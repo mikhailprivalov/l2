@@ -393,7 +393,7 @@ NEED_RECIEVE_TUBE_TO_PUSH_ORDER = False
 TITLE_RESULT_FORM_USE_HOSPITAL_STAMP = False
 QR_CODE_ANKETA = ""
 RESULT_LABORATORY_FORM = ""
-SELF_WATERMARKS = ""
+SELF_WATERMARKS = None
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

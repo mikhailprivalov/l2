@@ -495,7 +495,6 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
-    # style.fontName = "PTAstraSerifReg"
     style.fontName = "FreeSans"
     style.fontSize = 9
     style.leading = 10
@@ -573,12 +572,16 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
     result_style.alignment = TA_LEFT
 
     pks = []
+    laboratory_analyzer_data = []
     for iss in iss_list.order_by("research__direction_id", "research__pk", "tubes__number", "research__sort_weight"):
         if iss.pk in pks:
             continue
         pks.append(iss.pk)
         data = []
         fractions = directory.Fractions.objects.filter(research=iss.research, hide=False, render_type=0).order_by("pk").order_by("sort_weight")
+        if iss.api_app:
+            laboratory_analyzer_data.append(iss.api_app.name)
+
         if fractions.count() > 0:
             if fractions.count() == 1:
                 tmp = [Paragraph('<font face="FreeSans" size="8">' + iss.research.title + "</font>", styleSheet["BodyText"])]
@@ -597,35 +600,53 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
                 if not iss.time_confirmation and iss.deferred:
                     result = "отложен"
                 f = fractions[0]
-                st = TableStyle(
-                    [
-                        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
-                        # ('INNERGRID', (0, 0), (-1, -1), 0.8, colors.black),
-                        # ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
-                        ('LEFTPADDING', (0, 0), (-1, -1), 4),
-                        ('TOPPADDING', (0, 0), (-1, -1), 3),
-                        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-                        ('BOTTOMPADDING', (0, 0), (-1, -1), -1),
-                    ]
-                )
+                ts = [
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                    ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
+                    ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.black),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                    ('LEFTPADDING', (0, 0), (0, -1), 3),
+                ]
 
+                style_t = TableStyle(ts)
+                result_is_norm = []
                 if f.render_type == 0:
                     if norm in ["none", "normal"]:
                         tmp.append(Paragraph('<font face="FreeSans" size="8">' + result + "</font>", result_style))
+                        result_is_norm.append(True)
                     elif norm == "maybe":
                         tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "</font>", result_style))
+                        result_is_norm.append(True)
                     else:
-                        tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", styleBackgroundcolor))
+                        # tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + RANGE_NOT_IN.get(sign, "") + "</font>", styleBackgroundcolor))
+                        tmp.append(Paragraph('<font face="FreeSansBold" size="8">' + result + "*" + "</font>", styleBackgroundcolor))
+                        result_is_norm.append(False)
                     if not no_units_and_ref:
                         tmp.append(Paragraph('<font face="FreeSans" size="7">' + get_r(ref) + "</font>", stl))
                         tmp.append(Paragraph('<font face="FreeSans" size="7">' + f_units + "</font>", stl))
-
                     data.append(tmp)
 
+                for k in range(0, 4):
+                    style_t.add('TOPPADDING', (0, 0), (0, -1), 0)
+                    style_t.add('BOTTOMPADDING', (0, 0), (0, -1), 0)
+                    style_t.add('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.black)
+                    style_t.add('LEFTPADDING', (1, 0), (1, -1), 4 * mm)
+                    style_t.add('LEFTPADDING', (2, 0), (2, -1), 4 * mm)
+                    style_t.add('LEFTPADDING', (3, 0), (3, -1), 4 * mm)
+
+                step = 0
+                for is_norm in result_is_norm:
+                    if not is_norm:
+                        style_t.add('BACKGROUND', (1, step), (1, step), HexColor(0xF45E1E))
+
+                    step += 1
+
                 t = Table(data, colWidths=cw)
-                t.setStyle(st)
+                t.setStyle(style_t)
                 t.spaceBefore = 0
             else:
                 tmp = [
@@ -648,8 +669,6 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                     ('TEXTCOLOR', (0, -1), (-1, -1), colors.black),
                     ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.black),
-                    # ('INNERGRID', (0, 0), (-1, -1), 0.1, colors.white),
-                    # ('BOX', (0, 0), (-1, -1), 0.8, colors.black),
                     ('LEFTPADDING', (0, 0), (-1, -1), 0),
                     ('TOPPADDING', (0, 0), (-1, -1), 0),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 0),
@@ -723,8 +742,8 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
     data = []
 
     laboratory_analyzer = ""
-    if True:
-        laboratory_analyzer = "<br/>Лабораторное оборудование: Sysmex 1000"
+    if len(laboratory_analyzer_data) > 0:
+        laboratory_analyzer = f"<br/>{' '.join(laboratory_analyzer_data)}"
 
     tmp = [
         Paragraph(f"Дата, время выполнения: {strdate(iss.time_confirmation, short_year=False)} {strtime(iss.time_confirmation)[0:5]}{laboratory_analyzer}",
@@ -775,7 +794,6 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
     t.spaceAfter = 0
 
     fwb.append(t)
-
 
     return fwb
 
