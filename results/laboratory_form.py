@@ -263,9 +263,7 @@ def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, dir
                         j = print_vtype(data, f, iss, j, style_t, styleSheet)
 
                         if j - jp > 2:
-                            data.append(
-                                [Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])]
-                            )
+                            data.append([Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])])
                             style_t.add('SPAN', (0, j), (-1, j))
                             style_t.add('BOX', (0, j), (-1, j), 1, colors.white)
                             j -= 1
