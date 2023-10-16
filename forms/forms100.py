@@ -1085,6 +1085,7 @@ def form_05(request_data):
     style.fontName = "PTAstraSerifReg"
     style.fontSize = 12
     style.alignment = TA_LEFT
+    style.underlineWidth = 0.6
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleOrgName = deepcopy(styleBold)
@@ -1095,6 +1096,8 @@ def form_05(request_data):
     styleCenterBold = deepcopy(styleCenter)
     styleCenterBold.fontName = "PTAstraSerifBold"
     styleCenterBold.fontSize = 10
+    styleCenterBoldTable = deepcopy(styleCenterBold)
+    styleCenterBoldTable.fontSize = 11
     styleHeader = deepcopy(styleCenterBold)
     styleHeader.fontSize = 12
     styleRight = deepcopy(style)
@@ -1104,10 +1107,9 @@ def form_05(request_data):
 
     objs = []
 
-    # space_symbol = '&nbsp;'
-    # open_bold_tag = '<font fontname="PTAstraSerifBold">'
-    # close_bold_tag = '</font>'
-
+    space_symbol = '&nbsp;'
+    open_underline = '<u>'
+    close_underline = '</u>'
     order_data = [
         [
             Paragraph('Приложение № 3 <br/> к приказу Министерства здравоохранения Российской Федерации от 15 '
@@ -1169,7 +1171,6 @@ def form_05(request_data):
     frame_data.append(Paragraph(f'4. Страховой полис ОМС: серия {patient_data["oms"]["polis_serial"]} № '
                                 f'{patient_data["oms"]["polis_num"]} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style))
 
-    sex = 'муж. - 1, жен. - 2'
     if patient_data["sex"] == 'м':
         sex = 'муж. - 1'
     else:
@@ -1452,23 +1453,159 @@ def form_05(request_data):
     frame_data = []
     params_columns = []
 
-    operation_title = '_______________________________________________________________________________'
-    operation_code = '________________________'
-    frame_data.append(Paragraph(f'38. Операция: {operation_title} Код {operation_code}', style))
+    operation_title = f'{open_underline}{space_symbol * 184}{close_underline}'
+    operation_code = f'{open_underline}{space_symbol * 43}{close_underline}'
+    frame_data.append(Paragraph(f'38. Операция: {operation_title} код {operation_code}', style))
 
     anesthesia = 'общая – 1; местная – 2;'
     operation_hardware = 'лазерной – 1; криогенной – 2; эндоскопической – 3; рентгеновской – 4;'
-    doctor_speciality = '_______________________________'
-    doctor_fio = '____________________________'
-    doctor_code = '____________________'
-    frame_data.append(Paragraph(f'39. Анестезия: {anesthesia} 40. Операция проведена с использованием аппаратуры: {operation_hardware} 41. Врач: специальность {doctor_speciality} Ф.И.О. '
-                                f'{doctor_fio} Код {doctor_code}', style))
-    frame_data.append(Paragraph(f'', style))
+    anesthesia_doctor_speciality = f'{open_underline}{space_symbol * 45}{close_underline}'
+    anesthesia_doctor_fio = f'{open_underline}{space_symbol * 91}{close_underline}'
+    anesthesia_doctor_code = f'{open_underline}{space_symbol * 26}{close_underline}'
+    frame_data.append(Paragraph(f'39. Анестезия: {anesthesia} 40. Операция проведена с использованием аппаратуры: {operation_hardware} 41. Врач: специальность '
+                                f'{anesthesia_doctor_speciality} Ф.И.О. {anesthesia_doctor_fio} код {anesthesia_doctor_code}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -169 * mm, 'width': 279 * mm, 'height': 68 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
+    manipulations = f'{open_underline}{space_symbol * 129}{close_underline}'
+    manipulations_counts = f'{open_underline}{space_symbol * 26}{close_underline}'
+    manipulations_code = f'{open_underline}{space_symbol * 26}{close_underline}'
+    frame_data.append(Paragraph(f'42. Манипуляции, исследования: {manipulations} кол-во {manipulations_counts} код {manipulations_code}', style))
+    frame_data.append(Paragraph(f'{open_underline}{space_symbol * 186}{close_underline} кол-во {open_underline}{space_symbol * 26}{close_underline} код '
+                                f'{open_underline}{space_symbol * 26}{close_underline}', style))
+
+    diagnostic_manipulations = f'{open_underline}{space_symbol * 87}{close_underline}'
+    diagnostic_manipulations_counts = f'{open_underline}{space_symbol * 26}{close_underline}'
+    diagnostic_manipulations_code = f'{open_underline}{space_symbol * 26}{close_underline}'
+    frame_data.append(Paragraph(f'в том числе лабораторные, инструментальные и лучевые: {diagnostic_manipulations} кол-во {diagnostic_manipulations_counts} код '
+                                f'{diagnostic_manipulations_code}', style))
+
+    frame_data.append(Paragraph(f'{space_symbol * 186} кол-во {open_underline}{space_symbol * 26}{close_underline} код {open_underline}{space_symbol * 26}{close_underline}',
+                                style))
+
+    operation_doctor_speciality = f'{open_underline}{space_symbol * 58}{close_underline}'
+    operation_doctor_fio = f'{open_underline}{space_symbol * 104}{close_underline}'
+    operation_doctor_code = f'{open_underline}{space_symbol * 33}{close_underline}'
+    frame_data.append(Paragraph(f'43. Врач: специальность {operation_doctor_speciality} Ф.И.О. {operation_doctor_fio} код {operation_doctor_code}', style))
+
+    params_columns.append({'x': 0 * mm, 'y': -139 * mm, 'width': 279 * mm, 'height': 38 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
                            'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
 
     objs.append(FrameDataCol(params_columns))
+
+    frame_data = []
+    params_columns = []
+
+
+
+    frame_data.append(Paragraph('44. Рецепты на лекарственные препараты:', style))
+    frame_data.append(Spacer(1, 2 * mm))
+
+    drug_data = [
+        {
+            "date": "",
+            "series": "",
+            "number": "",
+            "drug_title": "",
+            "benefits": "",
+            "drug_form": "",
+            "drug_dose": "",
+            "drug_count": "",
+            "mkb_code": "",
+            "doctor_code": "",
+        },
+        {
+            "date": "",
+            "series": "",
+            "number": "",
+            "drug_title": "",
+            "benefits": "",
+            "drug_form": "",
+            "drug_dose": "",
+            "drug_count": "",
+            "mkb_code": "",
+            "doctor_code": "",
+        },
+        {
+            "date": "",
+            "series": "",
+            "number": "",
+            "drug_title": "",
+            "benefits": "",
+            "drug_form": "",
+            "drug_dose": "",
+            "drug_count": "",
+            "mkb_code": "",
+            "doctor_code": "",
+        },
+    ]
+
+    drug_data_in_table = [[
+        Paragraph(f'{drug["date"]}', style),
+        Paragraph(f'{drug["series"]}', style),
+        Paragraph(f'{drug["number"]}', style),
+        Paragraph(f'{drug["drug_title"]}', style),
+        Paragraph(f'{drug["benefits"]}', style),
+        Paragraph(f'{drug["drug_form"]}', style),
+        Paragraph(f'{drug["drug_dose"]}', style),
+        Paragraph(f'{drug["drug_count"]}', style),
+        Paragraph(f'{drug["mkb_code"]}', style),
+        Paragraph(f'{drug["doctor_code"]}', style),
+    ] for drug in drug_data]
+
+    table_data = [
+        [
+            Paragraph('Дата', styleCenterBoldTable),
+            Paragraph('Рецепт', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('Лекарственный препарат', styleCenterBoldTable),
+            Paragraph('льгота (%)', styleCenterBoldTable),
+            Paragraph('Лек. форма', styleCenterBoldTable),
+            Paragraph('Доза', styleCenterBoldTable),
+            Paragraph('Кол-во', styleCenterBoldTable),
+            Paragraph('код МКБ-10', styleCenterBoldTable),
+            Paragraph('Код врача', styleCenterBoldTable),
+        ],
+        [
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('серия', styleCenterBoldTable),
+            Paragraph('номер', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+            Paragraph('', styleCenterBoldTable),
+        ],
+    ]
+    table_data.extend(drug_data_in_table)
+
+    columns_widths = [20 * mm, 15 * mm, 25 * mm, 70 * mm, 25 * mm, 25 * mm, 20 * mm, 24 * mm, 30 * mm, 25 * mm]
+    tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('SPAN', (0, 0), (0, 1)),
+                ('SPAN', (1, 0), (2, 0)),
+                ('SPAN', (3, 0), (3, 1)),
+                ('SPAN', (4, 0), (4, 1)),
+                ('SPAN', (5, 0), (5, 1)),
+                ('SPAN', (6, 0), (6, 1)),
+                ('SPAN', (7, 0), (7, 1)),
+                ('SPAN', (8, 0), (8, 1)),
+                ('SPAN', (9, 0), (9, 1)),
+            ]
+        )
+    )
+
+    frame_data.append(tbl)
+
+    params_columns.append({'x': 0 * mm, 'y': -177 * mm, 'width': 279 * mm, 'height': 38 * mm, 'text': frame_data, 'left_padding': 0 * mm, 'right_padding': 0 * mm, 'bottom_padding': 2 * mm,
+                           'top_padding': 2, 'showBoundary': 0, 'fake_width': None})
+
+    objs.append(FrameDataCol(params_columns))
+
 
     def first_pages(canvas, document):
         canvas.saveState()
