@@ -373,8 +373,7 @@ def gen_hospital_stamp(direction):
         [img, ''],
         [Paragraph(direction.client.individual.fio(), stylePatient), Paragraph(f"Индивидуальный номер заказа: {space_symbol * 2}{direction.pk}", stylePatient)],
         ['', ''],
-        [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold),
-         data_get],
+        [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold), data_get],
         [Paragraph(f"Медкарта: {direction.client.number}", styleBold), data_receive],
         [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph("", styleText)],
     ]
