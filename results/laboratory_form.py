@@ -263,9 +263,7 @@ def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, dir
                         j = print_vtype(data, f, iss, j, style_t, styleSheet)
 
                         if j - jp > 2:
-                            data.append(
-                                [Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])]
-                            )
+                            data.append([Paragraph('<font face="FreeSans" size="8">S - чувствителен; R - резистентен; I - промежуточная чувствительность;</font>', styleSheet["BodyText"])])
                             style_t.add('SPAN', (0, j), (-1, j))
                             style_t.add('BOX', (0, j), (-1, j), 1, colors.white)
                             j -= 1
@@ -299,9 +297,7 @@ def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, dir
                         % ("" if not iss.tubes.exists() or not iss.tubes.first().time_get else strdate(iss.tubes.first().time_get), "" if not iss.comment else "<br/>" + iss.comment),
                         styleSheet["BodyText"],
                     ),
-                    Paragraph(
-                        '<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]
-                    ),
+                    Paragraph('<font face="FreeSans" size="8">%s</font>' % ("Не подтверждено" if not iss.time_confirmation else strdate(iss.time_confirmation)), styleSheet["BodyText"]),
                     Paragraph('<font face="FreeSans" size="8">%s</font>' % (iss.doc_confirmation_fio or "Не подтверждено"), styleSheet["BodyText"]),
                 ]
                 data.append(tmp)
@@ -746,8 +742,7 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
         laboratory_analyzer = f"<br/>{' '.join(laboratory_analyzer_data)}"
 
     tmp = [
-        Paragraph(f"Дата, время выполнения: {strdate(iss.time_confirmation, short_year=False)} {strtime(iss.time_confirmation)[0:5]}{laboratory_analyzer}",
-                  styleLeft),
+        Paragraph(f"Дата, время выполнения: {strdate(iss.time_confirmation, short_year=False)} {strtime(iss.time_confirmation)[0:5]}{laboratory_analyzer}", styleLeft),
         Paragraph(f"Исследования выполнены: {iss.doc_confirmation_fio} (Врач клинической лабораторной диагностики)", styleLeft),
     ]
 
