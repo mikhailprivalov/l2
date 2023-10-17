@@ -408,9 +408,9 @@ def endpoint(request):
                                         iss = iss.filter(pk=iss_pk)
                                     iss = iss.first()
                                     if not culture:
-                                        print('NO CULTURE', code, name)  # noqa: T001
+                                        print("NO CULTURE", code, name)  # noqa: T001
                                     elif not iss:
-                                        print('IGNORED')  # noqa: T001
+                                        print("IGNORED")  # noqa: T001
                                     else:
                                         directions.MicrobiologyResultCulture.objects.filter(issledovaniye=iss, culture=culture).delete()
 
