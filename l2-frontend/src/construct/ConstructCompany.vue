@@ -304,7 +304,7 @@
         />
         <VeTable
           :columns="columns"
-          :table-data="examinationList"
+          :table-data="examListPagination"
           row-key-field-name="card_id"
           :checkbox-option="checkboxOption"
         />
@@ -432,6 +432,9 @@ export default {
     },
     isNewCompany() {
       return !this.editorCompany.pk;
+    },
+    examListPagination() {
+      return this.examinationList.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
     },
   },
   mounted() {

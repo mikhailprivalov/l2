@@ -118,8 +118,10 @@ def add_factors_from_file(request):
             request_obj.user = request.user
             request_obj.method = "POST"
             request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
-            current_patient = check_enp(request_obj)
-            if current_patient.data.get("message"):
+            current_patient = None
+            if snils_data and snils_data != "None":
+                current_patient = check_enp(request_obj)
+            if not current_patient or current_patient.data.get("message"):
                 patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
                 if patient_card is None:
                     possible_family = find_and_replace(family_data, "е", "ё")
