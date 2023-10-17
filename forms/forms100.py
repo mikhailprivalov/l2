@@ -1058,7 +1058,7 @@ def form_04(request_data):
 
 def form_05(request_data):
     """
-    Новая форма 025/у - титульный лист амбулаторной карты (Амбулаторный случай)
+    Форма 025/у - титульный лист амбулаторной карты (Амбулаторный случай)
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
@@ -1097,7 +1097,9 @@ def form_05(request_data):
     styleCenterBold.fontName = "PTAstraSerifBold"
     styleCenterBold.fontSize = 10
     styleCenterBoldTable = deepcopy(styleCenterBold)
-    styleCenterBoldTable.fontSize = 11
+    styleCenterBoldTable.fontSize = 10
+    styleCenterTable = deepcopy(styleCenterBoldTable)
+    styleCenterTable.fontName = "PTAstraSerifReg"
     styleHeader = deepcopy(styleCenterBold)
     styleHeader.fontSize = 12
     styleRight = deepcopy(style)
@@ -1302,7 +1304,7 @@ def form_05(request_data):
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Код по МКБ-10', styleRight),
+            Paragraph('код по МКБ-10', styleRight),
             Paragraph('', style),
             Paragraph('', style),
         ],
@@ -1312,7 +1314,7 @@ def form_05(request_data):
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Код по МКБ-10', styleRight),
+            Paragraph('код по МКБ-10', styleRight),
             Paragraph('', style),
             Paragraph('', style),
         ],
@@ -1322,7 +1324,7 @@ def form_05(request_data):
             Paragraph('', style),
             Paragraph(' Ф.И.О. ', styleCenter),
             Paragraph('', style),
-            Paragraph('Код', styleRight),
+            Paragraph('код', styleRight),
             Paragraph('', style),
         ],
         [
@@ -1332,7 +1334,7 @@ def form_05(request_data):
             Paragraph(' Ф.И.О. ', styleCenter),
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Код', styleRight),
+            Paragraph('код', styleRight),
             Paragraph('', style),
         ],
         [
@@ -1342,7 +1344,7 @@ def form_05(request_data):
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Код', styleRight),
+            Paragraph('код', styleRight),
             Paragraph('', style),
         ],
         [
@@ -1352,17 +1354,16 @@ def form_05(request_data):
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
-            Paragraph('Код', styleRight),
+            Paragraph('код', styleRight),
             Paragraph('', style),
         ],
     ]
 
-    columns_widths = [10 * mm, 56 * mm, 55 * mm, 17 * mm, 55 * mm, 19 * mm, 14 * mm, 55 * mm]
+    columns_widths = [10 * mm, 55 * mm, 55 * mm, 17 * mm, 55 * mm, 19 * mm, 14 * mm, 50 * mm]
     table = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
     table.setStyle(
         TableStyle(
             [
-                # ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
                 ('SPAN', (2, 0), (4, 0)),
                 ('SPAN', (2, 1), (4, 1)),
                 ('SPAN', (4, 2), (5, 2)),
@@ -1382,8 +1383,8 @@ def form_05(request_data):
     )
     frame_data.append(table)
 
-    params_columns.append({'x': 0 * mm, 'y': -43 * mm, 'width': 279 * mm, 'height': 40 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append({'x': 0 * mm, 'y': -41 * mm, 'width': 279 * mm, 'height': 40 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
+                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
     objs.append(FrameDataCol(params_columns))
 
     frame_data = []
@@ -1421,12 +1422,11 @@ def form_05(request_data):
         ],
     ]
 
-    columns_widths = [65 * mm, 124 * mm, 32 * mm, 54 * mm]
+    columns_widths = [65 * mm, 127 * mm, 32 * mm, 51 * mm]
     tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
-                # ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
                 ('RIGHTPADDING', (1, 0), (-1, -1), 2 * mm),
                 ('LINEBELOW', (1, 0), (1, 2), 0.5, colors.black),
                 ('LINEBELOW', (0, 3), (1, -1), 0.5, colors.black),
@@ -1445,8 +1445,8 @@ def form_05(request_data):
     injuru_type = 'производственная – 1; транспортная – 2, из нее: ДТП – 2.1; спортивная – 3; уличная – 4; сельскохозяйственная – 5; прочая – 6'
     frame_data.append(Paragraph(f'37. Травма: {injuru_type}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -96 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append({'x': 0 * mm, 'y': -91 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
+                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
 
     objs.append(FrameDataCol(params_columns))
 
@@ -1486,69 +1486,41 @@ def form_05(request_data):
     operation_doctor_code = f'{open_underline}{space_symbol * 33}{close_underline}'
     frame_data.append(Paragraph(f'43. Врач: специальность {operation_doctor_speciality} Ф.И.О. {operation_doctor_fio} код {operation_doctor_code}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -139 * mm, 'width': 279 * mm, 'height': 38 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append({'x': 0 * mm, 'y': -130 * mm, 'width': 279 * mm, 'height': 37 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
+                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
 
     objs.append(FrameDataCol(params_columns))
 
     frame_data = []
     params_columns = []
 
-
-
-    frame_data.append(Paragraph('44. Рецепты на лекарственные препараты:', style))
+    frame_data.append(Paragraph(f'{space_symbol * 2}44. Рецепты на лекарственные препараты:', style))
     frame_data.append(Spacer(1, 2 * mm))
 
-    drug_data = [
-        {
-            "date": "",
-            "series": "",
-            "number": "",
-            "drug_title": "",
-            "benefits": "",
-            "drug_form": "",
-            "drug_dose": "",
-            "drug_count": "",
-            "mkb_code": "",
-            "doctor_code": "",
-        },
-        {
-            "date": "",
-            "series": "",
-            "number": "",
-            "drug_title": "",
-            "benefits": "",
-            "drug_form": "",
-            "drug_dose": "",
-            "drug_count": "",
-            "mkb_code": "",
-            "doctor_code": "",
-        },
-        {
-            "date": "",
-            "series": "",
-            "number": "",
-            "drug_title": "",
-            "benefits": "",
-            "drug_form": "",
-            "drug_dose": "",
-            "drug_count": "",
-            "mkb_code": "",
-            "doctor_code": "",
-        },
+    drug_data = [{}, {}, {}]
+
+    table_style_padding = [
+        ('TOPPADDING', (0, 0), (-1, -1), 3 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
     ]
 
+    if drug_data:
+        table_style_padding = [
+            ('TOPPADDING', (0, 0), (-1, -1), 0.1 * mm),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 0.7 * mm),
+        ]
+
     drug_data_in_table = [[
-        Paragraph(f'{drug["date"]}', style),
-        Paragraph(f'{drug["series"]}', style),
-        Paragraph(f'{drug["number"]}', style),
-        Paragraph(f'{drug["drug_title"]}', style),
-        Paragraph(f'{drug["benefits"]}', style),
-        Paragraph(f'{drug["drug_form"]}', style),
-        Paragraph(f'{drug["drug_dose"]}', style),
-        Paragraph(f'{drug["drug_count"]}', style),
-        Paragraph(f'{drug["mkb_code"]}', style),
-        Paragraph(f'{drug["doctor_code"]}', style),
+        Paragraph(f'{drug.get("date", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("series", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("number", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("drug_title", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("benefits", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("drug_form", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("drug_dose", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("drug_count", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("mkb_code", "")}', styleCenterTable),
+        Paragraph(f'{drug.get("doctor_code", "")}', styleCenterTable),
     ] for drug in drug_data]
 
     table_data = [
@@ -1579,11 +1551,7 @@ def form_05(request_data):
     ]
     table_data.extend(drug_data_in_table)
 
-    columns_widths = [20 * mm, 15 * mm, 25 * mm, 70 * mm, 25 * mm, 25 * mm, 20 * mm, 24 * mm, 30 * mm, 25 * mm]
-    tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
-    tbl.setStyle(
-        TableStyle(
-            [
+    table_style = [
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('SPAN', (0, 0), (0, 1)),
@@ -1596,13 +1564,48 @@ def form_05(request_data):
                 ('SPAN', (8, 0), (8, 1)),
                 ('SPAN', (9, 0), (9, 1)),
             ]
-        )
-    )
+    table_style.extend(table_style_padding)
+    columns_widths = [20 * mm, 15 * mm, 25 * mm, 70 * mm, 25 * mm, 25 * mm, 20 * mm, 24 * mm, 30 * mm, 25 * mm]
+    tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
+    tbl.setStyle(TableStyle(table_style))
 
     frame_data.append(tbl)
 
-    params_columns.append({'x': 0 * mm, 'y': -177 * mm, 'width': 279 * mm, 'height': 38 * mm, 'text': frame_data, 'left_padding': 0 * mm, 'right_padding': 0 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 0, 'fake_width': None})
+    params_columns.append({'x': 0 * mm, 'y': -164 * mm, 'width': 279 * mm, 'height': 35 * mm, 'text': frame_data, 'left_padding': 0 * mm, 'right_padding': 0 * mm, 'bottom_padding': 0 * mm,
+                           'top_padding': 0.5 * mm, 'showBoundary': 0, 'fake_width': None})
+
+    objs.append(FrameDataCol(params_columns))
+
+    frame_data = []
+    params_columns = []
+
+    sick_list = 'листок нетрудоспособности – 1; справка – 2.'
+    family_member_fio = f'{open_underline}{space_symbol * 70}{close_underline}'
+    issue_reason = (f'заболевание – 1; уход за больным членом семьи – 2 (Ф.И.О. {family_member_fio}); в связи с карантином – 3; на период санаторно-курортного лечения – 4; по беременности '
+                    f'и родам – 5; по прерыванию беременности – 6')
+    issue_date_day = f'{open_underline}{space_symbol * 15}{close_underline}'
+    issue_date_month = f'{open_underline}{space_symbol * 20}{close_underline}'
+    issue_date_year = f'{open_underline}{space_symbol * 15}{close_underline}'
+    frame_data.append(Paragraph(f'45. Документ о временной нетрудоспособности: {sick_list} 46. Повод выдачи: {issue_reason} 47. Дата выдачи: число {issue_date_day} месяц '
+                                f'{issue_date_month} год {issue_date_year}', style))
+
+    extension_dates = ''
+    frame_data.append(Paragraph(f'48. Даты продления: {extension_dates}', style))
+    sick_list_close_day = f'{open_underline}{space_symbol * 15}{close_underline}'
+    sick_list_close_month = f'{open_underline}{space_symbol * 20}{close_underline}'
+    sick_list_close_year = f'{open_underline}{space_symbol * 15}{close_underline}'
+    frame_data.append(Paragraph(f'49. Дата закрытия документа о временной нетрудоспособности: число {sick_list_close_day} месяц {sick_list_close_month} год {sick_list_close_year}',
+                                style))
+
+    coupon_date_close_day = f'{open_underline}{space_symbol * 15}{close_underline}'
+    coupon_date_close_month = f'{open_underline}{space_symbol * 20}{close_underline}'
+    coupon_date_close_year = f'{open_underline}{space_symbol * 15}{close_underline}'
+
+    doctor_talon = f'{open_underline}{space_symbol * 60}{close_underline}'
+    frame_data.append(Paragraph(f'50. Дата закрытия талона число {coupon_date_close_day} месяц {coupon_date_close_month} год {coupon_date_close_year} 51. Врач (Ф.И.О., подпись) '
+                                f'{doctor_talon}', style))
+    params_columns.append({'x': 0 * mm, 'y': -190 * mm, 'width': 279 * mm, 'height': 27 * mm, 'text': frame_data, 'left_padding': 0 * mm, 'right_padding': 0 * mm, 'bottom_padding': 0,
+                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
 
     objs.append(FrameDataCol(params_columns))
 
