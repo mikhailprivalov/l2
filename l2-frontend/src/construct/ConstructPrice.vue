@@ -123,14 +123,21 @@
         href="#"
         @click.prevent="downloadSpecification"
       >
-        Скачать спецификацию
+        Cпецификация
       </a>
-      <ul class="nav navbar-nav">
+      <a
+        class="a-under a-align r-padding"
+        href="#"
+        @click.prevent="copyPrice"
+      >
+        Скопировать
+      </a>
+      <a>
         <LoadFile
           :is-gen-commercial-offer="true"
           :selected-price="selectedPrice"
         />
-      </ul>
+      </a>
     </span>
     <div
       v-if="priceIsSelected"
@@ -411,6 +418,19 @@ export default {
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
+    async copyPrice() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('copy-price', {
+        id: this.selectedPrice,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Прайс скопирован');
+        await this.getPrices();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
     async updatePrice() {
       if (!this.priceDataIsFilled) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
@@ -638,5 +658,8 @@ export default {
   }
 .a-align {
   float: right;
+}
+.r-padding {
+  padding-right: 10px;
 }
 </style>
