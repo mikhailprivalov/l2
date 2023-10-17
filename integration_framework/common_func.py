@@ -1,4 +1,5 @@
 import directions.models as directions
+from contracts.models import Company, PriceName
 from hospitals.models import Hospitals
 from django.test import Client as TC
 import simplejson as json
@@ -17,6 +18,41 @@ def check_correct_hosp(request, oid_org):
         return {"OK": False, "message": 'Нет доступа в переданную организацию'}
 
     return {"OK": True, "hospital": hospital}
+
+
+def check_correct_hospital_company(request, ogrn):
+    if not ogrn:
+        return {"OK": False, "message": 'Должно быть указано ОГРН'}
+
+    hospital = Hospitals.objects.filter(ogrn=ogrn).first()
+    company = Company.objects.filter(ogrn=ogrn).first()
+    is_company = False
+    if company:
+        is_company = True
+    if not hospital and not company:
+        return {"OK": False, "message": 'Организация не найдена'}
+    if not is_company:
+        if not request.user.hospitals.filter(pk=hospital.pk).exists():
+            return {"OK": False, "message": 'Нет доступа в переданную организацию'}
+    else:
+        if not request.user.companies.filter(pk=company.pk).exists():
+            return {"OK": False, "message": 'Нет доступа в переданную компанию'}
+
+    return {"OK": True, "hospital": hospital, "company": company, "is_company": is_company}
+
+
+def check_correct_hospital_company_for_price(request, price_code, price_id):
+    price = PriceName.get_price_by_id_symbol_code(price_code, price_id)
+    if not price:
+        return {"OK": False, "message": 'Нет прайса'}
+    if price and price.hospital:
+        if not request.user.hospitals.filter(pk=price.hospital.pk).exists():
+            return {"OK": False, "message": 'Нет доступа в переданную организацию'}
+    if price and price.company:
+        if not request.user.companies.filter(pk=price.company.pk).exists():
+            return {"OK": False, "message": 'Нет доступа в переданную компанию'}
+
+    return {"OK": True, "price": price}
 
 
 def get_data_direction_with_param(direction_num):
