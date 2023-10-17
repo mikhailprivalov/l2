@@ -1497,18 +1497,15 @@ def form_05(request_data):
     frame_data.append(Paragraph(f'{space_symbol * 2}44. Рецепты на лекарственные препараты:', style))
     frame_data.append(Spacer(1, 2 * mm))
 
-    drug_data = [{}, {}, {}]
+    drug_data = []
 
-    table_style_padding = [
-        ('TOPPADDING', (0, 0), (-1, -1), 3 * mm),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
-    ]
-
+    table_style_padding = []
     if drug_data:
         table_style_padding = [
             ('TOPPADDING', (0, 0), (-1, -1), 0.1 * mm),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 0.7 * mm),
         ]
+    drug_data = [{}, {}, {}]
 
     drug_data_in_table = [[
         Paragraph(f'{drug.get("date", "")}', styleCenterTable),
@@ -1552,18 +1549,20 @@ def form_05(request_data):
     table_data.extend(drug_data_in_table)
 
     table_style = [
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('SPAN', (0, 0), (0, 1)),
-                ('SPAN', (1, 0), (2, 0)),
-                ('SPAN', (3, 0), (3, 1)),
-                ('SPAN', (4, 0), (4, 1)),
-                ('SPAN', (5, 0), (5, 1)),
-                ('SPAN', (6, 0), (6, 1)),
-                ('SPAN', (7, 0), (7, 1)),
-                ('SPAN', (8, 0), (8, 1)),
-                ('SPAN', (9, 0), (9, 1)),
-            ]
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('TOPPADDING', (0, 0), (-1, -1), 1.7 * mm),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1.7 * mm),
+        ('SPAN', (0, 0), (0, 1)),
+        ('SPAN', (1, 0), (2, 0)),
+        ('SPAN', (3, 0), (3, 1)),
+        ('SPAN', (4, 0), (4, 1)),
+        ('SPAN', (5, 0), (5, 1)),
+        ('SPAN', (6, 0), (6, 1)),
+        ('SPAN', (7, 0), (7, 1)),
+        ('SPAN', (8, 0), (8, 1)),
+        ('SPAN', (9, 0), (9, 1)),
+    ]
     table_style.extend(table_style_padding)
     columns_widths = [20 * mm, 15 * mm, 25 * mm, 70 * mm, 25 * mm, 25 * mm, 20 * mm, 24 * mm, 30 * mm, 25 * mm]
     tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
