@@ -116,8 +116,7 @@ def patients_search_card(request):
     p5 = re.compile(r'phone:.+')
     p5i = bool(re.search(p5, query))
     p_ecp = re.compile(r'ecp:\d+')
-    # is_ecp_search = bool(re.search(p_ecp, query))
-    is_ecp_search = False
+    is_ecp_search = bool(re.search(p_ecp, query))
     pat_bd = re.compile(r"\d{4}-\d{2}-\d{2}")
     c = None
     has_phone_search = False
@@ -186,7 +185,7 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
-    if is_ecp_search or (len(query) > 0 and ":" in query[0]):
+    if is_ecp_search and query or (query and ":" in query[0]):
         ecp_id = query.split(':')[1]
         patient_data = search_patient_ecp_by_person_id(ecp_id)
         if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
