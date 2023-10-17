@@ -66,6 +66,15 @@ class PriceName(models.Model):
         json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": company_id, "companyTitle": company_title}
         return json_data
 
+    @staticmethod
+    def get_price_by_id_symbol_code(price_code, price_id):
+        price = None
+        if price_id:
+            price = PriceName.objects.filter(pk=price_id).first()
+        elif price_code:
+            price = PriceName.objects.filter(symbol_code=price_code).first()
+        return price
+
 
 class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)

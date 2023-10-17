@@ -842,8 +842,8 @@ def receive_history(request):
                     "labs": ['Гистология'],
                     "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
                     'isDirection': True,
-                    'defect_text': n.defect_text,
-                    'is_defect': n.is_defect,
+                    'defect_text': "",
+                    'is_defect': "",
                 }
             )
 

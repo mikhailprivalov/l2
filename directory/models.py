@@ -179,6 +179,7 @@ class Researches(models.Model):
     RESULT_TITLE_FORMS = (
         (0, 'По умолчанию'),
         (10001, '100.01 - Выписка из амб карты'),
+        (10002, '100.02 - Клеше'),
     )
 
     CO_EXECUTOR_MODES = (

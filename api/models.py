@@ -33,6 +33,7 @@ class Application(models.Model):
     decimal_places = models.PositiveIntegerField(default=4)
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
     hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
+    companies = models.ManyToManyField('contracts.Company', blank=True)
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
     can_access_schedule = models.BooleanField(default=False, help_text="У приложения есть доступ к расписанию")
