@@ -185,7 +185,7 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
-    if is_ecp_search or ":" in query[0]:
+    if is_ecp_search and query or (query and ":" in query[0]):
         ecp_id = query.split(':')[1]
         patient_data = search_patient_ecp_by_person_id(ecp_id)
         if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
