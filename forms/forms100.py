@@ -1067,7 +1067,6 @@ def form_05(request_data):
 
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
-    hospital_kod_ogrn = hospital.safe_ogrn
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -1163,13 +1162,13 @@ def form_05(request_data):
     frame_data = []
     params_columns = []
     coupon_date_start = datetime.datetime.now()
-    category_benefits = '_______'
+    category_benefits = f'{open_underline}{space_symbol * 6}{close_underline}'
     coupon_date_end = coupon_date_start + datetime.timedelta(days=1)
     frame_data.append(Paragraph(f'1. Дата открытия талона: число {coupon_date_start.day} месяц {coupon_date_start.month} '
                                 f'год {coupon_date_start.year}2. Код категории льготы {category_benefits} '
                                 f'3. Действует до {coupon_date_end.strftime("%d.%m.%Y")}', style))
 
-    smo = '______________'
+    smo = f'{open_underline}{space_symbol * 14}{close_underline}'
     frame_data.append(Paragraph(f'4. Страховой полис ОМС: серия {patient_data["oms"]["polis_serial"]} № '
                                 f'{patient_data["oms"]["polis_num"]} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style))
 
@@ -1181,8 +1180,8 @@ def form_05(request_data):
     frame_data.append(Paragraph(f'7. Фамилия {patient_data["family"]} 8. Имя {patient_data["name"]} 9. Отчество '
                                 f'{patient_data["patronymic"]} 10. Пол: {sex}', style))
 
-    identity_document_serial = ''
-    identity_document_number = ''
+    identity_document_serial = f'{open_underline}{space_symbol * 10 }{close_underline}'
+    identity_document_number = f'{open_underline}{space_symbol * 15 }{close_underline}'
     if patient_data["type_doc"] == 'паспорт':
         identity_document_serial = patient_data["passport_serial"]
         identity_document_number = patient_data["passport_num"]
@@ -1296,66 +1295,72 @@ def form_05(request_data):
     params_columns = []
     objs.append(FrameBreak())
     objs.append(Paragraph('оборотная сторона формы № 025-1/у', style))
-
+    diagnosis_preliminary = {"title": "", "code": ""}
+    external_reason_preliminary = {"title": "", "code": ""}
+    doctor = {"speciality": "", "fio": "", "code": ""}
+    doctor_two = {"speciality": "", "fio": "", "code": ""}
+    research = {"title": "", "code": ""}
+    research_two = {"title": "", "code": ""}
     table_data = [
         [
             Paragraph('28.', styleCenter),
             Paragraph('Диагноз предварительный', style),
-            Paragraph('', style),
+            Paragraph(f'{diagnosis_preliminary["title"]}', style),
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{diagnosis_preliminary["code"]}', style),
             Paragraph('', style),
         ],
         [
             Paragraph('29.', styleCenter),
             Paragraph('Внешняя причина', style),
-            Paragraph('', style),
+            Paragraph(f'{external_reason_preliminary["title"]}', style),
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{external_reason_preliminary["code"]}', style),
             Paragraph('', style),
         ],
         [
             Paragraph('30.', styleCenter),
             Paragraph('Врач: специальность', style),
-            Paragraph('', style),
+            Paragraph(f'{doctor["speciality"]}', style),
             Paragraph(' Ф.И.О. ', styleCenter),
+            Paragraph(f'{doctor["fio"]}', style),
             Paragraph('', style),
             Paragraph('код', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{doctor["code"]}', style),
         ],
         [
             Paragraph('', styleCenter),
             Paragraph('Врач: специальность', style),
-            Paragraph('', style),
+            Paragraph(f'{doctor_two["speciality"]}', style),
             Paragraph(' Ф.И.О. ', styleCenter),
-            Paragraph('', style),
+            Paragraph(f'{doctor_two["fio"]}', style),
             Paragraph('', style),
             Paragraph('код', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{doctor_two["code"]}', style),
         ],
         [
             Paragraph('31. ', styleCenter),
             Paragraph('Медицинская услуга', style),
-            Paragraph('', style),
+            Paragraph(f'{research["title"]}', style),
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('код', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{research["code"]}', style),
         ],
         [
             Paragraph('', styleCenter),
             Paragraph('Медицинская услуга', style),
-            Paragraph('', style),
+            Paragraph(f'{research_two["title"]}', style),
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('код', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{research_two["code"]}', style),
         ],
     ]
 
@@ -1389,36 +1394,43 @@ def form_05(request_data):
 
     frame_data = []
     params_columns = []
+
+    diagnosis_final = {"title": "", "code": ""}
+    external_reason_final = {"title": "", "code": ""}
+    concomitant_diseases = {"title": "", "code": ""}
+    concomitant_diseases_two = {"title": "", "code": ""}
+    concomitant_diseases_three = {"title": "", "code": ""}
+
     table_data = [
         [
             Paragraph('32. Диагноз заключительный', style),
-            Paragraph('', style),
+            Paragraph(f'{diagnosis_final["title"]}', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{diagnosis_final["code"]}', style),
         ],
         [
             Paragraph('33. Внешняя причина', style),
-            Paragraph('', style),
+            Paragraph(f'{external_reason_final["title"]}', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{external_reason_final["code"]}', style),
         ],
         [
             Paragraph('34. Сопутствующие заболевания:', style),
-            Paragraph('', style),
+            Paragraph(f'{concomitant_diseases["title"]}', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{concomitant_diseases["code"]}', style),
         ],
         [
-            Paragraph('', style),
+            Paragraph(f'{concomitant_diseases_two["title"]}', style),
             Paragraph('', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{concomitant_diseases_two["code"]}', style),
         ],
         [
-            Paragraph('', style),
+            Paragraph(f'{concomitant_diseases_three["title"]}', style),
             Paragraph('', style),
             Paragraph('код по МКБ-10', styleRight),
-            Paragraph('', style),
+            Paragraph(f'{concomitant_diseases_three["code"]}', style),
         ],
     ]
 
@@ -1603,7 +1615,7 @@ def form_05(request_data):
     doctor_talon = f'{open_underline}{space_symbol * 60}{close_underline}'
     frame_data.append(Paragraph(f'50. Дата закрытия талона число {coupon_date_close_day} месяц {coupon_date_close_month} год {coupon_date_close_year} 51. Врач (Ф.И.О., подпись) '
                                 f'{doctor_talon}', style))
-    params_columns.append({'x': 0 * mm, 'y': -190 * mm, 'width': 279 * mm, 'height': 27 * mm, 'text': frame_data, 'left_padding': 0 * mm, 'right_padding': 0 * mm, 'bottom_padding': 0,
+    params_columns.append({'x': 0 * mm, 'y': -190 * mm, 'width': 279 * mm, 'height': 27 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
                            'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
 
     objs.append(FrameDataCol(params_columns))
