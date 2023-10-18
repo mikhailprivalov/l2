@@ -1077,8 +1077,7 @@ def form_05(request_data):
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm,
-                            bottomMargin=6 * mm, title="Форма 025у")
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, title="Форма 025у")
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
@@ -1112,13 +1111,8 @@ def form_05(request_data):
     open_underline = '<u>'
     close_underline = '</u>'
     order_data = [
-        [
-            Paragraph('Приложение № 3 <br/> к приказу Министерства здравоохранения Российской Федерации от 15 '
-                      'декабря 2014 г. № 834н', styleLeftMin)
-        ],
-        [
-            Paragraph('(в ред. Приказа Минздрава России от 09.01.2018 № 2н)', styleLeftMin)
-        ]
+        [Paragraph('Приложение № 3 <br/> к приказу Министерства здравоохранения Российской Федерации от 15 ' 'декабря 2014 г. № 834н', styleLeftMin)],
+        [Paragraph('(в ред. Приказа Минздрава России от 09.01.2018 № 2н)', styleLeftMin)],
     ]
 
     order_table = Table(order_data, 60 * mm, hAlign='RIGHT')
@@ -1134,11 +1128,13 @@ def form_05(request_data):
 
     header_data = [
         [
-            Paragraph('Наименование медицинской организации: <br/> <font fontname="PTAstraSerifReg" size=10>'
-                      f'{hospital_name}</font><br/>Адрес медицинской организации: <br/>'
-                      f'<font fontname="PTAstraSerifReg" size=10>{hospital_address}</font>', styleOrgName),
-            Paragraph('Медицинская документация <br/>Учетная форма № 025-1/у <br/>Утверждена приказом Минздрава России от 15 '
-                      'декабря 2014 г. № 834н', styleCenterBold),
+            Paragraph(
+                'Наименование медицинской организации: <br/> <font fontname="PTAstraSerifReg" size=10>'
+                f'{hospital_name}</font><br/>Адрес медицинской организации: <br/>'
+                f'<font fontname="PTAstraSerifReg" size=10>{hospital_address}</font>',
+                styleOrgName,
+            ),
+            Paragraph('Медицинская документация <br/>Учетная форма № 025-1/у <br/>Утверждена приказом Минздрава России от 15 ' 'декабря 2014 г. № 834н', styleCenterBold),
         ]
     ]
 
@@ -1156,32 +1152,36 @@ def form_05(request_data):
     card_num_obj = patient_data['card_num'].split(' ')
     p_card_num = card_num_obj[0]
 
-    objs.append(Paragraph(f'ТАЛОН ПАЦИЕНТА, ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ, №{p_card_num}',
-                          styleHeader))
+    objs.append(Paragraph(f'ТАЛОН ПАЦИЕНТА, ПОЛУЧАЮЩЕГО МЕДИЦИНСКУЮ ПОМОЩЬ В АМБУЛАТОРНЫХ УСЛОВИЯХ, №{p_card_num}', styleHeader))
 
     frame_data = []
     params_columns = []
     coupon_date_start = datetime.datetime.now()
     category_benefits = f'{open_underline}{space_symbol * 6}{close_underline}'
     coupon_date_end = coupon_date_start + datetime.timedelta(days=1)
-    frame_data.append(Paragraph(f'1. Дата открытия талона: число {coupon_date_start.day} месяц {coupon_date_start.month} '
-                                f'год {coupon_date_start.year}2. Код категории льготы {category_benefits} '
-                                f'3. Действует до {coupon_date_end.strftime("%d.%m.%Y")}', style))
+    frame_data.append(
+        Paragraph(
+            f'1. Дата открытия талона: число {coupon_date_start.day} месяц {coupon_date_start.month} '
+            f'год {coupon_date_start.year}2. Код категории льготы {category_benefits} '
+            f'3. Действует до {coupon_date_end.strftime("%d.%m.%Y")}',
+            style,
+        )
+    )
 
     smo = f'{open_underline}{space_symbol * 14}{close_underline}'
-    frame_data.append(Paragraph(f'4. Страховой полис ОМС: серия {patient_data["oms"]["polis_serial"]} № '
-                                f'{patient_data["oms"]["polis_num"]} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style))
+    frame_data.append(
+        Paragraph(f'4. Страховой полис ОМС: серия {patient_data["oms"]["polis_serial"]} № ' f'{patient_data["oms"]["polis_num"]} 5. СМО {smo} 6. СНИЛС {patient_data["snils"]}', style)
+    )
 
     if patient_data["sex"] == 'м':
         sex = 'муж. - 1'
     else:
         sex = 'жен. - 2'
 
-    frame_data.append(Paragraph(f'7. Фамилия {patient_data["family"]} 8. Имя {patient_data["name"]} 9. Отчество '
-                                f'{patient_data["patronymic"]} 10. Пол: {sex}', style))
+    frame_data.append(Paragraph(f'7. Фамилия {patient_data["family"]} 8. Имя {patient_data["name"]} 9. Отчество ' f'{patient_data["patronymic"]} 10. Пол: {sex}', style))
 
-    identity_document_serial = f'{open_underline}{space_symbol * 10 }{close_underline}'
-    identity_document_number = f'{open_underline}{space_symbol * 15 }{close_underline}'
+    identity_document_serial = f'{open_underline}{space_symbol * 10}{close_underline}'
+    identity_document_number = f'{open_underline}{space_symbol * 15}{close_underline}'
     if patient_data["type_doc"] == 'паспорт':
         identity_document_serial = patient_data["passport_serial"]
         identity_document_number = patient_data["passport_num"]
@@ -1189,18 +1189,36 @@ def form_05(request_data):
         identity_document_serial = patient_data["bc_serial"]
         identity_document_number = patient_data["bc_num"]
 
-    frame_data.append(Paragraph(f'11. Дата рождения: число {patient_data["birthday"].day} месяц {patient_data["birthday"].month}'
-                                f' год {patient_data["birthday"].year} 11.1. Документ, удостоверяющий личность: серия '
-                                f'{identity_document_serial} № {identity_document_number}', style))
+    frame_data.append(
+        Paragraph(
+            f'11. Дата рождения: число {patient_data["birthday"].day} месяц {patient_data["birthday"].month}'
+            f' год {patient_data["birthday"].year} 11.1. Документ, удостоверяющий личность: серия '
+            f'{identity_document_serial} № {identity_document_number}',
+            style,
+        )
+    )
 
-    place_registration = {'subject': '_______________', 'district': '_______________', 'city': '_______________', 'settlement': '_______________', 'street': '_______________',
-                          'house': '_______________', 'apartment': '_______________', 'phone': '_______________'}
+    place_registration = {
+        'subject': '_______________',
+        'district': '_______________',
+        'city': '_______________',
+        'settlement': '_______________',
+        'street': '_______________',
+        'house': '_______________',
+        'apartment': '_______________',
+        'phone': '_______________',
+    }
 
-    frame_data.append(Paragraph(f'12. Место регистрации: субъект Российской Федерации {place_registration["subject"]} район '
-                                f'{place_registration["district"]} город {place_registration["city"]} населенный пункт '
-                                f'{place_registration["settlement"]} улица {place_registration["street"]} дом '
-                                f'{place_registration["house"]} квартира {place_registration["apartment"]} тел. '
-                                f'{place_registration["phone"]}', style))
+    frame_data.append(
+        Paragraph(
+            f'12. Место регистрации: субъект Российской Федерации {place_registration["subject"]} район '
+            f'{place_registration["district"]} город {place_registration["city"]} населенный пункт '
+            f'{place_registration["settlement"]} улица {place_registration["street"]} дом '
+            f'{place_registration["house"]} квартира {place_registration["apartment"]} тел. '
+            f'{place_registration["phone"]}',
+            style,
+        )
+    )
 
     terrain = 'городская – 1, сельская – 2'
     frame_data.append(Paragraph(f'13. Местность: {terrain}', style))
@@ -1214,11 +1232,23 @@ def form_05(request_data):
     disability = 'установлена впервые – 1, повторно – 2'
     disability_group = 'I – 1, II – 2, III – 3'
     disability_childhood = 'да – 1, нет – 2'
-    frame_data.append(Paragraph(f'16. Инвалидность: {disability} 17. Группа инвалидности: '
-                                f'{disability_group} 18. Инвалид с детства: {disability_childhood}', style))
+    frame_data.append(Paragraph(f'16. Инвалидность: {disability} 17. Группа инвалидности: ' f'{disability_group} 18. Инвалид с детства: {disability_childhood}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -58 * mm, 'width': 279 * mm, 'height': 55 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -58 * mm,
+            'width': 279 * mm,
+            'height': 55 * mm,
+            'text': frame_data,
+            'left_padding': 2 * mm,
+            'right_padding': 2 * mm,
+            'bottom_padding': 2 * mm,
+            'top_padding': 2,
+            'showBoundary': 1,
+            'fake_width': None,
+        }
+    )
     objs.append(FrameDataCol(params_columns))
 
     frame_data = []
@@ -1271,24 +1301,29 @@ def form_05(request_data):
             Paragraph('', style),
             Paragraph('', style),
             Paragraph('', style),
-        ]
+        ],
     ]
 
     columns_widths = [42 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm, 33.3 * mm]
     tbl = Table(table_data, colWidths=columns_widths, hAlign='LEFT')
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ('SPAN', (0, 0), (0, 1))
-            ]
-        )
-    )
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.5, colors.black), ('VALIGN', (0, 0), (-1, -1), 'TOP'), ('SPAN', (0, 0), (0, 1))]))
     frame_data.append(tbl)
 
-    params_columns.append({'x': 0 * mm, 'y': -135 * mm, 'width': 279 * mm, 'height': 77 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 2 * mm,
-                           'top_padding': 2, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -135 * mm,
+            'width': 279 * mm,
+            'height': 77 * mm,
+            'text': frame_data,
+            'left_padding': 2 * mm,
+            'right_padding': 2 * mm,
+            'bottom_padding': 2 * mm,
+            'top_padding': 2,
+            'showBoundary': 1,
+            'fake_width': None,
+        }
+    )
     objs.append(FrameDataCol(params_columns))
 
     frame_data = []
@@ -1388,8 +1423,21 @@ def form_05(request_data):
     )
     frame_data.append(table)
 
-    params_columns.append({'x': 0 * mm, 'y': -41 * mm, 'width': 279 * mm, 'height': 40 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
-                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -41 * mm,
+            'width': 279 * mm,
+            'height': 40 * mm,
+            'text': frame_data,
+            'left_padding': 2 * mm,
+            'right_padding': 2 * mm,
+            'bottom_padding': 0,
+            'top_padding': 0,
+            'showBoundary': 1,
+            'fake_width': None,
+        }
+    )
     objs.append(FrameDataCol(params_columns))
 
     frame_data = []
@@ -1457,8 +1505,21 @@ def form_05(request_data):
     injuru_type = 'производственная – 1; транспортная – 2, из нее: ДТП – 2.1; спортивная – 3; уличная – 4; сельскохозяйственная – 5; прочая – 6'
     frame_data.append(Paragraph(f'37. Травма: {injuru_type}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -91 * mm, 'width': 279 * mm, 'height': 48 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
-                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -91 * mm,
+            'width': 279 * mm,
+            'height': 48 * mm,
+            'text': frame_data,
+            'left_padding': 2 * mm,
+            'right_padding': 2 * mm,
+            'bottom_padding': 0,
+            'top_padding': 0,
+            'showBoundary': 1,
+            'fake_width': None,
+        }
+    )
 
     objs.append(FrameDataCol(params_columns))
 
@@ -1474,32 +1535,54 @@ def form_05(request_data):
     anesthesia_doctor_speciality = f'{open_underline}{space_symbol * 45}{close_underline}'
     anesthesia_doctor_fio = f'{open_underline}{space_symbol * 91}{close_underline}'
     anesthesia_doctor_code = f'{open_underline}{space_symbol * 26}{close_underline}'
-    frame_data.append(Paragraph(f'39. Анестезия: {anesthesia} 40. Операция проведена с использованием аппаратуры: {operation_hardware} 41. Врач: специальность '
-                                f'{anesthesia_doctor_speciality} Ф.И.О. {anesthesia_doctor_fio} код {anesthesia_doctor_code}', style))
+    frame_data.append(
+        Paragraph(
+            f'39. Анестезия: {anesthesia} 40. Операция проведена с использованием аппаратуры: {operation_hardware} 41. Врач: специальность '
+            f'{anesthesia_doctor_speciality} Ф.И.О. {anesthesia_doctor_fio} код {anesthesia_doctor_code}',
+            style,
+        )
+    )
 
     manipulations = f'{open_underline}{space_symbol * 129}{close_underline}'
     manipulations_counts = f'{open_underline}{space_symbol * 26}{close_underline}'
     manipulations_code = f'{open_underline}{space_symbol * 26}{close_underline}'
     frame_data.append(Paragraph(f'42. Манипуляции, исследования: {manipulations} кол-во {manipulations_counts} код {manipulations_code}', style))
-    frame_data.append(Paragraph(f'{open_underline}{space_symbol * 186}{close_underline} кол-во {open_underline}{space_symbol * 26}{close_underline} код '
-                                f'{open_underline}{space_symbol * 26}{close_underline}', style))
+    frame_data.append(
+        Paragraph(
+            f'{open_underline}{space_symbol * 186}{close_underline} кол-во {open_underline}{space_symbol * 26}{close_underline} код ' f'{open_underline}{space_symbol * 26}{close_underline}',
+            style,
+        )
+    )
 
     diagnostic_manipulations = f'{open_underline}{space_symbol * 87}{close_underline}'
     diagnostic_manipulations_counts = f'{open_underline}{space_symbol * 26}{close_underline}'
     diagnostic_manipulations_code = f'{open_underline}{space_symbol * 26}{close_underline}'
-    frame_data.append(Paragraph(f'в том числе лабораторные, инструментальные и лучевые: {diagnostic_manipulations} кол-во {diagnostic_manipulations_counts} код '
-                                f'{diagnostic_manipulations_code}', style))
+    frame_data.append(
+        Paragraph(f'в том числе лабораторные, инструментальные и лучевые: {diagnostic_manipulations} кол-во {diagnostic_manipulations_counts} код ' f'{diagnostic_manipulations_code}', style)
+    )
 
-    frame_data.append(Paragraph(f'{space_symbol * 186} кол-во {open_underline}{space_symbol * 26}{close_underline} код {open_underline}{space_symbol * 26}{close_underline}',
-                                style))
+    frame_data.append(Paragraph(f'{space_symbol * 186} кол-во {open_underline}{space_symbol * 26}{close_underline} код {open_underline}{space_symbol * 26}{close_underline}', style))
 
     operation_doctor_speciality = f'{open_underline}{space_symbol * 58}{close_underline}'
     operation_doctor_fio = f'{open_underline}{space_symbol * 104}{close_underline}'
     operation_doctor_code = f'{open_underline}{space_symbol * 33}{close_underline}'
     frame_data.append(Paragraph(f'43. Врач: специальность {operation_doctor_speciality} Ф.И.О. {operation_doctor_fio} код {operation_doctor_code}', style))
 
-    params_columns.append({'x': 0 * mm, 'y': -130 * mm, 'width': 279 * mm, 'height': 37 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
-                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -130 * mm,
+            'width': 279 * mm,
+            'height': 37 * mm,
+            'text': frame_data,
+            'left_padding': 2 * mm,
+            'right_padding': 2 * mm,
+            'bottom_padding': 0,
+            'top_padding': 0,
+            'showBoundary': 1,
+            'fake_width': None,
+        }
+    )
 
     objs.append(FrameDataCol(params_columns))
 
@@ -1519,18 +1602,21 @@ def form_05(request_data):
         ]
     drug_data = [{}, {}, {}]
 
-    drug_data_in_table = [[
-        Paragraph(f'{drug.get("date", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("series", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("number", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("drug_title", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("benefits", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("drug_form", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("drug_dose", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("drug_count", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("mkb_code", "")}', styleCenterTable),
-        Paragraph(f'{drug.get("doctor_code", "")}', styleCenterTable),
-    ] for drug in drug_data]
+    drug_data_in_table = [
+        [
+            Paragraph(f'{drug.get("date", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("series", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("number", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("drug_title", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("benefits", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("drug_form", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("drug_dose", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("drug_count", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("mkb_code", "")}', styleCenterTable),
+            Paragraph(f'{drug.get("doctor_code", "")}', styleCenterTable),
+        ]
+        for drug in drug_data
+    ]
 
     table_data = [
         [
@@ -1582,8 +1668,21 @@ def form_05(request_data):
 
     frame_data.append(tbl)
 
-    params_columns.append({'x': 0 * mm, 'y': -164 * mm, 'width': 279 * mm, 'height': 35 * mm, 'text': frame_data, 'left_padding': 0 * mm, 'right_padding': 0 * mm, 'bottom_padding': 0 * mm,
-                           'top_padding': 0.5 * mm, 'showBoundary': 0, 'fake_width': None})
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -164 * mm,
+            'width': 279 * mm,
+            'height': 35 * mm,
+            'text': frame_data,
+            'left_padding': 0 * mm,
+            'right_padding': 0 * mm,
+            'bottom_padding': 0 * mm,
+            'top_padding': 0.5 * mm,
+            'showBoundary': 0,
+            'fake_width': None,
+        }
+    )
 
     objs.append(FrameDataCol(params_columns))
 
@@ -1592,34 +1691,53 @@ def form_05(request_data):
 
     sick_list = 'листок нетрудоспособности – 1; справка – 2.'
     family_member_fio = f'{open_underline}{space_symbol * 70}{close_underline}'
-    issue_reason = (f'заболевание – 1; уход за больным членом семьи – 2 (Ф.И.О. {family_member_fio}); в связи с карантином – 3; на период санаторно-курортного лечения – 4; по беременности '
-                    f'и родам – 5; по прерыванию беременности – 6')
+    issue_reason = (
+        f'заболевание – 1; уход за больным членом семьи – 2 (Ф.И.О. {family_member_fio}); в связи с карантином – 3; на период санаторно-курортного лечения – 4; по беременности '
+        f'и родам – 5; по прерыванию беременности – 6'
+    )
     issue_date_day = f'{open_underline}{space_symbol * 15}{close_underline}'
     issue_date_month = f'{open_underline}{space_symbol * 20}{close_underline}'
     issue_date_year = f'{open_underline}{space_symbol * 15}{close_underline}'
-    frame_data.append(Paragraph(f'45. Документ о временной нетрудоспособности: {sick_list} 46. Повод выдачи: {issue_reason} 47. Дата выдачи: число {issue_date_day} месяц '
-                                f'{issue_date_month} год {issue_date_year}', style))
+    frame_data.append(
+        Paragraph(
+            f'45. Документ о временной нетрудоспособности: {sick_list} 46. Повод выдачи: {issue_reason} 47. Дата выдачи: число {issue_date_day} месяц '
+            f'{issue_date_month} год {issue_date_year}',
+            style,
+        )
+    )
 
     extension_dates = ''
     frame_data.append(Paragraph(f'48. Даты продления: {extension_dates}', style))
     sick_list_close_day = f'{open_underline}{space_symbol * 15}{close_underline}'
     sick_list_close_month = f'{open_underline}{space_symbol * 20}{close_underline}'
     sick_list_close_year = f'{open_underline}{space_symbol * 15}{close_underline}'
-    frame_data.append(Paragraph(f'49. Дата закрытия документа о временной нетрудоспособности: число {sick_list_close_day} месяц {sick_list_close_month} год {sick_list_close_year}',
-                                style))
+    frame_data.append(Paragraph(f'49. Дата закрытия документа о временной нетрудоспособности: число {sick_list_close_day} месяц {sick_list_close_month} год {sick_list_close_year}', style))
 
     coupon_date_close_day = f'{open_underline}{space_symbol * 15}{close_underline}'
     coupon_date_close_month = f'{open_underline}{space_symbol * 20}{close_underline}'
     coupon_date_close_year = f'{open_underline}{space_symbol * 15}{close_underline}'
 
     doctor_talon = f'{open_underline}{space_symbol * 60}{close_underline}'
-    frame_data.append(Paragraph(f'50. Дата закрытия талона число {coupon_date_close_day} месяц {coupon_date_close_month} год {coupon_date_close_year} 51. Врач (Ф.И.О., подпись) '
-                                f'{doctor_talon}', style))
-    params_columns.append({'x': 0 * mm, 'y': -190 * mm, 'width': 279 * mm, 'height': 27 * mm, 'text': frame_data, 'left_padding': 2 * mm, 'right_padding': 2 * mm, 'bottom_padding': 0,
-                           'top_padding': 0, 'showBoundary': 1, 'fake_width': None})
+    frame_data.append(
+        Paragraph(f'50. Дата закрытия талона число {coupon_date_close_day} месяц {coupon_date_close_month} год {coupon_date_close_year} 51. Врач (Ф.И.О., подпись) ' f'{doctor_talon}', style)
+    )
+    params_columns.append(
+        {
+            'x': 0 * mm,
+            'y': -190 * mm,
+            'width': 279 * mm,
+            'height': 27 * mm,
+            'text': frame_data,
+            'left_padding': 2 * mm,
+            'right_padding': 2 * mm,
+            'bottom_padding': 0,
+            'top_padding': 0,
+            'showBoundary': 1,
+            'fake_width': None,
+        }
+    )
 
     objs.append(FrameDataCol(params_columns))
-
 
     def first_pages(canvas, document):
         canvas.saveState()
