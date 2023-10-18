@@ -105,6 +105,7 @@ urlpatterns = [
     path('get-prices', views.get_prices),
     path('get-price-data', views.get_price_data),
     path('update-price', views.update_price),
+    path('copy-price', views.copy_price),
     path('check-price-active', views.check_price_active),
     path('get-coasts-researches-in-price', views.get_coasts_researches_in_price),
     path('update-coast-research-in-price', views.update_coast_research_in_price),
