@@ -93,6 +93,7 @@ from .models import CrieOrder, ExternalService
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
+from directory.sql_func import get_lab_research_reference_books
 
 logger = logging.getLogger("IF")
 
@@ -3088,3 +3089,57 @@ def get_prices_by_date(request):
         } for i in prices]
 
     return Response({"data": result})
+
+
+@api_view(['POST'])
+def get_reference_books(request):
+    request_data = json.loads(request.body)
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    mode = request_data.get('mode')
+    is_lab = request_data.get('isLab', mode == 'laboratory')
+    if not token_obj.unlimited_access:
+        return Response({"ok": False, 'message': 'Некорректный auth токен'})
+    result = []
+    if is_lab:
+        lab_data = get_lab_research_reference_books()
+        service_result = {
+            "serviceId": "",
+            "serviceTitle": "",
+            "serviceInternalCode": "",
+            "serviceNMUCode": "",
+            "fractions": []
+        }
+
+        last_research_id = -1
+        step = 0
+        tmp_result = service_result.copy()
+        fractions = []
+        for i in lab_data:
+            if i.research_id != last_research_id:
+                if step != 0:
+                    result.append(tmp_result.copy())
+                    fractions = []
+                tmp_result = service_result.copy()
+                tmp_result["serviceId"] = i.research_id
+                tmp_result["serviceTitle"] = i.research_title
+                tmp_result["serviceInternalCode"] = i.research_internal_code
+                tmp_result["serviceNMUCode"] = i.research_nmu_code
+                tmp_result["fractions"] = fractions
+
+            fractions.append({
+                "id": i.fraction_id,
+                "title": i.fraction_title,
+                "fsli": i.fraction_fsli,
+                "ref_m": json.loads(i.fraction_ref_m),
+                "ref_f": json.loads(i.fraction_ref_f),
+                "unitTitle": i.unit_title,
+                "unitCode": i.unit_code,
+                "unitUcum": i.unit_ucum
+            })
+
+            last_research_id = i.research_id
+            step += 1
+        tmp_result["fractions"] = fractions
+        result.append(tmp_result.copy())
+    return JsonResponse({"result": result})
