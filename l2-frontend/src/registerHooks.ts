@@ -150,6 +150,7 @@ export default (instance: Vue): void => {
       monitoring = false,
       priceCategory = null,
       caseId,
+      caseByDirection = false,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -196,6 +197,7 @@ export default (instance: Vue): void => {
           hospital_override: hospitalOverride,
           priceCategory,
           caseId,
+          caseByDirection,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);
