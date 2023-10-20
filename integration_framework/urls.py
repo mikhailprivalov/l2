@@ -58,4 +58,5 @@ urlpatterns = [
     path('get-value-field', views.get_value_field),
     path('get-price-data', views.get_price_data),
     path('get-prices-by-date', views.get_prices_by_date),
+    path('get-reference-books', views.get_reference_books),
 ]
