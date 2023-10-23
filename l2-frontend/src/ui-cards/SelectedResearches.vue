@@ -796,6 +796,9 @@ export default {
     needChangeCase() {
       return this.$store.getters.modules.l2_case && this.kk !== 'stationar' && this.kk !== 'cd';
     },
+    needRequiredChooseCase() {
+      return this.$store.getters.modules.l2_required_choose_caseChoose;
+    },
     researches_departments() {
       const r = {};
       const deps = {
@@ -882,7 +885,7 @@ export default {
       return this.canChangeHospitalDirection && this.hospital_override === -1;
     },
     needSelectCase() {
-      return (!this.parentCase && this.needChangeCase && this.research_case === -2);
+      return (!this.parentCase && this.needChangeCase && this.research_case === -2 && this.needRequiredChooseCase);
     },
     need_update_object() {
       const r = [];
