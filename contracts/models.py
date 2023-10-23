@@ -233,25 +233,25 @@ class MedicalExamination(models.Model):
         result = []
         prev_card_id = -1
         examination_data = get_examination_data(company_id, date_start, date_end)
-        for data in examination_data:
-            if prev_card_id != data.card_id:
+        for i in examination_data:
+            if prev_card_id != i.card_id:
                 result.append(
                     {
-                        "card_id": data.card_id,
-                        "fio": data.family + " " + data.name + " " + data.patronymic,
-                        "harmful_factors": [f"{data.harmful_factor}; "],
-                        "research_id": [data.research_id],
-                        "research_titles": [f"{data.research_title}; "],
-                        "date": data.examination_date.strftime("%d.%m.%Y"),
+                        "card_id": i.card_id,
+                        "fio": i.family + " " + i.name + " " + i.patronymic,
+                        "harmful_factors": [f"{i.harmful_factor}; "],
+                        "research_id": [i.research_id],
+                        "research_titles": [f"{i.research_title}; "],
+                        "date": i.examination_date.strftime("%d.%m.%Y"),
                     }
                 )
             else:
-                if f"{data.harmful_factor}; " not in result[-1]["harmful_factors"]:
-                    result[-1]["harmful_factors"].append(f"{data.harmful_factor}; ")
-                if data.research_id not in result[-1]["research_id"]:
-                    result[-1]["research_id"].append(data.research_id)
-                    result[-1]["research_titles"].append(f"{data.research_title}; ")
-            prev_card_id = data.card_id
+                if f"{i.harmful_factor}; " not in result[-1]["harmful_factors"]:
+                    result[-1]["harmful_factors"].append(f"{i.harmful_factor}; ")
+                if i.research_id not in result[-1]["research_id"]:
+                    result[-1]["research_id"].append(i.research_id)
+                    result[-1]["research_titles"].append(f"{i.research_title}; ")
+            prev_card_id = i.card_id
         if month:
             result = sorted(result, key=lambda d: d["date"])
         else:
