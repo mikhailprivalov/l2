@@ -350,7 +350,6 @@ import {
 } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import Treeselect from '@riophae/vue-treeselect';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ruRu from '@/locales/ve';
@@ -408,22 +407,14 @@ export default {
           title: '',
           align: 'center',
           width: 30,
-          renderBodyCell: ({ row, column, rowIndex }, h) => (
-                                <span>
-                                    <button
-                                        class="button-demo"
-                                        on-click={() => this.editRow(rowIndex)}
-                                    >
-                                        Edit
-                                    </button>
-                                    &nbsp;
-                                    <button
-                                        class="button-demo"
-                                        on-click={() => this.deleteRow(rowIndex)}
-                                    >
-                                        Delete
-                                    </button>
-                                </span>
+          renderBodyCell: ({ row }, h) => (
+            h('div', { class: 'button' }, [
+              h(
+                'button',
+                { class: this.button.transparentButton, on: { click: () => { this.openCard(row.card_id); } } },
+                [h('i', { class: 'fa-solid fa-user' })],
+              ),
+            ])
           ),
         },
         {
@@ -755,20 +746,23 @@ export default {
   flex: 1;
   padding: 7px 0;
 }
+</style>
+
+<style module="button">
 .transparentButton {
-  background-color: transparent !important;
+  background-color: transparent;
   color: #434A54;
   border: none;
   border-radius: 4px;
   padding: 6px 12px;
 }
 .transparentButton:hover {
-  background-color: #434a54 !important;
+  background-color: #434a54;
   color: #FFFFFF;
   border: none;
 }
 .transparentButton:active {
-  background-color: #37BC9B !important;
+  background-color: #37BC9B;
   color: #FFFFFF;
 }
 </style>
