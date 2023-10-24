@@ -37,6 +37,12 @@
               :title-button="titleButton"
             />
           </ul>
+          <ul class="nav navbar-nav">
+            <LoadFile
+              :is-load-result-service="true"
+              :title-button="loadResultService"
+            />
+          </ul>
         </button>
       </div>
     </div>
@@ -58,6 +64,7 @@ export default {
       totalArchivedCards: 0,
       totalIndividualsWithoutCards: 0,
       titleButton: 'для записи в ЕЦП',
+      loadResultService: 'загрузить результаты услуг',
     };
   },
   async mounted() {

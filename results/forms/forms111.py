@@ -203,7 +203,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(
         Paragraph(
-            f"10. Дата начала профилактического медицинского осмотра несовершеннолетнего (далее - профилактический осмотр): <u>{data['Дата начала']}</u>",
+            f"10. Дата начала профилактического медицинского осмотра несовершеннолетнего (далее - профилактический осмотр): <u>{data.get('Дата осомтра', '')}</u>",
             style,
         )
     )
@@ -725,7 +725,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             style,
         )
     )
-
+    main_manager = data.get('Главный врач') if data.get('Главный врач') else iss.doc_confirmation.hospital.current_manager
     opinion = [
         [
             Paragraph("Врач", styleT),
@@ -774,7 +774,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
                 style,
             ),
             Paragraph(
-                f"{data['Главный врач']}",
+                f"{main_manager}",
                 styleCenter,
             ),
         ],
