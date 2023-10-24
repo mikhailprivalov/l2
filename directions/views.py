@@ -1040,19 +1040,3 @@ def px(x=0.0):
 def pxr(x=0.0):
     x *= mm
     return w - x
-
-
-@csrf_exempt
-@login_required
-def create_direction(card, financing_source, hospital):
-    direction = Napravleniya.objects.create(
-        client=card,
-        is_external=True,
-        istochnik_f=financing_source,
-        polis_who_give=card.polis.who_give if card.polis else None,
-        polis_n=card.polis.number if card.polis else None,
-        hospital=hospital,
-    )
-    return direction
-
-
