@@ -23,8 +23,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     к приказу Министерства здравоохранения Российской Федерации от 10 августа 2017 г. N 514н
     """
 
-    hospital: Hospitals = direction.hospital
-
     pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
     pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
 
@@ -658,16 +656,15 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         )
     )
     objs.append(
-    Paragraph(
-        "16.6.4. Дополнительные консультации и исследования выполнены: да, нет (нужное подчеркнуть); если «да»: "
-        "в амбулаторных условиях, в условиях дневного стационара, в стационарных условиях (нужное подчеркнуть).",
-        style,
+        Paragraph(
+            "16.6.4. Дополнительные консультации и исследования выполнены: да, нет (нужное подчеркнуть); если «да»: "
+            "в амбулаторных условиях, в условиях дневного стационара, в стационарных условиях (нужное подчеркнуть).",
+            style,
+        )
     )
-)
     objs.append(
         Paragraph(
-            "16.6.5. Лечение назначено: да, нет (нужное подчеркнуть); если «да»: в амбулаторных условиях, в условиях дневного стационара, "
-            "в стационарных условиях (нужное подчеркнуть).",
+            "16.6.5. Лечение назначено: да, нет (нужное подчеркнуть); если «да»: в амбулаторных условиях, в условиях дневного стационара, " "в стационарных условиях (нужное подчеркнуть).",
             style,
         )
     )
