@@ -257,7 +257,7 @@ def auto_load_result(request, research, doc_profile):
     file_data = request.FILES["file"]
     financing_source_title = request.POST.get("financingSourceTitle")
     title_fields = request.POST.get("titleFields")
-    title_data = title_fields.split(",")
+    title_data = [i.strip() for i in title_fields.split(",")]
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False

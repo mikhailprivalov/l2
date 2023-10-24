@@ -66,7 +66,7 @@
                 <input
                   v-model="titleFields"
                   class="form-control"
-                  placeholder="'fio', 'snils', 'enp', 'Диагноз', 'Дата осмотра'"
+                  placeholder="fio, lastname, firstname, patronymic, sex, birthday, address, snils, enp, Диагноз, Дата осмотра..."
                 >
               </div>
             </div>
