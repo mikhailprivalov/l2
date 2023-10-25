@@ -2949,7 +2949,7 @@ def update_company(request):
             company_data.pk,
             130002,
             request.user.doctorprofile,
-            {"old_company_data": old_company_data, "new_company_data": new_company_data},
+            {"old_company_data": str(old_company_data), "new_company_data": str(new_company_data)},
         )
         return JsonResponse({"ok": True})
     else:
