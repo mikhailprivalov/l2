@@ -307,6 +307,7 @@
           :table-data="examListPagination"
           row-key-field-name="card_id"
           :checkbox-option="checkboxOption"
+          :cell-selection-option="cellSelectionOption"
         />
         <div
           v-show="examinationList.length === 0"
@@ -349,7 +350,6 @@ import {
 } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import Treeselect from '@riophae/vue-treeselect';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ruRu from '@/locales/ve';
@@ -388,12 +388,44 @@ export default {
           this.selectedCards = selectedRowKeys;
         },
       },
+      basePk: -1,
+      cellSelectionOption: {
+        enable: false,
+      },
       columns: [
         {
-          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
+          field: 'number',
+          key: 'number',
+          title: '№',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ rowIndex }) => rowIndex + 1,
         },
         {
-          field: 'fio', key: 'fio', title: 'Пациент', align: 'left', width: 300,
+          field: 'card',
+          key: 'card',
+          title: '',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ row }, h) => (
+            h('div', { class: 'button' }, [
+              h(
+                'button',
+                { class: this.button.transparentButton, on: { click: () => { this.openCard(row.card_id); } } },
+                [h('i', { class: 'fa-solid fa-user' })],
+              ),
+            ])
+          ),
+        },
+        {
+          field: 'fio',
+          key: 'fio',
+          title: 'Пациент',
+          align: 'left',
+          width: 300,
+        },
+        {
+          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
         },
         {
           field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
@@ -440,6 +472,7 @@ export default {
   mounted() {
     this.getCompanies();
     this.getContracts();
+    this.getInternalBase();
   },
   methods: {
     async getCompanies() {
@@ -551,6 +584,15 @@ export default {
     },
     async getResearches() {
       this.researches = await this.$api('/get-research-list');
+    },
+    async getInternalBase() {
+      await this.$store.dispatch(actions.DEC_LOADING);
+      const baseData = await this.$api('/bases');
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.basePk = baseData.bases[0].pk;
+    },
+    openCard(cardPk) {
+      window.open(`/ui/directions?card_pk=${cardPk}&base_pk=${this.basePk}`);
     },
     pageNumberChange(number: number) {
       this.page = number;
@@ -703,5 +745,24 @@ export default {
   align-self: stretch;
   flex: 1;
   padding: 7px 0;
+}
+</style>
+
+<style module="button">
+.transparentButton {
+  background-color: transparent;
+  color: #434A54;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+.transparentButton:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+  border: none;
+}
+.transparentButton:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>

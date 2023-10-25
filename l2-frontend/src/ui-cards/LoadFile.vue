@@ -36,6 +36,39 @@
                 :accept="fileFilter"
                 @change="handleFileUpload()"
               >
+              <div
+                v-if="isLoadResultService"
+                class="input-group"
+                style="width: 100%; margin-top: 10px"
+              >
+                <span class="input-group-addon">Id услуги</span>
+                <input
+                  v-model="idService"
+                  class="form-control"
+                >
+                <span class="input-group-addon">Id врача</span>
+                <input
+                  v-model="idDoctorProfile"
+                  class="form-control"
+                >
+                <span class="input-group-addon">Источник финансирования</span>
+                <input
+                  v-model="financingSourceTitle"
+                  class="form-control"
+                >
+              </div>
+              <div
+                v-if="isLoadResultService"
+                class="input-group"
+                style="width: 100%; margin-top: 5px"
+              >
+                <span class="input-group-addon">Названия полей</span>
+                <input
+                  v-model="titleFields"
+                  class="form-control"
+                  placeholder="fio, lastname, firstname, patronymic, sex, birthday, address, snils, enp, Диагноз, Дата осмотра..."
+                >
+              </div>
             </div>
             <button
               style="width: 200px;"
@@ -159,6 +192,11 @@ export default {
       default: false,
       required: false,
     },
+    isLoadResultService: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
     isLoadGroupForProtocol: {
       type: Boolean,
       default: false,
@@ -196,6 +234,10 @@ export default {
       company: false,
       link: null,
       contentLoadGroupForProtocol: null,
+      idService: null,
+      idDoctorProfile: null,
+      financingSourceTitle: null,
+      titleFields: null,
     };
   },
   computed: {
@@ -240,9 +282,14 @@ export default {
         formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
         formData.append('selectedPrice', this.selectedPrice);
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
+        formData.append('isLoadResultService', this.isLoadResultService);
         formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
         formData.append('researchId', this.researchId);
         formData.append('researchSet', this.researchSet);
+        formData.append('idService', this.idService);
+        formData.append('idDoctorProfile', this.idDoctorProfile);
+        formData.append('financingSourceTitle', this.financingSourceTitle);
+        formData.append('titleFields', this.titleFields);
         if (this.isLoadGroupForProtocol) {
           this.$emit('load-file', this.contentLoadGroupForProtocol);
           this.open = false;

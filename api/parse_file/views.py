@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 import re
 import tempfile
 from copy import deepcopy
@@ -17,27 +18,33 @@ from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
 from contracts.models import PriceCoast, Company, MedicalExamination
-from directory.models import SetOrderResearch
+import directions.models as directions
+from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups, ParaclinicInputField
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
-from users.models import AssignmentResearches
-from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType
+from users.models import AssignmentResearches, DoctorProfile
+from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType, Document
 from integration_framework.views import check_enp
 from utils.dates import age_for_year, normalize_dots_date
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
+from django.db import transaction
+from django.utils import timezone
+
+logger = logging.getLogger("IF")
 
 
 def dnk_covid(request):
     prefixes = []
-    key_dnk = SettingManager.get("dnk_kovid", default='false', default_type='s')
+    key_dnk = SettingManager.get("dnk_kovid", default="false", default_type="s")
     to_return = None
     for x in "ABCDEF":
         prefixes.extend([f"{x}{i}" for i in range(1, 13)])
-    file = request.FILES['file']
-    if file.content_type == 'application/pdf' and file.size < 100000:
+    file = request.FILES["file"]
+    if file.content_type == "application/pdf" and file.size < 100000:
         with tempfile.TemporaryFile() as fp:
             fp.write(file.read())
             text = extract_text_from_pdf(fp)
@@ -102,15 +109,15 @@ def add_factors_from_file(request):
                 incorrect_patients.append({"fio": cells[fio], "reason": "ИНН организации не совпадает"})
                 continue
             snils_data = cells[snils].replace("-", "").replace(" ", "")
-            fio_data = cells[fio].split(' ')
+            fio_data = cells[fio].split(" ")
             family_data = fio_data[0]
             name_data = fio_data[1]
             patronymic_data = None
             if len(fio_data) > 2:
                 patronymic_data = fio_data[2]
-            birthday_data = cells[birthday].split(' ')[0]
-            code_harmful_data = cells[code_harmful].split(',')
-            exam_data = cells[examination_date].split(' ')[0]
+            birthday_data = cells[birthday].split(" ")[0]
+            code_harmful_data = cells[code_harmful].split(",")
+            exam_data = cells[examination_date].split(" ")[0]
             gender_data = cells[gender][0]
             params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
             request_obj = HttpRequest()
@@ -166,27 +173,37 @@ def add_factors_from_file(request):
 def load_file(request):
     link = ""
     req_data = dict(request.POST)
-    if req_data.get('isGenCommercialOffer')[0] == "true":
+    if req_data.get("isGenCommercialOffer")[0] == "true":
         results = gen_commercial_offer(request)
         link = "open-xls"
-    elif req_data.get('isWritePatientEcp')[0] == "true":
+    elif req_data.get("isWritePatientEcp")[0] == "true":
         results = write_patient_ecp(request)
         link = "open-xls"
-    elif req_data.get('researchSet')[0] != "-1":
-        research_set = int(req_data.get('researchSet')[0])
+    elif req_data.get("researchSet")[0] != "-1":
+        research_set = int(req_data.get("researchSet")[0])
         results = data_research_exam_patient(request, research_set)
         link = "open-xls"
-    elif len(req_data.get('companyInn')[0]) != 0:
+    elif len(req_data.get("companyInn")[0]) != 0:
         results = add_factors_from_file(request)
         return JsonResponse({"ok": True, "results": results, "company": True})
+    elif req_data.get("isLoadResultService")[0] == "true":
+        id_research = int(req_data.get("idService")[0])
+        research = Researches.objects.filter(pk=id_research).first()
+        id_doc_profile = int(req_data.get("idDoctorProfile")[0])
+        doc_profile = DoctorProfile.objects.filter(pk=id_doc_profile).first()
+        if not research or not doc_profile:
+            return JsonResponse({"ok": True, "results": "", "company": True})
+        else:
+            results = auto_load_result(request, research, doc_profile)
+            return JsonResponse({"ok": True, "results": results, "company": True})
     else:
         results = dnk_covid(request)
     return JsonResponse({"ok": True, "results": results, "link": link})
 
 
 def gen_commercial_offer(request):
-    file_data = request.FILES['file']
-    selected_price = request.POST.get('selectedPrice')
+    file_data = request.FILES["file"]
+    selected_price = request.POST.get("selectedPrice")
 
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
@@ -220,7 +237,7 @@ def gen_commercial_offer(request):
                             harmful_factor_data.append(adds_harmfull[i])
                             break
             templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
-            researches_data = AssignmentResearches.objects.values_list('research_id', flat=True).filter(template_id__in=templates_data)
+            researches_data = AssignmentResearches.objects.values_list("research_id", flat=True).filter(template_id__in=templates_data)
             researches_data = set(researches_data)
             for r in researches_data:
                 if counts_research.get(r):
@@ -230,10 +247,130 @@ def gen_commercial_offer(request):
             patients.append({"fio": cells[fio], "born": born_data, "harmful_factor": cells[harmful_factor], "position": cells[position], "researches": researches_data, "age": age})
 
     price_data = PriceCoast.objects.filter(price_name__id=selected_price, research_id__in=list(counts_research.keys()))
-    data_price = [{'title': k.research.title, 'code': k.research.code, 'count': counts_research[k.research.pk], 'coast': k.coast} for k in price_data]
+    data_price = [{"title": k.research.title, "code": k.research.code, "count": counts_research[k.research.pk], "coast": k.coast} for k in price_data]
     research_price = {d.research.pk: f"{d.research.title}@{d.coast}" for d in price_data}
     file_name = commercial_offer_xls_save_file(data_price, patients, research_price)
     return file_name
+
+
+def auto_load_result(request, research, doc_profile):
+    file_data = request.FILES["file"]
+    financing_source_title = request.POST.get("financingSourceTitle")
+    title_fields = request.POST.get("titleFields")
+    title_data = [i.strip() for i in title_fields.split(",")]
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    starts = False
+    snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
+    enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
+    date_variant_title_field = ["Дата осмотра"]
+    index_cell = {}
+    incorrect_patients = []
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "fio" in cells:
+                starts = True
+                for t in title_data:
+                    index_cell[t] = cells.index(t)
+        else:
+            data_result = {}
+            for i_cell in index_cell.keys():
+                data_result[i_cell] = cells[index_cell[i_cell]]
+            if len(data_result["snils"]) < 11 or len(data_result["enp"]) < 16:
+                continue
+            snils = data_result["snils"].replace("-", "").replace(" ", "")
+            birthday = normalize_dots_date(data_result["birthday"].split(" ")[0])
+            sex = data_result["sex"].lower()
+
+            individual, enp_doc, snils_doc = None, None, None
+            if data_result["enp"]:
+                individuals = Individual.objects.filter(tfoms_enp=data_result["enp"])
+                if not individuals.exists():
+                    individuals = Individual.objects.filter(document__number=data_result["enp"]).filter(
+                        Q(document__document_type__title="Полис ОМС") | Q(document__document_type__title="ЕНП")
+                    )
+                    individual = individuals.first()
+
+            if not individual:
+                individual = Individual(
+                    family=data_result["lastname"],
+                    name=data_result["firstname"],
+                    patronymic=data_result["patronymic"],
+                    birthday=birthday,
+                    sex=sex,
+                )
+                individual.save()
+
+            if not Document.objects.filter(individual=individual, document_type=snils_type).exists():
+                snils_doc = Document(
+                    individual=individual,
+                    document_type=snils_type,
+                    number=snils,
+                )
+                snils_doc.save()
+            else:
+                snils_doc = Document.objects.filter(individual=individual, document_type=snils_type).first()
+            if not Document.objects.filter(individual=individual, document_type=enp_type).exists():
+                enp_doc = Document(
+                    individual=individual,
+                    document_type=enp_type,
+                    number=data_result["enp"],
+                )
+                enp_doc.save()
+            else:
+                enp_doc = Document.objects.filter(individual=individual, document_type=enp_type).first()
+
+            if not Card.objects.filter(base__internal_type=True, individual=individual, is_archive=False).exists():
+                card = Card.add_l2_card(individual, polis=enp_doc, snils=snils_doc)
+            else:
+                card = Card.objects.filter(base__internal_type=True, individual=individual, is_archive=False).first()
+            card.main_address = data_result["address"]
+            card.save(update_fields=["main_address"])
+
+            financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+
+            try:
+                with transaction.atomic():
+                    direction = directions.Napravleniya.objects.create(
+                        client=card,
+                        istochnik_f=financing_source,
+                        polis_who_give=card.polis.who_give if card.polis else None,
+                        polis_n=card.polis.number if card.polis else None,
+                        hospital=doc_profile.hospital,
+                    )
+
+                    iss = directions.Issledovaniya.objects.create(
+                        napravleniye=direction,
+                        research=research,
+                        time_confirmation=timezone.now(),
+                        time_save=timezone.now(),
+                        doc_confirmation=doc_profile,
+                        doc_save=doc_profile,
+                        doc_confirmation_string=f"{doc_profile.get_fio_parts()}",
+                    )
+
+                    for group in ParaclinicInputGroups.objects.filter(research=research):
+                        for f in ParaclinicInputField.objects.filter(group=group):
+                            if data_result.get(f.title, None):
+                                if f.title.strip() in date_variant_title_field:
+                                    tmp_val = data_result[f.title]
+                                    data_result[f.title] = normalize_dots_date(tmp_val)
+                                if f.title.strip() == "Диагноз":
+                                    tmp_val = data_result[f.title].strip()
+                                    diag = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=tmp_val.upper(), hide=False).first()
+                                    if not diag:
+                                        incorrect_patients.append({"fio": data_result["fio"], "reason": "Неверные данные:"})
+                                    res = f'"code": "{tmp_val}", "title": "{diag.title}", "id": "{diag.id}"'
+                                    res = "{" + res + "}"
+                                    data_result[f.title] = res
+                                directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
+            except Exception as e:
+                logger.exception(e)
+                message = "Серверная ошибка"
+                return {"ok": False, "message": message}
+
+    return incorrect_patients
 
 
 def search_by_fio(request_obj, family, name, patronymic, birthday):
@@ -262,7 +399,7 @@ def search_by_fio(request_obj, family, name, patronymic, birthday):
     if current_patient.data.get("message"):
         request_obj._body = json.dumps(params_internal)
         data = patients_search_card(request_obj)
-        results_json = json.loads(data.content.decode('utf-8'))
+        results_json = json.loads(data.content.decode("utf-8"))
         if len(results_json["results"]) > 0:
             patient_card_pk = results_json["results"][0]["pk"]
             patient_card = Card.objects.filter(pk=patient_card_pk).first()
@@ -298,11 +435,11 @@ def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_fam
 
 
 def load_csv(request):
-    file_data = request.FILES['file']
-    file_data = file_data.read().decode('utf-8')
+    file_data = request.FILES["file"]
+    file_data = file_data.read().decode("utf-8")
     io_string = io.StringIO(file_data)
 
-    data = csv.reader(io_string, delimiter='\t')
+    data = csv.reader(io_string, delimiter="\t")
     header = next(data)
 
     application = None
@@ -317,9 +454,9 @@ def load_csv(request):
 
     app_key = application.key.hex
 
-    method = re.search(r'^(.+)\s\d+\s.*$', header[1]).group(1)
+    method = re.search(r"^(.+)\s\d+\s.*$", header[1]).group(1)
     results = []
-    pattern = re.compile(r'^\d+$')
+    pattern = re.compile(r"^\d+$")
 
     for row in data:
         if len(row) > 5 and pattern.match(row[2]):
@@ -346,7 +483,7 @@ def load_csv(request):
 
 
 def write_patient_ecp(request):
-    file_data = request.FILES['file']
+    file_data = request.FILES["file"]
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False
@@ -370,17 +507,17 @@ def write_patient_ecp(request):
             is_write = "Ошибка"
             message = ""
             if result:
-                if result.get('register'):
+                if result.get("register"):
                     is_write = "записан"
-                if result.get('message'):
-                    message = result.get('message', '')
+                if result.get("message"):
+                    message = result.get("message", "")
             patients.append({**patient, "is_write": is_write, "doctor": cells[doctor], "message": message})
     file_name = data_xls_save_file(patients, "Запись")
     return file_name
 
 
 def data_research_exam_patient(request, set_research):
-    file_data = request.FILES['file']
+    file_data = request.FILES["file"]
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     starts = False
@@ -404,7 +541,7 @@ def data_research_exam_patient(request, set_research):
                 born_data = normalize_dots_date(born_data)
             patient = {"family": cells[family], "name": cells[name], "patronymic": cells[patronymic], "birthday": born_data}
             patients_data[cells[snils]] = patient
-    doc_type = DocumentType.objects.filter(title='СНИЛС').first()
+    doc_type = DocumentType.objects.filter(title="СНИЛС").first()
     patient_cards = search_cards_by_numbers(tuple(patients_data.keys()), doc_type.id)
     cards_id = [i.card_id for i in patient_cards]
     researches_id = [i.research_id for i in set_research_d]
@@ -449,3 +586,12 @@ def data_research_exam_patient(request, set_research):
 
     file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name
+
+
+def get_parts_fio(fio_data):
+    family_data = fio_data[0]
+    name_data = fio_data[1]
+    patronymic_data = None
+    if len(fio_data) > 2:
+        patronymic_data = fio_data[2]
+    return family_data, name_data, patronymic_data
