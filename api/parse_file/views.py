@@ -33,6 +33,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.db import transaction
 from django.utils import timezone
+from utils.nsi_directories import NSI
 
 logger = logging.getLogger("IF")
 
@@ -364,6 +365,15 @@ def auto_load_result(request, research, doc_profile):
                                     res = f'"code": "{tmp_val}", "title": "{diag.title}", "id": "{diag.id}"'
                                     res = "{" + res + "}"
                                     data_result[f.title] = res
+                                if f.field_type == 28:
+                                    for nsi_key in NSI.values():
+                                        if f.title == nsi_key.get("title"):
+                                            for key, val in nsi_key.get("values").items():
+                                                if val == data_result[f.title].strip():
+                                                    res = f'"code": "{key}", "title": "{val}"'
+                                                    res = "{" + res + "}"
+                                                    data_result[f.title] = res
+                                                    continue
                                 directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
             except Exception as e:
                 logger.exception(e)
