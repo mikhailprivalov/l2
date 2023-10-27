@@ -3023,6 +3023,7 @@ def get_harmful_factors(request):
             "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
+            "cpp_key": factor.cpp_key,
         }
         for factor in HarmfulFactor.objects.all().order_by("title")
     ]

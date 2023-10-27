@@ -25,6 +25,7 @@
           <colgroup>
             <col width="150">
             <col>
+            <col width="250">
             <col width="200">
             <col width="99">
           </colgroup>
@@ -39,6 +40,9 @@
                 class="text-center"
               >
                 <strong>Описание</strong>
+              </th>
+              <th class="text-center">
+                <strong>UUID</strong>
               </th>
               <th
                 class="text-center"
@@ -75,6 +79,9 @@
                 v-model="factor.description"
                 class="form-control padding-left"
               >
+            </td>
+            <td class="table-row padding-left">
+              {{ factor.cpp_key }}
             </td>
             <td>
               <Treeselect
