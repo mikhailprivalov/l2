@@ -1951,6 +1951,7 @@ def get_cda_data(pk):
                     "gender": ind.sex.lower(),
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
+                    "address": data_individual['main_address'],
                 },
                 "organization": data["organization"],
             },
