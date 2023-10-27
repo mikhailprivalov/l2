@@ -25,7 +25,7 @@
           <colgroup>
             <col width="150">
             <col>
-            <col width="250">
+            <col width="285">
             <col width="200">
             <col width="99">
           </colgroup>
