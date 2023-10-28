@@ -701,6 +701,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/working-time',
+      name: 'WorkingTime',
+      component: () => import('@/pages/WorkingTime/WorkingTime.vue'),
+      meta: {
+        narrowLayout: false,
+        title: 'График рабочего времени',
+        groups: ['График рабочего времени'],
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),
