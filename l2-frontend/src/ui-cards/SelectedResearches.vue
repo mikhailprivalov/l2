@@ -379,6 +379,16 @@
         >
           <span>Набор документов</span>
         </button>
+        <button
+          v-if="show_calculate_researches"
+          v-tippy
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          title="Рассчитать стоимость"
+          @click="generate('calculate-cost')"
+        >
+          <span>Счёт</span>
+        </button>
       </template>
     </div>
 
@@ -762,6 +772,9 @@ export default {
     },
     hide_show_count_param() {
       return this.$store.getters.modules.l2_hide_show_count_param;
+    },
+    show_calculate_researches() {
+      return this.$store.getters.modules.l2_calculate_researches;
     },
     external_organizations_enabled() {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';

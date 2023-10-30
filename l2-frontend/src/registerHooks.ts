@@ -198,6 +198,7 @@ export default (instance: Vue): void => {
           priceCategory,
           caseId,
           caseByDirection,
+          type,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);
@@ -224,6 +225,9 @@ export default (instance: Vue): void => {
               ${data.messageLimit}`);
             } else if (type === 'save-and-open-embedded-form' && monitoring) {
               instance.$root.$emit('embedded-form:open', data.directions[0]);
+            } else if (type === 'calculate-cost') {
+              instance.$root.$emit('msg', 'ok', `Сумма: ${data.message}`, 10000);
+              return;
             }
             instance.$root.$emit(`researches-picker:clear_all${kk}`);
             instance.$root.$emit(`researches-picker:directions_created${kk}`);

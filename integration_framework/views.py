@@ -282,6 +282,7 @@ def direction_data(request):
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
             "department_name": iss[iss_index].doc_confirmation.podrazdeleniye.nsi_title if iss[iss_index].doc_confirmation else None,
             "kind": iss[iss_index].research.oid_kind if iss[iss_index].doc_confirmation else None,
+            "researchName": iss[iss_index].research.oid_title if iss[iss_index].doc_confirmation else None,
             "finSourceTitle": direction.istochnik_f.title if direction.istochnik_f else "другое",
             "finSourceCode": direction.istochnik_f.get_n3_code() if direction.istochnik_f else "6",
             "finSourceEcpCode": direction.istochnik_f.get_ecp_code() if direction.istochnik_f else "380101000000023",
