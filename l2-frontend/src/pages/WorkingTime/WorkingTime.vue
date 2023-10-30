@@ -20,13 +20,42 @@
         />
       </div>
       <div class="filters">
-        <label>Название</label>
+        <div>
+          <li
+            v-tippy="{
+              placement: 'right',
+              html: 'vtp3',
+              arrow: true,
+              reactive: true,
+              theme: 'light bordered',
+              popperOptions: {
+                modifiers: {
+                  preventOverflow: {
+                    boundariesElement: 'window',
+                  },
+                  hide: {
+                    enabled: false,
+                  },
+                },
+              },
+              interactive: true,
+            }"
+          >
+            fff
+          </li>
+        </div>
+        <div
+          id="vtp3"
+          class="tp"
+        >
+          <p>{{ 'ура!!!!' }}</p>
+        </div>
       </div>
     </div>
     <div>
       <label>Поиск сотрудника</label>
       <input
-        v-model="search"
+        v-model.trim="search"
         class="form-control"
       >
     </div>
@@ -47,16 +76,19 @@
 
 <script setup lang="ts">
 import {
-  computed, defineProps, onMounted, ref, useCssModule,
+  computed, defineComponent, defineProps, onMounted, ref, useCssModule,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
+
 import api from '@/api';
 import { useStore } from '@/store';
+import DateCell from '@/pages/WorkingTime/DateCell.vue';
 
+const cellComponent = defineComponent(DateCell);
 const selectedMonth = ref(1);
 const months = ref([
   { id: 1, label: 'Октябрь 2023' },
@@ -95,97 +127,97 @@ const columns = ref([
     title: '1',
     align: 'center',
     width: 5,
-    renderBodyCell: ({ row }, h) => h('p', { title: 'Привет мир!' }, '3'),
+    renderBodyCell: ({ row }, h) => h(cellComponent, { props: { text: '3' } }, '4'),
   },
   {
-    field: '02.10.2023', key: '02.10.2023', title: '2', align: 'center', width: 5,
+    field: '02.10.2023', key: '02.10.2023', title: '2', align: 'center', width: 50,
   },
   {
-    field: '03.10.2023', key: '03.10.2023', title: '3', align: 'center', width: 5,
+    field: '03.10.2023', key: '03.10.2023', title: '3', align: 'center', width: 50,
   },
   {
-    field: '04.10.2023', key: '04.10.2023', title: '4', align: 'center', width: 5,
+    field: '04.10.2023', key: '04.10.2023', title: '4', align: 'center', width: 50,
   },
   {
-    field: '05.10.2023', key: '05.10.2023', title: '5', align: 'center', width: 5,
+    field: '05.10.2023', key: '05.10.2023', title: '5', align: 'center', width: 50,
   },
   {
-    field: '06.10.2023', key: '06.10.2023', title: '6', align: 'center', width: 5,
+    field: '06.10.2023', key: '06.10.2023', title: '6', align: 'center', width: 50,
   },
   {
-    field: '07.10.2023', key: '07.10.2023', title: '7', align: 'center', width: 5,
+    field: '07.10.2023', key: '07.10.2023', title: '7', align: 'center', width: 50,
   },
   {
-    field: '08.10.2023', key: '08.10.2023', title: '8', align: 'center', width: 5,
+    field: '08.10.2023', key: '08.10.2023', title: '8', align: 'center', width: 50,
   },
   {
-    field: '09.10.2023', key: '09.10.2023', title: '9', align: 'center', width: 5,
+    field: '09.10.2023', key: '09.10.2023', title: '9', align: 'center', width: 50,
   },
   {
-    field: '10.10.2023', key: '10.10.2023', title: '10', align: 'center', width: 5,
+    field: '10.10.2023', key: '10.10.2023', title: '10', align: 'center', width: 50,
   },
   {
-    field: '11.10.2023', key: '11.10.2023', title: '11', align: 'center', width: 5,
+    field: '11.10.2023', key: '11.10.2023', title: '11', align: 'center', width: 50,
   },
   {
-    field: '12.10.2023', key: '12.10.2023', title: '12', align: 'center', width: 5,
+    field: '12.10.2023', key: '12.10.2023', title: '12', align: 'center', width: 50,
   },
   {
-    field: '13.10.2023', key: '13.10.2023', title: '13', align: 'center', width: 5,
+    field: '13.10.2023', key: '13.10.2023', title: '13', align: 'center', width: 50,
   },
   {
-    field: '14.10.2023', key: '14.10.2023', title: '14', align: 'center', width: 5,
+    field: '14.10.2023', key: '14.10.2023', title: '14', align: 'center', width: 50,
   },
   {
-    field: '15.10.2023', key: '15.10.2023', title: '15', align: 'center', width: 5,
+    field: '15.10.2023', key: '15.10.2023', title: '15', align: 'center', width: 50,
   },
   {
-    field: '16.10.2023', key: '16.10.2023', title: '16', align: 'center', width: 5,
+    field: '16.10.2023', key: '16.10.2023', title: '16', align: 'center', width: 50,
   },
   {
-    field: '17.10.2023', key: '17.10.2023', title: '17', align: 'center', width: 5,
+    field: '17.10.2023', key: '17.10.2023', title: '17', align: 'center', width: 50,
   },
   {
-    field: '18.10.2023', key: '18.10.2023', title: '18', align: 'center', width: 5,
+    field: '18.10.2023', key: '18.10.2023', title: '18', align: 'center', width: 50,
   },
   {
-    field: '19.10.2023', key: '19.10.2023', title: '19', align: 'center', width: 5,
+    field: '19.10.2023', key: '19.10.2023', title: '19', align: 'center', width: 50,
   },
   {
-    field: '20.10.2023', key: '20.10.2023', title: '20', align: 'center', width: 5,
+    field: '20.10.2023', key: '20.10.2023', title: '20', align: 'center', width: 50,
   },
   {
-    field: '21.10.2023', key: '21.10.2023', title: '21', align: 'center', width: 5,
+    field: '21.10.2023', key: '21.10.2023', title: '21', align: 'center', width: 50,
   },
   {
-    field: '22.10.2023', key: '22.10.2023', title: '22', align: 'center', width: 5,
+    field: '22.10.2023', key: '22.10.2023', title: '22', align: 'center', width: 50,
   },
   {
-    field: '23.10.2023', key: '23.10.2023', title: '23', align: 'center', width: 5,
+    field: '23.10.2023', key: '23.10.2023', title: '23', align: 'center', width: 50,
   },
   {
-    field: '24.10.2023', key: '24.10.2023', title: '24', align: 'center', width: 5,
+    field: '24.10.2023', key: '24.10.2023', title: '24', align: 'center', width: 50,
   },
   {
-    field: '25.10.2023', key: '25.10.2023', title: '25', align: 'center', width: 5,
+    field: '25.10.2023', key: '25.10.2023', title: '25', align: 'center', width: 50,
   },
   {
-    field: '26.10.2023', key: '26.10.2023', title: '26', align: 'center', width: 5,
+    field: '26.10.2023', key: '26.10.2023', title: '26', align: 'center', width: 50,
   },
   {
-    field: '27.10.2023', key: '27.10.2023', title: '27', align: 'center', width: 5,
+    field: '27.10.2023', key: '27.10.2023', title: '27', align: 'center', width: 50,
   },
   {
-    field: '28.10.2023', key: '28.10.2023', title: '28', align: 'center', width: 5,
+    field: '28.10.2023', key: '28.10.2023', title: '28', align: 'center', width: 50,
   },
   {
-    field: '29.10.2023', key: '29.10.2023', title: '29', align: 'center', width: 5,
+    field: '29.10.2023', key: '29.10.2023', title: '29', align: 'center', width: 50,
   },
   {
-    field: '30.10.2023', key: '30.10.2023', title: '30', align: 'center', width: 5,
+    field: '30.10.2023', key: '30.10.2023', title: '30', align: 'center', width: 50,
   },
   {
-    field: '31.10.2023', key: '31.10.2023', title: '31', align: 'center', width: 5,
+    field: '31.10.2023', key: '31.10.2023', title: '31', align: 'center', width: 50,
   },
 ]);
 const employees = ref([
@@ -212,7 +244,7 @@ const filteredEmployees = computed(() => employees.value.filter(employee => {
   margin: 20px auto;
 }
 .main {
-  width: 95%;
+  width: 100%;
   margin: 0 auto;
 }
 .four-col {
