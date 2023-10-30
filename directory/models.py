@@ -292,6 +292,7 @@ class Researches(models.Model):
     enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
     oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
+    oid_title = models.CharField(max_length=255, default="", db_index=True, help_text="oid-название документа 1.2.643.5.1.13.13.11.1520")
     uet_refferal_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
