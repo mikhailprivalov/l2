@@ -140,7 +140,6 @@ def directions_generate(request):
         type_generate = p.get("type")
         researches = p.get("researches")
 
-
         args = [
             card_pk,
             p.get("diagnos"),
