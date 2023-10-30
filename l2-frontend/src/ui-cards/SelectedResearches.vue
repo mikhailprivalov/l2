@@ -387,7 +387,7 @@
           title="Рассчитать стоимость"
           @click="generate('calculate-cost')"
         >
-          <span>Счёт</span>
+          <span>Сумма</span>
         </button>
       </template>
     </div>
