@@ -139,9 +139,7 @@ class ResXmlresearchTemplates(admin.ModelAdmin):
         'research',
         'type_xml',
     )
-    search_fields = (
-        'research',
-    )
+    search_fields = ('research',)
 
 
 class RefSiteType(admin.ModelAdmin):
