@@ -4,7 +4,8 @@ from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
     ParaclinicInputField,
-    PatientControlParam, XmlresearchTemplates,
+    PatientControlParam,
+    XmlresearchTemplates,
 )
 import simplejson as json
 
