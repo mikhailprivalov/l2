@@ -66,8 +66,17 @@ from directions.models import (
     GeneratorValuesAreOver,
     NoGenerator,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService, XmlresearchTemplates, \
-    TypeXmlresearchTemplates
+from directory.models import (
+    Fractions,
+    ParaclinicInputGroups,
+    ParaclinicTemplateName,
+    ParaclinicInputField,
+    HospitalService,
+    Researches,
+    AuxService,
+    XmlresearchTemplates,
+    TypeXmlresearchTemplates,
+)
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
