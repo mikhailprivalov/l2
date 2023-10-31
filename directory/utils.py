@@ -1,13 +1,17 @@
+import os
+
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
     ParaclinicInputField,
-    PatientControlParam,
+    PatientControlParam, XmlresearchTemplates,
 )
 import simplejson as json
 
 from external_system.models import InstrumentalResearchRefbook, CdaFields
 from external_system.sql_func import get_unique_method_instrumental_diagnostic
+from laboratory.settings import BASE_DIR
+from utils.dates import normalize_dash_date
 
 
 def get_researches_details(pk):
@@ -113,3 +117,26 @@ def get_can_created_patient():
     researches = DResearches.objects.filter(can_created_patient=True, hide=False)
     result = [{"pk": i.pk, "title": i.get_title(), "isRequest": i.convert_to_doc_call} for i in researches]
     return result
+
+
+def internal_gen_cda_xml(xml_template: XmlresearchTemplates, data):
+    xml_data = xml_template.template
+    xml_rule_replace_file = xml_template.xml_rule_replace_file
+    file_dir = os.path.join(BASE_DIR, 'directory', 'template_xml_rule', xml_rule_replace_file)
+    f = open(file_dir)
+    for line in f:
+        xml_data = eval(line)
+
+    if (data['patient']['gender']).lower() == "ж":
+        sex_code = "2"
+        sex_title = "Женский"
+    else:
+        sex_code = "1"
+        sex_title = "Мужской"
+
+    xml_data = xml_data.replace("{{patient_sex_code}}", sex_code)
+    xml_data = xml_data.replace("{{patient_sex_title}}", sex_title)
+    date_dots = normalize_dash_date(str(data['document']['content']['Дата осмотра']))
+    xml_data.replace("{{дата_осмотра_dd.mm.yyyy}}", date_dots)
+
+    return xml_data

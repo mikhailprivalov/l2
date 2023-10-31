@@ -6,6 +6,7 @@ from typing import Optional
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory, PriceCoast
+from directory.utils import internal_gen_cda_xml
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
@@ -65,7 +66,8 @@ from directions.models import (
     GeneratorValuesAreOver,
     NoGenerator,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService, XmlresearchTemplates, \
+    TypeXmlresearchTemplates
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -3862,12 +3864,18 @@ def eds_documents(request):
                 filename = f'{pk}-{last_time_confirm}.pdf'
                 file = ContentFile(result_print(request_tuple(**req)), filename)
             elif d.file_type == DirectionDocument.CDA and "generatorName" in cda_eds_data:
+                cda_xml = None
                 if SettingManager.l2('l2vi'):
                     cda_data = gen_cda_xml(pk=pk)
                     cda_xml = cda_data.get('result', {}).get('content')
                 elif SettingManager.l2('cdator'):
-                    cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
-                    cda_xml = cda_data.get('result', {}).get('content')
+                    type_xml = TypeXmlresearchTemplates.objects.filter(title='cda').first()
+                    if XmlresearchTemplates.objects.filter(research=iss_obj.research, type_xml=type_xml):
+                        xml_gen_template = XmlresearchTemplates.objects.filter(research=iss_obj.research, type_xml=type_xml).first()
+                        cda_xml = internal_gen_cda_xml(xml_gen_template, cda_eds_data["data"])
+                    else:
+                        cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
+                        cda_xml = cda_data.get('result', {}).get('content')
                 else:
                     cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
                 filename = f"{pk}–{last_time_confirm}.cda.xml"

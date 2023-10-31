@@ -124,6 +124,26 @@ class RefResearch(admin.ModelAdmin):
     )
 
 
+class ResXmlresearchTemplates(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'research',
+        'type_xml',
+    )
+    list_display_links = (
+        'title',
+        'research',
+        'type_xml',
+    )
+    list_filter = (
+        'research',
+        'type_xml',
+    )
+    search_fields = (
+        'research',
+    )
+
+
 class RefSiteType(admin.ModelAdmin):
     list_display = (
         'title',
@@ -302,3 +322,5 @@ admin.site.register(models.Phenotype, PhenotypeAdmin)
 admin.site.register(models.SetResearch, SetResearchAdmin)
 admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
 admin.site.register(models.AuxService, SetAuxService)
+admin.site.register(models.XmlresearchTemplates, ResXmlresearchTemplates)
+admin.site.register(models.TypeXmlresearchTemplates)

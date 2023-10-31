@@ -477,6 +477,32 @@ class Researches(models.Model):
         return self.site_type_id
 
 
+class TypeXmlresearchTemplates(models.Model):
+    title = models.CharField(max_length=30, db_index=True, blank=True, default="", null=True, help_text="Тип шаблона")
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Тип xml-шаблон'
+        verbose_name_plural = 'Типы xml-шаблонов'
+
+
+class XmlresearchTemplates(models.Model):
+    title = models.CharField(max_length=30, db_index=True, blank=True, default="", null=True, help_text="Название")
+    research = models.ForeignKey(Researches, help_text="Услуга", on_delete=models.CASCADE, db_index=True)
+    template = models.TextField(default='', blank=True)
+    xml_rule_replace_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="Название файла правил замены")
+    type_xml = models.ForeignKey(TypeXmlresearchTemplates, help_text="Тип шаблон", on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return f"{self.research.title}"
+
+    class Meta:
+        verbose_name = 'xml-шаблон'
+        verbose_name_plural = 'xml-шаблоны'
+
+
 class HospitalService(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
