@@ -380,9 +380,7 @@ def auto_load_result(request, research, doc_profile):
                                                     continue
                                 directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
 
-                    eds_documents_data = json.dumps(
-                        {'pk': direction.pk}
-                    )
+                    eds_documents_data = json.dumps({'pk': direction.pk})
                     eds_documents_obj = HttpRequest()
                     eds_documents_obj._body = eds_documents_data
                     eds_documents_obj.user = request.user
