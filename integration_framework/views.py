@@ -121,8 +121,6 @@ def next_result_direction(request):
     else:
         is_research = -1
     dirs, dirs_eds = None, None
-    researches = [832]
-    only_signed = "1"
     if only_signed == "1":
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at
@@ -137,7 +135,6 @@ def next_result_direction(request):
     elif dirs_eds:
         naprs = list(set([d[0] for d in dirs_eds]))
         next_time = dirs_eds[-1][2]
-    print(naprs)
 
     return Response({"next": naprs, "next_time": next_time, "n": next_n, "fromPk": from_pk, "afterDate": after_date})
 
