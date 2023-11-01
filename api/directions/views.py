@@ -4029,7 +4029,6 @@ def eds_to_sign(request):
         ldc = d.last_doc_confirm()
         signs_required = d.eds_required_signature_types
 
-
         for r in d.eds_required_documents:
             dd: DirectionDocument = DirectionDocument.objects.filter(direction=d, is_archive=False, last_confirmed_at=ltc, file_type=r.lower()).first()
             has_signatures = []
