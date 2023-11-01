@@ -121,7 +121,6 @@ def next_result_direction(request):
     else:
         is_research = -1
     dirs, dirs_eds = None, None
-
     if only_signed == "1":
         # TODO: вернуть только подписанные и как дату next_time использовать дату подписания, а не подтверждения
         # признак – eds_total_signed=True, датавремя полного подписания eds_total_signed_at

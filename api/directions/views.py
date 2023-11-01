@@ -3273,6 +3273,7 @@ def results_by_direction(request):
         directions = [direction]
     objs_result = {}
     if is_lab:
+        directions = tuple(directions)
         direction_result = get_laboratory_results_by_directions(directions)
 
         for r in direction_result:
@@ -4007,7 +4008,6 @@ def eds_to_sign(request):
 
         if len(REMD_EXCLUDE_RESEARCH) > 0:
             d_qs = d_qs.exclude(issledovaniya__research_id__in=REMD_EXCLUDE_RESEARCH)
-
         if status == 'ok-full':
             d_qs = d_qs.filter(eds_total_signed=True)
         elif status == 'ok-role':
