@@ -7,6 +7,7 @@ from copy import deepcopy
 
 from django.http import HttpRequest, JsonResponse
 
+from api.directions.views import eds_documents
 from api.models import Application
 
 from api.parse_file.pdf import extract_text_from_pdf
@@ -339,6 +340,9 @@ def auto_load_result(request, research, doc_profile):
                         polis_who_give=card.polis.who_give if card.polis else None,
                         polis_n=card.polis.number if card.polis else None,
                         hospital=doc_profile.hospital,
+                        total_confirmed=True,
+                        last_confirmed_at=timezone.now(),
+                        eds_required_signature_types=['Врач', 'Медицинская организация'],
                     )
 
                     iss = directions.Issledovaniya.objects.create(
@@ -375,6 +379,13 @@ def auto_load_result(request, research, doc_profile):
                                                     data_result[f.title] = res
                                                     continue
                                 directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
+
+                    eds_documents_data = json.dumps({'pk': direction.pk})
+                    eds_documents_obj = HttpRequest()
+                    eds_documents_obj._body = eds_documents_data
+                    eds_documents_obj.user = request.user
+                    eds_documents(eds_documents_obj)
+
             except Exception as e:
                 logger.exception(e)
                 message = "Серверная ошибка"
