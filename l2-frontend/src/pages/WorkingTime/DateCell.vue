@@ -1,38 +1,45 @@
 <template>
   <div>
-    <button ref="btn">
-      fff
-    </button>
+    <Treeselect
+      v-model="selectTemplate"
+      :options="templatesWorkTime"
+      @change=""
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, defineComponent, reactive, ref, watch,
+  computed, defineComponent, onMounted, ref, watch,
 } from 'vue';
-import { useTippy } from './vue-tippy';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 const props = defineProps({
-  text: {
-    type: String,
+  workTime: {
+    type: Object,
     required: true,
   },
 });
-const btn = ref(null);
-const options = reactive({
-  content: 'reactive',
-  placement: 'top',
-});
-useTippy(btn, options);
+
+const selectTemplate = ref(-1);
+const templatesWorkTime = ref([
+  { id: 1, label: '8:00-16:30' },
+  { id: 2, label: '8:00-15:48' },
+]);
 const data = ref('');
 
 const timeStart = ref('');
 const timeEnd = ref('');
-
-watch([timeStart, timeEnd], (newData, prevData) => {
-  console.log(prevData);
-  console.log(newData);
-  data.value = `${newData[0]}-${newData[1]}`;
+const appendTemplates = () => {
+  const start = props.workTime.startWorkTime;
+  const end = props.workTime.endWorkTime;
+  templatesWorkTime.value.push({ id: 3, label: `${start}-${end}` });
+  selectTemplate.value = 3;
+};
+onMounted(() => {
+  appendTemplates();
 });
 </script>
 

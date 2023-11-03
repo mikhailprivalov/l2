@@ -19,38 +19,6 @@
           class="treeselect-wide"
         />
       </div>
-      <div class="filters">
-        <div>
-          <li
-            v-tippy="{
-              placement: 'right',
-              html: 'vtp3',
-              arrow: true,
-              reactive: true,
-              theme: 'light bordered',
-              popperOptions: {
-                modifiers: {
-                  preventOverflow: {
-                    boundariesElement: 'window',
-                  },
-                  hide: {
-                    enabled: false,
-                  },
-                },
-              },
-              interactive: true,
-            }"
-          >
-            fff
-          </li>
-        </div>
-        <div
-          id="vtp3"
-          class="tp"
-        >
-          <p>{{ 'ура!!!!' }}</p>
-        </div>
-      </div>
     </div>
     <div>
       <label>Поиск сотрудника</label>
@@ -76,7 +44,7 @@
 
 <script setup lang="ts">
 import {
-  computed, defineComponent, defineProps, onMounted, ref, useCssModule,
+  computed, defineProps, onMounted, ref, useCssModule,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
@@ -88,7 +56,6 @@ import api from '@/api';
 import { useStore } from '@/store';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 
-const cellComponent = defineComponent(DateCell);
 const selectedMonth = ref(1);
 const months = ref([
   { id: 1, label: 'Октябрь 2023' },
@@ -127,7 +94,7 @@ const columns = ref([
     title: '1',
     align: 'center',
     width: 5,
-    renderBodyCell: ({ row }, h) => h(cellComponent, { props: { text: '3' } }, '4'),
+    renderBodyCell: ({ row, column }, h) => h(DateCell, { props: { workTime: row[column.field] } }),
   },
   {
     field: '02.10.2023', key: '02.10.2023', title: '2', align: 'center', width: 50,
@@ -227,7 +194,7 @@ const employees = ref([
     bidType: 'осн.',
     normMonth: '178',
     shiftDuration: '8',
-    '01.10.2023': '8',
+    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
 ]);
