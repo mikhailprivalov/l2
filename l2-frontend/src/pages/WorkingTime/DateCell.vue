@@ -4,6 +4,8 @@
       v-model="selectTemplate"
       :options="templatesWorkTime"
       value-format="object"
+      :append-to-body="true"
+      @input="changeTemplate"
     />
   </div>
 </template>
@@ -26,6 +28,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  columnKey: {
+    type: String,
+    required: true,
+  },
 });
 
 const selectTemplate = ref(null);
@@ -37,7 +43,7 @@ const data = ref('');
 
 const timeStart = ref('');
 const timeEnd = ref('');
-const appendTemplates = () => {
+const appendCurrentTemplates = () => {
   const start = props.workTime.startWorkTime;
   const end = props.workTime.endWorkTime;
   const currentWorkTime = { id: 3, label: `${start}-${end}` };
@@ -45,19 +51,23 @@ const appendTemplates = () => {
   selectTemplate.value = currentWorkTime;
 };
 const changeTemplate = () => {
-  const workTime = selectTemplate.value?.label?.split('-');
-  const start = workTime[0];
-  const end = workTime[1];
-  console.log('сейчас отправим emit');
-  emit('changeWorkTime', { start, end, rowIndex: props.rowIndex });
+  if (selectTemplate.value) {
+    console.log('мы зашли в проверку1');
+    const workTime = selectTemplate.value?.label?.split('-');
+    const start = workTime[0];
+    const end = workTime[1];
+    console.log(start, props.workTime.startWorkTime);
+    console.log(end, props.workTime.endWorkTime);
+    if (start !== props.workTime.startWorkTime || end !== props.workTime.endWorkTime) {
+      emit('changeWorkTime', {
+        start, end, rowIndex: props.rowIndex, columnKey: props.columnKey,
+      });
+    }
+  }
 };
-watch(selectTemplate, (newTemplate) => {
-  console.log('Мы запустили watch');
-  changeTemplate();
-});
 
 onMounted(() => {
-  appendTemplates();
+  appendCurrentTemplates();
 });
 </script>
 

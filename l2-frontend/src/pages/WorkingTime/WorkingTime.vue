@@ -72,13 +72,25 @@ const departments = ref([
 ]);
 
 const search = ref('');
-const changeWorkTime = (data) => {
-  console.log('Мы получили emit');
-  console.log(data);
-};
 
-const cellStyleOption = {
-  bodyCellClass: () => 'table-body-cell-class1',
+const employees = ref([
+  {
+    fio: 'Антонюк Г.Р',
+    position: 'Техник',
+    bidType: 'осн.',
+    normMonth: '178',
+    shiftDuration: '8',
+    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
+    '02.10.2023': '8',
+  },
+]);
+
+const changeWorkTime = (workTime: object) => {
+  console.log('Мы получили emit');
+  const {
+    start, end, rowIndex, columnKey,
+  } = workTime;
+  employees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
 };
 
 const columns = ref([
@@ -106,12 +118,8 @@ const columns = ref([
     renderBodyCell: ({ row, column, rowIndex }, h) => h(
       DateCell,
       {
-        props: { workTime: row[column.field], rowIndex },
-      },
-      {
-        changeWorkTime(event) {
-          console.log('УРА!', event);
-        },
+        props: { workTime: row[column.field], rowIndex, columnKey: column.key },
+        on: { changeWorkTime },
       },
     ),
   },
@@ -206,22 +214,17 @@ const columns = ref([
     field: '31.10.2023', key: '31.10.2023', title: '31', align: 'center', width: 50,
   },
 ]);
-const employees = ref([
-  {
-    fio: 'Антонюк Г.Р',
-    position: 'Техник',
-    bidType: 'осн.',
-    normMonth: '178',
-    shiftDuration: '8',
-    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
-    '02.10.2023': '8',
-  },
-]);
+
 const filteredEmployees = computed(() => employees.value.filter(employee => {
   const employeesFio = employee.fio?.toLowerCase();
   const searchTerm = search.value.toLowerCase();
   return employeesFio.includes(searchTerm);
 }));
+
+const cellStyleOption = {
+  bodyCellClass: () => 'table-body-cell-class1',
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -245,6 +248,9 @@ const filteredEmployees = computed(() => employees.value.filter(employee => {
   margin: 0 10px;
 }
 .table-body-cell-class1 {
+  td {
+    height: 200px !important;
+  }
   height: 200px !important;
 }
 </style>
