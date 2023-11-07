@@ -31,6 +31,7 @@
       <VeTable
         :columns="columns"
         :table-data="filteredEmployees"
+        :cell-style-option="cellStyleOption"
       />
       <div
         v-show="filteredEmployees.length === 0"
@@ -71,6 +72,14 @@ const departments = ref([
 ]);
 
 const search = ref('');
+const changeWorkTime = (data) => {
+  console.log('Мы получили emit');
+  console.log(data);
+};
+
+const cellStyleOption = {
+  bodyCellClass: () => 'table-body-cell-class1',
+};
 
 const columns = ref([
   {
@@ -93,8 +102,18 @@ const columns = ref([
     key: '01.10.2023',
     title: '1',
     align: 'center',
-    width: 5,
-    renderBodyCell: ({ row, column }, h) => h(DateCell, { props: { workTime: row[column.field] } }),
+    width: 200,
+    renderBodyCell: ({ row, column, rowIndex }, h) => h(
+      DateCell,
+      {
+        props: { workTime: row[column.field], rowIndex },
+      },
+      {
+        changeWorkTime(event) {
+          console.log('УРА!', event);
+        },
+      },
+    ),
   },
   {
     field: '02.10.2023', key: '02.10.2023', title: '2', align: 'center', width: 50,
@@ -224,5 +243,8 @@ const filteredEmployees = computed(() => employees.value.filter(employee => {
 }
 .filters {
   margin: 0 10px;
+}
+.table-body-cell-class1 {
+  height: 200px !important;
 }
 </style>

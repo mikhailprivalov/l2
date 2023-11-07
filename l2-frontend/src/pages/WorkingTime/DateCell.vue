@@ -3,7 +3,7 @@
     <Treeselect
       v-model="selectTemplate"
       :options="templatesWorkTime"
-      @change=""
+      value-format="object"
     />
   </div>
 </template>
@@ -16,14 +16,19 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+const emit = defineEmits(['changeWorkTime']);
 const props = defineProps({
   workTime: {
     type: Object,
     required: true,
   },
+  rowIndex: {
+    type: Number,
+    required: true,
+  },
 });
 
-const selectTemplate = ref(-1);
+const selectTemplate = ref(null);
 const templatesWorkTime = ref([
   { id: 1, label: '8:00-16:30' },
   { id: 2, label: '8:00-15:48' },
@@ -35,9 +40,22 @@ const timeEnd = ref('');
 const appendTemplates = () => {
   const start = props.workTime.startWorkTime;
   const end = props.workTime.endWorkTime;
-  templatesWorkTime.value.push({ id: 3, label: `${start}-${end}` });
-  selectTemplate.value = 3;
+  const currentWorkTime = { id: 3, label: `${start}-${end}` };
+  templatesWorkTime.value.push(currentWorkTime);
+  selectTemplate.value = currentWorkTime;
 };
+const changeTemplate = () => {
+  const workTime = selectTemplate.value?.label?.split('-');
+  const start = workTime[0];
+  const end = workTime[1];
+  console.log('сейчас отправим emit');
+  emit('changeWorkTime', { start, end, rowIndex: props.rowIndex });
+};
+watch(selectTemplate, (newTemplate) => {
+  console.log('Мы запустили watch');
+  changeTemplate();
+});
+
 onMounted(() => {
   appendTemplates();
 });
