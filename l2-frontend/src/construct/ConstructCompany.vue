@@ -9,7 +9,7 @@
           v-if="!isNewCompany"
           class="text-center"
         >
-          {{ originShortTitle }}
+          {{ originShortTitle }} (<strong>UUID:</strong> {{ company_uuid }})
         </h6>
         <div class="margin-right margin-left">
           <FormulateForm
@@ -443,6 +443,7 @@ export default {
       excludedResearches: [],
       researches: [],
       month: false,
+      company_uuid: '',
     };
   },
   computed: {
@@ -511,6 +512,7 @@ export default {
       await this.getDepartments(company.pk);
       this.editorCompany = this.currentCompany.data;
       this.originShortTitle = this.editorCompany.shortTitle;
+      this.company_uuid = this.editorCompany.uuid;
     },
     clearEditCompany() {
       this.getContracts();
