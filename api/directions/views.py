@@ -5,7 +5,7 @@ from typing import Optional
 
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
-from contracts.models import PriceCategory
+from contracts.models import PriceCategory, PriceCoast
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
@@ -137,6 +137,9 @@ def directions_generate(request):
             return JsonResponse(result)
         fin_source = p.get("fin_source", -1)
         fin_source_pk = int(fin_source) if (isinstance(fin_source, int) or str(fin_source).isdigit()) else fin_source
+        type_generate = p.get("type")
+        researches = p.get("researches")
+
         args = [
             card_pk,
             p.get("diagnos"),
@@ -144,7 +147,7 @@ def directions_generate(request):
             p.get("history_num"),
             p.get("ofname_pk"),
             request.user.doctorprofile,
-            p.get("researches"),
+            researches,
             p.get("comments"),
             p.get("for_rmis"),
             p.get("rmis_data", {}),
@@ -168,6 +171,19 @@ def directions_generate(request):
             case_id=p.get("caseId", -2),
             case_by_direction=p.get("caseByDirection", False),
         )
+        if type_generate == "calculate-cost":
+            fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()
+            calculate_researches = []
+            for values in researches.values():
+                calculate_researches.extend(values)
+            result_coast = 0
+            if fin_source_obj.title.lower() in ["платно", "средства граждан"]:
+                data_coast = PriceCoast.objects.filter(price_name=fin_source_obj.contracts.price, research_id__in=calculate_researches)
+                for dc in data_coast:
+                    result_coast += dc.coast
+            result = {"ok": True, "directions": [], "directionsStationar": [], "message": result_coast}
+            return JsonResponse(result)
+
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
             result["ok"] = rc["r"]
@@ -3257,6 +3273,7 @@ def results_by_direction(request):
         directions = [direction]
     objs_result = {}
     if is_lab:
+        directions = tuple(directions)
         direction_result = get_laboratory_results_by_directions(directions)
 
         for r in direction_result:
@@ -3991,7 +4008,6 @@ def eds_to_sign(request):
 
         if len(REMD_EXCLUDE_RESEARCH) > 0:
             d_qs = d_qs.exclude(issledovaniya__research_id__in=REMD_EXCLUDE_RESEARCH)
-
         if status == 'ok-full':
             d_qs = d_qs.filter(eds_total_signed=True)
         elif status == 'ok-role':

@@ -172,6 +172,7 @@ class SettingManager:
                     "hide_show_count_param",
                     "fraction_comment",
                     "required_choose_case",
+                    "calculate_researches",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
