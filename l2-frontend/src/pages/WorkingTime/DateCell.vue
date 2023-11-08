@@ -1,18 +1,24 @@
 <template>
-  <div>
+  <div class="flex">
     <Treeselect
       v-model="selectTemplate"
       :options="templatesWorkTime"
       value-format="object"
       :append-to-body="true"
-      @input="changeTemplate"
+      @input="changeWorkTime"
     />
+    <button class="transparentButton">
+      <i
+        class="fa fa-clock-o"
+        aria-hidden="true"
+      />
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, defineComponent, onMounted, ref, watch,
+  onMounted, ref,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -39,25 +45,25 @@ const templatesWorkTime = ref([
   { id: 1, label: '8:00-16:30' },
   { id: 2, label: '8:00-15:48' },
 ]);
-const data = ref('');
 
-const timeStart = ref('');
-const timeEnd = ref('');
-const appendCurrentTemplates = () => {
+const appendCurrentTime = () => {
   const start = props.workTime.startWorkTime;
   const end = props.workTime.endWorkTime;
-  const currentWorkTime = { id: 3, label: `${start}-${end}` };
-  templatesWorkTime.value.push(currentWorkTime);
-  selectTemplate.value = currentWorkTime;
+  const workTimeLabel = `${start}-${end}`;
+  const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === workTimeLabel);
+  if (templateCurrentWorkTime) {
+    selectTemplate.value = templateCurrentWorkTime;
+  } else {
+    const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: workTimeLabel };
+    templatesWorkTime.value.push(currentWorkTime);
+    selectTemplate.value = currentWorkTime;
+  }
 };
-const changeTemplate = () => {
+const changeWorkTime = () => {
   if (selectTemplate.value) {
-    console.log('мы зашли в проверку1');
     const workTime = selectTemplate.value?.label?.split('-');
     const start = workTime[0];
     const end = workTime[1];
-    console.log(start, props.workTime.startWorkTime);
-    console.log(end, props.workTime.endWorkTime);
     if (start !== props.workTime.startWorkTime || end !== props.workTime.endWorkTime) {
       emit('changeWorkTime', {
         start, end, rowIndex: props.rowIndex, columnKey: props.columnKey,
@@ -67,35 +73,29 @@ const changeTemplate = () => {
 };
 
 onMounted(() => {
-  appendCurrentTemplates();
+  appendCurrentTime();
 });
 </script>
 
 <style scoped lang="scss">
-.main {
+.flex {
   display: flex;
   flex-wrap: nowrap;
-  flex-direction: row;
 }
-.input-hour {
-  width: 100%;
-  flex-grow: 1;
+.transparentButton {
+  background-color: transparent;
+  color: #434A54;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
 }
-.tp {
-  min-height: 400px;
-  text-align: left;
-  padding: 1px;
-
-  table {
-    margin: 0;
-  }
-
-  max-height: 700px;
-  width: 900px;
-  overflow-y: auto;
-
-  &-inner {
-    overflow: visible;
-  }
+.transparentButton:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+  border: none;
+}
+.transparentButton:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>
