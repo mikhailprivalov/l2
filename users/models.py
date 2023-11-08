@@ -42,6 +42,7 @@ class Position(models.Model):
     hide = models.BooleanField(help_text='Скрытие', default=False)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
 
     def __str__(self):
         return self.title

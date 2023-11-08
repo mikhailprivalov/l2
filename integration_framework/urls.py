@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 
 from . import views
 
@@ -59,4 +59,5 @@ urlpatterns = [
     path('get-price-data', views.get_price_data),
     path('get-prices-by-date', views.get_prices_by_date),
     path('get-reference-books', views.get_reference_books),
+    path('researches/', include('integration_framework.researches.urls')),
 ]

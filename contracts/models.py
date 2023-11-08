@@ -198,6 +198,7 @@ class CompanyDepartment(models.Model):
     title = models.CharField(max_length=511, help_text='Наименование отдела', db_index=True)
     hide = models.BooleanField(default=False, help_text='Скрыть', db_index=True)
     company = models.ForeignKey(Company, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
