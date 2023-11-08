@@ -1,8 +1,5 @@
 <template>
-  <div>
-    <h4>
-      Прайс
-    </h4>
+  <div class="negative-margin-top">
     <div class="radio-button-object">
       <RadioField
         v-model="searchTypesObject"
@@ -113,6 +110,20 @@
                 {{ priceIsSelected ? 'Сохранить' : 'Добавить' }}
               </button>
             </div>
+          </td>
+        </tr>
+        <tr
+          v-if="priceIsSelected"
+          class="height-row border"
+        >
+          <td class="border text-center">
+            <strong>UUID</strong>
+          </td>
+          <td
+            class=" padding-left"
+            :colspan="priceIsActive ? 4 : 3"
+          >
+            {{ priceData.uuid }}
           </td>
         </tr>
       </table>
@@ -256,6 +267,7 @@
           <col>
           <col width="100">
           <col width="100">
+          <col width="100">
         </colgroup>
         <tr>
           <td class="border">
@@ -371,6 +383,7 @@ export default {
           start: '',
           end: '',
           company: null,
+          uuid: '',
         };
         this.activeStatus.ok = true;
       } else {
@@ -572,9 +585,8 @@ export default {
   width: 50%;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 2%;
-  margin-bottom: 2%;
-  alignment: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 ::v-deep .form-control {
@@ -590,7 +602,7 @@ export default {
   table-layout: fixed;
 }
 .margin-bottom {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 .border {
   border: 1px solid #ddd;
@@ -603,11 +615,11 @@ export default {
   border: 0;
 }
 .edit-price {
-  margin: 20px 0;
+  margin: 10px 0;
 }
 .scroll {
   min-height: 106px;
-  max-height: calc(100vh - 600px);
+  max-height: calc(100vh - 463px);
   overflow-y: auto;
 }
 .sticky {
@@ -661,5 +673,11 @@ export default {
 }
 .r-padding {
   padding-right: 10px;
+}
+.negative-margin-top {
+  margin-top: -20px;
+}
+.height-row {
+  height: 37px;
 }
 </style>
