@@ -32,7 +32,7 @@
         </div>
       </div>
     </div>
-    <div>
+    <div v-if="filtersIsFilled">
       <label>Поиск сотрудника</label>
       <input
         v-model.trim="search"
@@ -40,11 +40,14 @@
       >
     </div>
     <div
+      v-if="filtersIsFilled"
       class="white-background"
     >
       <VeTable
         :columns="columns"
         :table-data="filteredEmployees"
+        :row-style-option="rowStyleOption"
+        :cell-style-option="cellStyleOption"
       />
       <div
         v-show="filteredEmployees.length === 0"
@@ -104,6 +107,9 @@ const departments = ref([
   { id: 3, label: 'Гастроэнтерология' },
 ]);
 
+const filtersIsFilled = computed(() => !!(selectedDepartment.value && (selectedMonth.value || selectedMonth.value === 0)
+  && selectedYear.value));
+
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
   // const { ok, message } = await api('/working-time/get-columns');
@@ -123,6 +129,24 @@ const employees = ref([
     '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
+  {
+    fio: 'Касьяненко С.Н.',
+    position: 'Начальник',
+    bidType: 'осн.',
+    normMonth: '178',
+    shiftDuration: '8',
+    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
+    '02.10.2023': '8',
+  },
+  {
+    fio: 'Димитров С.Н.',
+    position: 'Техник',
+    bidType: 'осн.',
+    normMonth: '178',
+    shiftDuration: '8',
+    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
+    '02.10.2023': '8',
+  },
 ]);
 
 const changeWorkTime = (workTime: object) => {
@@ -132,8 +156,20 @@ const changeWorkTime = (workTime: object) => {
   employees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
 };
 
-const columns = ref([
-  {
+const columns = ref([]);
+
+const getMonthDays = (year: number, month: number) => {
+  const days = [];
+  const date = new Date(year, month);
+  while (date.getMonth() === month) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
+  }
+  return days;
+};
+
+const getColumns = () => {
+  const columnTemplate = [{
     field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 100,
   },
   {
@@ -147,40 +183,31 @@ const columns = ref([
   },
   {
     field: 'shiftDuration', key: 'shiftDuration', title: 'Смена', align: 'center', width: 30,
-  },
-]);
-
-const getDaysMonth = (year: number, month: number) => {
-  const days = [];
-  const date = new Date(year, month);
-  while (date.getMonth() === month) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
-
-const getColumns = () => {
-  if (selectedYear.value && selectedMonth.value) {
-    const daysMonth = getDaysMonth(Number(selectedYear.value.label), selectedMonth.value);
+  }];
+  if (filtersIsFilled.value) {
+    const daysMonth = getMonthDays(Number(selectedYear.value.label), selectedMonth.value);
     const data = daysMonth.map((col) => {
-      const dateString = `${col.getDate()}.${col.getMonth()}.${col.getFullYear()}`;
+      const date = col.toLocaleDateString();
+      const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
+      const weekend = [6, 0].includes(col.getDay());
       return {
-        key: dateString,
-        field: dateString,
-        title: dateString,
+        key: date,
+        field: date,
+        title: dateTitle,
         align: 'center',
-        width: 325,
+        width: 385,
+        isWeekend: weekend,
         renderBodyCell: ({ row, column, rowIndex }, h) => h(
           DateCell,
           {
-            props: { workTime: row[column.field], rowIndex, columnKey: column.key },
+            props: { workTime: row[column.field] ? row[column.field] : '', rowIndex, columnKey: column.key },
             on: { changeWorkTime },
           },
         ),
       };
     });
-    columns.value.push(...data);
+    columnTemplate.push(...data);
+    columns.value = columnTemplate;
   }
 };
 
@@ -189,6 +216,25 @@ const filteredEmployees = computed(() => employees.value.filter(employee => {
   const searchTerm = search.value.toLowerCase();
   return employeesFio.includes(searchTerm);
 }));
+
+const cellStyleOption = {
+  bodyCellClass: ({ column }) => {
+    if (column.isWeekend) {
+      return 'table-body-cell-weekend';
+    }
+    return '';
+  },
+  headerCellClass: ({ column }) => {
+    if (column.isWeekend) {
+      return 'table-header-cell-weekend';
+    }
+    return 'table-header-cell-weekday';
+  },
+};
+
+const rowStyleOption = {
+  stripe: true,
+};
 
 watch([selectedMonth, selectedYear], (newSelectedMonth, newSelectedYear) => {
   getColumns();
@@ -226,4 +272,18 @@ onMounted(() => {
 .filters {
   margin: 0 10px;
 }
+</style>
+
+<style lang="scss">
+.table-body-cell-weekend {
+  background: #ade0a875 !important;
+}
+.table-header-cell-weekend {
+  background: #ade0a875 !important;
+  padding-right: 35px !important;
+}
+.table-header-cell-weekday {
+  padding-right: 35px !important;
+}
+
 </style>
