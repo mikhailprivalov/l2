@@ -44,6 +44,7 @@
       class="white-background"
     >
       <VeTable
+        id="loading-container"
         :columns="columns"
         :table-data="filteredEmployees"
         :row-style-option="rowStyleOption"
@@ -63,7 +64,7 @@
 import {
   computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
-import { VeTable } from 'vue-easytable';
+import { VeTable, VeLoading } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -75,6 +76,9 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import * as actions from '@/store/action-types';
 
 const root = getCurrentInstance().proxy.$root;
+
+let loadingInstance: VeLoading | null = null;
+
 const store = useStore();
 
 const selectedMonth = ref(null);
@@ -243,6 +247,7 @@ watch([selectedMonth, selectedYear], (newSelectedMonth, newSelectedYear) => {
 onMounted(() => {
   getDepartments();
   getColumns();
+  loadingInstance = $ve
 });
 
 </script>
