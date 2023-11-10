@@ -610,6 +610,7 @@ def data_research_exam_patient(request, set_research):
         "patronymic": "отчество",
         "current_age": "возраст текущий",
         "year_age": "возраст в году",
+        "snils": "СНИЛС",
         **head_research_data,
     }
 

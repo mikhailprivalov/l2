@@ -21,6 +21,7 @@ from contracts.models import PriceCategory, PriceCoast, PriceName
 from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
+from ftp_orders.main import ServiceNotFoundException, InvalidOrderNumberException, FailedCreatingDirectionsException
 from integration_framework.authentication import can_use_schedule_only
 
 from laboratory import settings
@@ -116,6 +117,9 @@ def next_result_direction(request):
         researches = [x.pk for x in Researches.objects.filter(is_gistology=True)]
     elif type_researches == "paraclinic":
         researches = [x.pk for x in Researches.objects.filter(is_paraclinic=True)]
+    elif type_researches == "is_extract":
+        researches_hosp = [x for x in Researches.objects.filter(is_hospital=True)]
+        researches = [x.pk for x in researches_hosp if x.is_extract()]
     elif type_researches != "*":
         researches = [int(i) for i in type_researches.split(",")]
     else:
@@ -3055,7 +3059,15 @@ def get_price_data(request):
         price = PriceName.get_price_by_id_symbol_code(price_code, price_id)
     if price:
         data_price = PriceCoast.objects.filter(price_name=price)
-        result = [{"title": i.research.title, "shortTtile": i.research.short_title, "coast": i.coast} for i in data_price]
+        result = [
+            {
+                "title": i.research.title,
+                "shortTtile": i.research.short_title,
+                "coast": i.coast,
+                "internalCode": i.research.internal_code,
+                "researchCodeNMU": i.research.code
+            } for i in data_price
+        ]
     return Response({"data": result})
 
 
@@ -3142,3 +3154,211 @@ def get_reference_books(request):
         tmp_result["fractions"] = fractions
         result.append(tmp_result.copy())
     return JsonResponse({"result": result})
+
+
+@api_view(["POST"])
+def send_laboratory_order(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+
+    org = body.get("org", {})
+    code_tfoms = org.get("codeTFOMS")
+    oid_org = org.get("oid")
+
+    if not code_tfoms and not oid_org:
+        return Response({"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"})
+
+    if code_tfoms:
+        hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
+    else:
+        hospital = Hospitals.objects.filter(oid=oid_org).first()
+
+    if not hospital:
+        return Response({"ok": False, "message": "Организация не найдена"})
+
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return Response({"ok": False, "message": "Нет доступа в переданную организацию"})
+
+    patient = body.get("patient", {})
+
+    enp = (patient.get("enp") or "").replace(" ", "")
+    snils = (patient.get("snils") or "").replace(" ", "").replace("-", "")
+
+    if enp and (len(enp) != 16 or not enp.isdigit()):
+        return Response({"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"})
+    if snils and not petrovna.validate_snils(snils):
+        return Response({"ok": False, "message": "patient.snils: не прошёл валидацию"})
+
+
+    lastname = str(patient.get("lastname") or "")
+    firstname = str(patient.get("firstname") or "")
+    patronymic = str(patient.get("patronymic") or "")
+    birthdate = str(patient.get("birthdate") or "")
+    sex = str(patient.get("sex") or "").lower()
+
+    if not enp and not (lastname and firstname and birthdate and sex):
+        return Response({"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.lastname patient.firstname patient.birthdate patient.sex"})
+
+    individual = None
+
+    if lastname and not firstname:
+        return Response({"ok": False, "message": "При передаче lastname должен быть передан и firstname"})
+
+    if firstname and not lastname:
+        return Response({"ok": False, "message": "При передаче firstname должен быть передан и lastname"})
+
+    if firstname and lastname and not birthdate:
+        return Response({"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"})
+
+    if birthdate and (not re.fullmatch(r"\d{4}-\d\d-\d\d", birthdate) or birthdate[0] not in ["1", "2"]):
+        return Response({"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"})
+
+    if birthdate and sex not in ["м", "ж"]:
+        return Response({"ok": False, "message": 'patient.sex должно быть "м" или "ж"'})
+
+    if enp:
+        individuals = Individual.objects.filter(tfoms_enp=enp)
+        if not individuals.exists():
+            individuals = Individual.objects.filter(document__number=enp).filter(Q(document__document_type__title="Полис ОМС") | Q(document__document_type__title="ЕНП"))
+            individual = individuals.first()
+        if not individual:
+            tfoms_data = match_enp(enp)
+            if tfoms_data:
+                individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+                individual_status = "tfoms_match_enp"
+
+            individual = individuals.first()
+
+    if not individual and lastname:
+        tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
+        if tfoms_data:
+            individual_status = "tfoms_match_patient"
+            individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
+
+    if not individual and snils:
+        individuals = Individual.objects.filter(document__number=snils, document__document_type__title="СНИЛС")
+        individual = individuals.first()
+        individual_status = "snils"
+
+    card = None
+    if not individual and lastname:
+        card = Individual.import_from_simple_data(
+            {
+                "family": patient['family'],
+                "name": patient['name'],
+                "patronymic": patient['patronymic'],
+                "sex": patient['sex'],
+                "birthday": patient['birthday'],
+                "snils": patient['snils'],
+            },
+            hospital,
+            patient['internalId'],
+            patient['email'],
+            patient['phone']
+        )
+        card.main_address = patient["mainAddress"]
+        card.fact_address = patient["factAddress"]
+        card.save(update_fields=["main_address", "fact_address"])
+
+
+    if not card:
+        return Response({"ok": False, "message": "Карта не найдена"})
+    pay_data = body.get("payData", {})
+
+    financing_source_title = pay_data.get("financingSourcetitle", "")
+    price_id = pay_data.get("priceId", "")
+
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+
+    if not financing_source:
+        return Response({"ok": False, "message": "Некорректный источник финансирования"})
+
+    order_data = body.get("orderData")
+    order_internal_id = order_data.get("internalId", "")
+
+    if order_internal_id is None:
+        return Response({"ok": False, "message": "Некорректный номер заказа orderData.internalId"})
+
+    tubes = order_data.get("tubes")
+    internal_research_code_by_tube_number = {}
+    additional_order_number_by_service = {}
+    for tube in tubes:
+        tube_number = tube.get("tubeNumber")
+        internal_research_code_by_tube_number[tube_number] = []
+        for data_research in tube.get("researches"):
+            internal_research_code_by_tube_number[tube_number].append(data_research.get("internalCode"))
+            additional_order_number_by_service[data_research.get("internalCode")] = data_research.get("additionalNumber")
+    order_numbers = []
+
+    with transaction.atomic():
+        doc = DoctorProfile.get_system_profile()
+        services_by_order_number = {}
+        services_by_additional_order_num = {}
+        for order_number, services_codes in internal_research_code_by_tube_number.items():
+            for service_code in services_codes:
+                service = Researches.objects.filter(hide=False, internal_code=service_code).first()
+                if not service:
+                    raise ServiceNotFoundException(f"Service {service_code} not found")
+                if order_number not in services_by_order_number:
+                    services_by_order_number[order_number] = []
+                services_by_order_number[order_number].append(service.pk)
+                services_by_additional_order_num[service.pk] = additional_order_number_by_service.get(service_code, "")
+
+        for order_number_str, services in services_by_order_number.items():
+            order_numbers.append(order_number_str)
+
+            if not order_number_str.isdigit():
+                raise InvalidOrderNumberException(f'Number {order_number} is not digit')
+            order_number = int(order_number_str)
+            if order_number <= 0:
+                raise InvalidOrderNumberException(f'Number {order_number} need to be greater than 0')
+            if not directions.NumberGenerator.check_value_for_organization(hospital, order_number):
+                raise InvalidOrderNumberException(f'Number {order_number} not valid. May be NumberGenerator is over or order number exists')
+
+            external_order = directions.RegisteredOrders.objects.create(
+                order_number=order_number,
+                organization=hospital,
+                services=internal_research_code_by_tube_number[order_number_str],
+                patient_card=card,
+                file_name="",
+            )
+            result = Napravleniya.gen_napravleniya_by_issledovaniya(
+                card.pk,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: services},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                external_order=external_order,
+                hospital_override=hospital.pk,
+                services_by_additional_order_num=services_by_additional_order_num,
+                price_name=price_id,
+            )
+
+            if not result['r']:
+                raise FailedCreatingDirectionsException(result.get('message') or "Failed creating directions")
+
+            Log.log(
+                json.dumps(order_numbers),
+                190004,
+                None,
+                {
+                    "org": hospital.safe_short_title,
+                    "content": body,
+                    "service": services,
+                    "directions": result["list_id"],
+                    "card": card.number_with_type(),
+                },
+            )
+
+    return Response({"ok": False, "message": ""})
