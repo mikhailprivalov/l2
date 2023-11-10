@@ -3246,7 +3246,7 @@ def send_laboratory_order(request):
             hospital,
             patient['internalId'],
             patient['email'],
-            patient['phone']
+            patient['phone'],
         )
         card.main_address = patient["mainAddress"]
         card.fact_address = patient["factAddress"]
