@@ -3191,7 +3191,6 @@ def send_laboratory_order(request):
     if snils and not petrovna.validate_snils(snils):
         return Response({"ok": False, "message": "patient.snils: не прошёл валидацию"})
 
-
     lastname = str(patient.get("lastname") or "")
     firstname = str(patient.get("firstname") or "")
     patronymic = str(patient.get("patronymic") or "")
@@ -3227,20 +3226,16 @@ def send_laboratory_order(request):
             tfoms_data = match_enp(enp)
             if tfoms_data:
                 individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
-                individual_status = "tfoms_match_enp"
-
             individual = individuals.first()
 
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
-            individual_status = "tfoms_match_patient"
             individual = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
     if not individual and snils:
         individuals = Individual.objects.filter(document__number=snils, document__document_type__title="СНИЛС")
         individual = individuals.first()
-        individual_status = "snils"
 
     card = None
     if not individual and lastname:
@@ -3261,7 +3256,6 @@ def send_laboratory_order(request):
         card.main_address = patient["mainAddress"]
         card.fact_address = patient["factAddress"]
         card.save(update_fields=["main_address", "fact_address"])
-
 
     if not card:
         return Response({"ok": False, "message": "Карта не найдена"})

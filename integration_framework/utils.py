@@ -27,7 +27,6 @@ from users.models import DoctorProfile
 from utils.dates import normalize_dots_date
 from directions.models import Napravleniya
 from utils.nsi_directories import NSI
-from django.db import transaction
 
 
 def get_json_protocol_data(pk, is_paraclinic=False):
