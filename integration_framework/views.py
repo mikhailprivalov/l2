@@ -3256,7 +3256,6 @@ def send_laboratory_order(request):
         card.main_address = patient["mainAddress"]
         card.fact_address = patient["factAddress"]
         card.save(update_fields=["main_address", "fact_address"])
-
     if not card:
         return Response({"ok": False, "message": "Карта не найдена"})
     pay_data = body.get("payData", {})
