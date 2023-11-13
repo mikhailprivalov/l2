@@ -1,39 +1,33 @@
 <template>
   <div class="main">
-    <div class="four-col">
-      <div class="filters">
+    <div class="flex margin-bottom">
+      <div class="filters department-width">
         <label>Подразделение</label>
         <Treeselect
           v-model="selectedDepartment"
           :options="departments"
           placeholder="Выберите подразделение"
-          class="treeselect-wide"
         />
       </div>
-      <div class="two-col filters">
-        <div>
-          <label>Месяц</label>
-          <Treeselect
-            v-model="selectedMonth"
-            :options="months"
-            placeholder="Выберите месяц"
-            class="treeselect-wide"
-          />
-        </div>
-        <div>
-          <label>Год</label>
-          <Treeselect
-            v-model="selectedYear"
-            :options="years"
-            value-format="object"
-            placeholder="Выберите год"
-            class="treeselect-wide"
-          />
-        </div>
+      <div class="filters month-width">
+        <label>Месяц</label>
+        <Treeselect
+          v-model="selectedMonth"
+          :options="months"
+          placeholder="Выберите месяц"
+        />
+      </div>
+      <div class="filters year-width">
+        <label>Год</label>
+        <Treeselect
+          v-model="selectedYear"
+          :options="years"
+          placeholder="Выберите год"
+        />
       </div>
     </div>
     <div v-if="filtersIsFilled">
-      <label>Поиск сотрудника</label>
+      <label class="filters">Поиск сотрудника</label>
       <input
         v-model.trim="search"
         class="form-control"
@@ -44,11 +38,11 @@
       class="white-background"
     >
       <VeTable
-        id="loading-container"
         :columns="columns"
         :table-data="filteredEmployees"
         :row-style-option="rowStyleOption"
         :cell-style-option="cellStyleOption"
+        :border-y="true"
       />
       <div
         v-show="filteredEmployees.length === 0"
@@ -64,7 +58,7 @@
 import {
   computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
-import { VeTable, VeLoading } from 'vue-easytable';
+import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -77,31 +71,29 @@ import * as actions from '@/store/action-types';
 
 const root = getCurrentInstance().proxy.$root;
 
-let loadingInstance: VeLoading | null = null;
-
 const store = useStore();
 
 const selectedMonth = ref(null);
 const months = ref([
-  { id: 0, label: 'Январь' },
-  { id: 1, label: 'Февраль' },
-  { id: 2, label: 'Март' },
-  { id: 3, label: 'Апрель' },
-  { id: 4, label: 'Май' },
-  { id: 5, label: 'Июнь' },
-  { id: 6, label: 'Июль' },
-  { id: 7, label: 'Август' },
-  { id: 8, label: 'Сентябрь' },
-  { id: 9, label: 'Октябрь' },
-  { id: 10, label: 'Ноябрь' },
-  { id: 11, label: 'Декабрь' },
+  { id: 1, label: 'Январь' },
+  { id: 2, label: 'Февраль' },
+  { id: 3, label: 'Март' },
+  { id: 4, label: 'Апрель' },
+  { id: 5, label: 'Май' },
+  { id: 6, label: 'Июнь' },
+  { id: 7, label: 'Июль' },
+  { id: 8, label: 'Август' },
+  { id: 9, label: 'Сентябрь' },
+  { id: 10, label: 'Октябрь' },
+  { id: 11, label: 'Ноябрь' },
+  { id: 12, label: 'Декабрь' },
 ]);
 
-const selectedYear = ref({ id: 1, label: '2023' });
+const selectedYear = ref(2023);
 const years = ref([
-  { id: 1, label: '2023' },
-  { id: 2, label: '2024' },
-  { id: 3, label: '2025' },
+  { id: 2023, label: '2023' },
+  { id: 2024, label: '2024' },
+  { id: 2025, label: '2025' },
 ]);
 
 const selectedDepartment = ref(null);
@@ -111,8 +103,7 @@ const departments = ref([
   { id: 3, label: 'Гастроэнтерология' },
 ]);
 
-const filtersIsFilled = computed(() => !!(selectedDepartment.value && (selectedMonth.value || selectedMonth.value === 0)
-  && selectedYear.value));
+const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMonth.value && selectedYear.value));
 
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -130,7 +121,7 @@ const employees = ref([
     bidType: 'осн.',
     normMonth: '178',
     shiftDuration: '8',
-    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
+    '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
   {
@@ -139,7 +130,7 @@ const employees = ref([
     bidType: 'осн.',
     normMonth: '178',
     shiftDuration: '8',
-    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
+    '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
   {
@@ -148,24 +139,31 @@ const employees = ref([
     bidType: 'осн.',
     normMonth: '178',
     shiftDuration: '8',
-    '01.10.2023': { startWorkTime: '8:00', endWorkTime: '16:30' },
+    '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
 ]);
 
 const changeWorkTime = (workTime: object) => {
   const {
-    start, end, rowIndex, columnKey,
+    start, end, rowIndex, columnKey, clear,
   } = workTime;
-  employees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
+  if (clear) {
+    employees.value[rowIndex][columnKey] = null;
+    root.$emit('msg', 'ok', 'Очищено');
+  } else {
+    employees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
+    root.$emit('msg', 'ok', 'Обновлено');
+  }
 };
 
 const columns = ref([]);
 
 const getMonthDays = (year: number, month: number) => {
   const days = [];
-  const date = new Date(year, month);
-  while (date.getMonth() === month) {
+  const currentMonth = month - 1;
+  const date = new Date(year, currentMonth);
+  while (date.getMonth() === currentMonth) {
     days.push(new Date(date));
     date.setDate(date.getDate() + 1);
   }
@@ -173,27 +171,30 @@ const getMonthDays = (year: number, month: number) => {
 };
 
 const getColumns = () => {
-  const columnTemplate = [{
-    field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 100,
-  },
-  {
-    field: 'position', key: 'position', title: 'Должность', align: 'center', width: 100,
-  },
-  {
-    field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 30,
-  },
-  {
-    field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 30,
-  },
-  {
-    field: 'shiftDuration', key: 'shiftDuration', title: 'Смена', align: 'center', width: 30,
-  }];
   if (filtersIsFilled.value) {
-    const daysMonth = getMonthDays(Number(selectedYear.value.label), selectedMonth.value);
+    const columnTemplate = [
+      {
+        field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 140, fixed: 'left',
+      },
+      {
+        field: 'position', key: 'position', title: 'Должность', align: 'center', width: 100,
+      },
+      {
+        field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 30,
+      },
+      {
+        field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 30,
+      },
+      {
+        field: 'shiftDuration', key: 'shiftDuration', title: 'Смена', align: 'center', width: 30,
+      },
+    ];
+    const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
     const data = daysMonth.map((col) => {
       const date = col.toLocaleDateString();
       const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
       const weekend = [6, 0].includes(col.getDay());
+      const isFirstDay = col.getDate() === 1;
       return {
         key: date,
         field: date,
@@ -204,7 +205,9 @@ const getColumns = () => {
         renderBodyCell: ({ row, column, rowIndex }, h) => h(
           DateCell,
           {
-            props: { workTime: row[column.field] ? row[column.field] : '', rowIndex, columnKey: column.key },
+            props: {
+              workTime: row[column.field] ? row[column.field] : '', rowIndex, columnKey: column.key, isFirstDay,
+            },
             on: { changeWorkTime },
           },
         ),
@@ -232,7 +235,7 @@ const cellStyleOption = {
     if (column.isWeekend) {
       return 'table-header-cell-weekend';
     }
-    return 'table-header-cell-weekday';
+    return '';
   },
 };
 
@@ -240,14 +243,14 @@ const rowStyleOption = {
   stripe: true,
 };
 
-watch([selectedMonth, selectedYear], (newSelectedMonth, newSelectedYear) => {
+watch([selectedMonth, selectedYear, selectedDepartment], () => {
   getColumns();
 });
+const table = ref<any>(null);
 
 onMounted(() => {
   getDepartments();
   getColumns();
-  loadingInstance = $ve
 });
 
 </script>
@@ -261,14 +264,12 @@ onMounted(() => {
   width: 100%;
   margin: 0 auto;
 }
+.flex {
+  display: flex;
+}
 .four-col {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 5px;
-}
-.two-col {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   margin-bottom: 5px;
 }
 .white-background {
@@ -276,6 +277,18 @@ onMounted(() => {
 }
 .filters {
   margin: 0 10px;
+}
+.month-width {
+  width: 130px;
+}
+.year-width {
+  width: 100px;
+}
+.department-width {
+  width: 490px;
+}
+.margin-bottom {
+  margin-bottom: 5px;
 }
 </style>
 
@@ -285,10 +298,6 @@ onMounted(() => {
 }
 .table-header-cell-weekend {
   background: #ade0a875 !important;
-  padding-right: 35px !important;
-}
-.table-header-cell-weekday {
-  padding-right: 35px !important;
 }
 
 </style>

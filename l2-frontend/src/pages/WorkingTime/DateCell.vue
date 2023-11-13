@@ -1,26 +1,64 @@
 <template>
   <div class="flex">
+    <button
+      v-if="!props.isFirstDay"
+      v-tippy
+      class="transparentButton"
+      title="Скопировать предыдущий"
+    >
+      <i class="fa-solid fa-copy" />
+    </button>
     <Treeselect
       v-model="selectTemplate"
       :options="templatesWorkTime"
       value-format="object"
       :append-to-body="true"
       placeholder="Выберите время"
+      class="time-width"
       @input="changeWorkTime"
     />
-    <button class="transparentButton">
+    <button
+      v-tippy="{
+        html: '#temp',
+        arrow: true,
+        reactive: true,
+        interactive: true,
+        animation: 'fade',
+        duration: 0,
+        theme: 'light',
+        placement: 'bottom',
+        trigger: 'click',
+      }"
+      class="transparentButton"
+    >
       <i
         class="fa fa-clock-o"
         aria-hidden="true"
       />
     </button>
+
+    <div
+      id="temp"
+      class="tp"
+    >
+      <input
+        v-model="startWork"
+        class="form-control"
+        type="time"
+      >
+      <input
+        v-model="endWork"
+        class="form-control"
+        type="time"
+      >
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
   computed,
-  onMounted, ref,
+  onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -40,6 +78,10 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  isFirstDay: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const workTimeIsFilled = computed(() => !!(typeof props.workTime === 'object' && props.workTime.startWorkTime
@@ -47,40 +89,50 @@ const workTimeIsFilled = computed(() => !!(typeof props.workTime === 'object' &&
 
 const selectTemplate = ref(null);
 const templatesWorkTime = ref([
-  { id: 1, label: '8:00-16:30' },
-  { id: 2, label: '8:00-15:48' },
+  { id: 1, label: '08:00-16:30' },
+  { id: 2, label: '08:00-15:48' },
   { id: 3, label: '15:48-24:00' },
 ]);
+const startWork = ref(null);
+const endWork = ref(null);
 
-const appendCurrentTime = () => {
-  if (workTimeIsFilled.value) {
-    const start = props.workTime.startWorkTime;
-    const end = props.workTime.endWorkTime;
-    const workTimeLabel = `${start}-${end}`;
-    const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === workTimeLabel);
-    if (templateCurrentWorkTime) {
-      selectTemplate.value = templateCurrentWorkTime;
-    } else {
-      const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: workTimeLabel };
-      templatesWorkTime.value.push(currentWorkTime);
-      selectTemplate.value = currentWorkTime;
-    }
+const appendCurrentTime = (exact = false) => {
+  if ((workTimeIsFilled.value && !exact)) {
+    startWork.value = props.workTime.startWorkTime;
+    endWork.value = props.workTime.endWorkTime;
+  }
+  const workTimeLabel = `${startWork.value}-${endWork.value}`;
+  const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === workTimeLabel);
+  if (templateCurrentWorkTime) {
+    selectTemplate.value = templateCurrentWorkTime;
+  } else {
+    const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: workTimeLabel };
+    templatesWorkTime.value.push(currentWorkTime);
+    selectTemplate.value = currentWorkTime;
   }
 };
 
 const changeWorkTime = () => {
   if (selectTemplate.value) {
     const workTime = selectTemplate.value?.label?.split('-');
-    const start = workTime[0];
-    const end = workTime[1];
-    if (start !== props.workTime.startWorkTime || end !== props.workTime.endWorkTime) {
+    [startWork.value, endWork.value] = workTime;
+    if (startWork.value !== props.workTime.startWorkTime || endWork.value !== props.workTime.endWorkTime) {
       emit('changeWorkTime', {
-        start, end, rowIndex: props.rowIndex, columnKey: props.columnKey,
+        start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
       });
     }
+  } else {
+    startWork.value = null;
+    endWork.value = null;
+    emit('changeWorkTime', {
+      start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: true,
+    });
   }
 };
 
+watch([startWork, endWork], () => {
+  appendCurrentTime(true);
+});
 onMounted(() => {
   appendCurrentTime();
 });
@@ -90,14 +142,15 @@ onMounted(() => {
 .flex {
   display: flex;
   flex-wrap: nowrap;
-  width: 176px
+}
+.time-width {
+  width: 138px
 }
 .transparentButton {
   background-color: transparent;
   color: #434A54;
   border: none;
   border-radius: 4px;
-  padding: 6px 12px;
 }
 .transparentButton:hover {
   background-color: #434a54;
@@ -107,5 +160,9 @@ onMounted(() => {
 .transparentButton:active {
   background-color: #37BC9B;
   color: #FFFFFF;
+}
+.tp {
+  min-height: 100px;
+  min-width: 100px;
 }
 </style>
