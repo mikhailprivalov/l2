@@ -1183,3 +1183,16 @@ def get_doctor_data(value):
         return None
 
     return value
+
+
+def get_protocol_data(iss, protocol_fields):
+    data = {}
+    if protocol_fields:
+        result = fields_result_only_title_fields(iss, protocol_fields, False)
+        data = {i['title']: i['value'] for i in result}
+
+    for t in protocol_fields:
+        if not data.get(t, None):
+            data[t] = ""
+
+    return data
