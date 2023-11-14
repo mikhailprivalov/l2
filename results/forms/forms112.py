@@ -19,7 +19,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 
-def gen_table(table_data: list, column: Union[list, None]=None, span=None, full_grid: bool = False, outer_and_row_grid: bool = False):
+def gen_table(table_data: list, column: Union[list, None]=None, full_grid: bool = False, outer_and_row_grid: bool = False, custom_style=None) -> Table:
     if not table_data:
         return []
     if column:
@@ -34,8 +34,8 @@ def gen_table(table_data: list, column: Union[list, None]=None, span=None, full_
     if outer_and_row_grid:
         table_style.append(('BOX', (0, 0), (-1, -1), 0.75, colors.black))
         table_style.append(('LINEBELOW', (0, 0), (-1, -1), 0.75, colors.black))
-    if span:
-        table_style.extend(span)
+    if custom_style:
+        table_style.extend(custom_style)
     table.setStyle(TableStyle(table_style))
 
     return table
@@ -70,10 +70,10 @@ def gen_medicament_table(style_left_bold, style_center, leftnone, title, row_dat
         column_params = [7 * mm, 32 * mm, 30 * mm, 15 * mm, 15 * mm, 20 * mm, 21 * mm, 34 * mm]
     else:
         column_params = [7 * mm, 35 * mm, 30 * mm, 15 * mm, 20 * mm, 20 * mm, 21 * mm, 38 * mm,]
-    span_cell = [
+    custom_style = [
         ('SPAN', (0, 0), (-1, 0)),
     ]
-    table = gen_table(table_data, column_params, span_cell, True)
+    table = gen_table(table_data, column_params, True, False, custom_style)
 
     return table
 
@@ -81,7 +81,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     """
     112.01 - Извещение о НР ЛП
     """
-
     hospital: Hospitals = direction.hospital
     hospital_name = hospital.safe_short_title
     hospital_address = hospital.safe_address
@@ -89,7 +88,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('digit8', os.path.join(FONTS_FOLDER, 'digit88table.ttf')))
 
+    op_boxed_tag = '<font face="digit8" size=15>'
+    cl_boxed_tag = '</font>'
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
@@ -128,8 +130,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     objs.append(Spacer(1, space * 2))
     table_data = [
         [
-            Paragraph('Первичное ', style_center),
-            Paragraph('Дополнительная информация к сообщению <br/>№___________ от_________________', style_left),
+            Paragraph(f'Первичное {op_boxed_tag}{space_symbol}{cl_boxed_tag}', style_center),
+            Paragraph(f'Дополнительная информация к сообщению {op_boxed_tag}{space_symbol}{cl_boxed_tag}<br/>№___________ от_________________', style_left),
         ]
     ]
     objs.append(gen_table(table_data))
@@ -154,6 +156,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
     ]
 
+    custom_style = [
+        ('BACKGROUND', (0, 0), (-1, 0))
+    ]
     objs.append(gen_table(table_data, full_grid=True))
 
     list_bad_medicaments = [
@@ -172,7 +177,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f'{medicament["end_date"]}', style_center),
             Paragraph(f'{medicament["reason"]}', style_center),
         ]
-    ] for key, medicament in enumerate(list_bad_medicaments)]
+    ] for key, medicament in enumerate(list_bad_medicaments, 1)]
 
     title_table = 'Лекарственные средства, предположительно вызвавшие НР'
     objs.append(gen_medicament_table(style_left_bold, style_center, leftnone, title_table, bad_medicaments))
@@ -199,7 +204,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('□   Госпитализация или ее продление', style_left),
         ],
         [
-            Paragraph('Дата разрешения НР', style_left_bold),
+            Paragraph('Дата разрешения НР _________________________________', style_left_bold),
             Paragraph('□   Инвалидность', style_left),
         ],
         [
@@ -221,11 +226,14 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     else:
         column_params = [137 * mm, 49 * mm]
 
-    span_cell = [
+    custom_style = [
         ('SPAN', (0, 1), (0, 4)),
         ('SPAN', (0, 5), (0, 8)),
+        ('GRID', (1, 0), (1, -1), 0.75, colors.black),
+        ('GRID', (0, 0), (0, 0), 0.75, colors.black),
+        ('BOX', (0, 0), (0, -1), 0.75, colors.black)
     ]
-    objs.append(gen_table(table_data, column_params, span_cell, True))
+    objs.append(gen_table(table_data, column_params, False, False, custom_style))
 
     table_data = [
         [
@@ -289,10 +297,39 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f'{medicament["end_date"]}', style_center),
             Paragraph(f'{medicament["reason"]}', style_center),
         ]
-    ] for key, medicament in enumerate(list_other_medicament)]
+    ] for key, medicament in enumerate(list_other_medicament, 1)]
     objs.append(gen_table(table_data, outer_and_row_grid=True))
     title_table = 'Другие лекарственные средства, принимаемые в течение последних 3 месяцев, включая ЛС принимаемые пациентом самостоятельно (по собственному желанию)'
     objs.append(gen_medicament_table(style_left_bold, style_center, leftnone, title_table, other_medicaments))
+    table_data = [
+        [
+            Paragraph('Данные сообщающего лица', style_left_bold)
+        ],
+        [
+            Paragraph('□  Врач    □  Другой специалист системы здравоохранения    □   Пациент    □  Иной', style_left)
+        ],
+        [
+            Paragraph('Контактный телефон/e-mail:* ________________________________________________________________    ', style_left)
+        ],
+        [
+            Paragraph('Ф.И.О _____________________________________________________________________________________', style_left)
+        ],
+        [
+            Paragraph('Должность и место работы____________________________________________________________________', style_left)
+        ],
+        [
+            Paragraph('Дата сообщения_____________________________________________________________________________', style_left)
+        ],
+    ]
+
+    objs.append(gen_table(table_data, full_grid=True))
+    objs.append(Paragraph(f'{space_symbol * 12} * поле обязательно к заполнению', style))
+    objs.append(Spacer(1, space * 2))
+    objs.append(Paragraph('Сообщение может быть отправлено:', style))
+    objs.append(Paragraph(f'{space_symbol * 7}•{space_symbol * 4}	e-mail: pharm@roszdravnadzor.ru', style))
+    objs.append(Paragraph(f'{space_symbol * 7}•{space_symbol * 4}	факс: +7(495)698-15-73,', style))
+    objs.append(Paragraph(f'{space_symbol * 7}•{space_symbol * 4}	он-лайн на сайте npr.roszdravnadzor.ru', style))
+    objs.append(Paragraph(f'{space_symbol * 7}•{space_symbol * 4}	почтовый адрес: 109074, г. Москва, Славянская площадь, д. 4, строение 1.', style))
 
     fwb.extend(objs)
 
