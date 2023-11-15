@@ -129,7 +129,7 @@
         v-else
         class="btn btn-default"
         href="#"
-        @click="sendToVI"
+        @click.prevent="sendToVI"
       >
         Отправить в ВИМИС
       </a>
@@ -165,6 +165,10 @@ export default {
     direction: {
       type: Number,
       required: true,
+    },
+    noOGRN: {
+      type: Boolean,
+      required: false,
     },
   },
   data() {
@@ -207,6 +211,13 @@ export default {
     },
     ok() {
       return this.emptySignatures.length === 0;
+    },
+    invalidMessage() {
+      if (!this.noOGRN || this.selectedSignatureMode !== 'Медицинская организация') {
+        return null;
+      }
+
+      return 'Отсутствует ОГРН в сертификате';
     },
   },
   watch: {
@@ -265,6 +276,10 @@ export default {
       this.$root.$emit('eds:reload-document', this.direction);
     },
     async addSign(fast = false) {
+      if (this.invalidMessage) {
+        this.$error(this.invalidMessage);
+        return;
+      }
       if (!fast) {
         try {
           await this.$dialog.confirm(
