@@ -371,6 +371,12 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
   return [obj.SN, obj.G, obj.SNILS, obj.T].filter(Boolean).join(' ');
 };
 
+export const subjectNameHasOGRN = (object: any, subjectName: string | null) => {
+  const obj = object || convertSubjectNameToCertObject(subjectName);
+
+  return String(obj['ОГРН'] || '').length === 13;
+};
+
 export const validateEmail = (email: string) => Boolean(
   String(email || '')
     .toLowerCase()
