@@ -307,12 +307,13 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox,
     ]
 
+    issue_effect = '___________________________________________'
     if protocol_data["Исход"]:
         issue_title = protocol_data["Исход"]
         issue_index = issue_list.index(issue_title)
         issue[issue_index] = filled_checkbox
     if protocol_data["Последствия"]:
-        print(protocol_data["Последствия"])
+        issue_effect = protocol_data["Последствия"]
 
     table_data = [
         [
@@ -335,7 +336,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f'{issue[0]} Выздоровление без последствий {issue[1]} Улучшение состояние {issue[2]} Состояние без изменений', style_left)
         ],
         [
-            Paragraph(f'{issue[3]} Выздоровление с последствиями (указать)___________________________________________', style_left)
+            Paragraph(f'{issue[3]} Выздоровление с последствиями (указать): {issue_effect}', style_left)
         ],
         [
             Paragraph(f'{issue[4]} Смерть {issue[5]} Неизвестно {issue[6]} Не применимо', style_left)
