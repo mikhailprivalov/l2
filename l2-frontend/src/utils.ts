@@ -374,7 +374,13 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
 export const subjectNameHasOGRN = (object: any, subjectName: string | null) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
-  return String(obj['ОГРН'] || '').length === 13;
+  let ogrn = obj['ОГРН'] || null;
+
+  if (!ogrn) {
+    ogrn = Object.entries(obj).find(([, v]) => v === 'ОГРН')?.[0] || null;
+  }
+
+  return String(ogrn || '').length === 13;
 };
 
 export const validateEmail = (email: string) => Boolean(
