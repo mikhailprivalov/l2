@@ -39,6 +39,7 @@ def get_examination_data(company_id, date_start, date_end):
             INNER JOIN public.directory_researches
               ON public.users_assignmentresearches.research_id = public.directory_researches.id
         WHERE date BETWEEN %(date_start)s AND %(date_end)s and contracts_medicalexamination.company_id = %(company_id)s
+        ORDER BY contracts_medicalexamination.card_id
         """,
             params={"date_start": date_start, "date_end": date_end, "company_id": company_id},
         )
