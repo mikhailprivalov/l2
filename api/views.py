@@ -79,7 +79,7 @@ from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals
 from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
-from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar, search_case_by_card_date
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 
@@ -3305,6 +3305,58 @@ def get_examination_list(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def print_medical_examination_data(request):
+    request_data = json.loads(request.body)
+    cards = request_data.get("cards")
+    research_case = Researches.objects.filter(is_case=True, hide=False).first()
+    print(research_case.pk)
+    doc = users.DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
+    print(doc)
+    print(cards)
+    for card in cards:
+        print(card)
+        card_id = card.get("card_id")
+        researches = card.get("research")
+        plan_date_start_case = "2023-11-01 00:00:00"
+        result_search_case = search_case_by_card_date(card_id, plan_date_start_case, research_case.pk)
+        print(result_search_case)
+        financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__in=["Профосмотр", "Юрлицо"]).first()
+
+        if result_search_case:
+            if result_search_case:
+                print("нашли случай")
+                pass
+        else:
+            print("не нашли случай")
+            result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(
+                card_id,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: researches},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                price_name=13,
+                case_id=-1,
+                case_by_direction=True,
+                plan_start_date=plan_date_start_case
+            )
+            print(result)
+
+    # найти случаи по карте и дате
+        # если нет создать случай
+        # к случаю привязать услуги
+        # отдать номера направлений
+    # найти направления (не отмененные) - где родитель случай
+    # по направлениям получить перечень услуги
+    # услуги по АПИ сверить с усулгами по направлениям, если не отходит создать НАПРАВЛЕНИЯ
+    # отдать по картам пациентов номера направлений
     return status_response(True)
 
 

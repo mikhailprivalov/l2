@@ -170,6 +170,7 @@ def directions_generate(request):
             price_category=p.get("priceCategory", -1),
             case_id=p.get("caseId", -2),
             case_by_direction=p.get("caseByDirection", False),
+            plan_start_date=p.get("planStartDate", None)
         )
         if type_generate == "calculate-cost":
             fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()

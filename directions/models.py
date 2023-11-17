@@ -1293,7 +1293,9 @@ class Napravleniya(models.Model):
         price_name=None,
         case_id=-2,
         case_by_direction=False,
+        plan_start_date=None,
     ):
+        print(researches)
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if case_id > -1 and case_by_direction:
             iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
@@ -1322,7 +1324,6 @@ class Napravleniya(models.Model):
             else:
                 finsource = f_obj.pk
         finsource = IstochnikiFinansirovaniya.objects.filter(pk=finsource).first()
-
         if not doc_current.not_control_anketa:
             if control_anketa_dispanserization and finsource and "омс" in finsource.title.lower() and doc_current.pk not in EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED:
                 d1, d2 = start_end_year()
@@ -1396,6 +1397,7 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
+            print(researches)
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
                 for vv in researches[v]:
@@ -1562,7 +1564,8 @@ class Napravleniya(models.Model):
                             issledovaniye_case = Issledovaniya(
                                 napravleniye=napravleniye_case,
                                 research=research_case,
-                                deferred=False
+                                deferred=False,
+                                plan_start_date=plan_start_date
                             )
                             issledovaniye_case.save()
                             issledovaniye_case_id = issledovaniye_case.pk
@@ -1668,6 +1671,7 @@ class Napravleniya(models.Model):
                         how_many=research_howmany,
                         deferred=False,
                         external_add_order=ext_additional_num,
+                        plan_start_date=plan_start_date
                     )
 
                     if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
@@ -1798,6 +1802,7 @@ class Napravleniya(models.Model):
                 localizations=localizations,
                 service_locations=service_locations,
                 visited=visited,
+                plan_start_date=plan_start_date
             )
             if not res_children["r"]:
                 return res_children
@@ -2277,7 +2282,7 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
-
+    plan_start_date = models.DateTimeField(help_text='Планируемая дата-время начала оказания', db_index=True, blank=True, default=None, null=True)
 
     @property
     def time_save_local(self):
