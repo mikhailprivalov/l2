@@ -132,7 +132,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     protocol_fields = ['Вес(кг)', 'Беременность', 'Срок беременности (недель)', 'Аллергия', 'Аллергия на', 'Лечение', 'ЛП предположительно вызвавшие НР', 'Дата начала НР', 'Описание НР',
                        'Дата разрешения НР', 'Смерть', 'Угроза жизни', 'Госпитализация', 'Инвалидность', 'Врожденные аномалии', 'Клинически значимое событие',
                        'Не применимо', 'Без лечения', 'Отмена подозреваемого ЛС', 'Снижение дозы ЛС', 'Немедикаментозная терапия', 'Лекарственная терапия', 'Исход', 'Последствия',
-                       'Лекарственная терапия(описание)', 'Назначалось ли лекарство повторно', 'Результат']
+                       'Лекарственная терапия(описание)', 'Сопровождалась ли отмена ЛС исчезновением НР', 'Назначалось ли лекарство повторно', 'Результат',
+                       'Другие ЛП принимаемые в течение последних 3 месяцев']
     protocol_data = get_protocol_data(iss, protocol_fields)
 
     space = 5 * mm
@@ -357,14 +358,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     if protocol_data["Сопровождалась ли отмена ЛС исчезновением НР"]:
         result_cancel = find_and_replace(result_cancel_list, protocol_data["Сопровождалась ли отмена ЛС исчезновением НР"], result_cancel,
                                          filled_checkbox)
-    repeat_variant = ['нет', 'да']
-    repeat = [empty_checkbox, empty_checkbox]
+    repeat_variant = ['нет', 'да', 'не применимо']
+    repeat = [empty_checkbox, empty_checkbox, empty_checkbox]
     repeat_result = f'___________________'
-    not_repeat = empty_checkbox
     if protocol_data["Назначалось ли лекарство повторно"]:
         repeat = find_and_replace(repeat_variant, protocol_data["Назначалось ли лекарство повторно"], repeat, filled_checkbox)
-    if protocol_data["Повторение не применимо"] and string_check(protocol_data["Повторение не применимо"], 'да'):
-        not_repeat = filled_checkbox
     if protocol_data["Результат"]:
         repeat_result = protocol_data["Результат"]
 
@@ -375,28 +373,29 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph(f'Назначалось ли лекарство повторно?  {repeat[0]} Нет  {repeat[1]} Да', style_left),
-            Paragraph(f'Результат {repeat_result} {not_repeat} Не применимо', style_left)
+            Paragraph(f'Результат {repeat_result} {repeat[2]} Не применимо', style_left)
         ],
     ]
 
     list_other_medicament = [
-        {"title": "", "manufacturer": "", "serial_number": "", "dose_and_method": "", "start_date": "", "end_date": "", "reason": ""},
-        {"title": "", "manufacturer": "", "serial_number": "", "dose_and_method": "", "start_date": "", "end_date": "", "reason": ""},
-        {"title": "", "manufacturer": "", "serial_number": "", "dose_and_method": "", "start_date": "", "end_date": "", "reason": ""},
-        {"title": "", "manufacturer": "", "serial_number": "", "dose_and_method": "", "start_date": "", "end_date": "", "reason": ""},
-        {"title": "", "manufacturer": "", "serial_number": "", "dose_and_method": "", "start_date": "", "end_date": "", "reason": ""},
-        {"title": "", "manufacturer": "", "serial_number": "", "dose_and_method": "", "start_date": "", "end_date": "", "reason": ""},
+        ["", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", ""],
+        ["", "", "", "", "", "", ""]
     ]
+
+    if protocol_data["ЛП предположительно вызвавшие НР"]:
+        list_other_medicament = json.loads(protocol_data["Другие ЛП принимаемые в течение последних 3 месяцев"]).get("rows", [])
+
     other_medicaments = [[
         [
             Paragraph(f'{key}', style_center),
-            Paragraph(f'{medicament["title"]}', style_center),
-            Paragraph(f'{medicament["manufacturer"]}', style_center),
-            Paragraph(f'{medicament["serial_number"]}', style_center),
-            Paragraph(f'{medicament["dose_and_method"]}', style_center),
-            Paragraph(f'{medicament["start_date"]}', style_center),
-            Paragraph(f'{medicament["end_date"]}', style_center),
-            Paragraph(f'{medicament["reason"]}', style_center),
+            Paragraph(f'{medicament[0]}', style_center),
+            Paragraph(f'{medicament[1]}', style_center),
+            Paragraph(f'{medicament[2]}', style_center),
+            Paragraph(f'{medicament[3]}', style_center),
+            Paragraph(f'{medicament[4]}', style_center),
+            Paragraph(f'{medicament[5]}', style_center),
+            Paragraph(f'{medicament[6]}', style_center),
         ]
     ] for key, medicament in enumerate(list_other_medicament, 1)]
     objs.append(gen_table(table_data, outer_and_row_grid=True))
