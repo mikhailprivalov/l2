@@ -1,18 +1,14 @@
-import datetime
 import json
 from typing import Union
 
 from reportlab.lib import colors
 
-from hospitals.models import Hospitals
-from reportlab.platypus import Paragraph, Spacer, Table, FrameBreak, TableStyle, PageBreak
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY, TA_RIGHT
-from reportlab.lib.colors import black
-from results.forms.flowable import FrameDataCol
-from results.prepare_data import fields_result_only_title_fields, get_protocol_data
+from results.prepare_data import get_protocol_data
 from directions.models import Issledovaniya, Napravleniya
 from laboratory.settings import FONTS_FOLDER
 import os.path
@@ -22,7 +18,8 @@ from reportlab.pdfbase.ttfonts import TTFont
 from utils.dates import normalize_date
 
 
-def gen_table(table_data: list, column: Union[list, None] = None, full_grid: bool = False, outer_and_row_grid: bool = False, custom_style=None) -> Table:
+def gen_table(table_data: list, column: Union[list, None] = None, full_grid: bool = False, outer_and_row_grid: bool = False, custom_style: Union[list[tuple], None] = None) -> Union[
+    Table, list]:
     if not table_data:
         return []
     if column:
@@ -44,7 +41,7 @@ def gen_table(table_data: list, column: Union[list, None] = None, full_grid: boo
     return table
 
 
-def gen_medicament_table(style_left_bold, style_center, leftnone, title, row_data: list = None):
+def gen_medicament_table(style_left_bold, style_center, left_none: bool, title: str, row_data: Union[list, None] = None) -> Union[Table, list]:
     table_data = [
         [
             Paragraph(f'{title}', style_left_bold),
@@ -69,7 +66,7 @@ def gen_medicament_table(style_left_bold, style_center, leftnone, title, row_dat
     ]
     table_data.extend(row_data)
 
-    if leftnone:
+    if left_none:
         column_params = [7 * mm, 32 * mm, 28 * mm, 18 * mm, 20 * mm, 21 * mm, 21 * mm, 28 * mm]
     else:
         column_params = [7 * mm, 37 * mm, 32 * mm, 20 * mm, 20 * mm, 21 * mm, 21 * mm, 28 * mm]
@@ -82,16 +79,14 @@ def gen_medicament_table(style_left_bold, style_center, leftnone, title, row_dat
     return table
 
 
-def get_boxed_tag(font_size: Union[int, float] = 12):
-    op_boxed_tag = f'<font face="digit8" size={font_size}>'
-    cl_boxed_tag = '</font>'
-    return op_boxed_tag, cl_boxed_tag
-
-
 def string_check(text: str, value: str = 'да') -> bool:
-    if text.lower() == value:
-        return True
-    return False
+    return text.lower() == value.lower()
+
+
+def find_and_replace(variants: list, title: str, checkbox_list: list, filled_checkbox: str):
+    index = variants.index(title.lower())
+    checkbox_list[index] = filled_checkbox
+    return checkbox_list
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
@@ -136,7 +131,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     protocol_fields = ['Вес(кг)', 'Беременность', 'Срок беременности (недель)', 'Аллергия', 'Аллергия на', 'Лечение', 'ЛП предположительно вызвавшие НР', 'Дата начала НР', 'Описание НР',
                        'Дата разрешения НР', 'Смерть', 'Угроза жизни', 'Госпитализация', 'Инвалидность', 'Врожденные аномалии', 'Клинически значимое событие',
-                       'Не применимо', 'Без лечения', 'Отмена подозреваемого ЛС', 'Снижение дозы ЛС', 'Немедикаментозная терапия', 'Лекарственная терапия', 'Исход', 'Последствия']
+                       'Не применимо', 'Без лечения', 'Отмена подозреваемого ЛС', 'Снижение дозы ЛС', 'Немедикаментозная терапия', 'Лекарственная терапия', 'Исход', 'Последствия',
+                       'Лекарственная терапия(описание)', 'Назначалось ли лекарство повторно', 'Результат']
     protocol_data = get_protocol_data(iss, protocol_fields)
 
     space = 5 * mm
@@ -187,16 +183,16 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph('Данные пациента', style_left_bold)
         ],
         [
-            Paragraph(f'Инициалы пациента (код пациента): {patient_data["fio"]} Пол {patient_data["sex"]} Вес {weight} кг', style_left)
+            Paragraph(f'Инициалы пациента (код пациента): {patient_data["fio"]} Пол: {patient_data["sex"]} Вес: {weight} кг', style_left)
         ],
         [
             Paragraph(f'Возраст: {patient_data["age"]} Беременность: {pregnancy} {term_pregnancy}', style_left)
         ],
         [
-            Paragraph(f'Аллергия: {allergy} {allergy_reason} ', style_left)
+            Paragraph(f'Аллергия {allergy} {allergy_reason} ', style_left)
         ],
         [
-            Paragraph(f'Лечение: {treatment}', style_left)
+            Paragraph(f'Лечение {treatment}', style_left)
         ],
     ]
 
@@ -300,18 +296,19 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     not_treatment, cancel_medicament, reducing_medicament, non_grug_therapy, medicament_therapy = (protocol_data["Без лечения"], protocol_data["Отмена подозреваемого ЛС"],
                                                                                                    protocol_data["Снижение дозы ЛС"], protocol_data["Немедикаментозная терапия"],
                                                                                                    protocol_data["Лекарственная терапия"])
+    description_therapy = '_________________________________________________________________'
+    if protocol_data["Лекарственная терапия(описание)"]:
+        description_therapy = protocol_data["Лекарственная терапия(описание)"]
+
     issue_list = [
-        'Выздоровление без последствий', 'Улучшение состояние', 'Состояние без изменений', 'Выздоровление с последствиями', 'Смерть', 'Неизвестно', 'Не применимо'
+        'выздоровление без последствий', 'улучшение состояние', 'состояние без изменений', 'выздоровление с последствиями', 'смерть', 'неизвестно', 'не применимо'
     ]
     issue = [
         empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox,
     ]
-
     issue_effect = '___________________________________________'
     if protocol_data["Исход"]:
-        issue_title = protocol_data["Исход"]
-        issue_index = issue_list.index(issue_title)
-        issue[issue_index] = filled_checkbox
+        issue = find_and_replace(issue_list, protocol_data["Исход"], issue, filled_checkbox)
     if protocol_data["Последствия"]:
         issue_effect = protocol_data["Последствия"]
 
@@ -327,7 +324,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f'{filled_checkbox if string_check(non_grug_therapy) else empty_checkbox} Немедикаментозная терапия (в т.ч. хирургическое вмешательство) ', style_left)
         ],
         [
-            Paragraph(f'{filled_checkbox if string_check(medicament_therapy) else empty_checkbox}  Лекарственная терапия _________________________________________________________________', style_left)
+            Paragraph(f'{filled_checkbox if string_check(medicament_therapy) else empty_checkbox}  Лекарственная терапия: {description_therapy}',
+                      style_left)
         ],
         [
             Paragraph('Исход', style_left_bold)
@@ -352,14 +350,32 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     objs.append(PageBreak())
     objs.append(Spacer(1, space * 2))
 
+    result_cancel_list = ['нет', 'да', 'лс не отменялось', 'не применимо']
+    result_cancel = [
+        empty_checkbox, empty_checkbox, empty_checkbox, empty_checkbox,
+    ]
+    if protocol_data["Сопровождалась ли отмена ЛС исчезновением НР"]:
+        result_cancel = find_and_replace(result_cancel_list, protocol_data["Сопровождалась ли отмена ЛС исчезновением НР"], result_cancel,
+                                         filled_checkbox)
+    repeat_variant = ['нет', 'да']
+    repeat = [empty_checkbox, empty_checkbox]
+    repeat_result = f'___________________'
+    not_repeat = empty_checkbox
+    if protocol_data["Назначалось ли лекарство повторно"]:
+        repeat = find_and_replace(repeat_variant, protocol_data["Назначалось ли лекарство повторно"], repeat, filled_checkbox)
+    if protocol_data["Повторение не применимо"] and string_check(protocol_data["Повторение не применимо"], 'да'):
+        not_repeat = filled_checkbox
+    if protocol_data["Результат"]:
+        repeat_result = protocol_data["Результат"]
+
     table_data = [
         [
             Paragraph('Сопровождалась ли отмена ЛС исчезновением НР?', style_left),
-            Paragraph('□ Нет □ Да □ ЛС не отменялось □ Не применимо', style_left)
+            Paragraph(f'{result_cancel[0]} Нет {result_cancel[1]} Да {result_cancel[2]} ЛС не отменялось {result_cancel[3]} Не применимо', style_left)
         ],
         [
-            Paragraph('Назначалось ли лекарство повторно?  □ Нет  □ Да', style_left),
-            Paragraph('Результат___________________ □ Не применимо', style_left)
+            Paragraph(f'Назначалось ли лекарство повторно?  {repeat[0]} Нет  {repeat[1]} Да', style_left),
+            Paragraph(f'Результат {repeat_result} {not_repeat} Не применимо', style_left)
         ],
     ]
 
