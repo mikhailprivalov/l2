@@ -8,6 +8,7 @@ from typing import Optional, Union
 import pytz_deprecation_shim as pytz
 
 from api.models import ManageDoctorProfileAnalyzer, Analyzer
+from directions.sql_func import get_researches_by_number_directions
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -3308,25 +3309,29 @@ def print_medical_examination_data(request):
     request_data = json.loads(request.body)
     cards = request_data.get("cards")
     research_case = Researches.objects.filter(is_case=True, hide=False).first()
-    print(research_case.pk)
     doc = users.DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
-    print(doc)
-    print(cards)
+    card_directions = {}
     for card in cards:
-        print(card)
         card_id = card.get("card_id")
         researches = card.get("research")
         plan_date_start_case = "2023-11-01 00:00:00"
-        result_search_case = search_case_by_card_date(card_id, plan_date_start_case, research_case.pk)
-        print(result_search_case)
+        result_search_case = search_case_by_card_date(card_id, plan_date_start_case, research_case.pk, 1)
+        case_issledovaniye_number, case_direction_number = None, None
+        for i in result_search_case:
+            case_issledovaniye_number = i.case_issledovaniye_number
+            case_direction_number = i.case_direction_number
+            break
         financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__in=["Профосмотр", "Юрлицо"]).first()
+        print(result_search_case)
 
-        if result_search_case:
-            if result_search_case:
-                print("нашли случай")
-                pass
-        else:
-            print("не нашли случай")
+        if case_issledovaniye_number:
+            number_directons = directions.Napravleniya.objects.values_list("id", flat=True).filter(parent_case_id=case_issledovaniye_number)
+            print(number_directons)
+            researches_sql = get_researches_by_number_directions(tuple(number_directons))
+            current_researches_case = set([i.research_id for i in researches_sql])
+            api_researches = set(researches)
+            api_researches -= current_researches_case
+            researches = list(api_researches)
             result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(
                 card_id,
                 "",
@@ -3343,20 +3348,53 @@ def print_medical_examination_data(request):
                 discount=0,
                 rmis_slot=None,
                 price_name=13,
-                case_id=-1,
+                case_id=case_direction_number,
                 case_by_direction=True,
                 plan_start_date=plan_date_start_case
             )
-            print(result)
+        else:
+            napravleniye_case = directions.Napravleniya.gen_napravleniye(
+                card_id,
+                doc,
+                financing_source,
+                "",
+                "",
+                doc,
+                -1,
+                doc,
+                price_name_id=13
+            )
 
-    # найти случаи по карте и дате
-        # если нет создать случай
-        # к случаю привязать услуги
-        # отдать номера направлений
-    # найти направления (не отмененные) - где родитель случай
-    # по направлениям получить перечень услуги
-    # услуги по АПИ сверить с усулгами по направлениям, если не отходит создать НАПРАВЛЕНИЯ
-    # отдать по картам пациентов номера направлений
+            issledovaniye_case = directions.Issledovaniya(
+                napravleniye=napravleniye_case,
+                research=research_case,
+                deferred=False,
+                plan_start_date=plan_date_start_case
+            )
+            issledovaniye_case.save()
+            result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(
+                card_id,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: researches},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                price_name=13,
+                case_id=napravleniye_case.pk,
+                case_by_direction=True,
+                plan_start_date=plan_date_start_case
+            )
+        print(result.get("list_id"))
+        card_directions[card_id] = result.get("list_id")
+
     return status_response(True)
 
 

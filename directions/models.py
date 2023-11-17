@@ -1295,7 +1295,6 @@ class Napravleniya(models.Model):
         case_by_direction=False,
         plan_start_date=None,
     ):
-        print(researches)
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if case_id > -1 and case_by_direction:
             iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
