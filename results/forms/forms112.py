@@ -87,11 +87,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
     pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
-    pdfmetrics.registerFont(TTFont("digit8", os.path.join(FONTS_FOLDER, "digit88table.ttf")))
     pdfmetrics.registerFont(TTFont("Symbola", os.path.join(FONTS_FOLDER, "Symbola.ttf")))
 
-    op_boxed_tag = f'<font face="digit8" size=15>'
-    cl_boxed_tag = '</font>'
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
