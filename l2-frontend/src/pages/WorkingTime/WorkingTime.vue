@@ -43,6 +43,7 @@
         :row-style-option="rowStyleOption"
         :cell-style-option="cellStyleOption"
         :border-y="true"
+        :scroll-width="0"
       />
       <div
         v-show="filteredEmployees.length === 0"
@@ -176,19 +177,19 @@ const getColumns = () => {
   if (filtersIsFilled.value) {
     const columnTemplate = [
       {
-        field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 250, fixed: 'left',
+        field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 190, fixed: 'left',
       },
       {
-        field: 'position', key: 'position', title: 'Должность', align: 'center', width: 100, fixed: 'left',
+        field: 'position', key: 'position', title: 'Должность', align: 'center', width: 120, fixed: 'left',
       },
       {
-        field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 30,
+        field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 70,
       },
       {
-        field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 30,
+        field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 70,
       },
       {
-        field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 30,
+        field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
       },
     ];
     const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
@@ -203,7 +204,7 @@ const getColumns = () => {
         field: date,
         title: dateTitle,
         align: 'center',
-        width: 385,
+        width: 211,
         isWeekend: weekend,
         renderBodyCell: ({ row, column, rowIndex }, h) => h(
           DateCell,

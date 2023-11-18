@@ -10,8 +10,8 @@
       @input="changeWorkTime"
     />
     <button
-      v-if="!props.isFirstDay"
       v-tippy
+      :disabled="props.isFirstDay"
       class="transparentButton"
       title="Скопировать предыдущий"
       @click="copyPrevTime"
@@ -214,6 +214,11 @@ onMounted(() => {
 .transparentButton:active {
   background-color: #37BC9B;
   color: #FFFFFF;
+}
+button[disabled] {
+  cursor: default;
+  background-color: transparent !important;
+  color: grey !important;
 }
 .tp-button {
   width: 35px;
