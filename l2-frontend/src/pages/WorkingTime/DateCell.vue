@@ -41,25 +41,37 @@
       id="temp"
       class="tp"
     >
-      <input
-        v-model="startWork"
-        class="form-control"
-        type="time"
-        @input="changeExact"
+      <div>
+        <label>Начало</label>
+        <input
+          v-model="startWork"
+          class="form-control"
+          type="time"
+        >
+      </div>
+      <div>
+        <label>Конец</label>
+        <input
+          v-model="endWork"
+          class="form-control"
+          type="time"
+        >
+      </div>
+      <button
+        v-tippy
+        class="transparentButton tp-button"
+        title="Сохранить"
+        @click="changeExact"
       >
-      <input
-        v-model="endWork"
-        class="form-control"
-        type="time"
-        @input="changeExact"
-      >
+        <i class="fa-solid fa-save" />
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed,
+  computed, getCurrentInstance,
   onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
@@ -95,7 +107,7 @@ const templatesWorkTime = ref([
   { id: 2, label: '08:00-15:48' },
   { id: 3, label: '15:48-00:00' },
 ]);
-
+const root = getCurrentInstance().proxy.$root;
 const changeTemplate = (templateLabel) => {
   const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === templateLabel);
   if (templateCurrentWorkTime) {
@@ -150,6 +162,8 @@ const changeExact = () => {
     } else {
       changeTemplate(workTimeLabel);
     }
+  } else {
+    root.$emit('msg', 'error', 'Время не заполнено');
   }
 };
 
@@ -181,9 +195,14 @@ onMounted(() => {
   background-color: #37BC9B;
   color: #FFFFFF;
 }
+.tp-button {
+  width: 35px;
+  height: 34px;
+  margin-top: 24px;
+}
 .tp {
   display: flex;
-  min-height: 100px;
-  min-width: 100px;
+  height: 60px;
+  width: 225px;
 }
 </style>
