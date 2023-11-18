@@ -60,6 +60,7 @@
       :thumbprint="selectedCertificate"
       :direction="directionPk"
       :executors="executors"
+      :no-o-g-r-n="noOGRN"
     />
 
     <div
@@ -84,6 +85,7 @@
           <button
             type="button"
             class="btn btn-default btn-primary-nb"
+            :disabled="!!invalidMessage"
             @click="addSign"
           >
             Подписать все вложения
@@ -92,10 +94,10 @@
       </div>
     </div>
     <div
-      v-if="error"
+      v-if="error || invalidMessage"
       class="status-error"
     >
-      <h4><strong>{{ message }}</strong></h4>
+      <h4><strong>{{ message || invalidMessage }}</strong></h4>
     </div>
   </div>
 </template>
@@ -106,7 +108,7 @@ import moment from 'moment';
 import { debounce } from 'lodash/function';
 
 import * as actions from '@/store/action-types';
-import { convertSubjectNameToTitle } from '@/utils';
+import { convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 import EDSDocument from './EDSDocument.vue';
 
@@ -177,6 +179,22 @@ export default {
       }
 
       return Object.keys(r);
+    },
+    noOGRN() {
+      const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
+
+      if (!cert) {
+        return false;
+      }
+
+      return !subjectNameHasOGRN(null, cert.subjectName);
+    },
+    invalidMessage() {
+      if (!this.noOGRN || this.selectedSignatureMode !== 'Медицинская организация') {
+        return null;
+      }
+
+      return 'Отсутствует ОГРН в сертификате';
     },
   },
   watch: {

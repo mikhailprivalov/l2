@@ -1,5 +1,6 @@
 import calendar
 import datetime
+import uuid
 from decimal import Decimal
 
 from django.db import models
@@ -33,6 +34,7 @@ class PriceName(models.Model):
     external_performer = models.BooleanField(default=False, blank=True, help_text='Прайс внешний исполнитель', db_index=True)
     subcontract = models.BooleanField(default=False, blank=True, help_text='Прайс субподряд', db_index=True)
     symbol_code = models.CharField(max_length=55, unique=True, blank=True, null=True, default=None, help_text='Код прайса', db_index=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -63,7 +65,7 @@ class PriceName(models.Model):
         else:
             company_title = ""
             company_id = ""
-        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": company_id, "companyTitle": company_title}
+        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": company_id, "companyTitle": company_title, "uuid": str(price.uuid)}
         return json_data
 
     @staticmethod
@@ -146,6 +148,7 @@ class Company(models.Model):
     bik = models.CharField(max_length=9, default='', blank=True)
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     email = models.CharField(max_length=128, blank=True, default='', help_text="email")
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -186,6 +189,7 @@ class Company(models.Model):
             "kpp": company.kpp,
             "bik": company.bik,
             "contractId": company.contract_id,
+            "uuid": company.uuid,
         }
         return json_data
 

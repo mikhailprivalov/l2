@@ -390,7 +390,7 @@ import usersPoint from '@/api/user-point';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
-import { convertSubjectNameToTitle } from '@/utils';
+import { convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
   { id: 'mo', label: 'Подписи медицинской организации' },
@@ -514,6 +514,16 @@ export default class EDS extends Vue {
   selectedSignatureMode: any;
 
   signingProcess: any;
+
+  get noOGRN() {
+    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
+
+    if (!cert) {
+      return false;
+    }
+
+    return !subjectNameHasOGRN(null, cert.subjectName);
+  }
 
   get accessToMO() {
     return (this.$store.getters.user_data.groups || []).includes('ЭЦП Медицинской организации');
@@ -682,6 +692,11 @@ export default class EDS extends Vue {
   }
 
   async listSign() {
+    if (this.noOGRN && this.selectedSignatureMode === 'Медицинская организация') {
+      this.$error('Отсутствует ОГРН в сертификате');
+      return;
+    }
+
     if (this.signingProcess.active) {
       return;
     }

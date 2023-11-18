@@ -77,8 +77,9 @@ def fill_xls_check_research_exam_data(ws1, value_data):
         ws1.cell(row=r, column=5).value = fio[2]
         ws1.cell(row=r, column=6).value = "-"
         ws1.cell(row=r, column=7).value = "-"
+        ws1.cell(row=r, column=8).value = row.get('snils', '-')
         researches = row.get('researches')
-        column = 7
+        column = 8
         for v in researches.values():
             column += 1
             ws1.cell(row=r, column=column).value = v

@@ -2949,7 +2949,7 @@ def update_company(request):
             company_data.pk,
             130002,
             request.user.doctorprofile,
-            {"old_company_data": old_company_data, "new_company_data": new_company_data},
+            {"old_company_data": str(old_company_data), "new_company_data": str(new_company_data)},
         )
         return JsonResponse({"ok": True})
     else:
@@ -3023,6 +3023,7 @@ def get_harmful_factors(request):
             "title": factor.title,
             "description": factor.description,
             "template_id": factor.template_id,
+            "cpp_key": factor.cpp_key,
         }
         for factor in HarmfulFactor.objects.all().order_by("title")
     ]
