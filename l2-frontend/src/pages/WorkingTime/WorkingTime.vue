@@ -120,7 +120,7 @@ const employees = ref([
     position: 'Техник',
     bidType: 'осн.',
     normMonth: '178',
-    shiftDuration: '8',
+    normDay: '8',
     '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
@@ -129,7 +129,7 @@ const employees = ref([
     position: 'Начальник',
     bidType: 'осн.',
     normMonth: '178',
-    shiftDuration: '8',
+    normDay: '8',
     '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
@@ -138,7 +138,7 @@ const employees = ref([
     position: 'Техник',
     bidType: 'осн.',
     normMonth: '178',
-    shiftDuration: '8',
+    normDay: '8',
     '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
   },
@@ -174,10 +174,10 @@ const getColumns = () => {
   if (filtersIsFilled.value) {
     const columnTemplate = [
       {
-        field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 140, fixed: 'left',
+        field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 250, fixed: 'left',
       },
       {
-        field: 'position', key: 'position', title: 'Должность', align: 'center', width: 100,
+        field: 'position', key: 'position', title: 'Должность', align: 'center', width: 100, fixed: 'left',
       },
       {
         field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 30,
@@ -186,7 +186,7 @@ const getColumns = () => {
         field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 30,
       },
       {
-        field: 'shiftDuration', key: 'shiftDuration', title: 'Смена', align: 'center', width: 30,
+        field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 30,
       },
     ];
     const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
@@ -246,7 +246,6 @@ const rowStyleOption = {
 watch([selectedMonth, selectedYear, selectedDepartment], () => {
   getColumns();
 });
-const table = ref<any>(null);
 
 onMounted(() => {
   getDepartments();

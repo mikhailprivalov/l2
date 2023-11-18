@@ -42,19 +42,21 @@
       class="tp"
     >
       <div>
-        <label>Начало</label>
+        <label class="tp-label">Начало</label>
         <input
           v-model="startWork"
           class="form-control"
           type="time"
+          :max="endWork"
         >
       </div>
       <div>
-        <label>Конец</label>
+        <label class="tp-label">Конец</label>
         <input
           v-model="endWork"
           class="form-control"
           type="time"
+          :min="startWork"
         >
       </div>
       <button
@@ -108,7 +110,7 @@ const templatesWorkTime = ref([
   { id: 3, label: '15:48-00:00' },
 ]);
 const root = getCurrentInstance().proxy.$root;
-const changeTemplate = (templateLabel) => {
+const changeTemplate = (templateLabel: string) => {
   const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === templateLabel);
   if (templateCurrentWorkTime) {
     selectTemplate.value = templateCurrentWorkTime;
@@ -151,19 +153,22 @@ const changeWorkTime = () => {
     });
   }
 };
-
 const changeExact = () => {
-  if (startWork.value && endWork.value) {
+  if ((startWork.value && endWork.value) && (startWork.value < endWork.value)) {
     const workTimeLabel = `${startWork.value}-${endWork.value}`;
     if (selectTemplate.value) {
       if (workTimeLabel !== selectTemplate.value.label) {
         changeTemplate(workTimeLabel);
+      } else {
+        root.$emit('msg', 'error', 'Время уже назначено');
       }
     } else {
       changeTemplate(workTimeLabel);
     }
-  } else {
+  } else if (!startWork.value || !endWork.value) {
     root.$emit('msg', 'error', 'Время не заполнено');
+  } else if (startWork.value >= endWork.value) {
+    root.$emit('msg', 'error', 'Время не верно');
   }
 };
 
@@ -200,9 +205,12 @@ onMounted(() => {
   height: 34px;
   margin-top: 24px;
 }
+.tp-label {
+  height: 19px;
+}
 .tp {
   display: flex;
   height: 60px;
-  width: 225px;
+  width: 223px;
 }
 </style>
