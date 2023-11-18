@@ -1,13 +1,5 @@
 <template>
   <div class="flex">
-    <button
-      v-if="!props.isFirstDay"
-      v-tippy
-      class="transparentButton"
-      title="Скопировать предыдущий"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
     <Treeselect
       v-model="selectTemplate"
       :options="templatesWorkTime"
@@ -17,6 +9,14 @@
       class="time-width"
       @input="changeWorkTime"
     />
+    <button
+      v-if="!props.isFirstDay"
+      v-tippy
+      class="transparentButton"
+      title="Скопировать предыдущий"
+    >
+      <i class="fa-solid fa-copy" />
+    </button>
     <button
       v-tippy="{
         html: '#temp',
@@ -45,11 +45,13 @@
         v-model="startWork"
         class="form-control"
         type="time"
+        @input="changeExact"
       >
       <input
         v-model="endWork"
         class="form-control"
         type="time"
+        @input="changeExact"
       >
     </div>
   </div>
@@ -91,31 +93,39 @@ const selectTemplate = ref(null);
 const templatesWorkTime = ref([
   { id: 1, label: '08:00-16:30' },
   { id: 2, label: '08:00-15:48' },
-  { id: 3, label: '15:48-24:00' },
+  { id: 3, label: '15:48-00:00' },
 ]);
-const startWork = ref(null);
-const endWork = ref(null);
 
-const appendCurrentTime = (exact = false) => {
-  if ((workTimeIsFilled.value && !exact)) {
-    startWork.value = props.workTime.startWorkTime;
-    endWork.value = props.workTime.endWorkTime;
-  }
-  const workTimeLabel = `${startWork.value}-${endWork.value}`;
-  const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === workTimeLabel);
+const changeTemplate = (templateLabel) => {
+  const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === templateLabel);
   if (templateCurrentWorkTime) {
     selectTemplate.value = templateCurrentWorkTime;
   } else {
-    const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: workTimeLabel };
+    const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: templateLabel };
     templatesWorkTime.value.push(currentWorkTime);
     selectTemplate.value = currentWorkTime;
+  }
+};
+const startWork = ref(null);
+const endWork = ref(null);
+
+const appendCurrentTime = () => {
+  if (workTimeIsFilled.value) {
+    const start = props.workTime.startWorkTime;
+    const end = props.workTime.endWorkTime;
+    const workTimeLabel = `${start}-${end}`;
+    changeTemplate(workTimeLabel);
   }
 };
 
 const changeWorkTime = () => {
   if (selectTemplate.value) {
     const workTime = selectTemplate.value?.label?.split('-');
-    [startWork.value, endWork.value] = workTime;
+    const [start, end] = workTime;
+    if (start !== startWork.value || end !== endWork.value) {
+      startWork.value = start;
+      endWork.value = end;
+    }
     if (startWork.value !== props.workTime.startWorkTime || endWork.value !== props.workTime.endWorkTime) {
       emit('changeWorkTime', {
         start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
@@ -130,9 +140,19 @@ const changeWorkTime = () => {
   }
 };
 
-watch([startWork, endWork], () => {
-  appendCurrentTime(true);
-});
+const changeExact = () => {
+  if (startWork.value && endWork.value) {
+    const workTimeLabel = `${startWork.value}-${endWork.value}`;
+    if (selectTemplate.value) {
+      if (workTimeLabel !== selectTemplate.value.label) {
+        changeTemplate(workTimeLabel);
+      }
+    } else {
+      changeTemplate(workTimeLabel);
+    }
+  }
+};
+
 onMounted(() => {
   appendCurrentTime();
 });
@@ -162,6 +182,7 @@ onMounted(() => {
   color: #FFFFFF;
 }
 .tp {
+  display: flex;
   min-height: 100px;
   min-width: 100px;
 }
