@@ -123,6 +123,7 @@ const employees = ref([
     normDay: '8',
     '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
+    '03.10.2023': '8',
   },
   {
     fio: 'Касьяненко С.Н.',
@@ -132,6 +133,7 @@ const employees = ref([
     normDay: '8',
     '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
     '02.10.2023': '8',
+    '03.10.2023': '8',
   },
   {
     fio: 'Димитров С.Н.',
@@ -195,6 +197,7 @@ const getColumns = () => {
       const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
       const weekend = [6, 0].includes(col.getDay());
       const isFirstDay = col.getDate() === 1;
+      const prevDay = new Date(col.getFullYear(), col.getMonth(), col.getDate() - 1).toLocaleDateString();
       return {
         key: date,
         field: date,
@@ -206,7 +209,11 @@ const getColumns = () => {
           DateCell,
           {
             props: {
-              workTime: row[column.field] ? row[column.field] : '', rowIndex, columnKey: column.key, isFirstDay,
+              workTime: row[column.field] ? row[column.field] : '',
+              rowIndex,
+              columnKey: column.key,
+              isFirstDay,
+              prevWorkTime: employees.value[rowIndex][prevDay],
             },
             on: { changeWorkTime },
           },

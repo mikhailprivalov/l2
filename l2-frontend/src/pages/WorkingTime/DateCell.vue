@@ -14,6 +14,7 @@
       v-tippy
       class="transparentButton"
       title="Скопировать предыдущий"
+      @click="copyPrevTime"
     >
       <i class="fa-solid fa-copy" />
     </button>
@@ -74,7 +75,7 @@
 <script setup lang="ts">
 import {
   computed, getCurrentInstance,
-  onMounted, ref, watch,
+  onMounted, ref,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -98,9 +99,13 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
+  prevWorkTime: {
+    type: [Object, String],
+    required: false,
+  },
 });
 
-const workTimeIsFilled = computed(() => !!(typeof props.workTime === 'object' && props.workTime.startWorkTime
+const propsWorkTimeIsFilled = computed(() => !!(typeof props.workTime === 'object' && props.workTime.startWorkTime
   && props.workTime.endWorkTime));
 
 const selectTemplate = ref(null);
@@ -110,6 +115,9 @@ const templatesWorkTime = ref([
   { id: 3, label: '15:48-00:00' },
 ]);
 const root = getCurrentInstance().proxy.$root;
+
+const createLabel = (start, end) => `${start}-${end}`;
+
 const changeTemplate = (templateLabel: string) => {
   const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === templateLabel);
   if (templateCurrentWorkTime) {
@@ -120,14 +128,13 @@ const changeTemplate = (templateLabel: string) => {
     selectTemplate.value = currentWorkTime;
   }
 };
+
 const startWork = ref(null);
 const endWork = ref(null);
 
 const appendCurrentTime = () => {
-  if (workTimeIsFilled.value) {
-    const start = props.workTime.startWorkTime;
-    const end = props.workTime.endWorkTime;
-    const workTimeLabel = `${start}-${end}`;
+  if (propsWorkTimeIsFilled.value) {
+    const workTimeLabel = createLabel(props.workTime.startWorkTime, props.workTime.endWorkTime);
     changeTemplate(workTimeLabel);
   }
 };
@@ -153,8 +160,10 @@ const changeWorkTime = () => {
     });
   }
 };
+
+const timeCorrect = computed(() => !!(startWork.value && endWork.value) && (startWork.value < endWork.value));
 const changeExact = () => {
-  if ((startWork.value && endWork.value) && (startWork.value < endWork.value)) {
+  if (timeCorrect.value) {
     const workTimeLabel = `${startWork.value}-${endWork.value}`;
     if (selectTemplate.value) {
       if (workTimeLabel !== selectTemplate.value.label) {
@@ -172,6 +181,12 @@ const changeExact = () => {
   }
 };
 
+const copyPrevTime = () => {
+  if (props.prevWorkTime) {
+    const workTimeLabel = createLabel(props.prevWorkTime.startWorkTime, props.prevWorkTime.endWorkTime);
+    changeTemplate(workTimeLabel);
+  }
+};
 onMounted(() => {
   appendCurrentTime();
 });
