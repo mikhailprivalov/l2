@@ -51,7 +51,7 @@ watch([() => props.view, () => props.caseId], loadDirections, {
 });
 
 useOn('result-saved', loadDirections);
-useOn('researches-picker:directions_createdcd', loadDirections);
+useOn('researches-picker:directions_createdcase', loadDirections);
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 const printAll = () => {
