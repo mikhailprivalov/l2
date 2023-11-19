@@ -71,7 +71,7 @@ anytree = "2.8.0"
 beren = "0.7.1"
 transliterate = "1.10.2"
 imgkit = "1.2.3"
-astm = {git = "https://github.com/moodpulse/python-astm.git", rev = "v0.6"}
+astm = {git = "https://github.com/mikhailprivalov/python-astm.git", rev = "v0.6"}
 psycopg2-binary = "^2.9.4"
 boto3 = "^1.28.64"
 prompt-toolkit = "^3.0.36"

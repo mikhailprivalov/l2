@@ -85,7 +85,7 @@ develop = false
 
 [package.source]
 type = "git"
-url = "https://github.com/moodpulse/python-astm.git"
+url = "https://github.com/mikhailprivalov/python-astm.git"
 reference = "v0.6"
 resolved_reference = "b8b1ec5d104a3fc923caf9b497afbd23d7974c63"
 

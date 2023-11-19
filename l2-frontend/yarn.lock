@@ -9009,9 +9009,9 @@ vue-loader@^17.0.0:
     hash-sum "^2.0.0"
     loader-utils "^2.0.0"
 
-"vue-longpress@git+https://github.com/moodpulse/vuelongpress.git":
+"vue-longpress@git+https://github.com/mikhailprivalov/vuelongpress.git":
   version "2.0.0"
-  resolved "git+https://github.com/moodpulse/vuelongpress.git#6b1941cb76ac8efa3a2b9a24e52605fc47107080"
+  resolved "git+https://github.com/mikhailprivalov/vuelongpress.git#6b1941cb76ac8efa3a2b9a24e52605fc47107080"
   dependencies:
     vue "^2.1.10"
 
