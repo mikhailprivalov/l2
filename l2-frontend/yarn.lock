@@ -1387,10 +1387,10 @@
   dependencies:
     vue-router "*"
 
-"@types/vue-select@^3.16.2":
-  version "3.16.2"
-  resolved "https://registry.yarnpkg.com/@types/vue-select/-/vue-select-3.16.2.tgz#dbff98ffd9122657c818867b423caf44ec6db516"
-  integrity sha512-KkmQiNI7Cei2YV3wn7O2fmM6PpfuM9ybYFMDqq2AvIZNZ2BRHMMV70yaa1EKBRvqu5qY5ekel5WzcRRfNu56PQ==
+"@types/vue-select@^3.16.7":
+  version "3.16.7"
+  resolved "https://registry.yarnpkg.com/@types/vue-select/-/vue-select-3.16.7.tgz#05dad9fed299d72c8ab758383c110b5ebf68b522"
+  integrity sha512-euYyeydtItnSWDT72O8R6AV7UJHb62mBooMaWcX0QjPb/3PPGxRTj6x0rcrNQM1kPKu6YJvULLVYduzgQ8nOpQ==
   dependencies:
     vue "^2.0.0"
 
