@@ -424,7 +424,7 @@ import Component from 'vue-class-component';
 import moment from 'moment';
 import _ from 'lodash';
 // @ts-ignore
-import DatePicker from 'v-calendar/lib/components/date-picker.umd';
+import DatePicker from 'v-calendar/src/components/DatePicker.vue';
 import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
