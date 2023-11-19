@@ -5,7 +5,7 @@ from urllib.parse import quote
 import tempfile
 import tarfile
 
-REPO_API_URL = "https://api.github.com/repos/moodpulse/l2"
+REPO_API_URL = "https://api.github.com/repos/mikhailprivalov/l2"
 
 
 def get_release_info_from_github_by_version(version):

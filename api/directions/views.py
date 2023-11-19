@@ -2016,7 +2016,7 @@ def directions_paraclinic_result(request):
             return JsonResponse(response)
         parent_child_data = rb.get('parent_child_data', None)
         slave_reserch = HospitalService.objects.filter(slave_research=iss.research).first()
-        if parent_child_data:
+        if parent_child_data and slave_reserch:
             parent = int(parent_child_data.get('parent_iss', -1))
             child = int(parent_child_data.get('child_iss', -1))
             current = int(parent_child_data.get('current_iss', -1))

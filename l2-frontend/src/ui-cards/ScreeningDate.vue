@@ -40,7 +40,7 @@
 import Vue from 'vue';
 import Component from 'vue-class-component';
 // @ts-ignore
-import DatePicker from 'v-calendar/lib/components/date-picker.umd';
+import DatePicker from 'v-calendar/src/components/DatePicker.vue';
 import moment from 'moment';
 
 @Component({

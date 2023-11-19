@@ -47,6 +47,8 @@ def search(request):
                     original_view = 'morfology'
                 elif i.research.is_gistology:
                     original_view = 'morfology'
+                elif i.research.is_form:
+                    original_view = 'forms'
                 if original_view:
                     original_direction = pk
                 need_to_open_original = True
@@ -84,6 +86,8 @@ def search(request):
                             original_view = 'morfology'
                         elif iss_obj.research.is_gistology:
                             original_view = 'morfology'
+                        elif iss_obj.research.is_form:
+                            original_view = 'forms'
                 break
 
         if not child_research_title or child_research_title == '-1':
@@ -104,6 +108,7 @@ def search(request):
             "caseTitle": i.research.title,
             "childResearch": None,
             "forbiddenToEdit": forbidden_edit,
+            "closed": direction.total_confirmed,
             "originalDirection": {
                 'id': original_direction or child_direction,
                 'view': original_view,
@@ -137,6 +142,7 @@ def search(request):
                 'consultation': 0,
                 'morfology': 0,
                 'pharmacotherapy': 0,
+                'forms': 0,
                 'all': 0,
             },
         }
@@ -158,7 +164,8 @@ def search(request):
                 .distinct()
                 .count()
             )
-            result['data']['counts']["pharmacotherapy"] = ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
+            result['data']['counts']["pharmacotherapy"] += ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
+            result['data']['counts']["forms"] += Napravleniya.objects.filter(parent_case=i, issledovaniya__research__is_form=True).distinct().count()
             result['data']['counts']["all"] += Napravleniya.objects.filter(parent_case=i).count()
         break
     return JsonResponse(result)
@@ -234,6 +241,8 @@ def directions_by_key(request):
         directions = directions.filter(issledovaniya__research__is_paraclinic=True)
     elif view == 'consultation':
         directions = directions.filter(issledovaniya__research__is_doc_refferal=True)
+    elif view == 'forms':
+        directions = directions.filter(issledovaniya__research__is_form=True)
 
     directions = directions.distinct().order_by('id')
 
@@ -269,6 +278,8 @@ def aggregate(request):
         directions = directions.filter(issledovaniya__research__is_paraclinic=True)
     elif view == 'consultation':
         directions = directions.filter(issledovaniya__research__is_doc_refferal=True)
+    elif view == 'forms':
+        directions = directions.filter(issledovaniya__research__is_form=True)
 
     directions = directions.distinct().order_by('id')
 
