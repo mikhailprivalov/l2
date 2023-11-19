@@ -219,7 +219,7 @@
 
 <script lang="ts">
 import moment from 'moment';
-import DatePicker from 'v-calendar/lib/components/date-picker.umd';
+import DatePicker from 'v-calendar/src/components/DatePicker.vue';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
