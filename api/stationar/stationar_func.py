@@ -31,7 +31,7 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
 
     hosp_site_type = site_type
     hosp_level = level
-    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_is_all, hosp_morfology = False, False, False, False, False, False
+    hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_is_all, hosp_morfology, hosp_form = False, False, False, False, False, False, False
     if type_service == 'is_paraclinic':
         hosp_is_paraclinic = True
     elif type_service == 'is_doc_refferal':
@@ -40,11 +40,13 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
         hosp_is_lab = True
     elif type_service == 'is_morfology':
         hosp_morfology = True
+    elif type_service == 'is_form':
+        hosp_form = True
     if site_type == -1 and type_service == 'None':
         hosp_is_all = True
 
     hosp_dirs = tree_directions.hospital_get_direction(
-        num_iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology
+        num_iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology, hosp_form
     )
 
     data = []
@@ -71,10 +73,11 @@ def hosp_get_data_direction(main_direction, site_type=-1, type_service='None', l
                     'podrazdeleniye_title': i[19],
                     'site_type': i[21],
                     'research_short_title': i[23],
-                    'is_slave_hospital': i[24],
+                    'is_slave_hospital': i[24] or hosp_form,
                     'is_cancel': i[25],
                     "is_citology": i[26],
                     "is_gistology": i[27],
+                    "is_form": i[28],
                 }
             )
 
