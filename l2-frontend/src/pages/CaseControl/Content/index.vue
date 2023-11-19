@@ -56,6 +56,7 @@ watch(() => openedDirection.value, () => {
       :top-height-px="80"
       :top-padding-px="5"
       top-scrollable
+      :hide-top="props.view === 'closing'"
     >
       <template #top>
         <TopView
@@ -72,6 +73,7 @@ watch(() => openedDirection.value, () => {
           :key="openedDirection"
           :direction-id-to-open="openedDirection"
           :case-id="props.caseId"
+          kk="case"
         />
         <div
           v-else
@@ -84,7 +86,7 @@ watch(() => openedDirection.value, () => {
             disabled
           />
           <AggregateDesc
-            v-else-if="['paraclinical', 'consultation', 'morfology'].includes(props.view)"
+            v-else-if="['paraclinical', 'consultation', 'morfology', 'forms'].includes(props.view)"
             :key="`desc_${props.caseId}_${props.view}`"
             :case-direction="props.caseId"
             :r_type="props.view"

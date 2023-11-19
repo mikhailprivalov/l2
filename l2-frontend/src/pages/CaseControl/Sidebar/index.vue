@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import SearchForm from '@/pages/CaseControl/Sidebar/SearchForm.vue';
 import AnamnesisView from '@/pages/CaseControl/Sidebar/AnamnesisView.vue';
@@ -9,20 +9,32 @@ import useNotify from '@/hooks/useNotify';
 import api from '@/api';
 import { Patient } from '@/pages/CaseControl/types';
 import directionsPoint from '@/api/directions-point';
+import Modal from '@/ui-cards/Modal.vue';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import LastResult from '@/ui-cards/LastResult.vue';
+import { useStore } from '@/store';
 
-import { menuItems } from './menu';
+import { menuItems, showPlus } from './menu';
 
 const loader = useLoader();
 const notify = useNotify();
+const store = useStore();
 
 const caseTitle = ref<string>('');
 const cancel = ref<boolean>(false);
 const direction = ref<number | null>(null);
+const iss = ref<number | null>(null);
+const finId = ref<number | null>(null);
 const openedPatient = ref<Patient | null>(null);
 const openedTree = ref<any | null>(null);
 const childResearch = ref<any | null>(null);
 const originalDirection = ref<any | null>(null);
 const counts = ref<Record<string, number>>({});
+const isClosed = ref(false);
+const plusView = ref<string | null>(null);
+const plusOpened = ref(false);
+const createResearches = ref<number[]>([]);
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
@@ -41,12 +53,15 @@ const loadData = async (q?: string) => {
     }
     caseTitle.value = data.caseTitle;
     direction.value = data.direction;
+    iss.value = data.iss;
+    finId.value = data.fin_pk;
     cancel.value = data.cancel;
     childResearch.value = data.childResearch;
     openedPatient.value = patient;
     openedTree.value = tree;
     counts.value = data.counts;
     originalDirection.value = data.originalDirection;
+    isClosed.value = data.closed;
   }
   loader.dec();
 
@@ -78,7 +93,8 @@ const onSearch = async (q: string, onResult: (ok, message) => void) => {
 };
 
 useOn('result-saved', loadData);
-useOn('researches-picker:directions_createdcd', loadData);
+useOn('change-document-state', loadData);
+useOn('researches-picker:directions_createdcase', loadData);
 
 const toggleCancel = async () => {
   loader.inc();
@@ -97,6 +113,46 @@ const openDirection = (view: string, id: number) => {
     id,
   });
 };
+
+const openClosing = () => {
+  openDirection('closing', direction.value);
+};
+
+const plus = (view: string) => {
+  plusView.value = view;
+  plusOpened.value = true;
+};
+
+const plusClose = (view: string) => {
+  plusOpened.value = false;
+};
+
+const pickerTypesOnly = computed(() => {
+  if (plusView.value === 'laboratory') {
+    return [2];
+  }
+  if (plusView.value === 'paraclinical') {
+    return [3];
+  }
+  if (plusView.value === 'morfology') {
+    return [10000];
+  }
+  if (plusView.value === 'consultation') {
+    return [4];
+  }
+  if (plusView.value === 'forms') {
+    return [11];
+  }
+  return [];
+});
+
+const basesObj = computed(() => store.getters.bases.reduce(
+  (a, b) => ({
+    ...a,
+    [b.pk]: b,
+  }),
+  {},
+));
 </script>
 
 <template>
@@ -112,7 +168,7 @@ const openDirection = (view: string, id: number) => {
         <span v-else> <code>{{ direction }}</code></span>
         &nbsp;
         <a
-          v-if="!cancel"
+          v-if="!cancel && !isClosed"
           href="#"
           :class="{ cancel_color: !cancel }"
           class="a-under"
@@ -121,7 +177,7 @@ const openDirection = (view: string, id: number) => {
           Отменить
         </a>
         <a
-          v-if="cancel"
+          v-if="cancel && !isClosed"
           href="#"
           :class="{ active_color: cancel }"
           class="a-under"
@@ -129,6 +185,9 @@ const openDirection = (view: string, id: number) => {
         >
           Вернуть
         </a>
+        <span v-if="isClosed">
+          закрыт <i class="fa fa-check-circle-o" />
+        </span>
       </div>
       <div
         v-if="childResearch"
@@ -180,8 +239,122 @@ const openDirection = (view: string, id: number) => {
             :class="$style.counts"
           >{{ counts[key] }} шт.</span> {{ title }}
         </button>
+        <button
+          v-if="showPlus[key] && !isClosed"
+          class="btn btn-blue-nb"
+          :class="$style.sidebarBtn"
+          @click="plus(key)"
+        >
+          <i class="fa fa-plus" />
+        </button>
+      </div>
+      <div
+        key="closing"
+        :class="$style.sidebarBtnWrapper"
+      >
+        <button
+          class="btn btn-blue-nb"
+          :class="$style.sidebarBtn"
+          @click="openClosing"
+        >
+          {{ isClosed ? 'Протокол закрытия' : 'Закрыть случай' }}
+        </button>
       </div>
     </div>
+
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="DirectoryRowEditor"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="plusOpened"
+          margin-left-right="auto"
+          margin-top="60px"
+          max-width="1400px"
+          show-footer="true"
+          white-bg="true"
+          width="100%"
+          @close="plusClose"
+        >
+          <span slot="header">Создание направлений – случай {{ direction }}, {{ openedPatient.fioWithAge }}</span>
+          <div
+            slot="body"
+            class="registry-body"
+            style="min-height: 140px"
+          >
+            <div class="row">
+              <div
+                class="col-xs-6"
+                style="height: 450px; border-right: 1px solid #eaeaea; padding-right: 0"
+              >
+                <ResearchesPicker
+                  v-model="createResearches"
+                  :types-only="pickerTypesOnly"
+                  kk="case"
+                  style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
+                />
+              </div>
+              <div
+                class="col-xs-6"
+                style="height: 450px; padding-left: 0"
+              >
+                <SelectedResearches
+                  kk="case"
+                  :base="basesObj[openedPatient.base]"
+                  :researches="createResearches"
+                  :valid="true"
+                  :card_pk="openedPatient.cardPk"
+                  :initial_fin="finId"
+                  :parent_iss="iss"
+                  :parent-case="direction"
+                  :clear_after_gen="true"
+                  case-by-direction
+                  style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
+                />
+              </div>
+            </div>
+            <div
+              v-if="createResearches.length > 0"
+              style="margin-top: 5px; text-align: left"
+            >
+              <table class="table table-bordered lastresults">
+                <colgroup>
+                  <col width="180">
+                  <col>
+                  <col width="110">
+                  <col width="110">
+                </colgroup>
+                <tbody>
+                  <LastResult
+                    v-for="p in createResearches"
+                    :key="p"
+                    :individual="openedPatient.individualPk"
+                    :parent-iss="iss"
+                    :no-scroll="true"
+                    :research="p"
+                  />
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-4">
+                <button
+                  class="btn btn-primary-nb btn-blue-nb"
+                  type="button"
+                  @click="plusClose"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
   </div>
 </template>
 
@@ -244,6 +417,16 @@ export default {
     background-color: rgba(#000, 0.02) !important;
     color: #000;
     border-bottom: 1px solid #b1b1b1 !important;
+  }
+
+  &:hover {
+    border: none !important;
+  }
+
+  &.btn {
+    &:active, &:focus {
+      border: none !important;
+    }
   }
 }
 

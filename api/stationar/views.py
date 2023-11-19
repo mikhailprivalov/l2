@@ -125,7 +125,8 @@ def counts(request):
             .distinct()
             .count()
         )
-        result["pharmacotherapy"] = ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
+        result["pharmacotherapy"] += ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
+        result["forms"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__is_form=True).distinct().count()
         result["all"] += Napravleniya.objects.filter(parent=i).count()
     return JsonResponse(dict(result))
 
