@@ -11,6 +11,7 @@ export const menuItems = Object.freeze({
   physiotherapy: 'Физиотерапия',
   assignments: 'Назначения',
   't, ad, p sheet': 't, ad, p – листы',
+  forms: 'Формы',
   epicrisis: 'Эпикризы',
   extracts: 'Выписки',
   all: 'Показать всё',
@@ -35,12 +36,14 @@ export default {
         't, ad, p sheet': true,
         epicrisis: true,
         extracts: true,
+        forms: true,
       },
       plusDirectionsMode: {
         laboratory: true,
         paraclinical: true,
         morfology: true,
         consultation: true,
+        forms: true,
       },
       allowedOnlyOneEntry: {
         'primary receptions': true,
