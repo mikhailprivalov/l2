@@ -50,7 +50,7 @@
     "tiptap-extensions": "^1.35.2",
     "transform-runtime": "0.0.0",
     "typeahead.js": "^0.11.1",
-    "v-calendar": "^2.4.1",
+    "v-calendar": "^2.4.2",
     "v-click-outside": "^3.2.0",
     "v-img": "^0.2.0",
     "v-tooltip": "^2.1.3",
