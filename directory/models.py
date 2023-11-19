@@ -489,6 +489,7 @@ class HospitalService(models.Model):
         (7, 'Выписка'),
         (8, 'Больничный лист'),
         (9, 't, ad, p – лист'),
+        (11, 'Формы'),
     )
 
     TYPES_BY_KEYS = {
@@ -515,6 +516,7 @@ class HospitalService(models.Model):
         7: 'extracts',
         8: 'bl',
         9: 't, ad, p sheet',
+        11: 'forms',
     }
 
     TYPES_REVERSED = {
@@ -523,6 +525,7 @@ class HospitalService(models.Model):
         "consultation": "is_doc_refferal",
         "diaries": "diaries",
         "morfology": "is_morfology",
+        "forms": "is_form",
         "all": "None",
     }
 

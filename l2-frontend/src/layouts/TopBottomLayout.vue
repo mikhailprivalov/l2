@@ -1,6 +1,7 @@
 <template>
   <div :class="$style.root">
     <div
+      v-if="!props.hideTop"
       :class="[$style.top, props.topScrollable && $style.scrollable]"
       :style="topStyle"
     >
@@ -22,10 +23,11 @@ const props = withDefaults(defineProps<{
   topHeightPx?: number,
   topPaddingPx?: number,
   topScrollable?: boolean,
+  hideTop?: boolean,
 }>(), { topHeightPx: 100 });
 
 const topStyle = computed(() => {
-  const style = { height: `${props.topHeightPx}px` };
+  const style: Record<string, string> = { height: `${props.topHeightPx}px` };
 
   if (props.topPaddingPx) {
     style.padding = `${props.topPaddingPx}px`;
@@ -33,7 +35,7 @@ const topStyle = computed(() => {
 
   return style;
 });
-const bottomStyle = computed(() => ({ top: topStyle.value.height }));
+const bottomStyle = computed(() => ({ top: props.hideTop ? '0' : topStyle.value.height }));
 </script>
 
 <style module lang="scss">

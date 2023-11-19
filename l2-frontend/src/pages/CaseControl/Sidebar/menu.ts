@@ -4,5 +4,14 @@ export const menuItems = Object.freeze({
   paraclinical: 'Параклинические',
   laboratory: 'Лабораторные',
   morfology: 'Морфология',
+  forms: 'Формы',
   all: 'Показать всё',
+});
+
+export const showPlus = Object.freeze({
+  consultation: true,
+  paraclinical: true,
+  laboratory: true,
+  morfology: true,
+  forms: true,
 });

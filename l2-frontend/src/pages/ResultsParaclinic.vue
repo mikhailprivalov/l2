@@ -888,7 +888,7 @@
                 <div class="sd">
                   <DirectionsHistory
                     :iss_pk="row.pk"
-                    kk="cd"
+                    :kk="kk || 'cd'"
                   />
                 </div>
                 <div
@@ -1587,7 +1587,7 @@
           >
             <ResearchesPicker
               v-model="create_directions_data"
-              kk="cd"
+              :kk="kk || 'cd'"
               style="border-top: 1px solid #eaeaea; border-bottom: 1px solid #eaeaea"
               :filter_types="[7]"
             />
@@ -1597,7 +1597,7 @@
             style="height: 450px; padding-left: 0"
           >
             <SelectedResearches
-              kk="cd"
+              :kk="kk || 'cd'"
               :base="bases_obj[data.patient.base]"
               :researches="create_directions_data"
               :main_diagnosis="create_directions_diagnosis"
@@ -1872,6 +1872,10 @@ export default {
     },
     caseId: {
       type: Number,
+      required: false,
+    },
+    kk: {
+      type: String,
       required: false,
     },
   },
@@ -2673,6 +2677,7 @@ export default {
             this.reload_if_need();
             this.changed = false;
             this.$root.$emit('result-saved');
+            this.$root.$emit('change-document-state');
           } else {
             this.$root.$emit('msg', 'error', data.message);
           }
@@ -2729,6 +2734,7 @@ export default {
             }
             this.reload_if_need();
             this.changed = false;
+            this.$root.$emit('change-document-state');
           } else {
             this.$root.$emit('msg', 'error', data.message);
           }
@@ -2761,6 +2767,7 @@ export default {
             }
             this.reload_if_need();
             this.changed = false;
+            this.$root.$emit('change-document-state');
           } else {
             this.$root.$emit('msg', 'error', data.message);
           }
@@ -2805,6 +2812,7 @@ export default {
         }
         this.reload_if_need();
         this.changed = false;
+        this.$root.$emit('change-document-state');
       } else {
         this.$root.$emit('msg', 'error', data.message);
       }
