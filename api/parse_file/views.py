@@ -259,6 +259,12 @@ def auto_load_result(request, research, doc_profile):
     file_data = request.FILES["file"]
     financing_source_title = request.POST.get("financingSourceTitle")
     title_fields = request.POST.get("titleFields")
+    incorrect_patients = auto_create_protocol(title_fields, file_data, financing_source_title, research, doc_profile)
+
+    return incorrect_patients
+
+
+def auto_create_protocol(title_fields, file_data, financing_source_title, research, doc_profile):
     title_data = [i.strip() for i in title_fields.split(",")]
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
@@ -268,6 +274,7 @@ def auto_load_result(request, research, doc_profile):
     date_variant_title_field = ["Дата осмотра"]
     index_cell = {}
     incorrect_patients = []
+    step = 0
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -342,7 +349,7 @@ def auto_load_result(request, research, doc_profile):
                         hospital=doc_profile.hospital,
                         total_confirmed=True,
                         last_confirmed_at=timezone.now(),
-                        eds_required_signature_types=['Врач', 'Медицинская организация'],
+                        eds_required_signature_types=["Врач", "Медицинская организация"],
                     )
 
                     iss = directions.Issledovaniya.objects.create(
@@ -380,17 +387,18 @@ def auto_load_result(request, research, doc_profile):
                                                     continue
                                 directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
 
-                    eds_documents_data = json.dumps({'pk': direction.pk})
+                    eds_documents_data = json.dumps({"pk": direction.pk})
                     eds_documents_obj = HttpRequest()
                     eds_documents_obj._body = eds_documents_data
-                    eds_documents_obj.user = request.user
+                    eds_documents_obj.user = doc_profile.user
                     eds_documents(eds_documents_obj)
 
             except Exception as e:
                 logger.exception(e)
                 message = "Серверная ошибка"
                 return {"ok": False, "message": message}
-
+            step += 1
+            print(f"Карта: {card} Направление: {direction.pk}, Шаг: {step}")  # noqa: T001
     return incorrect_patients
 
 
@@ -602,6 +610,7 @@ def data_research_exam_patient(request, set_research):
         "patronymic": "отчество",
         "current_age": "возраст текущий",
         "year_age": "возраст в году",
+        "snils": "СНИЛС",
         **head_research_data,
     }
 

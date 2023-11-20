@@ -1017,6 +1017,9 @@ class CardBase(models.Model):
     order_weight = models.SmallIntegerField(default=0)
     forbidden_create_napr = models.BooleanField(help_text="Запрет создания направлений", default=False)
 
+    def get_fin_sources(self):
+        return [{'id': x.pk, 'label': x.title} for x in self.istochnikifinansirovaniya_set.filter(hide=False).order_by('-order_weight')]
+
     def __str__(self):
         return "{0} - {1}".format(self.title, self.short_title)
 

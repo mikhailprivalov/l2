@@ -170,6 +170,7 @@ def directions_generate(request):
             price_category=p.get("priceCategory", -1),
             case_id=p.get("caseId", -2),
             case_by_direction=p.get("caseByDirection", False),
+            slot_fact_id=p.get("slotFactId", None),
         )
         if type_generate == "calculate-cost":
             fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()
@@ -2015,7 +2016,7 @@ def directions_paraclinic_result(request):
             return JsonResponse(response)
         parent_child_data = rb.get('parent_child_data', None)
         slave_reserch = HospitalService.objects.filter(slave_research=iss.research).first()
-        if parent_child_data:
+        if parent_child_data and slave_reserch:
             parent = int(parent_child_data.get('parent_iss', -1))
             child = int(parent_child_data.get('child_iss', -1))
             current = int(parent_child_data.get('current_iss', -1))

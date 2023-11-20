@@ -175,6 +175,7 @@ class Researches(models.Model):
         (11001, '110.01 - Антирабическая карта'),
         (11002, '110.02 - Заключение ВК по психиатрическому освидетельствованию'),
         (11101, '111.01 - Карта профосмотра несовершеннолетнего N 030-ПО/у-17'),
+        (11201, '112.01 - Извещение о НР ЛП'),
     )
 
     RESULT_TITLE_FORMS = (
@@ -489,6 +490,7 @@ class HospitalService(models.Model):
         (7, 'Выписка'),
         (8, 'Больничный лист'),
         (9, 't, ad, p – лист'),
+        (11, 'Формы'),
     )
 
     TYPES_BY_KEYS = {
@@ -515,6 +517,7 @@ class HospitalService(models.Model):
         7: 'extracts',
         8: 'bl',
         9: 't, ad, p sheet',
+        11: 'forms',
     }
 
     TYPES_REVERSED = {
@@ -523,6 +526,7 @@ class HospitalService(models.Model):
         "consultation": "is_doc_refferal",
         "diaries": "diaries",
         "morfology": "is_morfology",
+        "forms": "is_form",
         "all": "None",
     }
 

@@ -607,7 +607,7 @@ export default {
         const card = exam.card_id;
         const selectCard = this.selectedCards;
         return selectCard.includes(card);
-      }).map((exam) => ({ card_id: exam.card_id, research: exam.research_id }));
+      }).map((exam) => ({ card_id: exam.card_id, date: exam.date, research: exam.research_id }));
       await this.$api('print-medical-examination-data', {
         cards: printData,
         exclude: this.excludedResearches,

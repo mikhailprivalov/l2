@@ -12,6 +12,8 @@
       :is-editing="isEditing"
       :resource="resource"
       :services="services"
+      :step="days.length"
+      :only-emit="onlyEmit"
     />
   </div>
 </template>
@@ -39,6 +41,9 @@ import Day from './Day.vue';
       type: String,
     },
     isEditing: {
+      type: Boolean,
+    },
+    onlyEmit: {
       type: Boolean,
     },
     resource: {
@@ -125,15 +130,6 @@ export default class DaysGridNatural extends Vue {
   flex-wrap: nowrap;
   flex-direction: row;
   justify-content: flex-start;
-  align-items: flex-start;
-
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  overflow-x: hidden;
-  overflow-y: auto;
+  align-items: stretch;
 }
 </style>
