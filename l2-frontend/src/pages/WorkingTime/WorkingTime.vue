@@ -10,7 +10,7 @@
         />
       </div>
       <div class="filters month-width">
-        <label>Месяц</label>
+        <label for="month">Месяц</label>
         <Treeselect
           v-model="selectedMonth"
           :options="months"
@@ -27,8 +27,12 @@
       </div>
     </div>
     <div v-if="filtersIsFilled">
-      <label class="filters">Поиск сотрудника</label>
+      <label
+        for="search"
+        class="filters"
+      >Поиск сотрудника</label>
       <input
+        id="search"
         v-model.trim="search"
         class="form-control"
       >
@@ -38,6 +42,7 @@
       class="white-background"
     >
       <VeTable
+        v-show="filteredEmployees.length"
         :columns="columns"
         :table-data="filteredEmployees"
         :row-style-option="rowStyleOption"
@@ -46,7 +51,7 @@
         :scroll-width="0"
       />
       <div
-        v-show="filteredEmployees.length === 0"
+        v-show="!filteredEmployees.length"
         class="empty-list"
       >
         Нет записей
@@ -93,17 +98,17 @@ const months = ref([
 const selectedYear = ref(2023);
 const years = ref([]);
 
+const currentDate = ref(new Date());
 const getYears = (yearStart = 2023) => {
   let start = yearStart;
-  selectedYear.value = new Date().getFullYear();
+  selectedYear.value = currentDate.value.getFullYear();
   while (start <= selectedYear.value) {
     years.value.push({ id: start, label: String(yearStart) });
     start++;
   }
 };
 const setCurrentMonth = () => {
-  const date = new Date();
-  selectedMonth.value = date.getMonth() + 1;
+  selectedMonth.value = currentDate.value.getMonth() + 1;
 };
 
 const selectedDepartment = ref(null);
@@ -216,6 +221,7 @@ const getColumns = () => {
           {
             props: {
               workTime: row[column.field] ? row[column.field] : '',
+              date: col,
               rowIndex,
               columnKey: column.key,
               isFirstDay,
@@ -242,7 +248,7 @@ const cellStyleOption = {
     if (column.isWeekend) {
       return 'table-body-cell-weekend';
     }
-    return '';
+    return 'table-body-cell-weekday';
   },
   headerCellClass: ({ column }) => {
     if (column.isWeekend) {
@@ -270,8 +276,15 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .empty-list {
-  width: 85px;
-  margin: 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 100%;
+  color: #666;
+  font-size: 16px;
+  border: 1px solid #eee;
+  border-top: 0;
 }
 .main {
   width: 100%;
@@ -287,6 +300,12 @@ onMounted(() => {
 }
 .white-background {
   background-color: #FFF;
+}
+.max-height {
+  max-height: calc(100vh - 325px);
+}
+.no-height {
+  height: 0px !important;
 }
 .filters {
   margin: 0 10px;
@@ -308,9 +327,14 @@ onMounted(() => {
 <style lang="scss">
 .table-body-cell-weekend {
   background: #ade0a875 !important;
+  white-space: normal !important;
+  padding: 0 10px !important;
+}
+.table-body-cell-weekday {
+  white-space: normal !important;
+  padding: 0 10px 10px 10px !important;
 }
 .table-header-cell-weekend {
   background: #ade0a875 !important;
 }
-
 </style>
