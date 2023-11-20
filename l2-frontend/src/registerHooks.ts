@@ -151,6 +151,8 @@ export default (instance: Vue): void => {
       priceCategory = null,
       caseId,
       caseByDirection = false,
+      slotFactId = null,
+      cbWithIds,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -199,6 +201,7 @@ export default (instance: Vue): void => {
           caseId,
           caseByDirection,
           type,
+          slotFactId,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);
@@ -227,6 +230,11 @@ export default (instance: Vue): void => {
               instance.$root.$emit('embedded-form:open', data.directions[0]);
             } else if (type === 'calculate-cost') {
               instance.$root.$emit('msg', 'ok', `Сумма: ${data.message}`, 10000);
+              return;
+            } else if (type === 'emit-open') {
+              instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}
+              ${data.messageLimit}`);
+              cbWithIds?.(data.directions);
               return;
             }
             instance.$root.$emit(`researches-picker:clear_all${kk}`);

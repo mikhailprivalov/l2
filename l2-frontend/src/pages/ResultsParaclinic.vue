@@ -6,7 +6,7 @@
   >
     <div
       v-if="!embedded"
-      :class="{ has_loc, opened: sidebarIsOpened || !data.ok }"
+      :class="{ has_loc: has_loc || schedule_in_protocol, opened: sidebarIsOpened || !data.ok }"
       class="results-sidebar"
     >
       <div class="sidebar-top">
@@ -92,7 +92,7 @@
       </div>
       <div
         class="directions"
-        :class="{ noStat: !stat_btn_d, has_loc, stat_btn: stat_btn_d }"
+        :class="{ noStat: !stat_btn_d, has_loc: has_loc || schedule_in_protocol, stat_btn: stat_btn_d }"
       >
         <div class="inner">
           <div
@@ -252,6 +252,58 @@
                 </td>
               </tbody>
             </table>
+          </div>
+        </div>
+        <div
+          v-else-if="schedule_in_protocol"
+          class="location-internal"
+        >
+          <div class="title">
+            <div
+              v-if="location.loading"
+              class="loader"
+            >
+              <i class="fa fa-spinner" />
+            </div>
+            Очередь за <input
+              v-model="td"
+              :readonly="location.loading"
+              class="inline-form"
+              required
+              type="date"
+            >
+          </div>
+          <div class="sub-title">
+            <Treeselect
+              v-model="location.resource"
+              :multiple="false"
+              class="treeselect-wide treeselect-nbr treeselect-34px"
+              :append-to-body="true"
+              :disable-branch-nodes="true"
+              :clearable="false"
+              :z-index="5001"
+              placeholder="Ресурс"
+              :options="location.resources"
+              :cache-options="true"
+              open-direction="bottom"
+              :open-on-focus="true"
+              :default-expand-level="1"
+            />
+          </div>
+          <div
+            class="inner"
+            :class="{ stat_btn: stat_btn_d }"
+          >
+            <DaysGridNatural
+              v-if="location.resource && location.services?.length && location.data?.length === 1"
+              :resource="location.resource"
+              :services="location.services"
+              :days="location.data"
+              :start-time="location.startTime"
+              :end-time="location.endTime"
+              mode="natural"
+              only-emit
+            />
           </div>
         </div>
         <div
@@ -1850,6 +1902,7 @@ export default {
     ScreeningButton,
     Treeselect,
     FileAdd: () => import('@/ui-cards/FileAdd.vue'),
+    DaysGridNatural: () => import('@/pages/Schedule/DaysGridNatural.vue'),
   },
   async beforeRouteLeave(to, from, next) {
     const msg = this.unload();
@@ -1913,6 +1966,11 @@ export default {
         loading: false,
         init: false,
         data: [],
+        resource: null,
+        services: [],
+        resources: [],
+        startTime: null,
+        endTime: null,
       },
       slot: {
         id: null,
@@ -1987,6 +2045,9 @@ export default {
     rmis_queue() {
       return this.$store.getters.modules.l2_rmis_queue;
     },
+    schedule_in_protocol() {
+      return this.$store.getters.modules.l2_schedule_in_protocol;
+    },
     amd() {
       return this.$store.getters.modules.l2_amd;
     },
@@ -1995,6 +2056,9 @@ export default {
     },
     l2_morfology_additional() {
       return this.$store.getters.modules.l2_morfology_additional;
+    },
+    locationResource() {
+      return this.location?.resource;
     },
     show_additional() {
       if (!this.data?.ok) {
@@ -2158,6 +2222,14 @@ export default {
     },
   },
   watch: {
+    locationResource: {
+      immediate: true,
+      handler() {
+        if (this.locationResource) {
+          this.load_location_internal();
+        }
+      },
+    },
     date() {
       this.load_history();
     },
@@ -2165,6 +2237,7 @@ export default {
       async handler({ rmis_location: rmisLocation }) {
         if (!this.location.init && rmisLocation) {
           await this.load_location();
+          await this.load_location_internal();
           this.location.init = true;
         }
       },
@@ -2203,9 +2276,20 @@ export default {
       },
       immediate: true,
     },
+    schedule_in_protocol: {
+      async handler(h) {
+        if (h) {
+          await this.$store.dispatch(actions.INC_LOADING);
+          await this.$store.dispatch(actions.GET_RESEARCHES);
+          await this.$store.dispatch(actions.DEC_LOADING);
+        }
+      },
+      immediate: true,
+    },
     td: {
       handler() {
         this.load_location();
+        this.load_location_internal();
       },
     },
     navState() {
@@ -2229,6 +2313,9 @@ export default {
     this.$root.$on('hide_benefit', () => {
       this.load_benefit_rows();
       this.benefit = false;
+    });
+    this.$root.$on('reload-location', () => {
+      this.load_location_internal();
     });
 
     this.$root.$on('show_results', (pk) => {
@@ -2377,6 +2464,47 @@ export default {
             return { data: [] };
           })
         ).data;
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+        this.location.data = [];
+      }
+      this.location.loading = false;
+    },
+    async load_location_internal() {
+      if (!this.schedule_in_protocol) {
+        return;
+      }
+      this.location.loading = true;
+      if (this.location.resources.length === 0) {
+        const { pk, options } = await this.$api('/schedule/get-first-user-resource?onlyMe=1');
+
+        if (options.length === 0) {
+          this.location.loading = false;
+          return;
+        }
+
+        this.location.resource = pk;
+        this.location.resources = options;
+      }
+
+      if (!this.loc_timer) {
+        this.loc_timer = setInterval(() => this.load_location_internal(), 120000);
+      }
+      try {
+        if (this.location.resource) {
+          const {
+            days, startTime, endTime, services,
+          } = await this.$api('/schedule/days', {
+            displayDays: 1,
+            date: this.td,
+            resource: this.location.resource,
+          });
+          this.location.data = days;
+          this.location.startTime = startTime;
+          this.location.endTime = endTime;
+          this.location.services = services;
+        }
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
@@ -2686,6 +2814,7 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.inserted = true;
           this.load_location();
+          this.load_location_internal();
         });
     },
     save_and_confirm(iss) {
@@ -2743,6 +2872,7 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.inserted = true;
           this.load_location();
+          this.load_location_internal();
           this.$root.$emit('open-pk', this.data.direction.pk);
         });
     },
@@ -2776,6 +2906,7 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.inserted = true;
           this.load_location();
+          this.load_location_internal();
           this.$root.$emit('open-pk', this.data.direction.pk);
         });
     },
@@ -2820,6 +2951,7 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       this.inserted = true;
       this.load_location();
+      this.load_location_internal();
     },
     clear(ignoreOrig) {
       const ignore = ignoreOrig || false;
@@ -2914,6 +3046,7 @@ export default {
         const { direction } = await usersPoint.fillSlot({ slot: { ...this.slot, card_pk: cardPk } });
         await this.$store.dispatch(actions.DEC_LOADING);
         this.load_location();
+        this.load_location_internal();
         this.open_fill_slot(direction);
       } catch (_) {
         await this.$store.dispatch(actions.DEC_LOADING);
@@ -3459,6 +3592,46 @@ export default {
   &.has_loc {
     .inner {
       height: calc(50% + 17px);
+    }
+  }
+
+  .location-internal {
+    position: absolute;
+    height: 50%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #b1b1b1;
+
+    .title {
+      height: 20px;
+      background: #eaeaea;
+      text-align: center;
+      position: relative;
+
+      .loader {
+        position: absolute;
+        right: 2px;
+        top: 1px;
+        animation: rotating 1.5s linear infinite;
+      }
+    }
+
+    .sub-title {
+      height: 34px;
+      position: relative;
+      background: #eaeaea;
+    }
+
+    .inner {
+      position: relative;
+      height: calc(100% - 54px);
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      &.stat_btn {
+        height: calc(100% - 88px);
+      }
     }
   }
 

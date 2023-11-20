@@ -247,6 +247,9 @@ export default {
         data: {
           doctors_has_free_date: doctors,
           unique_date: dates,
+        } = {
+          doctors_has_free_date: {},
+          unique_date: [],
         },
       } = await this.$api('ecp/available-slots-of-dates', {
         research_pk: this.servicePk,
