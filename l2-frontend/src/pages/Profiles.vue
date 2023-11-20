@@ -631,7 +631,7 @@
               />
             </div>
             <div
-              class="col-xs-10"
+              :class="current_resource_pk !== -1 ? 'col-xs-9' : 'col-xs-10'"
               style="padding-right: 0"
             >
               <div
@@ -646,7 +646,21 @@
               </div>
             </div>
             <div
-              style="float: right; padding-right: 20px"
+              v-if="current_resource_pk !== -1"
+              style="padding-right: 0;text-align: right"
+              class="col-xs-1"
+            >
+              <button
+                v-tippy
+                class="btn btn-blue-nb"
+                title="Отмена"
+                @click="current_resource_title = ''; resource_researches = []; current_resource_pk = -1;"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
+            <div
+              style="padding-right: 20px;text-align: right"
               class="col-xs-2"
             >
               <button
@@ -654,7 +668,7 @@
                 class="btn btn-blue-nb"
                 @click="save_resource"
               >
-                Сохранить ресурс
+                {{ current_resource_pk !== -1 ? 'Обновить ресурс' : 'Сохранить ресурс' }}
               </button>
             </div>
           </div>
@@ -666,7 +680,14 @@
               v-for="row in rows"
               :key="row.pk"
               class="research"
+              :class="current_resource_pk === row.pk && 'research-active'"
             >
+              <strong
+                v-if="row.title"
+                class="t-r"
+              >
+                {{ row.title }}
+              </strong>
               <span
                 v-for="res in row.researches"
                 :key="res.pk"
@@ -684,7 +705,7 @@
               <button
                 class="btn btn-blue-nb sidebar-btn"
                 style="font-size: 12px"
-                @click="open_schedule"
+                @click="open_schedule(row.pk)"
               >
                 Расписание
               </button>
@@ -869,6 +890,7 @@ import usersPoint from '@/api/user-point';
 import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import UrlData from '@/UrlData';
 
 const toTranslit = function (text) {
   return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
@@ -1102,8 +1124,8 @@ export default {
     this.getAllAnalyzers();
   },
   methods: {
-    open_schedule() {
-      window.open('/ui/schedule', '_blank');
+    open_schedule(pk) {
+      window.open(`/ui/schedule#${UrlData.objectToData({ resourceSelected: pk })}`, '_blank');
     },
     current_resource_researches(row) {
       for (const res of this.resource_templates_list) {
@@ -1111,6 +1133,7 @@ export default {
           this.resource_researches = res.researches;
           this.current_resource_pk = row.pk;
           this.current_resource_title = res.title;
+          break;
         }
       }
     },
@@ -1129,7 +1152,11 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', message);
-        this.current_resource_title = '';
+        if (this.current_resource_pk === -1) {
+          this.current_resource_title = '';
+          this.resource_researches = [];
+        }
+        await this.reloadResources();
       }
     },
     change_setup_forbidden() {
@@ -1193,6 +1220,16 @@ export default {
       this.resource_templates_list = this.user.resource_schedule;
       await this.$store.dispatch(actions.DEC_LOADING);
       this.open_pk = pk;
+    },
+    async reloadResources() {
+      if (!this.open_pk) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { user } = await usersPoint.loadUser({ pk: this.open_pk });
+      this.user.resource_schedule = user.resource_schedule;
+      this.resource_templates_list = this.user.resource_schedule;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -1458,19 +1495,21 @@ li.selected {
 
 .research {
   background-color: #fff;
-  padding: 5px;
+  padding: 5px 5px 5px 0;
   margin: 10px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
+  border-left: 5px solid #fff;
 
   &.rhide {
     background-image: linear-gradient(#6c7a89, #56616c);
     color: #fff;
   }
 
-  hr {
+  &-active {
+    border-left: 5px solid #37bc9b;
   }
 }
 

@@ -2,8 +2,12 @@
   <div
     class="day-root"
     :class="[currentDate === day.date && 'day-today', mode === 'list' ? 'day-list' : 'day-natural']"
+    :style="styleRoot"
   >
-    <div class="day-header">
+    <div
+      v-if="step !== 1"
+      class="day-header"
+    >
       <DayHeader
         :day="day"
         :is-editing="isEditing"
@@ -44,6 +48,8 @@
       :mode="mode"
       :services="services"
       :all-hours-values="allHoursValues"
+      :simple="step === 1"
+      :only-emit="onlyEmit"
     />
     <TimeMarker
       v-if="currentDate === day.date && mode !== 'list'"
@@ -101,7 +107,14 @@ import DayHeader from './DayHeader.vue';
     isEditing: {
       type: Boolean,
     },
+    onlyEmit: {
+      type: Boolean,
+    },
     resource: {
+      type: Number,
+      required: true,
+    },
+    step: {
       type: Number,
       required: true,
     },
@@ -126,15 +139,25 @@ export default class Day extends Vue {
 
   resource: number;
 
+  step: number;
+
   services: any[];
 
   getOffset(s) {
-    const offset = s.minute * 2 + this.allHoursValues.indexOf(s.hourValue) * 120 + 51;
+    const offset = s.minute * 2 + this.allHoursValues.indexOf(s.hourValue) * 120 + (this.step === 1 ? 0 : 51);
     return `${offset}px`;
   }
 
   createSlot(time) {
     this.$root.$emit('schedule:create-one-slot', this.day.date, time);
+  }
+
+  get width() {
+    return `calc(100% / ${this.step})`;
+  }
+
+  get styleRoot() {
+    return `width: ${this.width};flex: 0 ${this.width}`;
   }
 }
 </script>
@@ -144,15 +167,17 @@ $border-color: #000;
 $hour-height: 120px;
 
 .day-root {
-  width: calc(100% / 7);
   min-height: 100%;
-  flex: 0 calc(100% / 7);
   border-right: 1px solid $border-color;
   position: relative;
   background-color: #fff;
 
   &.day-today {
     background-color: #f4fffc;
+  }
+
+  &:last-child {
+    border-right: none;
   }
 }
 
