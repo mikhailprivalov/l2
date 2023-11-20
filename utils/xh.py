@@ -112,7 +112,6 @@ def replace_values(key):
 
 
 def simple_join_two_pdf_files(files_data):
-
     from pdfrw import PdfReader, PdfWriter
 
     today = datetime.datetime.now()
@@ -144,4 +143,3 @@ def simple_save_pdf_file(fc):
     file_buffer1 = os.path.join(dir_param, date_now_str + '_buffer1.pdf')
     save_tmp_file(fc_buf, filename=file_buffer1)
     return file_buffer1
-

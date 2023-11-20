@@ -1559,11 +1559,7 @@ class Napravleniya(models.Model):
                                 price_name_id=price_name,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
-                            issledovaniye_case = Issledovaniya(
-                                napravleniye=napravleniye_case,
-                                research=research_case,
-                                deferred=False
-                            )
+                            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
                             issledovaniye_case.save()
                             issledovaniye_case_id = issledovaniye_case.pk
                         elif case_id > 0:
@@ -2277,7 +2273,6 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
-
 
     @property
     def time_save_local(self):
