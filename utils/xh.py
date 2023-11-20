@@ -1,5 +1,3 @@
-import datetime
-
 from api.directions.sql_func import get_lab_podr
 from appconf.manager import SettingManager
 from laboratory.settings import QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
@@ -7,6 +5,7 @@ from utils.flowable import QrCodeSite
 import datetime
 import os.path
 from io import BytesIO
+from pdfrw import PdfReader, PdfWriter
 
 
 def fix(s: str):
@@ -112,12 +111,6 @@ def replace_values(key):
 
 
 def simple_join_two_pdf_files(files_data):
-    from pdfrw import PdfReader, PdfWriter
-
-    today = datetime.datetime.now()
-    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-    date_now_str = str(date_now1)
-
     pdf_all = BytesIO()
     inputs = files_data
     writer = PdfWriter()

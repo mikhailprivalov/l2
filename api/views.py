@@ -77,7 +77,7 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from utils.xh import get_all_hospitals, save_tmp_file, simple_join_two_pdf_files, simple_save_pdf_file
+from utils.xh import get_all_hospitals, simple_join_two_pdf_files, simple_save_pdf_file
 from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar, search_case_by_card_date
