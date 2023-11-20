@@ -3354,24 +3354,9 @@ def print_medical_examination_data(request):
                 plan_start_date=plan_date_start_case
             )
         else:
-            napravleniye_case = directions.Napravleniya.gen_napravleniye(
-                card_id,
-                doc,
-                financing_source,
-                "",
-                "",
-                doc,
-                -1,
-                doc,
-                price_name_id=13
-            )
+            napravleniye_case = directions.Napravleniya.gen_napravleniye(card_id, doc, financing_source, "", "", doc, -1, doc, price_name_id=13)
 
-            issledovaniye_case = directions.Issledovaniya(
-                napravleniye=napravleniye_case,
-                research=research_case,
-                deferred=False,
-                plan_start_date=plan_date_start_case
-            )
+            issledovaniye_case = directions.Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_date_start_case)
             issledovaniye_case.save()
             result = directions.Napravleniya.gen_napravleniya_by_issledovaniya(
                 card_id,
