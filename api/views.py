@@ -3351,7 +3351,7 @@ def print_medical_examination_data(request):
                 price_name=13,
                 case_id=case_direction_number,
                 case_by_direction=True,
-                plan_start_date=plan_date_start_case
+                plan_start_date=plan_date_start_case,
             )
         else:
             napravleniye_case = directions.Napravleniya.gen_napravleniye(card_id, doc, financing_source, "", "", doc, -1, doc, price_name_id=13)
