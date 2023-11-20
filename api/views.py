@@ -3350,7 +3350,7 @@ def print_medical_examination_data(request):
                 count=1,
                 discount=0,
                 rmis_slot=None,
-                price_name=13,
+                price_name=None,
                 case_id=case_direction_number,
                 case_by_direction=True,
                 plan_start_date=plan_start_date_case
@@ -3389,7 +3389,7 @@ def print_medical_examination_data(request):
                 count=1,
                 discount=0,
                 rmis_slot=None,
-                price_name=13,
+                price_name=None,
                 case_id=napravleniye_case.pk,
                 case_by_direction=True,
                 plan_start_date=plan_start_date_case,
