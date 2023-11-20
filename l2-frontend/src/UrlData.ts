@@ -1,12 +1,21 @@
 const titleSplitter = ' > ';
 
 export default class UrlData {
-  static set(data: any) {
+  static objectToData(data: any) {
     if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+      return null;
+    }
+
+    return encodeURIComponent(JSON.stringify(data));
+  }
+
+  static set(data: any) {
+    const hash = UrlData.objectToData(data);
+    if (!hash) {
       window.history.pushState('', '/', window.location.pathname);
       return false;
     }
-    window.location.hash = encodeURIComponent(JSON.stringify(data));
+    window.location.hash = hash;
     return true;
   }
 
@@ -30,6 +39,16 @@ export default class UrlData {
       }
     }
     return null;
+  }
+
+  static getKey(key: string) {
+    const data = UrlData.get();
+
+    if (!data || typeof data !== 'object') {
+      return undefined;
+    }
+
+    return data[key];
   }
 
   static title(newTitle: string) {

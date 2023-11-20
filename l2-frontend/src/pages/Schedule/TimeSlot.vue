@@ -3,11 +3,9 @@
     class="slot"
     :class="[`slot-status-${data.status}`, mode === 'list' ? 'slot-list' : 'slot-natural']"
     :style="mode === 'list' ? '' : `top: ${offset}; min-height: ${minHeight};`"
+    @click="open"
   >
-    <div
-      class="slot-inner"
-      @click="open"
-    >
+    <div class="slot-inner">
       <div
         v-if="data.patient"
         class="patient-row"
@@ -29,6 +27,12 @@
       </div>
       <div class="param-row">
         <i class="far fa-circle" /> {{ data.duration }} мин
+      </div>
+      <div
+        v-if="data.direction?.id"
+        class="service-row"
+      >
+        Протокол {{ data.direction?.id }}
       </div>
     </div>
 
@@ -59,30 +63,82 @@
               <i class="fa fa-spinner" /> загрузка
             </div>
             <div v-else>
-              <div class="patient-root">
-                <PatientSmallPicker
-                  v-model="details.cardId"
-                  :base_pk="details.baseId"
-                />
-              </div>
               <div
-                v-if="details.cardId"
-                class="form-row"
+                v-if="!details.cardId"
+                class="input-group"
+                style="margin-bottom: 5px"
               >
-                <div class="row-t">
-                  Услуга
-                </div>
-                <div class="row-v">
-                  <treeselect
-                    v-model="details.service.id"
-                    class="treeselect-noborder"
-                    :multiple="false"
-                    :disable-branch-nodes="true"
-                    :options="services"
-                    placeholder="Услуга не выбрана"
+                <span
+                  class="input-group-addon"
+                >Слот заблокирован:</span>
+                <label
+                  class="input-group-addon"
+                  style="text-align: left;width: 200px"
+                >
+                  <input
+                    v-model="details.disabled"
+                    type="checkbox"
+                    style="vertical-align: middle;"
+                  > {{ details.disabled ? 'да' : 'нет' }}
+                </label>
+              </div>
+              <template v-if="!details.disabled">
+                <div class="patient-root">
+                  <PatientSmallPicker
+                    v-model="details.cardId"
+                    :base_pk="details.baseId"
+                    :disabled="!!details?.direction?.id"
                   />
                 </div>
-              </div>
+                <div
+                  v-if="details.cardId"
+                  class="form-row"
+                >
+                  <div class="row-t">
+                    Услуга
+                  </div>
+                  <div class="row-v">
+                    <treeselect
+                      v-model="details.service.id"
+                      class="treeselect-noborder"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="services"
+                      placeholder="Услуга не выбрана"
+                      :disabled="!!details?.direction?.id"
+                    />
+                  </div>
+                </div>
+                <div
+                  v-if="details.service.id && details.cardId"
+                  class="form-row"
+                >
+                  <div class="row-t">
+                    Источник финансирования
+                  </div>
+                  <div class="row-v">
+                    <treeselect
+                      v-model="details.finSourceId"
+                      class="treeselect-noborder"
+                      :multiple="false"
+                      :disable-branch-nodes="true"
+                      :options="details.finSources"
+                      placeholder="Источник не выбран"
+                      :disabled="!!details?.direction?.id"
+                    />
+                  </div>
+                </div>
+                <div v-if="details.service.id && details.cardId && details.finSourceId">
+                  <button
+                    class="btn btn-blue-nb btn-block"
+                    type="button"
+                    style="margin-top: 5px"
+                    @click="fillProtocol"
+                  >
+                    Открыть приём ({{ details?.direction?.id || 'новый' }})
+                  </button>
+                </div>
+              </template>
             </div>
           </div>
           <div slot="footer">
@@ -122,9 +178,12 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
+import RadioField from '@/fields/RadioField.vue';
+import UrlData from '@/UrlData';
 
 @Component({
   components: {
+    RadioField,
     Modal,
     PatientSmallPicker,
     Treeselect,
@@ -144,6 +203,13 @@ import PatientSmallPicker from '@/ui-cards/PatientSmallPicker.vue';
     services: {
       type: Array,
       required: true,
+    },
+    simple: {
+      type: Boolean,
+      required: false,
+    },
+    onlyEmit: {
+      type: Boolean,
     },
   },
   data() {
@@ -172,16 +238,20 @@ export default class TimeSlot extends Vue {
 
   isOpened: boolean;
 
+  onlyEmit: boolean;
+
   mode: string | null;
 
   services: any[];
+
+  simple: boolean;
 
   get cardId() {
     return this.details?.cardId;
   }
 
   get offset() {
-    const offset = this.data.minute * 2 + this.allHoursValues.indexOf(this.data.hourValue) * 120 + 51;
+    const offset = this.data.minute * 2 + this.allHoursValues.indexOf(this.data.hourValue) * 120 + (this.simple ? 0 : 51);
     return `${offset}px`;
   }
 
@@ -209,15 +279,58 @@ export default class TimeSlot extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
+  async fillProtocol() {
+    await this.save();
+    await this.loadData();
+    if (this.details.direction?.id) {
+      const { id } = this.details.direction;
+
+      if (this.onlyEmit) {
+        this.$root.$emit('open-direction-form', id);
+        this.$root.$emit('reload-location');
+      } else {
+        window.location.replace(`/ui/results/descriptive#${UrlData.objectToData({ pk: id })}`);
+      }
+    } else {
+      this.$root.$emit('generate-directions', {
+        type: 'emit-open',
+        card_pk: this.details.cardId,
+        fin_source_pk: this.details.finSourceId,
+        researches: { '-1': [this.details.service.id] },
+        diagnos: '',
+        counts: {},
+        comments: {},
+        localizations: {},
+        service_locations: {},
+        slotFactId: this.details.factId,
+        cbWithIds: ([id]) => {
+          if (this.onlyEmit) {
+            this.$root.$emit('open-direction-form', id);
+            this.$root.$emit('reload-location');
+          } else {
+            window.location.replace(`/ui/results/descriptive#{&quot;pk&quot;:${id}}`);
+          }
+          this.details.direction = {
+            id,
+          };
+        },
+      });
+    }
+  }
+
   // eslint-disable-next-line class-methods-use-this
   smallTime(t) {
     const [h, m] = t.split(':');
     return `${h}:${m}`;
   }
 
-  open() {
+  async open() {
+    if (this.onlyEmit && this.data.direction?.id) {
+      this.$root.$emit('open-direction-form', this.data.direction.id);
+      return;
+    }
     this.isOpened = true;
-    this.loadData();
+    await this.loadData();
   }
 
   close() {
@@ -386,8 +499,17 @@ $slot-padding: 2px;
     &-cancelled {
       &,
       & .slot-inner {
+        color: #fff;
         border: 1px solid rgba(0, 0, 0, 0.14) !important;
         background-image: linear-gradient(#6c7a89, #56616c) !important;
+      }
+    }
+    &-disabled {
+      &,
+      & .slot-inner {
+        color: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.14) !important;
+        background-image: linear-gradient(#46505a, #373f46) !important;
       }
     }
     // &-success {
