@@ -500,9 +500,7 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
-    parent_case = models.ForeignKey(
-        'Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
-    )
+    parent_case = models.ForeignKey('Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
@@ -1135,6 +1133,7 @@ class Napravleniya(models.Model):
         dir.set_polis()
         if slot_fact_id:
             from doctor_schedule.models import SlotFact
+
             f = SlotFact.objects.get(pk=slot_fact_id)
             f.direction = dir
             f.save(update_fields=['direction'])
@@ -1567,11 +1566,7 @@ class Napravleniya(models.Model):
                                 slot_fact_id=slot_fact_id,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
-                            issledovaniye_case = Issledovaniya(
-                                napravleniye=napravleniye_case,
-                                research=research_case,
-                                deferred=False
-                            )
+                            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
                             issledovaniye_case.save()
                             issledovaniye_case_id = issledovaniye_case.pk
                         elif case_id > 0:
@@ -2288,7 +2283,6 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
-
 
     @property
     def time_save_local(self):

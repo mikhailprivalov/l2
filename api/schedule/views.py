@@ -524,10 +524,3 @@ def can_edit_resource(request, resource_pk):
     if has_group(request.user, *ADMIN_SCHEDULE_GROUPS):
         return True
     return can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk=resource_pk)
-
-
-@group_required(*COMMON_SCHEDULE_GROUPS)
-def open_slot(request):
-    slot_pk = data_parse(request.body, {'pk': int}, {'pk': None})[0]
-    slot = SlotFact.objects.get(pk=slot_pk)
-    return JsonResponse()
