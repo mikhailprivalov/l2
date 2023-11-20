@@ -149,6 +149,7 @@ class Company(models.Model):
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     email = models.CharField(max_length=128, blank=True, default='', help_text="email")
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
+    cpp_send = models.BooleanField(default=False, help_text='отправлять в ЦПП', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
