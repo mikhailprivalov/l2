@@ -1557,11 +1557,7 @@ class Napravleniya(models.Model):
                                 price_name_id=price_name,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
-                            issledovaniye_case = Issledovaniya(
-                                napravleniye=napravleniye_case,
-                                research=research_case,
-                                deferred=False
-                            )
+                            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
                             issledovaniye_case.save()
                             issledovaniye_case_id = issledovaniye_case.pk
                         elif case_id > 0:
