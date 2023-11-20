@@ -1,7 +1,7 @@
 from django.urls import path
 
-from api.transfer_document import views
+from api.working_time import views
 
 urlpatterns = [
-    path('get-columns', views.get_destination_source),
+    path('get-departments', views.get_departments),
 ]

@@ -48,7 +48,6 @@
           v-model="startWork"
           class="form-control"
           type="time"
-          :max="endWork"
         >
       </div>
       <div>
@@ -57,7 +56,6 @@
           v-model="endWork"
           class="form-control"
           type="time"
-          :min="startWork"
         >
       </div>
       <button

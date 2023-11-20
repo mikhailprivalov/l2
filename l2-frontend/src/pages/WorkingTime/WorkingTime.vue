@@ -91,27 +91,32 @@ const months = ref([
 ]);
 
 const selectedYear = ref(2023);
-const years = ref([
-  { id: 2023, label: '2023' },
-  { id: 2024, label: '2024' },
-  { id: 2025, label: '2025' },
-]);
+const years = ref([]);
+
+const getYears = (yearStart = 2023) => {
+  let start = yearStart;
+  selectedYear.value = new Date().getFullYear();
+  while (start <= selectedYear.value) {
+    years.value.push({ id: start, label: String(yearStart) });
+    start++;
+  }
+};
+const setCurrentMonth = () => {
+  const date = new Date();
+  selectedMonth.value = date.getMonth() + 1;
+};
 
 const selectedDepartment = ref(null);
-const departments = ref([
-  { id: 1, label: 'Отдел ИТ' },
-  { id: 2, label: 'Планово-экономический отдел' },
-  { id: 3, label: 'Гастроэнтерология' },
-]);
-
-const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMonth.value && selectedYear.value));
-
+const departments = ref([]);
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  // const { ok, message } = await api('/working-time/get-columns');
+  const { result } = await api('/working-time/get-departments');
   await store.dispatch(actions.DEC_LOADING);
+  departments.value = result;
   selectedDepartment.value = 1;
 };
+
+const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMonth.value && selectedYear.value));
 
 const search = ref('');
 
@@ -257,7 +262,8 @@ watch([selectedMonth, selectedYear, selectedDepartment], () => {
 
 onMounted(() => {
   getDepartments();
-  getColumns();
+  getYears();
+  setCurrentMonth();
 });
 
 </script>
