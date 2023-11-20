@@ -2314,6 +2314,9 @@ export default {
       this.load_benefit_rows();
       this.benefit = false;
     });
+    this.$root.$on('reload-location', () => {
+      this.load_location_internal();
+    });
 
     this.$root.$on('show_results', (pk) => {
       this.show_results_pk = pk;

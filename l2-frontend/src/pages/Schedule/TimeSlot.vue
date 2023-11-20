@@ -287,6 +287,7 @@ export default class TimeSlot extends Vue {
 
       if (this.onlyEmit) {
         this.$root.$emit('open-direction-form', id);
+        this.$root.$emit('reload-location');
       } else {
         window.location.replace(`/ui/results/descriptive#${UrlData.objectToData({ pk: id })}`);
       }
@@ -305,6 +306,7 @@ export default class TimeSlot extends Vue {
         cbWithIds: ([id]) => {
           if (this.onlyEmit) {
             this.$root.$emit('open-direction-form', id);
+            this.$root.$emit('reload-location');
           } else {
             window.location.replace(`/ui/results/descriptive#{&quot;pk&quot;:${id}}`);
           }
