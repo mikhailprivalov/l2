@@ -75,7 +75,7 @@ from slog.models import Log
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, StatisticsTicket, Outcomes, ExcludePurposes
 from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
-from utils.dates import try_parse_range, try_strptime
+from utils.dates import try_parse_range, try_strptime, normalize_dots_date
 from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals, simple_join_two_pdf_files, simple_save_pdf_file
 from .dicom import search_dicom_study
@@ -3317,7 +3317,9 @@ def print_medical_examination_data(request):
     for card in cards:
         card_id = card.get("card_id")
         researches = card.get("research")
-        plan_date_start_case = "2023-11-01 00:00:00"
+        plan_date_start_case = card.get("date")
+        plan_date_start_case = normalize_dots_date(plan_date_start_case)
+        plan_date_start_case = f"{plan_date_start_case} 00:00:00"
         result_search_case = search_case_by_card_date(card_id, plan_date_start_case, research_case.pk, 1)
         case_issledovaniye_number, case_direction_number = None, None
         for i in result_search_case:
@@ -3348,7 +3350,6 @@ def print_medical_examination_data(request):
                 count=1,
                 discount=0,
                 rmis_slot=None,
-                price_name=13,
                 case_id=case_direction_number,
                 case_by_direction=True,
                 plan_start_date=plan_date_start_case
@@ -3363,7 +3364,6 @@ def print_medical_examination_data(request):
                 doc,
                 -1,
                 doc,
-                price_name_id=13
             )
 
             issledovaniye_case = directions.Issledovaniya(
