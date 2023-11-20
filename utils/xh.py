@@ -112,7 +112,6 @@ def replace_values(key):
 
 
 def simple_join_two_pdf_files(files_data):
-
     from pdfrw import PdfReader, PdfWriter
 
     today = datetime.datetime.now()
