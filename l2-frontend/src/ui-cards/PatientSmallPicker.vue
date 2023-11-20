@@ -306,6 +306,13 @@ export default {
         .split(' ')
         .map(s => s.charAt(0).toUpperCase() + s.substring(1))
         .join(' ');
+      if (this.query.toLowerCase().includes('card_pk:')) {
+        setTimeout(() => {
+          if (this.query.toLowerCase().includes('card_pk:')) {
+            this.search();
+          }
+        }, 30);
+      }
     },
     bases() {
       this.check_base();

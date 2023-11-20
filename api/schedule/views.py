@@ -383,7 +383,7 @@ def get_first_user_resource(request):
         resources = ScheduleResource.objects.all()
     else:
         resources = ScheduleResource.objects.filter(executor=request.user.doctorprofile)
-    resources = resources.filter(hide=False, service__isnull=False)
+    resources = resources.filter(hide=False, service__isnull=False).distinct()
 
     first_current_user_pk = None
 

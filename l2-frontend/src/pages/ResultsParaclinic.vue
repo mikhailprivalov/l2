@@ -273,6 +273,23 @@
               type="date"
             >
           </div>
+          <div class="sub-title">
+            <Treeselect
+              v-model="location.resource"
+              :multiple="false"
+              class="treeselect-wide treeselect-nbr treeselect-34px"
+              :append-to-body="true"
+              :disable-branch-nodes="true"
+              :clearable="false"
+              :z-index="5001"
+              placeholder="Ресурс"
+              :options="location.resources"
+              :cache-options="true"
+              open-direction="bottom"
+              :open-on-focus="true"
+              :default-expand-level="1"
+            />
+          </div>
           <div
             class="inner"
             :class="{ stat_btn: stat_btn_d }"
@@ -2040,6 +2057,9 @@ export default {
     l2_morfology_additional() {
       return this.$store.getters.modules.l2_morfology_additional;
     },
+    locationResource() {
+      return this.location?.resource;
+    },
     show_additional() {
       if (!this.data?.ok) {
         return false;
@@ -2202,6 +2222,14 @@ export default {
     },
   },
   watch: {
+    locationResource: {
+      immediate: true,
+      handler() {
+        if (this.locationResource) {
+          this.load_location_internal();
+        }
+      },
+    },
     date() {
       this.load_history();
     },
@@ -3586,14 +3614,20 @@ export default {
       }
     }
 
+    .sub-title {
+      height: 34px;
+      position: relative;
+      background: #eaeaea;
+    }
+
     .inner {
       position: relative;
-      height: calc(100% - 20px);
+      height: calc(100% - 54px);
       overflow-y: auto;
       overflow-x: hidden;
 
       &.stat_btn {
-        height: calc(100% - 54px);
+        height: calc(100% - 88px);
       }
     }
   }
