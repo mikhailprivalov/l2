@@ -3391,7 +3391,7 @@ def print_medical_examination_data(request):
                 price_name=13,
                 case_id=napravleniye_case.pk,
                 case_by_direction=True,
-                plan_start_date=plan_date_start_case
+                plan_start_date=plan_date_start_case,
             )
         if number_directons:
             number_directons = [i for i in number_directons]
