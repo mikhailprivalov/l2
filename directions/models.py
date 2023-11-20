@@ -1291,6 +1291,8 @@ class Napravleniya(models.Model):
         price_name=None,
         case_id=-2,
         case_by_direction=False,
+        plan_start_date=None,
+        slot_fact_id=None
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if case_id > -1 and case_by_direction:
