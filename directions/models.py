@@ -2276,7 +2276,6 @@ class Issledovaniya(models.Model):
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
 
-
     @property
     def time_save_local(self):
         return localtime(self.time_save)
