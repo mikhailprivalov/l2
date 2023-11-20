@@ -1396,7 +1396,6 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
-            print(researches)
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
                 for vv in researches[v]:

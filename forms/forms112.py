@@ -26,6 +26,7 @@ from utils.xh import save_tmp_file
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
 from django.utils.module_loading import import_string
+from pdfrw import PdfReader, PdfWriter
 
 
 def form_01(request_data):
@@ -342,7 +343,6 @@ def form_02(request_data):
 
 
 def join_two_pdf_data(func_name, http_params, user_data, buffer, ind_card, type="post"):
-
     if type == "get":
         fc = func_name(request_data=http_params)
         is_get = False
@@ -512,3 +512,19 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
         elif section.get('isHospital'):
             direction_data.extend(list(types_direction["isHospital"]))
     return direction_data
+
+
+def form_03(request_data):
+    file_name = request_data.get("file").replace('"', "")
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, file_name)
+    pdf_all = BytesIO()
+    inputs = [file_dir]
+    writer = PdfWriter()
+    for inpfn in inputs:
+        writer.addpages(PdfReader(inpfn).pages)
+    writer.write(pdf_all)
+    pdf_out = pdf_all.getvalue()
+    os.remove(file_dir)
+
+    return pdf_out

@@ -1,7 +1,12 @@
+import datetime
+
 from api.directions.sql_func import get_lab_podr
 from appconf.manager import SettingManager
 from laboratory.settings import QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from utils.flowable import QrCodeSite
+import datetime
+import os.path
+from io import BytesIO
 
 
 def fix(s: str):
@@ -104,3 +109,39 @@ def show_qr_lk_address(fwb, leftnone=False):
 def replace_values(key):
     replace_data = {"code": "Код МКБ10", "title": "", "id": ""}
     return replace_data.get(key, "")
+
+
+def simple_join_two_pdf_files(files_data):
+
+    from pdfrw import PdfReader, PdfWriter
+
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(date_now1)
+
+    pdf_all = BytesIO()
+    inputs = files_data
+    writer = PdfWriter()
+    for inpfn in inputs:
+        writer.addpages(PdfReader(inpfn).pages)
+    writer.write(pdf_all)
+    pdf_out = pdf_all.getvalue()
+    pdf_all.close()
+
+    for i in files_data:
+        os.remove(i)
+    return pdf_out
+
+
+def simple_save_pdf_file(fc):
+    fc_buf = BytesIO()
+    fc_buf.write(fc)
+    fc_buf.seek(0)
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(date_now1)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_buffer1 = os.path.join(dir_param, date_now_str + '_buffer1.pdf')
+    save_tmp_file(fc_buf, filename=file_buffer1)
+    return file_buffer1
+

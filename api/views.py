@@ -24,7 +24,7 @@ from laboratory.settings import (
     UNLIMIT_PERIOD_STATISTIC_GROUP,
     TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
     STATISTIC_TYPE_DEPARTMENT,
-    USE_TFOMS_DISTRICT,
+    USE_TFOMS_DISTRICT, TYPE_COMPANY_SET_DIRECTION_PDF,
 )
 from utils.response import status_response
 
@@ -77,12 +77,14 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from utils.xh import get_all_hospitals
+from utils.xh import get_all_hospitals, save_tmp_file, simple_join_two_pdf_files, simple_save_pdf_file
 from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar, search_case_by_card_date
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
+from django.http import HttpResponse
+from django.utils.module_loading import import_string
 
 logger = logging.getLogger("API")
 
@@ -3311,6 +3313,7 @@ def print_medical_examination_data(request):
     research_case = Researches.objects.filter(is_case=True, hide=False).first()
     doc = users.DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
     card_directions = {}
+    number_directons = None
     for card in cards:
         card_id = card.get("card_id")
         researches = card.get("research")
@@ -3322,11 +3325,9 @@ def print_medical_examination_data(request):
             case_direction_number = i.case_direction_number
             break
         financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__in=["Профосмотр", "Юрлицо"]).first()
-        print(result_search_case)
 
         if case_issledovaniye_number:
             number_directons = directions.Napravleniya.objects.values_list("id", flat=True).filter(parent_case_id=case_issledovaniye_number)
-            print(number_directons)
             researches_sql = get_researches_by_number_directions(tuple(number_directons))
             current_researches_case = set([i.research_id for i in researches_sql])
             api_researches = set(researches)
@@ -3392,10 +3393,44 @@ def print_medical_examination_data(request):
                 case_by_direction=True,
                 plan_start_date=plan_date_start_case
             )
-        print(result.get("list_id"))
-        card_directions[card_id] = result.get("list_id")
+        if number_directons:
+            number_directons = [i for i in number_directons]
+        else:
+            number_directons = []
+        number_directons.extend(result.get("list_id"))
+        card_directions[card_id] = list(set(number_directons))
+    response = HttpResponse(content_type='application/pdf')
 
-    return status_response(True)
+    response['Content-Disposition'] = 'inline; filename="directions.pdf"'
+    files_data = []
+    if TYPE_COMPANY_SET_DIRECTION_PDF:
+        additional_page = import_string('forms.forms112.' + TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[0])
+        step = 0
+        for card, directions_data in card_directions.items():
+            step += 1
+            if len(directions_data) > 1:
+                directions_data = [str(i) for i in directions_data]
+                napr_id = ", ".join(directions_data)
+            else:
+                napr_id = directions_data[0]
+            napr_id = f"[{napr_id}]"
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card,
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[1],
+                    "fin_title": "профосмотр",
+                    "napr_id": napr_id,
+                }
+            )
+            saved_file_pdf = simple_save_pdf_file(fc)
+            files_data.append(saved_file_pdf)
+
+    buffer = simple_join_two_pdf_files(files_data)
+    saved_file_pdf = simple_save_pdf_file(buffer)
+    return JsonResponse({"fileName": saved_file_pdf})
 
 
 @login_required
