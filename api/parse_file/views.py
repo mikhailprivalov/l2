@@ -200,7 +200,7 @@ def add_factors_from_file(request):
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
             patient_updated = add_factors_data(patient_card, cells[position], harmful_factors_data, exam_data, company_inn)
             if not patient_updated["ok"]:
-                incorrect_patients.append({"fio": cells[fio], "reason": f"Сохранение не удалось, ошибка: {e}"})
+                incorrect_patients.append({"fio": cells[fio], "reason": f"Сохранение не удалось, ошибка: {patient_updated['message']}"})
 
     return incorrect_patients
 
