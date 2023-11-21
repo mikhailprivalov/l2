@@ -81,7 +81,7 @@ from utils.nsi_directories import NSI
 from utils.xh import get_all_hospitals, simple_join_two_pdf_files, simple_save_pdf_file, correspondence_set_file_hash
 from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
-from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar, search_case_by_card_date
+from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
 from django.utils.module_loading import import_string

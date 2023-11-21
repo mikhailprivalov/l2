@@ -26,7 +26,6 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, PageBreak
 from transliterate import translit
 
-import directions
 import directory.models as directory
 from directions.sql_func import get_researches_by_number_directions
 from users.models import DoctorProfile
@@ -1044,6 +1043,7 @@ def px(x=0.0):
 def pxr(x=0.0):
     x *= mm
     return w - x
+
 
 def create_case_by_cards(cards):
     research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
