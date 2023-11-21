@@ -8,6 +8,7 @@ from typing import Optional, Union
 import pytz_deprecation_shim as pytz
 
 from api.models import ManageDoctorProfileAnalyzer, Analyzer
+from directions.views import create_case_by_cards
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -24,6 +25,7 @@ from laboratory.settings import (
     TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
+    TYPE_COMPANY_SET_DIRECTION_PDF,
 )
 from utils.response import status_response
 
@@ -76,12 +78,13 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from utils.xh import get_all_hospitals
+from utils.xh import get_all_hospitals, simple_join_two_pdf_files, simple_save_pdf_file, correspondence_set_file_hash
 from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
+from django.utils.module_loading import import_string
 
 logger = logging.getLogger("API")
 
@@ -3305,7 +3308,38 @@ def get_examination_list(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def print_medical_examination_data(request):
-    return status_response(True)
+    request_data = json.loads(request.body)
+    cards = request_data.get("cards")
+    card_directions = create_case_by_cards(cards)
+    files_data = []
+    if TYPE_COMPANY_SET_DIRECTION_PDF:
+        additional_page = import_string('forms.forms112.' + TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[0])
+        for card, directions_data in card_directions.items():
+            if len(directions_data) > 1:
+                directions_data = [str(i) for i in directions_data]
+                napr_id = ", ".join(directions_data)
+            else:
+                napr_id = directions_data[0]
+            napr_id = f"[{napr_id}]"
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card,
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[1],
+                    "fin_title": "профосмотр",
+                    "napr_id": napr_id,
+                }
+            )
+            saved_file_pdf = simple_save_pdf_file(fc)
+            files_data.append(saved_file_pdf)
+
+    buffer = simple_join_two_pdf_files(files_data)
+
+    id_file = simple_save_pdf_file(buffer)
+    hash_file = correspondence_set_file_hash(id_file)
+    return JsonResponse({"id": hash_file})
 
 
 @login_required

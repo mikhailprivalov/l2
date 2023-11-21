@@ -2,6 +2,12 @@ from api.directions.sql_func import get_lab_podr
 from appconf.manager import SettingManager
 from laboratory.settings import QRCODE_OFFSET_SIZE, LEFT_QRCODE_OFFSET_SIZE
 from utils.flowable import QrCodeSite
+import uuid
+import os.path
+from io import BytesIO
+from pdfrw import PdfReader, PdfWriter
+from django.core.cache import cache
+import hashlib
 
 
 def fix(s: str):
@@ -104,3 +110,39 @@ def show_qr_lk_address(fwb, leftnone=False):
 def replace_values(key):
     replace_data = {"code": "Код МКБ10", "title": "", "id": ""}
     return replace_data.get(key, "")
+
+
+def simple_join_two_pdf_files(inputs):
+    pdf_all = BytesIO()
+    writer = PdfWriter()
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    for inpfn in inputs:
+        writer.addpages(PdfReader(os.path.join(dir_param, inpfn)).pages)
+    writer.write(pdf_all)
+    pdf_out = pdf_all.getvalue()
+    pdf_all.close()
+
+    for i in inputs:
+        os.remove(os.path.join(dir_param, i))
+    return pdf_out
+
+
+def simple_save_pdf_file(fc):
+    fc_buf = BytesIO()
+    fc_buf.write(fc)
+    fc_buf.seek(0)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    name = str(uuid.uuid4()) + '_buffer.pdf'
+    file_buffer1 = os.path.join(dir_param, name)
+    save_tmp_file(fc_buf, filename=file_buffer1)
+    return name
+
+
+def correspondence_set_file_hash(title_name):
+    k = hashlib.sha1(title_name.encode('utf-8')).hexdigest()
+    cache.set(k, title_name, 60 * 1)
+    return k
+
+
+def correspondence_get_file_hash(k):
+    return cache.get(k)
