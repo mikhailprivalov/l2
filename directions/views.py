@@ -1045,6 +1045,7 @@ def pxr(x=0.0):
     return w - x
 
 
+
 def create_case_by_cards(cards):
     research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
     doc = DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
