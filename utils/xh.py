@@ -8,7 +8,6 @@ from io import BytesIO
 from pdfrw import PdfReader, PdfWriter
 from django.core.cache import cache
 import hashlib
-import base64
 
 
 def fix(s: str):
@@ -140,10 +139,9 @@ def simple_save_pdf_file(fc):
 
 
 def correspondence_set_file_hash(title_name):
-    k = base64.b64encode(hashlib.sha1(title_name.encode('utf-8')).digest())
-    key_cashe = k.decode()
-    cache.set(key_cashe, title_name, 60 * 10)
-    return key_cashe
+    k = hashlib.sha1(title_name.encode('utf-8')).hexdigest()
+    cache.set(k, title_name, 60 * 10)
+    return k
 
 
 def correspondence_get_file_hash(k):
