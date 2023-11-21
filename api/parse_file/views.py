@@ -131,6 +131,19 @@ def find_factors(harmful_factors: list):
     return harmful_factors_data, incorrect_factor
 
 
+def add_factors_data(patient_card: Card, position: str, factors_data: list, exam_data: str, company_inn: str):
+    try:
+        PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, factors_data)
+        company_obj = Company.objects.filter(inn=company_inn).first()
+        patient_card.work_position = position.strip()
+        patient_card.work_place_db = company_obj
+        patient_card.save()
+        MedicalExamination.save_examination(patient_card, company_obj, exam_data)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "message": e}
+
+
 def add_factors_from_file(request):
     incorrect_patients = []
     company_inn = request.POST.get("companyInn", None)
@@ -187,14 +200,8 @@ def add_factors_from_file(request):
             harmful_factors_data, incorrect_factor = find_factors(code_harmful_data)
             if incorrect_factor:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
-            try:
-                PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
-                company_obj = Company.objects.filter(inn=company_inn).first()
-                patient_card.work_position = cells[position].strip()
-                patient_card.work_place_db = company_obj
-                patient_card.save()
-                MedicalExamination.save_examination(patient_card, company_obj, exam_data)
-            except Exception as e:
+            patient_updated = add_factors_data(patient_card, cells[position], harmful_factors_data, exam_data, company_inn)
+            if not patient_updated["ok"]:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Сохранение не удалось, ошибка: {e}"})
 
     return incorrect_patients
