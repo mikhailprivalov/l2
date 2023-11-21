@@ -195,8 +195,7 @@ def add_factors_from_file(request):
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверный формат даты/не существующая дата в файле: {e}"})
                 continue
             gender_data = cells[gender][0]
-            patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data,
-                                          gender_data)
+            patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data, gender_data)
             harmful_factors_data, incorrect_factor = find_factors(code_harmful_data)
             if incorrect_factor:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
@@ -479,10 +478,10 @@ def find_and_replace(text, symbol1, symbol2):
     result = []
     for i in range(len(text)):
         if text[i] == symbol1:
-            current_text = text[0:i] + symbol2 + text[i + 1:]
+            current_text = text[0:i] + symbol2 + text[i + 1 :]
             result.append(current_text)
         elif text[i] == symbol2:
-            current_text = text[0:i] + symbol1 + text[i + 1:]
+            current_text = text[0:i] + symbol1 + text[i + 1 :]
             result.append(current_text)
     return result
 
