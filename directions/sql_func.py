@@ -84,3 +84,18 @@ def check_create_direction_patient_by_research(client_id, researches, months_ago
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_researches_by_number_directions(direction_numbers):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+              directions_issledovaniya.research_id
+            FROM directions_issledovaniya
+            WHERE directions_issledovaniya.napravleniye_id in %(direction_numbers)s 
+            """,
+            params={'direction_numbers': direction_numbers},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

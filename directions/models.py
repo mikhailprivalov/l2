@@ -1298,6 +1298,7 @@ class Napravleniya(models.Model):
         price_name=None,
         case_id=-2,
         case_by_direction=False,
+        plan_start_date=None,
         slot_fact_id=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
@@ -2283,6 +2284,7 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
+    plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
 
     @property
     def time_save_local(self):

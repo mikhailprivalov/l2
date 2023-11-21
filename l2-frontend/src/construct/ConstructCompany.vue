@@ -608,10 +608,15 @@ export default {
         const selectCard = this.selectedCards;
         return selectCard.includes(card);
       }).map((exam) => ({ card_id: exam.card_id, date: exam.date, research: exam.research_id }));
-      await this.$api('print-medical-examination-data', {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const result = await this.$api('print-medical-examination-data', {
         cards: printData,
         exclude: this.excludedResearches,
       });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (result.id) {
+        window.open(`/forms/pdf?type=112.03&id=${encodeURIComponent(JSON.stringify(result.id))}`, '_blank');
+      }
     },
   },
 };
