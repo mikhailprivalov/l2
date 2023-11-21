@@ -1,74 +1,71 @@
 <template>
-  <div>
-    <div>{{ workingHours ? workingHours : '--:--' }}</div>
-    <div class="flex">
-      <Treeselect
-        v-model="selectTemplate"
-        :options="templatesWorkTime"
-        value-format="object"
-        :append-to-body="true"
-        placeholder="Выберите время"
-        class="time-width"
-        @input="changeWorkTime"
+  <div class="flex">
+    <Treeselect
+      v-model="selectTemplate"
+      :options="templatesWorkTime"
+      value-format="object"
+      :append-to-body="true"
+      placeholder="Выберите время"
+      class="time-width"
+      @input="changeWorkTime"
+    />
+    <button
+      v-tippy
+      :disabled="props.isFirstDay"
+      class="transparentButton"
+      title="Скопировать предыдущий"
+      @click="copyPrevTime"
+    >
+      <i class="fa-solid fa-copy" />
+    </button>
+    <button
+      v-tippy="{
+        html: '#temp',
+        arrow: true,
+        reactive: true,
+        interactive: true,
+        animation: 'fade',
+        duration: 0,
+        theme: 'light',
+        placement: 'bottom',
+        trigger: 'click',
+      }"
+      class="transparentButton"
+    >
+      <i
+        class="fa fa-clock-o"
+        aria-hidden="true"
       />
+    </button>
+
+    <div
+      id="temp"
+      class="tp"
+    >
+      <div>
+        <label class="tp-label">Начало</label>
+        <input
+          v-model="startWork"
+          class="form-control"
+          type="time"
+        >
+      </div>
+      <div>
+        <label class="tp-label">Конец</label>
+        <input
+          v-model="endWork"
+          class="form-control"
+          type="time"
+        >
+      </div>
       <button
         v-tippy
-        :disabled="props.isFirstDay"
-        class="transparentButton"
-        title="Скопировать предыдущий"
-        @click="copyPrevTime"
+        class="transparentButton tp-button"
+        title="Сохранить"
+        @click="changeExact"
       >
-        <i class="fa-solid fa-copy" />
+        <i class="fa-solid fa-save" />
       </button>
-      <button
-        v-tippy="{
-          html: '#temp',
-          arrow: true,
-          reactive: true,
-          interactive: true,
-          animation: 'fade',
-          duration: 0,
-          theme: 'light',
-          placement: 'bottom',
-          trigger: 'click',
-        }"
-        class="transparentButton"
-      >
-        <i
-          class="fa fa-clock-o"
-          aria-hidden="true"
-        />
-      </button>
-
-      <div
-        id="temp"
-        class="tp"
-      >
-        <div>
-          <label class="tp-label">Начало</label>
-          <input
-            v-model="startWork"
-            class="form-control"
-            type="time"
-          >
-        </div>
-        <div>
-          <label class="tp-label">Конец</label>
-          <input
-            v-model="endWork"
-            class="form-control"
-            type="time"
-          >
-        </div>
-        <button
-          v-tippy
-          class="transparentButton tp-button"
-          title="Сохранить"
-          @click="changeExact"
-        >
-          <i class="fa-solid fa-save" />
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -86,10 +83,6 @@ const emit = defineEmits(['changeWorkTime']);
 const props = defineProps({
   workTime: {
     type: [Object, String],
-    required: true,
-  },
-  date: {
-    type: Date,
     required: true,
   },
   rowIndex: {
@@ -136,7 +129,6 @@ const changeTemplate = (templateLabel: string) => {
 
 const startWork = ref(null);
 const endWork = ref(null);
-const workingHours = ref(null);
 
 const appendCurrentTime = () => {
   if (propsWorkTimeIsFilled.value) {
@@ -168,7 +160,8 @@ const changeWorkTime = () => {
 };
 
 const changeExact = () => {
-  if ((startWork.value && endWork.value) && (startWork.value < endWork.value)) {
+  if ((startWork.value && endWork.value) && ((startWork.value < endWork.value) || (startWork.value > endWork.value
+    && endWork.value === '00:00'))) {
     const workTimeLabel = `${startWork.value}-${endWork.value}`;
     if (selectTemplate.value) {
       if (workTimeLabel !== selectTemplate.value.label) {
@@ -192,18 +185,6 @@ const copyPrevTime = () => {
     changeTemplate(workTimeLabel);
   }
 };
-
-const calcWorkingHours = () => {
-  const end = new Date(`${props.date}, ${endWork.value}`);
-  const start = new Date(`${props.date}, ${startWork.value}`);
-  const diff = end.getTime() - start.getTime();
-  console.log(diff);
-  console.log(new Date(diff));
-};
-
-watch(() => [startWork.value, endWork.value], () => {
-  calcWorkingHours();
-});
 
 onMounted(() => {
   appendCurrentTime();

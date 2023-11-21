@@ -221,7 +221,6 @@ const getColumns = () => {
           {
             props: {
               workTime: row[column.field] ? row[column.field] : '',
-              date: col,
               rowIndex,
               columnKey: column.key,
               isFirstDay,
@@ -248,7 +247,7 @@ const cellStyleOption = {
     if (column.isWeekend) {
       return 'table-body-cell-weekend';
     }
-    return 'table-body-cell-weekday';
+    return '';
   },
   headerCellClass: ({ column }) => {
     if (column.isWeekend) {
@@ -301,12 +300,6 @@ onMounted(() => {
 .white-background {
   background-color: #FFF;
 }
-.max-height {
-  max-height: calc(100vh - 325px);
-}
-.no-height {
-  height: 0px !important;
-}
 .filters {
   margin: 0 10px;
 }
@@ -326,13 +319,7 @@ onMounted(() => {
 
 <style lang="scss">
 .table-body-cell-weekend {
-  background: #ade0a875 !important;
-  white-space: normal !important;
-  padding: 0 10px !important;
-}
-.table-body-cell-weekday {
-  white-space: normal !important;
-  padding: 0 10px 10px 10px !important;
+  background: #ade0a875 !important;;
 }
 .table-header-cell-weekend {
   background: #ade0a875 !important;
