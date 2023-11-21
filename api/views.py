@@ -2661,8 +2661,9 @@ def update_price(request):
             )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
-            current_price = PriceName(title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital,
-                                      external_performer=True)
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True
+            )
         if current_price:
             current_price.save()
             Log.log(
