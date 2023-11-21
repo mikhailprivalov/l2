@@ -22,7 +22,7 @@ from clients.models import Card
 from directions.models import Napravleniya, Issledovaniya
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
-from utils.xh import save_tmp_file
+from utils.xh import save_tmp_file, correspondence_get_file_hash
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
 from django.utils.module_loading import import_string
@@ -515,16 +515,17 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
 
 
 def form_03(request_data):
-    file_name = request_data.get("file").replace('"', "")
-    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-    file_dir = os.path.join(dir_param, file_name)
-    pdf_all = BytesIO()
-    inputs = [file_dir]
-    writer = PdfWriter()
-    for inpfn in inputs:
-        writer.addpages(PdfReader(inpfn).pages)
-    writer.write(pdf_all)
-    pdf_out = pdf_all.getvalue()
-    os.remove(file_dir)
-
-    return pdf_out
+    id_file = request_data.get("id").replace('"', "")
+    file_data = correspondence_get_file_hash(id_file)
+    if file_data:
+        dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+        file_dir = os.path.join(dir_param, file_data)
+        pdf_all = BytesIO()
+        inputs = [file_dir]
+        writer = PdfWriter()
+        for inpfn in inputs:
+            writer.addpages(PdfReader(inpfn).pages)
+        writer.write(pdf_all)
+        pdf_out = pdf_all.getvalue()
+        os.remove(file_dir)
+        return pdf_out

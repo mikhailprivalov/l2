@@ -614,8 +614,8 @@ export default {
         exclude: this.excludedResearches,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
-      if (result.fileName) {
-        window.open(`/forms/pdf?type=112.03&file=${encodeURIComponent(JSON.stringify(result.fileName))}`, '_blank');
+      if (result.id) {
+        window.open(`/forms/pdf?type=112.03&id=${encodeURIComponent(JSON.stringify(result.id))}`, '_blank');
       }
     },
   },
