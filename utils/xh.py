@@ -140,7 +140,7 @@ def simple_save_pdf_file(fc):
 
 def correspondence_set_file_hash(title_name):
     k = hashlib.sha1(title_name.encode('utf-8')).hexdigest()
-    cache.set(k, title_name, 60 * 10)
+    cache.set(k, title_name, 60 * 1)
     return k
 
 
