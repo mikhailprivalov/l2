@@ -2,6 +2,7 @@ import calendar
 import datetime
 import uuid
 from decimal import Decimal
+from typing import Union
 
 from django.db import models
 

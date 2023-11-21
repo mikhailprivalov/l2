@@ -1,4 +1,5 @@
 import csv
+import datetime
 import io
 import logging
 import re
@@ -174,6 +175,12 @@ def add_factors_from_file(request):
             birthday_data = cells[birthday].split(" ")[0]
             code_harmful_data = cells[code_harmful].split(",")
             exam_data = cells[examination_date].split(" ")[0]
+            try:
+                datetime.datetime.strptime(birthday_data, '%Y-%m-%d')
+                datetime.datetime.strptime(exam_data, '%Y-%m-%d')
+            except ValueError as e:
+                incorrect_patients.append({"fio": cells[fio], "reason": f"Неверный формат даты/не существующая дата в файле: {e}"})
+                continue
             gender_data = cells[gender][0]
             patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data,
                                           gender_data)
@@ -188,8 +195,7 @@ def add_factors_from_file(request):
                 patient_card.save()
                 MedicalExamination.save_examination(patient_card, company_obj, exam_data)
             except Exception as e:
-                incorrect_patients.append({"fio": cells[fio], "reason": "Сохранение не удалось, см. логи"})
-                Log.log(patient_card.pk, 130006, request.user, {"except": e})
+                incorrect_patients.append({"fio": cells[fio], "reason": f"Сохранение не удалось, ошибка: {e}"})
 
     return incorrect_patients
 
