@@ -25,6 +25,7 @@ from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_rese
 from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
+from slog.models import Log
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches, DoctorProfile
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType, Document
@@ -71,21 +72,7 @@ def http_func(data, user):
     return endpoint(http_obj)
 
 
-def add_factors_from_file(request):
-    incorrect_patients = []
-    company_inn = request.POST["companyInn"]
-    company_file = request.FILES["file"]
-    wb = load_workbook(filename=company_file)
-    ws = wb.worksheets[0]
-    starts = False
-    snils, fio, birthday, gender, inn_company, code_harmful = (
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-    )
+def search_patient(snils_data, request_user, family_data, name_data, patronymic_data, birthday_data, gender_data):
     application = Application.objects.filter(active=True, is_background_worker=True).first()
     if application:
         bearer_token = f"Bearer {application.key}"
@@ -93,6 +80,73 @@ def add_factors_from_file(request):
         new_application = Application(name="background_worker", is_background_worker=True)
         new_application.save()
         bearer_token = f"Bearer {new_application.key}"
+
+    params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
+    request_obj = HttpRequest()
+    request_obj._body = params
+    request_obj.user = request_user
+    request_obj.method = "POST"
+    request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
+    current_patient = None
+    if snils_data and snils_data != "None":
+        current_patient = check_enp(request_obj)
+    if not current_patient or current_patient.data.get("message"):
+        patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
+        if patient_card is None:
+            possible_family = find_and_replace(family_data, "е", "ё")
+            patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
+            if patient_card is None:
+                patient_indv = Individual(
+                    family=family_data,
+                    name=name_data,
+                    patronymic=patronymic_data,
+                    birthday=birthday_data,
+                    sex=gender_data,
+                )
+                patient_indv.save()
+                patient_card = Card.add_l2_card(individual=patient_indv)
+    elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
+        patient_card_pk = current_patient.data["patient_data"]["card"]
+        patient_card = Card.objects.filter(pk=patient_card_pk).first()
+    else:
+        patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
+
+    return patient_card
+
+
+def find_factors(harmful_factors: list):
+    if not harmful_factors:
+        return None
+    incorrect_factor = []
+    harmful_factors_data = []
+    for i in harmful_factors:
+        current_code = i.replace(" ", "")
+        harmful_factor = HarmfulFactor.objects.filter(title=current_code).first()
+        if harmful_factor:
+            harmful_factors_data.append({"factorId": harmful_factor.pk})
+        else:
+            incorrect_factor.append(f"{current_code}")
+
+    return harmful_factors_data, incorrect_factor
+
+
+def add_factors_from_file(request):
+    incorrect_patients = []
+    company_inn = request.POST.get("companyInn", None)
+    company_file = request.FILES["file"]
+    wb = load_workbook(filename=company_file)
+    ws = wb.worksheets[0]
+    starts = False
+    snils, fio, birthday, gender, inn_company, code_harmful, position, examination_date = (
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -121,52 +175,21 @@ def add_factors_from_file(request):
             code_harmful_data = cells[code_harmful].split(",")
             exam_data = cells[examination_date].split(" ")[0]
             gender_data = cells[gender][0]
-            params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
-            request_obj = HttpRequest()
-            request_obj._body = params
-            request_obj.user = request.user
-            request_obj.method = "POST"
-            request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
-            current_patient = None
-            if snils_data and snils_data != "None":
-                current_patient = check_enp(request_obj)
-            if not current_patient or current_patient.data.get("message"):
-                patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
-                if patient_card is None:
-                    possible_family = find_and_replace(family_data, "е", "ё")
-                    patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
-                    if patient_card is None:
-                        patient_indv = Individual(
-                            family=family_data,
-                            name=name_data,
-                            patronymic=patronymic_data,
-                            birthday=birthday_data,
-                            sex=gender_data,
-                        )
-                        patient_indv.save()
-                        patient_card = Card.add_l2_card(individual=patient_indv)
-            elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
-                patient_card_pk = current_patient.data["patient_data"]["card"]
-                patient_card = Card.objects.filter(pk=patient_card_pk).first()
-            else:
-                patient_card = Individual.import_from_tfoms(current_patient.data["patient_data"], None, None, None, True)
-            incorrect_factor = []
-            harmful_factors_data = []
-            for i in code_harmful_data:
-                current_code = i.replace(" ", "")
-                harmful_factor = HarmfulFactor.objects.filter(title=current_code).first()
-                if harmful_factor:
-                    harmful_factors_data.append({"factorId": harmful_factor.pk})
-                else:
-                    incorrect_factor.append(f"{current_code}")
-            if len(incorrect_factor) != 0:
+            patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data,
+                                          gender_data)
+            harmful_factors_data, incorrect_factor = find_factors(code_harmful_data)
+            if incorrect_factor:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
-            PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
-            company_obj = Company.objects.filter(inn=company_inn).first()
-            patient_card.work_position = cells[position].strip()
-            patient_card.work_place_db = company_obj
-            patient_card.save()
-            MedicalExamination.save_examination(patient_card, company_obj, exam_data)
+            try:
+                PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, harmful_factors_data)
+                company_obj = Company.objects.filter(inn=company_inn).first()
+                patient_card.work_position = cells[position].strip()
+                patient_card.work_place_db = company_obj
+                patient_card.save()
+                MedicalExamination.save_examination(patient_card, company_obj, exam_data)
+            except Exception as e:
+                incorrect_patients.append({"fio": cells[fio], "reason": "Сохранение не удалось, см. логи"})
+                Log.log(patient_card.pk, 130006, request.user, {"except": e})
 
     return incorrect_patients
 
@@ -443,10 +466,10 @@ def find_and_replace(text, symbol1, symbol2):
     result = []
     for i in range(len(text)):
         if text[i] == symbol1:
-            current_text = text[0:i] + symbol2 + text[i + 1 :]
+            current_text = text[0:i] + symbol2 + text[i + 1:]
             result.append(current_text)
         elif text[i] == symbol2:
-            current_text = text[0:i] + symbol1 + text[i + 1 :]
+            current_text = text[0:i] + symbol1 + text[i + 1:]
             result.append(current_text)
     return result
 
