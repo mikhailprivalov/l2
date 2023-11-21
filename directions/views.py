@@ -1102,12 +1102,7 @@ def create_case_by_cards(cards):
                 doc,
             )
 
-            issledovaniye_case = Issledovaniya(
-                napravleniye=napravleniye_case,
-                research=research_case,
-                deferred=False,
-                plan_start_date=plan_start_date_case
-            )
+            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_start_date_case)
             issledovaniye_case.save()
             result = Napravleniya.gen_napravleniya_by_issledovaniya(
                 card_id,
