@@ -124,7 +124,7 @@ def simple_join_two_pdf_files(inputs):
     pdf_all.close()
 
     for i in inputs:
-        os.remove(os.path.join(dir_param,i))
+        os.remove(os.path.join(dir_param, i))
     return pdf_out
 
 
