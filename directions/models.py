@@ -1059,6 +1059,7 @@ class Napravleniya(models.Model):
         hospital=-1,
         external_order=None,
         price_name_id=None,
+        slot_fact_id=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1130,6 +1131,12 @@ class Napravleniya(models.Model):
         if save:
             dir.save()
         dir.set_polis()
+        if slot_fact_id:
+            from doctor_schedule.models import SlotFact
+
+            f = SlotFact.objects.get(pk=slot_fact_id)
+            f.direction = dir
+            f.save(update_fields=['direction'])
         return dir
 
     @staticmethod
@@ -1557,6 +1564,7 @@ class Napravleniya(models.Model):
                                 hospital=hospital_override,
                                 external_order=external_order,
                                 price_name_id=price_name,
+                                slot_fact_id=slot_fact_id,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
                             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
@@ -1588,6 +1596,7 @@ class Napravleniya(models.Model):
                             hospital=hospital_override,
                             external_order=external_order,
                             price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1619,6 +1628,7 @@ class Napravleniya(models.Model):
                             hospital=hospital_override,
                             external_order=external_order,
                             price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1839,6 +1849,7 @@ class Napravleniya(models.Model):
                     external_organization=external_organization,
                     price_category=price_category,
                     hospital=hospital_override,
+                    slot_fact_id=slot_fact_id,
                 )
                 result["list_id"].append(new_direction.pk)
                 Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()
