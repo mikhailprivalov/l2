@@ -26,7 +26,6 @@ from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_rese
 from ecp_integration.integration import fill_slot_from_xlsx
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
-from slog.models import Log
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches, DoctorProfile
 from clients.models import Individual, HarmfulFactor, PatientHarmfullFactor, Card, CardBase, DocumentType, Document
