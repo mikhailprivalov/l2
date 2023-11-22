@@ -73,6 +73,7 @@ def http_func(data, user):
 
 
 def search_patient(snils_data, request_user, family_data, name_data, patronymic_data, birthday_data, gender_data):
+    patient_card = None
     application = Application.objects.filter(active=True, is_background_worker=True).first()
     if application:
         bearer_token = f"Bearer {application.key}"
@@ -91,20 +92,24 @@ def search_patient(snils_data, request_user, family_data, name_data, patronymic_
     if snils_data and snils_data != "None":
         current_patient = check_enp(request_obj)
     if not current_patient or current_patient.data.get("message"):
-        patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
-        if patient_card is None:
-            possible_family = find_and_replace(family_data, "е", "ё")
-            patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
+        patient_data = [family_data, name_data, birthday_data]
+        if None in patient_data or "None" in patient_data:
+            return patient_card
+        else:
+            patient_card = search_by_fio(request_obj, family_data, name_data, patronymic_data, birthday_data)
             if patient_card is None:
-                patient_indv = Individual(
-                    family=family_data,
-                    name=name_data,
-                    patronymic=patronymic_data,
-                    birthday=birthday_data,
-                    sex=gender_data,
-                )
-                patient_indv.save()
-                patient_card = Card.add_l2_card(individual=patient_indv)
+                possible_family = find_and_replace(family_data, "е", "ё")
+                patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
+                if patient_card is None:
+                    patient_indv = Individual(
+                        family=family_data,
+                        name=name_data,
+                        patronymic=patronymic_data,
+                        birthday=birthday_data,
+                        sex=gender_data,
+                    )
+                    patient_indv.save()
+                    patient_card = Card.add_l2_card(individual=patient_indv)
     elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
         patient_card_pk = current_patient.data["patient_data"]["card"]
         patient_card = Card.objects.filter(pk=patient_card_pk).first()
@@ -160,7 +165,7 @@ def add_factors_from_file(request):
         None,
         None,
     )
-    for row in ws.rows:
+    for index, row in enumerate(ws.rows, 1):
         cells = [str(x.value) for x in row]
         if not starts:
             if "код вредности" in cells:
@@ -178,12 +183,13 @@ def add_factors_from_file(request):
                 incorrect_patients.append({"fio": cells[fio], "reason": "ИНН организации не совпадает"})
                 continue
             snils_data = cells[snils].replace("-", "").replace(" ", "")
-            fio_data = cells[fio].split(" ")
-            family_data = fio_data[0]
-            name_data = fio_data[1]
-            patronymic_data = None
-            if len(fio_data) > 2:
-                patronymic_data = fio_data[2]
+            family_data, name_data, patronymic_data = None, None, None
+            if cells[fio] and cells[fio] != "None":
+                fio_data = cells[fio].split(" ")
+                family_data = fio_data[0]
+                name_data = fio_data[1]
+                if len(fio_data) > 2:
+                    patronymic_data = fio_data[2]
             birthday_data = cells[birthday].split(" ")[0]
             code_harmful_data = cells[code_harmful].split(",")
             exam_data = cells[examination_date].split(" ")[0]
@@ -195,6 +201,9 @@ def add_factors_from_file(request):
                 continue
             gender_data = cells[gender][0]
             patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data, gender_data)
+            if patient_card is None:
+                incorrect_patients.append({"fio": f"Строка: {index}", "reason": "Отсутствует данные"})
+                continue
             harmful_factors_data, incorrect_factor = find_factors(code_harmful_data)
             if incorrect_factor:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
