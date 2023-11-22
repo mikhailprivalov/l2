@@ -191,7 +191,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     term_pregnancy = '_____'
     allegry_variants = ['нет', 'есть']
     allergy = [empty_checkbox, empty_checkbox]
-    allergy_reason = "на ______________________________________ "
+    allergy_reason = "______________________________________ "
     treatments_variants = ['амбулаторное', 'стационарное', 'самолечение']
     treatments = [empty_checkbox, empty_checkbox, empty_checkbox]
 
