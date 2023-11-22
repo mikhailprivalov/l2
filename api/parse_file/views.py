@@ -191,7 +191,7 @@ def add_factors_from_file(request):
                 datetime.datetime.strptime(birthday_data, '%Y-%m-%d')
                 datetime.datetime.strptime(exam_data, '%Y-%m-%d')
             except ValueError as e:
-                incorrect_patients.append({"fio": cells[fio], "reason": f"Неверный формат даты/не существующая дата в файле: {e}"})
+                incorrect_patients.append({"fio": cells[fio], "reason": f"Неверный формат даты/несуществующая дата в файле: {e}"})
                 continue
             gender_data = cells[gender][0]
             patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data, gender_data)
