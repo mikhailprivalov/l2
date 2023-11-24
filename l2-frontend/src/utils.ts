@@ -352,10 +352,12 @@ export const getFormattedDate = (date: Date | void): string => {
 
 export const convertSubjectNameToCertObject = (subjectName: string): any => {
   const result = {};
-  const parts = subjectName.split(/(, )?([a-zа-яё]+)=/gi);
-  const p = parts.slice(2).filter((s) => s !== ', ');
+  const parts = subjectName.split(/([а-яa-z]+=|[а-яa-z]+\s[а-яa-z]+=)/i);
+  const p = parts.slice(1);
   for (let i = 0; i < p.length; i += 2) {
-    result[p[i]] = p[i + 1];
+    const key = p[i].replace('=', '');
+    const value = p[i + 1];
+    result[key] = value.length > 2 ? value.slice(0, -2) : value;
   }
 
   return result;
