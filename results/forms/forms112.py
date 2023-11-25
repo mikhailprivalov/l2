@@ -163,7 +163,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     filled_checkbox = '<font face="Symbola" size=8>\u2611</font>'
     objs = []
     objs.append(Paragraph("ИЗВЕЩЕНИЕ О ПОБОЧНОМ ДЕЙСТВИИ, НЕЖЕЛАТЕЛЬНОЙ РЕАКЦИИ ИЛИ ОТСУТСТВИИ ОЖИДАЕМОГО ТЕРАПЕВТИЧЕСКОГО ЭФФЕКТА ЛЕКАРСТВЕННОГО ПРЕПАРАТА", style_header))
- 
     primary = empty_checkbox
     addition = empty_checkbox
     message_num = '___________'
