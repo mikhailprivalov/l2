@@ -399,7 +399,7 @@ export default {
           title: '№',
           align: 'center',
           width: 30,
-          renderBodyCell: ({ rowIndex }) => rowIndex + 1,
+          renderBodyCell: ({ rowIndex }) => (rowIndex + (this.pageSize * (this.page - 1)) + 1),
         },
         {
           field: 'card',
