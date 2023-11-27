@@ -1,4 +1,5 @@
 import os.path
+import uuid
 from datetime import date, datetime
 from io import BytesIO
 
@@ -44,6 +45,7 @@ from django.utils.module_loading import import_string
 
 from utils.matrix import transpose
 from utils.xh import save_tmp_file, translation_number_from_decimal
+from users.models import User
 
 w, h = A4
 
@@ -1048,6 +1050,13 @@ def pxr(x=0.0):
 def create_case_by_cards(cards):
     research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
     doc = DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
+    if not doc:
+        user = User.objects.create_user(uuid.uuid4().hex)
+        user.is_active = True
+        user.save()
+        doc = DoctorProfile(user=user, fio='Системный Пользователь', is_system_user=True)
+        doc.save()
+        doc.get_fio_parts()
     card_directions = {}
     number_directons = None
     for card in cards:

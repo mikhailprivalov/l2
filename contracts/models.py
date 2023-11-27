@@ -7,7 +7,10 @@ from django.db import models
 
 import directory.models as directory
 from contracts.sql_func import search_companies, get_examination_data
-from clients.models import Card
+from clients.models import Card, HarmfulFactor
+from laboratory.settings import CONTROL_AGE_MEDEXAM
+from laboratory.utils import current_year
+from users.models import AssignmentResearches
 
 
 class PriceCategory(models.Model):
@@ -236,8 +239,13 @@ class MedicalExamination(models.Model):
             date_end = date
         result = []
         prev_card_id = -1
-        examination_data = get_examination_data(company_id, date_start, date_end)
+        last_date_year = f"{current_year()}-12-31"
+        examination_data = get_examination_data(company_id, date_start, date_end, last_date_year)
+        male = CONTROL_AGE_MEDEXAM.get("м")
+        female = CONTROL_AGE_MEDEXAM.get("ж")
+
         for i in examination_data:
+            harmful_factor_data = []
             if prev_card_id != i.card_id:
                 result.append(
                     {
@@ -249,12 +257,33 @@ class MedicalExamination(models.Model):
                         "date": i.examination_date.strftime("%d.%m.%Y"),
                     }
                 )
+
             else:
                 if f"{i.harmful_factor}; " not in result[-1]["harmful_factors"]:
                     result[-1]["harmful_factors"].append(f"{i.harmful_factor}; ")
                 if i.research_id not in result[-1]["research_id"]:
                     result[-1]["research_id"].append(i.research_id)
                     result[-1]["research_titles"].append(f"{i.research_title}; ")
+
+                if i.sex == "м":
+                    for k in sorted(male.keys()):
+                        if i.age_year < k:
+                            harmful_factor_data.append(male[k])
+                            break
+                elif i.sex == "ж":
+                    for k in sorted(female.keys()):
+                        if i.age_year < k:
+                            harmful_factor_data.append(female[k])
+                            break
+                templates_data = HarmfulFactor.objects.values_list("template_id", flat=True).filter(title__in=harmful_factor_data)
+                researches_data = AssignmentResearches.objects.values_list("research_id", flat=True).filter(template_id__in=templates_data)
+                researches_data = list(set(researches_data))
+                for research_id in researches_data:
+                    if research_id not in result[-1]["research_id"]:
+                        result[-1]["research_id"].append(research_id)
+                        res_obj = directory.Researches.objects.filter(pk=research_id).first()
+                        result[-1]["research_titles"].append(f"{res_obj.title}; ")
+
             prev_card_id = i.card_id
         if month:
             result = sorted(result, key=lambda d: d["date"])
