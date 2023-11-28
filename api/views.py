@@ -25,7 +25,7 @@ from laboratory.settings import (
     TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
-    TYPE_COMPANY_SET_DIRECTION_PDF,
+    TYPE_COMPANY_SET_DIRECTION_PDF, MEDEXAM_FIN_SOURCE_TITLE,
 )
 from utils.response import status_response
 
@@ -3328,7 +3328,7 @@ def print_medical_examination_data(request):
                     "card_pk": card,
                     "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                     "type_additional_pdf": TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[1],
-                    "fin_title": "профосмотр",
+                    "fin_title": MEDEXAM_FIN_SOURCE_TITLE,
                     "napr_id": napr_id,
                 }
             )
