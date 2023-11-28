@@ -281,7 +281,7 @@
           <div class="flex flex-bottom">
             Исключить исследования:
           </div>
-          <div class="print-div">
+          <div class="print">
             <div class="button">
               <button
                 v-tippy
@@ -289,7 +289,7 @@
                 class="btn last btn-blue-nb nbr"
                 @click="print"
               >
-                Печать
+                Печать списком ({{ selectedCards.length }})
               </button>
             </div>
           </div>
@@ -324,7 +324,7 @@
             @on-page-number-change="pageNumberChange"
             @on-page-size-change="pageSizeChange"
           />
-          <div class="print-div">
+          <div class="print">
             <div class="button">
               <button
                 v-tippy
@@ -332,7 +332,7 @@
                 class="btn last btn-blue-nb nbr"
                 @click="print"
               >
-                Печать
+                Печать списком ({{ selectedCards.length }})
               </button>
             </div>
           </div>
@@ -425,13 +425,40 @@ export default {
           width: 300,
         },
         {
-          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
+          field: 'date', key: 'date', title: 'Дата', align: 'left', width: 50,
         },
         {
           field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
         },
         {
           field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
+        },
+        {
+          field: 'print',
+          key: 'print',
+          title: '',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ row }, h) => (
+            h('div', { class: 'button' }, [
+              h(
+                'button',
+                {
+                  class: this.button.transparentButton,
+                  on: {
+                    click: () => {
+                      this.print(
+                        row.date,
+                        row.research_id,
+                        row.card_id,
+                      );
+                    },
+                  },
+                },
+                [h('i', { class: 'fa-solid fa-print' })],
+              ),
+            ])
+          ),
         },
         {
           field: '', key: 'select', title: '', align: 'center', width: 98, type: 'checkbox',
@@ -602,12 +629,17 @@ export default {
     pageSizeChange(size: number) {
       this.pageSize = size;
     },
-    async print() {
-      const printData = this.examinationList.filter((exam) => {
-        const card = exam.card_id;
-        const selectCard = this.selectedCards;
-        return selectCard.includes(card);
-      }).map((exam) => ({ card_id: exam.card_id, date: exam.date, research: exam.research_id }));
+    async print(date = '', researchId = [], cardId = -1) {
+      let printData = [];
+      if (cardId === -1) {
+        printData = this.examinationList.filter((exam) => {
+          const card = exam.card_id;
+          const selectCard = this.selectedCards;
+          return selectCard.includes(card);
+        }).map((exam) => ({ card_id: exam.card_id, date: exam.date, research: exam.research_id }));
+      } else {
+        printData = [{ card_id: cardId, date, research: researchId }];
+      }
       await this.$store.dispatch(actions.INC_LOADING);
       const result = await this.$api('print-medical-examination-data', {
         cards: printData,
@@ -735,8 +767,8 @@ export default {
 .margin-bottom {
   margin-bottom: 5px;
 }
-.print-div {
-  width: 100px;
+.print {
+  width: 160px;
 }
 .row-div {
   width: 100%;
