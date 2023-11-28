@@ -2705,6 +2705,8 @@ def last_field_result(request):
         result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
         result = {"value": data['snils']}
+    elif request_data["fieldPk"].find('%harmfull_factors') != -1:
+        result = {"value": data['harmfull_factors']}
     elif request_data["fieldPk"].find('%sex_full') != -1:
         if data['sex'] == 'м':
             sex = 'мужской'
