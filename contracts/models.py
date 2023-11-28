@@ -189,7 +189,7 @@ class Company(models.Model):
             "kpp": company.kpp,
             "bik": company.bik,
             "contractId": company.contract_id,
-            "uuid": company.uuid,
+            "uuid": str(company.uuid),
         }
         return json_data
 
