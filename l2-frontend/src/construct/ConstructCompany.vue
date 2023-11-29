@@ -643,7 +643,7 @@ export default {
           research: exam.research_id.filter(id => !this.excludedResearches.includes(id)),
         }));
       } else {
-        printData = [{ card_id: cardId, date, research: researchId }];
+        printData = [{ card_id: cardId, date, research: researchId.filter(id => !this.excludedResearches.includes(id)) }];
       }
       await this.$store.dispatch(actions.INC_LOADING);
       const result = await this.$api('print-medical-examination-data', {
