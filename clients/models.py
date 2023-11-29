@@ -1317,6 +1317,10 @@ class Card(models.Model):
         ind_data['oms']['issueOrgCode'] = ind_data['insurer_full_code']
         ind_data['ecp_id'] = self.individual.ecp_id
 
+        patient_harmfull_factors = PatientHarmfullFactor.objects.filter(card=self)
+        harmful_factors_title = [f"{i.harmful_factor.title}" for i in patient_harmfull_factors]
+        ind_data['harmfull_factors'] = ";".join(harmful_factors_title)
+
         return ind_data
 
     def get_ecp_id(self):
