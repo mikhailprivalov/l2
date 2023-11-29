@@ -162,18 +162,17 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     empty_checkbox = '<font face="Symbola" size=8>\u2610</font>'
     filled_checkbox = '<font face="Symbola" size=8>\u2611</font>'
     objs = []
-    objs.append(Paragraph("ИЗВЕЩЕНИЕ О НЕЖЕЛАТЕЛЬНОЙ РЕАКЦИИ ИЛИ ОТСУТСТВИИ ТЕРАПЕВТИЧЕСКОГО ЭФФЕКТАЛЕКАРСТВЕННОГО ПРЕПАРАТА", style_header))
-
+    objs.append(Paragraph("ИЗВЕЩЕНИЕ О ПОБОЧНОМ ДЕЙСТВИИ, НЕЖЕЛАТЕЛЬНОЙ РЕАКЦИИ ИЛИ ОТСУТСТВИИ ОЖИДАЕМОГО ТЕРАПЕВТИЧЕСКОГО ЭФФЕКТА ЛЕКАРСТВЕННОГО ПРЕПАРАТА", style_header))
     primary = empty_checkbox
     addition = empty_checkbox
     message_num = '___________'
     message_date = '_________________'
     if string_check(protocol_data["Первичное"]):
         primary = filled_checkbox
-    else:
+    elif string_check(protocol_data["Первичное"], 'нет'):
         addition = filled_checkbox
-        message_num = protocol_data["Дополнение к сообщению №"]
-        message_date = protocol_data["Дополнение к сообщению от"]
+        message_num = protocol_data["Дополнение к сообщению №"] if protocol_data["Дополнение к сообщению №"] else message_num
+        message_date = protocol_data["Дополнение к сообщению от"] if protocol_data["Дополнение к сообщению от"] else message_date
 
     objs.append(Spacer(1, space * 2))
     table_data = [
@@ -191,7 +190,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     term_pregnancy = '_____'
     allegry_variants = ['нет', 'есть']
     allergy = [empty_checkbox, empty_checkbox]
-    allergy_reason = "на ______________________________________ "
+    allergy_reason = "______________________________________ "
     treatments_variants = ['амбулаторное', 'стационарное', 'самолечение']
     treatments = [empty_checkbox, empty_checkbox, empty_checkbox]
 
@@ -368,7 +367,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     custom_style = [("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#99ccff")), ("BACKGROUND", (0, 4), (-1, 4), colors.HexColor("#99ccff"))]
     objs.append(gen_table(table_data, full_grid=True, custom_style=custom_style))
 
-    objs.append(PageBreak())
     objs.append(Spacer(1, space * 2))
 
     result_cancel_list = ["нет", "да", "лс не отменялось", "не применимо"]
