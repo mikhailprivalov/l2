@@ -603,6 +603,7 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         this.showExaminationList = true;
         this.examinationList = medicalExamination.data;
+        this.selectedCards = []
         await this.getResearches();
         if (this.month) {
           this.dateTitle = this.date.split('-').reverse().slice(-2).join('.');
