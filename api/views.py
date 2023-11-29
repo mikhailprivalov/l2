@@ -26,6 +26,7 @@ from laboratory.settings import (
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
+    MEDEXAM_FIN_SOURCE_TITLE,
 )
 from utils.response import status_response
 
@@ -2654,13 +2655,19 @@ def update_price(request):
     current_price = None
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
-            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"]
+            )
         elif request_data.get("typePrice") == "Заказчик":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
-            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True)
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True
+            )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
-            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True)
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True
+            )
         if current_price:
             current_price.save()
             Log.log(
@@ -2672,6 +2679,7 @@ def update_price(request):
     else:
         current_price = PriceName.objects.get(pk=request_data["id"])
         current_price.title = request_data["title"]
+        current_price.symbol_code = request_data["code"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
         if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
@@ -2697,6 +2705,7 @@ def copy_price(request):
         current_price = PriceName.objects.get(pk=request_data["id"])
         new_price = PriceName(
             title=f"{current_price.title} - новый прайс",
+            symbol_code=f"{current_price.symbol_code} - новый",
             date_start=current_price.date_start,
             date_end=current_price.date_end,
             company=current_price.company,
@@ -3328,7 +3337,7 @@ def print_medical_examination_data(request):
                     "card_pk": card,
                     "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                     "type_additional_pdf": TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[1],
-                    "fin_title": "профосмотр",
+                    "fin_title": MEDEXAM_FIN_SOURCE_TITLE,
                     "napr_id": napr_id,
                 }
             )

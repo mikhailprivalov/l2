@@ -20,6 +20,7 @@
           <col width="240">
           <col width="120">
           <col width="120">
+          <col width="120">
           <col>
           <col
             v-if="priceIsActive"
@@ -30,6 +31,9 @@
           <tr>
             <th class="text-center">
               <strong>Название</strong>
+            </th>
+            <th class="text-center">
+              <strong>Код</strong>
             </th>
             <th class="text-center">
               <strong>Дата начала</strong>
@@ -47,6 +51,13 @@
           <td class="border">
             <input
               v-model.trim="priceData.title"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
+          </td>
+          <td class="border">
+            <input
+              v-model="priceData.code"
               class="form-control"
               :disabled="!priceIsActive"
             >
@@ -117,11 +128,19 @@
           class="height-row border"
         >
           <td class="border text-center">
+            <strong>ID</strong>
+          </td>
+          <td
+            class="padding-left"
+          >
+            {{ priceData.id }}
+          </td>
+          <td class="border text-center">
             <strong>UUID</strong>
           </td>
           <td
-            class=" padding-left"
-            :colspan="priceIsActive ? 4 : 3"
+            class="padding-left"
+            :colspan="priceIsActive ? 3 : 2"
           >
             {{ priceData.uuid }}
           </td>
@@ -379,7 +398,9 @@ export default {
     selectedPrice() {
       if (!this.selectedPrice) {
         this.priceData = {
+          id: -1,
           title: '',
+          code: '',
           start: '',
           end: '',
           company: null,
@@ -454,6 +475,7 @@ export default {
         const { ok, message } = await this.$api('update-price', {
           id: this.selectedPrice,
           title: this.priceData.title,
+          code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
           company: this.priceData.company,
@@ -471,6 +493,7 @@ export default {
         const { ok, message } = await this.$api('update-price', {
           id: -1,
           title: this.priceData.title,
+          code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
           company: this.priceData.company,
@@ -481,10 +504,13 @@ export default {
           this.$root.$emit('msg', 'ok', 'Прайс добавлен');
           await this.getPrices();
           this.priceData = {
+            id: -1,
             title: '',
+            code: '',
             start: '',
             end: '',
             company: null,
+            uuid: '',
           };
         } else {
           this.$root.$emit('msg', 'error', message);
