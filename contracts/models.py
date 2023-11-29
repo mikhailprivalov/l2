@@ -68,7 +68,16 @@ class PriceName(models.Model):
         else:
             company_title = ""
             company_id = ""
-        json_data = {"id": price.id, "title": price.title, "start": price.date_start, "end": price.date_end, "company": company_id, "companyTitle": company_title, "uuid": str(price.uuid)}
+        json_data = {
+            "id": price.id,
+            "title": price.title,
+            "code": price.symbol_code,
+            "start": price.date_start,
+            "end": price.date_end,
+            "company": company_id,
+            "companyTitle": company_title,
+            "uuid": str(price.uuid),
+        }
         return json_data
 
     @staticmethod
