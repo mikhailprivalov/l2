@@ -2939,6 +2939,7 @@ def get_company(request):
 @group_required("Конструктор: Настройка организации")
 def update_company(request):
     request_data = json.loads(request.body)
+    print(request_data)
     if request_data.get("pk"):
         if Company.objects.filter(title=request_data["title"]).exclude(pk=request_data["pk"]):
             return JsonResponse({"ok": False, "message": "Такое название уже есть"})
@@ -2955,6 +2956,7 @@ def update_company(request):
         company_data.kpp = request_data["kpp"]
         company_data.bik = request_data["bik"]
         company_data.contract_id = request_data.get("contractId") or None
+        company_data.cpp_send = request_data.get("cppSend", False)
         company_data.save()
         new_company_data = Company.as_json(company_data)
         Log.log(
@@ -2979,6 +2981,7 @@ def update_company(request):
             kpp=request_data.get("kpp") or "",
             bik=request_data.get("bik") or "",
             contract_id=request_data.get("contractId") or None,
+            cpp_send=request_data.get("cppSend", False),
         )
         company_data.save()
         Log.log(

@@ -97,18 +97,27 @@
               name="contractId"
               label="Договор"
             />
-            <div class="flex flex-right">
-              <FormulateInput
-                class="margin-right"
-                type="button"
-                :label="isNewCompany ? 'Очистить' : 'Отменить'"
-                @click="clearEditCompany"
-              />
-              <FormulateInput
-                type="submit"
-                class="nbr margin-right"
-                :label="isNewCompany ? 'Добавить' : 'Сохранить'"
-              />
+            <div class="flex flex-space-between">
+              <div>
+                <FormulateInput
+                  type="checkbox"
+                  name="cppSend"
+                  label="Отправлять в ЦПП"
+                />
+              </div>
+              <div class="flex flex-right">
+                <FormulateInput
+                  class="margin-right"
+                  type="button"
+                  :label="isNewCompany ? 'Очистить' : 'Отменить'"
+                  @click="clearEditCompany"
+                />
+                <FormulateInput
+                  type="submit"
+                  class="nbr margin-right"
+                  :label="isNewCompany ? 'Добавить' : 'Сохранить'"
+                />
+              </div>
             </div>
           </FormulateForm>
           <div
@@ -392,53 +401,9 @@ export default {
       cellSelectionOption: {
         enable: false,
       },
-      columns: [
-        {
-          field: 'number',
-          key: 'number',
-          title: '№',
-          align: 'center',
-          width: 30,
-          renderBodyCell: ({ rowIndex }) => rowIndex + 1,
-        },
-        {
-          field: 'card',
-          key: 'card',
-          title: '',
-          align: 'center',
-          width: 30,
-          renderBodyCell: ({ row }, h) => (
-            h('div', { class: 'button' }, [
-              h(
-                'button',
-                { class: this.button.transparentButton, on: { click: () => { this.openCard(row.card_id); } } },
-                [h('i', { class: 'fa-solid fa-user' })],
-              ),
-            ])
-          ),
-        },
-        {
-          field: 'fio',
-          key: 'fio',
-          title: 'Пациент',
-          align: 'left',
-          width: 300,
-        },
-        {
-          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
-        },
-        {
-          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
-        },
-        {
-          field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
-        },
-        {
-          field: '', key: 'select', title: '', align: 'center', width: 98, type: 'checkbox',
-        },
-      ],
+      columns: [],
       page: 1,
-      pageSize: 50,
+      pageSize: 25,
       pageSizeOptions: [25, 50, 100],
       excludedResearches: [],
       researches: [],
@@ -563,6 +528,73 @@ export default {
         }
       }
     },
+    getColumns() {
+      const columnsTemplate = [
+        {
+          field: 'number',
+          key: 'number',
+          title: '№',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ rowIndex }) => rowIndex + 1,
+        },
+        {
+          field: 'card',
+          key: 'card',
+          title: '',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ row }, h) => (
+            h('div', { class: 'button' }, [
+              h(
+                'button',
+                { class: this.button.transparentButton, on: { click: () => { this.openCard(row.card_id); } } },
+                [h('i', { class: 'fa-solid fa-user' })],
+              ),
+            ])
+          ),
+        },
+        {
+          field: 'fio',
+          key: 'fio',
+          title: 'Пациент',
+          align: 'left',
+          width: 300,
+        },
+        {
+          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
+        },
+        {
+          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
+        },
+        {
+          field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
+        },
+        {
+          field: '', key: 'select', title: '', align: 'center', width: 98, type: 'checkbox',
+        },
+      ];
+      if (this.editorCompany.cppSend) {
+        const cppCol = {
+          field: 'cpp',
+          key: 'cpp',
+          title: 'ЦПП',
+          align: 'center',
+          width: 100,
+          renderBodyCell: ({ row, column }, h) => {
+            if (row[column.field] === 2) {
+              return h('p', 'Отправлен');
+            }
+            if (row[column.field] === 1) {
+              return h('p', 'Не отправлен');
+            }
+            return h('p', 'Нет протокола');
+          },
+        };
+        columnsTemplate.splice(3, 0, cppCol);
+      }
+      this.columns = columnsTemplate;
+    },
     async getExaminationList() {
       if (!this.date) {
         this.$root.$emit('msg', 'error', 'Дата не выбрана');
@@ -574,6 +606,7 @@ export default {
           month: this.month,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
+        this.getColumns();
         this.showExaminationList = true;
         this.examinationList = medicalExamination.data;
         await this.getResearches();

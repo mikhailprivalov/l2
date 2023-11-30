@@ -203,6 +203,7 @@ class Company(models.Model):
             "bik": company.bik,
             "contractId": company.contract_id,
             "uuid": company.uuid,
+            "cppSend": company.cpp_send,
         }
         return json_data
 
