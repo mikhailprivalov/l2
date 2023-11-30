@@ -246,3 +246,8 @@ def get_epid_data(directions, with_confirm):
             temp_data['master_field_results'].append({'master_field_title': i.master_field_title, 'master_value': master_value})
 
     return data
+
+
+def generate_xml(request):
+
+    return

@@ -1536,7 +1536,7 @@ def directions_paraclinic_form(request):
             card_documents = d.client.get_card_documents(check_has_type=['СНИЛС'])
 
             has_snils = bool(card_documents)
-
+            print(d.doc)
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "fio": d.client.individual.fio(),
