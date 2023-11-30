@@ -289,7 +289,7 @@
                 class="btn last btn-blue-nb nbr"
                 @click="print"
               >
-                Печать списком ({{ selectedCards.length }})
+                Печать
               </button>
             </div>
           </div>
@@ -332,7 +332,7 @@
                 class="btn last btn-blue-nb nbr"
                 @click="print"
               >
-                Печать списком ({{ selectedCards.length }})
+                Печать
               </button>
             </div>
           </div>
@@ -603,7 +603,6 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         this.showExaminationList = true;
         this.examinationList = medicalExamination.data;
-        this.selectedCards = [];
         await this.getResearches();
         if (this.month) {
           this.dateTitle = this.date.split('-').reverse().slice(-2).join('.');
@@ -772,7 +771,7 @@ export default {
   margin-bottom: 5px;
 }
 .print {
-  width: 160px;
+  width: 100px;
 }
 .row-div {
   width: 100%;
