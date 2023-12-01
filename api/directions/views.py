@@ -5,13 +5,14 @@ from typing import Optional
 
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
-from contracts.models import PriceCategory, PriceCoast
+from contracts.models import PriceCategory, PriceCoast, PriceName, Company, Contract
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
 
 from integration_framework.views import get_cda_data
+from results.prepare_data import fields_result_only_title_fields
 from utils.response import status_response
 from hospitals.models import Hospitals, HospitalParams
 import operator
@@ -82,6 +83,7 @@ from utils.common import non_selected_visible_type, none_if_minus_1, values_from
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
+from xml_generate.views import gen_resul_cpp_file
 from .sql_func import (
     get_history_dir,
     get_confirm_direction,
@@ -2406,6 +2408,28 @@ def directions_paraclinic_result(request):
                     if child_direction.parent:
                         Napravleniya.objects.filter(pk=child_iss[0]).update(parent=parent_iss, cancel=False)
 
+            if iss.research.cpp_template_files:
+                patient = iss.napravleniye.client.get_data_individual()
+                company = iss.napravleniye.client.work_place_db
+                price = PriceName.get_company_price_by_date(company.pk, current_time(only_date=True), current_time(only_date=True))
+                patient["ContragentUUID"] = str(company.uuid)
+
+                data = {
+                    "company": Company.as_json(company),
+                    "contract": PriceName.as_json(price),
+                    "patient": patient
+                }
+                result_direction = fields_result_only_title_fields(iss,
+                                                                   [
+                                                                       "СНИЛС", "Дата осмотра", "Резукльтат медицинского медосмотра", "Группы риска", "Группы риска по SCORE",
+                                                                       "Дата присвоения группы здоровья",
+                                                                       "Вредные факторы", "Группа здоровья", "Номер справки", "Дата выдачи справки"
+                                                                    ]
+                                                                   )
+                data["result"] = result_direction
+                gen_resul_cpp_file(iss, iss.research.cpp_template_files, data)
+
+
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
@@ -2704,6 +2728,7 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%mother_born') != -1:
         result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
+        print("snils")
         result = {"value": data['snils']}
     elif request_data["fieldPk"].find('%harmfull_factors') != -1:
         result = {"value": data['harmfull_factors']}

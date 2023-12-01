@@ -395,6 +395,7 @@ QR_CODE_ANKETA = ""
 RESULT_LABORATORY_FORM = ""
 SELF_WATERMARKS = ""
 TYPE_COMPANY_SET_DIRECTION_PDF = ""
+CPP_SEND_PROTOCOL_ID = -1
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

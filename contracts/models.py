@@ -76,6 +76,7 @@ class PriceName(models.Model):
             "end": price.date_end,
             "company": company_id,
             "companyTitle": company_title,
+            "symbolCode": price.symbol_code,
             "uuid": str(price.uuid),
         }
         return json_data
@@ -202,7 +203,7 @@ class Company(models.Model):
             "kpp": company.kpp,
             "bik": company.bik,
             "contractId": company.contract_id,
-            "uuid": company.uuid,
+            "uuid": str(company.uuid),
         }
         return json_data
 
@@ -289,17 +290,19 @@ class MedicalExamination(models.Model):
                 tmp_patient["research_titles"].append(f"{i.research_title}; ")
                 patient_result[i.card_id] = tmp_patient.copy()
 
-            result = [
-                {
-                    "card_id": k,
-                    "fio": v["fio"],
-                    "harmful_factors": list(set(v["harmful_factors"])),
-                    "research_id": list(set(v["research_id"])),
-                    "research_titles": list(set(v["research_titles"])),
-                    "date": v["date"],
-                }
-                for k, v in patient_result.items()
-            ]
+        result = [
+            {
+                "card_id": k,
+                "fio": v["fio"],
+                "harmful_factors": list(set(v["harmful_factors"])),
+                "research_id": list(set(v["research_id"])),
+                "research_titles": list(set(v["research_titles"])),
+                "date": v["date"],
+            }
+            for k, v in patient_result.items()
+        ]
+        for patient in result:
+            pass
 
         if month:
             result = sorted(result, key=lambda d: d["date"])
