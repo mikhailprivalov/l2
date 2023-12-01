@@ -2939,7 +2939,6 @@ def get_company(request):
 @group_required("Конструктор: Настройка организации")
 def update_company(request):
     request_data = json.loads(request.body)
-    print(request_data)
     if request_data.get("pk"):
         if Company.objects.filter(title=request_data["title"]).exclude(pk=request_data["pk"]):
             return JsonResponse({"ok": False, "message": "Такое название уже есть"})
