@@ -290,7 +290,7 @@
           <div class="flex flex-bottom">
             Исключить исследования:
           </div>
-          <div class="print-div">
+          <div class="print">
             <div class="button">
               <button
                 v-tippy
@@ -333,7 +333,7 @@
             @on-page-number-change="pageNumberChange"
             @on-page-size-change="pageSizeChange"
           />
-          <div class="print-div">
+          <div class="print">
             <div class="button">
               <button
                 v-tippy
@@ -632,16 +632,24 @@ export default {
     pageSizeChange(size: number) {
       this.pageSize = size;
     },
-    async print() {
-      const printData = this.examinationList.filter((exam) => {
-        const card = exam.card_id;
-        const selectCard = this.selectedCards;
-        return selectCard.includes(card);
-      }).map((exam) => ({ card_id: exam.card_id, date: exam.date, research: exam.research_id }));
+    async print(date = '', researchId = [], cardId = -1) {
+      let printData = [];
+      if (cardId === -1) {
+        printData = this.examinationList.filter((exam) => {
+          const card = exam.card_id;
+          const selectCard = this.selectedCards;
+          return selectCard.includes(card);
+        }).map((exam) => ({
+          card_id: exam.card_id,
+          date: exam.date,
+          research: exam.research_id.filter(id => !this.excludedResearches.includes(id)),
+        }));
+      } else {
+        printData = [{ card_id: cardId, date, research: researchId.filter(id => !this.excludedResearches.includes(id)) }];
+      }
       await this.$store.dispatch(actions.INC_LOADING);
       const result = await this.$api('print-medical-examination-data', {
         cards: printData,
-        exclude: this.excludedResearches,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (result.id) {
@@ -765,7 +773,7 @@ export default {
 .margin-bottom {
   margin-bottom: 5px;
 }
-.print-div {
+.print {
   width: 100px;
 }
 .row-div {

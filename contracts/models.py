@@ -202,7 +202,7 @@ class Company(models.Model):
             "kpp": company.kpp,
             "bik": company.bik,
             "contractId": company.contract_id,
-            "uuid": company.uuid,
+            "uuid": str(company.uuid),
             "cppSend": company.cpp_send,
         }
         return json_data
@@ -249,7 +249,6 @@ class MedicalExamination(models.Model):
         else:
             date_start = date
             date_end = date
-        result = []
         last_date_year = f"{current_year()}-12-31"
         examination_data = get_examination_data(company_id, date_start, date_end, last_date_year)
         male = CONTROL_AGE_MEDEXAM.get("м")
@@ -266,12 +265,12 @@ class MedicalExamination(models.Model):
                     "date": i.examination_date.strftime("%d.%m.%Y"),
                 }
                 harmful_factor_data = []
-                if i.sex == "м":
+                if i.sex == "м" and male:
                     for k in sorted(male.keys()):
                         if i.age_year < k:
                             harmful_factor_data.append(male[k])
                             break
-                elif i.sex == "ж":
+                elif i.sex == "ж" and female:
                     for k in sorted(female.keys()):
                         if i.age_year < k:
                             harmful_factor_data.append(female[k])
