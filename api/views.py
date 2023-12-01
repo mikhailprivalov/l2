@@ -2955,6 +2955,7 @@ def update_company(request):
         company_data.kpp = request_data["kpp"]
         company_data.bik = request_data["bik"]
         company_data.contract_id = request_data.get("contractId") or None
+        company_data.cpp_send = request_data.get("cppSend", False)
         company_data.save()
         new_company_data = Company.as_json(company_data)
         Log.log(
@@ -3356,12 +3357,3 @@ def get_date_medical_examination(request):
     request_data = json.loads(request.body)
     current_exam = MedicalExamination.get_date(request_data["card_pk"])
     return JsonResponse({"data": current_exam})
-
-
-@login_required
-def cpp_send_result(request):
-    request_data = json.loads(request.body)
-    directions_list = request_data.get("directionNumbers")
-    direction_numbers = directions.Napravleniya.objects.filter(pk__in=directions_list)
-    total_confirmed_direction = [d.id for d in direction_numbers if d.total_confirmed]
-

@@ -204,6 +204,7 @@ class Company(models.Model):
             "bik": company.bik,
             "contractId": company.contract_id,
             "uuid": str(company.uuid),
+            "cppSend": company.cpp_send,
         }
         return json_data
 
@@ -298,11 +299,11 @@ class MedicalExamination(models.Model):
                 "research_id": list(set(v["research_id"])),
                 "research_titles": list(set(v["research_titles"])),
                 "date": v["date"],
+                "cppSendStatus": "Отправлен",
+                "directionNumber": 1,
             }
             for k, v in patient_result.items()
         ]
-        for patient in result:
-            pass
 
         if month:
             result = sorted(result, key=lambda d: d["date"])
