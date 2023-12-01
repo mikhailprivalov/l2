@@ -1,3 +1,4 @@
+import json
 import os
 from jinja2 import FileSystemLoader, Environment
 from laboratory.settings import BASE_DIR
@@ -33,8 +34,10 @@ def gen_result_cpp():
 
 
 def gen_resul_cpp_file(iss, used_cpp_template_files, data):
-    print(used_cpp_template_files)
     print(data)
+    print(used_cpp_template_files)
+    cpp_template_files = json.loads(used_cpp_template_files)
+    print(sorted(cpp_template_files.items()))
     # str_addr = "templates/cpp/"
     # result_file_name = "cpp_result.xml"
     # data = {

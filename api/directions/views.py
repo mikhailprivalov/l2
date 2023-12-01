@@ -2429,7 +2429,6 @@ def directions_paraclinic_result(request):
                 data["result"] = result_direction
                 gen_resul_cpp_file(iss, iss.research.cpp_template_files, data)
 
-
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
