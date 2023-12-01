@@ -3359,3 +3359,12 @@ def get_date_medical_examination(request):
     request_data = json.loads(request.body)
     current_exam = MedicalExamination.get_date(request_data["card_pk"])
     return JsonResponse({"data": current_exam})
+
+
+@login_required
+@group_required('Конструктор: Настройка организации')
+def offload_to_cpp(request):
+    request_data = json.loads(request.body)
+    offload_list = request_data.get('offloadToCpp', None)
+    print(offload_list)
+    return JsonResponse(status_response(True))

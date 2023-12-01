@@ -297,7 +297,7 @@ class MedicalExamination(models.Model):
                 "research_id": list(set(v["research_id"])),
                 "research_titles": list(set(v["research_titles"])),
                 "date": v["date"],
-                "cppSendStatus": True,
+                "cppSendStatus": "Отправлен",
                 "directionNumber": 1,
             }
             for k, v in patient_result.items()
