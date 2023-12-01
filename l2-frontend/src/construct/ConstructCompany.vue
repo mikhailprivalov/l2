@@ -576,8 +576,8 @@ export default {
       ];
       if (this.editorCompany.cppSend) {
         const cppCol = {
-          field: 'cpp',
-          key: 'cpp',
+          field: 'cppSendStatus',
+          key: 'cppSendStatus',
           title: 'ЦПП',
           align: 'center',
           width: 100,
@@ -585,10 +585,7 @@ export default {
             if (row[column.field] === 2) {
               return h('p', 'Отправлен');
             }
-            if (row[column.field] === 1) {
-              return h('p', 'Не отправлен');
-            }
-            return h('p', 'Нет протокола');
+            return h('p', 'Не отправлен');
           },
         };
         columnsTemplate.splice(3, 0, cppCol);
