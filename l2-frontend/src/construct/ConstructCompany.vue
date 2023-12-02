@@ -720,7 +720,7 @@ export default {
         });
         if (offloadList.length > 0) {
           await this.$store.dispatch(actions.INC_LOADING);
-          const { ok, message } = await this.$api('offload-to-cpp', { offloadList });
+          const { ok, message } = await this.$api('cpp-send-result', { offloadList });
           await this.$store.dispatch(actions.DEC_LOADING);
           if (ok) {
             this.$root.$emit('msg', 'ok', 'Отправлено');

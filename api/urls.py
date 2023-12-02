@@ -120,7 +120,6 @@ urlpatterns = [
     path('get-date-medical-examination', views.get_date_medical_examination),
     path('print-medical-examination-data', views.print_medical_examination_data),
     path('cpp-send-result', views.cpp_send_result),
-    path('offload-to-cpp', views.offload_to_cpp),
     path('update-department', views.update_department),
     path('add-department', views.add_department),
     path('get-harmful-factors', views.get_harmful_factors),
