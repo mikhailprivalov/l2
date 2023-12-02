@@ -5,7 +5,7 @@ from typing import Optional
 
 from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
-from contracts.models import PriceCategory, PriceCoast, PriceName, Company, Contract
+from contracts.models import PriceCategory, PriceCoast, PriceName, Company
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
@@ -1538,7 +1538,6 @@ def directions_paraclinic_form(request):
             card_documents = d.client.get_card_documents(check_has_type=['СНИЛС'])
 
             has_snils = bool(card_documents)
-            print(d.doc)
             response["patient"] = {
                 "fio_age": d.client.individual.fio(full=True),
                 "fio": d.client.individual.fio(),
@@ -2424,7 +2423,7 @@ def directions_paraclinic_result(request):
                                                                        "СНИЛС", "Дата осмотра", "Резукльтат медицинского медосмотра", "Группы риска", "Группы риска по SCORE",
                                                                        "Дата присвоения группы здоровья",
                                                                        "Вредные факторы", "Группа здоровья", "Номер справки", "Дата выдачи справки"
-                                                                    ]
+                                                                   ]
                                                                    )
                 data["result"] = result_direction
                 gen_resul_cpp_file(iss, iss.research.cpp_template_files, data)
@@ -2727,7 +2726,6 @@ def last_field_result(request):
     elif request_data["fieldPk"].find('%mother_born') != -1:
         result = {"value": mother_data['born']}
     elif request_data["fieldPk"].find('%snils') != -1:
-        print("snils")
         result = {"value": data['snils']}
     elif request_data["fieldPk"].find('%harmfull_factors') != -1:
         result = {"value": data['harmfull_factors']}

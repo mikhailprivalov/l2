@@ -250,7 +250,6 @@ class MedicalExamination(models.Model):
         else:
             date_start = date
             date_end = date
-        result = []
         last_date_year = f"{current_year()}-12-31"
         examination_data = get_examination_data(company_id, date_start, date_end, last_date_year)
         male = CONTROL_AGE_MEDEXAM.get("м")
@@ -291,6 +290,14 @@ class MedicalExamination(models.Model):
                 tmp_patient["research_titles"].append(f"{i.research_title}; ")
                 patient_result[i.card_id] = tmp_patient.copy()
 
+        if Company.objects.filter(pk=company_id).first().cpp_send:
+            pass
+
+        #Найти случай по компании дату начала медосмотра - дата старт
+        #Дата конец дата старт + 60 дн
+        #Найти у пациента услуг протокол отправки и проверить id cpp Если есть - то статус === отправлен
+
+
         result = [
             {
                 "card_id": k,
@@ -298,12 +305,12 @@ class MedicalExamination(models.Model):
                 "harmful_factors": list(set(v["harmful_factors"])),
                 "research_id": list(set(v["research_id"])),
                 "research_titles": list(set(v["research_titles"])),
-                "date": v["date"],
-                "cppSendStatus": "Отправлен",
-                "directionNumber": 1,
+                "date": v["date"]
+                # "cppSendStatus": "",
             }
             for k, v in patient_result.items()
         ]
+
 
         if month:
             result = sorted(result, key=lambda d: d["date"])

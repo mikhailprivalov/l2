@@ -305,15 +305,6 @@
           <div :class="needOffloadCpp ? 'button-check' : 'print'">
             <div class="button">
               <button
-                v-if="needOffloadCpp"
-                v-tippy
-                title="Отправить"
-                class="btn last btn-blue-nb nbr"
-                @click="offloadToCpp"
-              >
-                Отправить в ЦПП
-              </button>
-              <button
                 v-tippy
                 title="Печать"
                 class="btn last btn-blue-nb nbr"
@@ -348,15 +339,6 @@
           />
           <div :class="needOffloadCpp ? 'button-check' : 'print'">
             <div class="button">
-              <button
-                v-if="needOffloadCpp"
-                v-tippy
-                title="Отправить в ЦПП"
-                class="btn last btn-blue-nb nbr"
-                @click="offloadToCpp"
-              >
-                Отправить в ЦПП
-              </button>
               <button
                 v-tippy
                 title="Печать"
@@ -705,31 +687,6 @@ export default {
         await this.$store.dispatch(actions.DEC_LOADING);
         if (result.id) {
           window.open(`/forms/pdf?type=112.03&id=${encodeURIComponent(JSON.stringify(result.id))}`, '_blank');
-        }
-      } else {
-        this.$root.$emit('msg', 'error', 'Пациенты не выбраны');
-      }
-    },
-    async offloadToCpp() {
-      if (this.selectedCards.length > 0) {
-        const offloadList = this.examinationList.filter(examItem => {
-          const card = examItem.card_id;
-          const statusOffload = examItem.cppSendStatus;
-          const selectedCard = this.selectedCards;
-          return selectedCard.includes(card) && statusOffload !== 'Отправлен';
-        });
-        if (offloadList.length > 0) {
-          await this.$store.dispatch(actions.INC_LOADING);
-          const { ok, message } = await this.$api('cpp-send-result', { offloadList });
-          await this.$store.dispatch(actions.DEC_LOADING);
-          if (ok) {
-            this.$root.$emit('msg', 'ok', 'Отправлено');
-            this.selectedCards = [];
-          } else {
-            this.$root.$emit('msg', 'error', message);
-          }
-        } else {
-          this.$root.$emit('msg', 'ok', 'Отправка не требуется');
         }
       } else {
         this.$root.$emit('msg', 'error', 'Пациенты не выбраны');

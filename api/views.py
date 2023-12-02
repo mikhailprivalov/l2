@@ -3358,7 +3358,3 @@ def get_date_medical_examination(request):
     current_exam = MedicalExamination.get_date(request_data["card_pk"])
     return JsonResponse({"data": current_exam})
 
-
-@login_required
-def cpp_send_result(request):
-    pass
