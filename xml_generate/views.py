@@ -18,23 +18,6 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
         pass
     os.mkdir(tmp_dir)
 
-    data = {
-        "PMOUUID": "121212",
-        "EmployeeUUID": "1212",
-        "PositionUUID": "1212",
-        "SubdivisionUUID": "1212",
-        "ContractUUID": "12121",
-        "PMONumber": "1212",
-        "PMODate": "01.10.2023",
-        "PMORestrictions": "нет",
-        "PMOResult": "допущен",
-        "RiskGroup": "Группа1",
-        "PMORecommendations": "Группа2",
-        "DateGroupHealthDateGroupHealth": "01.12.2023",
-        "GroupHealth": "Группа23",
-        "FactorUUID": ["UUID-1111", "UUID-2222", "UUID-33333", "UUID-4444"],
-        "CertificateDate": "10.12.2023",
-    }
     cpp_template_files = json.loads(used_cpp_template_files)
     file_loader = FileSystemLoader(os.path.join(BASE_DIR, 'xml_generate', CPP_TEMPLATE_XML_DIRECTORY))
     env = Environment(loader=file_loader, trim_blocks=True, lstrip_blocks=True)
@@ -43,7 +26,6 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
         template_file_name = f"{file_name.get('template')}.xml"
         tm = env.get_template(template_file_name)
         msg = tm.render(data=data)
-        print(msg)
 
         if file_name.get('file_name'):
             xml_file_name = file_name.get('file_name')
@@ -51,8 +33,6 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
             xml_file_name = file_name.get('template')
 
         with open(f'{tmp_dir}{xml_file_name}-{output_filename}.xml', 'w') as fp:
-            fp.write(msg)
-        with open(f'{tmp_dir}{xml_file_name}-{output_filename}_2.xml', 'w') as fp:
             fp.write(msg)
 
     zip_file_name = f"{iss.napravleniye.pk}-cpp"
