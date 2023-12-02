@@ -155,6 +155,17 @@ def get_dir_amd(request):
 
 
 @api_view()
+def get_dir_cpp(request):
+    next_n = int(request.GET.get("nextN", 5))
+    dirs = sql_if.direction_resend_cpp(next_n)
+    result = {"ok": False, "next": []}
+    if dirs:
+        result = {"ok": True, "next": [i[0] for i in dirs]}
+
+    return Response(result)
+
+
+@api_view()
 def get_dir_n3(request):
     next_n = int(request.GET.get("nextN", 5))
     dirs = sql_if.direction_resend_n3(next_n)
@@ -202,6 +213,20 @@ def result_amd_send(request):
             dir_pk = int(data_amd[0])
             amd_num = data_amd[1]
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
+        resp = {"ok": True}
+    return Response(resp)
+
+
+@api_view()
+def result_cpp_send(request):
+    result = json.loads(request.GET.get("result"))
+    resp = {"ok": False}
+    if result["send"]:
+        for i in result["send"]:
+            data_amd = i.split(":")
+            dir_pk = int(data_amd[0])
+            cpp_upload_id = data_amd[1]
+            directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_cpp=False, cpp_upload_id=cpp_upload_id)
         resp = {"ok": True}
     return Response(resp)
 
