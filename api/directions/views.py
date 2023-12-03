@@ -1,6 +1,7 @@
 import base64
 import math
 import os
+import uuid
 from typing import Optional
 
 from django.core.paginator import Paginator
@@ -2411,21 +2412,20 @@ def directions_paraclinic_result(request):
                 patient = iss.napravleniye.client.get_data_individual()
                 company = iss.napravleniye.client.work_place_db
                 price = PriceName.get_company_price_by_date(company.pk, current_time(only_date=True), current_time(only_date=True))
-                patient["ContragentUUID"] = str(company.uuid)
+                patient['uuid'] = str(uuid.uuid4())
 
                 data = {
                     "company": Company.as_json(company),
                     "contract": PriceName.as_json(price),
                     "patient": patient
                 }
-                result_direction = fields_result_only_title_fields(iss,
-                                                                   [
-                                                                       "СНИЛС", "Дата осмотра", "Резукльтат медицинского медосмотра", "Группы риска", "Группы риска по SCORE",
-                                                                       "Дата присвоения группы здоровья",
-                                                                       "Вредные факторы", "Группа здоровья", "Номер справки", "Дата выдачи справки"
-                                                                   ]
-                                                                   )
-                data["result"] = result_direction
+                field_titles = [
+                    "СНИЛС", "Дата осмотра", "Результат медицинского осмотра", "Группы риска", "Группы риска по SCORE",
+                    "Дата присвоения группы здоровья",
+                    "Вредные факторы", "Группа здоровья", "Номер справки", "Дата выдачи справки"
+                ]
+                result_protocol = fields_result_only_title_fields(iss, field_titles)
+                data["result"] = result_protocol
                 gen_resul_cpp_file(iss, iss.research.cpp_template_files, data)
 
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()

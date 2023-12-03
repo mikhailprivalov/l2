@@ -9,8 +9,10 @@ from datetime import datetime
 
 def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
     d = DirectionDocument.objects.filter(direction=iss.napravleniye, is_archive=False, file_type="cpp").first()
-    d.file.delete()
-    d.delete()
+    if d:
+        if d.file:
+            d.file.delete()
+        d.delete()
     tmp_dir = '/tmp/sample/'
     try:
         shutil.rmtree(tmp_dir)
@@ -22,6 +24,9 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
     file_loader = FileSystemLoader(os.path.join(BASE_DIR, 'xml_generate', CPP_TEMPLATE_XML_DIRECTORY))
     env = Environment(loader=file_loader, trim_blocks=True, lstrip_blocks=True)
     output_filename = f'{iss.napravleniye.pk}-{datetime.strftime(iss.napravleniye.last_confirmed_at, "%y%m%d%H%M%S%f")[:-3]}'
+    patient_result = normilize_result_data(data.get("result"))
+    patient_result["direction_number"] = iss.napravleniye_id
+    data["result"] = patient_result
     for k, file_name in sorted(cpp_template_files.items()):
         template_file_name = f"{file_name.get('template')}.xml"
         tm = env.get_template(template_file_name)
@@ -42,3 +47,43 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
     iss.napravleniye.need_resend_cpp = True
     iss.napravleniye.save(update_fields=['need_resend_cpp'])
     shutil.rmtree(tmp_dir)
+
+
+def normilize_result_data(results):
+    print(results)
+    dict_result = {}
+    for i in results:
+        if i.get("title") == "Дата осмотра":
+            dict_result["Дата осмотра"] = i.get("value")
+
+        elif i.get("title") == "Группы риска":
+            tmp_json = json.loads(i["value"])
+            dict_result["Группы риска"] = tmp_json["title"]
+
+        elif i.get("title") == "Группы риска по SCORE":
+            tmp_json = json.loads(i["value"])
+            dict_result["Группы риска по SCORE"] = tmp_json["title"]
+
+        elif i.get("title") == "Группа здоровья":
+            tmp_json = json.loads(i["value"])
+            dict_result["Группа здоровья"] = tmp_json["title"]
+
+        elif i.get("title") == "Результат медицинского осмотра":
+            tmp_json = json.loads(i["value"])
+            print(tmp_json)
+            dict_result["Результат медицинского осмотра"] = tmp_json["title"]
+
+        elif i.get("title") == "Вредные факторы":
+            dict_result["Вредные факторы"] = i.get("value")
+
+        elif i.get("title") == "Дата присвоения группы здоровья":
+            dict_result["Дата присвоения группы здоровья"] = i.get("value")
+
+        elif i.get("title") == "Номер справки":
+            dict_result["Номер справки"] = i.get("value")
+
+        elif i.get("title") == "Дата выдачи справки":
+            dict_result["Дата выдачи справки"] = i.get("value")
+    return dict_result
+
+

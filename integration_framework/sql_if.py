@@ -1,4 +1,5 @@
 from django.db import connection
+from utils.db import namedtuplefetchall
 
 from laboratory.settings import TIME_ZONE
 
@@ -114,8 +115,8 @@ def direction_resend_cpp(limit):
             params={'limit': limit},
         )
 
-        row = cursor.fetchall()
-    return row
+        rows = namedtuplefetchall(cursor)
+    return rows
 
 
 def direction_resend_n3(limit):

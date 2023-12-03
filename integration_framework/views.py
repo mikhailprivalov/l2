@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import os
 import html
 import zlib
@@ -157,12 +158,26 @@ def get_dir_amd(request):
 @api_view()
 def get_dir_cpp(request):
     next_n = int(request.GET.get("nextN", 5))
-    dirs = sql_if.direction_resend_cpp(next_n)
+    direction_pk = int(request.GET.get("idDirection", None))
+    dirs = None
+    if not direction_pk:
+        dirs = sql_if.direction_resend_cpp(next_n)
     result = {"ok": False, "next": []}
+    data_direction = []
     if dirs:
-        result = {"ok": True, "next": [i[0] for i in dirs]}
-
+        result = {"ok": True}
+        dirs_data = [i.id for i in dirs]
+    else:
+        dirs_data = [int(direction_pk)]
+    direction_document = DirectionDocument.objects.filter(direction__in=dirs_data, file_type="cpp")
+    for d in direction_document:
+        zip_file = d.file.open(mode='rb')
+        bs64_zip = base64.b64encode(zip_file.read())
+        md5_file = hashlib.md5(bs64_zip).hexdigest()
+        data_direction.append({"directionNumbrer": d.direction_id, "bs64Zip": bs64_zip, "md5file": md5_file})
+    result["next"] = data_direction
     return Response(result)
+
 
 
 @api_view()
