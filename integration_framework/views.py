@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import os
 import html
 import zlib
@@ -155,6 +156,34 @@ def get_dir_amd(request):
 
 
 @api_view()
+def get_dir_cpp(request):
+    next_n = int(request.GET.get("nextN", 5))
+    direction_pk = request.GET.get("idDirection", None)
+    dirs = None
+    if not direction_pk:
+        dirs = sql_if.direction_resend_cpp(next_n)
+    result = {"ok": False, "next": []}
+    data_direction = []
+    if dirs:
+        result = {"ok": True}
+        dirs_data = [i.id for i in dirs]
+    else:
+        dirs_data = [i for i in json.loads(direction_pk)]
+    direction_document = DirectionDocument.objects.filter(direction__in=dirs_data, file_type="cpp")
+    for d in direction_document:
+        with open(d.file.name, "rb") as f:
+            digest = hashlib.file_digest(f, "md5")
+            md5_file = digest.hexdigest()
+            f.close()
+        zip_file = d.file.open(mode='rb')
+        bs64_zip = base64.b64encode(zip_file.read())
+        md5_checksum_file = base64.b64encode(md5_file.encode('utf-8'))
+        data_direction.append({"directionNumbrer": d.direction_id, "bs64Zip": bs64_zip, "md5file": md5_checksum_file})
+    result["next"] = data_direction
+    return Response(result)
+
+
+@api_view()
 def get_dir_n3(request):
     next_n = int(request.GET.get("nextN", 5))
     dirs = sql_if.direction_resend_n3(next_n)
@@ -202,6 +231,20 @@ def result_amd_send(request):
             dir_pk = int(data_amd[0])
             amd_num = data_amd[1]
             directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_amd=False, amd_number=amd_num, error_amd=False)
+        resp = {"ok": True}
+    return Response(resp)
+
+
+@api_view()
+def result_cpp_send(request):
+    result = json.loads(request.GET.get("result"))
+    resp = {"ok": False}
+    if result["send"]:
+        for i in result["send"]:
+            data_amd = i.split(":")
+            dir_pk = int(data_amd[0])
+            cpp_upload_id = data_amd[1]
+            directions.Napravleniya.objects.filter(pk=dir_pk).update(need_resend_cpp=False, cpp_upload_id=cpp_upload_id)
         resp = {"ok": True}
     return Response(resp)
 
@@ -3350,79 +3393,3 @@ def send_laboratory_order(request):
             )
 
     return Response({"ok": False, "message": ""})
-
-
-@api_view(["POST"])
-def send_cpp_result(request):
-    pk = request.GET.get("pk")
-    research_pks = request.GET.get("research", "*")
-    direction: directions.Napravleniya = directions.Napravleniya.objects.select_related("istochnik_f", "client", "client__individual", "client__base").get(pk=pk)
-    card = direction.client
-    individual = card.individual
-    if not card.work_place_db.cpp_send:
-        return JsonResponse({"result": ""})
-
-    patient = {
-        "EmployeeUUID": "",
-        "ContragentUUID": "",
-        "EmployeeSNILS": "",
-        "family": individual.family,
-        "name": individual.name,
-        "patronymic": individual.patronymic,
-        "gender": individual.sex.lower(),
-        "birthdate": individual.birthday.strftime("%Y%m%d"),
-        "EmployeeSubdivisionCode": "",
-        "EmployeePositionUUID": ""
-    }
-
-    position = {
-        "uuid": "uuid",
-        "title": ""
-    }
-
-    contract = {
-        "ContraсtUUID": "",
-        "ContragentUUID": "",
-        "ResultUUID": "a755e6ab-296c-11eb-9451-00505683bb6c",
-        "number": "",
-        "uuid": "",
-        "date_start": "",
-        "date_end": "",
-        "company": ""
-    }
-    company = {
-        "uuid": "",
-        "inn": 8601022620,
-        "kpp": 860101001,
-        "ogrn": 1048600002054,
-        "organization_name": card.work_place_db.title,
-        "departments": [
-            {"title": "", "uuid": ""},
-            {"title": "", "uuid": ""},
-        ]
-    }
-
-    result = {
-        "PMOUUID": "uuid",
-        "EmployeeUUID": patient.get("uuid"),
-        "PositionUUID": "",
-        "SubdivisionUUID": "",
-        "ContractUUID": "",
-        "PMONumber": pk,
-        "PMODate": "01.01.2023",
-        "PMOResult": "справочник",
-        "RiskGroup": "справочник",
-        "PMORecommendations": "справочник",
-        "result": "medexam",
-        "FactorsUUID": ["uuid",  "uuid"],
-        "CertificateNumber": "",
-        "CertificateDate": ""
-    }
-    result = {
-        "patient": patient,
-        "company": company,
-        "contract": contract,
-        "result": result
-    }
-
-    return JsonResponse({"result": result})

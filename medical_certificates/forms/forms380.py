@@ -16,7 +16,7 @@ import os.path
 import directory.models as directory
 from reportlab.lib.units import mm
 from utils.common import get_system_name
-
+import json
 from utils.dates import normalize_date
 from utils.xh import show_qr_lk_address
 
@@ -159,6 +159,9 @@ def form_04(request_data):
             name_disease = i["value"]
         elif i["title"] == "Патология":
             patalogy = i["value"]
+        elif i["title"] == "Группа здоровья":
+            tmp_json = json.loads(i["value"])
+            dispensary_group = tmp_json["title"]
 
     fwb.append(Paragraph('Медицинское заключение по результатам', styleCenterBold))
     fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
@@ -174,13 +177,10 @@ def form_04(request_data):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f"4. <u>{type_med_examination.capitalize()}</u> медицинский осмотр (обследование)", style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"5. Результат медицинского осмотра (обследования): {patalogy}", style))
-    fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"6. Наименование заболевания: {name_disease}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(
         Paragraph(
-            f"7. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
+            f"5. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
             f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами заключение <u>{med_report}</u> ",
             style,
         )
@@ -188,24 +188,24 @@ def form_04(request_data):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(
         Paragraph(
-            f"8. Рекомендации по результатам <u>{type_med_examination_padeg}</u> медицинского осмотра (обсле-дования) (направление в специализированную или профпатологическую медицинскую "
+            f"6. Рекомендации по результатам <u>{type_med_examination_padeg}</u> медицинского осмотра (обсле-дования) (направление в специализированную или профпатологическую медицинскую "
             f"организацию; использование средств индивидуальной защиты, или др.): {recommendation}",
             style,
         )
     )
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"9. Диспансерная группа: {dispensary_group}", style))
+    fwb.append(Paragraph(f"7. Группа здоровья: {dispensary_group}", style))
     fwb.append(Spacer(1, 3 * mm))
     notice = "_____________________________"
-    fwb.append(Paragraph(f"10. Дата и номер извещения об установлении предварительного диагноза острого или хронического профессионального заболевания (отравления): {notice}", style))
+    fwb.append(Paragraph(f"8. Дата и номер извещения об установлении предварительного диагноза острого или хронического профессионального заболевания (отравления): {notice}", style))
     fwb.append(Spacer(1, 3 * mm))
     space_symbol = '&nbsp;'
     date_diagnos = iss.medical_examination
     date_diagnos = date_diagnos.strftime("%d.%m.%Y")
     opinion = [
         [
-            Paragraph('11. Председатель врачебной комиссии:', style),
-            Paragraph('12. Члены врачебной комиссии:', style),
+            Paragraph('9. Председатель врачебной комиссии:', style),
+            Paragraph('10. Члены врачебной комиссии:', style),
         ],
         [
             Paragraph(f'_________________________ {space_symbol * 3} ____________', style),
@@ -278,6 +278,7 @@ def protocol_fields_result(iss):
         'Патология',
         'Медицинское заключение',
         'Место регистрации',
+        'Группа здоровья',
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")

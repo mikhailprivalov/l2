@@ -1683,7 +1683,6 @@ def user_location(request):
     if rl and SettingManager.get("l2_rmis_queue", default="false", default_type="b"):
         if rl == 1337 and request.user.is_superuser:
             from rmis_integration.client import Patients
-
             d = Patients.get_fake_reserves()
         else:
             d = get_reserves_ecp(date, rl)
@@ -2204,6 +2203,7 @@ def organization_data_update(request):
             "resultPullFtpServerUrl": None,
             "hl7SenderApplication": None,
             "hl7ReceiverAapplication": None,
+            "isAutotransfer": False,
         },
     )
 
@@ -2227,7 +2227,7 @@ def organization_data_update(request):
     result_pull_by_numbers: Optional[str] = data[17] or None
     hl7_sender_application: Optional[str] = data[18] or None
     hl7_receiver_appplication: Optional[str] = data[19] or None
-    is_auto_transfer = data[20]
+    is_auto_transfer = data[20] if data[20] else False
 
     if not title:
         return status_response(False, "Название не может быть пустым")
@@ -2955,6 +2955,7 @@ def update_company(request):
         company_data.kpp = request_data["kpp"]
         company_data.bik = request_data["bik"]
         company_data.contract_id = request_data.get("contractId") or None
+        company_data.cpp_send = request_data.get("cppSend", False)
         company_data.save()
         new_company_data = Company.as_json(company_data)
         Log.log(
@@ -3356,12 +3357,4 @@ def get_date_medical_examination(request):
     request_data = json.loads(request.body)
     current_exam = MedicalExamination.get_date(request_data["card_pk"])
     return JsonResponse({"data": current_exam})
-
-
-@login_required
-def cpp_send_result(request):
-    request_data = json.loads(request.body)
-    direction_number = request_data.get("directionNumbers")
-
-
 
