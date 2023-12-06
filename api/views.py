@@ -1683,6 +1683,7 @@ def user_location(request):
     if rl and SettingManager.get("l2_rmis_queue", default="false", default_type="b"):
         if rl == 1337 and request.user.is_superuser:
             from rmis_integration.client import Patients
+
             d = Patients.get_fake_reserves()
         else:
             d = get_reserves_ecp(date, rl)
