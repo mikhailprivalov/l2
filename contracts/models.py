@@ -303,7 +303,6 @@ class MedicalExamination(models.Model):
             for k, v in patient_result.items()
         ]
 
-
         if month:
             result = sorted(result, key=lambda d: d["date"])
         else:
