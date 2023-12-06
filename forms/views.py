@@ -249,5 +249,4 @@ def get_epid_data(directions, with_confirm):
 
 
 def generate_xml(request):
-
     return
