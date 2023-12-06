@@ -67,3 +67,4 @@ def gen_resul_cpp2():
 
     output_filename = '/tmp/my-zip'
     shutil.make_archive(output_filename, 'zip', tmp_dir)
+

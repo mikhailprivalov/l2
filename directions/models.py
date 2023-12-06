@@ -557,6 +557,8 @@ class Napravleniya(models.Model):
     )
     time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
     price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
+    cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
+    cpp_status_send = models.BooleanField(default=False, blank=True, help_text='Статус отправки в ЦПП')
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
