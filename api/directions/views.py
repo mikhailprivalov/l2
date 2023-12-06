@@ -2426,7 +2426,10 @@ def directions_paraclinic_result(request):
                     "Группы риска",
                     "Группы риска по SCORE",
                     "Дата присвоения группы здоровья",
-                    "Вредные факторы", "Группа здоровья", "Номер справки", "Дата выдачи справки"
+                    "Вредные факторы",
+                    "Группа здоровья",
+                    "Номер справки",
+                    "Дата выдачи справки",
                 ]
                 result_protocol = fields_result_only_title_fields(iss, field_titles)
                 data["result"] = result_protocol
