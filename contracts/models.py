@@ -290,14 +290,6 @@ class MedicalExamination(models.Model):
                 tmp_patient["research_titles"].append(f"{i.research_title}; ")
                 patient_result[i.card_id] = tmp_patient.copy()
 
-        if Company.objects.filter(pk=company_id).first().cpp_send:
-            pass
-
-        #Найти случай по компании дату начала медосмотра - дата старт
-        #Дата конец дата старт + 60 дн
-        #Найти у пациента услуг протокол отправки и проверить id cpp Если есть - то статус === отправлен
-
-
         result = [
             {
                 "card_id": k,
@@ -305,8 +297,8 @@ class MedicalExamination(models.Model):
                 "harmful_factors": list(set(v["harmful_factors"])),
                 "research_id": list(set(v["research_id"])),
                 "research_titles": list(set(v["research_titles"])),
-                "date": v["date"]
-                # "cppSendStatus": "",
+                "date": v["date"],
+                "cppSendStatus": "",
             }
             for k, v in patient_result.items()
         ]

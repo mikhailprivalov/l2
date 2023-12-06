@@ -91,5 +91,3 @@ def normilize_result_data(results):
             dict_result["Вредные факторы"] = [str(i.cpp_key) for i in hf]
         dict_result["uuid"] = str(uuid.uuid4())
     return dict_result
-
-
