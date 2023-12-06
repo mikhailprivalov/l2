@@ -3357,4 +3357,3 @@ def get_date_medical_examination(request):
     request_data = json.loads(request.body)
     current_exam = MedicalExamination.get_date(request_data["card_pk"])
     return JsonResponse({"data": current_exam})
-
