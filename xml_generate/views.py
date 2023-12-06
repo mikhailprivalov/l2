@@ -1,6 +1,10 @@
 import json
 import os
+import uuid
+
 from jinja2 import FileSystemLoader, Environment
+
+from clients.models import HarmfulFactor
 from directions.models import Issledovaniya, DirectionDocument
 from laboratory.settings import BASE_DIR, CPP_TEMPLATE_XML_DIRECTORY, MEDIA_ROOT
 import shutil
@@ -33,12 +37,14 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
         msg = tm.render(data=data)
 
         if file_name.get('file_name'):
-            xml_file_name = file_name.get('file_name')
+            xml_file_name = f"{file_name.get('file_name')}.xml"
         else:
             xml_file_name = file_name.get('template')
+            xml_file_name = f"{xml_file_name}-{output_filename}.xml"
 
-        with open(f'{tmp_dir}{xml_file_name}-{output_filename}.xml', 'w') as fp:
+        with open(f'{tmp_dir}{xml_file_name}', 'w') as fp:
             fp.write(msg)
+        data[file_name.get('template')] = xml_file_name
 
     zip_file_name = f"{iss.napravleniye.pk}-cpp"
     result = os.path.join(MEDIA_ROOT, 'directions', str(iss.doc_confirmation.hospital.code_tfoms), str(iss.napravleniye.pk), zip_file_name)
@@ -50,7 +56,6 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
 
 
 def normilize_result_data(results):
-    print(results)
     dict_result = {}
     for i in results:
         if i.get("title") == "Дата осмотра":
@@ -70,11 +75,7 @@ def normilize_result_data(results):
 
         elif i.get("title") == "Результат медицинского осмотра":
             tmp_json = json.loads(i["value"])
-            print(tmp_json)
             dict_result["Результат медицинского осмотра"] = tmp_json["title"]
-
-        elif i.get("title") == "Вредные факторы":
-            dict_result["Вредные факторы"] = i.get("value")
 
         elif i.get("title") == "Дата присвоения группы здоровья":
             dict_result["Дата присвоения группы здоровья"] = i.get("value")
@@ -84,6 +85,11 @@ def normilize_result_data(results):
 
         elif i.get("title") == "Дата выдачи справки":
             dict_result["Дата выдачи справки"] = i.get("value")
+        elif i.get("title") == "Вредные факторы":
+            harmfull_factos = i.get("value").split(";")
+            hf = HarmfulFactor.objects.filter(title__in=harmfull_factos)
+            dict_result["Вредные факторы"] = [str(i.cpp_key) for i in hf]
+        dict_result["uuid"] = str(uuid.uuid4())
     return dict_result
 
 

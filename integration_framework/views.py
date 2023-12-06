@@ -158,7 +158,7 @@ def get_dir_amd(request):
 @api_view()
 def get_dir_cpp(request):
     next_n = int(request.GET.get("nextN", 5))
-    direction_pk = int(request.GET.get("idDirection", None))
+    direction_pk = request.GET.get("idDirection", None)
     dirs = None
     if not direction_pk:
         dirs = sql_if.direction_resend_cpp(next_n)
@@ -168,16 +168,19 @@ def get_dir_cpp(request):
         result = {"ok": True}
         dirs_data = [i.id for i in dirs]
     else:
-        dirs_data = [int(direction_pk)]
+        dirs_data = [i for i in json.loads(direction_pk)]
     direction_document = DirectionDocument.objects.filter(direction__in=dirs_data, file_type="cpp")
     for d in direction_document:
+        with open(d.file.name, "rb") as f:
+            digest = hashlib.file_digest(f, "md5")
+            md5_file = digest.hexdigest()
+            f.close()
         zip_file = d.file.open(mode='rb')
         bs64_zip = base64.b64encode(zip_file.read())
-        md5_file = hashlib.md5(bs64_zip).hexdigest()
-        data_direction.append({"directionNumbrer": d.direction_id, "bs64Zip": bs64_zip, "md5file": md5_file})
+        md5_checksum_file = base64.b64encode(md5_file.encode('utf-8'))
+        data_direction.append({"directionNumbrer": d.direction_id, "bs64Zip": bs64_zip, "md5file": md5_checksum_file})
     result["next"] = data_direction
     return Response(result)
-
 
 
 @api_view()
