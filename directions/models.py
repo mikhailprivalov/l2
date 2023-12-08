@@ -557,6 +557,8 @@ class Napravleniya(models.Model):
     )
     time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
     price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
+    cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
+    need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -2029,9 +2031,11 @@ def get_direction_file_path(instance: 'DirectionDocument', filename):
 class DirectionDocument(models.Model):
     PDF = 'pdf'
     CDA = 'cda'
+    CPP = 'cpp'
     FILE_TYPES = (
         (PDF, PDF),
         (CDA, CDA),
+        (CPP, CPP),
     )
 
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")

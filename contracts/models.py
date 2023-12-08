@@ -76,6 +76,7 @@ class PriceName(models.Model):
             "end": price.date_end,
             "company": company_id,
             "companyTitle": company_title,
+            "symbolCode": price.symbol_code,
             "uuid": str(price.uuid),
         }
         return json_data
@@ -161,6 +162,7 @@ class Company(models.Model):
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     email = models.CharField(max_length=128, blank=True, default="", help_text="email")
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
+    cpp_send = models.BooleanField(default=False, help_text='отправлять в ЦПП', db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -201,7 +203,8 @@ class Company(models.Model):
             "kpp": company.kpp,
             "bik": company.bik,
             "contractId": company.contract_id,
-            "uuid": company.uuid,
+            "uuid": str(company.uuid),
+            "cppSend": company.cpp_send,
         }
         return json_data
 
@@ -210,6 +213,7 @@ class CompanyDepartment(models.Model):
     title = models.CharField(max_length=511, help_text="Наименование отдела", db_index=True)
     hide = models.BooleanField(default=False, help_text="Скрыть", db_index=True)
     company = models.ForeignKey(Company, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -246,7 +250,6 @@ class MedicalExamination(models.Model):
         else:
             date_start = date
             date_end = date
-        result = []
         last_date_year = f"{current_year()}-12-31"
         examination_data = get_examination_data(company_id, date_start, date_end, last_date_year)
         male = CONTROL_AGE_MEDEXAM.get("м")
@@ -287,17 +290,18 @@ class MedicalExamination(models.Model):
                 tmp_patient["research_titles"].append(f"{i.research_title}; ")
                 patient_result[i.card_id] = tmp_patient.copy()
 
-            result = [
-                {
-                    "card_id": k,
-                    "fio": v["fio"],
-                    "harmful_factors": list(set(v["harmful_factors"])),
-                    "research_id": list(set(v["research_id"])),
-                    "research_titles": list(set(v["research_titles"])),
-                    "date": v["date"],
-                }
-                for k, v in patient_result.items()
-            ]
+        result = [
+            {
+                "card_id": k,
+                "fio": v["fio"],
+                "harmful_factors": list(set(v["harmful_factors"])),
+                "research_id": list(set(v["research_id"])),
+                "research_titles": list(set(v["research_titles"])),
+                "date": v["date"],
+                "cppSendStatus": "",
+            }
+            for k, v in patient_result.items()
+        ]
 
         if month:
             result = sorted(result, key=lambda d: d["date"])

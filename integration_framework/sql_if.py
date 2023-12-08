@@ -1,4 +1,5 @@
 from django.db import connection
+from utils.db import namedtuplefetchall
 
 from laboratory.settings import TIME_ZONE
 
@@ -96,6 +97,26 @@ def direction_resend_amd(limit):
 
         row = cursor.fetchall()
     return row
+
+
+def direction_resend_cpp(limit):
+    """
+    Вернуть:
+    Направления, в к-рых все исследования подтверждены, и подтверждены после определенной даты
+    в SQL:
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT id FROM public.directions_napravleniya
+            WHERE need_resend_cpp = True
+            ORDER BY id DESC LIMIT %(limit)s """,
+            params={'limit': limit},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
 
 
 def direction_resend_n3(limit):

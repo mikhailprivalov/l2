@@ -289,7 +289,7 @@ def form_02(request_data):
 
     if additional_data_from_file:
         with open(additional_data_from_file) as json_file:
-            data = json.load(json_file)
+            data = json.loads(json_file)
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
