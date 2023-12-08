@@ -32,7 +32,7 @@ def gen_resul_cpp_file(iss: Issledovaniya, used_cpp_template_files, data):
     patient_result["direction_number"] = iss.napravleniye_id
     data["result"] = patient_result
     for k, file_name in sorted(cpp_template_files.items()):
-        template_file_name = f"{file_name.get('template')}.xml.jinja"
+        template_file_name = f"{file_name.get('template')}"
         tm = env.get_template(template_file_name)
         msg = tm.render(data=data)
 
