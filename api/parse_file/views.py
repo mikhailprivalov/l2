@@ -9,7 +9,7 @@ from copy import deepcopy
 from django.http import HttpRequest, JsonResponse
 
 from api.directions.views import eds_documents
-from api.models import Application, Analyzer
+from api.models import Application
 
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
@@ -559,7 +559,6 @@ def load_equipment(request):
 
     application = Application.objects.filter(pk=int(equipment)).first()
     app_key = application.key.hex
-    print(app_key)
     wb = load_workbook(filename=file_data)
     ws = wb[wb.sheetnames[0]]
     test = None
@@ -586,21 +585,13 @@ def load_equipment(request):
                 num_row = cell.row
                 test = ws.cell(row=num_row, column=7).value
                 test = test.replace(' ', '')
-
-    print(tube_list)
-    print(result_list)
-    final_data = {}
     is_set_analit = False
     for i in result_list[-1]:
         if i:
-            final_data[f"{test}-{i}"] = []
             is_set_analit = True
-    if not is_set_analit:
-        final_data[f"{test}"] = []
 
     step = 0
     pare_result = []
-    print(test)
     for i in tube_list:
         second_step = 0
         for tube in i:
@@ -611,9 +602,6 @@ def load_equipment(request):
             second_step += 1
         step += 1
 
-
-    print(final_data)
-    print(pare_result)
     results = []
 
     for data in pare_result:
