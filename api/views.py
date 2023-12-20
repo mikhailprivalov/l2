@@ -383,7 +383,6 @@ def endpoint(request):
                                                 fraction_result.ref_f = ref.f
                                             fraction_result.save()
                                             result["ok"] = True
-                                            print(app, "app")
                                             issled.api_app = app
                                             issled.save()
                                             fraction_result.get_ref(re_save=True)
