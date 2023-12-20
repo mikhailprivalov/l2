@@ -9,7 +9,7 @@ from copy import deepcopy
 from django.http import HttpRequest, JsonResponse
 
 from api.directions.views import eds_documents
-from api.models import Application
+from api.models import Application, Analyzer
 
 from api.parse_file.pdf import extract_text_from_pdf
 import simplejson as json
@@ -36,6 +36,7 @@ from django.db.models import Q
 from django.db import transaction
 from django.utils import timezone
 from utils.nsi_directories import NSI
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger("IF")
 
@@ -506,6 +507,7 @@ def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_fam
     return patient_card
 
 
+@login_required
 def load_csv(request):
     file_data = request.FILES["file"]
     file_data = file_data.read().decode("utf-8")
@@ -536,13 +538,9 @@ def load_csv(request):
                 "pk": row[2],
                 "result": row[5],
             }
-
             result = json.dumps({"pk": r["pk"], "result": {method: r["result"]}})
-
             resp = http_func({"key": app_key, "result": result, "message_type": "R"}, request.user)
-
             resp = json.loads(resp.content)
-
             results.append(
                 {
                     "pk": row[2],
@@ -552,6 +550,96 @@ def load_csv(request):
             )
 
     return JsonResponse({"ok": True, "results": results, "method": method})
+
+
+@login_required
+def load_equipment(request):
+    file_data = request.FILES["file"]
+    equipment = request.POST.get("equipment")
+
+    application = Application.objects.filter(pk=int(equipment)).first()
+    app_key = application.key.hex
+    print(app_key)
+    wb = load_workbook(filename=file_data)
+    ws = wb[wb.sheetnames[0]]
+    test = None
+    search_result = "Результат,"
+    search_tubes_number = "Схема"
+    tube_list = []
+    result_list = []
+    for row in ws.rows:
+        for cell in row:
+            data_from_cell = str(cell.value)
+            result = re.findall(search_result, data_from_cell)
+            if len(result) > 0:
+                num_row = cell.row
+                result_data = ws[f"A{num_row + 1}:M{num_row+10}"]
+                result_list = [[j.value for j in k] for k in result_data]
+
+            result = re.findall(search_tubes_number, data_from_cell)
+            if len(result) > 0:
+                num_row = cell.row
+                tube_data = ws[f"A{num_row + 1}:M{num_row+10}"]
+                tube_list = [[j.value for j in k] for k in tube_data]
+
+            if cell.value == "Тест:":
+                num_row = cell.row
+                test = ws.cell(row=num_row, column=7).value
+                test = test.replace(' ', '')
+
+    print(tube_list)
+    print(result_list)
+    final_data = {}
+    is_set_analit = False
+    for i in result_list[-1]:
+        if i:
+            final_data[f"{test}-{i}"] = []
+            is_set_analit = True
+    if not is_set_analit:
+        final_data[f"{test}"] = []
+
+    step = 0
+    pare_result = []
+    print(test)
+    for i in tube_list:
+        second_step = 0
+        for tube in i:
+            if is_set_analit:
+                pare_result.append({"pk": tube, "result": {"method": f"{test}-{result_list[-1][second_step]}", "value": result_list[step][second_step]}})
+            else:
+                pare_result.append({"pk": tube, "result": {"method": test, "value": result_list[step][second_step]}})
+            second_step += 1
+        step += 1
+
+
+    print(final_data)
+    print(pare_result)
+    results = []
+
+    for data in pare_result:
+        if data.get("pk"):
+            try:
+                pk = int(data.get("pk"))
+                if pk > 1000:
+                    r = {
+                        "pk": int(data.get("pk")),
+                        "method": data["result"]["method"],
+                        "value": data["result"]["value"],
+                    }
+                    result = json.dumps({"pk": r["pk"], "result": {r["method"]: r["value"]}})
+                    resp = http_func({"key": app_key, "result": result, "message_type": "R"}, request.user)
+                    resp = json.loads(resp.content)
+                    results.append(
+                        {
+                            "pk": r["pk"],
+                            "result": {r["method"]: r["value"]},
+                            "comment": "успешно" if resp["ok"] else "не удалось сохранить результат",
+                        }
+                    )
+            except:
+                continue
+
+    return JsonResponse({"ok": True, "results": results})
 
 
 def write_patient_ecp(request):

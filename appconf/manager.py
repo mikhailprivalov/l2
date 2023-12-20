@@ -174,6 +174,7 @@ class SettingManager:
                     "required_choose_case",
                     "calculate_researches",
                     "schedule_in_protocol",
+                    "equipment_load_file",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
