@@ -4,6 +4,7 @@ import magic
 import pytz_deprecation_shim as pytz
 
 from appconf.manager import SettingManager
+from clients.models import HarmfulFactor
 from external_system.models import InstrumentalResearchRefbook
 from laboratory import settings
 import simplejson as json
@@ -125,6 +126,20 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             data["Состояние код"] = "1"
             data["Состояние наименование"] = "Удовлетворительное"
 
+        try:
+            val = data.get("Вредные факторы", None)
+            print("Вредные факторы", val)
+            if not val:
+                pass
+            else:
+                harm_full_factors = val.split(";")
+                harm_full_factors = [h.strip() for h in harm_full_factors]
+                harm_full_factors_object = [{"nsi_id": hf.nsi_id, "nsi_title": hf.description, "code": hf.title} for hf in HarmfulFactor.objects.filter(title__in=harm_full_factors)]
+                data["Вредные факторы"] = harm_full_factors_object
+        except Exception:
+            data["Состояние код"] = "1"
+            data["Состояние наименование"] = "Удовлетворительное"
+
         for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get(iss.research.generator_name, []):
             data[i] = "-"
         for r in result_protocol:
@@ -141,6 +156,7 @@ def get_json_protocol_data(pk, is_paraclinic=False):
         if not data.get("Дата осмотра"):
             data["Дата осмотра"] = iss.medical_examination.strftime("%Y-%m-%d")
         data = add_absent_field(data, iss.research)
+
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
     direction_params = {}
     for dp in direction_params_obj:

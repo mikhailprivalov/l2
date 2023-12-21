@@ -254,6 +254,9 @@ def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", "*")
     only_cda = request.GET.get("onlyCDA", False)
+    only_cda = True
+    print("запрос на получение")
+    print(pk)
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related("istochnik_f", "client", "client__individual", "client__base").get(pk=pk)
     card = direction.client
     individual = card.individual
@@ -496,6 +499,9 @@ def issledovaniye_data_simple(request):
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_doc_refferal")
     if i.research.is_extract:
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_extract")
+    if i.research.is_form:
+        id_med_document_type = i.research.n3_id_med_document_type
+
 
     return Response(
         {
@@ -1983,7 +1989,10 @@ def get_cda_data(pk):
         smo_title = smo.get(insurer_full_code, "")
         smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", {}).get("values", {})
         smo_id = smo_ids.get(insurer_full_code, "")
-    if p_enp:
+
+    if SettingManager.get("eds_control_enp", default='true', default_type='b') and not p_enp:
+        return {}
+    else:
         return {
             "title": n.get_eds_title(),
             "generatorName": n.get_eds_generator(),
@@ -2003,7 +2012,6 @@ def get_cda_data(pk):
                 "organization": data["organization"],
             },
         }
-    return {}
 
 
 @api_view(["POST"])

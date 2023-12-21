@@ -1047,6 +1047,7 @@ class HarmfulFactor(models.Model):
     description = models.CharField(max_length=1024, help_text='Описание', blank=True, default=None, null=True)
     template = models.ForeignKey(AssignmentTemplates, db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     cpp_key = models.UUIDField(null=True, blank=True, editable=False, help_text="UUID, с справочника", db_index=True)
+    nsi_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
 
     class Meta:
         verbose_name = 'Фактор вредности'

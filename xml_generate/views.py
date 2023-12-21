@@ -6,7 +6,7 @@ from jinja2 import FileSystemLoader, Environment
 
 from clients.models import HarmfulFactor
 from directions.models import Issledovaniya, DirectionDocument
-from laboratory.settings import BASE_DIR, CPP_TEMPLATE_XML_DIRECTORY, MEDIA_ROOT
+from laboratory.settings import BASE_DIR, CPP_TEMPLATE_XML_DIRECTORY, MEDIA_ROOT, CDA_TEMPLATE_XML_DIRECTORY
 import shutil
 from datetime import datetime
 
@@ -91,3 +91,11 @@ def normilize_result_data(results):
             dict_result["Вредные факторы"] = [str(i.cpp_key) for i in hf]
         dict_result["uuid"] = str(uuid.uuid4())
     return dict_result
+
+
+def gen_result_cda_files(template_file_name, data):
+    file_loader = FileSystemLoader(os.path.join(BASE_DIR, 'xml_generate', CDA_TEMPLATE_XML_DIRECTORY))
+    env = Environment(loader=file_loader, trim_blocks=True, lstrip_blocks=True)
+    tm = env.get_template(template_file_name)
+    print(data)
+    return tm.render(data)
