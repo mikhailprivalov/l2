@@ -41,9 +41,7 @@ class ResProfessionsWorkersPositionsRefbook(admin.ModelAdmin):
         'code',
         'title',
     )
-    search_fields = (
-        'title',
-    )
+    search_fields = ('title',)
 
 
 admin.site.register(FsliRefbookTest)
