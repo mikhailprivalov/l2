@@ -498,7 +498,6 @@ def issledovaniye_data_simple(request):
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_extract")
     if i.research.is_form:
         id_med_document_type = i.research.n3_id_med_document_type
-
     return Response(
         {
             "ok": True,
