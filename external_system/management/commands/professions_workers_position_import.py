@@ -31,10 +31,7 @@ class Command(BaseCommand):
             else:
                 r = ProfessionsWorkersPositionsRefbook.objects.filter(code=cells[id_position])
                 if not r.exists():
-                    ProfessionsWorkersPositionsRefbook(
-                        code=cells[id_position],
-                        title=cells[name_position]
-                    ).save()
+                    ProfessionsWorkersPositionsRefbook(code=cells[id_position], title=cells[name_position]).save()
                     self.stdout.write('сохранено', cells[name_position])
                 elif r.exists():
                     r = r[0]
