@@ -1,12 +1,5 @@
 from django.contrib import admin
-from .models import \
-    FsliRefbookTest, \
-    InstrumentalResearchRefbook, \
-    BodySiteRefbook, \
-    ArchiveMedicalDocuments, \
-    TypesMedicalDocuments, \
-    CdaFields,\
-    ProfessionsWorkersPositionsRefbook
+from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments, CdaFields, ProfessionsWorkersPositionsRefbook
 
 
 class ResArchiveMedicalDocuments(admin.ModelAdmin):
