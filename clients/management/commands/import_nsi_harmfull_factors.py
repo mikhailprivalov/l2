@@ -27,6 +27,7 @@ class Command(BaseCommand):
             if not starts:
                 if "ИД" in cells:
                     nsi_id = cells.index("ИД")
+                    description = cells.index("Описание")
                     harmfull_title = cells.index("Номер")
                     starts = True
             else:
@@ -36,4 +37,6 @@ class Command(BaseCommand):
                     harmful_factor.save()
                     self.stdout.write(f'Фактор {harmful_factor.title} обновлён, nsi_id={harmful_factor.nsi_id}')
                 else:
-                    self.stdout.write(f'Фактор {cells[harmfull_title]} не найден')
+                    new_harmful_factor = HarmfulFactor(title=cells[harmfull_title], description=cells[description], nsi_id=cells[nsi_id])
+                    new_harmful_factor.save()
+                    self.stdout.write(f'Фактор {cells[harmfull_title]} добавлен')

@@ -128,7 +128,6 @@ def get_json_protocol_data(pk, is_paraclinic=False):
 
         try:
             val = data.get("Вредные факторы", None)
-            print("Вредные факторы", val)
             if not val:
                 pass
             else:
@@ -137,8 +136,17 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 harm_full_factors_object = [{"nsi_id": hf.nsi_id, "nsi_title": hf.description, "code": hf.title} for hf in HarmfulFactor.objects.filter(title__in=harm_full_factors)]
                 data["Вредные факторы"] = harm_full_factors_object
         except Exception:
-            data["Состояние код"] = "1"
-            data["Состояние наименование"] = "Удовлетворительное"
+            pass
+
+        try:
+            val = data.get("Группа здоровья", None)
+            if not val or not isinstance(val, dict):
+                pass
+            else:
+                data["Группа здоровья код"] = val["code"]
+                data["Группа здоровья наименование"] = val["title"]
+        except Exception:
+            pass
 
         for i in REMD_FIELDS_BY_TYPE_DOCUMENT.get(iss.research.generator_name, []):
             data[i] = "-"
@@ -155,6 +163,11 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             data["Состояние наименование"] = "Удовлетворительное"
         if not data.get("Дата осмотра"):
             data["Дата осмотра"] = iss.medical_examination.strftime("%Y-%m-%d")
+        if data.get("Дата заключения"):
+            val = data.get("Дата заключения")
+            data["Дата заключения"] = normalize_dots_date(val).replace("-", "")
+
+
         data = add_absent_field(data, iss.research)
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)

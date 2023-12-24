@@ -254,9 +254,6 @@ def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", "*")
     only_cda = request.GET.get("onlyCDA", False)
-    only_cda = True
-    print("запрос на получение")
-    print(pk)
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related("istochnik_f", "client", "client__individual", "client__base").get(pk=pk)
     card = direction.client
     individual = card.individual
@@ -2005,6 +2002,8 @@ def get_cda_data(pk):
                     "snils": data_individual["snils"],
                     "name": {"family": ind.family, "name": ind.name, "patronymic": ind.patronymic},
                     "gender": ind.sex.lower(),
+                    "gender_code": 2 if ind.sex.lower() == "ж" else 1,
+                    "gender_title": "Женский" if ind.sex.lower() == "ж" else "Мужской",
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
                     "address": data_individual['main_address'],

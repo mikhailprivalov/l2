@@ -479,7 +479,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
 
 def add_appendix_direction_list(appendix_direction_list, dir_temp):
     direction_data = []
-    types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set(), "isHospital": set()}
+    types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set(), "isHospital": set(), "isForm": set()}
     for d in dir_temp:
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=d).first()
         if iss_obj.research.is_doc_refferal:
@@ -490,6 +490,8 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
             types_direction["isGistology"].add(d)
         elif iss_obj.research.is_hospital:
             types_direction["isHospital"].add(d)
+        elif iss_obj.research.is_form:
+            types_direction["isForm"].add(d)
         elif (
             not iss_obj.research.is_form
             and not iss_obj.research.is_citology
@@ -511,6 +513,9 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
             direction_data.extend(list(types_direction["isParaclinic"]))
         elif section.get('isHospital'):
             direction_data.extend(list(types_direction["isHospital"]))
+        elif section.get('isForm'):
+            direction_data.extend(list(types_direction["isForm"]))
+
     return direction_data
 
 
