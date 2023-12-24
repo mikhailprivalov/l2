@@ -2823,7 +2823,6 @@ def last_field_result(request):
         if len(work_data) >= 1:
             work_position = work_data[0]
         nsi_position = ProfessionsWorkersPositionsRefbook.objects.values_list("code", flat=True).filter(title=work_position).first()
-        print(nsi_position)
         result = {"value": nsi_position.strip()}
     elif request_data["fieldPk"].find('%work_department') != -1:
         work_department = ""
@@ -3864,7 +3863,6 @@ def eds_documents(request):
 
     DirectionDocument.objects.filter(direction=direction, is_archive=False).exclude(last_confirmed_at=last_time_confirm).update(is_archive=True)
     cda_eds_data = get_cda_data(pk)
-    print(cda_eds_data)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
         signatures = {}
@@ -3914,13 +3912,10 @@ def eds_documents(request):
                         cda_xml = cda_data.get('result', {}).get('content')
                     else:
                         cda_xml = gen_result_cda_files(iss_obj.research.cda_template_file, cda_eds_data["data"])
-                        print("локально")
-                        print(cda_xml)
                 else:
                     cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
                 filename = f"{pk}–{last_time_confirm}.cda.xml"
                 if cda_xml:
-                    print(cda_xml, type(cda_xml))
                     file = ContentFile(cda_xml.encode('utf-8'), filename)
                 else:
                     file = None
