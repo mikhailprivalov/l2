@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
-from external_system.models import FsliRefbookTest, ProfessionsWorkersPositionsRefbook
+from external_system.models import ProfessionsWorkersPositionsRefbook
 
 
 class Command(BaseCommand):
@@ -35,7 +35,7 @@ class Command(BaseCommand):
                         code=cells[id_position],
                         title=cells[name_position]
                     ).save()
-                    print('сохранено', cells[name_position])  # noqa: T001
+                    self.stdout.write('сохранено', cells[name_position])
                 elif r.exists():
                     r = r[0]
                     updated = []
@@ -44,4 +44,4 @@ class Command(BaseCommand):
                         updated.append('title')
                     if updated:
                         r.save(update_fields=updated)
-                        print('обновлено', cells[name_position])  # noqa: T001
+                        self.stdout.write('обновлено', cells[name_position])

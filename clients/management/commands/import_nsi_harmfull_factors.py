@@ -21,7 +21,7 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        cpp_key, title, description = '', '', ''
+        harmfull_title, description = '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:

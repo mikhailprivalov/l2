@@ -97,5 +97,4 @@ def gen_result_cda_files(template_file_name, data):
     file_loader = FileSystemLoader(os.path.join(BASE_DIR, 'xml_generate', CDA_TEMPLATE_XML_DIRECTORY))
     env = Environment(loader=file_loader, trim_blocks=True, lstrip_blocks=True)
     tm = env.get_template(template_file_name)
-    print(data)
     return tm.render(data)
