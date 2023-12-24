@@ -499,7 +499,6 @@ def issledovaniye_data_simple(request):
     if i.research.is_form:
         id_med_document_type = i.research.n3_id_med_document_type
 
-
     return Response(
         {
             "ok": True,
