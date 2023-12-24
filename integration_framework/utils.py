@@ -167,7 +167,6 @@ def get_json_protocol_data(pk, is_paraclinic=False):
             val = data.get("Дата заключения")
             data["Дата заключения"] = normalize_dots_date(val).replace("-", "")
 
-
         data = add_absent_field(data, iss.research)
 
     direction_params_obj = directions.DirectionParamsResult.objects.filter(napravleniye_id=pk)
