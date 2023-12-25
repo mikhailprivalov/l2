@@ -3,7 +3,7 @@ import datetime
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
-from clients.models import Card, Individual
+from clients.models import Card, Individual, Document, DocumentType
 from ecp_integration.integration import search_patient_ecp_by_fio, attach_patient_ecp
 from utils.dates import normalize_dots_date
 import logging
@@ -12,15 +12,21 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    # def add_arguments(self, parser):
-    #     """
-    #     :param path - файл с пациентами - участок ecp
-    #     """
-    #     parser.add_argument('path', type=str)
-
     def handle(self, *args, **kwargs):
-        # fp = kwargs["path"]
-        # self.stdout.write("Path: " + fp)
         current_date = datetime.datetime.now()
-        children_individual = Individual.objects.filter(birthday__range=[(current_date - current_date.year - 14), ])
+        start_date = datetime.datetime(current_date.year - 14, current_date.month, current_date.day)
+        self.stdout.write(f"Текущая дата: {current_date}")
+        self.stdout.write(f"Начальная дата: {start_date}")
+        passport_type = DocumentType.objects.filter(title__startswith="Паспорт гражданина РФ").first()
+        if passport_type:
+            children_individual = Individual.objects.filter(birthday__range=[start_date, current_date])
+            for individual in children_individual:
+                passport = Document.objects.filter(individual_id=individual.pk, document_type_id=passport_type.pk).first()
+                if passport:
+                    passport.delete()
+                    self.stdout.write(f"Пациент: {individual.fio()} - паспорт удалён")
+        else:
+            self.stdout.write("'Паспорт гражданина РФ', нет такого документа")
+
+
 
