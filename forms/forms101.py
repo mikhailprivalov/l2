@@ -4288,7 +4288,7 @@ def form_17(request_data):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerif"
-    style.fontSize = 12
+    style.fontSize = 10
     style.alignment = TA_JUSTIFY
 
     styleLeft = deepcopy(style)
@@ -4307,7 +4307,7 @@ def form_17(request_data):
     styleCenterMin.fontSize = 8
 
     objs = []
-    space = 3.5 * mm
+    space = 2.5 * mm
 
     objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА ПРОВЕДЕНИЕ МАГНИТНО-РЕЗОНАНСНОЙ ТОМОГРАФИИ (ОПРОСНОЙ ЛИСТ)</b>', style=styleHeader))
     objs.append(Spacer(1, space))
@@ -4465,7 +4465,13 @@ def form_17(request_data):
     opinion = create_questions_list(questions, styleCenter, style)
 
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
-    table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'), ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
     tbl.setStyle(table_style)
     objs.append(tbl)
     objs.append(Spacer(1, space))
@@ -4491,31 +4497,15 @@ def form_17(request_data):
     opinion = create_questions_list(questions, styleCenter, style)
 
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
-    table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'), ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
+    table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                   ('TOPPADDING', (0, 0), (-1, -1), 1),
+                   ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                   ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
     tbl.setStyle(table_style)
     objs.append(tbl)
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>Если было отмечено хотя бы одно «ДА», МР-исследование может быть противопоказано.</b>', style))
 
-    opinion = [
-        [
-            Paragraph('<b>Оставить в кабинке для переодевания!</b>', styleCenter),
-        ],
-        [
-            Paragraph(
-                '<b>Магнитные карты, телефоны, монеты, ювелирные изделия, часы, ножи, очки, съемные зубные протезы, слуховой аппарат. Одежду с металлическими частями, в том числе '
-                'бюстгальтер, металлические застежки, молнии, кнопки, заколки, ремни с металлическими частями, ручки, карандаши, обувь </b>',
-                style,
-            ),
-        ],
-    ]
-    tbl = Table(opinion, colWidths=[190 * mm], hAlign='LEFT')
-    table_style = [
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
-        ('LEFTPADDING', (0, 0), (-1, -1), 2),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-    ]
-    tbl.setStyle(table_style)
-    objs.append(tbl)
     objs.append(Spacer(1, space))
     objs.append(
         Paragraph(
