@@ -1,11 +1,8 @@
 import datetime
 
 from django.core.management.base import BaseCommand
-from openpyxl import load_workbook
 
-from clients.models import Card, Individual, Document, DocumentType
-from ecp_integration.integration import search_patient_ecp_by_fio, attach_patient_ecp
-from utils.dates import normalize_dots_date
+from clients.models import Individual, Document, DocumentType
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,6 +24,3 @@ class Command(BaseCommand):
                     self.stdout.write(f"Пациент: {individual.fio()} - паспорт удалён")
         else:
             self.stdout.write("'Паспорт гражданина РФ', нет такого документа")
-
-
-
