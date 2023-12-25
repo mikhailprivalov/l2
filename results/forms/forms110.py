@@ -264,7 +264,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     params_columns.append({"x": -4.5 * mm, "y": -170 * mm, "width": 135.5 * mm, "height": 185 * mm, "text": text, "showBoundary": 0})
 
     text = []
-    header_table_data = [header_org, Paragraph(f'ИЗВЕЩЕНИЕ', style_center_bold)]
+    header_table_data = [header_org, Paragraph('ИЗВЕЩЕНИЕ', style_center_bold)]
     text.append(create_header_table(header_table_data))
     text.append(Spacer(1, space))
     text.append(Paragraph(f'{bold_open}Владелец животного: {bold_close}{protocol_data["Владелец животного"]}', style))
