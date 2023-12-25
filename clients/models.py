@@ -743,7 +743,6 @@ class Individual(models.Model):
                 i.add_or_update_doc(snils_type, '', snils)
 
             if birth_cert_type and birth_cert_seria and birth_cert_number:
-                print('Sync BIRTH CERT')  # noqa: T001
                 i.add_or_update_doc(birth_cert_type, birth_cert_seria, birth_cert_number)
             elif passport_type and passport_seria and passport_number:
                 print('Sync PASSPORT')  # noqa: T001
