@@ -185,7 +185,7 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
-    if is_ecp_search or ":" in query:
+    if is_ecp_search and query or (query and ":" in query[0]):
         ecp_id = query.split(':')[1]
         patient_data = search_patient_ecp_by_person_id(ecp_id)
         if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
@@ -1533,7 +1533,7 @@ def load_anamnesis(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
     history = []
-    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk'):
+    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk') if not request_data.get('skipHistory') else []:
         history.append(
             {
                 "pk": a.pk,
@@ -1549,6 +1549,9 @@ def load_anamnesis(request):
         "text": card.anamnesis_of_life,
         "history": history,
     }
+    if request_data.get('withPatient'):
+        data['patient'] = card.get_fio_w_card()
+
     return JsonResponse(data)
 
 

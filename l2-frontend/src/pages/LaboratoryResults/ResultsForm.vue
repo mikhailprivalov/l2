@@ -57,11 +57,15 @@
           <col style="width: 31px">
           <col>
           <col
-            v-if="!noRefs"
+            v-if="visibleRefsM"
             style="width: 21%"
           >
           <col
-            v-if="!noRefs"
+            v-if="visibleRefsF"
+            style="width: 21%"
+          >
+          <col
+            v-if="labFractionComment"
             style="width: 21%"
           >
         </colgroup>
@@ -87,11 +91,14 @@
               </button>
             </td>
             <th>Значение</th>
-            <th v-if="!noRefs">
+            <th v-if="visibleRefsM">
               Нормы М
             </th>
-            <th v-if="!noRefs">
+            <th v-if="visibleRefsF">
               Нормы Ж
+            </th>
+            <th v-if="labFractionComment">
+              Комментарий
             </th>
           </tr>
         </thead>
@@ -133,13 +140,21 @@
               />
             </template>
             <Ref
-              v-if="!noRefs"
+              v-if="visibleRefsM"
               :data="r.ref.m"
             />
             <Ref
-              v-if="!noRefs"
+              v-if="visibleRefsF"
               :data="r.ref.f"
             />
+            <td v-if="labFractionComment">
+              <textarea
+                v-model="r.comment"
+                v-autosize="r.comment"
+                class="form-control noresize"
+                :rows="(r.comment || '').split('\n').length"
+              />
+            </td>
           </tr>
           <tr v-if="research.can_comment">
             <td>
@@ -340,6 +355,26 @@ export default {
     noRefs() {
       return this.research.no_units_and_ref || this.research.template === 2;
     },
+    patientSex() {
+      return this.dirData?.client_sex;
+    },
+    isPatientSexF() {
+      return this.patientSex === 'ж';
+    },
+    visibleRefsM() {
+      if (this.noRefs) {
+        return false;
+      }
+
+      return !this.labFractionComment || !this.isPatientSexF;
+    },
+    visibleRefsF() {
+      if (this.noRefs) {
+        return false;
+      }
+
+      return !this.labFractionComment || this.isPatientSexF;
+    },
     execParams() {
       const r = [];
       if (this.execData.timeSave) {
@@ -361,6 +396,9 @@ export default {
     },
     legalAuthenticator() {
       return !!this.$store.getters.modules.legal_authenticator;
+    },
+    labFractionComment() {
+      return !!this.$store.getters.modules.l2_fraction_comment;
     },
   },
   mounted() {

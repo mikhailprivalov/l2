@@ -473,7 +473,7 @@ export default class BiomaterialSearch extends Vue {
 
   scannerBuffer: string;
 
-  clearTimer: null | number;
+  clearTimer: null | any;
 
   direction: any;
 

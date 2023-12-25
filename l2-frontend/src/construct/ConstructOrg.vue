@@ -57,6 +57,12 @@
               label="ОГРН"
               maxlength="13"
             />
+            <FormulateInput
+              type="text"
+              name="hl7SenderApplication"
+              label="HL7 приложение отправитель"
+              maxlength="13"
+            />
           </div>
           <div class="col-xs-6">
             <FormulateInput
@@ -83,6 +89,12 @@
               type="text"
               name="okpo"
               label="ОКПО"
+            />
+            <FormulateInput
+              type="text"
+              name="hl7ReceiverAapplication"
+              label="HL7 приложение получатель"
+              maxlength="13"
             />
           </div>
         </div>
@@ -111,6 +123,13 @@
           </div>
           <div class="full-width">
             <FormulateInput
+              type="checkbox"
+              name="isAutotransfer"
+              label="Автоматически пересылать"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
               type="text"
               name="ordersPushFtpServerUrl"
               label="URL для FTP директории отправки заказов"
@@ -128,6 +147,13 @@
               type="checkbox"
               name="strictExternalNumbers"
               label="Требовать наличие генератора номеров ёмкостей при отправке заказов"
+            />
+          </div>
+          <div class="full-width">
+            <FormulateInput
+              type="text"
+              name="resultPullFtpServerUrl"
+              label="URL для FTP директории получения результатов"
             />
           </div>
         </template>

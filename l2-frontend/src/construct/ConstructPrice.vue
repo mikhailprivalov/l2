@@ -1,8 +1,5 @@
 <template>
-  <div>
-    <h4>
-      Прайс
-    </h4>
+  <div class="negative-margin-top">
     <div class="radio-button-object">
       <RadioField
         v-model="searchTypesObject"
@@ -23,6 +20,7 @@
           <col width="240">
           <col width="120">
           <col width="120">
+          <col width="120">
           <col>
           <col
             v-if="priceIsActive"
@@ -33,6 +31,9 @@
           <tr>
             <th class="text-center">
               <strong>Название</strong>
+            </th>
+            <th class="text-center">
+              <strong>Код</strong>
             </th>
             <th class="text-center">
               <strong>Дата начала</strong>
@@ -50,6 +51,13 @@
           <td class="border">
             <input
               v-model.trim="priceData.title"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
+          </td>
+          <td class="border">
+            <input
+              v-model="priceData.code"
               class="form-control"
               :disabled="!priceIsActive"
             >
@@ -115,6 +123,28 @@
             </div>
           </td>
         </tr>
+        <tr
+          v-if="priceIsSelected"
+          class="height-row border"
+        >
+          <td class="border text-center">
+            <strong>ID</strong>
+          </td>
+          <td
+            class="padding-left"
+          >
+            {{ priceData.id }}
+          </td>
+          <td class="border text-center">
+            <strong>UUID</strong>
+          </td>
+          <td
+            class="padding-left"
+            :colspan="priceIsActive ? 3 : 2"
+          >
+            {{ priceData.uuid }}
+          </td>
+        </tr>
       </table>
     </div>
     <span v-if="priceIsSelected">
@@ -123,14 +153,21 @@
         href="#"
         @click.prevent="downloadSpecification"
       >
-        Скачать спецификацию
+        Cпецификация
       </a>
-      <ul class="nav navbar-nav">
+      <a
+        class="a-under a-align r-padding"
+        href="#"
+        @click.prevent="copyPrice"
+      >
+        Скопировать
+      </a>
+      <a>
         <LoadFile
           :is-gen-commercial-offer="true"
           :selected-price="selectedPrice"
         />
-      </ul>
+      </a>
     </span>
     <div
       v-if="priceIsSelected"
@@ -249,6 +286,7 @@
           <col>
           <col width="100">
           <col width="100">
+          <col width="100">
         </colgroup>
         <tr>
           <td class="border">
@@ -360,10 +398,13 @@ export default {
     selectedPrice() {
       if (!this.selectedPrice) {
         this.priceData = {
+          id: -1,
           title: '',
+          code: '',
           start: '',
           end: '',
           company: null,
+          uuid: '',
         };
         this.activeStatus.ok = true;
       } else {
@@ -411,6 +452,19 @@ export default {
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
+    async copyPrice() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('copy-price', {
+        id: this.selectedPrice,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Прайс скопирован');
+        await this.getPrices();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
     async updatePrice() {
       if (!this.priceDataIsFilled) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
@@ -421,6 +475,7 @@ export default {
         const { ok, message } = await this.$api('update-price', {
           id: this.selectedPrice,
           title: this.priceData.title,
+          code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
           company: this.priceData.company,
@@ -438,6 +493,7 @@ export default {
         const { ok, message } = await this.$api('update-price', {
           id: -1,
           title: this.priceData.title,
+          code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
           company: this.priceData.company,
@@ -448,10 +504,13 @@ export default {
           this.$root.$emit('msg', 'ok', 'Прайс добавлен');
           await this.getPrices();
           this.priceData = {
+            id: -1,
             title: '',
+            code: '',
             start: '',
             end: '',
             company: null,
+            uuid: '',
           };
         } else {
           this.$root.$emit('msg', 'error', message);
@@ -552,9 +611,8 @@ export default {
   width: 50%;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 2%;
-  margin-bottom: 2%;
-  alignment: center;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 ::v-deep .form-control {
@@ -570,7 +628,7 @@ export default {
   table-layout: fixed;
 }
 .margin-bottom {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 .border {
   border: 1px solid #ddd;
@@ -583,11 +641,11 @@ export default {
   border: 0;
 }
 .edit-price {
-  margin: 20px 0;
+  margin: 10px 0;
 }
 .scroll {
   min-height: 106px;
-  max-height: calc(100vh - 600px);
+  max-height: calc(100vh - 463px);
   overflow-y: auto;
 }
 .sticky {
@@ -638,5 +696,14 @@ export default {
   }
 .a-align {
   float: right;
+}
+.r-padding {
+  padding-right: 10px;
+}
+.negative-margin-top {
+  margin-top: -20px;
+}
+.height-row {
+  height: 37px;
 }
 </style>

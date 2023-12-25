@@ -10,7 +10,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-10"
+    VERSION = f"{laboratory.VERSION}-13"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -160,6 +160,7 @@ class SettingManager:
                     "send_orgs_email_results",
                     "send_patients_email_results",
                     "docx_aggregate_laboratory_results",
+                    "need_order_redirection",
                     "chats",
                     "csv_load_file",
                     "transfer_card",
@@ -167,6 +168,13 @@ class SettingManager:
                     "price_customer",
                     "price_externel_performer",
                     "ftp",
+                    "case",
+                    "hide_show_count_param",
+                    "fraction_comment",
+                    "required_choose_case",
+                    "calculate_researches",
+                    "schedule_in_protocol",
+                    "equipment_load_file",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -213,6 +221,7 @@ class SettingManager:
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
                 13: SettingManager.l2("applications"),
                 14: SettingManager.l2("monitorings"),
+                16: SettingManager.l2("case"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)

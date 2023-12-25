@@ -2,7 +2,7 @@
   <div v-frag>
     <component
       :is="tag"
-      v-show="Boolean(l2_load_file || l2_csv_load_file)"
+      v-show="Boolean(l2_load_file || l2_csv_load_file || l2_equipment_load_file)"
     >
       <a
         href="#"
@@ -23,7 +23,51 @@
       >
         <span slot="header">{{ titleButton }}</span>
         <div slot="body">
-          <template v-if="l2_load_file">
+          <template v-if="l2_equipment_load_file">
+            <div class="form-group">
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Оборудование</span>
+                <Treeselect
+                  v-model="equipment"
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="equipments"
+                  placeholder="Оборудование не указано"
+                  :append-to-body="true"
+                  :clearable="false"
+                  :z-index="10000"
+                />
+              </div>
+              <input
+                id="fileInput"
+                ref="equipmentFile"
+                style="margin-top: 15px"
+                type="file"
+                class="form-control-file"
+                :readonly="loading"
+                :accept="fileFilter"
+                @change="handleEquipmentFileUpload()"
+              >
+            </div>
+            <button
+              style="width: 200px;"
+              type="button"
+              class="btn btn-primary"
+              :disabled="!Boolean(equipmentFile) || loading"
+              @click="submitEquipment()"
+            >
+              <i
+                v-if="loading"
+                class="fa fa-spinner"
+              />
+              <span v-else>Загрузить</span>
+            </button>
+          </template>
+          <template v-else-if="l2_load_file">
             <div class="form-group">
               <label for="fileInput"> {{ company === true || fileFilter === 'XLSX'?
                 'XLSX файл' : (isLoadGroupForProtocol ? 'JSON': 'PDF') }}</label>
@@ -36,6 +80,39 @@
                 :accept="fileFilter"
                 @change="handleFileUpload()"
               >
+              <div
+                v-if="isLoadResultService"
+                class="input-group"
+                style="width: 100%; margin-top: 10px"
+              >
+                <span class="input-group-addon">Id услуги</span>
+                <input
+                  v-model="idService"
+                  class="form-control"
+                >
+                <span class="input-group-addon">Id врача</span>
+                <input
+                  v-model="idDoctorProfile"
+                  class="form-control"
+                >
+                <span class="input-group-addon">Источник финансирования</span>
+                <input
+                  v-model="financingSourceTitle"
+                  class="form-control"
+                >
+              </div>
+              <div
+                v-if="isLoadResultService"
+                class="input-group"
+                style="width: 100%; margin-top: 5px"
+              >
+                <span class="input-group-addon">Названия полей</span>
+                <input
+                  v-model="titleFields"
+                  class="form-control"
+                  placeholder="fio, lastname, firstname, patronymic, sex, birthday, address, snils, enp, Диагноз, Дата осмотра..."
+                >
+              </div>
             </div>
             <button
               style="width: 200px;"
@@ -124,12 +201,14 @@
 <script lang="ts">
 import axios from 'axios';
 import * as Cookies from 'es-cookie';
+import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 export default {
   name: 'LoadFile',
-  components: { Modal },
+  components: { Modal, Treeselect },
   props: {
     tag: {
       type: String,
@@ -155,6 +234,11 @@ export default {
       required: false,
     },
     isWritePatientEcp: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    isLoadResultService: {
       type: Boolean,
       default: false,
       required: false,
@@ -191,11 +275,18 @@ export default {
       loading: false,
       file: '',
       csvFile: '',
+      equipmentFile: '',
       method: null,
       results: [],
       company: false,
       link: null,
       contentLoadGroupForProtocol: null,
+      idService: null,
+      idDoctorProfile: null,
+      financingSourceTitle: null,
+      titleFields: null,
+      equipments: [],
+      equipment: null,
     };
   },
   computed: {
@@ -204,6 +295,9 @@ export default {
     },
     l2_csv_load_file() {
       return this.$store.getters.modules.l2_csv_load_file;
+    },
+    l2_equipment_load_file() {
+      return this.$store.getters.modules.l2_equipment_load_file;
     },
   },
   methods: {
@@ -214,6 +308,7 @@ export default {
       this.method = null;
       this.company = false;
       this.link = null;
+      this.getEquipments();
     },
     handleFileUpload() {
       // eslint-disable-next-line prefer-destructuring
@@ -230,6 +325,10 @@ export default {
       // eslint-disable-next-line prefer-destructuring
       this.csvFile = this.$refs.csvFile.files[0];
     },
+    handleEquipmentFileUpload() {
+      // eslint-disable-next-line prefer-destructuring
+      this.equipmentFile = this.$refs.equipmentFile.files[0];
+    },
     async submit() {
       this.loading = true;
       try {
@@ -240,9 +339,14 @@ export default {
         formData.append('isGenCommercialOffer', this.isGenCommercialOffer);
         formData.append('selectedPrice', this.selectedPrice);
         formData.append('isWritePatientEcp', this.isWritePatientEcp);
+        formData.append('isLoadResultService', this.isLoadResultService);
         formData.append('isLoadGroupForProtocol', this.isLoadGroupForProtocol);
         formData.append('researchId', this.researchId);
         formData.append('researchSet', this.researchSet);
+        formData.append('idService', this.idService);
+        formData.append('idDoctorProfile', this.idDoctorProfile);
+        formData.append('financingSourceTitle', this.financingSourceTitle);
+        formData.append('titleFields', this.titleFields);
         if (this.isLoadGroupForProtocol) {
           this.$emit('load-file', this.contentLoadGroupForProtocol);
           this.open = false;
@@ -300,6 +404,42 @@ export default {
         this.$root.$emit('msg', 'error', 'Ошибка');
       }
       this.loading = false;
+    },
+    async submitEquipment() {
+      this.loading = true;
+      try {
+        this.results = [];
+        const formData = new FormData();
+        formData.append('file', this.equipmentFile);
+        formData.append('equipment', this.equipment);
+        const { data } = await axios.post('/api/parse-file/loadequipment', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-CSRFToken': Cookies.get('csrftoken'),
+          },
+        });
+        if (Object.hasOwn(data, 'ok') && !data.ok) {
+          this.$root.$emit('msg', 'error', data.message || 'Ошибка');
+          this.loading = false;
+          return;
+        }
+        this.results = data.results;
+        this.method = data.method || null;
+        this.$refs.equipmentFile.value = '';
+        this.equipmentFile = '';
+        this.$root.$emit('msg', 'ok', 'Файл загружен');
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(e);
+        this.$root.$emit('msg', 'error', 'Ошибка');
+      }
+      this.loading = false;
+    },
+    async getEquipments() {
+      const formData = new FormData();
+      formData.append('companyInn', this.equipment);
+      const list = await this.$api('analyzers/analyzers-load-file');
+      this.equipments = list.data;
     },
   },
 };

@@ -35,6 +35,7 @@ from laboratory.settings import (
     RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
     AUTO_PRINT_RESEARCH_DIRECTION,
     NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
+    MEDIA_ROOT,
 )
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
@@ -49,7 +50,6 @@ from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
-
 
 from appconf.manager import SettingManager
 from utils.dates import normalize_dots_date
@@ -124,6 +124,12 @@ class TubesRegistration(models.Model):
     @staticmethod
     def make_default_external_tube(number: int):
         external_tube = directory.ReleationsFT.get_default_external_tube()
+        return TubesRegistration.objects.create(number=number, type=external_tube)
+
+    @staticmethod
+    def make_external_tube(number: int, research):
+        fraction = directory.Fractions.objects.filter(research=research).first()
+        external_tube = fraction.relation
         return TubesRegistration.objects.create(number=number, type=external_tube)
 
     @staticmethod
@@ -419,8 +425,11 @@ class RegisteredOrders(models.Model):
         return f"{self.order_number} {self.patient_card}"
 
     class Meta:
-        verbose_name = 'Внешний заказ'
-        verbose_name_plural = 'Внешние заказы'
+        verbose_name = 'Внешний заказ направления'
+        verbose_name_plural = 'Внешние заказы направлений'
+
+    def get_registered_orders_by_file_name(self):
+        return RegisteredOrders.objects.values_list("id", flat=True).filter(file_name=self.file_name)
 
 
 class Napravleniya(models.Model):
@@ -491,6 +500,7 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
+    parent_case = models.ForeignKey('Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
@@ -546,6 +556,9 @@ class Napravleniya(models.Model):
         Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
     )
     time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
+    price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
+    cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
+    need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
 
     def sync_confirmed_fields(self):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -773,6 +786,13 @@ class Napravleniya(models.Model):
     @property
     def visit_date_local(self):
         return localtime(self.visit_date)
+
+    @property
+    def services(self) -> List[directory.Researches]:
+        result = []
+        for iss in self.issledovaniya_set.all().order_by('research__title'):
+            result.append(iss.research)
+        return result
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s, par: [%s])" % (
@@ -1033,12 +1053,15 @@ class Napravleniya(models.Model):
         parent_id=None,
         parent_auto_gen_id=None,
         parent_slave_hosp_id=None,
+        parent_case_id=None,
         rmis_slot=None,
         direction_purpose="NONE",
         external_organization="NONE",
         price_category=-1,
         hospital=-1,
         external_order=None,
+        price_name_id=None,
+        slot_fact_id=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1063,6 +1086,10 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
+        if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
+            price_name_id = price_name_obj.pk
+
         dir = Napravleniya(
             client=client,
             doc=doc if not for_rmis else None,
@@ -1073,9 +1100,11 @@ class Napravleniya(models.Model):
             parent_id=parent_id,
             parent_auto_gen_id=parent_auto_gen_id,
             parent_slave_hosp_id=parent_slave_hosp_id,
+            parent_case_id=parent_case_id,
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
+            price_name_id=price_name_id,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1104,6 +1133,12 @@ class Napravleniya(models.Model):
         if save:
             dir.save()
         dir.set_polis()
+        if slot_fact_id:
+            from doctor_schedule.models import SlotFact
+
+            f = SlotFact.objects.get(pk=slot_fact_id)
+            f.direction = dir
+            f.save(update_fields=['direction'])
         return dir
 
     @staticmethod
@@ -1262,12 +1297,25 @@ class Napravleniya(models.Model):
         price_category=-1,
         external_order: Optional[RegisteredOrders] = None,
         services_by_additional_order_num=None,
+        price_name=None,
+        case_id=-2,
+        case_by_direction=False,
+        plan_start_date=None,
+        slot_fact_id=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+        if case_id > -1 and case_by_direction:
+            iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
+            if iss:
+                case_id = iss.pk
+            else:
+                result["message"] = "Ошибка привязки к случаю"
+                return result
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
         pk_reseerches = []
+        issledovaniye_case_id = None
         for v in researches.values():
             pk_reseerches.extend(v)
         card = Clients.Card.objects.get(pk=client_id)
@@ -1415,7 +1463,7 @@ class Napravleniya(models.Model):
                         "research__pk": v,
                     }
                     last_iss = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=False).order_by("-time_confirmation").first()
-                    if doctor_control_actual_research and research.actual_period_result > 0:
+                    if doctor_control_actual_research and research.actual_period_result > 0 and last_iss:
                         delta = current_time() - last_iss.time_confirmation
                         if delta.days <= research.actual_period_result:
                             result["messageLimit"] = f" {result.get('messageLimit', '')} \n Срок действия {research.title} - {research.actual_period_result} дн."
@@ -1495,6 +1543,38 @@ class Napravleniya(models.Model):
                             result["message"] = "Данный мониторинг уже создан"
                             return result
 
+                    if case_id > -2:
+                        if case_id == -1:
+                            napravleniye_case = Napravleniya.gen_napravleniye(
+                                client_id,
+                                doc_current if not for_rmis else None,
+                                finsource,
+                                diagnos,
+                                history_num,
+                                doc_current,
+                                ofname_id,
+                                ofname,
+                                for_rmis=for_rmis,
+                                rmis_data=rmis_data,
+                                parent_id=parent_iss,
+                                parent_auto_gen_id=parent_auto_gen,
+                                parent_slave_hosp_id=parent_slave_hosp,
+                                rmis_slot=rmis_slot,
+                                direction_purpose=direction_purpose,
+                                external_organization=external_organization,
+                                price_category=price_category,
+                                hospital=hospital_override,
+                                external_order=external_order,
+                                price_name_id=price_name,
+                                slot_fact_id=slot_fact_id,
+                            )
+                            research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
+                            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
+                            issledovaniye_case.save()
+                            issledovaniye_case_id = issledovaniye_case.pk
+                        elif case_id > 0:
+                            issledovaniye_case_id = case_id
+
                     if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
@@ -1510,12 +1590,15 @@ class Napravleniya(models.Model):
                             parent_id=parent_iss,
                             parent_auto_gen_id=parent_auto_gen,
                             parent_slave_hosp_id=parent_slave_hosp,
+                            parent_case_id=issledovaniye_case_id,
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
+                            price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1539,12 +1622,15 @@ class Napravleniya(models.Model):
                             parent_id=parent_iss,
                             parent_auto_gen_id=parent_auto_gen,
                             parent_slave_hosp_id=parent_slave_hosp,
+                            parent_case_id=issledovaniye_case_id,
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                             price_category=price_category,
                             hospital=hospital_override,
                             external_order=external_order,
+                            price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1580,6 +1666,7 @@ class Napravleniya(models.Model):
                         ext_additional_num = ExternalAdditionalOrder.objects.filter(external_add_order=external_additional_order_number).first()
                         if not ext_additional_num:
                             ext_additional_num = ExternalAdditionalOrder.objects.create(external_add_order=external_additional_order_number)
+                            ext_additional_num.save()
 
                     issledovaniye = Issledovaniya(
                         napravleniye=directions_for_researches[dir_group],
@@ -1656,7 +1743,8 @@ class Napravleniya(models.Model):
                 tube: Optional[TubesRegistration] = None
 
                 if external_order:
-                    tube = TubesRegistration.make_default_external_tube(external_order.order_number)
+                    research = directory.Researches.objects.get(pk=res[0])
+                    tube = TubesRegistration.make_external_tube(external_order.order_number, research)
 
                 v: Napravleniya
                 for k, v in directions_for_researches.items():
@@ -1763,6 +1851,7 @@ class Napravleniya(models.Model):
                     external_organization=external_organization,
                     price_category=price_category,
                     hospital=hospital_override,
+                    slot_fact_id=slot_fact_id,
                 )
                 result["list_id"].append(new_direction.pk)
                 Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()
@@ -1942,9 +2031,11 @@ def get_direction_file_path(instance: 'DirectionDocument', filename):
 class DirectionDocument(models.Model):
     PDF = 'pdf'
     CDA = 'cda'
+    CPP = 'cpp'
     FILE_TYPES = (
         (PDF, PDF),
         (CDA, CDA),
+        (CPP, CPP),
     )
 
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
@@ -2111,6 +2202,13 @@ class PersonContract(models.Model):
 class ExternalAdditionalOrder(models.Model):
     external_add_order = models.CharField(max_length=255, db_index=True, blank=True, null=True, default=None, help_text='Внешний номер для услуги')
 
+    def __str__(self):
+        return f"{self.external_add_order}"
+
+    class Meta:
+        verbose_name = 'Внешний лабораторный номер заказа'
+        verbose_name_plural = 'Внешние лабораторные номера заказов'
+
 
 class Issledovaniya(models.Model):
     """
@@ -2190,6 +2288,7 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
+    plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
 
     @property
     def time_save_local(self):
@@ -2325,6 +2424,34 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+class NapravleniyaHL7LinkFiles(models.Model):
+    HL7_ORIG_ORDER = 'HL7_ORIG_ORDER'
+    HL7_FINISH_ORDER = 'HL7_FINISH_ORDER'
+    HL7_ORIG_RESULT = 'HL7_ORIG_RESULT'
+    FILE_TYPES = (
+        (HL7_ORIG_ORDER, HL7_ORIG_ORDER),
+        (HL7_FINISH_ORDER, HL7_FINISH_ORDER),
+        (HL7_ORIG_RESULT, HL7_ORIG_RESULT),
+    )
+
+    napravleniye = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направления")
+    file_type = models.CharField(max_length=30, db_index=True, verbose_name="Тип файла")
+    upload_file = models.FileField(blank=True, null=True, default=None, max_length=255, verbose_name="Файл документа")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+
+    def __str__(self) -> str:
+        return f"{self.napravleniye} — {self.file_type} – {self.created_at}"
+
+    def create_hl7_file_path(napravleniye_id, filename):
+        if not os.path.exists(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id))):
+            os.makedirs(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id)))
+        return os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id), filename)
+
+    class Meta:
+        verbose_name = 'HL7-файл'
+        verbose_name_plural = 'HL7-файлы'
 
 
 def get_file_path(instance: 'IssledovaniyaFiles', filename):
@@ -2878,6 +3005,7 @@ class Result(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
     fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True, on_delete=models.CASCADE)
     value = models.TextField(null=True, blank=True, help_text='Значение')
+    comment = models.TextField(null=True, blank=True, help_text='Комментарий к значению')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
     selected_reference = models.IntegerField(default=-2, blank=True, help_text="Выбранный референс")
@@ -3268,10 +3396,10 @@ class NumberGenerator(models.Model):
     key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
     year = models.IntegerField(verbose_name='Год', db_index=True)
     is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
-    start = models.PositiveIntegerField(verbose_name='Начало диапазона')
-    end = models.PositiveIntegerField(verbose_name='Конец диапазона', null=True, blank=True, default=None)
-    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
-    free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
+    start = models.PositiveBigIntegerField(verbose_name='Начало диапазона')
+    end = models.PositiveBigIntegerField(verbose_name='Конец диапазона', null=True, blank=True, default=None)
+    last = models.PositiveBigIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
+    free_numbers = ArrayField(models.PositiveBigIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
     prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
 
     def __str__(self):

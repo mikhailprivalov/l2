@@ -33,6 +33,7 @@ from .models import (
     MicrobiologyResultPhenotype,
     RegisteredOrders,
     ExternalAdditionalOrder,
+    NapravleniyaHL7LinkFiles,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -46,6 +47,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
         'parent',
         'parent_auto_gen',
         'parent_slave_hosp',
+        'parent_case',
     )
     search_fields = (
         'pk',
@@ -277,8 +279,26 @@ class ExternalAdditionalOrderAdmin(admin.ModelAdmin):
     list_display = ('external_add_order',)
 
 
+class NapravleniyaHL7FilesAdmin(admin.ModelAdmin):
+    raw_id_fields = ('napravleniye',)
+    list_display = (
+        'napravleniye_id',
+        'file_type',
+        'upload_file',
+        'created_at',
+    )
+
+
+class ResultAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('issledovaniye',)
+    list_display = (
+        'issledovaniye',
+        'fraction',
+    )
+
+
 admin.site.register(TubesRegistration)
-admin.site.register(Result)
+admin.site.register(Result, ResultAdmin)
 admin.site.register(FrequencyOfUseResearches)
 admin.site.register(CustomResearchOrdering)
 admin.site.register(ExternalOrganization)
@@ -296,6 +316,7 @@ admin.site.register(DashboardCharts, ResDashboardCharts)
 admin.site.register(DashboardChartFields, ResDashboardChartFields)
 admin.site.register(MonitoringSumFieldByDay)
 admin.site.register(MonitoringSumFieldTotal)
+admin.site.register(NapravleniyaHL7LinkFiles, NapravleniyaHL7FilesAdmin)
 admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)
 admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)
 admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)

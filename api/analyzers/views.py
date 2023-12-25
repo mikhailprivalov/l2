@@ -1,6 +1,6 @@
 import subprocess
 
-from api.models import Analyzer
+from api.models import Analyzer, Application
 from api.models import ManageDoctorProfileAnalyzer
 
 import simplejson as json
@@ -9,6 +9,11 @@ from django.http import JsonResponse
 
 def all_analyzers(request):
     analyzers = [{"label": analyzer.title, "pk": analyzer.id} for analyzer in Analyzer.objects.all().exclude(service_name=None).exclude(port=None).order_by('title', 'id')]
+    return JsonResponse({"data": analyzers})
+
+
+def analyzers_load_file(request):
+    analyzers = [{"label": analyzer.name, "id": analyzer.id} for analyzer in Application.objects.filter(can_load_file_result=True).order_by('name', 'id')]
     return JsonResponse({"data": analyzers})
 
 

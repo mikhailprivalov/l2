@@ -1,7 +1,8 @@
 <template>
   <div :class="$style.root">
     <div
-      :class="$style.top"
+      v-if="!props.hideTop"
+      :class="[$style.top, props.topScrollable && $style.scrollable]"
       :style="topStyle"
     >
       <slot name="top" />
@@ -20,10 +21,21 @@ import { computed } from 'vue';
 
 const props = withDefaults(defineProps<{
   topHeightPx?: number,
+  topPaddingPx?: number,
+  topScrollable?: boolean,
+  hideTop?: boolean,
 }>(), { topHeightPx: 100 });
 
-const topStyle = computed(() => ({ height: `${props.topHeightPx}px` }));
-const bottomStyle = computed(() => ({ top: topStyle.value.height }));
+const topStyle = computed(() => {
+  const style: Record<string, string> = { height: `${props.topHeightPx}px` };
+
+  if (props.topPaddingPx) {
+    style.padding = `${props.topPaddingPx}px`;
+  }
+
+  return style;
+});
+const bottomStyle = computed(() => ({ top: props.hideTop ? '0' : topStyle.value.height }));
 </script>
 
 <style module lang="scss">
@@ -44,6 +56,12 @@ const bottomStyle = computed(() => ({ top: topStyle.value.height }));
 .top {
   border-bottom: 1px solid #646d78;
   top: 0;
+
+  &.scrollable {
+    overflow-x: auto;
+    overflow-y: visible;
+    white-space: nowrap;
+  }
 }
 
 .bottom {

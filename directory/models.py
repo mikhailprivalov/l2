@@ -82,6 +82,7 @@ class ResearchSite(models.Model):
         (4, 'Микробиология'),
         (7, 'Формы'),
         (10, 'Мониторинги'),
+        (12, 'Случаи'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -173,11 +174,14 @@ class Researches(models.Model):
         (10901, '109.01 - 131/у'),
         (11001, '110.01 - Антирабическая карта'),
         (11002, '110.02 - Заключение ВК по психиатрическому освидетельствованию'),
+        (11101, '111.01 - Карта профосмотра несовершеннолетнего N 030-ПО/у-17'),
+        (11201, '112.01 - Извещение о НР ЛП'),
     )
 
     RESULT_TITLE_FORMS = (
         (0, 'По умолчанию'),
         (10001, '100.01 - Выписка из амб карты'),
+        (10002, '100.02 - Клеше'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -243,6 +247,7 @@ class Researches(models.Model):
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
     is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
+    is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -288,12 +293,14 @@ class Researches(models.Model):
     enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
     oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
+    oid_title = models.CharField(max_length=255, default="", db_index=True, help_text="oid-название документа 1.2.643.5.1.13.13.11.1520")
     uet_refferal_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
     plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
+    cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -330,6 +337,7 @@ class Researches(models.Model):
             14: dict(is_application=True),
             15: dict(is_monitoring=True),
             16: dict(is_expertise=True),
+            17: dict(is_case=True),
         }
         return ts.get(t + 1, {})
 
@@ -357,6 +365,8 @@ class Researches(models.Model):
             return -13
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
+        if self.is_case:
+            return -14
         return self.podrazdeleniye_id or -2
 
     @property
@@ -368,6 +378,7 @@ class Researches(models.Model):
             or self.is_paraclinic
             or self.is_microbiology
             or self.is_hospital
+            or self.is_case
             or self.is_citology
             or self.is_gistology
             or self.is_form
@@ -480,6 +491,7 @@ class HospitalService(models.Model):
         (7, 'Выписка'),
         (8, 'Больничный лист'),
         (9, 't, ad, p – лист'),
+        (11, 'Формы'),
     )
 
     TYPES_BY_KEYS = {
@@ -506,6 +518,7 @@ class HospitalService(models.Model):
         7: 'extracts',
         8: 'bl',
         9: 't, ad, p sheet',
+        11: 'forms',
     }
 
     TYPES_REVERSED = {
@@ -514,6 +527,7 @@ class HospitalService(models.Model):
         "consultation": "is_doc_refferal",
         "diaries": "diaries",
         "morfology": "is_morfology",
+        "forms": "is_form",
         "all": "None",
     }
 

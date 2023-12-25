@@ -1141,6 +1141,9 @@ export default {
       if (this.openPlusId === 'consultation') {
         return [4];
       }
+      if (this.openPlusId === 'forms') {
+        return [11];
+      }
       if (this.openPlusId === null) {
         return [2, 3, 4];
       }

@@ -59,6 +59,12 @@ export default (instance: Vue): void => {
     instance.$ok('Запланирована повторная отправка результатов.\nРезультаты должны быть подтверждены полностью.\nУ пациента должен быть заполнен email и разраешена отправка.');
   });
 
+  instance.$root.$on('directions:need_order_redirection', async ids => {
+    await instance.$api('directions/need-order-redirection', { ids });
+    // eslint-disable-next-line max-len
+    instance.$ok('Запланирована повторная отправка направления исполнителю');
+  });
+
   instance.$root.$on('print:aggregate_laboratory_results', async pks => {
     window.open(`/forms/docx?type=113.02&directions=${pks}`, '_blank');
   });
@@ -143,6 +149,10 @@ export default (instance: Vue): void => {
       hospital_override: hospitalOverride = -1,
       monitoring = false,
       priceCategory = null,
+      caseId,
+      caseByDirection = false,
+      slotFactId = null,
+      cbWithIds,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -188,6 +198,10 @@ export default (instance: Vue): void => {
           hospital_department_override: hospitalDepartmentOverride,
           hospital_override: hospitalOverride,
           priceCategory,
+          caseId,
+          caseByDirection,
+          type,
+          slotFactId,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);
@@ -214,6 +228,14 @@ export default (instance: Vue): void => {
               ${data.messageLimit}`);
             } else if (type === 'save-and-open-embedded-form' && monitoring) {
               instance.$root.$emit('embedded-form:open', data.directions[0]);
+            } else if (type === 'calculate-cost') {
+              instance.$root.$emit('msg', 'ok', `Сумма: ${data.message}`, 10000);
+              return;
+            } else if (type === 'emit-open') {
+              instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}
+              ${data.messageLimit}`);
+              cbWithIds?.(data.directions);
+              return;
             }
             instance.$root.$emit(`researches-picker:clear_all${kk}`);
             instance.$root.$emit(`researches-picker:directions_created${kk}`);
@@ -231,6 +253,10 @@ export default (instance: Vue): void => {
 
   Vue.prototype.$error = (message, timeout: number | void | null) => {
     instance.$root.$emit('msg', 'error', message, timeout);
+  };
+
+  Vue.prototype.$info = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'info', message, timeout);
   };
 
   Vue.prototype.$ok = (message, timeout: number | void | null) => {

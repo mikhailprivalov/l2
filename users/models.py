@@ -105,8 +105,9 @@ class DoctorProfile(models.Model):
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
     available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подразделений по времени {"id-подразделения": "10:00-15:00"}')
     is_system_user = models.BooleanField(default=False, blank=True)
-
     room_access = models.ManyToManyField('podrazdeleniya.Room', blank=True, help_text='Доступ к кабинетам')
+    date_extract_employee = models.DateField(help_text='Дата выписки запрошена', db_index=True, default=None, blank=True, null=True)
+    date_stop_certificate = models.DateField(help_text='Дата окончания сертификата', db_index=True, default=None, blank=True, null=True)
 
     @staticmethod
     def get_system_profile():
@@ -116,7 +117,7 @@ class DoctorProfile(models.Model):
             user = User.objects.create_user(uuid.uuid4().hex)
             user.is_active = True
             user.save()
-            doc = DoctorProfile(user=user, fio='Системный Пользователь')
+            doc = DoctorProfile(user=user, fio='Системный Пользователь', is_system_user=True)
             doc.save()
             doc.get_fio_parts()
 

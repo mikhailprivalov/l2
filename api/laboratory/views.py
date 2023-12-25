@@ -194,7 +194,11 @@ def search(request):
             except Napravleniya.DoesNotExist:
                 direction = None
                 iss = None
-        if direction and direction.hospital and direction.hospital != doc.hospital:
+        user_groups = [str(x) for x in request.user.groups.all()]
+        contol_hosp = False
+        if "Направления-все МО" not in user_groups:
+            contol_hosp = True
+        if direction and direction.hospital and direction.hospital != doc.hospital and contol_hosp:
             direction = None
             iss = None
         mnext = False
@@ -472,6 +476,7 @@ def form(request):
                 "selectedReference": selected_reference,
                 "norm": r.get_is_norm(recalc=True)[0] if r else None,
                 "value": str(r.value if r else '').replace('&lt;', '<').replace('&gt;', '>'),
+                "comment": str(r.comment if r else '').replace('&lt;', '<').replace('&gt;', '>'),
             }
         )
 
@@ -508,9 +513,11 @@ def save(request):
             created = True
 
         value = bleach.clean(r["value"], tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>")
+        comment = bleach.clean(r.get('comment', ''), tags=['sup', 'sub', 'br', 'b', 'i', 'strong', 'a', 'img', 'font', 'p', 'span', 'div']).replace("<br>", "<br/>").strip()
 
-        if not created or value:
+        if not created or value or comment:
             fraction_result.value = value
+            fraction_result.comment = comment
             fraction_result.get_units(needsave=False)
             fraction_result.iteration = 1
 
@@ -709,15 +716,19 @@ def receive_one_by_one(request):
             resp_json = json.loads(resp.content)
             if isinstance(resp_json, dict) and "message" in resp_json:
                 message = resp_json["message"]
+        user_groups = [str(x) for x in request.user.groups.all()]
+        if "Направления-все МО" not in user_groups:
+            pks = [
+                x.number
+                for x in (
+                    TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
+                    .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
+                    .distinct()
+                )
+            ]
+        else:
+            pks = [x.number for x in (TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk).distinct())]
 
-        pks = [
-            x.number
-            for x in (
-                TubesRegistration.objects.filter(issledovaniya__napravleniye__pk=pk)
-                .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
-                .distinct()
-            )
-        ]
     ok_objects = []
     ok_researches = []
     invalid_objects = []
@@ -831,8 +842,8 @@ def receive_history(request):
                     "labs": ['Гистология'],
                     "researches": [x.research.title for x in Issledovaniya.objects.filter(napravleniye_id=n.pk)],
                     'isDirection': True,
-                    'defect_text': n.defect_text,
-                    'is_defect': n.is_defect,
+                    'defect_text': "",
+                    'is_defect': "",
                 }
             )
 
@@ -840,6 +851,9 @@ def receive_history(request):
         first_iss: Issledovaniya = row.issledovaniya_set.first()
         if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
             podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+            lab_titles = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+            lab_titles = ",".join(lab_titles)
+            podrs = [f"{podrs[0]}, {lab_titles}"]
             is_external_executor = True
         else:
             podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))

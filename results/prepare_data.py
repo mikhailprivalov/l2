@@ -1,4 +1,6 @@
 import pytz_deprecation_shim as pytz
+
+import hospitals.models
 from api.stationar.stationar_func import hosp_get_lab_iss, hosp_get_text
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -9,13 +11,13 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 import os.path
-from laboratory.settings import FONTS_FOLDER, TIME_ZONE
+from laboratory.settings import FONTS_FOLDER, TIME_ZONE, TITLE_RESULT_FORM_USE_HOSPITAL_STAMP
 from pyvirtualdisplay import Display
 import imgkit
 import sys
 import directory.models as directory
 import collections
-from directions.models import ParaclinicResult, MicrobiologyResultCulture, TubesRegistration
+from directions.models import ParaclinicResult, MicrobiologyResultCulture, TubesRegistration, Issledovaniya
 import datetime
 from appconf.manager import SettingManager
 import simplejson as json
@@ -26,6 +28,7 @@ from users.models import DoctorProfile
 from utils.dates import normalize_date
 from utils.xh import check_valid_square_brackets
 from reportlab.platypus.flowables import HRFlowable
+from laboratory.utils import strdate
 
 
 def lab_iss_to_pdf(data1):
@@ -317,6 +320,77 @@ def html_to_pdf(file_tmp, r_value, pw, leftnone=False):
     return i
 
 
+def format_time_if_is_not_none_to_str(data_t):
+    if not data_t:
+        return ""
+    return data_t.strftime("%d.%m.%Y %H:%M")
+
+
+def gen_hospital_stamp(direction):
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    styleSheet = getSampleStyleSheet()
+    styleBold = styleSheet["Normal"]
+    styleBold.fontName = "PTAstraSerifBold"
+    styleBold.fontSize = 10
+    styleBold.leading = 10
+    styleBold.spaceAfter = 0 * mm
+    styleBold.alignment = TA_JUSTIFY
+
+    stylePatient = deepcopy(styleBold)
+    stylePatient.fontSize = 12
+
+    styleText = deepcopy(styleBold)
+    styleText.fontName = "PTAstraSerifReg"
+
+    img = None
+    file_jpg = None
+    hospital = direction.hospital
+    if hospital and hospital.title_stamp_customer:
+        file_jpg = hospital.get_title_stamp_customer_pdf()
+    else:
+        hospital = hospitals.models.Hospitals.objects.filter(is_default=True).first()
+    if hospital.title_stamp_executor:
+        file_jpg = hospital.get_title_stamp_executor_pdf()
+    if file_jpg:
+        img = Image(
+            file_jpg,
+            185 * mm,
+            27 * mm,
+        )
+    individual_birthday = f'({strdate(direction.client.individual.birthday)})'
+    i = Issledovaniya.objects.filter(napravleniye=direction).first()
+    sample = TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
+    date_time_get = format_time_if_is_not_none_to_str(sample.time_get_local) if sample else ""
+    date_time_receive = format_time_if_is_not_none_to_str(sample.time_recive_local) if sample else ""
+    data_get = ""
+    data_receive = ""
+    if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == 2:
+        data_get = Paragraph(f"Дата, время взятия биоматериала: {date_time_get}", styleText)
+        data_receive = Paragraph(f"Дата, время доставки биоматериала в КДЛ: {date_time_receive}", styleText)
+
+    space_symbol = '&nbsp;'
+    opinion = [
+        [img, ''],
+        [Paragraph(direction.client.individual.fio(), stylePatient), Paragraph(f"Индивидуальный номер заказа: {space_symbol * 2}{direction.pk}", stylePatient)],
+        ['', ''],
+        [Paragraph(f"Пол/Возраст: {direction.client.individual.sex} / {individual_birthday} {direction.client.individual.age_s(direction=direction)}", styleBold), data_get],
+        [Paragraph(f"Медкарта: {direction.client.number}", styleBold), data_receive],
+        [Paragraph(f"Заказчик: {direction.hospital.safe_short_title}", styleBold), Paragraph("", styleText)],
+    ]
+    gentbl = Table(opinion, colWidths=(90 * mm, 110 * mm), hAlign='LEFT')
+    gentbl.setStyle(
+        TableStyle(
+            [
+                ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), -0.5 * mm),
+            ]
+        )
+    )
+
+    return gentbl
+
+
 def default_title_result_form(direction, doc, date_t, has_paraclinic, individual_birthday, number_poliklinika, logo_col_func, is_extract):
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -344,68 +418,71 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
     styleTableSm = deepcopy(styleTable)
     styleTableSm.fontSize = 4
 
-    data = [
-        ["Номер:", str(direction.pk)],
-        ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
-        ["Пол:", direction.client.individual.sex],
-        ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
-    ]
-    if not direction.is_external:
-        data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
-        data += [
-            [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
-            ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
+    if not TITLE_RESULT_FORM_USE_HOSPITAL_STAMP:
+        data = [
+            ["Номер:", str(direction.pk)],
+            ["Пациент:", Paragraph(direction.client.individual.fio(), styleTableMonoBold)],
+            ["Пол:", direction.client.individual.sex],
+            ["Возраст:", "{} {}".format(direction.client.individual.age_s(direction=direction), individual_birthday)],
         ]
-
-    if direction.is_external and direction.hospital:
-        data.append(["Организация:", direction.hospital.safe_short_title])
-        if direction.id_in_hospital is not None:
-            data += [["Номер в организации:", direction.id_in_hospital]]
-        else:
-            data += [["", ""]]
-        tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
-        if tube and (tube.time_get or tube.time_recive):
-            data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
-    elif not direction.imported_from_rmis and not is_extract and direction.doc:
-        data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
-    elif direction.imported_org:
-        data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
-    rows = len(data)
-
-    logo_col = logo_col_func(direction)
-
-    data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(rows)]
-    if direction.is_external:
-        colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
-    else:
-        colWidths = [doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158]
-
-    t = Table(data, colWidths=colWidths)
-    t.setStyle(
-        TableStyle(
-            [
-                ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('VALIGN', (-1, 0), (-1, 0), 'MIDDLE'),
-                ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
-                ('TOPPADDING', (0, 0), (-1, -1), 0),
-                ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
-                ('TOPPADDING', (-1, 0), (-1, -1), 0),
-                ('TOPPADDING', (-1, 5), (-1, 5), 3),
-                ('TOPPADDING', (-1, 0), (-1, 0), -7 * mm if isinstance(logo_col[0], Paragraph) else 0),
-                ('TOPPADDING', (0, 5), (1, 5), 0),
-                ('TOPPADDING', (0, 6), (1, 6), -6),
-                ('BOTTOMPADDING', (0, 5), (1, 5), 0),
-                ('LEFTPADDING', (0, 5), (1, 5), 0),
-                ('RIGHTPADDING', (0, 5), (1, 5), 0),
-                ('SPAN', (-1, 0), (-1, 4)),
-                ('SPAN', (-1, 5), (-1, -1)),
+        if not direction.is_external:
+            data += [["Дата забора:", date_t]] if not has_paraclinic else [["Диагноз:", direction.diagnos]]
+            data += [
+                [Paragraph('&nbsp;', styleTableSm), Paragraph('&nbsp;', styleTableSm)],
+                ["РМИС ID:" if direction.client.base.is_rmis else "№ карты:", direction.client.number_with_type() + (" - архив" if direction.client.is_archive else "") + number_poliklinika],
             ]
+
+        if direction.is_external and direction.hospital:
+            data.append(["Организация:", direction.hospital.safe_short_title])
+            if direction.id_in_hospital is not None:
+                data += [["Номер в организации:", direction.id_in_hospital]]
+            else:
+                data += [["", ""]]
+            tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
+            if tube and (tube.time_get or tube.time_recive):
+                data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
+        elif not direction.imported_from_rmis and not is_extract and direction.doc:
+            data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
+        elif direction.imported_org:
+            data.append(["<font>Направляющая<br/>организация:</font>", direction.imported_org.title])
+        rows = len(data)
+
+        logo_col = logo_col_func(direction)
+
+        data = [[Paragraph(y, styleTableMono) if isinstance(y, str) else y for y in data[xi]] + [logo_col[xi]] for xi in range(rows)]
+        if direction.is_external:
+            colWidths = [40 * mm, doc.width - 158 - 40 * mm, 158]
+        else:
+            colWidths = [doc.width * 0.145, doc.width - 158 - doc.width * 0.145, 158]
+
+        t = Table(data, colWidths=colWidths)
+        t.setStyle(
+            TableStyle(
+                [
+                    ('ALIGN', (-1, 0), (-1, 0), 'CENTER'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('VALIGN', (-1, 0), (-1, 0), 'MIDDLE'),
+                    ('VALIGN', (-1, 5), (-1, 5), 'TOP'),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+                    ('TOPPADDING', (0, 0), (-1, -1), 0),
+                    ('BOTTOMPADDING', (-1, 0), (-1, -1), 0),
+                    ('TOPPADDING', (-1, 0), (-1, -1), 0),
+                    ('TOPPADDING', (-1, 5), (-1, 5), 3),
+                    ('TOPPADDING', (-1, 0), (-1, 0), -7 * mm if isinstance(logo_col[0], Paragraph) else 0),
+                    ('TOPPADDING', (0, 5), (1, 5), 0),
+                    ('TOPPADDING', (0, 6), (1, 6), -6),
+                    ('BOTTOMPADDING', (0, 5), (1, 5), 0),
+                    ('LEFTPADDING', (0, 5), (1, 5), 0),
+                    ('RIGHTPADDING', (0, 5), (1, 5), 0),
+                    ('SPAN', (-1, 0), (-1, 4)),
+                    ('SPAN', (-1, 5), (-1, -1)),
+                ]
+            )
         )
-    )
+    else:
+        t = gen_hospital_stamp(direction)
 
     return t
 
@@ -1106,3 +1183,18 @@ def get_doctor_data(value):
         return None
 
     return value
+
+
+def get_protocol_data(iss, protocol_fields):
+    data = {}
+    if protocol_fields:
+        result = fields_result_only_title_fields(iss, protocol_fields, False)
+        data = {i['title']: i['value'] for i in result}
+
+    for t in protocol_fields:
+        if not data.get(t, None):
+            data[t] = ""
+
+    return data
+
+

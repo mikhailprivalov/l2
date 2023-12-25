@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 from django.core.mail import EmailMessage
@@ -6,7 +7,7 @@ from appconf.manager import SettingManager
 from clients.models import Card
 from directory.models import Researches
 from hospitals.sql_func import search_hospitals
-from laboratory.settings import EMAIL_HOST_USER
+from laboratory.settings import EMAIL_HOST_USER, MEDIA_ROOT
 
 
 class Hospitals(models.Model):
@@ -47,6 +48,15 @@ class Hospitals(models.Model):
     orders_push_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории отправки заказов (ftp://user:password@host.example.com/path)'
     )
+    result_pull_by_numbers = models.CharField(
+        max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения результатов (ftp://user:password@host.example.com/path)'
+    )
+    hl7_sender_application = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение отправитель')
+    hl7_receiver_appplication = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение получатель')
+    hl7_rule_file = models.CharField(max_length=60, null=True, blank=True, default="default.json", help_text="Название ф-ла правил HL7")
+    is_auto_transfer_hl7_file = models.BooleanField(default=False, blank=True, help_text='Автоматическая отправка файла в каталог', db_index=True)
+    title_stamp_executor = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Исполнителя - клеше")
+    title_stamp_customer = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Закачика - клеше")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
@@ -113,6 +123,16 @@ class Hospitals(models.Model):
     def get_is_external_performing_organization():
         hosp = Hospitals.objects.filter(hide=False, is_external_performing_organization=True)
         return [{"id": h.id, "label": h.title} for h in hosp]
+
+    def get_title_stamp_executor_pdf(self):
+        if self.title_stamp_executor:
+            return os.path.join(MEDIA_ROOT, 'title_stamp_executor_pdf', self.title_stamp_executor)
+        return None
+
+    def get_title_stamp_customer_pdf(self):
+        if self.title_stamp_customer:
+            return os.path.join(MEDIA_ROOT, 'title_stamp_customer_pdf', self.title_stamp_customer)
+        return None
 
     class Meta:
         verbose_name = 'Больница'
