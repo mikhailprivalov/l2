@@ -4471,7 +4471,8 @@ def form_17(request_data):
         ('TOPPADDING', (0, 0), (-1, -1), 1),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
         ('LEFTPADDING', (0, 0), (-1, -1), 2),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]
     tbl.setStyle(table_style)
     objs.append(tbl)
     objs.append(Spacer(1, space))
