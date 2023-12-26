@@ -20,7 +20,6 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         starts = False
         tubes_title = ''
-        tubes_set = set()
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -35,4 +34,3 @@ class Command(BaseCommand):
                     self.stdout.write(f'Пробирка добавлена - {new_tubes.title}')
                 else:
                     self.stdout.write(f'Такая пробирка уже есть - {current_tubes.title}')
-
