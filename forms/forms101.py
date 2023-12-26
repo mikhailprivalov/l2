@@ -4498,10 +4498,14 @@ def form_17(request_data):
     opinion = create_questions_list(questions, styleCenter, style)
 
     tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
-    table_style = [('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                   ('TOPPADDING', (0, 0), (-1, -1), 1),
-                   ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
-                   ('RIGHTPADDING', (0, 0), (-1, -1), 2), ('LEFTPADDING', (0, 0), (-1, -1), 2), ('GRID', (0, 0), (-1, -1), 0.5, colors.black)]
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]
     tbl.setStyle(table_style)
     objs.append(tbl)
     objs.append(Spacer(1, space))
