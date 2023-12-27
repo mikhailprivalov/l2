@@ -512,6 +512,12 @@ def patients_get_card_data(request, card_id):
     ]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     d = District.objects.all().order_by('-sort_weight', '-id')
+
+    age = card.individual.age()
+    if age < 14:
+        doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all().exclude(title__startswith="Паспорт гражданина РФ")]
+    else:
+        doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]
     return JsonResponse(
         {
             **i,
@@ -543,7 +549,7 @@ def patients_get_card_data(request, card_id):
             "payer": None if not card.payer else card.payer.get_fio_w_card(),
             "payer_pk": card.payer_id,
             "rmis_uid": rc[0].number if rc.exists() else None,
-            "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
+            "doc_types": doc_types,
             "number_poli": card.number_poliklinika,
             "harmful": card.harmful_factor,
             "medbookPrefix": card.medbook_prefix,
