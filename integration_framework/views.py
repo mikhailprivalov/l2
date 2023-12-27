@@ -496,7 +496,8 @@ def issledovaniye_data_simple(request):
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_doc_refferal")
     if i.research.is_extract:
         id_med_document_type = ID_MED_DOCUMENT_TYPE_IEMK_N3.get("is_extract")
-
+    if i.research.is_form:
+        id_med_document_type = i.research.n3_id_med_document_type
     return Response(
         {
             "ok": True,
@@ -1983,7 +1984,10 @@ def get_cda_data(pk):
         smo_title = smo.get(insurer_full_code, "")
         smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", {}).get("values", {})
         smo_id = smo_ids.get(insurer_full_code, "")
-    if p_enp:
+
+    if SettingManager.get("eds_control_enp", default='true', default_type='b') and not p_enp:
+        return {}
+    else:
         return {
             "title": n.get_eds_title(),
             "generatorName": n.get_eds_generator(),
@@ -1996,6 +2000,8 @@ def get_cda_data(pk):
                     "snils": data_individual["snils"],
                     "name": {"family": ind.family, "name": ind.name, "patronymic": ind.patronymic},
                     "gender": ind.sex.lower(),
+                    "gender_code": 2 if ind.sex.lower() == "ж" else 1,
+                    "gender_title": "Женский" if ind.sex.lower() == "ж" else "Мужской",
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
                     "address": data_individual['main_address'],
@@ -2003,7 +2009,6 @@ def get_cda_data(pk):
                 "organization": data["organization"],
             },
         }
-    return {}
 
 
 @api_view(["POST"])
