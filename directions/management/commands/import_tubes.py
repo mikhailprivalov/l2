@@ -26,7 +26,7 @@ class Command(BaseCommand):
                 if 'Контейнер' in cells:
                     tubes_title = cells.index('Контейнер')
                     starts = True
-            elif cells[tubes_title] != 'None':
+            elif starts and cells[tubes_title] != 'None':
                 current_tubes = Tubes.objects.filter(title=cells[tubes_title]).first()
                 if not current_tubes:
                     new_tubes = Tubes(title=cells[tubes_title], color='#1122FF')
