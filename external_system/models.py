@@ -111,3 +111,19 @@ class CdaFields(models.Model):
             result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_extract=True).order_by("title")]]
 
         return result
+
+
+class ProfessionsWorkersPositionsRefbook(models.Model):
+    """
+    Профессии рабочих и должностей служащих: 1.2.643.5.1.13.13.99.2.855
+    """
+
+    code = models.CharField(max_length=20, db_index=True, help_text='Код')
+    title = models.CharField(max_length=1000, db_index=True, help_text='Полное наименование')
+
+    def __str__(self):
+        return f"{self.code} – {self.title}"
+
+    class Meta:
+        verbose_name = "Профессия рабочих и должностей служащих"
+        verbose_name_plural = "Профессии рабочих и должностей служащих"
