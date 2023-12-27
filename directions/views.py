@@ -172,6 +172,7 @@ def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
     appendix = request.GET.get("appendix", 0)
+    narrow_format = request.GET.get("narrowFormat", "0") == "1"
     req_from_additional_pages = False
     req_from_appendix_pages = False
     if direction_id == []:
