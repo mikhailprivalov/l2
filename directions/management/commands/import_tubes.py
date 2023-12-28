@@ -17,23 +17,28 @@ class Command(BaseCommand):
         """
 
         colors = {
-            "красной": "#FF0000",
-            "оранжевый": "#FF8C00",
-            "желтый": "#FFFF00",
-            "жёлтой": "#FFFF00",
-            "зеленый": "#008000",
-            "голубой": "#00FFFF",
+            "красн": "#FF0000",
+            "оранж": "#FF8C00",
+            "желт": "#FFFF00",
+            "жёлт": "#FFFF00",
+            "зелен": "#008000",
+            "голуб": "#00FFFF",
             "синий": "#0000FF",
-            "фиолетовой": "#9400D3",
-            "сиреневой": "#c8a2c8",
-            "розовой": "#FF1493",
+            "синего": "#0000FF",
+            "фиолет": "#9400D3",
+            "сирен": "#c8a2c8",
+            "розов": "#FF1493",
             "белый": "#FFFFFF",
+            "белая": "#FFFFFF",
+            "белого": "#FFFFFF",
+            "белой": "#FFFFFF",
+            "серый": "#808080",
+            "серая": "#808080",
+            "серого": "#808080",
             "серой": "#808080",
-            "коричневый": "#8B4513",
+            "корич": "#8B4513",
         }
-        color_string = "|".join(list(colors.keys()))
-        regex_pattern = f"\b({color_string})\b=ig"
-        print(regex_pattern)
+        colors_string = "|".join(list(colors.keys()))
         fp = kwargs['path']
         self.stdout.write('Path: ' + fp)
         wb = load_workbook(filename=fp)
@@ -47,14 +52,13 @@ class Command(BaseCommand):
                     tubes_title = cells.index('Контейнер')
                     starts = True
             elif starts and cells[tubes_title] != 'None':
-                color = re.search(regex_pattern, cells[tubes_title].lower())
-                if color:
-                    print(color.group(0))
-                current_tubes = Tubes.objects.filter(title=cells[tubes_title]).first()
+                normalized_title = re.split('([/;])', cells[tubes_title])[0].strip()
+                color = "#808080"
+                color_in_string = re.search(f'({colors_string})', normalized_title, flags=re.IGNORECASE)
+                if color_in_string:
+                    color = colors.get(color_in_string.group(0))
+                current_tubes = Tubes.objects.filter(title=normalized_title).first()
                 if not current_tubes:
-                    new_tubes = Tubes(title=cells[tubes_title], color='#1122FF')
-                    # new_tubes.save()
-                    # self.stdout.write(f'Пробирка добавлена - {new_tubes.title}')
-                # else:
-                #     print('f')
-                #     # self.stdout.write(f'Такая пробирка уже есть - {current_tubes.title}')
+                    new_tubes = Tubes(title=normalized_title, color=color)
+                    new_tubes.save()
+                    self.stdout.write(f'Пробирка добавлена - {new_tubes.title}')
