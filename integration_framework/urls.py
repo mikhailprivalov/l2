@@ -62,4 +62,8 @@ urlpatterns = [
     path('get-prices-by-date', views.get_prices_by_date),
     path('get-reference-books', views.get_reference_books),
     path('send-laboratory-order', views.send_laboratory_order),
+    path('client/register', views.client_register),
+    path('client/logout', views.client_logout),
+    path('client/info', views.client_info),
+    path('client/categories', views.client_categories),
 ]

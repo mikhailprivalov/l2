@@ -1,3 +1,4 @@
+from clients.models import Individual
 from directions.models import Napravleniya
 import uuid
 
@@ -80,3 +81,19 @@ class CrieOrder(models.Model):
     system_id = models.IntegerField(db_index=True, null=True, blank=True)
     status = models.CharField(max_length=12, blank=True, default='null', db_index=True)
     error = models.TextField(blank=True, default='')
+
+
+class IndividualAuth(models.Model):
+    individual = models.ForeignKey(Individual, on_delete=models.CASCADE, db_index=True)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
+    device_os = models.CharField(max_length=64, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_superuser = False
+    is_confirmed = models.BooleanField(default=False, db_index=True, blank=True)
+    confirmation_code = models.CharField(max_length=4, default=None, null=True, blank=True, db_index=True)
+    code_check_count = models.IntegerField(default=0, db_index=True, blank=True)
+    last_activity = models.DateTimeField(auto_now=True, db_index=True)
+    used_phone = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True)
+
+    def __str__(self):
+        return f"{self.individual} {self.device_os} {self.created_at:%Y-%m-%d %H:%M:%S}"

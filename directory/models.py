@@ -443,6 +443,11 @@ class Researches(models.Model):
             return self.microbiology_tube.title if self.microbiology_tube else ''
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
 
+    def get_podrazdeleniye_short_title(self):
+        if self.is_microbiology:
+            return self.microbiology_tube.title if self.microbiology_tube else ''
+        return self.podrazdeleniye.get_title() if self.podrazdeleniye else ""
+
     def get_podrazdeleniye_title_recieve_recieve(self):
         if self.plan_external_performing_organization:
             result = self.plan_external_performing_organization.short_title

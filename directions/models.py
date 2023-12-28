@@ -560,7 +560,7 @@ class Napravleniya(models.Model):
     cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
     need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
 
-    def sync_confirmed_fields(self):
+    def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
         no_unconfirmed_iss = not Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=True).exists()
 
@@ -581,10 +581,11 @@ class Napravleniya(models.Model):
         if updated:
             self.save(update_fields=updated)
 
-        if self.is_all_confirm():
-            self.post_confirmation()
-        else:
-            self.post_reset_confirmation()
+        if not skip_post:
+            if self.is_all_confirm():
+                self.post_confirmation()
+            else:
+                self.post_reset_confirmation()
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -1900,6 +1901,9 @@ class Napravleniya(models.Model):
                 self.external_order.totally_completed = totally_confirmed_all_directions_in_order
                 self.external_order.save()
 
+        from results_feed.models import ResultFeed
+        ResultFeed.insert_feed_by_direction(self)
+
     def post_reset_confirmation(self):
         if self.celery_send_task_ids:
             task_ids = self.celery_send_task_ids
@@ -1911,6 +1915,9 @@ class Napravleniya(models.Model):
             self.external_order.totally_completed = False
             self.external_order.need_check_for_results_redirection = False
             self.external_order.save()
+
+        from results_feed.models import ResultFeed
+        ResultFeed.remove_feed_by_direction(self)
 
     def last_time_confirm(self):
         return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
