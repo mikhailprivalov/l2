@@ -1,6 +1,6 @@
-import re
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from openpyxl import load_workbook
 
 from directory.models import Researches
@@ -12,6 +12,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         """
         :param path - xlsx файл со столбцами:
+        Название
+        Код
         Контейнер
         """
 
@@ -29,7 +31,8 @@ class Command(BaseCommand):
                 research_tubes_idx = cells.index('Контейнер')
                 starts = True
             elif starts and cells[research_title_idx] != 'None':
-                current_research = Researches.objects.filter(title=cells[research_title_idx]).first()
+                current_research = Researches.objects.filter(Q(internal_code=cells[research_code_idx]) | Q(title=cells[research_title_idx])).first()
                 print(current_research)
                 if not current_research:
-                    new_research = Researches(title=cells[research_title_idx])
+                    new_research = Researches(title=cells[research_title_idx], internal_code=cells[research_code_idx], )
+                    print(new_research)
