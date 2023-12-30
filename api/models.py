@@ -40,6 +40,7 @@ class Application(models.Model):
     csv_header = models.CharField(max_length=255, blank=True, null=True, help_text="Заголовок CSV файла")
     is_background_worker = models.BooleanField(default=False)
     unlimited_access = models.BooleanField(default=False, help_text="Доступ без ограничений")
+    can_load_file_result = models.BooleanField(default=False, help_text="Результаты загружаются файлом")
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:

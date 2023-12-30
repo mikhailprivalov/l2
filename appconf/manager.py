@@ -175,6 +175,7 @@ class SettingManager:
                     "calculate_researches",
                     "schedule_in_protocol",
                     "feed",
+                    "equipment_load_file",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

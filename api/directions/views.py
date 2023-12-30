@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory, PriceCoast, PriceName, Company
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
+from external_system.models import ProfessionsWorkersPositionsRefbook
 from integration_framework.common_func import directions_pdf_result
 from l2vi.integration import gen_cda_xml, send_cda_xml
 import collections
@@ -84,7 +85,7 @@ from utils.common import non_selected_visible_type, none_if_minus_1, values_from
 from utils.dates import normalize_date, date_iter_range, try_strptime
 from utils.dates import try_parse_range
 from utils.xh import check_float_is_valid, short_fio_dots
-from xml_generate.views import gen_resul_cpp_file
+from xml_generate.views import gen_resul_cpp_file, gen_result_cda_files
 from .sql_func import (
     get_history_dir,
     get_confirm_direction,
@@ -2816,6 +2817,13 @@ def last_field_result(request):
         if len(work_data) >= 1:
             work_position = work_data[0]
         result = {"value": work_position.strip()}
+    elif request_data["fieldPk"].find('%work_code_position') != -1:
+        work_position = ""
+        work_data = c.work_position.split(';')
+        if len(work_data) >= 1:
+            work_position = work_data[0]
+        nsi_position = ProfessionsWorkersPositionsRefbook.objects.values_list("code", flat=True).filter(title=work_position).first()
+        result = {"value": nsi_position.strip()}
     elif request_data["fieldPk"].find('%work_department') != -1:
         work_department = ""
         work_data = c.work_position.split(';')
@@ -3854,7 +3862,6 @@ def eds_documents(request):
         DirectionDocument.objects.create(direction=direction, last_confirmed_at=last_time_confirm, file_type=t.lower())
 
     DirectionDocument.objects.filter(direction=direction, is_archive=False).exclude(last_confirmed_at=last_time_confirm).update(is_archive=True)
-
     cda_eds_data = get_cda_data(pk)
 
     for d in DirectionDocument.objects.filter(direction=direction, last_confirmed_at=last_time_confirm):
@@ -3900,8 +3907,11 @@ def eds_documents(request):
                     cda_data = gen_cda_xml(pk=pk)
                     cda_xml = cda_data.get('result', {}).get('content')
                 elif SettingManager.l2('cdator'):
-                    cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
-                    cda_xml = cda_data.get('result', {}).get('content')
+                    if not iss_obj.research.cda_template_file:
+                        cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
+                        cda_xml = cda_data.get('result', {}).get('content')
+                    else:
+                        cda_xml = gen_result_cda_files(iss_obj.research.cda_template_file, cda_eds_data["data"])
                 else:
                     cda_xml = render_cda(service=cda_eds_data['title'], direction_data=cda_eds_data)
                 filename = f"{pk}–{last_time_confirm}.cda.xml"
