@@ -66,4 +66,6 @@ urlpatterns = [
     path('client/logout', views.client_logout),
     path('client/info', views.client_info),
     path('client/categories', views.client_categories),
+    path('client/results/pdf', views.client_results_pdf),
+    path('client/results', views.client_results_list),
 ]

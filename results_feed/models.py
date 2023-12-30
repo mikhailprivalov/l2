@@ -35,6 +35,21 @@ class ResultFeed(models.Model):
     def __str__(self):
         return f'{self.direction} {self.get_category_display()} {self.result_confirmed_at:%Y-%m-%d %H:%M:%S}'
 
+    @property
+    def json(self):
+        return {
+            'id': self.unique_id,
+            'hospital': self.hospital.pk,
+            'individual': self.individual.pk,
+            'card': self.card.pk,
+            'direction': self.direction.pk,
+            'service_names': self.service_names,
+            'department_name': self.department_name or 'Услуга',
+            'category': self.category,
+            'direction_created_at': self.direction_created_at.isoformat(),
+            'result_confirmed_at': self.result_confirmed_at.isoformat(),
+        }
+
     @staticmethod
     def insert_feed_by_direction(direction: Napravleniya):
         if not SettingManager.l2('feed'):

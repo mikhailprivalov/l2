@@ -1,10 +1,12 @@
 import base64
+import collections
 import hashlib
 import os
 import html
 import uuid
 import zlib
 
+from django.core.paginator import Paginator
 from django.test import Client as TC
 import datetime
 import logging
@@ -79,6 +81,7 @@ from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from results.prepare_data import fields_result_only_title_fields
 from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
+from results_feed.models import ResultFeed
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
@@ -3537,3 +3540,67 @@ def client_categories(request):
             },
         ],
     })
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_results_list(request):
+    individual: IndividualAuth = request.user
+    body = json.loads(request.body)
+    category = body.get("category")
+    page = max(min(body.get("page", 1), 1000), 1)
+    page_size = max(min(body.get("pageSize", 20), 20), 10)
+
+    if category not in ['all', *[x[0] for x in ResultFeed.CATEGORIES]]:
+        return Response({"rows": [], "total": 0, "pages": 0, "page": page, "pageSize": page_size})
+
+    rows = ResultFeed.objects.filter(individual=individual.individual)
+    if category != "all":
+        rows = rows.filter(category=category)
+    rows = rows.order_by("-result_confirmed_at")
+
+    paginator = Paginator(rows, page_size)
+    page = paginator.get_page(page)
+
+    return Response({
+        "rows": [
+            x.json for x in page.object_list
+        ],
+        "total": paginator.count,
+        "pages": paginator.num_pages,
+        "page": page.number,
+        "pageSize": page_size,
+    })
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_results_pdf(request):
+    individual: IndividualAuth = request.user
+    body = json.loads(request.body)
+    unique_id = body.get("id")
+
+    result: ResultFeed = ResultFeed.objects.filter(individual=individual.individual, unique_id=unique_id).first()
+
+    if not result:
+        return Response({"data": ""})
+
+    from results.views import result_print
+
+    request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+    req = {
+        'GET': {
+            "pk": f'[{result.direction_id}]',
+            "split": '1',
+            "leftnone": '0',
+            "inline": '1',
+            "protocol_plain_text": '1',
+        },
+        'user': request.user,
+        'plain_response': True,
+    }
+    pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+
+    return Response({"data": pdf_content, "name": f"{result.direction_id}.pdf"})

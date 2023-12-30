@@ -89,6 +89,7 @@ class IndividualAuth(models.Model):
     device_os = models.CharField(max_length=64, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_superuser = False
+    is_authenticated = True
     is_confirmed = models.BooleanField(default=False, db_index=True, blank=True)
     confirmation_code = models.CharField(max_length=4, default=None, null=True, blank=True, db_index=True)
     code_check_count = models.IntegerField(default=0, db_index=True, blank=True)
