@@ -1902,6 +1902,7 @@ class Napravleniya(models.Model):
                 self.external_order.save()
 
         from results_feed.models import ResultFeed
+
         ResultFeed.insert_feed_by_direction(self)
 
     def post_reset_confirmation(self):
