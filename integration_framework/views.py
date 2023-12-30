@@ -3444,7 +3444,6 @@ def client_register(request):
         if not individual:
             api_token = uuid.uuid4().hex
         else:
-            print('Individual ok', individual)
             IndividualAuth.objects.filter(individual=individual).delete()
 
             code_n = random.randint(0, 9)
@@ -3458,7 +3457,7 @@ def client_register(request):
                 used_phone=Phones.format_as_plus_7(phone),
             )
             api_token = auth.token
-            print({"code": code})
+            print({"code": code})  # noqa: T001,T201
 
         need_code = True
     else:
