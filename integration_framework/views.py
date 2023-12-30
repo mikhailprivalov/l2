@@ -3516,11 +3516,13 @@ def client_logout(request):
 def client_info(request):
     individual: IndividualAuth = request.user
 
-    return Response({
-        "id": individual.individual.pk,
-        "fullName": f"{individual.individual.fio(dots=True, short=True)} {individual.individual.age_s()}",
-        "phone": individual.used_phone or "--",
-    })
+    return Response(
+        {
+            "id": individual.individual.pk,
+            "fullName": f"{individual.individual.fio(dots=True, short=True)} {individual.individual.age_s()}",
+            "phone": individual.used_phone or "--",
+        }
+    )
 
 
 @api_view(["POST"])
