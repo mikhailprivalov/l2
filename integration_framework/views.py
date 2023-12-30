@@ -3485,13 +3485,15 @@ def client_register(request):
             ok = True
             api_token = token
 
-    return Response({
-        "ok": ok,
-        "needCode": need_code,
-        "apiToken": api_token,
-        "error": error,
-        "message": message,
-    })
+    return Response(
+        {
+            "ok": ok,
+            "needCode": need_code,
+            "apiToken": api_token,
+            "error": error,
+            "message": message,
+        }
+    )
 
 
 @api_view(["POST"])
