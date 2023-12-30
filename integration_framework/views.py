@@ -3527,26 +3527,28 @@ def client_info(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_categories(request):
-    return Response({
-        "categories": [
-            {
-                "id": "all",
-                "title": "Все результаты",
-            },
-            {
-                "id": "consultations",
-                "title": "Консультации",
-            },
-            {
-                "id": "laboratory",
-                "title": "Лаборатория",
-            },
-            {
-                "id": "diagnostics",
-                "title": "Диагностика",
-            },
-        ],
-    })
+    return Response(
+        {
+            "categories": [
+                {
+                    "id": "all",
+                    "title": "Все результаты",
+                },
+                {
+                    "id": "consultations",
+                    "title": "Консультации",
+                },
+                {
+                    "id": "laboratory",
+                    "title": "Лаборатория",
+                },
+                {
+                    "id": "diagnostics",
+                    "title": "Диагностика",
+                },
+            ],
+        }
+    )
 
 
 @api_view(["POST"])
