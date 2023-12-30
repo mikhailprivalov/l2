@@ -3572,15 +3572,15 @@ def client_results_list(request):
     paginator = Paginator(rows, page_size)
     page = paginator.get_page(page)
 
-    return Response({
-        "rows": [
-            x.json for x in page.object_list
-        ],
-        "total": paginator.count,
-        "pages": paginator.num_pages,
-        "page": page.number,
-        "pageSize": page_size,
-    })
+    return Response(
+        {
+            "rows": [x.json for x in page.object_list],
+            "total": paginator.count,
+            "pages": paginator.num_pages,
+            "page": page.number,
+            "pageSize": page_size,
+        }
+    )
 
 
 @api_view(["POST"])
