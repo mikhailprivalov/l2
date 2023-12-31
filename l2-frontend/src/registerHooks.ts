@@ -15,10 +15,6 @@ function printForm(tpl: string, pks: number[]) {
 export default (instance: Vue): void => {
   instance.$root.$on('no-loader-in-header', status => instance.$store.dispatch(actions.SET_LOADER_IN_HEADER, !status));
 
-  instance.$root.$on('print:directions1', pks => {
-    printForm('/directions/pdf?napr_id={pks}', pks);
-  });
-
   instance.$root.$on('print:directions', pks => {
     const url = '/ui/directions/preview?napr_id={pks}';
     printForm(url, pks);
