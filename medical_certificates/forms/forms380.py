@@ -279,7 +279,6 @@ def protocol_fields_result(iss):
         'Медицинское заключение',
         'Место регистрации',
         'Группа здоровья',
-
     ]
     for group in directory.ParaclinicInputGroups.objects.filter(research=iss.research).order_by("order"):
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
