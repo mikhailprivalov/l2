@@ -173,6 +173,7 @@ def gen_pdf_dir(request):
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
     appendix = request.GET.get("appendix", 0)
     narrow_format = request.GET.get("narrowFormat", "0") == "1"
+
     req_from_additional_pages = False
     req_from_appendix_pages = False
     if direction_id == []:
@@ -213,6 +214,20 @@ def gen_pdf_dir(request):
         )
         .order_by('pk')
     )
+
+    if narrow_format:
+        from directions.forms.forms580 import form_01 as form_80
+        fc = form_80(
+            request_data={
+                **dict(request.GET.items()),
+                "user": request.user,
+                "card_pk": dn[0].client_id,
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            }
+        )
+        if fc:
+            response.write(fc)
+            return response
 
     donepage = dn.exclude(issledovaniya__research__direction_form=0)
     donepage = donepage.exclude(external_organization__isnull=False)
