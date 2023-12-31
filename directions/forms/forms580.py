@@ -12,7 +12,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak
 from transliterate import translit
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
@@ -42,7 +42,7 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    pagesize = (80 * mm, 850 * mm)
+    pagesize = (80 * mm, 120 * mm)
     doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=0 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -287,20 +287,7 @@ def form_01(request_data):
             if dir.doc:
                 objs.append(Paragraph(f"Отделение: {Truncator(dir.get_doc_podrazdeleniye_title()).chars(50)}", style))
                 objs.append(Paragraph(f"Л/врач: {dir.doc.get_fio()}", style))
-
-        opinion = [[Paragraph("", style)]]
-        tbl = Table(opinion, colWidths=(90 * mm), rowHeights=0.1 * mm)
-        tbl.setStyle(
-            TableStyle(
-                [
-                    ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.black),
-                    ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
-                ]
-            )
-        )
-        objs.append(Spacer(1, 9 * mm))
-        objs.append(tbl)
-        objs.append(Spacer(1, 5 * mm))
+        objs.append(PageBreak())
 
     doc.build(objs)
     pdf = buffer.getvalue()
