@@ -1831,6 +1831,13 @@ class Phones(models.Model):
         return n
 
     @staticmethod
+    def format_as_plus_7(n):
+        phone = Phones.nn(n)
+        if len(phone) != 11:
+            return phone[:11]
+        return f"+7 {phone[1:4]} {phone[4:7]}-{phone[7:9]}-{phone[9:]}"
+
+    @staticmethod
     def normalize_to_search(n):
         nn = Phones.nn(n)
 

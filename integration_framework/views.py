@@ -1,9 +1,12 @@
 import base64
+import collections
 import hashlib
 import os
 import html
+import uuid
 import zlib
 
+from django.core.paginator import Paginator
 from django.test import Client as TC
 import datetime
 import logging
@@ -23,7 +26,7 @@ from directory.utils import get_researches_details, get_can_created_patient
 from doctor_schedule.views import get_hospital_resource, get_available_hospital_plans, check_available_hospital_slot_before_save
 from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
 from ftp_orders.main import ServiceNotFoundException, InvalidOrderNumberException, FailedCreatingDirectionsException
-from integration_framework.authentication import can_use_schedule_only
+from integration_framework.authentication import can_use_schedule_only, IndividualAuthentication
 
 from laboratory import settings
 from plans.models import PlanHospitalization, PlanHospitalizationFiles, Messages
@@ -46,7 +49,7 @@ from rest_framework.response import Response
 
 import directions.models as directions
 from appconf.manager import SettingManager
-from clients.models import Individual, Card, CardBase
+from clients.models import Individual, Card, CardBase, Phones
 from clients.sql_func import last_results_researches_by_time_ago
 from directory.models import Researches, Fractions, ReleationsFT, HospitalService, ParaclinicInputGroups, ParaclinicInputField
 from doctor_call.models import DoctorCall
@@ -78,6 +81,7 @@ from refprocessor.result_parser import ResultRight
 from researches.models import Tubes
 from results.prepare_data import fields_result_only_title_fields
 from results.sql_func import get_laboratory_results_by_directions, get_not_confirm_direction
+from results_feed.models import ResultFeed
 from rmis_integration.client import Client
 from slog.models import Log
 from tfoms.integration import match_enp, match_patient, get_ud_info_by_enp, match_patient_by_snils, get_dn_info_by_enp
@@ -91,7 +95,7 @@ from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
-from .models import CrieOrder, ExternalService
+from .models import CrieOrder, ExternalService, IndividualAuth
 from laboratory.settings import COVID_RESEARCHES_PK
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
@@ -3398,3 +3402,215 @@ def send_laboratory_order(request):
             )
 
     return Response({"ok": False, "message": ""})
+
+
+@api_view(["POST"])
+@authentication_classes([])
+@permission_classes([])
+def client_register(request):
+    body = json.loads(request.body)
+    phone = str(body.get("phone"))
+    os = str(body.get("os"))
+
+    if len(phone) != 10 or not phone.isdigit() or phone[0] != "9":
+        return Response({"ok": False, "message": "Неверный формат телефона"})
+
+    normalized_phones = Phones.normalize_to_search(phone)
+
+    code = body.get("code")
+
+    if code is not None and (not isinstance(code, str) or (code and len(code) != 4 or not code.isdigit())):
+        return Response({"ok": False, "message": "Неверный формат кода"})
+
+    token = body.get("token")
+
+    if token is not None and not isinstance(token, str):
+        return Response({"ok": False, "message": "Неверный формат токена"})
+
+    individual = Individual.objects.filter(
+        Q(card__phones__normalized_number__in=normalized_phones)
+        | Q(card__phones__number__in=normalized_phones)
+        | Q(card__phone__in=normalized_phones)
+        | Q(card__doctorcall__phone__in=normalized_phones)
+    ).first()
+
+    ok = False
+    need_code = False
+    api_token = None
+    error = None
+    message = None
+
+    if token is None or code is None:
+        if not individual:
+            api_token = uuid.uuid4().hex
+        else:
+            IndividualAuth.objects.filter(individual=individual).delete()
+
+            code_n = random.randint(0, 9)
+            code_x = random.randint(0, 9)
+            code_y = random.randint(0, 9)
+            code = f"{code_n}{code_x}{code_n}{code_y}"
+            auth = IndividualAuth.objects.create(
+                individual=individual,
+                device_os=os,
+                confirmation_code=code,
+                used_phone=Phones.format_as_plus_7(phone),
+            )
+            api_token = auth.token
+            print({"code": code})  # noqa: T001,T201
+
+        need_code = True
+    else:
+        auth: IndividualAuth = IndividualAuth.objects.filter(
+            token=token,
+            is_confirmed=False,
+            device_os=os,
+            individual=individual,
+        ).first()
+
+        if auth:
+            time.sleep(auth.code_check_count * 2)
+            auth.code_check_count += 1
+            auth.save(update_fields=["code_check_count"])
+
+        if not auth or auth.confirmation_code != code:
+            need_code = True
+            api_token = token
+            error = True
+            message = "Неверный код"
+        else:
+            auth.is_confirmed = True
+            auth.save(update_fields=["is_confirmed"])
+            ok = True
+            api_token = token
+
+    return Response(
+        {
+            "ok": ok,
+            "needCode": need_code,
+            "apiToken": api_token,
+            "error": error,
+            "message": message,
+        }
+    )
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_logout(request):
+    individual: IndividualAuth = request.user
+
+    individual.is_confirmed = False
+    individual.save(update_fields=["is_confirmed"])
+
+    return Response({
+        "ok": True,
+    })
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_info(request):
+    individual: IndividualAuth = request.user
+
+    return Response(
+        {
+            "id": individual.individual.pk,
+            "fullName": f"{individual.individual.fio(dots=True, short=True)} {individual.individual.age_s()}",
+            "phone": individual.used_phone or "--",
+        }
+    )
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_categories(request):
+    return Response(
+        {
+            "categories": [
+                {
+                    "id": "all",
+                    "title": "Все результаты",
+                },
+                {
+                    "id": "consultations",
+                    "title": "Консультации",
+                },
+                {
+                    "id": "laboratory",
+                    "title": "Лаборатория",
+                },
+                {
+                    "id": "diagnostics",
+                    "title": "Диагностика",
+                },
+            ],
+        }
+    )
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_results_list(request):
+    individual: IndividualAuth = request.user
+    body = json.loads(request.body)
+    category = body.get("category")
+    page = max(min(body.get("page", 1), 1000), 1)
+    page_size = max(min(body.get("pageSize", 20), 20), 10)
+
+    if category not in ['all', *[x[0] for x in ResultFeed.CATEGORIES]]:
+        return Response({"rows": [], "total": 0, "pages": 0, "page": page, "pageSize": page_size})
+
+    rows = ResultFeed.objects.filter(individual=individual.individual)
+    if category != "all":
+        rows = rows.filter(category=category)
+    rows = rows.order_by("-result_confirmed_at")
+
+    paginator = Paginator(rows, page_size)
+    page = paginator.get_page(page)
+
+    return Response(
+        {
+            "rows": [x.json for x in page.object_list],
+            "total": paginator.count,
+            "pages": paginator.num_pages,
+            "page": page.number,
+            "pageSize": page_size,
+        }
+    )
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_results_pdf(request):
+    individual: IndividualAuth = request.user
+    body = json.loads(request.body)
+    unique_id = body.get("id")
+
+    result: ResultFeed = ResultFeed.objects.filter(individual=individual.individual, unique_id=unique_id).first()
+
+    if not result:
+        return Response({"data": ""})
+
+    from results.views import result_print
+
+    request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+    req = {
+        'GET': {
+            "pk": f'[{result.direction_id}]',
+            "split": '1',
+            "leftnone": '0',
+            "inline": '1',
+            "protocol_plain_text": '1',
+        },
+        'user': request.user,
+        'plain_response': True,
+    }
+    pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+
+    return Response({"data": pdf_content, "name": f"{result.direction_id}.pdf"})
