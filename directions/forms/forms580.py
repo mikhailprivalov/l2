@@ -75,7 +75,6 @@ def form_01(request_data):
     styleTypeResearch = deepcopy(style)
     styleTypeResearch.firstLineIndent = -0.5 * mm
 
-
     objs: List[Union[Spacer, Paragraph, Table, KeepTogether]] = []
 
     directions = json.loads(request_data.get("napr_id", '[]'))
