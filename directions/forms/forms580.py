@@ -185,7 +185,7 @@ def form_01(request_data):
             )
         one_sl = len(service_locations) <= 1
         ns = {}
-        values.sort(key=lambda l: l["full_title"])
+        values.sort(key=lambda data_title: data_title["full_title"])
         if has_descriptive or has_doc_refferal:
             opinion = [[Paragraph("Назначение", style), Paragraph('Информация', style)]]
 
@@ -205,7 +205,7 @@ def form_01(request_data):
                 ]
                 opinion.append(tmp)
         else:
-            values.sort(key=lambda l: (l["g"], l["sw"]))
+            values.sort(key=lambda data_val: (data_val["g"], data_val["sw"]))
             n_rows = int(len(values) / 2)
             normvars = []
             c_cnt = nc_cnt = 0
