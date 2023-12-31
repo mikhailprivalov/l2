@@ -106,7 +106,6 @@ export default class DirectionsPreview extends Vue {
   }
 
   keyHandler(event) {
-    console.log(this.pdfUrlNoInline);
     if (event.ctrlKey || event.metaKey) {
       if (String.fromCharCode(event.which).toLowerCase() === 's') {
         event.preventDefault();
