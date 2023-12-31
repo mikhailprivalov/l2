@@ -206,12 +206,7 @@ def form_01(request_data):
         ns = {}
         values.sort(key=lambda l: l["full_title"])
         if has_descriptive or has_doc_refferal:
-            opinion = [
-                [
-                    Paragraph("Назначение", style),
-                    Paragraph('Информация', style)
-                ]
-            ]
+            opinion = [[Paragraph("Назначение", style), Paragraph('Информация', style)]]
 
             for v in values:
                 ns[v["n"]] = v["n"]
