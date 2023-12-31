@@ -261,7 +261,7 @@ def form_01(request_data):
 
             opinion = [
                 [
-                    Paragraph(f'', styleFL),
+                    Paragraph('', styleFL),
                     bcd,
                 ],
             ]
