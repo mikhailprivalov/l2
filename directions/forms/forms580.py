@@ -312,9 +312,7 @@ def form_01(request_data):
                 objs.append(Paragraph(f"Отделение: {Truncator(dir.get_doc_podrazdeleniye_title()).chars(50)}", style))
                 objs.append(Paragraph(f"Л/врач: {dir.doc.get_fio()}", style))
 
-        opinion = [
-            [Paragraph("", style)]
-        ]
+        opinion = [[Paragraph("", style)]]
         tbl = Table(opinion, colWidths=(90 * mm), rowHeights=0.1 * mm)
         tbl.setStyle(
             TableStyle(
