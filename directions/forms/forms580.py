@@ -44,9 +44,7 @@ def form_01(request_data):
 
     buffer = BytesIO()
     pagesize = (80 * mm, 850 * mm)
-    doc = SimpleDocTemplate(
-        buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=0 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм")
-    )
+    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=0 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
