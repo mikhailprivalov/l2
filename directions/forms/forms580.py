@@ -332,4 +332,3 @@ def form_01(request_data):
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
-
