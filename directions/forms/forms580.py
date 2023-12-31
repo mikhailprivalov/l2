@@ -109,26 +109,11 @@ def form_01(request_data):
         objs.append(tbl)
 
         opinion = [
-            [
-                Paragraph(f'Создано: {strdate(dir.data_sozdaniya)} {strtime(dir.data_sozdaniya)[:5]}', style),
-                Paragraph('', style)
-            ],
-            [
-                Paragraph(f'ФИО: {dir.client.individual.fio()}', style),
-                Paragraph(f'Код {translation_number_from_decimal(int(dir.client.pk))}', style)
-            ],
-            [
-                Paragraph(f'Номер карты: {dir.client.number_with_type()}', style),
-                Paragraph(f'Д/р: {dir.client.individual.bd()}', style)
-            ],
-            [
-                Paragraph('Диагноз (МКБ 10):', style),
-                Paragraph(f'({dir.client.individual.age_s(direction=dir)})–{dir.client.individual.sex}', style)
-            ],
-            [
-                Paragraph(f'Вид финансировния: {dir.client.base.title} - {dir.istochnik_f.title}', style),
-                Paragraph('', style)
-            ],
+            [Paragraph(f'Создано: {strdate(dir.data_sozdaniya)} {strtime(dir.data_sozdaniya)[:5]}', style), Paragraph('', style)],
+            [Paragraph(f'ФИО: {dir.client.individual.fio()}', style), Paragraph(f'Код {translation_number_from_decimal(int(dir.client.pk))}', style)],
+            [Paragraph(f'Номер карты: {dir.client.number_with_type()}', style), Paragraph(f'Д/р: {dir.client.individual.bd()}', style)],
+            [Paragraph('Диагноз (МКБ 10):', style), Paragraph(f'({dir.client.individual.age_s(direction=dir)})–{dir.client.individual.sex}', style)],
+            [Paragraph(f'Вид финансировния: {dir.client.base.title} - {dir.istochnik_f.title}', style), Paragraph('', style)],
         ]
 
         tbl = Table(opinion, colWidths=(53 * mm, 22 * mm))
