@@ -217,6 +217,7 @@ def gen_pdf_dir(request):
 
     if narrow_format:
         from directions.forms.forms580 import form_01 as form_80
+
         fc = form_80(
             request_data={
                 **dict(request.GET.items()),
