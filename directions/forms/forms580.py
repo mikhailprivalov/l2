@@ -31,7 +31,6 @@ def form_01(request_data):
     ширина 80 мм
     """
 
-
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
