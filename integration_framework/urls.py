@@ -61,7 +61,6 @@ urlpatterns = [
     path('get-price-data', views.get_price_data),
     path('get-prices-by-date', views.get_prices_by_date),
     path('get-reference-books', views.get_reference_books),
-    path('external-save-protocol', views.save_external_protocol),
     path('get-research-fields-data', views.get_research_fields_data),
     path('send-laboratory-order', views.send_laboratory_order),
     path('client/register', views.client_register),

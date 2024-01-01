@@ -2911,8 +2911,7 @@ def document_lk_save(request):
 
     date = timezone.now()
     date_start = date_at_bound(date)
-    result_protocol = {}
-
+    fields_data = []
     if not request_data.get("externalProtocol"):
         user = User.objects.get(pk=LK_USER).doctorprofile
     else:
@@ -2920,8 +2919,7 @@ def document_lk_save(request):
         user = User.objects.get(username=login).doctorprofile
         if user.hospital != hospital:
             return Response({"ok": False, "message": "Логин не соответствует организации"})
-        values = request_data.get("values")
-        result_protocol = {v["id"]: v["value"] for v in values}
+        fields_data = request_data.get("fieldData")
 
     if Napravleniya.objects.filter(client=card, issledovaniya__research=service, data_sozdaniya__gte=date_start).count() > 1:
         return Response({"ok": False, "message": "Вы сегодня уже заполняли эту форму два раза!\nПопробуйте позднее."})
@@ -3008,9 +3006,8 @@ def document_lk_save(request):
                 )
                 return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
         else:
-            for field_id, field_val in result_protocol.items():
-                field = ParaclinicInputField.objects.filter(pk=field_id).first()
-                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=field_id, field_type=field.field_type, value=field_val[:400])
+            for field_data in fields_data:
+                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=field_data.get("fieldId"), field_type=field_data.get("fieldTypeId"), value=field_data.get("fieldValue"))
                 f_result.save()
 
     return Response({"ok": True, "message": f'Форма "{service.get_title()}" ({direction}) сохранена'})
@@ -3238,11 +3235,9 @@ def get_research_fields_data(request):
         check_permissions = check_correct_hospital_company(request, ogrn)
         if not check_permissions["OK"]:
             return Response({"ok": False, "message": check_permissions["message"]})
-        hospital = check_permissions["hospital"]
-        company = check_permissions["company"]
     paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False)
     paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False)
-    data_fields = [{"title": i.title, "id": i.pk, "type": i.get_field_type_display(), "inputTemplates": json.loads(i.input_templates) if i.input_templates else "" } for i in paraclinic_input_fields]
+    data_fields = [{"title": i.title, "fieldId": i.pk, "fieldTypeId": i.field_type, "fieldTypeTitle": i.get_field_type_display(), "inputTemplates": json.loads(i.input_templates) if i.input_templates else "" } for i in paraclinic_input_fields]
     research = Researches.objects.get(pk=research_id)
 
     return Response({"fields": data_fields, "service": {"title": research.title, "id": research.pk}})
