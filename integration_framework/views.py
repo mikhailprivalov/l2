@@ -2818,6 +2818,16 @@ def get_limit_download_files(request):
 @can_use_schedule_only
 def document_lk_save(request):
     form = request.body
+    request_data = json.loads(form)
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    ogrn = request_data.get("ogrn" or "")
+    hospital = None
+    if not token_obj.unlimited_access:
+        check_permissions = check_correct_hospital_company(request, ogrn)
+        if not check_permissions["OK"]:
+            return Response({"ok": False, "message": check_permissions["message"]})
+        hospital = check_permissions["hospital"]
 
     data = data_parse(
         form,
@@ -2901,8 +2911,17 @@ def document_lk_save(request):
 
     date = timezone.now()
     date_start = date_at_bound(date)
+    result_protocol = {}
 
-    user = User.objects.get(pk=LK_USER).doctorprofile
+    if not request_data.get("externalProtocol"):
+        user = User.objects.get(pk=LK_USER).doctorprofile
+    else:
+        login = request_data.get("login")
+        user = User.objects.get(username=login).doctorprofile
+        if user.hospital != hospital:
+            return Response({"ok": False, "message": "Логин не соответствует организации"})
+        values = request_data.get("values")
+        result_protocol = {v["id"]: v["value"] for v in values}
 
     if Napravleniya.objects.filter(client=card, issledovaniya__research=service, data_sozdaniya__gte=date_start).count() > 1:
         return Response({"ok": False, "message": "Вы сегодня уже заполняли эту форму два раза!\nПопробуйте позднее."})
@@ -2944,50 +2963,55 @@ def document_lk_save(request):
 
         comment_lines = []
 
-        for g in groups[:50]:
-            if g["title"] and g["show_title"]:
-                comment_lines.append(f"{g['title']}:")
+        if not request_data.get("externalProtocol"):
+            for g in groups[:50]:
+                if g["title"] and g["show_title"]:
+                    comment_lines.append(f"{g['title']}:")
 
-            for f in g["fields"][:50]:
-                if not f["new_value"]:
-                    continue
-                fields_count += 1
-                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=f["pk"], field_type=f["field_type"], value=html.escape(f["new_value"][:400]))
+                for f in g["fields"][:50]:
+                    if not f["new_value"]:
+                        continue
+                    fields_count += 1
+                    f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=f["pk"], field_type=f["field_type"], value=html.escape(f["new_value"][:400]))
+                    f_result.save()
 
+                    line = ""
+                    if f_result.field.title:
+                        line = f"{f_result.field.title}: "
+                    line += f_result.value
+                    comment_lines.append(line)
+
+            if fields_count == 0:
+                transaction.set_rollback(True)
+                return Response({"ok": False})
+            elif service.convert_to_doc_call:
+                if not phone:
+                    return Response({"ok": False, "message": "Телефон должен быть заполнен"})
+                hospital = Hospitals.get_default_hospital()
+                DoctorCall.doctor_call_save(
+                    {
+                        "card": card,
+                        "research": service.pk,
+                        "address": card.main_address,
+                        "district": -1,
+                        "date": current_time(),
+                        "comment": "\n".join(comment_lines),
+                        "phone": phone,
+                        "doc": -1,
+                        "purpose": 24,
+                        "hospital": hospital.pk,
+                        "external": True,
+                        "external_num": str(direction),
+                        "is_main_external": False,
+                        "direction": direction,
+                    }
+                )
+                return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
+        else:
+            for field_id, field_val in result_protocol.items():
+                field = ParaclinicInputField.objects.filter(pk=field_id).first()
+                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=field_id, field_type=field.field_type, value=field_val[:400])
                 f_result.save()
-
-                line = ""
-                if f_result.field.title:
-                    line = f"{f_result.field.title}: "
-                line += f_result.value
-                comment_lines.append(line)
-
-        if fields_count == 0:
-            transaction.set_rollback(True)
-            return Response({"ok": False})
-        elif service.convert_to_doc_call:
-            if not phone:
-                return Response({"ok": False, "message": "Телефон должен быть заполнен"})
-            hospital = Hospitals.get_default_hospital()
-            DoctorCall.doctor_call_save(
-                {
-                    "card": card,
-                    "research": service.pk,
-                    "address": card.main_address,
-                    "district": -1,
-                    "date": current_time(),
-                    "comment": "\n".join(comment_lines),
-                    "phone": phone,
-                    "doc": -1,
-                    "purpose": 24,
-                    "hospital": hospital.pk,
-                    "external": True,
-                    "external_num": str(direction),
-                    "is_main_external": False,
-                    "direction": direction,
-                }
-            )
-            return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f'Форма "{service.get_title()}" ({direction}) сохранена'})
 
@@ -3201,6 +3225,27 @@ def get_reference_books(request):
         tmp_result["fractions"] = fractions
         result.append(tmp_result.copy())
     return JsonResponse({"result": result})
+
+
+@api_view(["POST"])
+def get_research_fields_data(request):
+    request_data = json.loads(request.body)
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    ogrn = request_data.get("ogrn" or "")
+    research_id = request_data.get("researchId" or "")
+    if not token_obj.unlimited_access:
+        check_permissions = check_correct_hospital_company(request, ogrn)
+        if not check_permissions["OK"]:
+            return Response({"ok": False, "message": check_permissions["message"]})
+        hospital = check_permissions["hospital"]
+        company = check_permissions["company"]
+    paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False)
+    paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False)
+    data_fields = [{"title": i.title, "id": i.pk, "type": i.get_field_type_display(), "inputTemplates": json.loads(i.input_templates) if i.input_templates else "" } for i in paraclinic_input_fields]
+    research = Researches.objects.get(pk=research_id)
+
+    return Response({"fields": data_fields, "service": {"title": research.title, "id": research.pk}})
 
 
 @api_view(["POST"])
