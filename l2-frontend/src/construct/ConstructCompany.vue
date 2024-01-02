@@ -97,18 +97,27 @@
               name="contractId"
               label="Договор"
             />
-            <div class="flex flex-right">
-              <FormulateInput
-                class="margin-right"
-                type="button"
-                :label="isNewCompany ? 'Очистить' : 'Отменить'"
-                @click="clearEditCompany"
-              />
-              <FormulateInput
-                type="submit"
-                class="nbr margin-right"
-                :label="isNewCompany ? 'Добавить' : 'Сохранить'"
-              />
+            <div class="flex flex-space-between">
+              <div>
+                <FormulateInput
+                  type="checkbox"
+                  name="cppSend"
+                  label="Отправлять в ЦПП"
+                />
+              </div>
+              <div class="flex flex-right">
+                <FormulateInput
+                  class="margin-right"
+                  type="button"
+                  :label="isNewCompany ? 'Очистить' : 'Отменить'"
+                  @click="clearEditCompany"
+                />
+                <FormulateInput
+                  type="submit"
+                  class="nbr margin-right"
+                  :label="isNewCompany ? 'Добавить' : 'Сохранить'"
+                />
+              </div>
             </div>
           </FormulateForm>
           <div
@@ -130,12 +139,16 @@
                 Списки
               </button>
               <input
+                id="month"
                 v-model="month"
                 class="margin-left margin-right checkbox-input"
                 type="checkbox"
               >
               <div class="month">
-                За месяц
+                <label
+                  for="month"
+                  class="month-label"
+                >За месяц</label>
               </div>
             </div>
             <div>
@@ -277,22 +290,8 @@
         <h5 class="text-center no-margin">
           {{ originShortTitle + ' мед. осмотры на: ' + dateTitle }}
         </h5>
-        <div class="flex flex-space-between">
-          <div class="flex flex-bottom">
-            Исключить исследования:
-          </div>
-          <div class="print-div">
-            <div class="button">
-              <button
-                v-tippy
-                title="Печать"
-                class="btn last btn-blue-nb nbr"
-                @click="print"
-              >
-                Печать
-              </button>
-            </div>
-          </div>
+        <div class="flex">
+          Исключить исследования:
         </div>
         <Treeselect
           v-model="excludedResearches"
@@ -302,6 +301,20 @@
           :append-to-body="true"
           placeholder="Выберите исследование"
         />
+        <div class="flex flex-right">
+          <div :class="needOffloadCpp ? 'button-check' : 'print'">
+            <div class="button">
+              <button
+                v-tippy
+                title="Печать"
+                class="btn last btn-blue-nb nbr"
+                @click="print"
+              >
+                Набор документов
+              </button>
+            </div>
+          </div>
+        </div>
         <VeTable
           :columns="columns"
           :table-data="examListPagination"
@@ -324,7 +337,7 @@
             @on-page-number-change="pageNumberChange"
             @on-page-size-change="pageSizeChange"
           />
-          <div class="print-div">
+          <div :class="needOffloadCpp ? 'button-check' : 'print'">
             <div class="button">
               <button
                 v-tippy
@@ -332,7 +345,7 @@
                 class="btn last btn-blue-nb nbr"
                 @click="print"
               >
-                Печать
+                Набор документов
               </button>
             </div>
           </div>
@@ -392,58 +405,15 @@ export default {
       cellSelectionOption: {
         enable: false,
       },
-      columns: [
-        {
-          field: 'number',
-          key: 'number',
-          title: '№',
-          align: 'center',
-          width: 30,
-          renderBodyCell: ({ rowIndex }) => rowIndex + 1,
-        },
-        {
-          field: 'card',
-          key: 'card',
-          title: '',
-          align: 'center',
-          width: 30,
-          renderBodyCell: ({ row }, h) => (
-            h('div', { class: 'button' }, [
-              h(
-                'button',
-                { class: this.button.transparentButton, on: { click: () => { this.openCard(row.card_id); } } },
-                [h('i', { class: 'fa-solid fa-user' })],
-              ),
-            ])
-          ),
-        },
-        {
-          field: 'fio',
-          key: 'fio',
-          title: 'Пациент',
-          align: 'left',
-          width: 300,
-        },
-        {
-          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
-        },
-        {
-          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
-        },
-        {
-          field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
-        },
-        {
-          field: '', key: 'select', title: '', align: 'center', width: 98, type: 'checkbox',
-        },
-      ],
+      columns: [],
       page: 1,
-      pageSize: 50,
+      pageSize: 25,
       pageSizeOptions: [25, 50, 100],
       excludedResearches: [],
       researches: [],
       month: false,
       company_uuid: '',
+      companySppSend: false,
     };
   },
   computed: {
@@ -465,6 +435,9 @@ export default {
     },
     isNewCompany() {
       return !this.editorCompany.pk;
+    },
+    needOffloadCpp() {
+      return this.companySppSend === true;
     },
     examListPagination() {
       return this.examinationList.slice((this.page - 1) * this.pageSize, this.page * this.pageSize);
@@ -513,6 +486,9 @@ export default {
       this.editorCompany = this.currentCompany.data;
       this.originShortTitle = this.editorCompany.shortTitle;
       this.company_uuid = this.editorCompany.uuid;
+      this.companySppSend = this.editorCompany.cppSend;
+      this.examinationList = [];
+      this.getColumns();
     },
     clearEditCompany() {
       this.getContracts();
@@ -520,6 +496,7 @@ export default {
       this.departments = [];
       this.originTitle = '';
       this.newDepartment = '';
+      this.examinationList = [];
     },
     async getDepartments(companyId) {
       const depart = await this.$api('company-departments-find', { company_db: companyId });
@@ -563,6 +540,91 @@ export default {
         }
       }
     },
+    getColumns() {
+      const columnsTemplate = [
+        {
+          field: 'number',
+          key: 'number',
+          title: '№',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ rowIndex }) => rowIndex + 1,
+        },
+        {
+          field: 'card',
+          key: 'card',
+          title: '',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ row }, h) => (
+            h('div', { class: 'button' }, [
+              h(
+                'button',
+                { class: this.button.transparentButton, on: { click: () => { this.openCard(row.card_id); } } },
+                [h('i', { class: 'fa-solid fa-user' })],
+              ),
+            ])
+          ),
+        },
+        {
+          field: 'fio',
+          key: 'fio',
+          title: 'Пациент',
+          align: 'left',
+          width: 300,
+        },
+        {
+          field: 'date', key: 'date', title: 'Дата', align: 'center', width: 50,
+        },
+        {
+          field: 'harmful_factors', key: 'harmful_factors', title: 'Вредные факторы', align: 'left', width: 200,
+        },
+        {
+          field: 'research_titles', key: 'research_titles', title: 'Исследования', align: 'left',
+        },
+        {
+          field: 'print',
+          key: 'print',
+          title: '',
+          align: 'center',
+          width: 30,
+          renderBodyCell: ({ row }, h) => (
+            h('div', { class: 'button' }, [
+              h(
+                'button',
+                {
+                  class: this.button.transparentButton,
+                  on: {
+                    click: () => {
+                      this.print(
+                        row.date,
+                        row.research_id,
+                        row.card_id,
+                      );
+                    },
+                  },
+                },
+                [h('i', { class: 'fa-solid fa-print' })],
+              ),
+            ])
+          ),
+        },
+        {
+          field: '', key: 'select', title: '', align: 'center', width: 30, type: 'checkbox',
+        },
+      ];
+      if (this.needOffloadCpp) {
+        const cppCol = {
+          field: 'cppSendStatus',
+          key: 'cppSendStatus',
+          title: 'ЦПП',
+          align: 'center',
+          width: 100,
+        };
+        columnsTemplate.splice(-2, 0, cppCol);
+      }
+      this.columns = columnsTemplate;
+    },
     async getExaminationList() {
       if (!this.date) {
         this.$root.$emit('msg', 'error', 'Дата не выбрана');
@@ -602,16 +664,33 @@ export default {
     pageSizeChange(size: number) {
       this.pageSize = size;
     },
-    async print() {
-      const printData = this.examinationList.filter((exam) => {
-        const card = exam.card_id;
-        const selectCard = this.selectedCards;
-        return selectCard.includes(card);
-      }).map((exam) => ({ card_id: exam.card_id, date: exam.date, research: exam.research_id }));
-      await this.$api('print-medical-examination-data', {
-        cards: printData,
-        exclude: this.excludedResearches,
-      });
+    async print(date = '', researchId = [], cardId = -1) {
+      let printData = [];
+      if (cardId === -1 && this.selectedCards.length > 0) {
+        printData = this.examinationList.filter((exam) => {
+          const card = exam.card_id;
+          const selectCard = this.selectedCards;
+          return selectCard.includes(card);
+        }).map((exam) => ({
+          card_id: exam.card_id,
+          date: exam.date,
+          research: exam.research_id.filter(id => !this.excludedResearches.includes(id)),
+        }));
+      } else if (cardId !== -1) {
+        printData = [{ card_id: cardId, date, research: researchId.filter(id => !this.excludedResearches.includes(id)) }];
+      }
+      if (printData.length > 0) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const result = await this.$api('print-medical-examination-data', {
+          cards: printData,
+        });
+        await this.$store.dispatch(actions.DEC_LOADING);
+        if (result.id) {
+          window.open(`/forms/pdf?type=112.03&id=${encodeURIComponent(JSON.stringify(result.id))}`, '_blank');
+        }
+      } else {
+        this.$root.$emit('msg', 'error', 'Пациенты не выбраны');
+      }
     },
   },
 };
@@ -730,8 +809,11 @@ export default {
 .margin-bottom {
   margin-bottom: 5px;
 }
-.print-div {
-  width: 100px;
+.button-check {
+  width: 310px;
+}
+.print {
+  width: 155px;
 }
 .row-div {
   width: 100%;
@@ -747,6 +829,9 @@ export default {
   align-self: stretch;
   flex: 1;
   padding: 7px 0;
+}
+.month-label {
+  font-weight: 600;
 }
 </style>
 

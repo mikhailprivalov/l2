@@ -85,7 +85,7 @@ def days(request):
 
                 slot_fact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
 
-                status = 'empty'
+                status = 'disabled' if s.disabled else 'empty'
 
                 patient = None
                 service = None
@@ -127,6 +127,7 @@ def days(request):
                 date_data['slots'].append(
                     {
                         'id': s.pk,
+                        'factId': slot_fact.pk if slot_fact else None,
                         'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
                         'time': datetime.datetime.strftime(slot_datetime, '%H:%M'),
                         'timeEnd': datetime.datetime.strftime(slot_datetime + timedelta(minutes=duration), '%H:%M'),
@@ -179,16 +180,22 @@ def details(request):
 
         slot_fact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
 
-        status = 'empty'
+        disabled = s.disabled
+        status = 'disabled' if disabled else 'empty'
 
         card_pk = None
         service = {
             'id': None,
         }
         direction = None
-        base_pk = CardBase.objects.filter(internal_type=True)[0].pk
+        base = CardBase.objects.filter(internal_type=True)[0]
+
+        fin_source = None
+        fact_id = None
 
         if slot_fact:
+            fact_id = slot_fact.pk
+
             status = {
                 0: 'reserved',
                 1: 'cancelled',
@@ -211,11 +218,14 @@ def details(request):
                     'id': slot_fact.direction_id,
                 }
 
+            fin_source = slot_fact.fin_source_id
+
         return status_response(
             True,
             data={
                 'data': {
                     'id': s.pk,
+                    'factId': fact_id,
                     'date': datetime.datetime.strftime(slot_datetime, '%Y-%m-%d'),
                     'time': datetime.datetime.strftime(slot_datetime, '%X'),
                     'hour': delta_to_string(current_slot_time),
@@ -224,9 +234,12 @@ def details(request):
                     'duration': duration,
                     'status': status,
                     'cardId': card_pk,
-                    'baseId': base_pk,
+                    'baseId': base.pk,
+                    'finSources': base.get_fin_sources(),
+                    'finSourceId': fin_source,
                     'service': service,
                     'direction': direction,
+                    'disabled': disabled,
                 },
             },
         )
@@ -239,8 +252,8 @@ def details(request):
 def save(request):
     data = data_parse(
         request.body,
-        {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int, 'date': str, 'resource': str},
-        {'planId': None, 'cardId': None, 'serviceId': None, 'status': 'reserved', 'date': None, 'resource': None},
+        {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int, 'date': str, 'resource': str, 'disabled': bool, 'finSourceId': int},
+        {'planId': None, 'cardId': None, 'serviceId': None, 'status': 'reserved', 'date': None, 'resource': None, 'disabled': False, 'finSourceId': None},
     )
     pk: int = data[0]
     card_pk: int = data[1]
@@ -249,13 +262,12 @@ def save(request):
     service_id: int = data[4]
     date: str = data[5]
     resource: int = data[6]
-
-    if not card_pk:
-        return status_response(False, 'Пациен не выбран')
+    disabled: bool = data[7]
+    fin_source: bool = data[8]
 
     is_cito = False
 
-    if has_group(request.user, 'Цито-запись в расписании') and pk == -10 and date and resource:
+    if card_pk and has_group(request.user, 'Цито-запись в расписании') and pk == -10 and date and resource:
         d = try_strptime(f"{date}", formats=('%Y-%m-%d',))
         start_date = datetime.datetime.combine(d, datetime.time.min)
         end_date = datetime.datetime.combine(d, datetime.time.max)
@@ -287,27 +299,33 @@ def save(request):
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
 
     if s:
-        status = {
-            'reserved': 0,
-            'cancelled': 1,
-            'success': 2,
-        }.get(status, 0)
-        slot_fact: SlotFact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
+        if card_pk:
+            status = {
+                'reserved': 0,
+                'cancelled': 1,
+                'success': 2,
+            }.get(status, 0)
+            slot_fact: SlotFact = SlotFact.objects.filter(plan=s).order_by('-pk').first()
 
-        if not slot_fact:
-            slot_fact = SlotFact.objects.create(plan=s, status=status)
+            if not slot_fact:
+                slot_fact = SlotFact.objects.create(plan=s, status=status)
 
-        slot_fact.patient_id = card_pk
-        slot_fact.status = status
-        slot_fact.service_id = service_id
-        slot_fact.is_cito = is_cito
-        slot_fact.save()
-        if plan_id:
-            ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
-            ph.slot_fact = slot_fact
-            ph.work_status = 3
-            ph.exec_at = s.datetime
-            ph.save()
+            s.disabled = False
+            slot_fact.patient_id = card_pk
+            slot_fact.status = status
+            slot_fact.service_id = service_id
+            slot_fact.is_cito = is_cito
+            slot_fact.fin_source_id = fin_source
+            slot_fact.save()
+            if plan_id:
+                ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
+                ph.slot_fact = slot_fact
+                ph.work_status = 3
+                ph.exec_at = s.datetime
+                ph.save()
+        else:
+            s.disabled = disabled
+            s.save(update_fields=['disabled'])
         return status_response(True)
 
     return status_response(False, 'Слот не найден')
@@ -360,12 +378,22 @@ def search_resource(request):
 @login_required
 @group_required(*COMMON_SCHEDULE_GROUPS)
 def get_first_user_resource(request):
-    resources = ScheduleResource.objects.filter(executor=request.user.doctorprofile)
+    access_to_all = has_group(request.user, *ADMIN_SCHEDULE_GROUPS) and request.GET.get('onlyMe') != '1'
+    if access_to_all:
+        resources = ScheduleResource.objects.all()
+    else:
+        resources = ScheduleResource.objects.filter(executor=request.user.doctorprofile)
+    resources = resources.filter(hide=False, service__isnull=False).distinct()
+
+    first_current_user_pk = None
+
     if resources.exists():
         options = []
         departments = defaultdict(list)
         for r in resources:
             departments[r.executor.podrazdeleniye_id].append({"id": r.pk, "label": str(r)})
+            if r.executor_id == request.user.doctorprofile.pk:
+                first_current_user_pk = r.pk
         for dep_pk in departments:
             options.append(
                 {
@@ -374,7 +402,7 @@ def get_first_user_resource(request):
                     "children": departments[dep_pk],
                 }
             )
-        return JsonResponse({"pk": resources[0].pk, "title": str(resources[0]), "options": options})
+        return JsonResponse({"pk": first_current_user_pk if first_current_user_pk is not None else resources[0].pk, "title": str(resources[0]), "options": options})
     return JsonResponse({"pk": None, "title": None, "options": []})
 
 

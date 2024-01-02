@@ -65,6 +65,7 @@ INSTALLED_APPS = (
     'dashboards',
     'chats.apps.ChatsConfig',
     'employees.apps.EmployeesConfig',
+    'results_feed.apps.ResultsFeedConfig',
 )
 
 MIDDLEWARE = [
@@ -394,6 +395,10 @@ TITLE_RESULT_FORM_USE_HOSPITAL_STAMP = False
 QR_CODE_ANKETA = ""
 RESULT_LABORATORY_FORM = ""
 SELF_WATERMARKS = ""
+TYPE_COMPANY_SET_DIRECTION_PDF = ""
+CPP_SEND_PROTOCOL_ID = -1
+CPP_TEMPLATE_XML_DIRECTORY = ""
+CDA_TEMPLATE_XML_DIRECTORY = ""
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

@@ -10,7 +10,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-12"
+    VERSION = f"{laboratory.VERSION}-14"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -173,6 +173,9 @@ class SettingManager:
                     "fraction_comment",
                     "required_choose_case",
                     "calculate_researches",
+                    "schedule_in_protocol",
+                    "feed",
+                    "equipment_load_file",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

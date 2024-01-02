@@ -8,4 +8,5 @@ urlpatterns = [
     path('status-analyzer', views.status_analyzer),
     path('restart-analyzer', views.restart_analyzer),
     path('status-systemctl', views.status_systemctl),
+    path('analyzers-load-file', views.analyzers_load_file),
 ]

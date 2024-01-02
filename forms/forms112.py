@@ -22,10 +22,11 @@ from clients.models import Card
 from directions.models import Napravleniya, Issledovaniya
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER, BASE_DIR
-from utils.xh import save_tmp_file
+from utils.xh import save_tmp_file, correspondence_get_file_hash
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
 from django.utils.module_loading import import_string
+from pdfrw import PdfReader, PdfWriter
 
 
 def form_01(request_data):
@@ -288,7 +289,7 @@ def form_02(request_data):
 
     if additional_data_from_file:
         with open(additional_data_from_file) as json_file:
-            data = json.load(json_file)
+            data = json.loads(json_file.read())
             appendix_paragraphs = data.get('appendix_paragraphs', None)
             appendix_route_list = data.get('appendix_route_list', None)
             appendix_direction_list = data.get('appendix_direction_list', None)
@@ -342,7 +343,6 @@ def form_02(request_data):
 
 
 def join_two_pdf_data(func_name, http_params, user_data, buffer, ind_card, type="post"):
-
     if type == "get":
         fc = func_name(request_data=http_params)
         is_get = False
@@ -479,7 +479,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
 
 def add_appendix_direction_list(appendix_direction_list, dir_temp):
     direction_data = []
-    types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set(), "isHospital": set()}
+    types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set(), "isHospital": set(), "isForm": set()}
     for d in dir_temp:
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=d).first()
         if iss_obj.research.is_doc_refferal:
@@ -490,6 +490,8 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
             types_direction["isGistology"].add(d)
         elif iss_obj.research.is_hospital:
             types_direction["isHospital"].add(d)
+        elif iss_obj.research.is_form:
+            types_direction["isForm"].add(d)
         elif (
             not iss_obj.research.is_form
             and not iss_obj.research.is_citology
@@ -511,4 +513,24 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
             direction_data.extend(list(types_direction["isParaclinic"]))
         elif section.get('isHospital'):
             direction_data.extend(list(types_direction["isHospital"]))
+        elif section.get('isForm'):
+            direction_data.extend(list(types_direction["isForm"]))
+
     return direction_data
+
+
+def form_03(request_data):
+    id_file = request_data.get("id").replace('"', "")
+    file_data = correspondence_get_file_hash(id_file)
+    if file_data:
+        dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+        file_dir = os.path.join(dir_param, file_data)
+        pdf_all = BytesIO()
+        inputs = [file_dir]
+        writer = PdfWriter()
+        for inpfn in inputs:
+            writer.addpages(PdfReader(inpfn).pages)
+        writer.write(pdf_all)
+        pdf_out = pdf_all.getvalue()
+        os.remove(file_dir)
+        return pdf_out

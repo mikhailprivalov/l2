@@ -300,6 +300,9 @@ class Researches(models.Model):
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
     plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
+    cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
+    cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
+    n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -441,6 +444,11 @@ class Researches(models.Model):
         if self.is_microbiology:
             return self.microbiology_tube.title if self.microbiology_tube else ''
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
+
+    def get_podrazdeleniye_short_title(self):
+        if self.is_microbiology:
+            return self.microbiology_tube.title if self.microbiology_tube else ''
+        return self.podrazdeleniye.get_title() if self.podrazdeleniye else ""
 
     def get_podrazdeleniye_title_recieve_recieve(self):
         if self.plan_external_performing_organization:

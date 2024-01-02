@@ -1,4 +1,5 @@
 import os.path
+import uuid
 from datetime import date, datetime
 from io import BytesIO
 
@@ -27,20 +28,24 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from transliterate import translit
 
 import directory.models as directory
+from directions.sql_func import get_researches_by_number_directions
+from users.models import DoctorProfile
+from api.sql_func import search_case_by_card_date
 from hospitals.models import Hospitals
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult, IstochnikiFinansirovaniya
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE, PRINT_APPENDIX_PAGE_DIRECTION
 from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
-from utils.dates import try_parse_range
+from utils.dates import try_parse_range, normalize_dots_date
 from django.utils.module_loading import import_string
 
 from utils.matrix import transpose
 from utils.xh import save_tmp_file, translation_number_from_decimal
+from users.models import User
 
 w, h = A4
 
@@ -1040,3 +1045,98 @@ def px(x=0.0):
 def pxr(x=0.0):
     x *= mm
     return w - x
+
+
+def create_case_by_cards(cards):
+    research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
+    doc = DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
+    if not doc:
+        user = User.objects.create_user(uuid.uuid4().hex)
+        user.is_active = True
+        user.save()
+        doc = DoctorProfile(user=user, fio='Системный Пользователь', is_system_user=True)
+        doc.save()
+        doc.get_fio_parts()
+    card_directions = {}
+    number_directons = None
+    for card in cards:
+        card_id = card.get("card_id")
+        researches = card.get("research")
+        plan_start_date_case = normalize_dots_date(card.get("date"))
+        plan_start_date_case = f"{plan_start_date_case} 00:00:00"
+        result_search_case = search_case_by_card_date(card_id, plan_start_date_case, research_case.pk, 1)
+        case_issledovaniye_number, case_direction_number = None, None
+        for i in result_search_case:
+            case_issledovaniye_number = i.case_issledovaniye_number
+            case_direction_number = i.case_direction_number
+            break
+        financing_source = IstochnikiFinansirovaniya.objects.filter(title__in=["Профосмотр", "Юрлицо"]).first()
+
+        if case_issledovaniye_number:
+            number_directons = Napravleniya.objects.values_list("id", flat=True).filter(parent_case_id=case_issledovaniye_number)
+            researches_sql = get_researches_by_number_directions(tuple(number_directons))
+            current_researches_case = set([i.research_id for i in researches_sql])
+            api_researches = set(researches)
+            api_researches -= current_researches_case
+            researches = list(api_researches)
+            result = Napravleniya.gen_napravleniya_by_issledovaniya(
+                card_id,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: researches},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                price_name=None,
+                case_id=case_direction_number,
+                case_by_direction=True,
+                plan_start_date=plan_start_date_case,
+            )
+        else:
+            napravleniye_case = Napravleniya.gen_napravleniye(
+                card_id,
+                doc,
+                financing_source,
+                "",
+                "",
+                doc,
+                -1,
+                doc,
+            )
+
+            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_start_date_case)
+            issledovaniye_case.save()
+            result = Napravleniya.gen_napravleniya_by_issledovaniya(
+                card_id,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: researches},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                price_name=None,
+                case_id=napravleniye_case.pk,
+                case_by_direction=True,
+                plan_start_date=plan_start_date_case,
+            )
+        if number_directons:
+            number_directons = [i for i in number_directons]
+        else:
+            number_directons = []
+        number_directons.extend(result.get("list_id"))
+        card_directions[card_id] = list(set(number_directons))
+    return card_directions

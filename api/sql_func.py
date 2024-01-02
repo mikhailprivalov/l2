@@ -404,3 +404,25 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def search_case_by_card_date(card_id, plan_date_start_case, research_case_id, limit):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_napravleniya.id as case_direction_number,
+                directions_issledovaniya.id as case_issledovaniye_number
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                WHERE 
+                    directions_issledovaniya.research_id = %(research_case_id)s
+                    and directions_issledovaniya.plan_start_date AT TIME ZONE %(tz)s = %(plan_date_start_case)s
+                    and directions_napravleniya.client_id = %(card_id)s 
+                LIMIT %(limit)s
+            """,
+            params={'card_id': card_id, 'plan_date_start_case': plan_date_start_case, 'research_case_id': research_case_id, 'tz': TIME_ZONE, 'limit': limit},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

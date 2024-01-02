@@ -5,10 +5,12 @@ from . import views
 urlpatterns = [
     path('result/next', views.next_result_direction),
     path('result/amd', views.get_dir_amd),
+    path('result/cpp', views.get_dir_cpp),
     path('result/n3', views.get_dir_n3),
     path('result/resend-l2', views.resend_dir_l2),
     path('result/resend-crie', views.resend_dir_crie),
     path('result/sendamd', views.result_amd_send),
+    path('result/sendcpp', views.result_cpp_send),
     path('result/pdf', views.get_pdf_result),
     path('external-result/pdf', views.external_get_pdf_result),
     path('direction/pdf', views.get_pdf_direction),
@@ -60,4 +62,10 @@ urlpatterns = [
     path('get-prices-by-date', views.get_prices_by_date),
     path('get-reference-books', views.get_reference_books),
     path('send-laboratory-order', views.send_laboratory_order),
+    path('client/register', views.client_register),
+    path('client/logout', views.client_logout),
+    path('client/info', views.client_info),
+    path('client/categories', views.client_categories),
+    path('client/results/pdf', views.client_results_pdf),
+    path('client/results', views.client_results_list),
 ]

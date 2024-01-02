@@ -8,6 +8,7 @@ from typing import Optional, Union
 import pytz_deprecation_shim as pytz
 
 from api.models import ManageDoctorProfileAnalyzer, Analyzer
+from directions.views import create_case_by_cards
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
@@ -24,6 +25,8 @@ from laboratory.settings import (
     TITLE_REPORT_FILTER_HAS_ALL_FIN_SOURCE,
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
+    TYPE_COMPANY_SET_DIRECTION_PDF,
+    MEDEXAM_FIN_SOURCE_TITLE,
 )
 from utils.response import status_response
 
@@ -76,12 +79,13 @@ from tfoms.integration import match_enp
 from utils.common import non_selected_visible_type
 from utils.dates import try_parse_range, try_strptime
 from utils.nsi_directories import NSI
-from utils.xh import get_all_hospitals
+from utils.xh import get_all_hospitals, simple_join_two_pdf_files, simple_save_pdf_file, correspondence_set_file_hash
 from .dicom import search_dicom_study
 from .directions.sql_func import get_lab_podr
 from .sql_func import users_by_group, users_all, get_diagnoses, get_resource_researches, search_data_by_param, search_text_stationar
 from laboratory.settings import URL_RMIS_AUTH, URL_ELN_MADE, URL_SCHEDULE
 import urllib.parse
+from django.utils.module_loading import import_string
 
 logger = logging.getLogger("API")
 
@@ -2200,6 +2204,7 @@ def organization_data_update(request):
             "resultPullFtpServerUrl": None,
             "hl7SenderApplication": None,
             "hl7ReceiverAapplication": None,
+            "isAutotransfer": False,
         },
     )
 
@@ -2223,7 +2228,7 @@ def organization_data_update(request):
     result_pull_by_numbers: Optional[str] = data[17] or None
     hl7_sender_application: Optional[str] = data[18] or None
     hl7_receiver_appplication: Optional[str] = data[19] or None
-    is_auto_transfer = data[20]
+    is_auto_transfer = data[20] if data[20] else False
 
     if not title:
         return status_response(False, "Название не может быть пустым")
@@ -2651,13 +2656,19 @@ def update_price(request):
     current_price = None
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
-            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"])
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"]
+            )
         elif request_data.get("typePrice") == "Заказчик":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
-            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True)
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True
+            )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
-            current_price = PriceName(title=request_data["title"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True)
+            current_price = PriceName(
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True
+            )
         if current_price:
             current_price.save()
             Log.log(
@@ -2669,6 +2680,7 @@ def update_price(request):
     else:
         current_price = PriceName.objects.get(pk=request_data["id"])
         current_price.title = request_data["title"]
+        current_price.symbol_code = request_data["code"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
         if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
@@ -2694,6 +2706,7 @@ def copy_price(request):
         current_price = PriceName.objects.get(pk=request_data["id"])
         new_price = PriceName(
             title=f"{current_price.title} - новый прайс",
+            symbol_code=f"{current_price.symbol_code} - новый",
             date_start=current_price.date_start,
             date_end=current_price.date_end,
             company=current_price.company,
@@ -2943,6 +2956,7 @@ def update_company(request):
         company_data.kpp = request_data["kpp"]
         company_data.bik = request_data["bik"]
         company_data.contract_id = request_data.get("contractId") or None
+        company_data.cpp_send = request_data.get("cppSend", False)
         company_data.save()
         new_company_data = Company.as_json(company_data)
         Log.log(
@@ -3305,7 +3319,38 @@ def get_examination_list(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def print_medical_examination_data(request):
-    return status_response(True)
+    request_data = json.loads(request.body)
+    cards = request_data.get("cards")
+    card_directions = create_case_by_cards(cards)
+    files_data = []
+    if TYPE_COMPANY_SET_DIRECTION_PDF:
+        additional_page = import_string('forms.forms112.' + TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[0])
+        for card, directions_data in card_directions.items():
+            if len(directions_data) > 1:
+                directions_data = [str(i) for i in directions_data]
+                napr_id = ", ".join(directions_data)
+            else:
+                napr_id = directions_data[0]
+            napr_id = f"[{napr_id}]"
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card,
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": TYPE_COMPANY_SET_DIRECTION_PDF.split(".")[1],
+                    "fin_title": MEDEXAM_FIN_SOURCE_TITLE,
+                    "napr_id": napr_id,
+                }
+            )
+            saved_file_pdf = simple_save_pdf_file(fc)
+            files_data.append(saved_file_pdf)
+
+    buffer = simple_join_two_pdf_files(files_data)
+
+    id_file = simple_save_pdf_file(buffer)
+    hash_file = correspondence_set_file_hash(id_file)
+    return JsonResponse({"id": hash_file})
 
 
 @login_required

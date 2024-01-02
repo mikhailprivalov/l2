@@ -500,9 +500,7 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
-    parent_case = models.ForeignKey(
-        'Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
-    )
+    parent_case = models.ForeignKey('Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
@@ -559,8 +557,10 @@ class Napravleniya(models.Model):
     )
     time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
     price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
+    cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
+    need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
 
-    def sync_confirmed_fields(self):
+    def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
         no_unconfirmed_iss = not Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=True).exists()
 
@@ -581,10 +581,11 @@ class Napravleniya(models.Model):
         if updated:
             self.save(update_fields=updated)
 
-        if self.is_all_confirm():
-            self.post_confirmation()
-        else:
-            self.post_reset_confirmation()
+        if not skip_post:
+            if self.is_all_confirm():
+                self.post_confirmation()
+            else:
+                self.post_reset_confirmation()
 
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
@@ -1061,6 +1062,7 @@ class Napravleniya(models.Model):
         hospital=-1,
         external_order=None,
         price_name_id=None,
+        slot_fact_id=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1132,6 +1134,12 @@ class Napravleniya(models.Model):
         if save:
             dir.save()
         dir.set_polis()
+        if slot_fact_id:
+            from doctor_schedule.models import SlotFact
+
+            f = SlotFact.objects.get(pk=slot_fact_id)
+            f.direction = dir
+            f.save(update_fields=['direction'])
         return dir
 
     @staticmethod
@@ -1293,6 +1301,8 @@ class Napravleniya(models.Model):
         price_name=None,
         case_id=-2,
         case_by_direction=False,
+        plan_start_date=None,
+        slot_fact_id=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if case_id > -1 and case_by_direction:
@@ -1557,13 +1567,10 @@ class Napravleniya(models.Model):
                                 hospital=hospital_override,
                                 external_order=external_order,
                                 price_name_id=price_name,
+                                slot_fact_id=slot_fact_id,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
-                            issledovaniye_case = Issledovaniya(
-                                napravleniye=napravleniye_case,
-                                research=research_case,
-                                deferred=False
-                            )
+                            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
                             issledovaniye_case.save()
                             issledovaniye_case_id = issledovaniye_case.pk
                         elif case_id > 0:
@@ -1592,6 +1599,7 @@ class Napravleniya(models.Model):
                             hospital=hospital_override,
                             external_order=external_order,
                             price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1623,6 +1631,7 @@ class Napravleniya(models.Model):
                             hospital=hospital_override,
                             external_order=external_order,
                             price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1843,6 +1852,7 @@ class Napravleniya(models.Model):
                     external_organization=external_organization,
                     price_category=price_category,
                     hospital=hospital_override,
+                    slot_fact_id=slot_fact_id,
                 )
                 result["list_id"].append(new_direction.pk)
                 Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()
@@ -1891,6 +1901,10 @@ class Napravleniya(models.Model):
                 self.external_order.totally_completed = totally_confirmed_all_directions_in_order
                 self.external_order.save()
 
+        from results_feed.models import ResultFeed
+
+        ResultFeed.insert_feed_by_direction(self)
+
     def post_reset_confirmation(self):
         if self.celery_send_task_ids:
             task_ids = self.celery_send_task_ids
@@ -1902,6 +1916,9 @@ class Napravleniya(models.Model):
             self.external_order.totally_completed = False
             self.external_order.need_check_for_results_redirection = False
             self.external_order.save()
+
+        from results_feed.models import ResultFeed
+        ResultFeed.remove_feed_by_direction(self)
 
     def last_time_confirm(self):
         return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
@@ -2022,9 +2039,11 @@ def get_direction_file_path(instance: 'DirectionDocument', filename):
 class DirectionDocument(models.Model):
     PDF = 'pdf'
     CDA = 'cda'
+    CPP = 'cpp'
     FILE_TYPES = (
         (PDF, PDF),
         (CDA, CDA),
+        (CPP, CPP),
     )
 
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
@@ -2277,7 +2296,7 @@ class Issledovaniya(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
-
+    plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
 
     @property
     def time_save_local(self):

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments, CdaFields
+from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments, CdaFields, ProfessionsWorkersPositionsRefbook
 
 
 class ResArchiveMedicalDocuments(admin.ModelAdmin):
@@ -36,9 +36,18 @@ class ResCdaFields(admin.ModelAdmin):
     )
 
 
+class ResProfessionsWorkersPositionsRefbook(admin.ModelAdmin):
+    list_display = (
+        'code',
+        'title',
+    )
+    search_fields = ('title',)
+
+
 admin.site.register(FsliRefbookTest)
 admin.site.register(InstrumentalResearchRefbook)
 admin.site.register(BodySiteRefbook)
 admin.site.register(ArchiveMedicalDocuments, ResArchiveMedicalDocuments)
 admin.site.register(TypesMedicalDocuments)
 admin.site.register(CdaFields, ResCdaFields)
+admin.site.register(ProfessionsWorkersPositionsRefbook, ResProfessionsWorkersPositionsRefbook)
