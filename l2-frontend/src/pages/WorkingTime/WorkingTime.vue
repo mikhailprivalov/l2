@@ -138,6 +138,23 @@ const search = ref('');
 
 const workTimeDocument = ref(false);
 
+const getWorkTimeDocument = async () => {
+  if (filtersIsFilled.value) {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/working-time/get-document', {
+      month: selectedMonth.value,
+      year: selectedYear.value,
+      department: selectedDepartment.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      workTimeDocument.value = true;
+    } else {
+      workTimeDocument.value = false;
+    }
+  }
+};
+
 const createWorkTimeDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/working-time/create-document', {
@@ -164,12 +181,8 @@ const getEmployeesWorkTime = async () => {
       department: selectedDepartment.value,
     });
     await store.dispatch(actions.DEC_LOADING);
-    if (result) {
-      employeesWorkTime.value = result;
-      workTimeDocument.value = true;
-    } else {
-      workTimeDocument.value = false;
-    }
+    console.log(result);
+    employeesWorkTime.value = result;
   }
 };
 
@@ -240,7 +253,7 @@ const getColumns = () => {
               rowIndex,
               columnKey: column.key,
               isFirstDay,
-              prevWorkTime: employees.value[rowIndex][prevDay],
+              prevWorkTime: employeesWorkTime.value[rowIndex][prevDay],
             },
             on: { changeWorkTime },
           },
@@ -279,6 +292,7 @@ const rowStyleOption = {
 
 watch([selectedMonth, selectedYear, selectedDepartment], () => {
   getColumns();
+  getWorkTimeDocument();
   getEmployeesWorkTime();
 });
 

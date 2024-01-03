@@ -1,8 +1,11 @@
+import calendar
 import datetime
+from copy import copy
 
 from django.db import models
 from django.core.paginator import Paginator
 
+from employees.sql_func import get_work_time_by_document
 from hospitals.models import Hospitals
 from laboratory.utils import strfdatetime
 from slog.models import Log
@@ -431,7 +434,15 @@ class WorkTimeDocument(models.Model):
         return f'{self.department} - {self.month}'
 
     @staticmethod
-    def create_document(month: int, year: int, department: int):
+    def get_document(year: int, month: int, department: int):
+        month_date = datetime.date(year, month, 1)
+        document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
+        if not document:
+            return False
+        return True
+
+    @staticmethod
+    def create_document(year: int, month: int, department: int):
         month_date = datetime.date(year, month, 1)
         document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
         if not document:
@@ -460,18 +471,45 @@ class EmployeeWorkTime(models.Model):
         return f'{self.employee_position.employee.__str__()}: {self.start} - {self.end}'
 
     @staticmethod
-    def get_work_time(month: int, year: int, department: int):
+    def get_employees_template(year: int, month: int, department: int) -> dict:
+        _, end_month = calendar.monthrange(year, month)
+        days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": ""} for day in range(1, end_month + 1)}
+        employees = EmployeePosition.objects.filter(is_active=True, department_id=department).order_by('employee__family')
+        employees_template = {}
+        for i in employees:
+            employees_template[i.pk] = {
+                "fio": f'{i.employee.family} {i.employee.name[0]}.{i.employee.patronymic[0] if i.employee.patronymic else ""}',
+                "position": i.position.name,
+                "bidType": "осн",
+                "normMonth": "178",
+                "normDay": "8"
+            }
+            for key, value in days.items():
+                employees_template[i.pk][key] = value.copy()
+        return employees_template
+
+    @staticmethod
+    def get_work_time(year: int, month: int, department: int):
         month_date = datetime.date(year, month, 1)
         document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
         if not document:
-            return False
-        print('УРа')
-        work_time = []
-        return work_time
+            return []
+        employees_result = EmployeeWorkTime.get_employees_template(year, month, department)
+        if not employees_result:
+            return []
+        employees_work_time = get_work_time_by_document(document.pk)
+        for time in employees_work_time:
+            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["startWorkTime"] = time.start.strftime('%H:%M')
+            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["endWorkTime"] = time.end.strftime('%H:%M')
+        result = [
+            v
+            for k, v in employees_result.items()
+        ]
+        return result
 
     class Meta:
-        verbose_name = 'Рабочее время'
-        verbose_name_plural = 'Рабочее время'
+        verbose_name = 'Рабочее время сотрудника'
+        verbose_name_plural = 'Рабочее время сотрудников'
         indexes = [
             models.Index(fields=['document', 'employee_position']),
         ]
