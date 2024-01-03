@@ -419,3 +419,35 @@ class EmployeePosition(models.Model):
         ]
         unique_together = ('employee', 'position', 'department', 'is_active')
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
+
+
+class WorkTimeDocument(models.Model):
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Подразделение', help_text='Отдел АСУ, Травмпункт и т.д')
+    month = models.DateField(verbose_name='Месяц', help_text='Дата в месяца, (01.12.24)')
+
+    def __str__(self):
+        return f'{self.department} - {self.month}'
+
+    class Meta:
+        verbose_name = 'График рабочего времени'
+        verbose_name_plural = 'Графики рабочего времени'
+        indexes = [
+            models.Index(fields=['department', 'month']),
+        ]
+
+
+class EmployeeWorkTime(models.Model):
+    document = models.ForeignKey(WorkTimeDocument, on_delete=models.CASCADE, verbose_name='График')
+    employee_position = models.ForeignKey(EmployeePosition, on_delete=models.CASCADE, verbose_name='Должность сотрудника')
+    start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
+    end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
+
+    def __str__(self):
+        return f'{self.employee_position.employee.__str__()}: {self.start} - {self.end}'
+
+    class Meta:
+        verbose_name = 'Рабочее время'
+        verbose_name_plural = 'Рабочее время'
+        indexes = [
+            models.Index(fields=['document', 'employee_position']),
+        ]
