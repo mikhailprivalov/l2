@@ -503,10 +503,6 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleCenterBold12 = deepcopy(styleCenterBold)
     styleCenterBold12.fontSize = 12
 
-    styleT = deepcopy(style)
-    styleT.alignment = TA_LEFT
-    styleT.leading = 5 * mm
-
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
     pdfmetrics.registerFont(TTFont('boxedCyrilic', os.path.join(FONTS_FOLDER, 'boxed-cyrilic.ttf')))
@@ -550,9 +546,6 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             title_field_result[i["title"]] = i["value"]
     hospital = iss.doc_confirmation.hospital
     hospital_short_title = hospital.safe_short_title
-    hospital_title = hospital.safe_full_title
-    hospital_address = hospital.safe_address
-    hospital_phone = hospital.phones
 
     open_bold_tag = "<font face =\"PTAstraSerifBold\">"
     close_tag_bold = "</font>"
@@ -661,7 +654,7 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     elif status == "выдан с продолжением в другое МО":
         result_status = title_field_result["явка в МО"]
     elif status == "продлить амбулаторное лечение  (через ВК)":
-        result_status = f'c{space_symbol * 2} {title_field_result["Продлить с"]}<br/> по {title_field_result["Продлить по"]}'
+        result_status = f'c {title_field_result["Продлить с"]} {space_symbol * 1} по {space_symbol * 1} {title_field_result["Продлить по"]}'
 
     mkb10_code_obj = json.loads(title_field_result["код МКБ 10"])
     mkb10_code = mkb10_code_obj.get("code")
@@ -670,19 +663,19 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     opinion = [
         [
             Paragraph(f'Тип ЭЛН (первичный/продолжение)', style),
-            Paragraph(f'{title_field_result["Вид"]}', style)
+            Paragraph(f'{open_bold_tag}{title_field_result["Вид"]}{close_tag_bold}', style)
         ],
         [
             Paragraph(f'Период', style),
-            Paragraph(f'с <u>{title_field_result["с"]}</u> по <u>{title_field_result["по"]}</u>', style)
+            Paragraph(f'с {open_bold_tag}{title_field_result["с"]}{close_tag_bold}{space_symbol * 1} по {space_symbol * 1}{open_bold_tag}{title_field_result["по"]}{close_tag_bold}', style)
         ],
         [
             Paragraph(f'Количество календарных дней (больше 15 календарных дней - через ВК)', style),
-            Paragraph(f'{title_field_result["Количество календарных дней"]}', style)
+            Paragraph(f'{open_bold_tag}{title_field_result["Количество календарных дней"]}{close_tag_bold}', style)
         ],
         [
             Paragraph(f'Статус ЭЛН', style),
-            Paragraph(f'{status}<br/> {result_status}', style)
+            Paragraph(f'{open_bold_tag}{status}{close_tag_bold}<br/><br/> {result_status}', style)
         ],
         [
             Paragraph(f'Диагноз (словами)', style),
@@ -690,7 +683,7 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph(f'код МКБ 10', style),
-            Paragraph(f'{mkb10_code}', style)
+            Paragraph(f'{open_bold_tag}{mkb10_code}{close_tag_bold}', style)
         ],
         [
             Paragraph(f'Ф.И.О лечащего врача:', style),
