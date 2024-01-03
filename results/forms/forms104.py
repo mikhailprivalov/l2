@@ -12,6 +12,7 @@ from laboratory.settings import FONTS_FOLDER
 import os.path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import simplejson as json
 
 
 def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
@@ -470,3 +471,248 @@ def stamp_signature(styleT, zav=""):
         )
     )
     return tbl
+
+
+def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+    # Анкета для оформления ЭЛН
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.borderColor = colors.black
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenter14 = deepcopy(styleCenter)
+    styleCenter14.fontSize = 14
+
+    styleCenter9 = deepcopy(styleCenter)
+    styleCenter9.fontSize = 9
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 14
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    styleCenterBold12 = deepcopy(styleCenterBold)
+    styleCenterBold12.fontSize = 12
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.leading = 5 * mm
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('boxedCyrilic', os.path.join(FONTS_FOLDER, 'boxed-cyrilic.ttf')))
+
+    fwb.append(Spacer(1, 3 * mm))
+    title_field_result = {
+        "Степень родства": "",
+        "Фамилия": "",
+        "Имя": "",
+        "Отчество": "",
+        "Дата рождения": "",
+        "Возраст": "",
+        "СНИЛС": "",
+        "Адрес": "",
+        "Телефон": "",
+        "Место работы": "",
+        "Инвалидность": "",
+        "Фамилия ребенка": "",
+        "Имя ребенка": "",
+        "Отчество ребенка": "",
+        "Дата рождения ребенка": "",
+        "Возраст ребенка": "",
+        "Номера предыдущих ЛН": "",
+        "Выдан в МО": "",
+        "Вид": "",
+        "с": "",
+        "по": "",
+        "Количество календарных дней": "",
+        "Лист нетрудоспособности": "",
+        "Приступить к работе": "",
+        "явка в МО": "",
+        "Продлить с": "",
+        "Продлить по": "",
+        "Диагноз (словами)": "",
+        "код МКБ 10": "",
+        "Ф.И.О лечащего врача": "",
+    }
+    data_fields_result = fields_result_only_title_fields(iss, title_field_result)
+    for i in data_fields_result:
+        if title_field_result.get(i["title"], None) is not None:
+            title_field_result[i["title"]] = i["value"]
+    hospital = iss.doc_confirmation.hospital
+    hospital_short_title = hospital.safe_short_title
+    hospital_title = hospital.safe_full_title
+    hospital_address = hospital.safe_address
+    hospital_phone = hospital.phones
+
+    open_bold_tag = "<font face =\"PTAstraSerifBold\">"
+    close_tag_bold = "</font>"
+
+    op_boxed_tag = '<font face="boxedCyrilic" size=14>'
+    cl_boxed_tag = '</font>'
+    space_symbol = '&nbsp;'
+
+
+    fwb.append(Paragraph('Анкета для оформления листка нетрудоспособности в форме электронного документа', styleCenter))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph('По уходу за ребенком с оформлением листа нетрудоспособности госпитализирован(а)', styleCenter14))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'<u>{title_field_result["Степень родства"]}</u>', styleCenter14))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph('(указать степень родства мама, папа, опекун, попечитель, иные родственники- бабушка, сестра и пр.)', styleCenter9))
+    fwb.append(Spacer(1, 4 * mm))
+
+    opinion = [
+        [
+            Paragraph(f'Фамилия:', style),
+            Paragraph(f'{op_boxed_tag}{title_field_result["Фамилия"]}{cl_boxed_tag}', style)
+        ],
+        [
+            Paragraph(f'Имя:', style),
+            Paragraph(f'{op_boxed_tag}{title_field_result["Имя"]}{cl_boxed_tag}', style)
+        ],
+        [
+            Paragraph(f'Отчество:', style),
+            Paragraph(f'{op_boxed_tag}{title_field_result["Отчество"]}{cl_boxed_tag}', style)
+        ],
+    ]
+
+    tbl = Table(opinion, hAlign='LEFT', colWidths=[22 * mm, 170 * mm], rowHeights=9 * mm)
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+                ('BOTTOMPADDING', (1, 0), (-1, -1), 3 * mm),
+                ('BOTTOMPADDING', (0, 0), (0, -1), 2 * mm),
+            ]
+        )
+    )
+    fwb.append(Paragraph("Ф.И.О ухаживающего:", styleCenterBold))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"Дата рождения ухаживающего: {title_field_result['Дата рождения']} {space_symbol * 20} Возраст: {title_field_result['Возраст']} лет", style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"СНИЛС (ухаживающего) : {title_field_result['СНИЛС']}", style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"Адрес, телефон: {title_field_result['Адрес']} {space_symbol * 2} тел. {title_field_result['Телефон']}", style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"Место работы: {title_field_result['Место работы']}", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph("Ф.И.О Ребенка", styleCenterBold))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"Ребенок - инвалид {space_symbol * 8}<u>{title_field_result['Инвалидность']}</u>", styleCenterBold12))
+
+    opinion = [
+        [
+            Paragraph(f'Фамилия:', style),
+            Paragraph(f'{op_boxed_tag}{title_field_result["Фамилия ребенка"]}{cl_boxed_tag}', style)
+        ],
+        [
+            Paragraph(f'Имя:', style),
+            Paragraph(f'{op_boxed_tag}{title_field_result["Имя ребенка"]}{cl_boxed_tag}', style)
+        ],
+        [
+            Paragraph(f'Отчество:', style),
+            Paragraph(f'{op_boxed_tag}{title_field_result["Отчество ребенка"]}{cl_boxed_tag}', style)
+        ],
+    ]
+
+    tbl = Table(opinion, hAlign='LEFT', colWidths=[22 * mm, 170 * mm], rowHeights=9 * mm)
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+                ('BOTTOMPADDING', (1, 0), (-1, -1), 3 * mm),
+                ('BOTTOMPADDING', (0, 0), (0, -1), 2 * mm),
+            ]
+        )
+    )
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"Дата рождения ребенка: {title_field_result['Дата рождения ребенка']} {space_symbol * 20} Возраст: {title_field_result['Возраст ребенка']} лет", style))
+    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Paragraph("Номера предыдущих ЛН (первичный или продолжение)", styleCenterBold))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"<u>{title_field_result['Номера предыдущих ЛН']}</u>", styleCenter))
+    fwb.append(Spacer(1, 0.2 * mm))
+    fwb.append(Paragraph("(при наличии)", styleCenter))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"Выдан в <u>{title_field_result['Выдан в МО']}</u>(название МО)", styleCenter))
+    fwb.append(Spacer(1, 4 * mm))
+    status = title_field_result["Лист нетрудоспособности"]
+    result_status = ""
+    if status == "закрыт":
+        result_status = title_field_result["Приступить к работе"]
+    elif status == "выдан с продолжением в другое МО":
+        result_status = title_field_result["явка в МО"]
+    elif status == "продлить амбулаторное лечение  (через ВК)":
+        result_status = f'c{space_symbol * 2} {title_field_result["Продлить с"]}<br/> по {title_field_result["Продлить по"]}'
+
+    mkb10_code_obj = json.loads(title_field_result["код МКБ 10"])
+    mkb10_code = mkb10_code_obj.get("code")
+
+
+    opinion = [
+        [
+            Paragraph(f'Тип ЭЛН (первичный/продолжение)', style),
+            Paragraph(f'{title_field_result["Вид"]}', style)
+        ],
+        [
+            Paragraph(f'Период', style),
+            Paragraph(f'с <u>{title_field_result["с"]}</u> по <u>{title_field_result["по"]}</u>', style)
+        ],
+        [
+            Paragraph(f'Количество календарных дней (больше 15 календарных дней - через ВК)', style),
+            Paragraph(f'{title_field_result["Количество календарных дней"]}', style)
+        ],
+        [
+            Paragraph(f'Статус ЭЛН', style),
+            Paragraph(f'{status}<br/> {result_status}', style)
+        ],
+        [
+            Paragraph(f'Диагноз (словами)', style),
+            Paragraph(f'{title_field_result["Диагноз (словами)"]}', style)
+        ],
+        [
+            Paragraph(f'код МКБ 10', style),
+            Paragraph(f'{mkb10_code}', style)
+        ],
+        [
+            Paragraph(f'Ф.И.О лечащего врача:', style),
+            Paragraph(f'{title_field_result["Ф.И.О лечащего врача"]}', style)
+        ],
+    ]
+
+    tbl = Table(opinion, hAlign='LEFT', colWidths=[72 * mm, 110 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'CENTRE'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 2 * mm),
+                ('LEFTPADDING', (0, 0), (-1, -1), 2 * mm),
+            ]
+        )
+    )
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f"Сведения: {hospital_short_title} ", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(tbl)
+
+    return fwb

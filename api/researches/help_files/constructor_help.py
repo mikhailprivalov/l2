@@ -14,6 +14,8 @@ constructor_help_message = [
     {"label": "-", "param": "%doc_position", "value": "Должность текущего пользователя"},
     {"label": "-", "param": "%patient_fio", "value": "ФИО пациента"},
     {"label": "-", "param": "%patient_family", "value": "Только фамилия пациента"},
+    {"label": "-", "param": "%patient_name", "value": "Только имя пациента"},
+    {"label": "-", "param": "%patient_patronymic", "value": "Только отчество пациента"},
     {"label": "-", "param": "%mother_family", "value": "Только фамилия матери"},
     {"label": "-", "param": "%mother_name", "value": "Только имя матери"},
     {"label": "-", "param": "%mother_patronymic", "value": "Только отчество матери"},
