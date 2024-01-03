@@ -2819,11 +2819,9 @@ def get_limit_download_files(request):
 def document_lk_save(request):
     form = request.body
     request_data = json.loads(form)
-    token = request.headers.get("Authorization").split(" ")[1]
-    token_obj = Application.objects.filter(key=token).first()
     ogrn = request_data.get("ogrn" or "")
     hospital = None
-    if not token_obj.unlimited_access:
+    if not request.user.unlimited_access:
         check_permissions = check_correct_hospital_company(request, ogrn)
         if not check_permissions["OK"]:
             return Response({"ok": False, "message": check_permissions["message"]})
@@ -2919,7 +2917,7 @@ def document_lk_save(request):
         user = User.objects.get(username=login).doctorprofile
         if user.hospital != hospital:
             return Response({"ok": False, "message": "Логин не соответствует организации"})
-        fields_data = request_data.get("fieldData")
+        fields_data = request_data.get("fieldsData")
 
     if Napravleniya.objects.filter(client=card, issledovaniya__research=service, data_sozdaniya__gte=date_start).count() > 1:
         return Response({"ok": False, "message": "Вы сегодня уже заполняли эту форму два раза!\nПопробуйте позднее."})
@@ -3225,25 +3223,23 @@ def get_reference_books(request):
 
 
 @api_view(["POST"])
-def get_research_fields_data(request):
+def get_research_fields(request):
     request_data = json.loads(request.body)
-    token = request.headers.get("Authorization").split(" ")[1]
-    token_obj = Application.objects.filter(key=token).first()
-    ogrn = request_data.get("ogrn" or "")
-    research_id = request_data.get("researchId" or "")
-    if not token_obj.unlimited_access:
+    ogrn = request_data.get("ogrn")
+    research_id = request_data.get("researchId")
+    if not request.user.unlimited_access:
         check_permissions = check_correct_hospital_company(request, ogrn)
         if not check_permissions["OK"]:
             return Response({"ok": False, "message": check_permissions["message"]})
-    paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False)
-    paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False)
+    paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False).order_by("order")
+    paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False).order_by("order")
     data_fields = [
         {
             "title": i.title,
-            "fieldId": i.pk,
-            "fieldTypeId": i.field_type,
-            "fieldTypeTitle": i.get_field_type_display(),
-            "inputTemplates": json.loads(i.input_templates) if i.input_templates else "",
+            "id": i.pk,
+            "typeId": i.field_type,
+            "typeTitle": i.get_field_type_display(),
+            "inputTemplates": json.loads(i.input_templates)
         }
         for i in paraclinic_input_fields
     ]
