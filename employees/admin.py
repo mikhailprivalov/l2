@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee, Position, Department, EmployeePosition
+from .models import Employee, Position, Department, EmployeePosition, WorkTimeDocument, EmployeeWorkTime
 
 
 @admin.register(Employee)
@@ -36,3 +36,13 @@ class EmployeePositionAdmin(admin.ModelAdmin):
     search_fields = ('employee', 'department', 'position')
     ordering = ('employee', 'department', 'position', 'is_active')
     autocomplete_fields = ('employee', 'department', 'doctorprofile_created', 'doctorprofile_updated')
+
+
+@admin.register(WorkTimeDocument)
+class WorkTimeDocumentAdmin(admin.ModelAdmin):
+    list_display = ('department', 'month')
+
+
+@admin.register(EmployeeWorkTime)
+class EmployeesWorkTime(admin.ModelAdmin):
+    list_display = ('employee_position', 'start', 'end')

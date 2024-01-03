@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.core.paginator import Paginator
 
@@ -423,10 +425,19 @@ class EmployeePosition(models.Model):
 
 class WorkTimeDocument(models.Model):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Подразделение', help_text='Отдел АСУ, Травмпункт и т.д')
-    month = models.DateField(verbose_name='Месяц', help_text='Дата в месяца, (01.12.24)')
+    month = models.DateField(verbose_name='Месяц', help_text='Дата в месяце, (01.12.24)')
 
     def __str__(self):
         return f'{self.department} - {self.month}'
+
+    @staticmethod
+    def create_document(month: int, year: int, department: int):
+        month_date = datetime.date(year, month, 1)
+        document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
+        if not document:
+            document = WorkTimeDocument(department_id=department, month=month_date)
+            document.save()
+        return True
 
     class Meta:
         verbose_name = 'График рабочего времени'
@@ -441,9 +452,22 @@ class EmployeeWorkTime(models.Model):
     employee_position = models.ForeignKey(EmployeePosition, on_delete=models.CASCADE, verbose_name='Должность сотрудника')
     start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
     end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
+    doctor_profile_saved = models.ForeignKey(
+        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись'
+    )
 
     def __str__(self):
         return f'{self.employee_position.employee.__str__()}: {self.start} - {self.end}'
+
+    @staticmethod
+    def get_work_time(month: int, year: int, department: int):
+        month_date = datetime.date(year, month, 1)
+        document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
+        if not document:
+            return False
+        print('УРа')
+        work_time = []
+        return work_time
 
     class Meta:
         verbose_name = 'Рабочее время'

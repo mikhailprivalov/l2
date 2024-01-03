@@ -26,7 +26,7 @@
         />
       </div>
     </div>
-    <div v-if="filtersIsFilled">
+    <div v-if="filtersIsFilled && workTimeDocument">
       <label
         for="search"
         class="filters"
@@ -38,7 +38,7 @@
       >
     </div>
     <div
-      v-if="filtersIsFilled"
+      v-if="filtersIsFilled && workTimeDocument"
       class="white-background"
     >
       <VeTable
@@ -56,6 +56,17 @@
       >
         Нет записей
       </div>
+    </div>
+    <div
+      v-if="!workTimeDocument"
+      class="create-document"
+    >
+      <button
+        class="btn btn-blue-nb"
+        @click="createWorkTimeDocument"
+      >
+        Создать график
+      </button>
     </div>
   </div>
 </template>
@@ -103,7 +114,7 @@ const getYears = (yearStart = 2023) => {
   let start = yearStart;
   selectedYear.value = currentDate.value.getFullYear();
   while (start <= selectedYear.value) {
-    years.value.push({ id: start, label: String(yearStart) });
+    years.value.push({ id: start, label: String(start) });
     start++;
   }
 };
@@ -125,47 +136,52 @@ const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMo
 
 const search = ref('');
 
-const employees = ref([
-  {
-    fio: 'Антонюк Г.Р',
-    position: 'Техник',
-    bidType: 'осн.',
-    normMonth: '178',
-    normDay: '8',
-    '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
-    '02.10.2023': '8',
-    '03.10.2023': '8',
-  },
-  {
-    fio: 'Касьяненко С.Н.',
-    position: 'Начальник',
-    bidType: 'осн.',
-    normMonth: '178',
-    normDay: '8',
-    '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
-    '02.10.2023': '8',
-    '03.10.2023': '8',
-  },
-  {
-    fio: 'Димитров С.Н.',
-    position: 'Техник',
-    bidType: 'осн.',
-    normMonth: '178',
-    normDay: '8',
-    '01.10.2023': { startWorkTime: '08:00', endWorkTime: '16:30' },
-    '02.10.2023': '8',
-  },
-]);
+const workTimeDocument = ref(false);
+
+const createWorkTimeDocument = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/create-document', {
+    month: selectedMonth.value,
+    year: selectedYear.value,
+    department: selectedDepartment.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'График создан');
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
+const employeesWorkTime = ref([]);
+
+const getEmployeesWorkTime = async () => {
+  if (filtersIsFilled.value) {
+    await store.dispatch(actions.INC_LOADING);
+    const { result } = await api('/working-time/get-work-time', {
+      month: selectedMonth.value,
+      year: selectedYear.value,
+      department: selectedDepartment.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (result) {
+      employeesWorkTime.value = result;
+      workTimeDocument.value = true;
+    } else {
+      workTimeDocument.value = false;
+    }
+  }
+};
 
 const changeWorkTime = (workTime: object) => {
   const {
     start, end, rowIndex, columnKey, clear,
   } = workTime;
   if (clear) {
-    employees.value[rowIndex][columnKey] = null;
+    employeesWorkTime.value[rowIndex][columnKey] = null;
     root.$emit('msg', 'ok', 'Очищено');
   } else {
-    employees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
+    employeesWorkTime.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
     root.$emit('msg', 'ok', 'Обновлено');
   }
 };
@@ -236,7 +252,7 @@ const getColumns = () => {
   }
 };
 
-const filteredEmployees = computed(() => employees.value.filter(employee => {
+const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
   const employeesFio = employee.fio?.toLowerCase();
   const searchTerm = search.value.toLowerCase();
   return employeesFio.includes(searchTerm);
@@ -263,6 +279,7 @@ const rowStyleOption = {
 
 watch([selectedMonth, selectedYear, selectedDepartment], () => {
   getColumns();
+  getEmployeesWorkTime();
 });
 
 onMounted(() => {
@@ -314,6 +331,11 @@ onMounted(() => {
 }
 .margin-bottom {
   margin-bottom: 5px;
+}
+.create-document {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
 
