@@ -1,12 +1,13 @@
 import calendar
 import datetime
-from copy import copy
 
+import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
-from employees.sql_func import get_work_time_by_document
+from employees.sql_func import get_work_time_by_document, get_employees_by_department
 from hospitals.models import Hospitals
+from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
 from slog.models import Log
 
@@ -474,18 +475,18 @@ class EmployeeWorkTime(models.Model):
     def get_employees_template(year: int, month: int, department: int) -> dict:
         _, end_month = calendar.monthrange(year, month)
         days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": ""} for day in range(1, end_month + 1)}
-        employees = EmployeePosition.objects.filter(is_active=True, department_id=department).order_by('employee__family')
+        employees = get_employees_by_department(department)
         employees_template = {}
-        for i in employees:
-            employees_template[i.pk] = {
-                "fio": f'{i.employee.family} {i.employee.name[0]}.{i.employee.patronymic[0] if i.employee.patronymic else ""}',
-                "position": i.position.name,
+        for employee in employees:
+            employees_template[employee.employee_position_id] = {
+                "fio": f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}',
+                "position": employee.position_name,
                 "bidType": "осн",
                 "normMonth": "178",
                 "normDay": "8"
             }
             for key, value in days.items():
-                employees_template[i.pk][key] = value.copy()
+                employees_template[employee.employee_position_id][key] = value.copy()
         return employees_template
 
     @staticmethod
@@ -499,11 +500,11 @@ class EmployeeWorkTime(models.Model):
             return []
         employees_work_time = get_work_time_by_document(document.pk)
         for time in employees_work_time:
-            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["startWorkTime"] = time.start.strftime('%H:%M')
-            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["endWorkTime"] = time.end.strftime('%H:%M')
+            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["startWorkTime"] = time.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["endWorkTime"] = time.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
         result = [
-            v
-            for k, v in employees_result.items()
+            value
+            for _, value in employees_result.items()
         ]
         return result
 
