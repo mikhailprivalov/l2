@@ -564,9 +564,9 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Spacer(1, 4 * mm))
 
     opinion = [
-        [Paragraph(f"Фамилия:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Фамилия"]}{cl_boxed_tag}', style)],
-        [Paragraph(f"Имя:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Имя"]}{cl_boxed_tag}', style)],
-        [Paragraph(f"Отчество:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Отчество"]}{cl_boxed_tag}', style)],
+        [Paragraph("Фамилия:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Фамилия"]}{cl_boxed_tag}', style)],
+        [Paragraph("Имя:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Имя"]}{cl_boxed_tag}', style)],
+        [Paragraph("Отчество:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Отчество"]}{cl_boxed_tag}', style)],
     ]
 
     tbl = Table(opinion, hAlign="LEFT", colWidths=[22 * mm, 170 * mm], rowHeights=9 * mm)
@@ -598,9 +598,9 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     fwb.append(Paragraph(f"Ребенок - инвалид {space_symbol * 8}<u>{title_field_result['Инвалидность']}</u>", styleCenterBold12))
 
     opinion = [
-        [Paragraph(f"Фамилия:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Фамилия ребенка"]}{cl_boxed_tag}', style)],
-        [Paragraph(f"Имя:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Имя ребенка"]}{cl_boxed_tag}', style)],
-        [Paragraph(f"Отчество:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Отчество ребенка"]}{cl_boxed_tag}', style)],
+        [Paragraph("Фамилия:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Фамилия ребенка"]}{cl_boxed_tag}', style)],
+        [Paragraph("Имя:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Имя ребенка"]}{cl_boxed_tag}', style)],
+        [Paragraph("Отчество:", style), Paragraph(f'{op_boxed_tag}{title_field_result["Отчество ребенка"]}{cl_boxed_tag}', style)],
     ]
 
     tbl = Table(opinion, hAlign="LEFT", colWidths=[22 * mm, 170 * mm], rowHeights=9 * mm)
@@ -641,19 +641,19 @@ def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     mkb10_code = mkb10_code_obj.get("code")
 
     opinion = [
-        [Paragraph(f"Тип ЭЛН (первичный/продолжение)", style), Paragraph(f'{open_bold_tag}{title_field_result["Вид"]}{close_tag_bold}', style)],
+        [Paragraph("Тип ЭЛН (первичный/продолжение)", style), Paragraph(f'{open_bold_tag}{title_field_result["Вид"]}{close_tag_bold}', style)],
         [
-            Paragraph(f"Период", style),
+            Paragraph("Период", style),
             Paragraph(f'с {open_bold_tag}{title_field_result["с"]}{close_tag_bold}{space_symbol * 1} по {space_symbol * 1}{open_bold_tag}{title_field_result["по"]}{close_tag_bold}', style),
         ],
         [
-            Paragraph(f"Количество календарных дней (больше 15 календарных дней - через ВК)", style),
+            Paragraph("Количество календарных дней (больше 15 календарных дней - через ВК)", style),
             Paragraph(f'{open_bold_tag}{title_field_result["Количество календарных дней"]}{close_tag_bold}', style),
         ],
-        [Paragraph(f"Статус ЭЛН", style), Paragraph(f"{open_bold_tag}{status}{close_tag_bold}<br/><br/> {result_status}", style)],
-        [Paragraph(f"Диагноз (словами)", style), Paragraph(f'{title_field_result["Диагноз (словами)"]}', style)],
-        [Paragraph(f"код МКБ 10", style), Paragraph(f"{open_bold_tag}{mkb10_code}{close_tag_bold}", style)],
-        [Paragraph(f"Ф.И.О лечащего врача:", style), Paragraph(f'{title_field_result["Ф.И.О лечащего врача"]}', style)],
+        [Paragraph("Статус ЭЛН", style), Paragraph(f"{open_bold_tag}{status}{close_tag_bold}<br/><br/> {result_status}", style)],
+        [Paragraph("Диагноз (словами)", style), Paragraph(f'{title_field_result["Диагноз (словами)"]}', style)],
+        [Paragraph("код МКБ 10", style), Paragraph(f"{open_bold_tag}{mkb10_code}{close_tag_bold}", style)],
+        [Paragraph("Ф.И.О лечащего врача:", style), Paragraph(f'{title_field_result["Ф.И.О лечащего врача"]}', style)],
     ]
 
     tbl = Table(opinion, hAlign="LEFT", colWidths=[72 * mm, 110 * mm])
