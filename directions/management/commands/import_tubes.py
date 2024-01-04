@@ -53,7 +53,7 @@ class Command(BaseCommand):
                     starts = True
             elif starts and cells[tubes_title] != 'None':
                 normalized_title = re.split('([/;])', cells[tubes_title])[0].strip()
-                color = "#808080"
+                color = colors.get('серый')
                 color_in_string = re.search(f'({colors_string})', normalized_title, flags=re.IGNORECASE)
                 if color_in_string:
                     color = colors.get(color_in_string.group(0))
