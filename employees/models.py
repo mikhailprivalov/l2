@@ -438,9 +438,9 @@ class WorkTimeDocument(models.Model):
     def get_document(year: int, month: int, department: int):
         month_date = datetime.date(year, month, 1)
         document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
-        if not document:
-            return False
-        return True
+        if document:
+            return document.pk
+        return document
 
     @staticmethod
     def create_document(year: int, month: int, department: int):
@@ -472,10 +472,11 @@ class EmployeeWorkTime(models.Model):
         return f'{self.employee_position.employee.__str__()}: {self.start} - {self.end}'
 
     @staticmethod
-    def get_employees_template(year: int, month: int, department: int) -> dict:
+    def get_employees_template(document: WorkTimeDocument) -> dict:
+        year, month = document.month.year, document.month.month
         _, end_month = calendar.monthrange(year, month)
         days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": ""} for day in range(1, end_month + 1)}
-        employees = get_employees_by_department(department)
+        employees = get_employees_by_department(document.department_id)
         employees_template = {}
         for employee in employees:
             employees_template[employee.employee_position_id] = {
@@ -490,12 +491,9 @@ class EmployeeWorkTime(models.Model):
         return employees_template
 
     @staticmethod
-    def get_work_time(year: int, month: int, department: int):
-        month_date = datetime.date(year, month, 1)
-        document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
-        if not document:
-            return []
-        employees_result = EmployeeWorkTime.get_employees_template(year, month, department)
+    def get_work_time(document_id: int):
+        document = WorkTimeDocument.objects.get(pk=document_id)
+        employees_result = EmployeeWorkTime.get_employees_template(document)
         if not employees_result:
             return []
         employees_work_time = get_work_time_by_document(document.pk)

@@ -26,7 +26,7 @@
         />
       </div>
     </div>
-    <div v-if="filtersIsFilled && workTimeDocument">
+    <div v-if="workTimeDocument">
       <label
         for="search"
         class="filters"
@@ -38,7 +38,7 @@
       >
     </div>
     <div
-      v-if="filtersIsFilled && workTimeDocument"
+      v-if="workTimeDocument"
       class="white-background"
     >
       <VeTable
@@ -136,28 +136,22 @@ const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMo
 
 const search = ref('');
 
-const workTimeDocument = ref(false);
+const workTimeDocument = ref(null);
 
 const getWorkTimeDocument = async () => {
-  if (filtersIsFilled.value) {
-    await store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('/working-time/get-document', {
-      month: selectedMonth.value,
-      year: selectedYear.value,
-      department: selectedDepartment.value,
-    });
-    await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      workTimeDocument.value = true;
-    } else {
-      workTimeDocument.value = false;
-    }
-  }
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-document', {
+    month: selectedMonth.value,
+    year: selectedYear.value,
+    department: selectedDepartment.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  workTimeDocument.value = result;
 };
 
 const createWorkTimeDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('/working-time/create-document', {
+  const { ok } = await api('/working-time/create-document', {
     month: selectedMonth.value,
     year: selectedYear.value,
     department: selectedDepartment.value,
@@ -165,6 +159,7 @@ const createWorkTimeDocument = async () => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'График создан');
+    await getWorkTimeDocument();
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
@@ -173,17 +168,12 @@ const createWorkTimeDocument = async () => {
 const employeesWorkTime = ref([]);
 
 const getEmployeesWorkTime = async () => {
-  if (filtersIsFilled.value) {
-    await store.dispatch(actions.INC_LOADING);
-    const { result } = await api('/working-time/get-work-time', {
-      month: selectedMonth.value,
-      year: selectedYear.value,
-      department: selectedDepartment.value,
-    });
-    await store.dispatch(actions.DEC_LOADING);
-    console.log(result);
-    employeesWorkTime.value = result;
-  }
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-work-time', {
+    documentId: workTimeDocument.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  employeesWorkTime.value = result;
 };
 
 const changeWorkTime = (workTime: object) => {
@@ -213,56 +203,54 @@ const getMonthDays = (year: number, month: number) => {
 };
 
 const getColumns = () => {
-  if (filtersIsFilled.value) {
-    const columnTemplate = [
-      {
-        field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 190, fixed: 'left',
-      },
-      {
-        field: 'position', key: 'position', title: 'Должность', align: 'center', width: 120, fixed: 'left',
-      },
-      {
-        field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 70,
-      },
-      {
-        field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 70,
-      },
-      {
-        field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
-      },
-    ];
-    const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
-    const data = daysMonth.map((col) => {
-      const date = col.toLocaleDateString();
-      const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
-      const weekend = [6, 0].includes(col.getDay());
-      const isFirstDay = col.getDate() === 1;
-      const prevDay = new Date(col.getFullYear(), col.getMonth(), col.getDate() - 1).toLocaleDateString();
-      return {
-        key: date,
-        field: date,
-        title: dateTitle,
-        align: 'center',
-        width: 211,
-        isWeekend: weekend,
-        renderBodyCell: ({ row, column, rowIndex }, h) => h(
-          DateCell,
-          {
-            props: {
-              workTime: row[column.field] ? row[column.field] : '',
-              rowIndex,
-              columnKey: column.key,
-              isFirstDay,
-              prevWorkTime: employeesWorkTime.value[rowIndex][prevDay],
-            },
-            on: { changeWorkTime },
+  const columnTemplate = [
+    {
+      field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 190, fixed: 'left',
+    },
+    {
+      field: 'position', key: 'position', title: 'Должность', align: 'center', width: 120, fixed: 'left',
+    },
+    {
+      field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 70,
+    },
+    {
+      field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 70,
+    },
+    {
+      field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
+    },
+  ];
+  const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
+  const data = daysMonth.map((col) => {
+    const date = col.toLocaleDateString();
+    const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
+    const weekend = [6, 0].includes(col.getDay());
+    const isFirstDay = col.getDate() === 1;
+    const prevDay = new Date(col.getFullYear(), col.getMonth(), col.getDate() - 1).toLocaleDateString();
+    return {
+      key: date,
+      field: date,
+      title: dateTitle,
+      align: 'center',
+      width: 211,
+      isWeekend: weekend,
+      renderBodyCell: ({ row, column, rowIndex }, h) => h(
+        DateCell,
+        {
+          props: {
+            workTime: row[column.field] ? row[column.field] : '',
+            rowIndex,
+            columnKey: column.key,
+            isFirstDay,
+            prevWorkTime: employeesWorkTime.value[rowIndex][prevDay],
           },
-        ),
-      };
-    });
-    columnTemplate.push(...data);
-    columns.value = columnTemplate;
-  }
+          on: { changeWorkTime },
+        },
+      ),
+    };
+  });
+  columnTemplate.push(...data);
+  columns.value = columnTemplate;
 };
 
 const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
@@ -291,11 +279,22 @@ const rowStyleOption = {
 };
 
 watch([selectedMonth, selectedYear, selectedDepartment], () => {
-  getColumns();
-  getWorkTimeDocument();
-  getEmployeesWorkTime();
+  if (filtersIsFilled.value) {
+    getWorkTimeDocument();
+  }
 });
 
+watch([workTimeDocument], () => {
+  if (workTimeDocument.value) {
+    getEmployeesWorkTime();
+  }
+});
+
+watch([selectedYear, selectedMonth], () => {
+  if (selectedYear.value && selectedMonth.value) {
+    getColumns();
+  }
+});
 onMounted(() => {
   getDepartments();
   getYears();
