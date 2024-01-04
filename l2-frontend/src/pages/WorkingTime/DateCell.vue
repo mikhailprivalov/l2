@@ -7,6 +7,8 @@
       :append-to-body="true"
       placeholder="Выберите время"
       class="time-width"
+      :clearable="true"
+      :before-clear-all="beforeClearAll"
       @input="changeWorkTime"
     />
     <button
@@ -72,8 +74,8 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance,
-  onMounted, onUpdated, ref, watch,
+  getCurrentInstance,
+  ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -104,9 +106,6 @@ const props = defineProps({
   },
 });
 
-const propsWorkTimeIsFilled = computed(() => !!(typeof props.workTime === 'object' && props.workTime.startWorkTime
-  && props.workTime.endWorkTime));
-
 const selectTemplate = ref(null);
 const defaultTemplatesWorkTime = ref([
   { id: 1, label: '08:00-16:30' },
@@ -120,16 +119,23 @@ const templatesWorkTime = ref([
 ]);
 const root = getCurrentInstance().proxy.$root;
 
-const createLabel = (start, end) => `${start}-${end}`;
+const createLabel = (start, end) => {
+  if (start && end) {
+    return `${start}-${end}`;
+  }
+  return null;
+};
 
-const changeTemplate = (templateLabel: string) => {
-  const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === templateLabel);
-  if (templateCurrentWorkTime) {
-    selectTemplate.value = templateCurrentWorkTime;
-  } else {
-    const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: templateLabel };
-    templatesWorkTime.value.push(currentWorkTime);
-    selectTemplate.value = currentWorkTime;
+const changeTemplate = (templateLabel: string | null) => {
+  if (templateLabel) {
+    const templateCurrentWorkTime = templatesWorkTime.value.find((template) => template.label === templateLabel);
+    if (templateCurrentWorkTime) {
+      selectTemplate.value = templateCurrentWorkTime;
+    } else {
+      const currentWorkTime = { id: templatesWorkTime.value.length + 1, label: templateLabel };
+      templatesWorkTime.value.push(currentWorkTime);
+      selectTemplate.value = currentWorkTime;
+    }
   }
 };
 
@@ -137,7 +143,9 @@ const startWork = ref(null);
 const endWork = ref(null);
 
 const appendCurrentTime = () => {
-  if (propsWorkTimeIsFilled.value) {
+  startWork.value = props.workTime.startWorkTime;
+  endWork.value = props.workTime.endWorkTime;
+  if (startWork.value && endWork.value) {
     const workTimeLabel = createLabel(props.workTime.startWorkTime, props.workTime.endWorkTime);
     changeTemplate(workTimeLabel);
   } else {
@@ -150,41 +158,26 @@ const changeWorkTime = () => {
   if (selectTemplate.value) {
     const workTime = selectTemplate.value?.label?.split('-');
     const [start, end] = workTime;
-    if (start !== startWork.value || end !== endWork.value) {
-      startWork.value = start;
-      endWork.value = end;
-    }
-    if (startWork.value !== props.workTime.startWorkTime || endWork.value !== props.workTime.endWorkTime) {
+    if (start !== props.workTime.startWorkTime || end !== props.workTime.endWorkTime) {
       emit('changeWorkTime', {
-        start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
-      });
-    }
-  } else {
-    startWork.value = null;
-    endWork.value = null;
-    if (startWork.value !== props.workTime.startWorkTime) {
-      emit('changeWorkTime', {
-        start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: true,
+        start, end, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
       });
     }
   }
 };
 
+const beforeClearAll = () => {
+  emit('changeWorkTime', {
+    start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: true,
+  });
+};
+
 const changeExact = () => {
   if ((startWork.value && endWork.value) && ((startWork.value < endWork.value) || (startWork.value > endWork.value
     && endWork.value === '00:00'))) {
-    const workTimeLabel = `${startWork.value}-${endWork.value}`;
-    if (selectTemplate.value) {
-      if (workTimeLabel !== selectTemplate.value.label) {
-        changeTemplate(workTimeLabel);
-      } else {
-        root.$emit('msg', 'error', 'Время уже назначено');
-      }
-    } else {
-      changeTemplate(workTimeLabel);
-    }
-  } else if (!startWork.value || !endWork.value) {
-    root.$emit('msg', 'error', 'Время не заполнено');
+    emit('changeWorkTime', {
+      start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
+    });
   } else if (startWork.value >= endWork.value) {
     root.$emit('msg', 'error', 'Время не верно');
   }
@@ -200,11 +193,6 @@ const copyPrevTime = () => {
 watch(() => props.workTime, () => {
   appendCurrentTime();
 }, { immediate: true });
-
-// onMounted(() => {
-//   console.log('манту');
-//   appendCurrentTime();
-// });
 </script>
 
 <style scoped lang="scss">

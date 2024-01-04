@@ -128,7 +128,7 @@ const getColumns = () => {
         DateCell,
         {
           props: {
-            workTime: employeesWorkTime.value[rowIndex][date] ? employeesWorkTime.value[rowIndex][date] : '',
+            workTime: row[column.field] ? row[column.field] : '',
             rowIndex,
             columnKey: column.key,
             isFirstDay,
