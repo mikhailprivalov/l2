@@ -475,19 +475,16 @@ class EmployeeWorkTime(models.Model):
     def get_employees_template(document: WorkTimeDocument) -> dict:
         year, month = document.month.year, document.month.month
         _, end_month = calendar.monthrange(year, month)
-        days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": ""} for day in range(1, end_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": ""} for day in range(1, end_month + 1)}
         employees = get_employees_by_department(document.department_id)
         employees_template = {}
         for employee in employees:
-            employees_template[employee.employee_position_id] = {
-                "fio": f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}',
-                "position": employee.position_name,
-                "bidType": "осн",
-                "normMonth": "178",
-                "normDay": "8"
-            }
-            for key, value in days.items():
-                employees_template[employee.employee_position_id][key] = value.copy()
+            employees_template[employee.employee_position_id] = template_days.copy()
+            employees_template[employee.employee_position_id]["fio"] = f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}'
+            employees_template[employee.employee_position_id]["position"] = employee.position_name
+            employees_template[employee.employee_position_id]["bidType"] = 'осн'
+            employees_template[employee.employee_position_id]["normMonth"] = '178'
+            employees_template[employee.employee_position_id]["normDay"] = "8"
         return employees_template
 
     @staticmethod
@@ -498,8 +495,10 @@ class EmployeeWorkTime(models.Model):
             return []
         employees_work_time = get_work_time_by_document(document.pk)
         for time in employees_work_time:
-            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["startWorkTime"] = time.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
-            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')]["endWorkTime"] = time.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+            work_time = employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')].copy()
+            work_time["startWorkTime"] = time.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+            work_time["endWorkTime"] = time.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')] = work_time
         result = [
             value
             for _, value in employees_result.items()
