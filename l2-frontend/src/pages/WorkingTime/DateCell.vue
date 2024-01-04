@@ -73,7 +73,7 @@
 <script setup lang="ts">
 import {
   computed, getCurrentInstance,
-  onMounted, ref, watch,
+  onMounted, onUpdated, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -84,6 +84,7 @@ const props = defineProps({
   workTime: {
     type: [Object, String],
     required: true,
+    default: '',
   },
   rowIndex: {
     type: Number,
@@ -107,6 +108,11 @@ const propsWorkTimeIsFilled = computed(() => !!(typeof props.workTime === 'objec
   && props.workTime.endWorkTime));
 
 const selectTemplate = ref(null);
+const defaultTemplatesWorkTime = ref([
+  { id: 1, label: '08:00-16:30' },
+  { id: 2, label: '08:00-15:48' },
+  { id: 3, label: '15:48-00:00' },
+]);
 const templatesWorkTime = ref([
   { id: 1, label: '08:00-16:30' },
   { id: 2, label: '08:00-15:48' },
@@ -134,6 +140,9 @@ const appendCurrentTime = () => {
   if (propsWorkTimeIsFilled.value) {
     const workTimeLabel = createLabel(props.workTime.startWorkTime, props.workTime.endWorkTime);
     changeTemplate(workTimeLabel);
+  } else {
+    templatesWorkTime.value = defaultTemplatesWorkTime.value;
+    selectTemplate.value = null;
   }
 };
 
@@ -153,9 +162,11 @@ const changeWorkTime = () => {
   } else {
     startWork.value = null;
     endWork.value = null;
-    emit('changeWorkTime', {
-      start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: true,
-    });
+    if (startWork.value !== props.workTime.startWorkTime) {
+      emit('changeWorkTime', {
+        start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: true,
+      });
+    }
   }
 };
 
@@ -186,9 +197,14 @@ const copyPrevTime = () => {
   }
 };
 
-onMounted(() => {
+watch(() => props.workTime, () => {
   appendCurrentTime();
-});
+}, { immediate: true });
+
+// onMounted(() => {
+//   console.log('манту');
+//   appendCurrentTime();
+// });
 </script>
 
 <style scoped lang="scss">

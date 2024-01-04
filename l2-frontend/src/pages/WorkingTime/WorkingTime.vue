@@ -26,37 +26,12 @@
         />
       </div>
     </div>
-    <div v-if="workTimeDocument">
-      <label
-        for="search"
-        class="filters"
-      >Поиск сотрудника</label>
-      <input
-        id="search"
-        v-model.trim="search"
-        class="form-control"
-      >
-    </div>
-    <div
+    <WorktingTimeTable
       v-if="workTimeDocument"
-      class="white-background"
-    >
-      <VeTable
-        v-show="filteredEmployees.length"
-        :columns="columns"
-        :table-data="filteredEmployees"
-        :row-style-option="rowStyleOption"
-        :cell-style-option="cellStyleOption"
-        :border-y="true"
-        :scroll-width="0"
-      />
-      <div
-        v-show="!filteredEmployees.length"
-        class="empty-list"
-      >
-        Нет записей
-      </div>
-    </div>
+      :work-time-document-id="workTimeDocument"
+      :year="selectedYear"
+      :month="selectedMonth"
+    />
     <div
       v-if="!workTimeDocument"
       class="create-document"
@@ -75,7 +50,6 @@
 import {
   computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
-import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -83,8 +57,8 @@ import 'vue-easytable/libs/theme-default/index.css';
 
 import api from '@/api';
 import { useStore } from '@/store';
-import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import * as actions from '@/store/action-types';
+import WorktingTimeTable from '@/pages/WorkingTime/WorktingTimeTable.vue';
 
 const root = getCurrentInstance().proxy.$root;
 
@@ -134,8 +108,6 @@ const getDepartments = async () => {
 
 const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMonth.value && selectedYear.value));
 
-const search = ref('');
-
 const workTimeDocument = ref(null);
 
 const getWorkTimeDocument = async () => {
@@ -165,136 +137,12 @@ const createWorkTimeDocument = async () => {
   }
 };
 
-const employeesWorkTime = ref([]);
-
-const getEmployeesWorkTime = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-work-time', {
-    documentId: workTimeDocument.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  employeesWorkTime.value = result;
-};
-
-const changeWorkTime = (workTime: object) => {
-  const {
-    start, end, rowIndex, columnKey, clear,
-  } = workTime;
-  if (clear) {
-    employeesWorkTime.value[rowIndex][columnKey] = null;
-    root.$emit('msg', 'ok', 'Очищено');
-  } else {
-    employeesWorkTime.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
-    root.$emit('msg', 'ok', 'Обновлено');
-  }
-};
-
-const columns = ref([]);
-
-const getMonthDays = (year: number, month: number) => {
-  const days = [];
-  const currentMonth = month - 1;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
-
-const getColumns = () => {
-  const columnTemplate = [
-    {
-      field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 190, fixed: 'left',
-    },
-    {
-      field: 'position', key: 'position', title: 'Должность', align: 'center', width: 120, fixed: 'left',
-    },
-    {
-      field: 'bidType', key: 'bidType', title: 'Ставка', align: 'center', width: 70,
-    },
-    {
-      field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 70,
-    },
-    {
-      field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
-    },
-  ];
-  const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
-  const data = daysMonth.map((col) => {
-    const date = col.toLocaleDateString();
-    const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
-    const weekend = [6, 0].includes(col.getDay());
-    const isFirstDay = col.getDate() === 1;
-    const prevDay = new Date(col.getFullYear(), col.getMonth(), col.getDate() - 1).toLocaleDateString();
-    return {
-      key: date,
-      field: date,
-      title: dateTitle,
-      align: 'center',
-      width: 211,
-      isWeekend: weekend,
-      renderBodyCell: ({ row, column, rowIndex }, h) => h(
-        DateCell,
-        {
-          props: {
-            workTime: row[column.field] ? row[column.field] : '',
-            rowIndex,
-            columnKey: column.key,
-            isFirstDay,
-            prevWorkTime: employeesWorkTime.value[rowIndex][prevDay],
-          },
-          on: { changeWorkTime },
-        },
-      ),
-    };
-  });
-  columnTemplate.push(...data);
-  columns.value = columnTemplate;
-};
-
-const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
-  const employeesFio = employee.fio?.toLowerCase();
-  const searchTerm = search.value.toLowerCase();
-  return employeesFio.includes(searchTerm);
-}));
-
-const cellStyleOption = {
-  bodyCellClass: ({ column }) => {
-    if (column.isWeekend) {
-      return 'table-body-cell-weekend';
-    }
-    return '';
-  },
-  headerCellClass: ({ column }) => {
-    if (column.isWeekend) {
-      return 'table-header-cell-weekend';
-    }
-    return '';
-  },
-};
-
-const rowStyleOption = {
-  stripe: true,
-};
-
 watch([selectedMonth, selectedYear, selectedDepartment], () => {
   if (filtersIsFilled.value) {
     getWorkTimeDocument();
   }
 });
 
-watch([workTimeDocument], () => {
-  if (workTimeDocument.value) {
-    getEmployeesWorkTime();
-  }
-});
-
-watch([selectedYear, selectedMonth], () => {
-  if (selectedYear.value && selectedMonth.value) {
-    getColumns();
-  }
-});
 onMounted(() => {
   getDepartments();
   getYears();
@@ -304,17 +152,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.empty-list {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 30px;
-  width: 100%;
-  color: #666;
-  font-size: 16px;
-  border: 1px solid #eee;
-  border-top: 0;
-}
 .main {
   width: 100%;
   margin: 0 auto;
@@ -326,9 +163,6 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 5px;
-}
-.white-background {
-  background-color: #FFF;
 }
 .filters {
   margin: 0 10px;
@@ -349,14 +183,5 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-}
-</style>
-
-<style lang="scss">
-.table-body-cell-weekend {
-  background: #ade0a875 !important;;
-}
-.table-header-cell-weekend {
-  background: #ade0a875 !important;
 }
 </style>
