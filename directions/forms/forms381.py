@@ -17,6 +17,8 @@ from reportlab.platypus import Table, TableStyle, Paragraph, Frame, Spacer, Keep
 from reportlab.platypus.flowables import HRFlowable
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import Image
+
+from directory.models import Fractions
 from laboratory.utils import strdate, strtime
 import sys
 import locale
@@ -1073,5 +1075,137 @@ def form_03(c: Canvas, dir: Napravleniya):
         one_inframe = KeepInFrame(210 * mm, 146 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
         two_inframe = KeepInFrame(210 * mm, 146 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
         one_frame.addFromList([one_inframe, two_inframe], c)
+
+    printForm()
+
+
+def form_04(c: Canvas, dir: Napravleniya):
+    # Направление на химико-токсикологические исследования
+    def printForm():
+        hospital_name = dir.hospital_short_title
+
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 12
+        style.leading = 5
+
+        styleLeading8 = deepcopy(style)
+        styleLeading8.leading = 13
+        styleLeading8.leftIndent = 10 * mm
+
+        styleZeroSpaceAfter = deepcopy(style)
+        styleZeroSpaceAfter.spaceAfter = 1 * mm
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleCenter = deepcopy(styleCenterBold)
+        styleCenter.fontName = 'PTAstraSerifReg'
+        styleCenter.fontSize = 14
+
+        styleCenter12 = deepcopy(styleCenter)
+        styleCenter12.fontSize = 12
+        styleCenter12.SpaceAfter = 1 * mm
+
+        styleCenter10 = deepcopy(styleCenter12)
+        styleCenter10.fontSize = 10
+
+        styleCenter2 = deepcopy(styleCenter12)
+        styleCenter2.SpaceBefor = -20 * mm
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 10
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        objs = []
+        opinion = [
+            [
+                Paragraph(f'<font size=10>Министерство здравоохранения<br/>Российской Федерации<br/>{hospital_name}<br/></font>', styleT),
+                Paragraph('<font size=10>Медицинская документация<br/>Учетная форма № 452/у-06</font>', styleT),
+            ],
+        ]
+        tbl = Table(opinion, 2 * [105 * mm])
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                    ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                    ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]
+            )
+        )
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 2 * mm))
+        objs.append(Paragraph('Направление<br/><br/> на химико-токсикологические исследования', styleCenter))
+        objs.append(Spacer(1, 2 * mm))
+        space_symbol = '&nbsp;'
+        objs.append(Paragraph(f'{strdate(dir.data_sozdaniya)} {space_symbol * 140} №{dir.pk}', styleCenter12))
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(Paragraph(f' в ХТЛ {hospital_name}', styleCenter))
+        objs.append(Spacer(1, 0.2 * mm))
+        objs.append(Paragraph('______________________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 2.2 * mm))
+        objs.append(Paragraph(f'(наименование химико-токсикологической лаборатории – ХТЛ)', styleCenter10))
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(Paragraph('______________________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 2.2 * mm))
+        objs.append(Paragraph(f'(наименование медицинской организации и его структурного подразделения, выдавшего направление)', styleCenter10))
+        objs.append(Spacer(1, 5 * mm))
+        objs.append(Paragraph(f'{dir.client.individual.fio()} {space_symbol * 5} Возраст: {dir.client.individual.age()}', styleCenter12))
+        objs.append(Spacer(1, 0.2 * mm))
+        objs.append(Paragraph('______________________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 2.2 * mm))
+        objs.append(Paragraph(f'(фамилия, имя, отчество освидетельствуемого, возраст)', styleCenter10))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Код биологического объекта {dir.pk} ', style))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph('______________________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Дата и время отбора объекта  {strdate(dir.data_sozdaniya)} ', style))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Условия хранения объектов __________________________________________________________________________', style))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Биологический объект и его количество и показатели МОЧА', style))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph('______________________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph('______________________________________________________________________________________________________________________', styleCenter10))
+        objs.append(Spacer(1, 4 * mm))
+        diagnosis = dir.diagnos.strip()[:35]
+        objs.append(Paragraph(f'Предварительный клинический диагноз: {diagnosis}', style))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Цель химико-токсикологических исследований:  <u>Обнаружены / Не обнаружены</u>', style))
+        iss = Issledovaniya.objects.filter(napravleniye=dir).first()
+        research = iss.research
+        fractions = Fractions.objects.filter(research=research, hide=False)
+        test = [f.title for f in fractions]
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'{"<br/>".join(test)}', styleLeading8))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Дополнительные сведения ___________________________________________________________________________', style))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph(f'Дата и время отправки биологических объектов в ХТЛ', style))
+        objs.append(Spacer(1, 10 * mm))
+        objs.append(Paragraph(f'Ф.И.О. врача (фельдшера), <br/><br/>выдавшего направление {space_symbol * 20} {dir.doc.get_fio()} {space_symbol * 40} _______________________', style))
+        objs.append(Spacer(1, 1.5 * mm))
+        objs.append(Paragraph(f'{space_symbol * 150}(подпись)', style))
+
+        data_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        data_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)
+        data_frame.addFromList([data_inframe], c)
 
     printForm()
