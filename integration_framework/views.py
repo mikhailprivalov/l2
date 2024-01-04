@@ -179,9 +179,9 @@ def get_dir_cpp(request):
             digest = hashlib.file_digest(f, "md5")
             md5_file = digest.hexdigest()
             f.close()
-        zip_file = d.file.open(mode='rb')
+        zip_file = d.file.open(mode="rb")
         bs64_zip = base64.b64encode(zip_file.read())
-        md5_checksum_file = base64.b64encode(md5_file.encode('utf-8'))
+        md5_checksum_file = base64.b64encode(md5_file.encode("utf-8"))
         data_direction.append({"directionNumbrer": d.direction_id, "bs64Zip": bs64_zip, "md5file": md5_checksum_file})
     result["next"] = data_direction
     return Response(result)
@@ -1989,7 +1989,7 @@ def get_cda_data(pk):
         smo_ids = NSI.get("1.2.643.5.1.13.13.99.2.183_smo_id", {}).get("values", {})
         smo_id = smo_ids.get(insurer_full_code, "")
 
-    if SettingManager.get("eds_control_enp", default='true', default_type='b') and not p_enp:
+    if SettingManager.get("eds_control_enp", default="true", default_type="b") and not p_enp:
         return {}
     else:
         return {
@@ -2008,7 +2008,7 @@ def get_cda_data(pk):
                     "gender_title": "Женский" if ind.sex.lower() == "ж" else "Мужской",
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
-                    "address": data_individual['main_address'],
+                    "address": data_individual["main_address"],
                 },
                 "organization": data["organization"],
             },
@@ -2818,6 +2818,14 @@ def get_limit_download_files(request):
 @can_use_schedule_only
 def document_lk_save(request):
     form = request.body
+    request_data = json.loads(form)
+    ogrn = request_data.get("ogrn" or "")
+    hospital = None
+    if not request.user.unlimited_access:
+        check_permissions = check_correct_hospital_company(request, ogrn)
+        if not check_permissions["OK"]:
+            return Response({"ok": False, "message": check_permissions["message"]})
+        hospital = check_permissions["hospital"]
 
     data = data_parse(
         form,
@@ -2901,8 +2909,15 @@ def document_lk_save(request):
 
     date = timezone.now()
     date_start = date_at_bound(date)
-
-    user = User.objects.get(pk=LK_USER).doctorprofile
+    fields_data = []
+    if not request_data.get("externalProtocol"):
+        user = User.objects.get(pk=LK_USER).doctorprofile
+    else:
+        login = request_data.get("login")
+        user = User.objects.get(username=login).doctorprofile
+        if user.hospital != hospital:
+            return Response({"ok": False, "message": "Логин не соответствует организации"})
+        fields_data = request_data.get("fieldsData")
 
     if Napravleniya.objects.filter(client=card, issledovaniya__research=service, data_sozdaniya__gte=date_start).count() > 1:
         return Response({"ok": False, "message": "Вы сегодня уже заполняли эту форму два раза!\nПопробуйте позднее."})
@@ -2944,50 +2959,54 @@ def document_lk_save(request):
 
         comment_lines = []
 
-        for g in groups[:50]:
-            if g["title"] and g["show_title"]:
-                comment_lines.append(f"{g['title']}:")
+        if not request_data.get("externalProtocol"):
+            for g in groups[:50]:
+                if g["title"] and g["show_title"]:
+                    comment_lines.append(f"{g['title']}:")
 
-            for f in g["fields"][:50]:
-                if not f["new_value"]:
-                    continue
-                fields_count += 1
-                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=f["pk"], field_type=f["field_type"], value=html.escape(f["new_value"][:400]))
+                for f in g["fields"][:50]:
+                    if not f["new_value"]:
+                        continue
+                    fields_count += 1
+                    f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=f["pk"], field_type=f["field_type"], value=html.escape(f["new_value"][:400]))
+                    f_result.save()
 
+                    line = ""
+                    if f_result.field.title:
+                        line = f"{f_result.field.title}: "
+                    line += f_result.value
+                    comment_lines.append(line)
+
+            if fields_count == 0:
+                transaction.set_rollback(True)
+                return Response({"ok": False})
+            elif service.convert_to_doc_call:
+                if not phone:
+                    return Response({"ok": False, "message": "Телефон должен быть заполнен"})
+                hospital = Hospitals.get_default_hospital()
+                DoctorCall.doctor_call_save(
+                    {
+                        "card": card,
+                        "research": service.pk,
+                        "address": card.main_address,
+                        "district": -1,
+                        "date": current_time(),
+                        "comment": "\n".join(comment_lines),
+                        "phone": phone,
+                        "doc": -1,
+                        "purpose": 24,
+                        "hospital": hospital.pk,
+                        "external": True,
+                        "external_num": str(direction),
+                        "is_main_external": False,
+                        "direction": direction,
+                    }
+                )
+                return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
+        else:
+            for field_data in fields_data:
+                f_result = directions.ParaclinicResult(issledovaniye=iss, field_id=field_data.get("fieldId"), field_type=field_data.get("fieldTypeId"), value=field_data.get("fieldValue"))
                 f_result.save()
-
-                line = ""
-                if f_result.field.title:
-                    line = f"{f_result.field.title}: "
-                line += f_result.value
-                comment_lines.append(line)
-
-        if fields_count == 0:
-            transaction.set_rollback(True)
-            return Response({"ok": False})
-        elif service.convert_to_doc_call:
-            if not phone:
-                return Response({"ok": False, "message": "Телефон должен быть заполнен"})
-            hospital = Hospitals.get_default_hospital()
-            DoctorCall.doctor_call_save(
-                {
-                    "card": card,
-                    "research": service.pk,
-                    "address": card.main_address,
-                    "district": -1,
-                    "date": current_time(),
-                    "comment": "\n".join(comment_lines),
-                    "phone": phone,
-                    "doc": -1,
-                    "purpose": 24,
-                    "hospital": hospital.pk,
-                    "external": True,
-                    "external_num": str(direction),
-                    "is_main_external": False,
-                    "direction": direction,
-                }
-            )
-            return Response({"ok": True, "message": f"Заявка {direction} зарегистрирована"})
 
     return Response({"ok": True, "message": f'Форма "{service.get_title()}" ({direction}) сохранена'})
 
@@ -3204,6 +3223,32 @@ def get_reference_books(request):
 
 
 @api_view(["POST"])
+def get_research_fields(request):
+    request_data = json.loads(request.body)
+    ogrn = request_data.get("ogrn")
+    research_id = request_data.get("researchId")
+    if not request.user.unlimited_access:
+        check_permissions = check_correct_hospital_company(request, ogrn)
+        if not check_permissions["OK"]:
+            return Response({"ok": False, "message": check_permissions["message"]})
+    paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False).order_by("order")
+    paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False).order_by("order")
+    data_fields = [
+        {
+            "title": i.title,
+            "id": i.pk,
+            "typeId": i.field_type,
+            "typeTitle": i.get_field_type_display(),
+            "inputTemplates": json.loads(i.input_templates)
+        }
+        for i in paraclinic_input_fields
+    ]
+    research = Researches.objects.get(pk=research_id)
+
+    return Response({"fields": data_fields, "service": {"title": research.title, "id": research.pk}})
+
+
+@api_view(["POST"])
 def send_laboratory_order(request):
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
@@ -3288,17 +3333,17 @@ def send_laboratory_order(request):
     if not individual and lastname:
         card = Individual.import_from_simple_data(
             {
-                "family": patient['family'],
-                "name": patient['name'],
-                "patronymic": patient['patronymic'],
-                "sex": patient['sex'],
-                "birthday": patient['birthday'],
-                "snils": patient['snils'],
+                "family": patient["family"],
+                "name": patient["name"],
+                "patronymic": patient["patronymic"],
+                "sex": patient["sex"],
+                "birthday": patient["birthday"],
+                "snils": patient["snils"],
             },
             hospital,
-            patient['internalId'],
-            patient['email'],
-            patient['phone'],
+            patient["internalId"],
+            patient["email"],
+            patient["phone"],
         )
         card.main_address = patient["mainAddress"]
         card.fact_address = patient["factAddress"]
@@ -3350,12 +3395,12 @@ def send_laboratory_order(request):
             order_numbers.append(order_number_str)
 
             if not order_number_str.isdigit():
-                raise InvalidOrderNumberException(f'Number {order_number} is not digit')
+                raise InvalidOrderNumberException(f"Number {order_number} is not digit")
             order_number = int(order_number_str)
             if order_number <= 0:
-                raise InvalidOrderNumberException(f'Number {order_number} need to be greater than 0')
+                raise InvalidOrderNumberException(f"Number {order_number} need to be greater than 0")
             if not directions.NumberGenerator.check_value_for_organization(hospital, order_number):
-                raise InvalidOrderNumberException(f'Number {order_number} not valid. May be NumberGenerator is over or order number exists')
+                raise InvalidOrderNumberException(f"Number {order_number} not valid. May be NumberGenerator is over or order number exists")
 
             external_order = directions.RegisteredOrders.objects.create(
                 order_number=order_number,
@@ -3385,8 +3430,8 @@ def send_laboratory_order(request):
                 price_name=price_id,
             )
 
-            if not result['r']:
-                raise FailedCreatingDirectionsException(result.get('message') or "Failed creating directions")
+            if not result["r"]:
+                raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
 
             Log.log(
                 json.dumps(order_numbers),
@@ -3504,9 +3549,11 @@ def client_logout(request):
     individual.is_confirmed = False
     individual.save(update_fields=["is_confirmed"])
 
-    return Response({
-        "ok": True,
-    })
+    return Response(
+        {
+            "ok": True,
+        }
+    )
 
 
 @api_view(["POST"])
@@ -3562,7 +3609,7 @@ def client_results_list(request):
     page = max(min(body.get("page", 1), 1000), 1)
     page_size = max(min(body.get("pageSize", 20), 20), 10)
 
-    if category not in ['all', *[x[0] for x in ResultFeed.CATEGORIES]]:
+    if category not in ["all", *[x[0] for x in ResultFeed.CATEGORIES]]:
         return Response({"rows": [], "total": 0, "pages": 0, "page": page, "pageSize": page_size})
 
     rows = ResultFeed.objects.filter(individual=individual.individual)
@@ -3599,18 +3646,18 @@ def client_results_pdf(request):
 
     from results.views import result_print
 
-    request_tuple = collections.namedtuple('HttpRequest', ('GET', 'user', 'plain_response'))
+    request_tuple = collections.namedtuple("HttpRequest", ("GET", "user", "plain_response"))
     req = {
-        'GET': {
-            "pk": f'[{result.direction_id}]',
-            "split": '1',
-            "leftnone": '0',
-            "inline": '1',
-            "protocol_plain_text": '1',
+        "GET": {
+            "pk": f"[{result.direction_id}]",
+            "split": "1",
+            "leftnone": "0",
+            "inline": "1",
+            "protocol_plain_text": "1",
         },
-        'user': request.user,
-        'plain_response': True,
+        "user": request.user,
+        "plain_response": True,
     }
-    pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode('utf-8')
+    pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode("utf-8")
 
     return Response({"data": pdf_content, "name": f"{result.direction_id}.pdf"})
