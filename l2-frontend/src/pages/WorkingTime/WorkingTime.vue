@@ -86,14 +86,15 @@ const years = ref([]);
 const currentDate = ref(new Date());
 const getYears = (yearStart = 2023) => {
   let start = yearStart;
-  selectedYear.value = currentDate.value.getFullYear();
-  while (start <= selectedYear.value) {
+  currentDate.value.getFullYear();
+  while (start <= currentDate.value.getFullYear()) {
     years.value.push({ id: start, label: String(start) });
     start++;
   }
 };
-const setCurrentMonth = () => {
+const setCurrentDate = () => {
   selectedMonth.value = currentDate.value.getMonth() + 1;
+  selectedYear.value = currentDate.value.getFullYear();
 };
 
 const selectedDepartment = ref(null);
@@ -103,7 +104,6 @@ const getDepartments = async () => {
   const { result } = await api('/working-time/get-departments');
   await store.dispatch(actions.DEC_LOADING);
   departments.value = result;
-  selectedDepartment.value = 1;
 };
 
 const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMonth.value && selectedYear.value));
@@ -146,7 +146,7 @@ watch([selectedMonth, selectedYear, selectedDepartment], () => {
 onMounted(() => {
   getDepartments();
   getYears();
-  setCurrentMonth();
+  setCurrentDate();
 });
 
 </script>
