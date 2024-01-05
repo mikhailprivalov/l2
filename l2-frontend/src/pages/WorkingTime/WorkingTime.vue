@@ -7,6 +7,7 @@
           v-model="selectedDepartment"
           :options="departments"
           placeholder="Выберите подразделение"
+          :clearable="false"
         />
       </div>
       <div class="filters month-width">
@@ -15,6 +16,7 @@
           v-model="selectedMonth"
           :options="months"
           placeholder="Выберите месяц"
+          :clearable="false"
         />
       </div>
       <div class="filters year-width">
@@ -23,9 +25,9 @@
           v-model="selectedYear"
           :options="years"
           placeholder="Выберите год"
+          :clearable="false"
         />
       </div>
-      <div>{{ 'график на:'  }}</div>
     </div>
     <WorkingTimeTable
       v-if="workTimeDocument"
