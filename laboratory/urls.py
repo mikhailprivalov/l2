@@ -21,7 +21,7 @@ if not settings.DEBUG:
     handler500 = mainmenu.views.v500
 
 
-urlpatterns = [
+urlpatterns = ([] if not settings.PROMETHEUS_ENABLED else [path('prometheus/', include('django_prometheus.urls'))]) + [
     path('favicon.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
     path('', home, name='home'),
     re_path(r'^ui/(?P<path>.*)$', mainmenu.views.ui),
