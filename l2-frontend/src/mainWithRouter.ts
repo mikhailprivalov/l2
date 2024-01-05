@@ -95,6 +95,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/laboratory',
+      name: 'construct_laboratory',
+      component: () => import('@/construct/ConstructLaboratory.vue'),
+      meta: {
+        title: 'Лабораторные исследования',
+        groups: ['Конструктор: Лабораторные исследования'],
+      },
+    },
+    {
       path: '/ui/construct/screening',
       name: 'construct_screening',
       component: () => import('@/construct/ConstructScreening.vue'),
