@@ -400,6 +400,8 @@ CPP_SEND_PROTOCOL_ID = -1
 CPP_TEMPLATE_XML_DIRECTORY = ""
 CDA_TEMPLATE_XML_DIRECTORY = ""
 
+FCM_CERT_PATH = ""
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
