@@ -68,7 +68,43 @@ const store = useStore();
 const search = ref('');
 
 const employeesWorkTime = ref([]);
+const getEmployeesWorkTime = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-work-time', {
+    documentId: props.workTimeDocumentId,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  employeesWorkTime.value = result;
+};
 
+watch(() => props.workTimeDocumentId, () => {
+  if (props.workTimeDocumentId) {
+    getEmployeesWorkTime();
+  }
+});
+
+const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
+  const employeesFio = employee.fio?.toLowerCase();
+  const searchTerm = search.value.toLowerCase();
+  return employeesFio.includes(searchTerm);
+}));
+
+const changeWorkTime = async (workTime: object) => {
+  const {
+    start, end, rowIndex, columnKey,
+  } = workTime;
+  // await store.dispatch(actions.INC_LOADING);
+  // const { ok, message } = await api('/working-time/get-work-time', {
+  //   documentId: props.workTimeDocumentId,
+  // });
+  // await store.dispatch(actions.DEC_LOADING);
+  // if (ok) {
+  //   // getEmployeesWorkTime();
+  //   root.$emit('msg', 'ok', 'Обновлено');
+  // }
+};
+
+const columns = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
   const currentMonth = month - 1;
@@ -79,19 +115,6 @@ const getMonthDays = (year: number, month: number) => {
   }
   return days;
 };
-const changeWorkTime = (workTime: object) => {
-  const {
-    start, end, rowIndex, columnKey, clear,
-  } = workTime;
-  if (clear) {
-    employeesWorkTime.value[rowIndex][columnKey] = null;
-    root.$emit('msg', 'ok', 'Очищено');
-  } else {
-    employeesWorkTime.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
-    root.$emit('msg', 'ok', 'Обновлено');
-  }
-};
-const columns = ref([]);
 const getColumns = () => {
   const columnTemplate = [
     {
@@ -143,27 +166,11 @@ const getColumns = () => {
   columns.value = columnTemplate;
 };
 
-const getEmployeesWorkTime = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-work-time', {
-    documentId: props.workTimeDocumentId,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  employeesWorkTime.value = result;
-  getColumns();
-};
-
-watch(() => props.workTimeDocumentId, () => {
-  if (props.workTimeDocumentId) {
-    getEmployeesWorkTime();
+watch(() => [props.year, props.month], () => {
+  if (props.year && props.month) {
+    getColumns();
   }
-});
-
-const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
-  const employeesFio = employee.fio?.toLowerCase();
-  const searchTerm = search.value.toLowerCase();
-  return employeesFio.includes(searchTerm);
-}));
+}, { immediate: true });
 
 const cellStyleOption = {
   bodyCellClass: ({ column }) => {

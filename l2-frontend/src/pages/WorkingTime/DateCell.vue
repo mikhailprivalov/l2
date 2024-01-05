@@ -160,7 +160,7 @@ const changeWorkTime = () => {
     const [start, end] = workTime;
     if (start !== props.workTime.startWorkTime || end !== props.workTime.endWorkTime) {
       emit('changeWorkTime', {
-        start, end, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
+        start, end, rowIndex: props.rowIndex, columnKey: props.columnKey,
       });
     }
   }
@@ -168,7 +168,7 @@ const changeWorkTime = () => {
 
 const beforeClearAll = () => {
   emit('changeWorkTime', {
-    start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: true,
+    start: null, end: null, rowIndex: props.rowIndex, columnKey: props.columnKey,
   });
 };
 
@@ -176,7 +176,7 @@ const changeExact = () => {
   if ((startWork.value && endWork.value) && ((startWork.value < endWork.value) || (startWork.value > endWork.value
     && endWork.value === '00:00'))) {
     emit('changeWorkTime', {
-      start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey, clear: false,
+      start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey,
     });
   } else if (startWork.value >= endWork.value) {
     root.$emit('msg', 'error', 'Время не верно');

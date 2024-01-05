@@ -25,15 +25,16 @@
           placeholder="Выберите год"
         />
       </div>
+      <div>{{ 'график на:'  }}</div>
     </div>
-    <WorktingTimeTable
+    <WorkingTimeTable
       v-if="workTimeDocument"
       :work-time-document-id="workTimeDocument"
       :year="selectedYear"
       :month="selectedMonth"
     />
     <div
-      v-if="!workTimeDocument"
+      v-if="showCreateButton"
       class="create-document"
     >
       <button
@@ -58,7 +59,7 @@ import 'vue-easytable/libs/theme-default/index.css';
 import api from '@/api';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
-import WorktingTimeTable from '@/pages/WorkingTime/WorktingTimeTable.vue';
+import WorkingTimeTable from '@/pages/WorkingTime/WorkingTimeTable.vue';
 
 const root = getCurrentInstance().proxy.$root;
 
@@ -110,6 +111,7 @@ const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMo
 
 const workTimeDocument = ref(null);
 
+const showCreateButton = ref(false);
 const getWorkTimeDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/get-document', {
@@ -119,6 +121,11 @@ const getWorkTimeDocument = async () => {
   });
   await store.dispatch(actions.DEC_LOADING);
   workTimeDocument.value = result;
+  if (!result) {
+    showCreateButton.value = true;
+  } else {
+    showCreateButton.value = false;
+  }
 };
 
 const createWorkTimeDocument = async () => {
