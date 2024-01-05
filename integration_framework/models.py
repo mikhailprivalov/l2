@@ -95,6 +95,7 @@ class IndividualAuth(models.Model):
     code_check_count = models.IntegerField(default=0, db_index=True, blank=True)
     last_activity = models.DateTimeField(auto_now=True, db_index=True)
     used_phone = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True)
+    fcm_token = models.CharField(max_length=255, default=None, null=True, blank=True, db_index=True)
 
     def __str__(self):
         return f"{self.individual} {self.device_os} {self.created_at:%Y-%m-%d %H:%M:%S}"
