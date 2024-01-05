@@ -83,6 +83,7 @@ jinja2 = "^3.1.2"
 python-dotenv = "^1.0.0"
 gevent = "^23.9.1"
 firebase-admin = "^6.3.0"
+django-prometheus = "^2.3.1"
 
 [tool.poetry.extras]
 caching = ["psycopg2"]
