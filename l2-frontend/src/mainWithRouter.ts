@@ -100,6 +100,7 @@ const router = new Router({
       component: () => import('@/construct/ConstructLaboratory.vue'),
       meta: {
         title: 'Лабораторные исследования',
+        fullPageLayout: true,
         groups: ['Конструктор: Лабораторные исследования'],
       },
     },
