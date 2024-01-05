@@ -691,6 +691,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/directions/preview',
+      name: 'directions-preview',
+      component: () => import('@/pages/DirectionsPreview.vue'),
+      meta: {
+        emptyLayout: true,
+        title: 'Предварительный просмотр бланков направлений',
+      },
+    },
+    {
       path: '/ui/analyzers',
       name: 'ManageAnalyzer',
       component: () => import('@/pages/ManageAnalyzers/index.vue'),

@@ -16,7 +16,8 @@ export default (instance: Vue): void => {
   instance.$root.$on('no-loader-in-header', status => instance.$store.dispatch(actions.SET_LOADER_IN_HEADER, !status));
 
   instance.$root.$on('print:directions', pks => {
-    printForm('/directions/pdf?napr_id={pks}', pks);
+    const url = '/ui/directions/preview?napr_id={pks}';
+    printForm(url, pks);
   });
 
   instance.$root.$on('print:hosp', pks => {
