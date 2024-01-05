@@ -998,6 +998,102 @@ def form_08(request_data):
     return pdf
 
 
+def form_091(request_data):
+    # Прикрепление
+    direction = request_data["dir"]
+
+    buffer = BytesIO()
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A5), leftMargin=15 * mm, rightMargin=10 * mm, topMargin=5 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Прикрепление")
+    )
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.leading = 12
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_full_title
+    hospital_address = hospital.safe_address
+    hospital_phones = hospital.safe_phones
+    hospital_email = hospital.safe_email
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 11.5
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    fwb = []
+    fwb.append(Paragraph(f'{hospital_name}', styleCenterBold))
+    fwb.append(HRFlowable(width=200 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black))
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
+    date_medical_examination = iss.medical_examination.strftime("%Y-%m-%d")
+    date_medical_examination = normalize_date(date_medical_examination)
+    opinion = [
+        [
+            Paragraph(
+                f'<font size=10>Юридический адрес:<br/>{hospital_address}<br/>тел: {hospital_phones}<br/>e-mail: {hospital_email}<br/><br/>{date_medical_examination} г.</font>', styleT
+            ),
+            Paragraph('', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [105 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 3 * mm))
+
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    patient_data = patient.client.get_data_individual()
+
+    if not iss.time_confirmation:
+        return ""
+
+    fwb.append(Paragraph(f'Врачебная справка № {direction}', styleCenterBold))
+    fwb.append(Spacer(1, 4 * mm))
+    result = protocol_fields_result(iss)
+    data = ""
+    for i in result:
+        if i["title"] == "Дополнительные сведения":
+            data = i["value"]
+    fwb.append(Paragraph(f'Дана {fio} {patient_data["born"]}. в том, что она прикреплен(а) в: {hospital_name}. {data}', style))
+    fwb.append(Spacer(1, 8 * mm))
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f'Лечащий врач {space_symbol * 80} {iss.doc_confirmation_fio}', style))
+
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
 def form_09(request_data):
     # Прикрепление
     direction = request_data["dir"]
