@@ -650,13 +650,12 @@ bcrypt = ["bcrypt"]
 
 [[package]]
 name = "django-ajax-selects"
-version = "2.2.0"
+version = "2.2.1"
 description = "Edit ForeignKey, ManyToManyField and CharField in Django Admin using jQuery UI AutoComplete."
 optional = false
 python-versions = "*"
 files = [
-    {file = "django-ajax-selects-2.2.0.tar.gz", hash = "sha256:539298874b2d26ce9e778a5173d312f55340c887a126c7e2d3460b9a5b4593a2"},
-    {file = "django_ajax_selects-2.2.0-2-py3-none-any.whl", hash = "sha256:2aa8af2ef5aece8b3718f91b9e9e45b8ed1d61e6d06d67527a44e920d5e4f0aa"},
+    {file = "django-ajax-selects-2.2.1.tar.gz", hash = "sha256:996ffb38dff1a621b358613afdf2681dbf261e5976da3c30a75e9b08fd81a887"},
 ]
 
 [[package]]
@@ -3107,4 +3106,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "55a993bdb10bb6c73e73011a5b62e43b62c028d2523fa7073dc54244bf7cb927"
+content-hash = "f6b5b79cb6fa54521caa9e6797fbc0c6384ed8e7848816db424c9f8eb90d6b71"
