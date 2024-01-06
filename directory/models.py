@@ -510,11 +510,13 @@ class Researches(models.Model):
             tubes_info = [value for _, value in research_tubes.items()]
             tubes_keys = tuple(research_tubes.keys())
             if tubes.get(tubes_keys):
-                tubes[tubes_keys]["researches"].append({
-                    "pk": research.pk,
-                    "title": research.title,
-                    "hide": research.hide,
-                })
+                tubes[tubes_keys]["researches"].append(
+                    {
+                        "pk": research.pk,
+                        "title": research.title,
+                        "hide": research.hide,
+                    }
+                )
             else:
                 tubes[tubes_keys] = {
                     "researches": [
