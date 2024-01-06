@@ -4,6 +4,7 @@ from django.db import models
 
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
+from integration_framework.tasks import send_has_result
 
 
 class ResultFeed(models.Model):
@@ -51,7 +52,7 @@ class ResultFeed(models.Model):
         }
 
     @staticmethod
-    def insert_feed_by_direction(direction: Napravleniya):
+    def insert_feed_by_direction(direction: Napravleniya, disable_send=False):
         if not SettingManager.l2('feed'):
             return None
 
@@ -97,7 +98,7 @@ class ResultFeed(models.Model):
         unique_id_raw = f'{individual.pk}_{card.pk}_{direction.pk}'
         unique_id = hashlib.sha1(unique_id_raw.encode('utf-8')).hexdigest()
 
-        return ResultFeed.objects.create(
+        feed = ResultFeed.objects.create(
             unique_id=unique_id,
             hospital=hospital,
             individual=individual,
@@ -109,6 +110,11 @@ class ResultFeed(models.Model):
             direction_created_at=direction_created_at,
             result_confirmed_at=result_confirmed_at,
         )
+
+        if not disable_send:
+            send_has_result.apply_async(args=[feed.unique_id])
+
+        return feed
 
     @staticmethod
     def remove_feed_by_direction(direction: Napravleniya):
