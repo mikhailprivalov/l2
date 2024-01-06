@@ -7,6 +7,7 @@
       <colgroup>
         <col>
         <col width="30">
+        <col width="30">
       </colgroup>
       <tr
         v-for="research in props.tube.researches"
@@ -17,9 +18,16 @@
         </td>
         <td class="border">
           <div class="button">
-            <button class="transparent-button">
+            <button
+              class="transparent-button"
+              @click="hideResearch(research)"
+            >
               {{ research.hide ? 'пок' : 'скр' }}
             </button>
+          </div>
+        </td>
+        <td class="border">
+          <div class="button">
             <button class="transparent-button">
               <i class="fa fa-pencil" />
             </button>
@@ -47,12 +55,28 @@
 </template>
 
 <script setup lang="ts">
+import { getCurrentInstance } from 'vue';
+
 const props = defineProps({
   tube: {
     type: Object,
     required: true,
   },
 });
+const root = getCurrentInstance().proxy.$root;
+
+const hideResearch = async (research) => {
+  if (research.hide) {
+    // eslint-disable-next-line no-param-reassign
+    research.hide = !research.hide;
+    root.$emit('msg', 'ok', 'Показано');
+  } else {
+    // eslint-disable-next-line no-param-reassign
+    research.hide = !research.hide;
+    root.$emit('msg', 'ok', 'Скрыто');
+  }
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -111,6 +135,9 @@ const props = defineProps({
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding-left: 3px;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
 
 .research-edit {
@@ -121,11 +148,21 @@ const props = defineProps({
   }
 }
 
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+
 .transparent-button {
   background-color: transparent;
+  align-self: stretch;
+  flex: 1;
   color: #434A54;
   border: none;
-  padding: 0 3px;
+  padding: 1px 0;
 }
 .transparent-button:hover {
   background-color: #434a54;
