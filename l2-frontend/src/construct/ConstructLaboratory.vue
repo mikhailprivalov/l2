@@ -17,15 +17,13 @@
       <div
         class="sidebar-content"
       >
+        <Tube
+          v-for="tube in filteredResearchTubes"
+          :key="tube.id"
+          :tube="tube"
+        />
         <div
-          v-for="research in filteredResearches"
-          :key="research.id"
-          class="research"
-        >
-          {{ research.label }}
-        </div>
-        <div
-          v-if="filteredResearches.length === 0"
+          v-if="filteredResearchTubes.length === 0"
           class="empty-list"
         >
           Не найдено
@@ -43,27 +41,80 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
+
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import Tube from '@/construct/tube.vue';
+import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+
+const store = useStore();
 
 const department = ref(null);
 const departments = ref([
   { id: 1, label: 'отделение1' },
 ]);
 
+const getDepartments = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('laboratory/get-departments');
+  await store.dispatch(actions.DEC_LOADING);
+  departments.value = result;
+};
+
 const search = ref('');
 
-const researches = ref([
-  { id: 1, label: 'Гле' },
-  { id: 2, label: 'Анастаси' },
-  { id: 3, label: 'Прив' },
+const researchTubes = ref([
+  {
+    id: 1,
+    label: 'Гле',
+    color: '#809030',
+    research: [
+      { id: 1, label: 'Исследование 1' },
+      { id: 2, label: 'Исследование 2' },
+      { id: 3, label: 'Исследование 3' },
+    ],
+  },
+  {
+    id: 2,
+    label: '4234fsd',
+    color: '#800800',
+    research: [
+      { id: 1, label: 'Исследование 11' },
+      { id: 2, label: 'Исследование 12' },
+      { id: 3, label: 'Исследование 13' },
+    ],
+  },
+  {
+    id: 3,
+    label: 'Глsdfsdfе',
+    color: '#803000',
+    research: [
+      { id: 1, label: 'Исследование 111' },
+      { id: 2, label: 'Исследование 112' },
+      { id: 3, label: 'Исследование 113' },
+    ],
+  },
 ]);
-const filteredResearches = computed(() => researches.value.filter(research => {
+
+const getTubes = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('laboratory/get-tubes', { podrazdelenie_id: department });
+  await store.dispatch(actions.DEC_LOADING);
+  researchTubes.value = result;
+};
+const filteredResearchTubes = computed(() => researchTubes.value.filter(research => {
   const researchTitle = research.label?.toLowerCase();
   const searchTerm = search.value.toLowerCase();
   return researchTitle.includes(searchTerm);
 }));
+
+onMounted(() => {
+  getDepartments();
+});
+
 </script>
 
 <style scoped lang="scss">
@@ -95,35 +146,6 @@ const filteredResearches = computed(() => researches.value.filter(research => {
   height: 100%;
 }
 
-.research {
-  background-color: #fff;
-  padding: 5px;
-  margin: 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-
-  &.rhide {
-    background-image: linear-gradient(#6c7a89, #56616c);
-    color: #fff;
-  }
-
-  &:hover {
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-    z-index: 1;
-    transform: scale(1.008);
-  }
-}
-
-.research:not(:first-child) {
-  margin-top: 0;
-}
-
-.research:last-child {
-  margin-bottom: 0;
-}
 .sidebar-footer {
   border-radius: 0;
   margin: 0;

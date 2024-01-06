@@ -19,4 +19,6 @@ urlpatterns = [
     path('receive-one-by-one', views.receive_one_by_one),
     path('receive-history', views.receive_history),
     path('save-defect-tube', views.save_defect_tube),
+    path('get-departments', views.get_departments),
+    path('get-tubes', views.get_tubes),
 ]

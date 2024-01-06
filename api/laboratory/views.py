@@ -891,3 +891,23 @@ def save_defect_tube(request):
     t.save()
     message = {"ok": "ok"}
     return JsonResponse(message)
+
+
+@login_required
+@group_required("'Конструктор: Лабораторные исследования'")
+def get_departments(request):
+    result = Podrazdeleniya.get_podrazdeleniya(Podrazdeleniya.LABORATORY)
+    return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("'Конструктор: Лабораторные исследования'")
+def get_tubes(request):
+    request_data = json.loads(request.body);
+    result = []
+
+    # if request_data["podrazdeleniye_id"] == "all":
+    #     researches = []
+    # else:
+    #     researches = []
+    return JsonResponse({"result": result})
