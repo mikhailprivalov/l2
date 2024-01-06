@@ -526,7 +526,7 @@ class Researches(models.Model):
                             "hide": research.hide,
                         }
                     ],
-                    "tubes": tubes_info
+                    "tubes": tubes_info,
                 }
         result = [value for _, value in tubes.items()]
         return result
