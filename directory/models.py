@@ -528,10 +528,7 @@ class Researches(models.Model):
                     ],
                     "tubes": tubes_info
                 }
-        result = [
-            value
-            for _, value in tubes.items()
-        ]
+        result = [value for _, value in tubes.items()]
         return result
 
 class HospitalService(models.Model):
