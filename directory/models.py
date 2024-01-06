@@ -531,6 +531,7 @@ class Researches(models.Model):
         result = [value for _, value in tubes.items()]
         return result
 
+
 class HospitalService(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
