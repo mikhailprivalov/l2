@@ -67,10 +67,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
 
     @staticmethod
     def get_podrazdeleniya(p_type: int):
-        result = [{
-            "id": podrazdelenie.pk,
-            "label": podrazdelenie.title
-        } for podrazdelenie in Podrazdeleniya.objects.filter(p_type=p_type).order_by('title')]
+        result = [{"id": podrazdelenie.pk, "label": podrazdelenie.title} for podrazdelenie in Podrazdeleniya.objects.filter(p_type=p_type).order_by('title')]
         return result
 
     def __str__(self):
