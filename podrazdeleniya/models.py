@@ -71,10 +71,6 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
             "id": podrazdelenie.pk,
             "label": podrazdelenie.title
         } for podrazdelenie in Podrazdeleniya.objects.filter(p_type=p_type).order_by('title')]
-        result.insert(0, {
-            "id": "all",
-            "label": "Все"
-        })
         return result
 
     def __str__(self):

@@ -18,8 +18,8 @@
         class="sidebar-content"
       >
         <Tube
-          v-for="tube in filteredResearchTubes"
-          :key="tube.id"
+          v-for="(tube, idx) in filteredResearchTubes"
+          :key="idx"
           :tube="tube"
         />
         <div
@@ -41,7 +41,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import {
+  computed, onMounted, ref, watch,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -59,57 +61,40 @@ const departments = ref([
 
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('laboratory/get-departments');
+  const { result } = await api('laboratory/construct/get-departments');
   await store.dispatch(actions.DEC_LOADING);
+  result.push({
+    id: -1, label: 'Все',
+  });
   departments.value = result;
 };
 
 const search = ref('');
 
-const researchTubes = ref([
-  {
-    id: 1,
-    label: 'Гле',
-    color: '#809030',
-    research: [
-      { id: 1, label: 'Исследование 1' },
-      { id: 2, label: 'Исследование 2' },
-      { id: 3, label: 'Исследование 3' },
-    ],
-  },
-  {
-    id: 2,
-    label: '4234fsd',
-    color: '#800800',
-    research: [
-      { id: 1, label: 'Исследование 11' },
-      { id: 2, label: 'Исследование 12' },
-      { id: 3, label: 'Исследование 13' },
-    ],
-  },
-  {
-    id: 3,
-    label: 'Глsdfsdfе',
-    color: '#803000',
-    research: [
-      { id: 1, label: 'Исследование 111' },
-      { id: 2, label: 'Исследование 112' },
-      { id: 3, label: 'Исследование 113' },
-    ],
-  },
-]);
+const researchTubes = ref([]);
 
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('laboratory/get-tubes', { podrazdelenie_id: department });
+  const { result } = await api('laboratory/construct/get-tubes', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
 };
-const filteredResearchTubes = computed(() => researchTubes.value.filter(research => {
-  const researchTitle = research.label?.toLowerCase();
+
+watch([department], () => {
+  getTubes();
+});
+
+const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
   const searchTerm = search.value.toLowerCase();
-  return researchTitle.includes(searchTerm);
-}));
+  const result = tubes.researches.filter(research => {
+    const researchTitle = research.title.toLowerCase();
+    return researchTitle.includes(searchTerm);
+  });
+  if (result) {
+    return { researches: result, tubes: tubes.tubes };
+  }
+  return [];
+}).filter(tubes => tubes.researches.length !== 0));
 
 onMounted(() => {
   getDepartments();

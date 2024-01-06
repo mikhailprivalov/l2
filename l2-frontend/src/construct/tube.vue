@@ -7,34 +7,41 @@
       <colgroup>
         <col>
         <col width="30">
-        <col width="25">
       </colgroup>
       <tr
-        v-for="research in props.tube.research"
-        :key="research.id"
+        v-for="research in props.tube.researches"
+        :key="research.pk"
       >
+        <td class="border research-title">
+          {{ research.title }}
+        </td>
         <td class="border">
-          {{ research.label }}
-        </td>
-        <td class="border text-center">
-          скр
-        </td>
-        <td class="border text-center">
-          <i class="fa fa-pencil" />
+          <div class="button">
+            <button class="transparent-button">
+              {{ research.hide ? 'пок' : 'скр' }}
+            </button>
+            <button class="transparent-button">
+              <i class="fa fa-pencil" />
+            </button>
+          </div>
         </td>
       </tr>
     </table>
     <div> {{ 'Ёмкости' }}</div>
-    <div class="tube">
+    <div
+      v-for="currentTube in props.tube.tubes"
+      :key="currentTube.pk"
+      class="tube-item"
+    >
       <div
         class="sq"
       >
         <div
           class="color-sq"
-          :style="'background-color: ' + props.tube.color"
+          :style="'background-color: ' + currentTube.color"
         />
       </div>
-      <div> {{ props.tube.label }}</div>
+      <div> {{ currentTube.title }}</div>
     </div>
   </div>
 </template>
@@ -62,8 +69,9 @@ const props = defineProps({
     height: 12px;
     width: 12px;
 }
-.tube {
+.tube-item {
   display: flex;
+
 }
 .table {
   table-layout: fixed;
@@ -97,5 +105,35 @@ const props = defineProps({
 
 .research:last-child {
   margin-bottom: 0;
+}
+
+.research-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.research-edit {
+  text-align: center;
+
+  .transparent-button {
+    padding: 0 5px;
+  }
+}
+
+.transparent-button {
+  background-color: transparent;
+  color: #434A54;
+  border: none;
+  padding: 0 3px;
+}
+.transparent-button:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+  border: none;
+}
+.transparent-button:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>

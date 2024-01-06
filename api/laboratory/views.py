@@ -903,11 +903,6 @@ def get_departments(request):
 @login_required
 @group_required("'Конструктор: Лабораторные исследования'")
 def get_tubes(request):
-    request_data = json.loads(request.body);
-    result = []
-
-    # if request_data["podrazdeleniye_id"] == "all":
-    #     researches = []
-    # else:
-    #     researches = []
+    request_data = json.loads(request.body)
+    result = Researches.get_tubes(request_data["department_id"])
     return JsonResponse({"result": result})

@@ -1,3 +1,5 @@
+from typing import Union
+
 from django.contrib.auth.models import Group
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
@@ -487,6 +489,48 @@ class Researches(models.Model):
             return -13
         return self.site_type_id
 
+    @staticmethod
+    def get_tubes(podrazdelenie_id: int):
+        tubes = {}
+        if podrazdelenie_id == -1:
+            podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
+            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya)
+        else:
+            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id)
+        for research in researches:
+            fractions = Fractions.objects.filter(research_id=research.pk).select_related('relation__tube')
+            research_tubes = {}
+            for fraction in fractions:
+                if fraction.relation_id not in research_tubes.keys():
+                    research_tubes[fraction.relation_id] = {
+                        "pk": fraction.relation_id,
+                        "color": fraction.relation.tube.color,
+                        "title": fraction.relation.tube.title,
+                    }
+            tubes_info = [value for _, value in research_tubes.items()]
+            tubes_keys = tuple(research_tubes.keys())
+            if tubes.get(tubes_keys):
+                tubes[tubes_keys]["researches"].append({
+                    "pk": research.pk,
+                    "title": research.title,
+                    "hide": research.hide,
+                })
+            else:
+                tubes[tubes_keys] = {
+                    "researches": [
+                        {
+                            "pk": research.pk,
+                            "title": research.title,
+                            "hide": research.hide,
+                        }
+                    ],
+                    "tubes": tubes_info
+                }
+        result = [
+            value
+            for _, value in tubes.items()
+        ]
+        return result
 
 class HospitalService(models.Model):
     TYPES = (
