@@ -9,25 +9,27 @@
           <label
             for="title"
             class="research-detail-label"
-          >Полное название</label>
+          >Полное наименование</label>
           <input
             id="title"
-            class="form-control"
             v-model="research.title"
+            class="form-control"
           >
         </div>
         <div class="margin">
           <label
             for="shortTitle"
             class="research-detail-label"
-          >Краткое название</label>
+          >Краткое наименование</label>
           <input
             id="shortTitle"
             v-model="research.shortTitle"
             class="form-control"
           >
         </div>
-        <div class="margin">
+      </div>
+      <div class="code">
+        <div class="margin height">
           <label
             for="code"
             class="research-detail-label"
@@ -38,27 +40,25 @@
             class="form-control"
           >
         </div>
-      </div>
-      <div>
-        <div class="margin">
-          <label
-            for="internalCode"
-            class="research-detail-label"
-          >Внутренний код</label>
-          <input
-            id="internalCode"
-            v-model="research.internalCode"
-            class="form-control"
-          >
-        </div>
-        <div class="margin">
+        <div class="margin height">
           <label
             for="ecpCode"
             class="research-detail-label"
-          >ЕЦП код</label>
+          >Код ЕЦП</label>
           <input
             id="ecpCode"
             v-model="research.ecpCode"
+            class="form-control"
+          >
+        </div>
+        <div class="margin height">
+          <label
+            for="internalCode"
+            class="research-detail-label"
+          >Код внутренний</label>
+          <input
+            id="internalCode"
+            v-model="research.internalCode"
             class="form-control"
           >
         </div>
@@ -72,13 +72,14 @@
           <textarea
             id="preparation"
             class="form-control"
+            style="height: 90px"
             rows="4"
           />
         </div>
       </div>
     </div>
     <div class="research-fractions">
-      а
+      <p></p>
     </div>
   </div>
 </template>
@@ -143,15 +144,22 @@ onMounted(() => {
 <style scoped lang="scss">
 .research-detail {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   margin: 0 20px;
 }
+.code {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
 .margin {
-  margin: 5px;
+  margin: 0 5px;
 }
 .research-detail-label {
   margin-bottom: 0;
   margin-left: 12px;
+}
+.height {
+  height: 55px;
 }
 .header {
   margin: 10px 0 10px 37px;
