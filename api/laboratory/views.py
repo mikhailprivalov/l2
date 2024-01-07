@@ -915,3 +915,11 @@ def update_order_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_order(request_data["researchPk"], request_data["researchNearbyPk"], request_data["action"])
     return status_response(result)
+
+
+@login_required
+@group_required("'Конструктор: Лабораторные исследования'")
+def change_visibility_research(request):
+    request_data = json.loads(request.body)
+    result = Researches.change_visibility(request_data["researchPk"])
+    return status_response(result)

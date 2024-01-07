@@ -22,4 +22,5 @@ urlpatterns = [
     path('construct/get-departments', views.get_departments),
     path('construct/get-tubes', views.get_tubes),
     path('construct/update-order-research', views.update_order_research),
+    path('construct/change-visibility-research', views.change_visibility_research),
 ]

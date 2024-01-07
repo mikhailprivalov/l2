@@ -44,7 +44,7 @@
           <div class="button">
             <button
               class="transparent-button"
-              @click="hideResearch(research)"
+              @click="changeVisibility(research.pk)"
             >
               {{ research.hide ? 'пок' : 'скр' }}
             </button>
@@ -93,18 +93,10 @@ const props = defineProps({
 });
 const root = getCurrentInstance().proxy.$root;
 const store = useStore();
-const emit = defineEmits(['updateOrder']);
+const emit = defineEmits(['updateOrder', 'changeVisibility']);
 
-const hideResearch = async (research: object) => {
-  if (research.hide) {
-    // eslint-disable-next-line no-param-reassign
-    research.hide = !research.hide;
-    root.$emit('msg', 'ok', 'Показано');
-  } else {
-    // eslint-disable-next-line no-param-reassign
-    research.hide = !research.hide;
-    root.$emit('msg', 'ok', 'Скрыто');
-  }
+const changeVisibility = async (researchPk: number) => {
+  emit('changeVisibility', { researchPk });
 };
 
 const minMaxOrder = computed(() => {

@@ -11,7 +11,6 @@
       <input
         v-model.trim="search"
         class="form-control"
-        style="padding-top: 7px; padding-bottom: 7px"
         placeholder="Фильтр по названию"
       >
       <div
@@ -22,6 +21,7 @@
           :key="idx"
           :tube="tube"
           @updateOrder="updateOrder"
+          @changeVisibility="changeVisibility"
         />
         <div
           v-if="filteredResearchTubes.length === 0"
@@ -112,6 +112,20 @@ const updateOrder = async ({ researchPk, researchNearbyPk, action }) => {
   }
 };
 
+const changeVisibility = async ({ researchPk }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('laboratory/construct/change-visibility-research', {
+    researchPk,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Обновлено');
+    await getTubes();
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
 onMounted(() => {
   getDepartments();
 });
@@ -121,7 +135,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .two-col {
   display: grid;
-  grid-template-columns: 350px auto;
+  grid-template-columns: 450px auto;
   margin-bottom: 5px;
   height: calc(100vh - 36px);
 }
@@ -135,6 +149,7 @@ onMounted(() => {
     border-radius: 0;
     border-left: none;
     border-right: none;
+    height: 36px;
   }
 }
 .empty-list {
@@ -144,7 +159,8 @@ onMounted(() => {
 }
 
 .sidebar-content {
-  height: 100%;
+  height: calc(100vh - 142px);
+  overflow-y: auto;
 }
 
 .sidebar-footer {

@@ -547,6 +547,17 @@ class Researches(models.Model):
         research_nearby.save()
         return True
 
+    @staticmethod
+    def change_visibility(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        if research.hide:
+            research.hide = False
+        else:
+            research.hide = True
+        research.save()
+        return True
+
+
 
 class HospitalService(models.Model):
     TYPES = (
