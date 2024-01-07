@@ -7,6 +7,7 @@ from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality
+from utils.response import status_response
 
 
 class DirectionsGroup(models.Model):
@@ -492,9 +493,9 @@ class Researches(models.Model):
         tubes = {}
         if podrazdelenie_id == -1:
             podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
-            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya)
+            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by('pk')
         else:
-            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id)
+            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by('pk')
         for research in researches:
             fractions = Fractions.objects.filter(research_id=research.pk).select_related('relation__tube')
             research_tubes = {}
@@ -513,6 +514,7 @@ class Researches(models.Model):
                         "pk": research.pk,
                         "title": research.title,
                         "hide": research.hide,
+                        "order": research.sort_weight,
                     }
                 )
             else:
@@ -522,12 +524,28 @@ class Researches(models.Model):
                             "pk": research.pk,
                             "title": research.title,
                             "hide": research.hide,
+                            "order": research.sort_weight,
                         }
                     ],
                     "tubes": tubes_info,
                 }
-        result = [value for _, value in tubes.items()]
+
+        result = [{"researches": sorted(value["researches"], key=lambda d: d["order"]), "tubes": value["tubes"]} for _, value in tubes.items()]
         return result
+
+    @staticmethod
+    def update_order(research_pk: int, research_nearby_pk: int, action: str):
+        research = Researches.objects.get(pk=research_pk)
+        research_nearby = Researches.objects.get(pk=research_nearby_pk)
+        if action == 'inc_order':
+            research.sort_weight += 1
+            research_nearby.sort_weight -= 1
+        elif action == 'dec_order':
+            research.sort_weight -= 1
+            research_nearby.sort_weight += 1
+        research.save()
+        research_nearby.save()
+        return True
 
 
 class HospitalService(models.Model):

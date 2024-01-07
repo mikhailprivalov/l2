@@ -21,6 +21,7 @@
           v-for="(tube, idx) in filteredResearchTubes"
           :key="idx"
           :tube="tube"
+          @updateOrder="updateOrder"
         />
         <div
           v-if="filteredResearchTubes.length === 0"
@@ -42,7 +43,7 @@
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -53,6 +54,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
 const department = ref(null);
 const departments = ref([
@@ -95,6 +97,20 @@ const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
   }
   return [];
 }).filter(tubes => tubes.researches.length !== 0));
+
+const updateOrder = async ({ researchPk, researchNearbyPk, action }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('laboratory/construct/update-order-research', {
+    researchPk, researchNearbyPk, action,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Обновлено');
+    await getTubes();
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
 
 onMounted(() => {
   getDepartments();

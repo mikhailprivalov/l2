@@ -5,14 +5,38 @@
     {{ 'Анализы' }}
     <table class="table">
       <colgroup>
+        <col width="30">
+        <col width="30">
         <col>
         <col width="30">
         <col width="30">
       </colgroup>
       <tr
-        v-for="research in props.tube.researches"
+        v-for="(research, idx) in props.tube.researches"
         :key="research.pk"
       >
+        <td class="border">
+          <div class="button">
+            <button
+              :class="isFirstRow(research.order) ? 'transparent-button-disabled' : 'transparent-button'"
+              :disabled="isFirstRow(research.order)"
+              @click="updateOrder(idx, research.pk, research.order,'dec_order')"
+            >
+              <i class="glyphicon glyphicon-arrow-up" />
+            </button>
+          </div>
+        </td>
+        <td class="border">
+          <div class="button">
+            <button
+              :class="isLastRow(research.order) ? 'transparent-button-disabled' : 'transparent-button'"
+              :disabled="isLastRow(research.order)"
+              @click="updateOrder(idx, research.pk, research.order, 'inc_order')"
+            >
+              <i class="glyphicon glyphicon-arrow-down" />
+            </button>
+          </div>
+        </td>
         <td class="border research-title">
           {{ research.title }}
         </td>
@@ -55,7 +79,11 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance } from 'vue';
+import { computed, getCurrentInstance } from 'vue';
+
+import { useStore } from '@/store';
+import api from '@/api';
+import * as actions from '@/store/action-types';
 
 const props = defineProps({
   tube: {
@@ -64,8 +92,10 @@ const props = defineProps({
   },
 });
 const root = getCurrentInstance().proxy.$root;
+const store = useStore();
+const emit = defineEmits(['updateOrder']);
 
-const hideResearch = async (research) => {
+const hideResearch = async (research: object) => {
   if (research.hide) {
     // eslint-disable-next-line no-param-reassign
     research.hide = !research.hide;
@@ -74,6 +104,35 @@ const hideResearch = async (research) => {
     // eslint-disable-next-line no-param-reassign
     research.hide = !research.hide;
     root.$emit('msg', 'ok', 'Скрыто');
+  }
+};
+
+const minMaxOrder = computed(() => {
+  let min = 0;
+  let max = 0;
+  for (const row of props.tube.researches) {
+    if (min === 0) {
+      min = row.order;
+    } else {
+      min = Math.min(min, row.order);
+    }
+    max = Math.max(max, row.order);
+  }
+  return { min, max };
+});
+
+const isFirstRow = (order: number) => order === minMaxOrder.value.min;
+const isLastRow = (order: number) => order === minMaxOrder.value.max;
+
+const updateOrder = async (researchIdx: number, researchPk: number, researchOrder: number, action: string) => {
+  if (action === 'inc_order' && researchOrder < minMaxOrder.value.max) {
+    const researchNearbyPk = props.tube.researches[researchIdx + 1].pk;
+    emit('updateOrder', { researchPk, researchNearbyPk, action });
+  } else if (action === 'dec_order' && researchOrder > minMaxOrder.value.min) {
+    const researchNearbyPk = props.tube.researches[researchIdx - 1].pk;
+    emit('updateOrder', { researchPk, researchNearbyPk, action });
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
   }
 };
 
@@ -163,6 +222,7 @@ const hideResearch = async (research) => {
   color: #434A54;
   border: none;
   padding: 1px 0;
+
 }
 .transparent-button:hover {
   background-color: #434a54;
@@ -172,5 +232,14 @@ const hideResearch = async (research) => {
 .transparent-button:active {
   background-color: #37BC9B;
   color: #FFFFFF;
+}
+.transparent-button-disabled {
+  color: #abaeb3;
+  cursor: not-allowed;
+  background-color: transparent;
+  align-self: stretch;
+  flex: 1;
+  border: none;
+  padding: 1px 0;
 }
 </style>
