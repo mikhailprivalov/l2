@@ -557,6 +557,19 @@ class Researches(models.Model):
         research.save()
         return True
 
+    @staticmethod
+    def get_research(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "shortTitle": research.short_title,
+            "code": research.code,
+            "internalCode": research.internal_code,
+            "ecpCode": None,
+            "preparation": research.preparation,
+        }
+        return result
 
 
 class HospitalService(models.Model):

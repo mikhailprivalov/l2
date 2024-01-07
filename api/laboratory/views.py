@@ -923,3 +923,11 @@ def change_visibility_research(request):
     request_data = json.loads(request.body)
     result = Researches.change_visibility(request_data["researchPk"])
     return status_response(result)
+
+
+@login_required
+@group_required("'Конструктор: Лабораторные исследования'")
+def get_research(request):
+    request_data = json.loads(request.body)
+    result = Researches.get_research(request_data["researchPk"])
+    return JsonResponse({"result": result})

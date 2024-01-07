@@ -52,14 +52,17 @@
         </td>
         <td class="border">
           <div class="button">
-            <button class="transparent-button">
+            <button
+              class="transparent-button"
+              @click="edit(research.pk)"
+            >
               <i class="fa fa-pencil" />
             </button>
           </div>
         </td>
       </tr>
     </table>
-    <div> {{ 'Ёмкости' }}</div>
+    <div> {{ props.tube.tubes.length > 0 ? 'Ёмкости' : 'Ёмкости не привязаны' }}</div>
     <div
       v-for="currentTube in props.tube.tubes"
       :key="currentTube.pk"
@@ -81,10 +84,6 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance } from 'vue';
 
-import { useStore } from '@/store';
-import api from '@/api';
-import * as actions from '@/store/action-types';
-
 const props = defineProps({
   tube: {
     type: Object,
@@ -92,12 +91,7 @@ const props = defineProps({
   },
 });
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
-const emit = defineEmits(['updateOrder', 'changeVisibility']);
-
-const changeVisibility = async (researchPk: number) => {
-  emit('changeVisibility', { researchPk });
-};
+const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit']);
 
 const minMaxOrder = computed(() => {
   let min = 0;
@@ -116,7 +110,7 @@ const minMaxOrder = computed(() => {
 const isFirstRow = (order: number) => order === minMaxOrder.value.min;
 const isLastRow = (order: number) => order === minMaxOrder.value.max;
 
-const updateOrder = async (researchIdx: number, researchPk: number, researchOrder: number, action: string) => {
+const updateOrder = (researchIdx: number, researchPk: number, researchOrder: number, action: string) => {
   if (action === 'inc_order' && researchOrder < minMaxOrder.value.max) {
     const researchNearbyPk = props.tube.researches[researchIdx + 1].pk;
     emit('updateOrder', { researchPk, researchNearbyPk, action });
@@ -128,6 +122,13 @@ const updateOrder = async (researchIdx: number, researchPk: number, researchOrde
   }
 };
 
+const changeVisibility = (researchPk: number) => {
+  emit('changeVisibility', { researchPk });
+};
+
+const edit = (researchPk: number) => {
+  emit('edit', { researchPk });
+};
 </script>
 
 <style scoped lang="scss">
@@ -189,14 +190,6 @@ const updateOrder = async (researchIdx: number, researchPk: number, researchOrde
   padding-left: 3px;
   padding-top: 1px;
   padding-bottom: 1px;
-}
-
-.research-edit {
-  text-align: center;
-
-  .transparent-button {
-    padding: 0 5px;
-  }
 }
 
 .button {

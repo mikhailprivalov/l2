@@ -22,6 +22,7 @@
           :tube="tube"
           @updateOrder="updateOrder"
           @changeVisibility="changeVisibility"
+          @edit="edit"
         />
         <div
           v-if="filteredResearchTubes.length === 0"
@@ -37,7 +38,12 @@
         Добавить
       </button>
     </div>
-    <div class="content-construct" />
+    <div class="content-construct">
+      <ResearchDetail
+        v-if="currentResearchPk"
+        :research-pk="currentResearchPk"
+      />
+    </div>
   </div>
 </template>
 
@@ -48,10 +54,11 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import Tube from '@/construct/tube.vue';
+import Tube from '@/construct/Tube.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import ResearchDetail from '@/construct/ResearchDetail.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -82,8 +89,15 @@ const getTubes = async () => {
   researchTubes.value = result;
 };
 
+const currentResearchPk = ref(null);
+
+const edit = async ({ researchPk }) => {
+  currentResearchPk.value = researchPk;
+};
+
 watch([department], () => {
   getTubes();
+  currentResearchPk.value = null;
 });
 
 const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
@@ -170,6 +184,5 @@ onMounted(() => {
 }
 
 .content-construct {
-  display: flex;
 }
 </style>
