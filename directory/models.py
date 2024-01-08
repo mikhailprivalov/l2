@@ -1014,7 +1014,7 @@ class Fractions(models.Model):
             "pk": fraction.pk,
             "title": fraction.title,
             "unit": fraction.unit,
-            "variants": fraction.variants,
+            "variants": fraction.variants.get_variants(),
             "order": fraction.sort_weight,
         }
         return result

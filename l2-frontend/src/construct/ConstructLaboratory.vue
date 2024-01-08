@@ -16,7 +16,7 @@
       <div
         class="sidebar-content"
       >
-        <Tube
+        <TubeGroup
           v-for="(tube, idx) in filteredResearchTubes"
           :key="idx"
           :tube="tube"
@@ -55,7 +55,7 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import Tube from '@/construct/Tube.vue';
+import TubeGroup from '@/construct/TubeGroup.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
