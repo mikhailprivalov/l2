@@ -40,7 +40,7 @@
             id="code"
             v-model="research.code"
             class="form-control"
-            placeholder="Введите код НМУ"
+            placeholder="Введите код"
           >
         </div>
         <div class="margin code-item">
@@ -52,7 +52,7 @@
             id="ecpCode"
             v-model="research.ecpCode"
             class="form-control"
-            placeholder="Введите код ЕЦП"
+            placeholder="Введите код"
           >
         </div>
         <div class="margin code-item">
@@ -64,7 +64,7 @@
             id="internalCode"
             v-model="research.internalCode"
             class="form-control"
-            placeholder="Введите код Внутренний"
+            placeholder="Введите код"
           >
         </div>
       </div>
@@ -79,7 +79,7 @@
             class="form-control"
             style="height: 90px"
             rows="4"
-            placeholder="Введите подгтовка (напр. 'Не требуется')"
+            placeholder="Введите подготовку (напр. 'Не требуется')"
           />
         </div>
       </div>
@@ -111,24 +111,24 @@
             v-for="fraction in tube.fractions"
             :key="fraction.pk"
           >
-            <td class="padding-td">
+            <td class="padding-td no-left-padding">
               <input
                 v-model="fraction.title"
-                class="form-control"
+                class="form-control fraction-input"
                 placeholder="Введите название фракции"
               >
             </td>
             <td class="padding-td">
               <input
                 v-model="fraction.unit"
-                class="form-control"
+                class="form-control fraction-input"
                 placeholder="Введите ед. изм"
               >
             </td>
-            <td class="padding-td">
+            <td class="padding-td no-right-padding">
               <input
                 v-model="fraction.variants"
-                class="form-control"
+                class="form-control fraction-input"
               >
             </td>
           </tr>
@@ -222,7 +222,7 @@ const research = ref<researchData>({
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('laboratory/construct/get-research', { researchPk: props.researchPk });
+  const { result } = await api('construct/laboratory/get-research', { researchPk: props.researchPk });
   await store.dispatch(actions.DEC_LOADING);
   research.value = result;
   researchShortTitle.value = research.value?.title;
@@ -234,7 +234,7 @@ watch(() => props.researchPk, () => {
 
 const updateResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('laboratory/construct/update-research', { research: research.value });
+  const { ok } = await api('construct/laboratory/update-research', { research: research.value });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
@@ -300,9 +300,18 @@ onMounted(() => {
   margin-bottom: 0;
 }
 .padding-td {
-  padding: 5px;
+  padding: 2px 5px;
+}
+.no-left-padding {
+  padding-left: 0;
+}
+.no-right-padding {
+  padding-right: 0;
 }
 .border {
-  border: 1px solid #bbb;;
+  border: 1px solid #bbb;
+}
+.fraction-input {
+  height: 28px;
 }
 </style>

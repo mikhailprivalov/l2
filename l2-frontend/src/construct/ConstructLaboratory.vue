@@ -71,7 +71,7 @@ const departments = ref([
 
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('laboratory/construct/get-departments');
+  const { result } = await api('construct/laboratory/get-departments');
   await store.dispatch(actions.DEC_LOADING);
   result.push({
     id: -1, label: 'Все',
@@ -85,7 +85,7 @@ const researchTubes = ref([]);
 
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('laboratory/construct/get-tubes', { department_id: department.value });
+  const { result } = await api('construct/laboratory/get-tubes', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
 };
@@ -115,7 +115,7 @@ const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
 
 const updateOrder = async ({ researchPk, researchNearbyPk, action }) => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('laboratory/construct/update-order-research', {
+  const { ok } = await api('construct/laboratory/update-order-research', {
     researchPk, researchNearbyPk, action,
   });
   await store.dispatch(actions.DEC_LOADING);
@@ -129,7 +129,7 @@ const updateOrder = async ({ researchPk, researchNearbyPk, action }) => {
 
 const changeVisibility = async ({ researchPk }) => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('laboratory/construct/change-visibility-research', {
+  const { ok } = await api('construct/laboratory/change-visibility-research', {
     researchPk,
   });
   await store.dispatch(actions.DEC_LOADING);
