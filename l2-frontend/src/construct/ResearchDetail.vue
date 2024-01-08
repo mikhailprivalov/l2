@@ -3,83 +3,90 @@
     <h4 class="header">
       Редактирование анализа - {{ researchShortTitle }}
     </h4>
-    <div class="research-detail">
-      <div>
-        <div class="margin">
-          <label
-            for="title"
-            class="research-detail-label"
-          >Полное наименование</label>
-          <input
-            id="title"
-            v-model="research.title"
-            class="form-control"
-          >
+    <div class="margin-root">
+      <div class="research-detail">
+        <div>
+          <div class="margin">
+            <label
+              for="title"
+              class="research-detail-label"
+            >Полное наименование</label>
+            <input
+              id="title"
+              v-model="research.title"
+              class="form-control"
+            >
+          </div>
+          <div class="margin">
+            <label
+              for="shortTitle"
+              class="research-detail-label"
+            >Краткое наименование</label>
+            <input
+              id="shortTitle"
+              v-model="research.shortTitle"
+              class="form-control"
+            >
+          </div>
         </div>
-        <div class="margin">
-          <label
-            for="shortTitle"
-            class="research-detail-label"
-          >Краткое наименование</label>
-          <input
-            id="shortTitle"
-            v-model="research.shortTitle"
-            class="form-control"
-          >
+        <div class="code">
+          <div class="margin code-item">
+            <label
+              for="code"
+              class="research-detail-label"
+            >Код НМУ</label>
+            <input
+              id="code"
+              v-model="research.code"
+              class="form-control"
+            >
+          </div>
+          <div class="margin code-item">
+            <label
+              for="ecpCode"
+              class="research-detail-label"
+            >Код ЕЦП</label>
+            <input
+              id="ecpCode"
+              v-model="research.ecpCode"
+              class="form-control"
+            >
+          </div>
+          <div class="margin code-item">
+            <label
+              for="internalCode"
+              class="research-detail-label"
+            >Код внутренний</label>
+            <input
+              id="internalCode"
+              v-model="research.internalCode"
+              class="form-control"
+            >
+          </div>
+        </div>
+        <div>
+          <div class="margin">
+            <label
+              for="preparation"
+              class="research-detail-label"
+            >Подготовка</label>
+            <textarea
+              id="preparation"
+              class="form-control"
+              style="height: 90px"
+              rows="4"
+            />
+          </div>
         </div>
       </div>
-      <div class="code">
-        <div class="margin height">
-          <label
-            for="code"
-            class="research-detail-label"
-          >Код НМУ</label>
-          <input
-            id="code"
-            v-model="research.code"
-            class="form-control"
-          >
-        </div>
-        <div class="margin height">
-          <label
-            for="ecpCode"
-            class="research-detail-label"
-          >Код ЕЦП</label>
-          <input
-            id="ecpCode"
-            v-model="research.ecpCode"
-            class="form-control"
-          >
-        </div>
-        <div class="margin height">
-          <label
-            for="internalCode"
-            class="research-detail-label"
-          >Код внутренний</label>
-          <input
-            id="internalCode"
-            v-model="research.internalCode"
-            class="form-control"
-          >
-        </div>
+      <div class="margin-bottom flex-right">
+        <button class="btn btn-blue-nb">
+          Cохранить
+        </button>
       </div>
-      <div>
-        <div class="margin">
-          <label
-            for="preparation"
-            class="research-detail-label"
-          >Подготовка</label>
-          <textarea
-            id="preparation"
-            class="form-control"
-            style="height: 90px"
-            rows="4"
-          />
-        </div>
+      <div class="research-fractions">
+        <p />
       </div>
-    </div>
-    <div class="research-fractions">
-      <p></p>
     </div>
   </div>
 </template>
@@ -145,23 +152,35 @@ onMounted(() => {
 .research-detail {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  margin: 0 20px;
+  margin-bottom: 15px;
 }
 .code {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+}
+.margin-root {
+  margin: 0 20px 0 20px;
 }
 .margin {
   margin: 0 5px;
+}
+.margin-bottom {
+  margin-bottom: 15px;
 }
 .research-detail-label {
   margin-bottom: 0;
   margin-left: 12px;
 }
-.height {
-  height: 55px;
+.code-item {
+  flex-grow: 1;
+  flex-basis: 145px;
 }
 .header {
   margin: 10px 0 10px 37px;
+}
+.flex-right {
+  display: flex;
+  justify-content: end;
 }
 </style>
