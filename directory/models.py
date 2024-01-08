@@ -595,7 +595,6 @@ class Researches(models.Model):
         research.save()
         return True
 
-
 class HospitalService(models.Model):
     TYPES = (
         (0, 'Первичный прием'),
