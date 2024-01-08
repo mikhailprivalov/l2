@@ -23,7 +23,6 @@ from rmis_integration.client import Client
 from slog.models import Log
 from users.models import DoctorProfile
 from utils.dates import try_parse_range
-from utils.response import status_response
 
 
 @login_required
@@ -220,8 +219,8 @@ def search(request):
                 researches_chk = []
                 for issledovaniye in (
                     iss.order_by("deferred", "-doc_save", "-doc_confirmation", "tubes__number", "research__sort_weight")
-                        .prefetch_related('tubes', 'result_set')
-                        .select_related('research', 'doc_save')
+                    .prefetch_related('tubes', 'result_set')
+                    .select_related('research', 'doc_save')
                 ):
                     if True:
                         if issledovaniye.pk in researches_chk:

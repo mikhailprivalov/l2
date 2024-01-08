@@ -492,10 +492,10 @@ class Researches(models.Model):
     @staticmethod
     def as_json(research):
         result = {
-                "pk": research.pk,
-                "title": research.title,
-                "hide": research.hide,
-                "order": research.sort_weight,
+            "pk": research.pk,
+            "title": research.title,
+            "hide": research.hide,
+            "order": research.sort_weight,
         }
         return result
 
@@ -537,9 +537,7 @@ class Researches(models.Model):
                 tubes[tubes_keys]["researches"].append(research.as_json(research))
             else:
                 tubes[tubes_keys] = {
-                    "researches": [
-                        research.as_json(research)
-                    ],
+                    "researches": [research.as_json(research)],
                     "tubes": tubes_info,
                 }
 
@@ -582,13 +580,12 @@ class Researches(models.Model):
             "internalCode": research.internal_code,
             "ecpCode": None,
             "preparation": research.preparation,
-            "tubes": [value for _, value in research_tubes.items()]
+            "tubes": [value for _, value in research_tubes.items()],
         }
         return result
 
     @staticmethod
     def update_lab_research(research_data):
-        print(research_data)
         research = Researches.objects.get(pk=research_data["pk"])
         research.title = research_data["title"]
         research.short_title = research_data["shortTitle"]
