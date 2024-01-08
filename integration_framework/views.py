@@ -419,7 +419,7 @@ def issledovaniye_data(request):
                 "unitCode": u.code if u else None,
                 "ref": refs,
                 "interpretation": "N" if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else "A",
-                "ecp": r.fraction.get_ecp_code(),
+                "ecpId": r.fraction.get_ecp_code(),
             }
         )
 
