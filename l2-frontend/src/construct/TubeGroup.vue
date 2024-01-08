@@ -63,10 +63,11 @@
       </tr>
     </table>
     <div> {{ props.tube.tubes.length > 0 ? 'Ёмкости' : 'Ёмкости не привязаны' }}</div>
-    <Tube
+    <ColorTitled
       v-for="currentTube in props.tube.tubes"
       :key="currentTube.pk"
-      :tube="currentTube"
+      :color="currentTube.color"
+      :title="currentTube.title"
     />
   </div>
 </template>
@@ -74,7 +75,7 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance } from 'vue';
 
-import Tube from '@/construct/Tube.vue';
+import ColorTitled from '@/ui-cards/ColorTitled.vue';
 
 const props = defineProps({
   tube: {

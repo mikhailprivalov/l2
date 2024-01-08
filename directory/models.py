@@ -500,7 +500,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
-        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube')
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube').order_by('sort_weight')
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
@@ -1018,6 +1018,20 @@ class Fractions(models.Model):
             "order": fraction.sort_weight,
         }
         return result
+
+    @staticmethod
+    def update_order(fraction_pk: int, fraction_nearby_pk: int, action: str):
+        fraction = Fractions.objects.get(pk=fraction_pk)
+        fraction_nearby = Fractions.objects.get(pk=fraction_nearby_pk)
+        if action == 'inc_order':
+            fraction.sort_weight += 1
+            fraction_nearby.sort_weight -= 1
+        elif action == 'dec_order':
+            fraction.sort_weight -= 1
+            fraction_nearby.sort_weight += 1
+        fraction.save()
+        fraction_nearby.save()
+        return True
 
     def __str__(self):
         return self.research.title + " | " + self.title

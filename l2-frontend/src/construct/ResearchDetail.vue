@@ -89,50 +89,18 @@
     </h4>
     <div class="research-fractions">
       <div
-        v-for="tube in research.tubes"
+        v-for="(tube) in research.tubes"
         :key="tube.pk"
         class="tube-group"
       >
-        <Tube :tube="tube" />
-        <table class="table">
-          <colgroup>
-            <col>
-            <col width="300">
-            <col width="300">
-          </colgroup>
-          <thead>
-            <tr>
-              <th><strong>Фракция</strong></th>
-              <th><strong>Ед. измерения</strong></th>
-              <th><strong>Вар. комментариев</strong></th>
-            </tr>
-          </thead>
-          <tr
-            v-for="fraction in tube.fractions"
-            :key="fraction.pk"
-          >
-            <td class="padding-td no-left-padding">
-              <input
-                v-model="fraction.title"
-                class="form-control fraction-input"
-                placeholder="Введите название фракции"
-              >
-            </td>
-            <td class="padding-td">
-              <input
-                v-model="fraction.unit"
-                class="form-control fraction-input"
-                placeholder="Введите ед. изм"
-              >
-            </td>
-            <td class="padding-td no-right-padding">
-              <input
-                v-model="fraction.variants"
-                class="form-control fraction-input"
-              >
-            </td>
-          </tr>
-        </table>
+        <ColorTitled
+          :title="tube.title"
+          :color="tube.color"
+        />
+        <FractionsTable
+          :fractions="tube.fractions"
+          @updateOrder="updateOrder"
+        />
       </div>
       <div class="margin-bottom flex-right">
         <button
@@ -148,13 +116,15 @@
 
 <script setup lang="ts">
 import {
+  computed,
   getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import Tube from '@/construct/Tube.vue';
+import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import FractionsTable from '@/construct/FractionsTable.vue';
 
 const store = useStore();
 
@@ -167,12 +137,12 @@ const props = defineProps({
   },
 });
 
-interface fractionsData {
+export interface fractionsData {
   pk: number,
   title: string,
   unit: string,
   variants: string[] | null,
-  sortWeight: number,
+  order: number,
 }
 
 interface tubeData {
@@ -245,6 +215,20 @@ const updateResearch = async () => {
   }
 };
 
+const updateOrder = async ({ fractionPk, fractionNearbyPk, action }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('construct/laboratory/update-order-fraction', {
+    fractionPk, fractionNearbyPk, action,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Обновлено');
+    await getResearch();
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
 onMounted(() => {
   getResearch();
 });
@@ -294,24 +278,5 @@ onMounted(() => {
   padding: 10px 5px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
-}
-.table {
-  table-layout: fixed;
-  margin-bottom: 0;
-}
-.padding-td {
-  padding: 2px 5px;
-}
-.no-left-padding {
-  padding-left: 0;
-}
-.no-right-padding {
-  padding-right: 0;
-}
-.border {
-  border: 1px solid #bbb;
-}
-.fraction-input {
-  height: 28px;
 }
 </style>

@@ -19,10 +19,4 @@ urlpatterns = [
     path('receive-one-by-one', views.receive_one_by_one),
     path('receive-history', views.receive_history),
     path('save-defect-tube', views.save_defect_tube),
-    path('construct/get-departments', views.get_departments),
-    path('construct/get-tubes', views.get_tubes),
-    path('construct/update-order-research', views.update_order_research),
-    path('construct/change-visibility-research', views.change_visibility_research),
-    path('construct/get-research', views.get_research),
-    path('construct/update-research', views.update_research),
 ]
