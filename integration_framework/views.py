@@ -419,6 +419,7 @@ def issledovaniye_data(request):
                 "unitCode": u.code if u else None,
                 "ref": refs,
                 "interpretation": "N" if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else "A",
+                "ecpId": r.fraction.get_ecp_code(),
             }
         )
 
@@ -445,6 +446,7 @@ def issledovaniye_data(request):
             "comments": i.lab_comment,
             "isGistology": i.research.is_gistology,
             "isParaclinic": i.research.is_paraclinic,
+            "ecpResearchId": i.research.ecp_id,
         }
     )
 

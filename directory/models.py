@@ -305,6 +305,7 @@ class Researches(models.Model):
     cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -877,6 +878,7 @@ class Fractions(models.Model):
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код теста в ЕЦП')
 
     def get_unit(self):
         if self.unit:
@@ -897,6 +899,9 @@ class Fractions(models.Model):
 
     def get_fsli_code(self):
         return (self.fsli or '').strip()
+
+    def get_ecp_code(self):
+        return (self.ecp_id or '').strip()
 
     def __str__(self):
         return self.research.title + " | " + self.title
