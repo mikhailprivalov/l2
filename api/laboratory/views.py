@@ -931,3 +931,11 @@ def get_research(request):
     request_data = json.loads(request.body)
     result = Researches.get_research(request_data["researchPk"])
     return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("'Конструктор: Лабораторные исследования'")
+def update_research(request):
+    request_data = json.loads(request.body)
+    result = Researches.update_lab_research(request_data["research"])
+    return status_response(result)

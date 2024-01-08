@@ -42,6 +42,7 @@
       <ResearchDetail
         v-if="currentResearchPk"
         :research-pk="currentResearchPk"
+        @updateResearch="getTubes"
       />
     </div>
   </div>
@@ -181,8 +182,5 @@ onMounted(() => {
   border-radius: 0;
   margin: 0;
   flex: 0 0 34px;
-}
-
-.content-construct {
 }
 </style>

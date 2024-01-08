@@ -489,43 +489,55 @@ class Researches(models.Model):
         return self.site_type_id
 
     @staticmethod
-    def get_tubes(podrazdelenie_id: int):
-        tubes = {}
+    def as_json(research):
+        result = {
+                "pk": research.pk,
+                "title": research.title,
+                "hide": research.hide,
+                "order": research.sort_weight,
+        }
+        return result
+
+    @staticmethod
+    def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube')
+        research_tubes = {}
+        for fraction in fractions:
+            if research_tubes.get(fraction.relation_id) and need_fractions:
+                research_tubes[fraction.relation_id]["fractions"].append(fraction.as_json(fraction))
+            elif not research_tubes.get(fraction.relation_id):
+                research_tubes[fraction.relation_id] = {
+                    "pk": fraction.relation_id,
+                    "color": fraction.relation.tube.color,
+                    "title": fraction.relation.tube.title,
+                }
+                if need_fractions:
+                    research_tubes[fraction.relation_id]["fractions"] = [fraction.as_json(fraction)]
+        return research_tubes
+
+    @staticmethod
+    def get_laboratory_researches(podrazdelenie_id: int):
         if podrazdelenie_id == -1:
             podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
             researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by('pk')
         else:
             researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by('pk')
+        return researches
+
+    @staticmethod
+    def get_tubes(podrazdelenie_id: int):
+        tubes = {}
+        researches = Researches.get_laboratory_researches(podrazdelenie_id)
         for research in researches:
-            fractions = Fractions.objects.filter(research_id=research.pk).select_related('relation__tube')
-            research_tubes = {}
-            for fraction in fractions:
-                if fraction.relation_id not in research_tubes.keys():
-                    research_tubes[fraction.relation_id] = {
-                        "pk": fraction.relation_id,
-                        "color": fraction.relation.tube.color,
-                        "title": fraction.relation.tube.title,
-                    }
+            research_tubes = Researches.get_tube_data(research.pk)
             tubes_info = [value for _, value in research_tubes.items()]
             tubes_keys = tuple(research_tubes.keys())
             if tubes.get(tubes_keys):
-                tubes[tubes_keys]["researches"].append(
-                    {
-                        "pk": research.pk,
-                        "title": research.title,
-                        "hide": research.hide,
-                        "order": research.sort_weight,
-                    }
-                )
+                tubes[tubes_keys]["researches"].append(research.as_json(research))
             else:
                 tubes[tubes_keys] = {
                     "researches": [
-                        {
-                            "pk": research.pk,
-                            "title": research.title,
-                            "hide": research.hide,
-                            "order": research.sort_weight,
-                        }
+                        research.as_json(research)
                     ],
                     "tubes": tubes_info,
                 }
@@ -560,6 +572,7 @@ class Researches(models.Model):
     @staticmethod
     def get_research(research_pk: int):
         research = Researches.objects.get(pk=research_pk)
+        research_tubes = Researches.get_tube_data(research_pk, True)
         result = {
             "pk": research.pk,
             "title": research.title,
@@ -568,8 +581,21 @@ class Researches(models.Model):
             "internalCode": research.internal_code,
             "ecpCode": None,
             "preparation": research.preparation,
+            "tubes": [value for _, value in research_tubes.items()]
         }
         return result
+
+    @staticmethod
+    def update_lab_research(research_data):
+        print(research_data)
+        research = Researches.objects.get(pk=research_data["pk"])
+        research.title = research_data["title"]
+        research.short_title = research_data["shortTitle"]
+        research.code = research_data["code"]
+        research.internal_code = research_data["internalCode"]
+        research.preparation = research_data["preparation"]
+        research.save()
+        return True
 
 
 class HospitalService(models.Model):
@@ -981,6 +1007,17 @@ class Fractions(models.Model):
 
     def get_fsli_code(self):
         return (self.fsli or '').strip()
+
+    @staticmethod
+    def as_json(fraction) -> dict:
+        result = {
+            "pk": fraction.pk,
+            "title": fraction.title,
+            "unit": fraction.unit,
+            "variants": fraction.variants,
+            "order": fraction.sort_weight,
+        }
+        return result
 
     def __str__(self):
         return self.research.title + " | " + self.title

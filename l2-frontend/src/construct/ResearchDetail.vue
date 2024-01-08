@@ -79,13 +79,34 @@
           </div>
         </div>
       </div>
-      <div class="margin-bottom flex-right">
-        <button class="btn btn-blue-nb">
-          Cохранить
-        </button>
-      </div>
       <div class="research-fractions">
-        <p />
+        <h4 class="header">
+          <table class="table">
+            <colgroup>
+              <col width="30">
+              <col width="30">
+              <col>
+              <col width="30">
+              <col width="30">
+            </colgroup>
+            <tr
+              v-for="(research) in props.tube.researches"
+              :key="research.pk"
+            >
+              <td class="border">
+                ура
+              </td>
+            </tr>
+          </table>
+        </h4>
+      </div>
+      <div class="margin-bottom flex-right">
+        <button
+          class="btn btn-blue-nb"
+          @click="updateResearch"
+        >
+          Сохранить
+        </button>
       </div>
     </div>
   </div>
@@ -102,12 +123,21 @@ import api from '@/api';
 
 const store = useStore();
 
+const emit = defineEmits(['updateResearch']);
+
 const props = defineProps({
   researchPk: {
     type: Number,
     required: true,
   },
 });
+
+interface fractionsData {
+  title: string,
+  unit: string,
+  variants: string[] | null,
+  sortWeight: number,
+}
 
 interface researchData {
   pk: number | null,
@@ -117,6 +147,7 @@ interface researchData {
   internalCode: number | null,
   ecpCode: number | null,
   preparation: string | null,
+  fractions: fractionsData[],
 }
 const researchShortTitle = ref('');
 
@@ -129,6 +160,13 @@ const research = ref<researchData>({
   internalCode: -1,
   ecpCode: -1,
   preparation: '',
+  fractions: [
+    {
+      title: '',
+      unit: '',
+      variants: null,
+      sortWeight: -1,
+    }],
 });
 
 const getResearch = async () => {
@@ -142,6 +180,19 @@ const getResearch = async () => {
 watch(() => props.researchPk, () => {
   getResearch();
 });
+
+const updateResearch = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('laboratory/construct/update-research', { research: research.value });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Обновлено');
+    await getResearch();
+    emit('updateResearch');
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
 
 onMounted(() => {
   getResearch();
