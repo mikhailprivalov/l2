@@ -3462,8 +3462,6 @@ def client_register(request):
     if len(phone) != 10 or not phone.isdigit() or phone[0] != "9":
         return Response({"ok": False, "message": "Неверный формат телефона"})
 
-    normalized_phones = Phones.normalize_to_search(phone)
-
     code = body.get("code")
 
     if code is not None and (not isinstance(code, str) or (code and len(code) != 4 or not code.isdigit())):
@@ -3474,13 +3472,6 @@ def client_register(request):
     if token is not None and not isinstance(token, str):
         return Response({"ok": False, "message": "Неверный формат токена"})
 
-    individual = Individual.objects.filter(
-        Q(card__phones__normalized_number__in=normalized_phones)
-        | Q(card__phones__number__in=normalized_phones)
-        | Q(card__phone__in=normalized_phones)
-        | Q(card__doctorcall__phone__in=normalized_phones)
-    ).first()
-
     ok = False
     need_code = False
     api_token = None
@@ -3488,23 +3479,17 @@ def client_register(request):
     message = None
 
     if token is None or code is None:
-        if not individual:
-            api_token = uuid.uuid4().hex
-        else:
-            IndividualAuth.objects.filter(individual=individual).delete()
-
-            code_n = random.randint(0, 9)
-            code_x = random.randint(0, 9)
-            code_y = random.randint(0, 9)
-            code = f"{code_n}{code_x}{code_n}{code_y}"
-            auth = IndividualAuth.objects.create(
-                individual=individual,
-                device_os=os,
-                confirmation_code=code,
-                used_phone=Phones.format_as_plus_7(phone),
-            )
-            api_token = auth.token
-            print({"code": code})  # noqa: T001,T201
+        code_n = random.randint(0, 9)
+        code_x = random.randint(0, 9)
+        code_y = random.randint(0, 9)
+        code = f"{code_n}{code_x}{code_n}{code_y}"
+        auth = IndividualAuth.objects.create(
+            device_os=os,
+            confirmation_code=code,
+            used_phone=Phones.format_as_plus_7(phone),
+        )
+        api_token = auth.token
+        print({"code": code})  # noqa: T001,T201
 
         need_code = True
     else:
@@ -3512,7 +3497,7 @@ def client_register(request):
             token=token,
             is_confirmed=False,
             device_os=os,
-            individual=individual,
+            used_phone=Phones.format_as_plus_7(phone),
         ).first()
 
         if auth:
@@ -3562,13 +3547,26 @@ def client_logout(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_info(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
+
+    individuals = list(individual_auth.individuals)
 
     return Response(
         {
-            "id": individual.individual.pk,
-            "fullName": f"{individual.individual.fio(dots=True, short=True)} {individual.individual.age_s()}",
-            "phone": individual.used_phone or "--",
+            "rows": [
+                {
+                    "id": individual.pk,
+                    "fullName": f"{individual.fio(dots=True, short=True)} {individual.age_s()}",
+                    "phone": individual_auth.used_phone or "--",
+                }
+                for individual in individuals
+            ] if individuals else [
+                {
+                    "id": -1,
+                    "fullName": "Нет данных",
+                    "phone": individual_auth.used_phone or "--",
+                }
+            ]
         }
     )
 
@@ -3605,16 +3603,18 @@ def client_categories(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_results_list(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
     body = json.loads(request.body)
     category = body.get("category")
+    user_id = body.get("userId")
     page = max(min(body.get("page", 1), 1000), 1)
     page_size = max(min(body.get("pageSize", 20), 20), 10)
 
     if category not in ["all", *[x[0] for x in ResultFeed.CATEGORIES]]:
         return Response({"rows": [], "total": 0, "pages": 0, "page": page, "pageSize": page_size})
 
-    rows = ResultFeed.objects.filter(individual=individual.individual)
+    individual = individual_auth.individuals.get(pk=user_id)
+    rows = ResultFeed.objects.filter(individual=individual)
     if category != "all":
         rows = rows.filter(category=category)
     rows = rows.order_by("-result_confirmed_at")
@@ -3637,11 +3637,13 @@ def client_results_list(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_results_pdf(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
     body = json.loads(request.body)
     unique_id = body.get("id")
+    user_id = body.get("userId")
 
-    result: ResultFeed = ResultFeed.objects.filter(individual=individual.individual, unique_id=unique_id).first()
+    individual = individual_auth.individuals.get(pk=user_id)
+    result: ResultFeed = ResultFeed.objects.filter(individual=individual, unique_id=unique_id).first()
 
     if not result:
         return Response({"data": ""})
