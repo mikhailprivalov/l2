@@ -1024,7 +1024,7 @@ class Fractions(models.Model):
             "pk": fraction.pk,
             "title": fraction.title,
             "unit": fraction.unit.title if fraction.unit else '',
-            "variants": fraction.variants.get_variants(),
+            "variants": fraction.variants.get_variants() if fraction.variants else '',
             "order": fraction.sort_weight,
             "ecpCode": fraction.ecp_id,
             "fsli": fraction.fsli,
