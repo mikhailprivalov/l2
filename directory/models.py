@@ -7,7 +7,6 @@ from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality
-from utils.response import status_response
 
 
 class DirectionsGroup(models.Model):
