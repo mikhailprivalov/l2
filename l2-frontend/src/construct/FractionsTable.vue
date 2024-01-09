@@ -3,20 +3,24 @@
     <table class="table">
       <colgroup>
         <col width="60">
-        <col>
-        <col width="200">
-        <col width="200">
-        <col width="200">
-        <col width="200">
-        <col width="200">
+        <col style="min-width: 100px">
+        <col width="150">
+        <col width="150">
+        <col width="100">
+        <col width="100">
+        <col width="100">
+        <col width="150">
+        <col width="150">
       </colgroup>
       <thead>
         <tr>
           <th />
           <th><strong>Фракция</strong></th>
           <th><strong>По умолчанию</strong></th>
-          <th><strong>Ед. измерения</strong></th>
-          <th><strong>Вар. комментариев</strong></th>
+          <th><strong>Варианты</strong></th>
+          <th><strong>Ед. изм</strong></th>
+          <th><strong>Код ЕЦП</strong></th>
+          <th><strong>ФСЛИ</strong></th>
           <th><strong>Референсы м.</strong></th>
           <th><strong>Референсы ж.</strong></th>
         </tr>
@@ -58,6 +62,12 @@
         </td>
         <td class="padding-td no-right-padding">
           <input
+            v-model="fraction.variants"
+            class="form-control fraction-input"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
             v-model="fraction.unit"
             class="form-control fraction-input"
             placeholder="Введите ед. изм."
@@ -65,7 +75,13 @@
         </td>
         <td class="padding-td no-right-padding">
           <input
-            v-model="fraction.variants"
+            v-model="fraction.ecpCode"
+            class="form-control fraction-input"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            v-model="fraction.fsli"
             class="form-control fraction-input"
           >
         </td>

@@ -143,6 +143,8 @@ export interface fractionsData {
   unit: string,
   variants: string[] | null,
   order: number,
+  ecpCode: number,
+  fsli: number,
 }
 
 interface tubeData {
@@ -184,7 +186,9 @@ const research = ref<researchData>({
           title: '',
           unit: '',
           variants: null,
-          sortWeight: -1,
+          order: -1,
+          ecpCode: -1,
+          fsli: -1,
         },
       ],
     }],

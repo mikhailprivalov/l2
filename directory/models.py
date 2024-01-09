@@ -577,7 +577,7 @@ class Researches(models.Model):
             "shortTitle": research.short_title,
             "code": research.code,
             "internalCode": research.internal_code,
-            "ecpCode": None,
+            "ecpCode": research.ecp_id,
             "preparation": research.preparation,
             "tubes": [value for _, value in research_tubes.items()],
         }
@@ -586,9 +586,18 @@ class Researches(models.Model):
     @staticmethod
     def update_lab_research(research_data):
         research = Researches.objects.get(pk=research_data["pk"])
+        fractions = Fractions.objects.filter(research_id=research.pk)
+        for tube in research_data["tubes"]:
+            for fraction in tube["fractions"]:
+                current_fractions = fractions.get(pk=fraction["pk"])
+                current_fractions.title = fraction["title"]
+                current_fractions.ecp_id = fraction["ecpCode"]
+                current_fractions.fsli = fraction["fsli"]
+                current_fractions.save()
         research.title = research_data["title"]
         research.short_title = research_data["shortTitle"]
         research.code = research_data["code"]
+        research.ecp_id = research_data["ecpCode"]
         research.internal_code = research_data["internalCode"]
         research.preparation = research_data["preparation"]
         research.save()
@@ -1017,6 +1026,8 @@ class Fractions(models.Model):
             "unit": fraction.unit,
             "variants": fraction.variants.get_variants(),
             "order": fraction.sort_weight,
+            "ecpCode": fraction.ecp_id,
+            "fsli": fraction.fsli,
         }
         return result
 
