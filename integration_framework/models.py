@@ -1,4 +1,6 @@
-from clients.models import Individual
+from django.db.models import Q
+
+from clients.models import Individual, Phones
 from directions.models import Napravleniya
 import uuid
 
@@ -84,7 +86,6 @@ class CrieOrder(models.Model):
 
 
 class IndividualAuth(models.Model):
-    individual = models.ForeignKey(Individual, on_delete=models.CASCADE, db_index=True)
     token = models.UUIDField(default=uuid.uuid4, editable=False, db_index=True)
     device_os = models.CharField(max_length=64, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -97,5 +98,16 @@ class IndividualAuth(models.Model):
     used_phone = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True)
     fcm_token = models.CharField(max_length=255, default=None, null=True, blank=True, db_index=True)
 
+    @property
+    def individuals(self):
+        normalized_phones = Phones.normalize_to_search(self.used_phone)
+
+        return Individual.objects.filter(
+            Q(card__phones__normalized_number__in=normalized_phones)
+            | Q(card__phones__number__in=normalized_phones)
+            | Q(card__phone__in=normalized_phones)
+            | Q(card__doctorcall__phone__in=normalized_phones)
+        ).distinct()
+
     def __str__(self):
-        return f"{self.individual} {self.device_os} {self.created_at:%Y-%m-%d %H:%M:%S}"
+        return f"{self.used_phone} {self.device_os} {self.created_at:%Y-%m-%d %H:%M:%S}"
