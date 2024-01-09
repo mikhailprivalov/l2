@@ -1008,6 +1008,11 @@ def hosp_get_operation_data(num_dir):
         'Код хирурга',
         'Код врача',
         'Заключение',
+        'Реакции и осложнения:',
+        'Группа крови АВО',
+        'Фенотип донора:',
+        'Наименование компонента донорской крови',
+        '№ единицы компонентов крови:'
     ]
     list_values = []
 
@@ -1035,6 +1040,10 @@ def hosp_get_operation_data(num_dir):
                 'category_difficult': '',
                 'doc_code': '',
                 'final': '',
+                'Группа крови АВО': '',
+                'Фенотип донора:': '',
+                'Наименование компонента донорской крови': '',
+                '№ единицы компонентов крови:': ''
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.time_confirmation:
@@ -1060,7 +1069,7 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Метод обезболивания':
                     operation_data['anesthesia method'] = field[2]
                     continue
-                if field[3] == 'Осложнения':
+                if field[3] == 'Осложнения' or field[3] == 'Реакции и осложнения:':
                     operation_data['complications'] = field[2]
                     continue
                 if field[3] == 'Код операции':
@@ -1096,8 +1105,30 @@ def hosp_get_operation_data(num_dir):
                     if field[2]:
                         operation_data['final'] = field[2]
                     continue
+                if field[3] == 'Группа крови АВО':
+                    if field[2]:
+                        operation_data['Группа крови АВО'] = field[2]
+                    continue
+                if field[3] == 'Фенотип донора:':
+                    if field[2]:
+                        operation_data['Фенотип донора:'] = field[2]
+                    continue
+                if field[3] == 'Наименование компонента донорской крови':
+                    if field[2]:
+                        operation_data['Наименование компонента донорской крови'] = field[2]
+                    continue
+                if field[3] == '№ единицы компонентов крови:':
+                    if field[2]:
+                        operation_data['№ единицы компонентов крови:'] = field[2]
+                    continue
 
-            operation_data['name_operation'] = f"{operation_data['name_operation']} {category_difficult}"
+            operation_data['name_operation'] = f"{operation_data['name_operation']}-{category_difficult}"
+            if operation_data.get('name_operation') == '-':
+                operation_data["name_operation"] = f"{iss_obj.research.title} " \
+                                                   f"Группа крови АВО:{operation_data.get('Группа крови АВО')} " \
+                                                   f"Фенотип донора: {operation_data.get('Фенотип донора:', '-')} " \
+                                                   f"Наименование компонента донорской крови: {operation_data.get('Наименование компонента донорской крови', '-')} " \
+                                                   f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')}"
             operation_result.append(operation_data.copy())
 
     return operation_result
