@@ -1023,7 +1023,7 @@ class Fractions(models.Model):
         result = {
             "pk": fraction.pk,
             "title": fraction.title,
-            "unit": fraction.unit,
+            "unit": fraction.unit.title if fraction.unit else '',
             "variants": fraction.variants.get_variants(),
             "order": fraction.sort_weight,
             "ecpCode": fraction.ecp_id,
