@@ -1043,7 +1043,7 @@ def hosp_get_operation_data(num_dir):
                 'Группа крови АВО': '',
                 'Фенотип донора:': '',
                 'Наименование компонента донорской крови': '',
-                '№ единицы компонентов крови:': ''
+                '№ единицы компонентов крови:': '',
             }
             iss_obj = Issledovaniya.objects.filter(pk=pk_iss_operation).first()
             if not iss_obj.time_confirmation:
