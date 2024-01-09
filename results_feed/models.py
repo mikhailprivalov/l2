@@ -18,7 +18,8 @@ class ResultFeed(models.Model):
     )
 
     unique_id = models.CharField(max_length=128, db_index=True, unique=True)
-    hospital = models.ForeignKey('hospitals.Hospitals', on_delete=models.CASCADE, db_index=True)
+    hospital = models.ForeignKey('hospitals.Hospitals', on_delete=models.CASCADE, db_index=True, related_name='feed_hospital')
+    owner = models.ForeignKey('hospitals.Hospitals', on_delete=models.CASCADE, db_index=True, related_name='feed_owner')
     individual = models.ForeignKey('clients.Individual', on_delete=models.CASCADE, db_index=True)
     card = models.ForeignKey('clients.Card', on_delete=models.CASCADE)
     direction = models.ForeignKey('directions.Napravleniya', on_delete=models.CASCADE, db_index=True)
@@ -101,6 +102,7 @@ class ResultFeed(models.Model):
         feed = ResultFeed.objects.create(
             unique_id=unique_id,
             hospital=hospital,
+            owner=individual.owner or hospital,
             individual=individual,
             card=card,
             direction=direction,
