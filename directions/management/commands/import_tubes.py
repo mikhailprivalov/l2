@@ -40,7 +40,6 @@ class Command(BaseCommand):
         }
         colors_string = "|".join(list(colors.keys()))
         fp = kwargs['path']
-        self.stdout.write('Path: ' + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
