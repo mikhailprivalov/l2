@@ -1,0 +1,210 @@
+<template>
+  <div>
+    <table class="table">
+      <colgroup>
+        <col width="60">
+        <col style="min-width: 100px">
+        <col width="150">
+        <col width="150">
+        <col width="100">
+        <col width="100">
+        <col width="100">
+        <col width="150">
+        <col width="150">
+      </colgroup>
+      <thead>
+        <tr>
+          <th />
+          <th><strong>Фракция</strong></th>
+          <th><strong>По умолчанию</strong></th>
+          <th><strong>Варианты</strong></th>
+          <th><strong>Ед. изм</strong></th>
+          <th><strong>Код ЕЦП</strong></th>
+          <th><strong>ФСЛИ</strong></th>
+          <th><strong>Референсы м.</strong></th>
+          <th><strong>Референсы ж.</strong></th>
+        </tr>
+      </thead>
+      <tr
+        v-for="(fraction, idx) in props.fractions"
+        :key="fraction.pk"
+      >
+        <td>
+          <div class="button">
+            <button
+              :class="isFirstRow(fraction.order) ? 'transparent-button-disabled' : 'transparent-button'"
+              :disabled="isFirstRow(fraction.order)"
+              @click="updateOrder(idx, fraction.pk, fraction.order, 'dec_order')"
+            >
+              <i class="glyphicon glyphicon-arrow-up" />
+            </button>
+            <button
+              :class="isLastRow(fraction.order) ? 'transparent-button-disabled' : 'transparent-button'"
+              :disabled="isLastRow(fraction.order)"
+              @click="updateOrder(idx, fraction.pk, fraction.order, 'inc_order')"
+            >
+              <i class="glyphicon glyphicon-arrow-down" />
+            </button>
+          </div>
+        </td>
+        <td class="padding-td">
+          <input
+            v-model="fraction.title"
+            class="form-control fraction-input"
+            placeholder="Введите название фракции"
+          >
+        </td>
+        <td class="padding-td">
+          <input
+            class="form-control fraction-input"
+            placeholder="Введите значение"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            v-model="fraction.variants"
+            class="form-control fraction-input"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            v-model="fraction.unit"
+            class="form-control fraction-input"
+            placeholder="Введите ед. изм."
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            v-model="fraction.ecpCode"
+            class="form-control fraction-input"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            v-model="fraction.fsli"
+            class="form-control fraction-input"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            class="form-control fraction-input"
+            placeholder="Введите референсы"
+          >
+        </td>
+        <td class="padding-td no-right-padding">
+          <input
+            v-model="fraction.variants"
+            class="form-control fraction-input"
+            placeholder="Введите референсы"
+          >
+        </td>
+      </tr>
+    </table>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { computed, getCurrentInstance, PropType } from 'vue';
+
+import { fractionsData } from '@/construct/ResearchDetail.vue';
+
+const root = getCurrentInstance().proxy.$root;
+
+const props = defineProps({
+  fractions: {
+    type: Array as PropType<fractionsData[]>,
+    required: true,
+  },
+});
+const emit = defineEmits(['updateOrder']);
+
+const minMaxOrder = computed(() => {
+  const { fractions } = props;
+  let min = 0;
+  let max = 0;
+  for (const fraction of fractions) {
+    if (min === 0) {
+      min = fraction.order;
+    } else {
+      min = Math.min(min, fraction.order);
+    }
+    max = Math.max(max, fraction.order);
+  }
+  return { min, max };
+});
+
+const isFirstRow = (order: number) => order === minMaxOrder.value.min;
+const isLastRow = (order: number) => order === minMaxOrder.value.max;
+
+const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: number, action: string) => {
+  if (action === 'inc_order' && fractionOrder < minMaxOrder.value.max) {
+    const fractionNearbyPk = props.fractions[fractionIdx + 1].pk;
+    emit('updateOrder', { fractionPk, fractionNearbyPk, action });
+  } else if (action === 'dec_order' && fractionOrder > minMaxOrder.value.min) {
+    const fractionNearbyPk = props.fractions[fractionIdx - 1].pk;
+    emit('updateOrder', { fractionPk, fractionNearbyPk, action });
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
+</script>
+
+<style scoped lang="scss">
+.table {
+  table-layout: fixed;
+  margin-bottom: 0;
+}
+.padding-td {
+  padding: 2px 5px;
+}
+.no-left-padding {
+  padding-left: 0;
+}
+.no-right-padding {
+  padding-right: 0;
+}
+.border {
+  border: 1px solid #bbb;
+}
+.fraction-input {
+  height: 28px;
+}
+
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+.transparent-button {
+  background-color: transparent;
+  align-self: stretch;
+  flex: 1;
+  color: #434A54;
+  border: 1px solid #AAB2BD;
+  border-radius: 4px;
+  padding: 3px 2px;
+  margin: 0px 1px;
+}
+.transparent-button:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+}
+.transparent-button:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
+}
+.transparent-button-disabled {
+  color: #abaeb3;
+  cursor: not-allowed;
+  background-color: transparent;
+  align-self: stretch;
+  flex: 1;
+  border: 1px solid #AAB2BD;
+  border-radius: 4px;
+  padding: 3px 2px;
+   margin: 0px 1px;
+}
+</style>

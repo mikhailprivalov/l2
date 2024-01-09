@@ -488,6 +488,121 @@ class Researches(models.Model):
             return -13
         return self.site_type_id
 
+    @staticmethod
+    def as_json(research):
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "hide": research.hide,
+            "order": research.sort_weight,
+        }
+        return result
+
+    @staticmethod
+    def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube').order_by('sort_weight')
+        research_tubes = {}
+        for fraction in fractions:
+            if research_tubes.get(fraction.relation_id) and need_fractions:
+                research_tubes[fraction.relation_id]["fractions"].append(fraction.as_json(fraction))
+            elif not research_tubes.get(fraction.relation_id):
+                research_tubes[fraction.relation_id] = {
+                    "pk": fraction.relation_id,
+                    "color": fraction.relation.tube.color,
+                    "title": fraction.relation.tube.title,
+                }
+                if need_fractions:
+                    research_tubes[fraction.relation_id]["fractions"] = [fraction.as_json(fraction)]
+        return research_tubes
+
+    @staticmethod
+    def get_laboratory_researches(podrazdelenie_id: int):
+        if podrazdelenie_id == -1:
+            podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
+            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by('pk')
+        else:
+            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by('pk')
+        return researches
+
+    @staticmethod
+    def get_tubes(podrazdelenie_id: int):
+        tubes = {}
+        researches = Researches.get_laboratory_researches(podrazdelenie_id)
+        for research in researches:
+            research_tubes = Researches.get_tube_data(research.pk)
+            tubes_info = [value for _, value in research_tubes.items()]
+            tubes_keys = tuple(research_tubes.keys())
+            if tubes.get(tubes_keys):
+                tubes[tubes_keys]["researches"].append(research.as_json(research))
+            else:
+                tubes[tubes_keys] = {
+                    "researches": [research.as_json(research)],
+                    "tubes": tubes_info,
+                }
+
+        result = [{"researches": sorted(value["researches"], key=lambda d: d["order"]), "tubes": value["tubes"]} for _, value in tubes.items()]
+        return result
+
+    @staticmethod
+    def update_order(research_pk: int, research_nearby_pk: int, action: str):
+        research = Researches.objects.get(pk=research_pk)
+        research_nearby = Researches.objects.get(pk=research_nearby_pk)
+        if action == 'inc_order':
+            research.sort_weight += 1
+            research_nearby.sort_weight -= 1
+        elif action == 'dec_order':
+            research.sort_weight -= 1
+            research_nearby.sort_weight += 1
+        research.save()
+        research_nearby.save()
+        return True
+
+    @staticmethod
+    def change_visibility(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        if research.hide:
+            research.hide = False
+        else:
+            research.hide = True
+        research.save()
+        return True
+
+    @staticmethod
+    def get_research(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        research_tubes = Researches.get_tube_data(research_pk, True)
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "shortTitle": research.short_title,
+            "code": research.code,
+            "internalCode": research.internal_code,
+            "ecpCode": research.ecp_id,
+            "preparation": research.preparation,
+            "tubes": [value for _, value in research_tubes.items()],
+        }
+        return result
+
+    @staticmethod
+    def update_lab_research(research_data):
+        research = Researches.objects.get(pk=research_data["pk"])
+        fractions = Fractions.objects.filter(research_id=research.pk)
+        for tube in research_data["tubes"]:
+            for fraction in tube["fractions"]:
+                current_fractions = fractions.get(pk=fraction["pk"])
+                current_fractions.title = fraction["title"]
+                current_fractions.ecp_id = fraction["ecpCode"]
+                current_fractions.fsli = fraction["fsli"]
+                current_fractions.save()
+        research.title = research_data["title"]
+        research.short_title = research_data["shortTitle"]
+        research.code = research_data["code"]
+        research.ecp_id = research_data["ecpCode"]
+        research.internal_code = research_data["internalCode"]
+        research.preparation = research_data["preparation"]
+        research.save()
+        return True
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -902,6 +1017,33 @@ class Fractions(models.Model):
 
     def get_ecp_code(self):
         return (self.ecp_id or '').strip()
+
+    @staticmethod
+    def as_json(fraction) -> dict:
+        result = {
+            "pk": fraction.pk,
+            "title": fraction.title,
+            "unit": fraction.unit,
+            "variants": fraction.variants.get_variants(),
+            "order": fraction.sort_weight,
+            "ecpCode": fraction.ecp_id,
+            "fsli": fraction.fsli,
+        }
+        return result
+
+    @staticmethod
+    def update_order(fraction_pk: int, fraction_nearby_pk: int, action: str):
+        fraction = Fractions.objects.get(pk=fraction_pk)
+        fraction_nearby = Fractions.objects.get(pk=fraction_nearby_pk)
+        if action == 'inc_order':
+            fraction.sort_weight += 1
+            fraction_nearby.sort_weight -= 1
+        elif action == 'dec_order':
+            fraction.sort_weight -= 1
+            fraction_nearby.sort_weight += 1
+        fraction.save()
+        fraction_nearby.save()
+        return True
 
     def __str__(self):
         return self.research.title + " | " + self.title

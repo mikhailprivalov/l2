@@ -65,6 +65,11 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     def get_title(self):
         return self.short_title or self.title
 
+    @staticmethod
+    def get_podrazdeleniya(p_type: int):
+        result = [{"id": podrazdelenie.pk, "label": podrazdelenie.title} for podrazdelenie in Podrazdeleniya.objects.filter(p_type=p_type).order_by('title')]
+        return result
+
     def __str__(self):
         return self.title
 
