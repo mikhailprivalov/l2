@@ -1124,11 +1124,13 @@ def hosp_get_operation_data(num_dir):
 
             operation_data['name_operation'] = f"{operation_data['name_operation']}-{category_difficult}"
             if operation_data.get('name_operation') == '-':
-                operation_data["name_operation"] = f"{iss_obj.research.title} " \
-                                                   f"Группа крови АВО:{operation_data.get('Группа крови АВО')} " \
-                                                   f"Фенотип донора: {operation_data.get('Фенотип донора:', '-')} " \
-                                                   f"Наименование компонента донорской крови: {operation_data.get('Наименование компонента донорской крови', '-')} " \
-                                                   f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')}"
+                operation_data["name_operation"] = (
+                    f"{iss_obj.research.title} "
+                    f"Группа крови АВО:{operation_data.get('Группа крови АВО')} "
+                    f"Фенотип донора: {operation_data.get('Фенотип донора:', '-')} "
+                    f"Наименование компонента донорской крови: {operation_data.get('Наименование компонента донорской крови', '-')} "
+                    f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')}"
+                )
             operation_result.append(operation_data.copy())
 
     return operation_result
