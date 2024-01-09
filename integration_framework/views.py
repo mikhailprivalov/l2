@@ -3236,14 +3236,7 @@ def get_research_fields(request):
     paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False).order_by("order")
     paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False).order_by("order")
     data_fields = [
-        {
-            "title": i.title,
-            "id": i.pk,
-            "typeId": i.field_type,
-            "typeTitle": i.get_field_type_display(),
-            "inputTemplates": json.loads(i.input_templates)
-        }
-        for i in paraclinic_input_fields
+        {"title": i.title, "id": i.pk, "typeId": i.field_type, "typeTitle": i.get_field_type_display(), "inputTemplates": json.loads(i.input_templates)} for i in paraclinic_input_fields
     ]
     research = Researches.objects.get(pk=research_id)
 
@@ -3560,7 +3553,9 @@ def client_info(request):
                     "phone": individual_auth.used_phone or "--",
                 }
                 for individual in individuals
-            ] if individuals else [
+            ]
+            if individuals
+            else [
                 {
                     "id": -1,
                     "fullName": "Нет данных",
