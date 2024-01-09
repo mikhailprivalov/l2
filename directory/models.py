@@ -153,6 +153,7 @@ class Researches(models.Model):
         (38101, '38101. ИО - Направление в ИДЦ Ковид'),
         (38102, '38102. ИО - Направление в ИДЦ обследование'),
         (38103, '38103. ИО - Направление в СПИД-центр'),
+        (38104, '38104. ИО - Направление на химико-токсикологические исследования'),
     )
 
     RESULT_FORMS = (
@@ -167,6 +168,7 @@ class Researches(models.Model):
         (10402, '104.02 - Направление на ВМП'),
         (10403, '104.03 - Рапорт на ВМП'),
         (10404, '104.04 - Заявление на возврат'),
+        (10405, '104.05 - Анкета для оформления ЭЛН'),
         (10501, '105.01 - Свидетельство о смерти'),
         (10601, '106.01 - Свидетельство о о перинатальной смерти'),
         (10701, '107.01 - МСЭ'),
@@ -303,6 +305,7 @@ class Researches(models.Model):
     cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -444,6 +447,11 @@ class Researches(models.Model):
         if self.is_microbiology:
             return self.microbiology_tube.title if self.microbiology_tube else ''
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
+
+    def get_podrazdeleniye_short_title(self):
+        if self.is_microbiology:
+            return self.microbiology_tube.title if self.microbiology_tube else ''
+        return self.podrazdeleniye.get_title() if self.podrazdeleniye else ""
 
     def get_podrazdeleniye_title_recieve_recieve(self):
         if self.plan_external_performing_organization:
@@ -870,6 +878,7 @@ class Fractions(models.Model):
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код теста в ЕЦП')
 
     def get_unit(self):
         if self.unit:
@@ -890,6 +899,9 @@ class Fractions(models.Model):
 
     def get_fsli_code(self):
         return (self.fsli or '').strip()
+
+    def get_ecp_code(self):
+        return (self.ecp_id or '').strip()
 
     def __str__(self):
         return self.research.title + " | " + self.title

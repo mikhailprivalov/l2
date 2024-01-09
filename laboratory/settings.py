@@ -65,6 +65,7 @@ INSTALLED_APPS = (
     'dashboards',
     'chats.apps.ChatsConfig',
     'employees.apps.EmployeesConfig',
+    'results_feed.apps.ResultsFeedConfig',
 )
 
 MIDDLEWARE = [
@@ -399,6 +400,9 @@ CPP_SEND_PROTOCOL_ID = -1
 CPP_TEMPLATE_XML_DIRECTORY = ""
 CDA_TEMPLATE_XML_DIRECTORY = ""
 
+FCM_CERT_PATH = ""
+PROMETHEUS_ENABLED = False
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
@@ -409,6 +413,10 @@ MIDDLEWARE = list(OrderedDict.fromkeys(MIDDLEWARE))
 INSTALLED_APPS += INSTALLED_APPS_ADD
 if not FORCE_CACHALOT:
     INSTALLED_APPS = [x for x in OrderedDict.fromkeys(INSTALLED_APPS_PRE_ADD + INSTALLED_APPS) if x not in ['cachalot']]
+
+if PROMETHEUS_ENABLED:
+    INSTALLED_APPS += ['django_prometheus']
+    MIDDLEWARE = ['django_prometheus.middleware.PrometheusBeforeMiddleware'] + MIDDLEWARE + ['django_prometheus.middleware.PrometheusAfterMiddleware']
 
 if LOG_SQL:
     LOGGING['loggers']['django.db.backends'] = {

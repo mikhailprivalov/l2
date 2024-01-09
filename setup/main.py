@@ -14,11 +14,13 @@ from prompt_toolkit.shortcuts import radiolist_dialog, input_dialog, yes_no_dial
 import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from dotenv import dotenv_values
 
 from take_release import get_current_version
 
 L2_SETUPS_S3_BUCKET = 'l2-setups'
 ROOT_DIR = os.path.abspath(os.curdir)
+config = dotenv_values(os.path.join(ROOT_DIR, '.env'))
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
@@ -114,6 +116,8 @@ def get_tool_path(tool, output_check, check_args='--version'):
                     sys.exit()
             print('Custom', tool, 'path is ok', tool_path)
 
+    if os.name == 'nt':
+        tool_path = f'"{tool_path}"'
     return tool_path
 
 
@@ -133,8 +137,8 @@ def enter():
 
     if mode in ('setup', 'save-config'):
         is_s3_ok = False
-        s3_id = ''
-        s3_secret = ''
+        s3_id = config.get('S3_ACCESS_KEY_ID') or ''
+        s3_secret = config.get('S3_SECRET_ACCESS_KEY') or ''
 
         while not is_s3_ok:
             s3_id = input_dialog(title='S3 settings', text='Enter access_key_id:', ok_text='Next', default=s3_id).run()
@@ -349,7 +353,10 @@ def enter():
             if need_version_checkout:
                 print('Checking out version', cfg['version'])
 
-                proc = subprocess.Popen(f"{ROOT_DIR}/checkout_version.sh {cfg['version']}", shell=True)
+                if os.name == 'nt':
+                    proc = subprocess.Popen(['powershell', os.path.join(ROOT_DIR, 'checkout_version.ps1'), cfg['version']], shell=True)
+                else:
+                    proc = subprocess.Popen(os.path.join(ROOT_DIR, 'checkout_version.sh') + ' ' + cfg['version'], shell=True)
                 proc.communicate()
                 exit_code = proc.wait()
                 checkout_result = exit_code == 0
@@ -373,19 +380,21 @@ def enter():
                 sql_backup_file = None
                 with ProgressBar(title=f"Downloading setup files to {dn}") as pb:
                     for f in pb(fl):
-                        file_dir, fn = os.path.split(os.path.join(dn, f))
+                        f_fixed = str(f).replace('/', os.path.sep)
+                        file_dir, fn = os.path.split(os.path.join(dn, f_fixed))
+
                         os.makedirs(file_dir, exist_ok=True)
                         full_n = str(os.path.join(file_dir, fn))
                         s3.download_file(L2_SETUPS_S3_BUCKET, f, full_n)
-                        if str(f).startswith(os.path.join(cfg['name'], 'migrations')) or f == os.path.join(cfg['name'], 'local_settings.py'):
+                        if f_fixed.startswith(os.path.join(cfg['name'], 'migrations')) or f_fixed.endswith('local_settings.py'):
                             p, ln = os.path.split(full_n)
-                            if p.endswith('/migrations'):
+                            if p.endswith(os.path.sep + 'migrations'):
                                 cn = p
                             else:
                                 cn = full_n
                             if cn not in files_to_copy:
                                 files_to_copy.append(cn)
-                        elif f == os.path.join(cfg['name'], 'dump.sql.gz'):
+                        elif f_fixed == os.path.join(cfg['name'], 'dump.sql.gz'):
                             sql_backup_file = full_n
 
                 if not sql_backup_file:
@@ -400,9 +409,9 @@ def enter():
 
                 with ProgressBar(title='Copying files from setup to L2') as pb:
                     for f in pb(files_to_copy):
-                        dst = f.replace(base + '/', '')
-                        if dst.startswith('migrations/'):
-                            dst = dst.split('/', maxsplit=1)[1]
+                        dst = f.replace(base + os.path.sep, '')
+                        if dst.startswith('migrations' + os.path.sep):
+                            dst = dst.split(os.path.sep, maxsplit=1)[1]
 
                         if dst == 'local_settings.py':
                             dst = os.path.join(ROOT_DIR, 'laboratory', dst)
@@ -424,7 +433,7 @@ def enter():
                 db_content_lines = []
                 settings_lines = []
 
-                with open(local_settings_path) as ls_file:
+                with open(local_settings_path, encoding='utf-8') as ls_file:
                     open_brackets_count = 0
                     close_brackets_count = 0
                     has_db_start = False
@@ -483,7 +492,13 @@ def enter():
                         db_is_ok = True
 
                     try:
+                        print(f'Connecting to database {DB["NAME"]}...')
                         with psycopg2.connect(host=DB['HOST'], port=DB['PORT'], dbname=DB['NAME'], user=DB['USER'], password=DB['PASSWORD'] or None) as conn:
+                            with conn.cursor() as cursor:
+                                cursor.execute("SELECT PG_CLIENT_ENCODING()")
+                                client_encoding = cursor.fetchone()[0]
+                                print("Client Encoding:", client_encoding)
+
                             with conn.cursor() as cursor:
                                 cursor.execute('SELECT VERSION()')
                                 row = cursor.fetchone()
@@ -491,6 +506,7 @@ def enter():
                     except Exception as e:
                         m = str(e)
                         print(m)
+                        traceback.print_exc()
 
                         if f'database "{DB["NAME"]}" does not exist' in m:
                             go_to_next = yes_no_dialog(
@@ -504,11 +520,16 @@ def enter():
                             print('Connecting to default db...')
                             try:
                                 connection = psycopg2.connect(host=DB['HOST'], port=DB['PORT'], user=DB['USER'], password=DB['PASSWORD'] or None)
+                                connection.set_client_encoding('UTF8')
                                 connection.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
                                 cursor = connection.cursor()
                                 cursor.execute(sql.SQL("CREATE DATABASE {dbname}").format(dbname=sql.Identifier(DB['NAME'])))
                                 cursor.close()
                                 with psycopg2.connect(host=DB['HOST'], port=DB['PORT'], dbname=DB['NAME'], user=DB['USER'], password=DB['PASSWORD'] or None) as conn:
+                                    with conn.cursor() as cursor:
+                                        cursor.execute("SELECT PG_CLIENT_ENCODING()")
+                                        client_encoding = cursor.fetchone()[0]
+                                        print("Client Encoding:", client_encoding)
                                     with conn.cursor() as cursor:
                                         cursor.execute('SELECT VERSION()')
                                         row = cursor.fetchone()
@@ -516,6 +537,7 @@ def enter():
                                         print('Database successfully created!')
                             except Exception as e:
                                 print(e)
+                                traceback.print_exc()
                                 db_is_ok = False
                                 go_to_next = yes_no_dialog(
                                     title='Failed to create database',
@@ -541,37 +563,64 @@ def enter():
                 print(psql_path)
 
                 pv = which_tool('pv')
-                pv_retry = not pv
+                pv_retry = not pv and os.name != 'nt'
                 while pv_retry:
                     pv_retry = yes_no_dialog(
                         title='Command pv not found',
                         text='pv is a useful tool that allows you to track the process of unpacking a dump.\nYou can install it with:\nsudo apt install pv\nor\nbrew install pv\n\n'
                         'Do you want to try again after installing it?\nUse another terminal for installation.',
                     ).run()
-                    pv = which_tool('pv')
-                    pv_retry = not pv
+                    if pv_retry:
+                        pv = which_tool('pv')
+                        pv_retry = not pv
 
                 gunzip = which_tool('gunzip')
+                gzip = which_tool('gzip')
                 zcat = which_tool('zcat')
 
-                if not gunzip and not zcat:
+                if not gunzip and not zcat and not gzip:
                     print('gunzip or zcat not found in system')
                     sys.exit()
 
                 if zcat:
                     unzip_command = f'{zcat} {sql_backup_file}'
-                else:
+                elif gunzip:
                     unzip_command = f'{gunzip} < {sql_backup_file}'
+                else:
+                    unzip_command = f'{gzip} -d -c {sql_backup_file}'
                 if pv:
                     unzip_command = f'{pv} {sql_backup_file} | {zcat or gunzip}'
 
-                command_for_restoring = f'{unzip_command} | {psql_path} {DB["NAME"]} -P pager=off --host={DB["HOST"]} --port={DB["PORT"]} --username={DB["USER"]} --no-password'
-                print('Starting pg_dump...')
-                print(command_for_restoring)
+                if os.name == 'nt':
+                    psql_command = f'{psql_path} -P pager=off -h {DB["HOST"]} -p {DB["PORT"]} -U {DB["USER"]} -d {DB["NAME"]} --no-password'
+                else:
+                    psql_command = f'{psql_path} {DB["NAME"]} -P pager=off --host={DB["HOST"]} --port={DB["PORT"]} --username={DB["USER"]} --no-password'
+
                 restore_success = False
                 try:
-                    proc = subprocess.Popen(command_for_restoring, shell=True, env={'PGPASSWORD': DB['PASSWORD'] or ''})
-                    proc.communicate()
+                    if os.name == 'nt':
+                        print('Starting restoring...')
+                        print(unzip_command)
+                        print('piped to')
+                        print(psql_command)
+                        proc_unzip = subprocess.Popen(unzip_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        proc_psql = subprocess.Popen(psql_command, shell=True, stdin=proc_unzip.stdout, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        proc_unzip.stdout.close()
+                        proc_unzip.stderr.close()
+                        while True:
+                            output = proc_psql.stdout.readline()
+                            if output == b'' and proc_psql.poll() is not None:
+                                break
+                            if output:
+                                print(output.strip())
+                        proc_psql.communicate()
+                    else:
+                        command_for_restoring = f'{unzip_command} | {psql_command}'
+                        print('Starting restoring...')
+                        print(command_for_restoring)
+                        env_s = {'PGPASSWORD': DB['PASSWORD'] or ''}
+                        proc = subprocess.Popen(command_for_restoring, shell=True, env=env_s)
+                        proc.communicate()
                     restore_success = True
                 except Exception as e:
                     print('Exception happened during restoring')

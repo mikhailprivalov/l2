@@ -2723,6 +2723,10 @@ def last_field_result(request):
         result = {"value": data['fio']}
     elif request_data["fieldPk"].find('%patient_family') != -1:
         result = {"value": data['family']}
+    elif request_data["fieldPk"].find('%patient_name') != -1:
+        result = {"value": data['name']}
+    elif request_data["fieldPk"].find('%patient_patronymic') != -1:
+        result = {"value": data['patronymic']}
     elif request_data["fieldPk"].find('%mother_family') != -1:
         result = {"value": mother_data['family']}
     elif request_data["fieldPk"].find('%mother_name') != -1:
