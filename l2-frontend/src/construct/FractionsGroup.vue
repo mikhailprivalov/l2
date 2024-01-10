@@ -8,9 +8,9 @@
       <colgroup>
         <col style="width: 60px">
         <col style="min-width: 100px">
-        <col style="min-width: 70px; max-width: 200px">
-        <col style="min-width: 70px; max-width: 200px">
-        <col style="min-width: 70px; max-width: 200px">
+        <col style="min-width: 70px;">
+        <col style="min-width: 70px;">
+        <col style="min-width: 70px;">
       </colgroup>
       <thead>
         <tr>
