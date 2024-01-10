@@ -109,7 +109,6 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
 
-
 const root = getCurrentInstance().proxy.$root;
 const store = useStore();
 
