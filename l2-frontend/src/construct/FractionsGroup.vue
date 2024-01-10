@@ -8,9 +8,10 @@
       <colgroup>
         <col style="width: 60px">
         <col style="min-width: 100px">
-        <col style="min-width: 70px;">
-        <col style="min-width: 70px;">
-        <col style="min-width: 70px;">
+        <col style="min-width: 70px">
+        <col style="min-width: 70px">
+        <col style="min-width: 70px">
+        <col style="width: 30px">
       </colgroup>
       <thead>
         <tr>
@@ -69,6 +70,13 @@
             placeholder="Введите ед. изм."
           >
         </td>
+        <td class="padding-td">
+          <input
+            class="form-control fraction-input"
+            placeholder="Введите ед. изм."
+            @click="edit(fraction.pk)"
+          >
+        </td>
       </tr>
     </table>
   </div>
@@ -88,7 +96,7 @@ const props = defineProps({
     required: true,
   },
 });
-const emit = defineEmits(['updateOrder']);
+const emit = defineEmits(['updateOrder', 'edit']);
 
 const minMaxOrder = computed(() => {
   const { fractions } = props.tube;
@@ -118,6 +126,10 @@ const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: num
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
+};
+
+const edit = (fractionPk: number) => {
+  emit('edit', { fractionPk });
 };
 
 </script>

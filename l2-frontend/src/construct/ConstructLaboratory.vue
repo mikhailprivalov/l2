@@ -90,7 +90,7 @@ const getTubes = async () => {
 
 const currentResearchPk = ref(null);
 
-const edit = async ({ researchPk }) => {
+const edit = ({ researchPk }) => {
   currentResearchPk.value = researchPk;
 };
 

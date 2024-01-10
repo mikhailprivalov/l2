@@ -105,6 +105,7 @@
         :key="tube.pk"
         :tube="tube"
         @updateOrder="updateOrder"
+        @edit="edit"
       />
       <div class="margin-bottom flex-right">
         <button
@@ -242,6 +243,13 @@ const updateOrder = async ({ fractionPk, fractionNearbyPk, action }) => {
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
+};
+
+const currentFractionPk = ref(null);
+
+const edit = ({ fractionPk }) => {
+  currentFractionPk.value = fractionPk;
+  root.$emit('msg', 'ok', 'Получили фракцию');
 };
 
 onMounted(() => {
