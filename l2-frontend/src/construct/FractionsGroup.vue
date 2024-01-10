@@ -61,10 +61,10 @@
           >
         </td>
         <td class="padding-td">
-          <input
-            v-model="fraction.unit"
-            class="form-control fraction-input"
-          >
+          <Treeselect
+            :options="units"
+            :clearable="false"
+          />
         </td>
         <td class="padding-td">
           <input
@@ -96,12 +96,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, PropType } from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, PropType, ref,
+} from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
+
 
 const root = getCurrentInstance().proxy.$root;
+const store = useStore();
 
 const props = defineProps({
   tube: {
@@ -145,6 +155,17 @@ const edit = (fractionPk: number) => {
   emit('edit', { fractionPk });
 };
 
+const units = ref([]);
+const getUnits = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-units');
+  await store.dispatch(actions.DEC_LOADING);
+  units.value = result;
+};
+
+onMounted(() => {
+  getUnits();
+});
 </script>
 
 <style scoped lang="scss">

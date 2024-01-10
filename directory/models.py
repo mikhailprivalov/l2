@@ -961,6 +961,13 @@ class Unit(models.Model):
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
     ucum = models.CharField(max_length=55, default='', blank=True, verbose_name='UCUM')
 
+    @staticmethod
+    def get_units():
+        result = [{
+            "id": unit.pk,
+            "label": unit.title,
+        } for unit in Unit.objects.filter(hide=False)]
+
     def __str__(self) -> str:
         return f"{self.code} — {self.short_title} – {self.title}"
 

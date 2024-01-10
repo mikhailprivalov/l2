@@ -10,4 +10,5 @@ urlpatterns = [
     path('laboratory/change-visibility-research', views.change_visibility_research),
     path('laboratory/get-research', views.get_research),
     path('laboratory/update-research', views.update_research),
+    path('laboratory/get-units', views.get_units),
 ]
