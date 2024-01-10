@@ -100,20 +100,12 @@
       Фракции
     </h4>
     <div class="research-fractions">
-      <div
-        v-for="(tube) in research.tubes"
+      <FractionsGroup
+        v-for="tube in research.tubes"
         :key="tube.pk"
-        class="tube-group"
-      >
-        <ColorTitled
-          :title="tube.title"
-          :color="tube.color"
-        />
-        <FractionsTable
-          :fractions="tube.fractions"
-          @updateOrder="updateOrder"
-        />
-      </div>
+        :tube="tube"
+        @updateOrder="updateOrder"
+      />
       <div class="margin-bottom flex-right">
         <button
           class="btn btn-blue-nb"
@@ -137,8 +129,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
-import ColorTitled from '@/ui-cards/ColorTitled.vue';
-import FractionsTable from '@/construct/FractionsTable.vue';
+import FractionsGroup from '@/construct/FractionsGroup.vue';
 
 const store = useStore();
 
@@ -150,12 +141,12 @@ const props = defineProps({
     required: true,
   },
   departments: {
-    type: Object,
+    type: Array,
     required: true,
   },
 });
 
-export interface fractionsData {
+interface fractionsData {
   pk: number,
   title: string,
   unit: string,
@@ -165,7 +156,7 @@ export interface fractionsData {
   fsli: number,
 }
 
-interface tubeData {
+export interface tubeData {
   pk: number,
   title: string,
   color: string,
@@ -295,12 +286,5 @@ onMounted(() => {
 .flex-right {
   display: flex;
   justify-content: end;
-}
-.tube-group {
-  margin-bottom: 10px;
-  background-color: #fff;
-  padding: 10px 5px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
 }
 </style>

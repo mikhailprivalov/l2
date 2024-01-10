@@ -1,5 +1,9 @@
 <template>
-  <div>
+  <div class="tube-group">
+    <ColorTitled
+      :title="props.tube.title"
+      :color="props.tube.color"
+    />
     <table class="table">
       <colgroup>
         <col width="60">
@@ -26,7 +30,7 @@
         </tr>
       </thead>
       <tr
-        v-for="(fraction, idx) in props.fractions"
+        v-for="(fraction, idx) in props.tube.fractions"
         :key="fraction.pk"
       >
         <td>
@@ -106,20 +110,21 @@
 <script setup lang="ts">
 import { computed, getCurrentInstance, PropType } from 'vue';
 
-import { fractionsData } from '@/construct/ResearchDetail.vue';
+import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import { tubeData } from '@/construct/ResearchDetail.vue';
 
 const root = getCurrentInstance().proxy.$root;
 
 const props = defineProps({
-  fractions: {
-    type: Array as PropType<fractionsData[]>,
+  tube: {
+    type: Object as PropType<tubeData>,
     required: true,
   },
 });
 const emit = defineEmits(['updateOrder']);
 
 const minMaxOrder = computed(() => {
-  const { fractions } = props;
+  const { fractions } = props.tube;
   let min = 0;
   let max = 0;
   for (const fraction of fractions) {
@@ -138,10 +143,10 @@ const isLastRow = (order: number) => order === minMaxOrder.value.max;
 
 const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: number, action: string) => {
   if (action === 'inc_order' && fractionOrder < minMaxOrder.value.max) {
-    const fractionNearbyPk = props.fractions[fractionIdx + 1].pk;
+    const fractionNearbyPk = props.tube.fractions[fractionIdx + 1].pk;
     emit('updateOrder', { fractionPk, fractionNearbyPk, action });
   } else if (action === 'dec_order' && fractionOrder > minMaxOrder.value.min) {
-    const fractionNearbyPk = props.fractions[fractionIdx - 1].pk;
+    const fractionNearbyPk = props.tube.fractions[fractionIdx - 1].pk;
     emit('updateOrder', { fractionPk, fractionNearbyPk, action });
   } else {
     root.$emit('msg', 'error', 'Ошибка');
@@ -151,6 +156,13 @@ const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: num
 </script>
 
 <style scoped lang="scss">
+.tube-group {
+  margin-bottom: 10px;
+  background-color: #fff;
+  padding: 10px 5px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
+}
 .table {
   table-layout: fixed;
   margin-bottom: 0;
