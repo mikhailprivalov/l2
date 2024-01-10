@@ -6,15 +6,11 @@
     />
     <table class="table">
       <colgroup>
-        <col width="60">
+        <col style="width: 60px">
         <col style="min-width: 100px">
-        <col width="150">
-        <col width="150">
-        <col width="100">
-        <col width="100">
-        <col width="100">
-        <col width="150">
-        <col width="150">
+        <col style="min-width: 70px; max-width: 200px">
+        <col style="min-width: 70px; max-width: 200px">
+        <col style="min-width: 70px; max-width: 200px">
       </colgroup>
       <thead>
         <tr>
@@ -23,10 +19,6 @@
           <th><strong>По умолчанию</strong></th>
           <th><strong>Варианты</strong></th>
           <th><strong>Ед. изм</strong></th>
-          <th><strong>Код ЕЦП</strong></th>
-          <th><strong>ФСЛИ</strong></th>
-          <th><strong>Референсы м.</strong></th>
-          <th><strong>Референсы ж.</strong></th>
         </tr>
       </thead>
       <tr
@@ -64,42 +56,17 @@
             placeholder="Введите значение"
           >
         </td>
-        <td class="padding-td no-right-padding">
+        <td class="padding-td">
           <input
             v-model="fraction.variants"
             class="form-control fraction-input"
           >
         </td>
-        <td class="padding-td no-right-padding">
+        <td class="padding-td">
           <input
             v-model="fraction.unit"
             class="form-control fraction-input"
             placeholder="Введите ед. изм."
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
-            v-model="fraction.ecpCode"
-            class="form-control fraction-input"
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
-            v-model="fraction.fsli"
-            class="form-control fraction-input"
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
-            class="form-control fraction-input"
-            placeholder="Введите референсы"
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
-            v-model="fraction.variants"
-            class="form-control fraction-input"
-            placeholder="Введите референсы"
           >
         </td>
       </tr>
@@ -168,7 +135,7 @@ const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: num
   margin-bottom: 0;
 }
 .padding-td {
-  padding: 2px 5px;
+  padding: 2px 3px;
 }
 .no-left-padding {
   padding-left: 0;
@@ -217,6 +184,6 @@ const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: num
   border: 1px solid #AAB2BD;
   border-radius: 4px;
   padding: 3px 2px;
-   margin: 0px 1px;
+  margin: 0 1px;
 }
 </style>

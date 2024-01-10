@@ -181,4 +181,7 @@ onMounted(() => {
   margin: 0;
   flex: 0 0 34px;
 }
+.content-construct {
+  overflow-y: auto;
+}
 </style>

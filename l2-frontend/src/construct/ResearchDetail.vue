@@ -287,4 +287,11 @@ onMounted(() => {
   display: flex;
   justify-content: end;
 }
+::v-deep .vue-treeselect__control {
+  border: 1px solid #AAB2BD;
+  border-radius: 4px;
+}
+::v-deep .vue-treeselect__control:hover {
+  border-color: #AAB2BD;
+}
 </style>
