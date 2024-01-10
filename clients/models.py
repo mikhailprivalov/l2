@@ -629,10 +629,10 @@ class Individual(models.Model):
             document_seria = data.get('document_seria', '').strip()
             document_number = data.get('document_number', '').strip()
             birth_cert_number, birth_cert_seria, passport_number, passport_seria = None, None, None, None
-            if document_type == birth_cert_type.tfoms_type:
+            if birth_cert_type and document_type == birth_cert_type.tfoms_type:
                 birth_cert_number = document_number
                 birth_cert_seria = document_seria
-            elif document_type == passport_type.tfoms_type:
+            elif passport_type and document_type == passport_type.tfoms_type:
                 passport_number = document_number
                 passport_seria = document_seria
             if not document_type:
