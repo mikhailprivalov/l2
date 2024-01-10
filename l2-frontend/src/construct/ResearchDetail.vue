@@ -151,7 +151,6 @@ interface fractionsData {
   pk: number,
   title: string,
   unit: string,
-  variants: string[] | null,
   order: number,
   ecpCode: number,
   fsli: number,
@@ -197,7 +196,6 @@ const research = ref<researchData>({
           pk: -1,
           title: '',
           unit: '',
-          variants: null,
           order: null,
           ecpCode: null,
           fsli: null,
@@ -296,10 +294,7 @@ onMounted(() => {
   justify-content: end;
 }
 ::v-deep .vue-treeselect__control {
-  border: 1px solid #AAB2BD;
+  border: 1px solid #AAB2BD !important;
   border-radius: 4px;
-}
-::v-deep .vue-treeselect__control:hover {
-  border-color: #AAB2BD;
 }
 </style>

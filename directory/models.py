@@ -592,6 +592,8 @@ class Researches(models.Model):
             for fraction in tube["fractions"]:
                 current_fractions = fractions.get(pk=fraction["pk"])
                 current_fractions.title = fraction["title"]
+                current_fractions.ecp_id = fraction["ecpCode"]
+                current_fractions.fsli = fraction["fsli"]
                 current_fractions.save()
         research.title = research_data["title"]
         research.short_title = research_data["shortTitle"]
@@ -1023,8 +1025,9 @@ class Fractions(models.Model):
         result = {
             "pk": fraction.pk,
             "title": fraction.title,
-            "variants": fraction.variants.get_variants() if fraction.variants else "",
             "unit": fraction.unit.title if fraction.unit else "",
+            "ecpCode": fraction.ecp_id,
+            "fsli": fraction.fsli,
             "order": fraction.sort_weight,
         }
         return result

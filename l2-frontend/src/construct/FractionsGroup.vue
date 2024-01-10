@@ -11,6 +11,7 @@
         <col style="min-width: 70px">
         <col style="min-width: 70px">
         <col style="min-width: 70px">
+        <col style="min-width: 70px">
         <col style="width: 30px">
       </colgroup>
       <thead>
@@ -18,8 +19,10 @@
           <th />
           <th><strong>Фракция</strong></th>
           <th><strong>По умолчанию</strong></th>
-          <th><strong>Варианты</strong></th>
           <th><strong>Ед. изм</strong></th>
+          <th><strong>Код ЕЦП</strong></th>
+          <th><strong>ФСЛИ</strong></th>
+          <th />
         </tr>
       </thead>
       <tr
@@ -59,23 +62,33 @@
         </td>
         <td class="padding-td">
           <input
-            v-model="fraction.variants"
-            class="form-control fraction-input"
-          >
-        </td>
-        <td class="padding-td">
-          <input
             v-model="fraction.unit"
             class="form-control fraction-input"
+          >
+        </td>
+        <td class="padding-td">
+          <input
+            v-model="fraction.ecpCode"
+            class="form-control fraction-input"
             placeholder="Введите ед. изм."
           >
         </td>
         <td class="padding-td">
           <input
+            v-model="fraction.fsli"
             class="form-control fraction-input"
             placeholder="Введите ед. изм."
-            @click="edit(fraction.pk)"
           >
+        </td>
+        <td>
+          <div class="button">
+            <button
+              class="transparent-button"
+              @click="edit(fraction.pk)"
+            >
+              <i class="fa fa-pencil" />
+            </button>
+          </div>
         </td>
       </tr>
     </table>
