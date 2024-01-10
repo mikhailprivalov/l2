@@ -330,7 +330,7 @@ class Researches(models.Model):
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text='Биоматериал', on_delete=models.SET_NULL)
-    sub_grou = models.ForeignKey(SubGroup, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
+    sub_group = models.ForeignKey(SubGroup, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default='', blank=True, verbose_name='Срок выполнения')
 
     @staticmethod
