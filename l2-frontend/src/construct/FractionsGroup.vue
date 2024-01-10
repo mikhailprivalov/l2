@@ -129,6 +129,7 @@ const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: num
   padding: 10px 5px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
+  overflow-y: auto;
 }
 .table {
   table-layout: fixed;
