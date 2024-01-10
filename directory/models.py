@@ -500,7 +500,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
-        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube').order_by('sort_weight')
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('sort_weight')
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
