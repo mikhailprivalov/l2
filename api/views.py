@@ -1219,6 +1219,7 @@ def get_template(request):
 def update_template(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
+    print(request_data)
     pk = request_data.get("pk", -2)
     if pk > -2:
         title = request_data.get("title").strip()
