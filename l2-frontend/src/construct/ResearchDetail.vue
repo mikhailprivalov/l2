@@ -29,8 +29,20 @@
             placeholder="Введите краткое наименование"
           >
         </div>
+        <div class="margin">
+          <label
+            for="department"
+            class="research-detail-label"
+          >Подразделение</label>
+          <Treeselect
+            v-model="research.department"
+            :options="props.departments"
+            :clearable="false"
+            placeholder="Выберите подразделение"
+          />
+        </div>
       </div>
-      <div class="code">
+      <div class="flex-col">
         <div class="margin code-item">
           <label
             for="code"
@@ -76,9 +88,9 @@
           >Подготовка</label>
           <textarea
             id="preparation"
+            v-model="research.preparation"
             class="form-control"
             style="height: 90px"
-            rows="4"
             placeholder="Введите подготовку (напр. 'Не требуется')"
           />
         </div>
@@ -116,9 +128,11 @@
 
 <script setup lang="ts">
 import {
-  computed,
   getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
@@ -133,6 +147,10 @@ const emit = defineEmits(['updateResearch']);
 const props = defineProps({
   researchPk: {
     type: Number,
+    required: true,
+  },
+  departments: {
+    type: Object,
     required: true,
   },
 });
@@ -162,6 +180,7 @@ interface researchData {
   internalCode: number | null,
   ecpCode: number | null,
   preparation: string | null,
+  department: number,
   tubes: tubeData[]
 }
 const researchShortTitle = ref('');
@@ -171,10 +190,11 @@ const research = ref<researchData>({
   pk: -1,
   title: '',
   shortTitle: '',
-  code: -1,
-  internalCode: -1,
-  ecpCode: -1,
+  code: null,
+  internalCode: null,
+  ecpCode: null,
   preparation: '',
+  department: null,
   tubes: [
     {
       pk: -1,
@@ -186,9 +206,9 @@ const research = ref<researchData>({
           title: '',
           unit: '',
           variants: null,
-          order: -1,
-          ecpCode: -1,
-          fsli: -1,
+          order: null,
+          ecpCode: null,
+          fsli: null,
         },
       ],
     }],
@@ -247,7 +267,7 @@ onMounted(() => {
   padding: 10px 0;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
 }
-.code {
+.flex-col {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;

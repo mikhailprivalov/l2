@@ -42,6 +42,7 @@
       <ResearchDetail
         v-if="currentResearchPk"
         :research-pk="currentResearchPk"
+        :departments="departments.slice(1)"
         @updateResearch="getTubes"
       />
     </div>
@@ -55,27 +56,24 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import ResearchesGroup from '@/construct/ResearchesGroup.vue.vue';
+
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import ResearchDetail from '@/construct/ResearchDetail.vue';
+import ResearchesGroup from '@/construct/ResearchesGroup.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
 const department = ref(null);
-const departments = ref([
-  { id: 1, label: 'отделение1' },
-]);
+const departments = ref([]);
 
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-departments');
   await store.dispatch(actions.DEC_LOADING);
-  result.push({
-    id: -1, label: 'Все',
-  });
+  result.unshift({ id: -1, label: 'Все' });
   departments.value = result;
 };
 

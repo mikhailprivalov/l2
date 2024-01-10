@@ -579,6 +579,7 @@ class Researches(models.Model):
             "internalCode": research.internal_code,
             "ecpCode": research.ecp_id,
             "preparation": research.preparation,
+            "department": research.podrazdeleniye_id,
             "tubes": [value for _, value in research_tubes.items()],
         }
         return result
@@ -600,6 +601,7 @@ class Researches(models.Model):
         research.ecp_id = research_data["ecpCode"]
         research.internal_code = research_data["internalCode"]
         research.preparation = research_data["preparation"]
+        research.podrazdeleniye_id = research_data["department"]
         research.save()
         return True
 
