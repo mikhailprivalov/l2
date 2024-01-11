@@ -134,6 +134,28 @@ class MethodLaboratoryAnalisis(models.Model):
         verbose_name_plural = 'Методика анализа'
 
 
+class LaboratoryMaterial(models.Model):
+    title = models.CharField(max_length=64, help_text="Биоматериал")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Биоматериал'
+        verbose_name_plural = 'Биоматериалы'
+
+
+class SubGroup(models.Model):
+    title = models.CharField(max_length=64, help_text="Подгруппа услуги")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Погруппа услуги'
+        verbose_name_plural = 'Подгруппы услуг'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -250,6 +272,7 @@ class Researches(models.Model):
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
     is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
     is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
+    is_complex = models.BooleanField(default=False, blank=True, help_text="Это комплексная услуга", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -306,6 +329,9 @@ class Researches(models.Model):
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
+    laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text='Биоматериал', on_delete=models.SET_NULL)
+    sub_group = models.ForeignKey(SubGroup, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
+    laboratory_duration = models.CharField(max_length=3, default='', blank=True, verbose_name='Срок выполнения')
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -686,6 +712,19 @@ class AuxService(models.Model):
 
     def __str__(self):
         return f"{self.main_research.title} - {self.aux_research.title} - {self.hide}"
+
+
+class ComplexService(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Комплексная услуга", on_delete=models.CASCADE, db_index=True)
+    slave_research = models.ForeignKey(Researches, related_name='slave_service', help_text="Простая услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+
+    class Meta:
+        verbose_name = 'Комплексная услуга'
+        verbose_name_plural = 'Комплексные услуги'
+
+    def __str__(self):
+        return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
 
 
 class ParaclinicInputGroups(models.Model):
