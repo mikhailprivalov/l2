@@ -139,21 +139,27 @@
       Фракции
     </h4>
     <div class="research-fractions">
-      <FractionsGroup
-        v-for="tube in research.tubes"
-        :key="tube.pk"
-        :tube="tube"
-        @updateOrder="updateOrder"
-        @edit="edit"
-      />
-      <div class="margin-bottom flex-right">
-        <button
-          class="btn btn-blue-nb"
-          @click="updateResearch"
-        >
-          Сохранить
-        </button>
+      <div class="fraction-group">
+        <FractionsGroup
+          v-for="tube in research.tubes"
+          :key="tube.pk"
+          :tube="tube"
+          @updateOrder="updateOrder"
+          @edit="edit"
+        />
       </div>
+      <FractionDetail
+        v-if="currentFractionPk"
+        :fraction-pk="currentFractionPk"
+      />
+    </div>
+    <div class="margin-bottom flex-right">
+      <button
+        class="btn btn-blue-nb"
+        @click="updateResearch"
+      >
+        Сохранить
+      </button>
     </div>
   </div>
 </template>
@@ -170,6 +176,7 @@ import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
+import FractionDetail from '@/construct/FractionDetail.vue';
 
 const store = useStore();
 
@@ -292,7 +299,6 @@ const currentFractionPk = ref(null);
 
 const edit = ({ fractionPk }) => {
   currentFractionPk.value = fractionPk;
-  root.$emit('msg', 'ok', 'Получили фракцию');
 };
 
 const laboratoryMaterials = ref([]);
@@ -360,5 +366,14 @@ onMounted(() => {
 ::v-deep .vue-treeselect__control {
   border: 1px solid #AAB2BD !important;
   border-radius: 4px;
+}
+.research-fractions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(200px, 450px));
+  height: 360px;
+  overflow-y: auto;
+}
+.fraction-group {
+  overflow-y: auto;
 }
 </style>

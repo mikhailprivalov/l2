@@ -11,14 +11,12 @@
         <col style="min-width: 70px">
         <col style="min-width: 70px">
         <col style="min-width: 70px">
-        <col style="min-width: 70px">
         <col style="width: 30px">
       </colgroup>
       <thead>
         <tr>
           <th />
           <th><strong>Фракция</strong></th>
-          <th><strong>По умолчанию</strong></th>
           <th><strong>Ед. изм</strong></th>
           <th><strong>Код ЕЦП</strong></th>
           <th><strong>ФСЛИ</strong></th>
@@ -52,12 +50,6 @@
             v-model="fraction.title"
             class="form-control fraction-input"
             placeholder="Введите название фракции"
-          >
-        </td>
-        <td class="padding-td">
-          <input
-            class="form-control fraction-input"
-            placeholder="Введите значение"
           >
         </td>
         <td class="padding-td">
