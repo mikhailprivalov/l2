@@ -311,6 +311,7 @@ def form_02(request_data):
 
     doc.build(objs)
     pdf = buffer.getvalue()
+    result_join_pdf = None
 
     direction_data = []
     if additional_data_from_file and appendix_direction_list:
@@ -335,6 +336,8 @@ def form_02(request_data):
         if len(direction_data) > 0:
             http_params = {"napr_id": direction_data, "from_additional_pages": True, "from_appendix_pages": True}
             result_join_pdf = join_two_pdf_data(f_print_direction, http_params, request_data['user'], buffer, ind_card)
+        if not result_join_pdf:
+            result_join_pdf = pdf
 
         return result_join_pdf
 

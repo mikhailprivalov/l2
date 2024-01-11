@@ -8,6 +8,7 @@ import uuid
 from django.db import models
 
 from directory.models import Researches
+from hospitals.models import Hospitals
 from utils.models import ChoiceArrayField
 
 
@@ -104,12 +105,16 @@ class IndividualAuth(models.Model):
     def individuals(self):
         normalized_phones = Phones.normalize_to_search(self.used_phone)
 
-        return Individual.objects.filter(
-            Q(card__phones__normalized_number__in=normalized_phones)
-            | Q(card__phones__number__in=normalized_phones)
-            | Q(card__phone__in=normalized_phones)
-            | Q(card__doctorcall__phone__in=normalized_phones)
-        ).distinct()
+        return (
+            Individual.objects.filter(Q(owner__isnull=True) | Q(owner=Hospitals.get_default_hospital()))
+            .filter(
+                Q(card__phones__normalized_number__in=normalized_phones)
+                | Q(card__phones__number__in=normalized_phones)
+                | Q(card__phone__in=normalized_phones)
+                | Q(card__doctorcall__phone__in=normalized_phones)
+            )
+            .distinct()
+        )
 
     def __str__(self):
         return f"{self.used_phone} {self.device_os} {self.created_at:%Y-%m-%d %H:%M:%S}"
