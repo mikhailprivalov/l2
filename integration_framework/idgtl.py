@@ -43,7 +43,6 @@ class IDGTLApi:
                                 "text": f"Код авторизации от организации: {code}",
                             },
                             "ttl": 100 * 60,
-                            "condition": "not_read",
                         },
                         {
                             "channelType": "SMS",
