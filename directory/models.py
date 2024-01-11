@@ -140,6 +140,11 @@ class LaboratoryMaterial(models.Model):
     def __str__(self):
         return "%s" % self.title
 
+    @staticmethod
+    def get_materials():
+        result = [{"id": material.pk, "label": material.title} for material in LaboratoryMaterial.objects.all()]
+        return result
+
     class Meta:
         verbose_name = 'Биоматериал'
         verbose_name_plural = 'Биоматериалы'
@@ -150,6 +155,11 @@ class SubGroup(models.Model):
 
     def __str__(self):
         return "%s" % self.title
+
+    @staticmethod
+    def get_groups():
+        result = [{"id": group.pk, "label": group.title} for group in SubGroup.objects.all()]
+        return result
 
     class Meta:
         verbose_name = 'Погруппа услуги'
@@ -606,6 +616,9 @@ class Researches(models.Model):
             "ecpId": research.ecp_id,
             "preparation": research.preparation,
             "departmentId": research.podrazdeleniye_id,
+            "laboratoryMaterialId": research.laboratory_material_id,
+            "subGroupId": research.sub_group_id,
+            "laboratoryDuration": research.laboratory_duration,
             "tubes": [value for _, value in research_tubes.items()],
         }
         return result
@@ -629,6 +642,9 @@ class Researches(models.Model):
         research.internal_code = research_data["internalCode"].strip()
         research.preparation = research_data["preparation"]
         research.podrazdeleniye_id = research_data["departmentId"]
+        research.laboratory_material_id = research_data["laboratoryMaterialId"]
+        research.sub_group_id = research_data["subGroupId"]
+        research.laboratory_duration = research_data["laboratoryDuration"]
         research.save()
         return True
 

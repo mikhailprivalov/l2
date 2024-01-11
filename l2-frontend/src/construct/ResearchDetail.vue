@@ -31,53 +31,66 @@
         </div>
         <div class="margin">
           <label
-            for="department"
             class="research-detail-label"
           >Подразделение</label>
           <Treeselect
             v-model="research.departmentId"
             :options="props.departments"
             :clearable="false"
+            class="treeselect-34px"
             placeholder="Выберите подразделение"
           />
         </div>
       </div>
-      <div class="flex-col">
-        <div class="margin code-item">
-          <label
-            for="code"
-            class="research-detail-label"
-          >Код НМУ</label>
-          <input
-            id="code"
-            v-model="research.code"
-            class="form-control"
-            placeholder="Введите код"
-          >
+      <div>
+        <div class="flex-col">
+          <div class="margin code-item">
+            <label
+              for="code"
+              class="research-detail-label"
+            >Код НМУ</label>
+            <input
+              id="code"
+              v-model="research.code"
+              class="form-control"
+              placeholder="Введите код"
+            >
+          </div>
+          <div class="margin code-item">
+            <label
+              for="ecpCode"
+              class="research-detail-label"
+            >Код ЕЦП</label>
+            <input
+              id="ecpCode"
+              v-model="research.ecpId"
+              class="form-control"
+              placeholder="Введите код"
+            >
+          </div>
+          <div class="margin code-item">
+            <label
+              for="internalCode"
+              class="research-detail-label"
+            >Код внутренний</label>
+            <input
+              id="internalCode"
+              v-model="research.internalCode"
+              class="form-control"
+              placeholder="Введите код"
+            >
+          </div>
         </div>
-        <div class="margin code-item">
+        <div class="margin">
           <label
-            for="ecpCode"
             class="research-detail-label"
-          >Код ЕЦП</label>
-          <input
-            id="ecpCode"
-            v-model="research.ecpId"
-            class="form-control"
-            placeholder="Введите код"
-          >
-        </div>
-        <div class="margin code-item">
-          <label
-            for="internalCode"
-            class="research-detail-label"
-          >Код внутренний</label>
-          <input
-            id="internalCode"
-            v-model="research.internalCode"
-            class="form-control"
-            placeholder="Введите код"
-          >
+          >Биоматериал</label>
+          <Treeselect
+            v-model="research.laboratoryMaterialId"
+            :options="laboratoryMaterials"
+            placeholder="Выберите биоматериал"
+            class="treeselect-34px"
+          />
         </div>
       </div>
       <div>
@@ -91,8 +104,34 @@
             v-model="research.preparation"
             class="form-control"
             style="height: 90px"
+            rows="4"
             placeholder="Введите подготовку (напр. 'Не требуется')"
           />
+        </div>
+        <div class="flex-col">
+          <div class="margin code-item">
+            <label
+              for="laboratoryDuration"
+              class="research-detail-label"
+            >Время (мин)</label>
+            <input
+              id="laboratoryDuration"
+              v-model="research.laboratoryDuration"
+              class="form-control"
+              type="number"
+            >
+          </div>
+          <div class="margin code-item">
+            <label
+              class="research-detail-label"
+            >Подгруппа</label>
+            <Treeselect
+              v-model="research.subGroupId"
+              :options="subGroups"
+              class="treeselect-34px"
+              placeholder="Выберите подгруппу"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -172,6 +211,9 @@ interface researchData {
   ecpId: number | null,
   preparation: string | null,
   departmentId: number,
+  laboratoryMaterialId: number,
+  subGroupId: number,
+  laboratoryDuration: string,
   tubes: tubeData[]
 }
 const researchShortTitle = ref('');
@@ -183,9 +225,12 @@ const research = ref<researchData>({
   shortTitle: '',
   code: null,
   internalCode: null,
-  ecpCode: null,
+  ecpId: null,
   preparation: '',
-  department: null,
+  departmentId: null,
+  laboratoryMaterialId: null,
+  subGroupId: null,
+  laboratoryDuration: '',
   tubes: [
     {
       pk: -1,
@@ -250,8 +295,27 @@ const edit = ({ fractionPk }) => {
   root.$emit('msg', 'ok', 'Получили фракцию');
 };
 
+const laboratoryMaterials = ref([]);
+const getLaboratoryMaterials = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-laboratory-materials');
+  await store.dispatch(actions.DEC_LOADING);
+  laboratoryMaterials.value = result;
+};
+
+const subGroups = ref([]);
+
+const getSubGroup = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-sub-groups');
+  await store.dispatch(actions.DEC_LOADING);
+  subGroups.value = result;
+};
+
 onMounted(() => {
   getResearch();
+  getLaboratoryMaterials();
+  getSubGroup();
 });
 </script>
 
