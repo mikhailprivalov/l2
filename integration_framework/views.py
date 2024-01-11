@@ -95,8 +95,9 @@ from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
-from .models import CrieOrder, ExternalService, IndividualAuth
+from .models import CrieOrder, ExternalService, IndividualAuth, IPLimitter
 from laboratory.settings import COVID_RESEARCHES_PK
+from .tasks import send_code_cascade, stop_code_cascade
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
 from directory.sql_func import get_lab_research_reference_books
@@ -3452,6 +3453,11 @@ def client_register(request):
     phone = str(body.get("phone"))
     os = str(body.get("os"))
 
+    ip = Log.get_client_ip(request)
+
+    if IPLimitter.check_limit(ip):
+        return Response({"ok": False, "message": "Too many requests"})
+
     if len(phone) != 10 or not phone.isdigit() or phone[0] != "9":
         return Response({"ok": False, "message": "Неверный формат телефона"})
 
@@ -3482,7 +3488,13 @@ def client_register(request):
             used_phone=Phones.format_as_plus_7(phone),
         )
         api_token = auth.token
-        print({"code": code})  # noqa: T001,T201
+        send_code_cascade.apply_async(
+            kwargs={
+                "phone": phone,
+                "auth_id": auth.pk,
+            },
+            countdown=1,
+        )
 
         need_code = True
     else:
@@ -3508,6 +3520,12 @@ def client_register(request):
             auth.save(update_fields=["is_confirmed"])
             ok = True
             api_token = token
+            stop_code_cascade.apply_async(
+                kwargs={
+                    'auth_id': auth.pk,
+                },
+                countdown=1,
+            )
 
     return Response(
         {
