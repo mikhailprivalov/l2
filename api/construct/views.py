@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
-from directory.models import Researches, Fractions
+from directory.models import Researches, Fractions, Unit, LaboratoryMaterial, SubGroup
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from utils.response import status_response
@@ -9,7 +9,7 @@ from utils.response import status_response
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def get_departments(request):
+def get_lab_departments(request):
     result = Podrazdeleniya.get_podrazdeleniya(Podrazdeleniya.LABORATORY)
     return JsonResponse({"result": result})
 
@@ -48,7 +48,7 @@ def change_visibility_research(request):
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def get_research(request):
+def get_lab_research(request):
     request_data = json.loads(request.body)
     result = Researches.get_research(request_data["researchPk"])
     return JsonResponse({"result": result})
@@ -56,7 +56,17 @@ def get_research(request):
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def update_research(request):
+def update_lab_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_lab_research(request_data["research"])
     return status_response(result)
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def get_lab_ref_books(request):
+    units = Unit.get_units()
+    materials = LaboratoryMaterial.get_materials()
+    subgroups = SubGroup.get_groups()
+    result = {"units": units, "materials": materials, "subgroups": subgroups}
+    return JsonResponse({"result": result})

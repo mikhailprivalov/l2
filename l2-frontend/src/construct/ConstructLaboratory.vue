@@ -16,7 +16,7 @@
       <div
         class="sidebar-content"
       >
-        <TubeGroup
+        <ResearchesGroup
           v-for="(tube, idx) in filteredResearchTubes"
           :key="idx"
           :tube="tube"
@@ -42,6 +42,10 @@
       <ResearchDetail
         v-if="currentResearchPk"
         :research-pk="currentResearchPk"
+        :departments="departments.slice(1)"
+        :units="units"
+        :materials="materials"
+        :sub-groups="subGroups"
         @updateResearch="getTubes"
       />
     </div>
@@ -55,27 +59,24 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import TubeGroup from '@/construct/TubeGroup.vue';
+
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import ResearchDetail from '@/construct/ResearchDetail.vue';
+import ResearchesGroup from '@/construct/ResearchesGroup.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
 const department = ref(null);
-const departments = ref([
-  { id: 1, label: 'отделение1' },
-]);
+const departments = ref([]);
 
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-departments');
   await store.dispatch(actions.DEC_LOADING);
-  result.push({
-    id: -1, label: 'Все',
-  });
+  result.unshift({ id: -1, label: 'Все' });
   departments.value = result;
 };
 
@@ -92,7 +93,7 @@ const getTubes = async () => {
 
 const currentResearchPk = ref(null);
 
-const edit = async ({ researchPk }) => {
+const edit = ({ researchPk }) => {
   currentResearchPk.value = researchPk;
 };
 
@@ -141,8 +142,22 @@ const changeVisibility = async ({ researchPk }) => {
   }
 };
 
+const units = ref([]);
+const materials = ref([]);
+const subGroups = ref([]);
+
+const getRefbooks = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-ref-books');
+  await store.dispatch(actions.DEC_LOADING);
+  units.value = result.units;
+  materials.value = result.materials;
+  subGroups.value = result.subGroups;
+};
+
 onMounted(() => {
   getDepartments();
+  getRefbooks();
 });
 
 </script>
@@ -150,7 +165,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .two-col {
   display: grid;
-  grid-template-columns: 450px auto;
+  grid-template-columns: minmax(200px, 450px) minmax(150px, auto);
   margin-bottom: 5px;
   height: calc(100vh - 36px);
 }
@@ -182,5 +197,8 @@ onMounted(() => {
   border-radius: 0;
   margin: 0;
   flex: 0 0 34px;
+}
+.content-construct {
+  overflow-y: auto;
 }
 </style>
