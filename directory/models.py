@@ -140,6 +140,11 @@ class LaboratoryMaterial(models.Model):
     def __str__(self):
         return "%s" % self.title
 
+    @staticmethod
+    def get_materials():
+        result = [{"id": material.pk, "label": material.title} for material in LaboratoryMaterial.objects.all()]
+        return result
+
     class Meta:
         verbose_name = 'Биоматериал'
         verbose_name_plural = 'Биоматериалы'
@@ -150,6 +155,11 @@ class SubGroup(models.Model):
 
     def __str__(self):
         return "%s" % self.title
+
+    @staticmethod
+    def get_groups():
+        result = [{"id": group.pk, "label": group.title} for group in SubGroup.objects.all()]
+        return result
 
     class Meta:
         verbose_name = 'Погруппа услуги'
@@ -526,7 +536,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
-        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube').order_by('sort_weight')
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('sort_weight')
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
@@ -603,8 +613,12 @@ class Researches(models.Model):
             "shortTitle": research.short_title,
             "code": research.code,
             "internalCode": research.internal_code,
-            "ecpCode": research.ecp_id,
+            "ecpId": research.ecp_id,
             "preparation": research.preparation,
+            "departmentId": research.podrazdeleniye_id,
+            "laboratoryMaterialId": research.laboratory_material_id,
+            "subGroupId": research.sub_group_id,
+            "laboratoryDuration": research.laboratory_duration,
             "tubes": [value for _, value in research_tubes.items()],
         }
         return result
@@ -616,16 +630,21 @@ class Researches(models.Model):
         for tube in research_data["tubes"]:
             for fraction in tube["fractions"]:
                 current_fractions = fractions.get(pk=fraction["pk"])
-                current_fractions.title = fraction["title"]
-                current_fractions.ecp_id = fraction["ecpCode"]
+                current_fractions.title = fraction["title"].strip()
+                current_fractions.ecp_id = fraction["ecpId"].strip()
                 current_fractions.fsli = fraction["fsli"]
+                current_fractions.unit_id = fraction["unitId"]
                 current_fractions.save()
-        research.title = research_data["title"]
-        research.short_title = research_data["shortTitle"]
-        research.code = research_data["code"]
-        research.ecp_id = research_data["ecpCode"]
-        research.internal_code = research_data["internalCode"]
+        research.title = research_data["title"].strip()
+        research.short_title = research_data["shortTitle"].strip()
+        research.code = research_data["code"].strip()
+        research.ecp_id = research_data["ecpId"].strip()
+        research.internal_code = research_data["internalCode"].strip()
         research.preparation = research_data["preparation"]
+        research.podrazdeleniye_id = research_data["departmentId"]
+        research.laboratory_material_id = research_data["laboratoryMaterialId"]
+        research.sub_group_id = research_data["subGroupId"]
+        research.laboratory_duration = research_data["laboratoryDuration"]
         research.save()
         return True
 
@@ -998,6 +1017,17 @@ class Unit(models.Model):
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
     ucum = models.CharField(max_length=55, default='', blank=True, verbose_name='UCUM')
 
+    @staticmethod
+    def get_units():
+        result = [
+            {
+                "id": unit.pk,
+                "label": unit.title,
+            }
+            for unit in Unit.objects.filter(hide=False)
+        ]
+        return result
+
     def __str__(self) -> str:
         return f"{self.code} — {self.short_title} – {self.title}"
 
@@ -1062,11 +1092,10 @@ class Fractions(models.Model):
         result = {
             "pk": fraction.pk,
             "title": fraction.title,
-            "unit": fraction.unit.title if fraction.unit else "",
-            "variants": fraction.variants.get_variants() if fraction.variants else "",
-            "order": fraction.sort_weight,
-            "ecpCode": fraction.ecp_id,
+            "unitId": fraction.unit_id,
+            "ecpId": fraction.ecp_id,
             "fsli": fraction.fsli,
+            "order": fraction.sort_weight,
         }
         return result
 

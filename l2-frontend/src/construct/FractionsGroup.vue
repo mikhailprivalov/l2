@@ -1,32 +1,32 @@
 <template>
-  <div>
+  <div class="tube-group">
+    <ColorTitled
+      :title="props.tube.title"
+      :color="props.tube.color"
+    />
     <table class="table">
       <colgroup>
-        <col width="60">
+        <col style="width: 60px">
         <col style="min-width: 100px">
-        <col width="150">
-        <col width="150">
-        <col width="100">
-        <col width="100">
-        <col width="100">
-        <col width="150">
-        <col width="150">
+        <col style="min-width: 70px">
+        <col style="min-width: 70px">
+        <col style="min-width: 70px">
+        <col style="min-width: 70px">
+        <col style="width: 30px">
       </colgroup>
       <thead>
         <tr>
           <th />
           <th><strong>Фракция</strong></th>
           <th><strong>По умолчанию</strong></th>
-          <th><strong>Варианты</strong></th>
           <th><strong>Ед. изм</strong></th>
           <th><strong>Код ЕЦП</strong></th>
           <th><strong>ФСЛИ</strong></th>
-          <th><strong>Референсы м.</strong></th>
-          <th><strong>Референсы ж.</strong></th>
+          <th />
         </tr>
       </thead>
       <tr
-        v-for="(fraction, idx) in props.fractions"
+        v-for="(fraction, idx) in props.tube.fractions"
         :key="fraction.pk"
       >
         <td>
@@ -60,43 +60,57 @@
             placeholder="Введите значение"
           >
         </td>
-        <td class="padding-td no-right-padding">
+        <td class="padding-td">
+          <Treeselect
+            v-model="fraction.unitId"
+            :options="props.units"
+            placeholder="Ед. изм."
+            class="treeselect-28px"
+            :append-to-body="true"
+          />
+        </td>
+        <td class="padding-td">
           <input
-            v-model="fraction.variants"
+            v-model="fraction.ecpId"
             class="form-control fraction-input"
+            placeholder="Введите код"
           >
         </td>
-        <td class="padding-td no-right-padding">
-          <input
-            v-model="fraction.unit"
-            class="form-control fraction-input"
-            placeholder="Введите ед. изм."
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
-            v-model="fraction.ecpCode"
-            class="form-control fraction-input"
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
+        <td class="padding-td">
+          <Treeselect
             v-model="fraction.fsli"
-            class="form-control fraction-input"
+            :async="true"
+            :load-options="getFsli"
+            class="treeselect-28px"
+            :append-to-body="true"
+            loading-text="Загрузка"
+            no-results-text="Не найдено"
+            search-prompt-text="Начните писать для поиска"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :clearable="true"
+            :z-index="10001"
+            :cache-options="false"
+            open-direction="bottom"
+            :open-on-focus="true"
           >
+            <div
+              slot="value-label"
+              slot-scope="{ node }"
+            >
+              {{ node.raw.id || fraction.fsli }}
+            </div>
+          </Treeselect>
         </td>
-        <td class="padding-td no-right-padding">
-          <input
-            class="form-control fraction-input"
-            placeholder="Введите референсы"
-          >
-        </td>
-        <td class="padding-td no-right-padding">
-          <input
-            v-model="fraction.variants"
-            class="form-control fraction-input"
-            placeholder="Введите референсы"
-          >
+        <td>
+          <div class="button">
+            <button
+              class="transparent-button"
+              @click="edit(fraction.pk)"
+            >
+              <i class="fa fa-pencil" />
+            </button>
+          </div>
         </td>
       </tr>
     </table>
@@ -104,22 +118,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, PropType } from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, PropType, ref,
+} from 'vue';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
-import { fractionsData } from '@/construct/ResearchDetail.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import { tubeData } from '@/construct/ResearchDetail.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
+const store = useStore();
 
 const props = defineProps({
-  fractions: {
-    type: Array as PropType<fractionsData[]>,
+  tube: {
+    type: Object as PropType<tubeData>,
+    required: true,
+  },
+  units: {
+    type: Array,
     required: true,
   },
 });
-const emit = defineEmits(['updateOrder']);
+const emit = defineEmits(['updateOrder', 'edit']);
 
 const minMaxOrder = computed(() => {
-  const { fractions } = props;
+  const { fractions } = props.tube;
   let min = 0;
   let max = 0;
   for (const fraction of fractions) {
@@ -138,25 +166,48 @@ const isLastRow = (order: number) => order === minMaxOrder.value.max;
 
 const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: number, action: string) => {
   if (action === 'inc_order' && fractionOrder < minMaxOrder.value.max) {
-    const fractionNearbyPk = props.fractions[fractionIdx + 1].pk;
+    const fractionNearbyPk = props.tube.fractions[fractionIdx + 1].pk;
     emit('updateOrder', { fractionPk, fractionNearbyPk, action });
   } else if (action === 'dec_order' && fractionOrder > minMaxOrder.value.min) {
-    const fractionNearbyPk = props.fractions[fractionIdx - 1].pk;
+    const fractionNearbyPk = props.tube.fractions[fractionIdx - 1].pk;
     emit('updateOrder', { fractionPk, fractionNearbyPk, action });
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
 };
 
+const edit = (fractionPk: number) => {
+  emit('edit', { fractionPk });
+};
+
+const getFsli = async ({ action, searchQuery, callback }) => {
+  if (action === ASYNC_SEARCH) {
+    const { data } = await api(`autocomplete?value=${searchQuery}&type=fsli&limit=14`);
+    callback(
+      null,
+      data.map(i => (
+        { id: i.code_fsli, label: `${i.title}-${i.short_title}-${i.sample}-${i.synonym}-${i.nmu}` }
+      )),
+    );
+  }
+};
 </script>
 
 <style scoped lang="scss">
+.tube-group {
+  margin-bottom: 10px;
+  background-color: #fff;
+  padding: 10px 5px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
+  overflow-y: auto;
+}
 .table {
   table-layout: fixed;
   margin-bottom: 0;
 }
 .padding-td {
-  padding: 2px 5px;
+  padding: 2px 3px;
 }
 .no-left-padding {
   padding-left: 0;
@@ -205,6 +256,19 @@ const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: num
   border: 1px solid #AAB2BD;
   border-radius: 4px;
   padding: 3px 2px;
-   margin: 0px 1px;
+  margin: 0 1px;
+}
+::v-deep .vue-treeselect__control {
+  border-collapse: separate;
+}
+::v-deep .treeselect-28px .vue-treeselect {
+  &__control {
+    height: 28px !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 28px !important;
+  }
 }
 </style>
