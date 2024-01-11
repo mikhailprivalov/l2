@@ -195,9 +195,9 @@ const research = ref<researchData>({
         {
           pk: -1,
           title: '',
-          unit: '',
+          unitId: '',
           order: null,
-          ecpCode: null,
+          ecpId: null,
           fsli: null,
         },
       ],
