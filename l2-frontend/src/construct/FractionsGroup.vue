@@ -62,23 +62,45 @@
         </td>
         <td class="padding-td">
           <Treeselect
+            v-model="fraction.unitId"
             :options="units"
-            :clearable="false"
+            placeholder="Ед. изм."
+            class="treeselect-28px"
+            :append-to-body="true"
           />
         </td>
         <td class="padding-td">
           <input
-            v-model="fraction.ecpCode"
+            v-model="fraction.ecpId"
             class="form-control fraction-input"
-            placeholder="Введите ед. изм."
+            placeholder="Введите код"
           >
         </td>
         <td class="padding-td">
-          <input
+          <Treeselect
             v-model="fraction.fsli"
-            class="form-control fraction-input"
-            placeholder="Введите ед. изм."
+            :async="true"
+            :load-options="getFsli"
+            class="treeselect-28px"
+            :append-to-body="true"
+            loading-text="Загрузка"
+            no-results-text="Не найдено"
+            search-prompt-text="Начните писать для поиска"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :clearable="true"
+            :z-index="10001"
+            :cache-options="false"
+            open-direction="bottom"
+            :open-on-focus="true"
           >
+            <div
+              slot="value-label"
+              slot-scope="{ node }"
+            >
+              {{ node.raw.id || fraction.fsli }}
+            </div>
+          </Treeselect>
         </td>
         <td>
           <div class="button">
@@ -99,7 +121,7 @@
 import {
   computed, getCurrentInstance, onMounted, PropType, ref,
 } from 'vue';
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
@@ -160,6 +182,18 @@ const getUnits = async () => {
   const { result } = await api('construct/laboratory/get-units');
   await store.dispatch(actions.DEC_LOADING);
   units.value = result;
+};
+
+const getFsli = async ({ action, searchQuery, callback }) => {
+  if (action === ASYNC_SEARCH) {
+    const { data } = await api(`autocomplete?value=${searchQuery}&type=fsli&limit=14`);
+    callback(
+      null,
+      data.map(i => (
+        { id: i.code_fsli, label: `${i.title}-${i.short_title}-${i.sample}-${i.synonym}-${i.nmu}` }
+      )),
+    );
+  }
 };
 
 onMounted(() => {
@@ -231,5 +265,18 @@ onMounted(() => {
   border-radius: 4px;
   padding: 3px 2px;
   margin: 0 1px;
+}
+::v-deep .vue-treeselect__control {
+  border-collapse: separate;
+}
+::v-deep .treeselect-28px .vue-treeselect {
+  &__control {
+    height: 28px !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 28px !important;
+  }
 }
 </style>

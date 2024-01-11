@@ -577,9 +577,9 @@ class Researches(models.Model):
             "shortTitle": research.short_title,
             "code": research.code,
             "internalCode": research.internal_code,
-            "ecpCode": research.ecp_id,
+            "ecpId": research.ecp_id,
             "preparation": research.preparation,
-            "department": research.podrazdeleniye_id,
+            "departmentId": research.podrazdeleniye_id,
             "tubes": [value for _, value in research_tubes.items()],
         }
         return result
@@ -591,17 +591,18 @@ class Researches(models.Model):
         for tube in research_data["tubes"]:
             for fraction in tube["fractions"]:
                 current_fractions = fractions.get(pk=fraction["pk"])
-                current_fractions.title = fraction["title"]
-                current_fractions.ecp_id = fraction["ecpCode"]
+                current_fractions.title = fraction["title"].strip()
+                current_fractions.ecp_id = fraction["ecpId"].strip()
                 current_fractions.fsli = fraction["fsli"]
+                current_fractions.unit_id = fraction["unitId"]
                 current_fractions.save()
-        research.title = research_data["title"]
-        research.short_title = research_data["shortTitle"]
-        research.code = research_data["code"]
-        research.ecp_id = research_data["ecpCode"]
-        research.internal_code = research_data["internalCode"]
+        research.title = research_data["title"].strip()
+        research.short_title = research_data["shortTitle"].strip()
+        research.code = research_data["code"].strip()
+        research.ecp_id = research_data["ecpId"].strip()
+        research.internal_code = research_data["internalCode"].strip()
         research.preparation = research_data["preparation"]
-        research.podrazdeleniye_id = research_data["department"]
+        research.podrazdeleniye_id = research_data["departmentId"]
         research.save()
         return True
 
@@ -967,6 +968,7 @@ class Unit(models.Model):
             "id": unit.pk,
             "label": unit.title,
         } for unit in Unit.objects.filter(hide=False)]
+        return result
 
     def __str__(self) -> str:
         return f"{self.code} — {self.short_title} – {self.title}"
@@ -1032,8 +1034,8 @@ class Fractions(models.Model):
         result = {
             "pk": fraction.pk,
             "title": fraction.title,
-            "unit": fraction.unit.title if fraction.unit else "",
-            "ecpCode": fraction.ecp_id,
+            "unitId": fraction.unit_id,
+            "ecpId": fraction.ecp_id,
             "fsli": fraction.fsli,
             "order": fraction.sort_weight,
         }

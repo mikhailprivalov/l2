@@ -35,7 +35,7 @@
             class="research-detail-label"
           >Подразделение</label>
           <Treeselect
-            v-model="research.department"
+            v-model="research.departmentId"
             :options="props.departments"
             :clearable="false"
             placeholder="Выберите подразделение"
@@ -62,7 +62,7 @@
           >Код ЕЦП</label>
           <input
             id="ecpCode"
-            v-model="research.ecpCode"
+            v-model="research.ecpId"
             class="form-control"
             placeholder="Введите код"
           >
@@ -150,9 +150,9 @@ const props = defineProps({
 interface fractionsData {
   pk: number,
   title: string,
-  unit: string,
+  unitId: string,
   order: number,
-  ecpCode: number,
+  ecpId: number,
   fsli: number,
 }
 
@@ -169,9 +169,9 @@ interface researchData {
   shortTitle: string | null,
   code: number | null,
   internalCode: number | null,
-  ecpCode: number | null,
+  ecpId: number | null,
   preparation: string | null,
-  department: number,
+  departmentId: number,
   tubes: tubeData[]
 }
 const researchShortTitle = ref('');
@@ -291,7 +291,7 @@ onMounted(() => {
 }
 .flex-right {
   display: flex;
-  justify-content: end;
+  justify-content: flex-end;
 }
 ::v-deep .vue-treeselect__control {
   border: 1px solid #AAB2BD !important;
