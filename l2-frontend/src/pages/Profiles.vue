@@ -857,6 +857,26 @@
                 >
               </div>
             </div>
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Исполнитель в протколе</span>
+                <Treeselect
+                  v-model="user.replace_doctor_cda"
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="user.department_doctors"
+                  placeholder="Врач для CDA"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -966,6 +986,7 @@ export default {
       specialities: [],
       positions: [],
       districts: [],
+      doctor_profiles: [],
       resource_researches: [],
       setup_analyzer: false,
       setup_forbidden: false,
@@ -993,6 +1014,8 @@ export default {
         notControlAnketa: false,
         date_extract_employee: '',
         date_stop_certificate: '',
+        replace_doctor_cda: -1,
+        department_doctors: [],
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -1194,12 +1217,13 @@ export default {
         this.departments = [];
       }
       const {
-        departments, specialities, positions, districts,
+        departments, specialities, positions, districts, doctorProfiles,
       } = await usersPoint.loadUsers(this, 'selected_hospital');
       this.departments = departments;
       this.specialities = specialities;
       this.positions = positions;
       this.districts = districts;
+      this.doctor_profiles = doctorProfiles;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async open(pk, dep = null) {
