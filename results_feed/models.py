@@ -4,6 +4,7 @@ from django.db import models
 
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
+from hospitals.models import Hospitals
 from integration_framework.tasks import send_has_result
 
 
@@ -86,9 +87,14 @@ class ResultFeed(models.Model):
         if not category:
             return None
 
+        individual = direction.client.individual
+        individual_owner = individual.owner
+
+        if individual_owner and individual_owner != Hospitals.get_default_hospital():
+            return None
+
         direction.sync_confirmed_fields(skip_post=True)
         hospital = direction.get_hospital()
-        individual = direction.client.individual
         card = direction.client
         direction_created_at = direction.data_sozdaniya
         result_confirmed_at = direction.last_confirmed_at
@@ -102,7 +108,7 @@ class ResultFeed(models.Model):
         feed = ResultFeed.objects.create(
             unique_id=unique_id,
             hospital=hospital,
-            owner=individual.owner or hospital,
+            owner=individual_owner or hospital,
             individual=individual,
             card=card,
             direction=direction,
