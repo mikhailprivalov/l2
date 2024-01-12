@@ -120,7 +120,6 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
 import api from '@/api';
-import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
 
