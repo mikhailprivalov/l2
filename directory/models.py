@@ -1113,6 +1113,14 @@ class Fractions(models.Model):
         fraction_nearby.save()
         return True
 
+    @staticmethod
+    def get_fraction(fraction_pk):
+        fraction = Fractions.objects.get(pk=fraction_pk)
+        result = {"pk": fraction.pk, "title": fraction.title, "variants": fraction.variants_id}
+        return result
+
+
+
     def __str__(self):
         return self.research.title + " | " + self.title
 

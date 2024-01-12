@@ -70,3 +70,11 @@ def get_lab_ref_books(request):
     subgroups = SubGroup.get_groups()
     result = {"units": units, "materials": materials, "subgroups": subgroups}
     return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def get_fraction(request):
+    request_data = json.loads(request.body)
+    result = Fractions.get_fraction(request_data["fractionPk"])
+    return JsonResponse({"result": result})
