@@ -2700,6 +2700,12 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
+    if request_data["fieldPk"].find('%district') != -1:
+        if c.district:
+            district = c.district.title
+        else:
+            district = ""
+        result = {"value": district}
     elif request_data["fieldPk"].find('%hospital') != -1:
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
