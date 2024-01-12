@@ -69,9 +69,7 @@ def get_lab_ref_books(request):
     materials = LaboratoryMaterial.get_materials()
     subgroups = SubGroup.get_groups()
     variants = ResultVariants.get_all()
-    print(variants)
     result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants}
-    print(result)
     return JsonResponse({"result": result})
 
 

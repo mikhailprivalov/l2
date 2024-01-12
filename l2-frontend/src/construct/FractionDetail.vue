@@ -7,6 +7,11 @@
         v-model="fraction.variantsId"
         :options="props.variants"
       />
+      <label>Формула</label>
+      <input
+        v-model="fraction.formula"
+        class="form-control"
+      >
     </div>
   </div>
 </template>
@@ -41,12 +46,14 @@ interface otherFractionData {
   pk: number | null,
   title: string,
   variantsId: number | null,
+  formula: string,
 }
 
 const fraction = ref<otherFractionData>({
   pk: null,
   title: '',
   variantsId: null,
+  formula: '',
 });
 
 const getFraction = async () => {
