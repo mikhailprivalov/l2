@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, PropType, ref,
+  computed, getCurrentInstance, PropType,
 } from 'vue';
 import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
@@ -119,12 +119,10 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
-import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
 
 const props = defineProps({
   tube: {
