@@ -12,6 +12,22 @@
         v-model="fraction.formula"
         class="form-control"
       >
+      <div>
+        <label>Рефернсы М</label>
+        <input class="form-control">
+        <input class="form-control">
+        <button class="btn btn-blue-nb">
+          Добавить
+        </button>
+      </div>
+      <div>
+        <label>Рефернсы Ж</label>
+        <input class="form-control">
+        <input class="form-control">
+        <button class="btn btn-blue-nb">
+          Добавить
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -47,6 +63,8 @@ interface otherFractionData {
   title: string,
   variantsId: number | null,
   formula: string,
+  refM: any,
+  refF: any,
 }
 
 const fraction = ref<otherFractionData>({
@@ -54,6 +72,8 @@ const fraction = ref<otherFractionData>({
   title: '',
   variantsId: null,
   formula: '',
+  refM: [],
+  refF: [],
 });
 
 const getFraction = async () => {

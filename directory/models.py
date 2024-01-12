@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.models import Group
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
@@ -1121,7 +1123,8 @@ class Fractions(models.Model):
     @staticmethod
     def get_fraction(fraction_pk):
         fraction = Fractions.objects.get(pk=fraction_pk)
-        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id}
+        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": json.loads(fraction.ref_m),
+                  "refF": json.loads(fraction.ref_f)}
         return result
 
 
