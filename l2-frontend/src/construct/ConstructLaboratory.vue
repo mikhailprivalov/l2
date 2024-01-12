@@ -46,6 +46,7 @@
         :units="units"
         :materials="materials"
         :sub-groups="subGroups"
+        :variants="variants"
         @updateResearch="getTubes"
       />
     </div>
@@ -145,6 +146,7 @@ const changeVisibility = async ({ researchPk }) => {
 const units = ref([]);
 const materials = ref([]);
 const subGroups = ref([]);
+const variants = ref([]);
 
 const getRefbooks = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -153,6 +155,7 @@ const getRefbooks = async () => {
   units.value = result.units;
   materials.value = result.materials;
   subGroups.value = result.subGroups;
+  variants.value = result.variants;
 };
 
 onMounted(() => {

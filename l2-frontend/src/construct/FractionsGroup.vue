@@ -78,13 +78,7 @@
             loading-text="Загрузка"
             no-results-text="Не найдено"
             search-prompt-text="Начните писать для поиска"
-            :multiple="false"
-            :disable-branch-nodes="true"
-            :clearable="true"
-            :z-index="10001"
             :cache-options="false"
-            open-direction="bottom"
-            :open-on-focus="true"
           >
             <div
               slot="value-label"

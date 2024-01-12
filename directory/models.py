@@ -979,6 +979,11 @@ class ResultVariants(models.Model):
     def get_variants(self):
         return self.values.split('|')
 
+    @staticmethod
+    def get_all():
+        result = [{"id": variants.pk, "label": variants.values} for variants in ResultVariants.objects.all()]
+        return result
+
     def __str__(self):
         return str(self.get_variants())
 
@@ -1116,7 +1121,7 @@ class Fractions(models.Model):
     @staticmethod
     def get_fraction(fraction_pk):
         fraction = Fractions.objects.get(pk=fraction_pk)
-        result = {"pk": fraction.pk, "title": fraction.title, "variants": fraction.variants_id}
+        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id}
         return result
 
 

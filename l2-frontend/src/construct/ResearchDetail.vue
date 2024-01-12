@@ -152,6 +152,7 @@
       <FractionDetail
         v-if="currentFractionPk"
         :fraction-pk="currentFractionPk"
+        :variants="props.variants"
       />
     </div>
     <div class="margin-bottom flex-right">
@@ -201,6 +202,10 @@ const props = defineProps({
     required: true,
   },
   subGroups: {
+    type: Array,
+    required: true,
+  },
+  variants: {
     type: Array,
     required: true,
   },
@@ -363,9 +368,7 @@ onMounted(() => {
 }
 .research-fractions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(200px, 450px));
-  height: 360px;
-  overflow-y: auto;
+  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 350px));
 }
 .fraction-group {
   overflow-y: auto;
