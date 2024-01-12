@@ -55,7 +55,7 @@
         <td class="padding-td">
           <Treeselect
             v-model="fraction.unitId"
-            :options="units"
+            :options="props.units"
             placeholder="Ед. изм."
             class="treeselect-28px"
             :append-to-body="true"
@@ -131,6 +131,10 @@ const props = defineProps({
     type: Object as PropType<tubeData>,
     required: true,
   },
+  units: {
+    type: Array,
+    required: true,
+  },
 });
 const emit = defineEmits(['updateOrder', 'edit']);
 
@@ -168,14 +172,6 @@ const edit = (fractionPk: number) => {
   emit('edit', { fractionPk });
 };
 
-const units = ref([]);
-const getUnits = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-units');
-  await store.dispatch(actions.DEC_LOADING);
-  units.value = result;
-};
-
 const getFsli = async ({ action, searchQuery, callback }) => {
   if (action === ASYNC_SEARCH) {
     const { data } = await api(`autocomplete?value=${searchQuery}&type=fsli&limit=14`);
@@ -187,10 +183,6 @@ const getFsli = async ({ action, searchQuery, callback }) => {
     );
   }
 };
-
-onMounted(() => {
-  getUnits();
-});
 </script>
 
 <style scoped lang="scss">

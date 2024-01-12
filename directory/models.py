@@ -1019,10 +1019,13 @@ class Unit(models.Model):
 
     @staticmethod
     def get_units():
-        result = [{
-            "id": unit.pk,
-            "label": unit.title,
-        } for unit in Unit.objects.filter(hide=False)]
+        result = [
+            {
+                "id": unit.pk,
+                "label": unit.title,
+            }
+            for unit in Unit.objects.filter(hide=False)
+        ]
         return result
 
     def __str__(self) -> str:

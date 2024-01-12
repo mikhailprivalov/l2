@@ -43,6 +43,9 @@
         v-if="currentResearchPk"
         :research-pk="currentResearchPk"
         :departments="departments.slice(1)"
+        :units="units"
+        :materials="materials"
+        :sub-groups="subGroups"
         @updateResearch="getTubes"
       />
     </div>
@@ -139,8 +142,22 @@ const changeVisibility = async ({ researchPk }) => {
   }
 };
 
+const units = ref([]);
+const materials = ref([]);
+const subGroups = ref([]);
+
+const getRefbooks = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-ref-books');
+  await store.dispatch(actions.DEC_LOADING);
+  units.value = result.units;
+  materials.value = result.materials;
+  subGroups.value = result.subGroups;
+};
+
 onMounted(() => {
   getDepartments();
+  getRefbooks();
 });
 
 </script>

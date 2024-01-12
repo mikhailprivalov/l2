@@ -44,7 +44,7 @@
       </div>
       <div>
         <div class="flex-col">
-          <div class="margin code-item">
+          <div class="margin flex-item">
             <label
               for="code"
               class="research-detail-label"
@@ -56,19 +56,19 @@
               placeholder="Введите код"
             >
           </div>
-          <div class="margin code-item">
+          <div class="margin flex-item">
             <label
-              for="ecpCode"
+              for="ecpId"
               class="research-detail-label"
             >Код ЕЦП</label>
             <input
-              id="ecpCode"
+              id="ecpId"
               v-model="research.ecpId"
               class="form-control"
               placeholder="Введите код"
             >
           </div>
-          <div class="margin code-item">
+          <div class="margin flex-item">
             <label
               for="internalCode"
               class="research-detail-label"
@@ -87,7 +87,7 @@
           >Биоматериал</label>
           <Treeselect
             v-model="research.laboratoryMaterialId"
-            :options="laboratoryMaterials"
+            :options="props.materials"
             placeholder="Выберите биоматериал"
             class="treeselect-34px"
           />
@@ -109,7 +109,7 @@
           />
         </div>
         <div class="flex-col">
-          <div class="margin code-item">
+          <div class="margin flex-item">
             <label
               for="laboratoryDuration"
               class="research-detail-label"
@@ -121,13 +121,13 @@
               type="number"
             >
           </div>
-          <div class="margin code-item">
+          <div class="margin flex-item">
             <label
               class="research-detail-label"
             >Подгруппа</label>
             <Treeselect
               v-model="research.subGroupId"
-              :options="subGroups"
+              :options="props.subGroups"
               class="treeselect-34px"
               placeholder="Выберите подгруппу"
             />
@@ -144,6 +144,7 @@
           v-for="tube in research.tubes"
           :key="tube.pk"
           :tube="tube"
+          :units="props.units"
           @updateOrder="updateOrder"
           @edit="edit"
         />
@@ -188,6 +189,18 @@ const props = defineProps({
     required: true,
   },
   departments: {
+    type: Array,
+    required: true,
+  },
+  units: {
+    type: Array,
+    required: true,
+  },
+  materials: {
+    type: Array,
+    required: true,
+  },
+  subGroups: {
     type: Array,
     required: true,
   },
@@ -301,27 +314,8 @@ const edit = ({ fractionPk }) => {
   currentFractionPk.value = fractionPk;
 };
 
-const laboratoryMaterials = ref([]);
-const getLaboratoryMaterials = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-laboratory-materials');
-  await store.dispatch(actions.DEC_LOADING);
-  laboratoryMaterials.value = result;
-};
-
-const subGroups = ref([]);
-
-const getSubGroup = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-sub-groups');
-  await store.dispatch(actions.DEC_LOADING);
-  subGroups.value = result;
-};
-
 onMounted(() => {
   getResearch();
-  getLaboratoryMaterials();
-  getSubGroup();
 });
 </script>
 
@@ -352,7 +346,7 @@ onMounted(() => {
   margin-bottom: 0;
   margin-left: 12px;
 }
-.code-item {
+.flex-item {
   flex-grow: 1;
   flex-basis: 145px;
 }
