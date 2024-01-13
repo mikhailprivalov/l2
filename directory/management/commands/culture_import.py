@@ -13,7 +13,6 @@ class Command(BaseCommand):
         :param path - xlsx файл с микроорганизмами со столбцами:
         Название, Группа, LIS(код)
         """
-
         fp = kwargs["path"]
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)

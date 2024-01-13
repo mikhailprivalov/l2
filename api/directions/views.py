@@ -2700,7 +2700,7 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
-    if request_data["fieldPk"].find('%district') != -1:
+    elif request_data["fieldPk"].find('%district') != -1:
         if c.district:
             district = c.district.title
         else:
