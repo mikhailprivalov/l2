@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from directory.models import Researches, Fractions
+from directory.models import Fractions
 import json
 from appconf.manager import SettingManager
 
