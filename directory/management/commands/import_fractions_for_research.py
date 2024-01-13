@@ -18,10 +18,10 @@ class Command(BaseCommand):
             data = json.load(json_file)
             for fraction in data:
                 unit = Unit.objects.filter(code=fraction["code"]).first()
-                fraction = Fractions.objects.filter(research_id=research_pk).first()
+                fraction_data = Fractions.objects.filter(research_id=research_pk).first()
                 fraction_obj = Fractions(
                     research_id=research_pk,
-                    relation=fraction.relation,
+                    relation=fraction_data.relation,
                     title=fraction["title"],
                     unit=unit,
                     sort_weight=fraction["sort_weight"],
