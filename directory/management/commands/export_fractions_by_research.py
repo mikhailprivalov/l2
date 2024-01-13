@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from directory.models import Researches, ParaclinicInputGroups, ParaclinicInputField, Fractions
+from directory.models import Researches, Fractions
 import json
 from appconf.manager import SettingManager
 
@@ -10,8 +10,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         research_pk = kwargs["research_pk"]
-        research_data = {}
-        r = Researches.objects.get(pk=research_pk)
         factions = Fractions.objects.filter(research_id=research_pk)
         data_fractions = [
             {

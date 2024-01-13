@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from directory.models import Fractions, Unit, LaboratoryMaterial, Researches, ReleationsFT
-import json
+from directory.models import Fractions, LaboratoryMaterial, Researches, ReleationsFT
 from openpyxl import load_workbook
 
 from podrazdeleniya.models import Podrazdeleniya

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from directory.models import Fractions, Unit, Researches
+from directory.models import Fractions, Unit
 import json
 
 
