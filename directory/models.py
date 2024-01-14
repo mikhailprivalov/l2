@@ -648,9 +648,19 @@ class Researches(models.Model):
             research.save()
             fractions = Fractions.objects.filter(research_id=research.pk)
         elif research_title:
-            research = Researches(title=research_title, short_title=research_short_title, ecp_id=research_ecp_id, code=research_code, internal_code=research_internal_code,
-                                  preparation=research_data["preparation"], podrazdeleniye_id=research_data["departmentId"], laboratory_material_id=research_data["laboratoryMaterialId"],
-                                  sub_group_id=research_data["subGroupId"], laboratory_duration=research_data["laboratoryDuration"], sort_weight=research_data["order"])
+            research = Researches(
+                title=research_title,
+                short_title=research_short_title,
+                ecp_id=research_ecp_id,
+                code=research_code,
+                internal_code=research_internal_code,
+                preparation=research_data["preparation"],
+                podrazdeleniye_id=research_data["departmentId"],
+                laboratory_material_id=research_data["laboratoryMaterialId"],
+                sub_group_id=research_data["subGroupId"],
+                laboratory_duration=research_data["laboratoryDuration"],
+                sort_weight=research_data["order"],
+            )
             research.save()
         else:
             return False
