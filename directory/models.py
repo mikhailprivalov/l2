@@ -680,8 +680,9 @@ class Researches(models.Model):
                     title = fraction["title"].strip() if fraction["title"] else ''
                     ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
                     unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
-                    new_fraction = Fractions(research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"],
-                                             unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"])
+                    new_fraction = Fractions(
+                        research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"]
+                    )
                     new_fraction.save()
         return True
 
