@@ -24,7 +24,6 @@ class Command(BaseCommand):
                     starts = True
             else:
                 material_obj = LaboratoryMaterial.objects.filter(title=cells[title].strip()).first()
-                print(cells[title])
                 if not material_obj:
                     LaboratoryMaterial(title=cells[title]).save()
                     self.stdout.write(f'Материал добавлен - {cells[title]}')
