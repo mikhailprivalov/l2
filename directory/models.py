@@ -1161,8 +1161,7 @@ class Fractions(models.Model):
         fraction = Fractions.objects.get(pk=fraction_pk)
         refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()] if isinstance(fraction.ref_m, dict) else []
         refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()] if isinstance(fraction.ref_f, dict) else []
-        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM,
-                  "refF": refF}
+        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM, "refF": refF}
         return result
 
     @staticmethod
