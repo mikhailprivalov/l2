@@ -11,4 +11,6 @@ urlpatterns = [
     path('laboratory/get-research', views.get_lab_research),
     path('laboratory/update-research', views.update_lab_research),
     path('laboratory/get-ref-books', views.get_lab_ref_books),
+    path('laboratory/get-fraction', views.get_fraction),
+    path('laboratory/update-fraction', views.update_fraction),
 ]

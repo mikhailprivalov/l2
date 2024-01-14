@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
-from directory.models import Researches, Fractions, Unit, LaboratoryMaterial, SubGroup
+from directory.models import Researches, Fractions, Unit, LaboratoryMaterial, SubGroup, ResultVariants
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from utils.response import status_response
@@ -68,5 +68,22 @@ def get_lab_ref_books(request):
     units = Unit.get_units()
     materials = LaboratoryMaterial.get_materials()
     subgroups = SubGroup.get_groups()
-    result = {"units": units, "materials": materials, "subgroups": subgroups}
+    variants = ResultVariants.get_all()
+    result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants}
     return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def get_fraction(request):
+    request_data = json.loads(request.body)
+    result = Fractions.get_fraction(request_data["fractionPk"])
+    return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def update_fraction(request):
+    request_data = json.loads(request.body)
+    result = Fractions.update_fraction(request_data["fraction"])
+    return status_response(result)

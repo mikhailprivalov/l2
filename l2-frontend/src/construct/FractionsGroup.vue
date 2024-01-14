@@ -11,14 +11,12 @@
         <col style="min-width: 70px">
         <col style="min-width: 70px">
         <col style="min-width: 70px">
-        <col style="min-width: 70px">
         <col style="width: 30px">
       </colgroup>
       <thead>
         <tr>
           <th />
           <th><strong>Фракция</strong></th>
-          <th><strong>По умолчанию</strong></th>
           <th><strong>Ед. изм</strong></th>
           <th><strong>Код ЕЦП</strong></th>
           <th><strong>ФСЛИ</strong></th>
@@ -55,12 +53,6 @@
           >
         </td>
         <td class="padding-td">
-          <input
-            class="form-control fraction-input"
-            placeholder="Введите значение"
-          >
-        </td>
-        <td class="padding-td">
           <Treeselect
             v-model="fraction.unitId"
             :options="props.units"
@@ -86,13 +78,7 @@
             loading-text="Загрузка"
             no-results-text="Не найдено"
             search-prompt-text="Начните писать для поиска"
-            :multiple="false"
-            :disable-branch-nodes="true"
-            :clearable="true"
-            :z-index="10001"
             :cache-options="false"
-            open-direction="bottom"
-            :open-on-focus="true"
           >
             <div
               slot="value-label"
@@ -114,12 +100,18 @@
         </td>
       </tr>
     </table>
+    <button
+      class="btn btn-blue-nb"
+      @click="addFraction"
+    >
+      Добавить
+    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, PropType, ref,
+  computed, getCurrentInstance, PropType,
 } from 'vue';
 import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
@@ -127,16 +119,17 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
-import * as actions from '@/store/action-types';
 import api from '@/api';
-import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
 
 const props = defineProps({
   tube: {
     type: Object as PropType<tubeData>,
+    required: true,
+  },
+  tubeidx: {
+    type: Number,
     required: true,
   },
   units: {
@@ -144,7 +137,7 @@ const props = defineProps({
     required: true,
   },
 });
-const emit = defineEmits(['updateOrder', 'edit']);
+const emit = defineEmits(['updateOrder', 'edit', 'addFraction']);
 
 const minMaxOrder = computed(() => {
   const { fractions } = props.tube;
@@ -190,6 +183,13 @@ const getFsli = async ({ action, searchQuery, callback }) => {
       )),
     );
   }
+};
+
+const addFraction = () => {
+  const newFraction = {
+    order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
+  };
+  emit('addFraction', newFraction);
 };
 </script>
 
