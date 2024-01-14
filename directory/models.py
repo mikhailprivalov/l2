@@ -1180,8 +1180,6 @@ class Fractions(models.Model):
         fraction.save()
         return True
 
-
-
     def __str__(self):
         return self.research.title + " | " + self.title
 
