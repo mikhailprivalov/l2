@@ -31,10 +31,12 @@ class Command(BaseCommand):
                     laboratory_duration = cells.index("Готовность")
                     starts = True
             else:
+                if Researches.objects.filter(title=cells[title].strip()):
+                    continue
                 material_obj = LaboratoryMaterial.objects.filter(title=cells[material].strip()).first()
-                department_obj = Podrazdeleniya.objects.filter(title=cells[department]).first()
+                department_obj = Podrazdeleniya.objects.filter(title=cells[department].strip()).first()
                 research = Researches(
-                    title=cells[title],
+                    title=cells[title].strip(),
                     internal_code=cells[internal_code],
                     laboratory_material=material_obj,
                     podrazdeleniye=department_obj,
@@ -43,15 +45,16 @@ class Command(BaseCommand):
                 research.save()
 
                 tube = Tubes.objects.filter(title=cells[container].strip()).first()
-                if not ReleationsFT.objects.filter(tube=tube).first():
-                    relation_f = ReleationsFT(tube=tube)
-                    relation_f.save()
-                else:
+                fraction_data, relation_f = None, None
+                if ReleationsFT.objects.filter(tube=tube).first():
                     relation_f = ReleationsFT.objects.filter(tube=tube).first()
                     fraction_data = Fractions.objects.filter(relation=relation_f).first()
-                    if fraction_data.research.podrazdeleniye != department_obj or fraction_data.research.laboratory_material != material_obj:
-                        relation_f = ReleationsFT(tube=tube)
-                        relation_f.save()
+
+                if not ReleationsFT.objects.filter(tube=tube).first() or (
+                        fraction_data and (fraction_data.research.podrazdeleniye != department_obj or fraction_data.research.laboratory_material != material_obj)):
+                    relation_f = ReleationsFT(tube=tube)
+                    relation_f.save()
+
                 fraction = Fractions(
                     research=research,
                     title=cells[title],
