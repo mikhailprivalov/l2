@@ -23,6 +23,7 @@
           @updateOrder="updateOrder"
           @changeVisibility="changeVisibility"
           @edit="edit"
+          @add="add"
         />
         <div
           v-if="filteredResearchTubes.length === 0"
@@ -42,10 +43,13 @@
       <ResearchDetail
         v-if="currentResearchPk"
         :research-pk="currentResearchPk"
+        :new-research="newResearch"
+        :department-id="department"
         :departments="departments.slice(1)"
         :units="units"
         :materials="materials"
         :sub-groups="subGroups"
+        :variants="variants"
         @updateResearch="getTubes"
       />
     </div>
@@ -84,17 +88,24 @@ const search = ref('');
 
 const researchTubes = ref([]);
 
+const currentResearchPk = ref(null);
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-tubes', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
+  currentResearchPk.value = null;
 };
-
-const currentResearchPk = ref(null);
 
 const edit = ({ researchPk }) => {
   currentResearchPk.value = researchPk;
+};
+
+const newResearch = ref({});
+
+const add = (newResearchData: object) => {
+  currentResearchPk.value = -1;
+  newResearch.value = newResearchData;
 };
 
 watch([department], () => {
@@ -145,6 +156,7 @@ const changeVisibility = async ({ researchPk }) => {
 const units = ref([]);
 const materials = ref([]);
 const subGroups = ref([]);
+const variants = ref([]);
 
 const getRefbooks = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -153,6 +165,7 @@ const getRefbooks = async () => {
   units.value = result.units;
   materials.value = result.materials;
   subGroups.value = result.subGroups;
+  variants.value = result.variants;
 };
 
 onMounted(() => {

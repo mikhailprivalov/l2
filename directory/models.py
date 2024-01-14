@@ -536,7 +536,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
-        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('sort_weight')
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
@@ -625,27 +625,63 @@ class Researches(models.Model):
 
     @staticmethod
     def update_lab_research(research_data):
-        research = Researches.objects.get(pk=research_data["pk"])
-        fractions = Fractions.objects.filter(research_id=research.pk)
+        research_title = research_data["title"].strip() if research_data["title"] else None
+        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ''
+        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ''
+        research_code = research_data["code"].strip() if research_data["code"] else ''
+        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ''
+        research = Researches.objects.filter(pk=research_data["pk"]).first()
+        fractions = None
+        if research and research_title:
+            research.title = research_title
+            research.short_title = research_short_title
+            research.code = research_code
+            research.ecp_id = research_ecp_id
+            research.internal_code = research_internal_code
+            research.preparation = research_data["preparation"]
+            research.podrazdeleniye_id = research_data["departmentId"]
+            research.laboratory_material_id = research_data["laboratoryMaterialId"]
+            research.sub_group_id = research_data["subGroupId"]
+            research.laboratory_duration = research_data["laboratoryDuration"]
+            research.save()
+            fractions = Fractions.objects.filter(research_id=research.pk)
+        elif research_title:
+            research = Researches(
+                title=research_title,
+                short_title=research_short_title,
+                ecp_id=research_ecp_id,
+                code=research_code,
+                internal_code=research_internal_code,
+                preparation=research_data["preparation"],
+                podrazdeleniye_id=research_data["departmentId"],
+                laboratory_material_id=research_data["laboratoryMaterialId"],
+                sub_group_id=research_data["subGroupId"],
+                laboratory_duration=research_data["laboratoryDuration"],
+                sort_weight=research_data["order"],
+            )
+            research.save()
+        else:
+            return False
         for tube in research_data["tubes"]:
             for fraction in tube["fractions"]:
-                current_fractions = fractions.get(pk=fraction["pk"])
-                current_fractions.title = fraction["title"].strip()
-                current_fractions.ecp_id = fraction["ecpId"].strip()
-                current_fractions.fsli = fraction["fsli"]
-                current_fractions.unit_id = fraction["unitId"]
-                current_fractions.save()
-        research.title = research_data["title"].strip()
-        research.short_title = research_data["shortTitle"].strip()
-        research.code = research_data["code"].strip()
-        research.ecp_id = research_data["ecpId"].strip()
-        research.internal_code = research_data["internalCode"].strip()
-        research.preparation = research_data["preparation"]
-        research.podrazdeleniye_id = research_data["departmentId"]
-        research.laboratory_material_id = research_data["laboratoryMaterialId"]
-        research.sub_group_id = research_data["subGroupId"]
-        research.laboratory_duration = research_data["laboratoryDuration"]
-        research.save()
+                if fractions:
+                    current_fractions = fractions.filter(pk=fraction["pk"]).first()
+                else:
+                    current_fractions = None
+                if current_fractions:
+                    current_fractions.title = fraction["title"].strip()
+                    current_fractions.ecp_id = fraction["ecpId"].strip()
+                    current_fractions.fsli = fraction["fsli"]
+                    current_fractions.unit_id = fraction["unitId"]
+                    current_fractions.save()
+                else:
+                    title = fraction["title"].strip() if fraction["title"] else ''
+                    ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                    unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
+                    new_fraction = Fractions(
+                        research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"]
+                    )
+                    new_fraction.save()
         return True
 
 
@@ -979,6 +1015,11 @@ class ResultVariants(models.Model):
     def get_variants(self):
         return self.values.split('|')
 
+    @staticmethod
+    def get_all():
+        result = [{"id": variants.pk, "label": variants.values} for variants in ResultVariants.objects.all()]
+        return result
+
     def __str__(self):
         return str(self.get_variants())
 
@@ -1111,6 +1152,30 @@ class Fractions(models.Model):
             fraction_nearby.sort_weight += 1
         fraction.save()
         fraction_nearby.save()
+        return True
+
+    @staticmethod
+    def get_fraction(fraction_pk: int):
+        fraction = Fractions.objects.get(pk=fraction_pk)
+        refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()] if isinstance(fraction.ref_m, dict) else []
+        refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()] if isinstance(fraction.ref_f, dict) else []
+        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM, "refF": refF}
+        return result
+
+    @staticmethod
+    def update_fraction(fraction_data: dict):
+        fraction = Fractions.objects.get(pk=fraction_data["pk"])
+        fraction.variants_id = fraction_data["variantsId"]
+        fraction.formula = fraction_data["formula"].strip()
+        ref_m_dict = {}
+        ref_f_dict = {}
+        for ref in fraction_data["refM"]:
+            ref_m_dict[ref["age"].strip()] = ref["value"].strip()
+        for ref in fraction_data["refF"]:
+            ref_f_dict[ref["age"].strip()] = ref["value"].strip()
+        fraction.ref_m = ref_m_dict
+        fraction.ref_f = ref_f_dict
+        fraction.save()
         return True
 
     def __str__(self):

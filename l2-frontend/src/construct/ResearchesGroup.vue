@@ -61,6 +61,21 @@
           </div>
         </td>
       </tr>
+      <tr>
+        <td
+          colspan="5"
+          class="border"
+        >
+          <div class="button">
+            <button
+              class="transparent-button"
+              @click="addResearch"
+            >
+              Добавить анализ
+            </button>
+          </div>
+        </td>
+      </tr>
     </table>
     <div> {{ props.tube.tubes.length > 0 ? 'Ёмкости' : 'Ёмкости не привязаны' }}</div>
     <ColorTitled
@@ -84,7 +99,7 @@ const props = defineProps({
   },
 });
 const root = getCurrentInstance().proxy.$root;
-const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit']);
+const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit', 'add']);
 
 const minMaxOrder = computed(() => {
   let min = 0;
@@ -121,6 +136,10 @@ const changeVisibility = (researchPk: number) => {
 
 const edit = (researchPk: number) => {
   emit('edit', { researchPk });
+};
+
+const addResearch = () => {
+  emit('add', { tubes: props.tube.tubes, order: minMaxOrder.value.max + 1 });
 };
 </script>
 
