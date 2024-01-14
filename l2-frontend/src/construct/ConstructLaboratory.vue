@@ -23,6 +23,7 @@
           @updateOrder="updateOrder"
           @changeVisibility="changeVisibility"
           @edit="edit"
+          @add="add"
         />
         <div
           v-if="filteredResearchTubes.length === 0"
@@ -42,6 +43,8 @@
       <ResearchDetail
         v-if="currentResearchPk"
         :research-pk="currentResearchPk"
+        :new-research="newResearch"
+        :department-id="department"
         :departments="departments.slice(1)"
         :units="units"
         :materials="materials"
@@ -85,17 +88,24 @@ const search = ref('');
 
 const researchTubes = ref([]);
 
+const currentResearchPk = ref(null);
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-tubes', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
+  currentResearchPk.value = null;
 };
-
-const currentResearchPk = ref(null);
 
 const edit = ({ researchPk }) => {
   currentResearchPk.value = researchPk;
+};
+
+const newResearch = ref({});
+
+const add = (newResearchData: object) => {
+  currentResearchPk.value = -1;
+  newResearch.value = newResearchData;
 };
 
 watch([department], () => {

@@ -627,11 +627,39 @@ class Researches(models.Model):
 
     @staticmethod
     def update_lab_research(research_data):
-        research = Researches.objects.get(pk=research_data["pk"])
-        fractions = Fractions.objects.filter(research_id=research.pk)
+        research_title = research_data["title"].strip() if research_data["title"] else None
+        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ''
+        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ''
+        research_code = research_data["code"].strip() if research_data["code"] else ''
+        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ''
+        research = Researches.objects.filter(pk=research_data["pk"]).first()
+        fractions = None
+        if research and research_title:
+            research.title = research_title
+            research.short_title = research_short_title
+            research.code = research_code
+            research.ecp_id = research_ecp_id
+            research.internal_code = research_internal_code
+            research.preparation = research_data["preparation"]
+            research.podrazdeleniye_id = research_data["departmentId"]
+            research.laboratory_material_id = research_data["laboratoryMaterialId"]
+            research.sub_group_id = research_data["subGroupId"]
+            research.laboratory_duration = research_data["laboratoryDuration"]
+            research.save()
+            fractions = Fractions.objects.filter(research_id=research.pk)
+        elif research_title:
+            research = Researches(title=research_title, short_title=research_short_title, ecp_id=research_ecp_id, code=research_code, internal_code=research_internal_code,
+                                  preparation=research_data["preparation"], podrazdeleniye_id=research_data["departmentId"], laboratory_material_id=research_data["laboratoryMaterialId"],
+                                  sub_group_id=research_data["subGroupId"], laboratory_duration=research_data["laboratoryDuration"], sort_weight=research_data["order"])
+            research.save()
+        else:
+            return False
         for tube in research_data["tubes"]:
             for fraction in tube["fractions"]:
-                current_fractions = fractions.filter(pk=fraction["pk"]).first()
+                if fractions:
+                    current_fractions = fractions.filter(pk=fraction["pk"]).first()
+                else:
+                    current_fractions = None
                 if current_fractions:
                     current_fractions.title = fraction["title"].strip()
                     current_fractions.ecp_id = fraction["ecpId"].strip()
@@ -639,25 +667,12 @@ class Researches(models.Model):
                     current_fractions.unit_id = fraction["unitId"]
                     current_fractions.save()
                 else:
-                    title = fraction["title"].strip() if fraction["title"] else None
+                    title = fraction["title"].strip() if fraction["title"] else ''
                     ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
-                    if title:
-                        new_fraction = Fractions(research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"],
-                                                 unit_id=fraction["unitId"], relation_id=tube["pk"], sort_weight=fraction["order"])
-                        new_fraction.save()
-                    else:
-                        return False
-        research.title = research_data["title"].strip()
-        research.short_title = research_data["shortTitle"].strip()
-        research.code = research_data["code"].strip()
-        research.ecp_id = research_data["ecpId"].strip()
-        research.internal_code = research_data["internalCode"].strip()
-        research.preparation = research_data["preparation"]
-        research.podrazdeleniye_id = research_data["departmentId"]
-        research.laboratory_material_id = research_data["laboratoryMaterialId"]
-        research.sub_group_id = research_data["subGroupId"]
-        research.laboratory_duration = research_data["laboratoryDuration"]
-        research.save()
+                    unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
+                    new_fraction = Fractions(research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"],
+                                             unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"])
+                    new_fraction.save()
         return True
 
 

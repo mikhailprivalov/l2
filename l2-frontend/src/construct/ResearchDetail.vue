@@ -211,14 +211,22 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  newResearch: {
+    type: Object,
+    required: true,
+  },
+  departmentId: {
+    type: Number,
+    required: true,
+  },
 });
 
 interface fractionsData {
   pk: number,
   title: string,
-  unitId: string,
+  unitId: number,
   order: number,
-  ecpId: number,
+  ecpId: number | string,
   fsli: number,
 }
 
@@ -234,6 +242,7 @@ interface researchData {
   title: string | null,
   shortTitle: string | null,
   code: number | null,
+  order: number,
   internalCode: number | null,
   ecpId: number | null,
   preparation: string | null,
@@ -246,11 +255,13 @@ interface researchData {
 const researchShortTitle = ref('');
 
 const root = getCurrentInstance().proxy.$root;
+
 const research = ref<researchData>({
   pk: -1,
   title: '',
   shortTitle: '',
   code: null,
+  order: null,
   internalCode: null,
   ecpId: null,
   preparation: '',
@@ -258,23 +269,10 @@ const research = ref<researchData>({
   laboratoryMaterialId: null,
   subGroupId: null,
   laboratoryDuration: '',
-  tubes: [
-    {
-      pk: -1,
-      title: '',
-      color: '',
-      fractions: [
-        {
-          pk: -1,
-          title: '',
-          unitId: '',
-          order: null,
-          ecpId: null,
-          fsli: null,
-        },
-      ],
-    }],
+  tubes: [],
 });
+
+const currentFractionPk = ref(null);
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -285,8 +283,47 @@ const getResearch = async () => {
 };
 
 watch(() => props.researchPk, () => {
-  getResearch();
-});
+  if (props.researchPk !== -1) {
+    getResearch();
+    currentFractionPk.value = null;
+  } else {
+    research.value = {
+      pk: -1,
+      title: '',
+      shortTitle: '',
+      code: null,
+      order: null,
+      internalCode: null,
+      ecpId: null,
+      preparation: '',
+      departmentId: null,
+      laboratoryMaterialId: null,
+      subGroupId: null,
+      laboratoryDuration: '',
+      tubes: [],
+    };
+    for (const tube of props.newResearch.tubes) {
+      research.value.tubes.push({
+        pk: tube.pk,
+        title: tube.title,
+        color: tube.color,
+        fractions: [
+          {
+            pk: -1,
+            title: '',
+            unitId: -1,
+            order: 1,
+            ecpId: '',
+            fsli: -1,
+          },
+        ],
+      });
+    }
+    research.value.order = props.newResearch.order;
+    research.value.departmentId = props.departmentId;
+    currentFractionPk.value = null;
+  }
+}, { immediate: true });
 
 const updateResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -294,7 +331,6 @@ const updateResearch = async () => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
-    await getResearch();
     emit('updateResearch');
   } else {
     root.$emit('msg', 'error', 'Ошибка');
@@ -315,8 +351,6 @@ const updateOrder = async ({ fractionPk, fractionNearbyPk, action }) => {
   }
 };
 
-const currentFractionPk = ref(null);
-
 const edit = ({ fractionPk }) => {
   currentFractionPk.value = fractionPk;
 };
@@ -328,9 +362,6 @@ const addFraction = (newFraction: object) => {
   research.value.tubes[newFraction.tubeIdx].fractions.push(newFractionData);
 };
 
-onMounted(() => {
-  getResearch();
-});
 </script>
 
 <style scoped lang="scss">
