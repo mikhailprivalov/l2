@@ -1130,15 +1130,15 @@ class Fractions(models.Model):
         return result
 
     @staticmethod
-    def update_fraction(fractionData: dict):
-        fraction = Fractions.objects.get(pk=fractionData["pk"])
-        fraction.variants_id = fractionData["variantsId"]
-        fraction.formula = fractionData["formula"].strip()
+    def update_fraction(fraction_data: dict):
+        fraction = Fractions.objects.get(pk=fraction_data["pk"])
+        fraction.variants_id = fraction_data["variantsId"]
+        fraction.formula = fraction_data["formula"].strip()
         ref_m_dict = {}
         ref_f_dict = {}
-        for ref in fractionData["refM"]:
+        for ref in fraction_data["refM"]:
             ref_m_dict[ref["age"].strip()] = ref["value"].strip()
-        for ref in fractionData["refF"]:
+        for ref in fraction_data["refF"]:
             ref_f_dict[ref["age"].strip()] = ref["value"].strip()
         fraction.ref_m = ref_m_dict
         fraction.ref_f = ref_f_dict
