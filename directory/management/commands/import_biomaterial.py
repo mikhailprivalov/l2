@@ -1,9 +1,6 @@
 from django.core.management.base import BaseCommand
-from directory.models import Fractions, LaboratoryMaterial, Researches, ReleationsFT
+from directory.models import LaboratoryMaterial
 from openpyxl import load_workbook
-
-from podrazdeleniya.models import Podrazdeleniya
-from researches.models import Tubes
 
 
 class Command(BaseCommand):
