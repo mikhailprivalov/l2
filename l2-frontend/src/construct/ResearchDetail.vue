@@ -150,20 +150,20 @@
           @edit="edit"
           @addFraction="addFraction"
         />
+        <div class="margin-bottom flex-right">
+          <button
+            class="btn btn-blue-nb"
+            @click="updateResearch"
+          >
+            Сохранить
+          </button>
+        </div>
       </div>
       <FractionDetail
         v-if="currentFractionPk"
         :fraction-pk="currentFractionPk"
         :variants="props.variants"
       />
-    </div>
-    <div class="margin-bottom flex-right">
-      <button
-        class="btn btn-blue-nb"
-        @click="updateResearch"
-      >
-        Сохранить
-      </button>
     </div>
   </div>
 </template>

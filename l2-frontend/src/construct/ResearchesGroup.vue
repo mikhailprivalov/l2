@@ -62,7 +62,10 @@
         </td>
       </tr>
       <tr>
-        <td colspan="5" class="border">
+        <td
+          colspan="5"
+          class="border"
+        >
           <div class="button">
             <button
               class="transparent-button"
