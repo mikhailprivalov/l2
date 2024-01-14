@@ -170,7 +170,7 @@
 
 <script setup lang="ts">
 import {
-  getCurrentInstance, onMounted, ref, watch,
+  getCurrentInstance, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
