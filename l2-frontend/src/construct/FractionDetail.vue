@@ -6,26 +6,65 @@
       <Treeselect
         v-model="fraction.variantsId"
         :options="props.variants"
+        :clearable="false"
       />
       <label>Формула</label>
       <input
         v-model="fraction.formula"
         class="form-control"
       >
+      <label>Рефернсы М</label>
+      <div
+        v-for="(refM, idx) in fraction.refM"
+        :key="idx"
+        class="flex"
+      >
+        <input
+          v-model="refM.age"
+          class="form-control"
+        >
+        <input
+          v-model="refM.value"
+          class="form-control"
+        >
+      </div>
       <div>
-        <label>Рефернсы М</label>
-        <input class="form-control">
-        <input class="form-control">
-        <button class="btn btn-blue-nb">
+        <button
+          class="btn btn-blue-nb"
+          @click="addRef('m')"
+        >
           Добавить
         </button>
       </div>
+      <label>Рефернсы Ж</label>
+      <div
+        v-for="(refF, idx) in fraction.refF"
+        :key="idx"
+        class="flex"
+      >
+        <input
+          v-model="refF.age"
+          class="form-control"
+        >
+        <input
+          v-model="refF.value"
+          class="form-control"
+        >
+      </div>
       <div>
-        <label>Рефернсы Ж</label>
-        <input class="form-control">
-        <input class="form-control">
-        <button class="btn btn-blue-nb">
+        <button
+          class="btn btn-blue-nb"
+          @click="addRef('f')"
+        >
           Добавить
+        </button>
+      </div>
+      <div class="flex-end">
+        <button
+          class="btn btn-blue-nb"
+          @click="save"
+        >
+          Сохранить
         </button>
       </div>
     </div>
@@ -35,6 +74,7 @@
 <script setup lang="ts">
 
 import {
+  getCurrentInstance,
   onMounted,
   ref, watch,
 } from 'vue';
@@ -47,6 +87,7 @@ import api from '@/api';
 import { useStore } from '@/store';
 
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   fractionPk: {
     type: Number,
@@ -58,13 +99,18 @@ const props = defineProps({
   },
 });
 
+interface refData {
+  age: string,
+  value: string
+}
+
 interface otherFractionData {
   pk: number | null,
   title: string,
   variantsId: number | null,
   formula: string,
-  refM: any,
-  refF: any,
+  refM: refData[],
+  refF: refData[],
 }
 
 const fraction = ref<otherFractionData>({
@@ -87,6 +133,26 @@ watch(() => [props.fractionPk], () => {
   getFraction();
 });
 
+const addRef = (refKey: string) => {
+  if (refKey === 'm') {
+    fraction.value.refM.push({ age: '', value: '' });
+  } else {
+    fraction.value.refF.push({ age: '', value: '' });
+  }
+};
+
+const save = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('construct/laboratory/update-fraction', { fraction: fraction.value });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getFraction();
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
 onMounted(() => {
   getFraction();
 });
@@ -105,5 +171,12 @@ onMounted(() => {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
   padding: 10px 5px 10px 5px;
+}
+.flex {
+  display: flex;
+}
+.flex-end {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

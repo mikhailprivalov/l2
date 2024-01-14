@@ -79,3 +79,11 @@ def get_fraction(request):
     request_data = json.loads(request.body)
     result = Fractions.get_fraction(request_data["fractionPk"])
     return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def update_fraction(request):
+    request_data = json.loads(request.body)
+    result = Fractions.update_fraction(request_data["fraction"])
+    return status_response(result)

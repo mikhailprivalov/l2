@@ -1121,11 +1121,29 @@ class Fractions(models.Model):
         return True
 
     @staticmethod
-    def get_fraction(fraction_pk):
+    def get_fraction(fraction_pk: int):
         fraction = Fractions.objects.get(pk=fraction_pk)
-        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": json.loads(fraction.ref_m),
-                  "refF": json.loads(fraction.ref_f)}
+        refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()]
+        refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()]
+        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM,
+                  "refF": refF}
         return result
+
+    @staticmethod
+    def update_fraction(fractionData: dict):
+        fraction = Fractions.objects.get(pk=fractionData["pk"])
+        fraction.variants_id = fractionData["variantsId"]
+        fraction.formula = fractionData["formula"].strip()
+        ref_m_dict = {}
+        ref_f_dict = {}
+        for ref in fractionData["refM"]:
+            ref_m_dict[ref["age"].strip()] = ref["value"].strip()
+        for ref in fractionData["refF"]:
+            ref_f_dict[ref["age"].strip()] = ref["value"].strip()
+        fraction.ref_m = ref_m_dict
+        fraction.ref_f = ref_f_dict
+        fraction.save()
+        return True
 
 
 
