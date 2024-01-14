@@ -538,7 +538,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
-        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('sort_weight')
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
@@ -631,12 +631,22 @@ class Researches(models.Model):
         fractions = Fractions.objects.filter(research_id=research.pk)
         for tube in research_data["tubes"]:
             for fraction in tube["fractions"]:
-                current_fractions = fractions.get(pk=fraction["pk"])
-                current_fractions.title = fraction["title"].strip()
-                current_fractions.ecp_id = fraction["ecpId"].strip()
-                current_fractions.fsli = fraction["fsli"]
-                current_fractions.unit_id = fraction["unitId"]
-                current_fractions.save()
+                current_fractions = fractions.filter(pk=fraction["pk"]).first()
+                if current_fractions:
+                    current_fractions.title = fraction["title"].strip()
+                    current_fractions.ecp_id = fraction["ecpId"].strip()
+                    current_fractions.fsli = fraction["fsli"]
+                    current_fractions.unit_id = fraction["unitId"]
+                    current_fractions.save()
+                else:
+                    title = fraction["title"].strip() if fraction["title"] else None
+                    ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                    if title:
+                        new_fraction = Fractions(research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"],
+                                                 unit_id=fraction["unitId"], relation_id=tube["pk"], sort_weight=fraction["order"])
+                        new_fraction.save()
+                    else:
+                        return False
         research.title = research_data["title"].strip()
         research.short_title = research_data["shortTitle"].strip()
         research.code = research_data["code"].strip()
@@ -1123,8 +1133,8 @@ class Fractions(models.Model):
     @staticmethod
     def get_fraction(fraction_pk: int):
         fraction = Fractions.objects.get(pk=fraction_pk)
-        refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()]
-        refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()]
+        refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()] if isinstance(fraction.ref_m, dict) else []
+        refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()] if isinstance(fraction.ref_f, dict) else []
         result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM,
                   "refF": refF}
         return result

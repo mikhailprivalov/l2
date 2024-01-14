@@ -141,12 +141,14 @@
     <div class="research-fractions">
       <div class="fraction-group">
         <FractionsGroup
-          v-for="tube in research.tubes"
+          v-for="(tube, idx) in research.tubes"
           :key="tube.pk"
           :tube="tube"
+          :tubeidx="idx"
           :units="props.units"
           @updateOrder="updateOrder"
           @edit="edit"
+          @addFraction="addFraction"
         />
       </div>
       <FractionDetail
@@ -317,6 +319,13 @@ const currentFractionPk = ref(null);
 
 const edit = ({ fractionPk }) => {
   currentFractionPk.value = fractionPk;
+};
+
+const addFraction = (newFraction: object) => {
+  const newFractionData = {
+    pk: -1, title: '', unitId: null, order: newFraction.order, ecpId: null, fsli: null,
+  };
+  research.value.tubes[newFraction.tubeIdx].fractions.push(newFractionData);
 };
 
 onMounted(() => {

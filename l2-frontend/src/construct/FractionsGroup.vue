@@ -100,6 +100,12 @@
         </td>
       </tr>
     </table>
+    <button
+      class="btn btn-blue-nb"
+      @click="addFraction"
+    >
+      Добавить
+    </button>
   </div>
 </template>
 
@@ -122,12 +128,16 @@ const props = defineProps({
     type: Object as PropType<tubeData>,
     required: true,
   },
+  tubeidx: {
+    type: Number,
+    required: true,
+  },
   units: {
     type: Array,
     required: true,
   },
 });
-const emit = defineEmits(['updateOrder', 'edit']);
+const emit = defineEmits(['updateOrder', 'edit', 'addFraction']);
 
 const minMaxOrder = computed(() => {
   const { fractions } = props.tube;
@@ -173,6 +183,13 @@ const getFsli = async ({ action, searchQuery, callback }) => {
       )),
     );
   }
+};
+
+const addFraction = () => {
+  const newFraction = {
+    order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
+  };
+  emit('addFraction', newFraction);
 };
 </script>
 
