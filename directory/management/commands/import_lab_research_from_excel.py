@@ -32,7 +32,6 @@ class Command(BaseCommand):
                     laboratory_duration = cells.index("Готовность")
                     starts = True
             else:
-                print(cells[title].strip())
                 if Researches.objects.filter(title=cells[title].strip()):
                     continue
                 material_obj = LaboratoryMaterial.objects.filter(title=cells[material].strip()).first()
