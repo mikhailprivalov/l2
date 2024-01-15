@@ -48,6 +48,8 @@
         <td class="padding-td">
           <input
             v-model="fraction.title"
+            :title="fraction.title"
+            v-tippy
             class="form-control fraction-input"
             placeholder="Введите название фракции"
           >

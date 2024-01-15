@@ -13,6 +13,8 @@
           <input
             id="title"
             v-model="research.title"
+            v-tippy
+            :title="research.title"
             class="form-control"
             placeholder="Введите полное наименование"
           >
