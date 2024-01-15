@@ -672,6 +672,7 @@ class Researches(models.Model):
                     current_fractions.title = fraction["title"].strip()
                     current_fractions.ecp_id = fraction["ecpId"].strip()
                     current_fractions.fsli = fraction["fsli"]
+                    current_fractions.sort_weight = fraction["order"]
                     current_fractions.unit_id = fraction["unitId"]
                     current_fractions.save()
                 else:
@@ -1139,20 +1140,6 @@ class Fractions(models.Model):
             "order": fraction.sort_weight,
         }
         return result
-
-    @staticmethod
-    def update_order(fraction_pk: int, fraction_nearby_pk: int, action: str):
-        fraction = Fractions.objects.get(pk=fraction_pk)
-        fraction_nearby = Fractions.objects.get(pk=fraction_nearby_pk)
-        if action == 'inc_order':
-            fraction.sort_weight += 1
-            fraction_nearby.sort_weight -= 1
-        elif action == 'dec_order':
-            fraction.sort_weight -= 1
-            fraction_nearby.sort_weight += 1
-        fraction.save()
-        fraction_nearby.save()
-        return True
 
     @staticmethod
     def get_fraction(fraction_pk: int):

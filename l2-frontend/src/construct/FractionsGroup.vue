@@ -24,7 +24,7 @@
         </tr>
       </thead>
       <tr
-        v-for="(fraction, idx) in props.tube.fractions"
+        v-for="(fraction, idx) in sortedFractions"
         :key="fraction.pk"
       >
         <td>
@@ -32,14 +32,14 @@
             <button
               :class="isFirstRow(fraction.order) ? 'transparent-button-disabled' : 'transparent-button'"
               :disabled="isFirstRow(fraction.order)"
-              @click="updateOrder(idx, fraction.pk, fraction.order, 'dec_order')"
+              @click="updateOrder(idx, fraction.order, 'dec_order')"
             >
               <i class="glyphicon glyphicon-arrow-up" />
             </button>
             <button
               :class="isLastRow(fraction.order) ? 'transparent-button-disabled' : 'transparent-button'"
               :disabled="isLastRow(fraction.order)"
-              @click="updateOrder(idx, fraction.pk, fraction.order, 'inc_order')"
+              @click="updateOrder(idx, fraction.order, 'inc_order')"
             >
               <i class="glyphicon glyphicon-arrow-down" />
             </button>
@@ -139,11 +139,16 @@ const props = defineProps({
 });
 const emit = defineEmits(['updateOrder', 'edit', 'addFraction']);
 
+const sortedFractions = computed(() => {
+  const res = [...props.tube.fractions];
+  const result = res.sort((x, y) => x.order - y.order);
+  return result;
+});
+
 const minMaxOrder = computed(() => {
-  const { fractions } = props.tube;
   let min = 0;
   let max = 0;
-  for (const fraction of fractions) {
+  for (const fraction of sortedFractions.value) {
     if (min === 0) {
       min = fraction.order;
     } else {
@@ -157,13 +162,17 @@ const minMaxOrder = computed(() => {
 const isFirstRow = (order: number) => order === minMaxOrder.value.min;
 const isLastRow = (order: number) => order === minMaxOrder.value.max;
 
-const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: number, action: string) => {
+const updateOrder = (fractionIdx: number, fractionOrder: number, action: string) => {
   if (action === 'inc_order' && fractionOrder < minMaxOrder.value.max) {
-    const fractionNearbyPk = props.tube.fractions[fractionIdx + 1].pk;
-    emit('updateOrder', { fractionPk, fractionNearbyPk, action });
+    const fractionNearbyOrder = sortedFractions.value[fractionIdx + 1].order;
+    emit('updateOrder', {
+      tubeIdx: props.tubeidx, fractionNearbyOrder, fractionOrder, action,
+    });
   } else if (action === 'dec_order' && fractionOrder > minMaxOrder.value.min) {
-    const fractionNearbyPk = props.tube.fractions[fractionIdx - 1].pk;
-    emit('updateOrder', { fractionPk, fractionNearbyPk, action });
+    const fractionNearbyOrder = sortedFractions.value[fractionIdx - 1].order;
+    emit('updateOrder', {
+      tubeIdx: props.tubeidx, fractionNearbyOrder, fractionOrder, action,
+    });
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }

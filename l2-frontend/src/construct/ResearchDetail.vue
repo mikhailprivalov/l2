@@ -316,17 +316,19 @@ const updateResearch = async () => {
   }
 };
 
-const updateOrder = async ({ fractionPk, fractionNearbyPk, action }) => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('construct/laboratory/update-order-fraction', {
-    fractionPk, fractionNearbyPk, action,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Обновлено');
-    await getResearch();
-  } else {
-    root.$emit('msg', 'error', 'Ошибка');
+const updateOrder = async ({
+  tubeIdx, fractionNearbyOrder, fractionOrder, action,
+}) => {
+  if (action === 'inc_order') {
+    const currentFraction = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.order === fractionOrder);
+    const nearbyFraction = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.order === fractionNearbyOrder);
+    currentFraction.order += 1;
+    nearbyFraction.order -= 1;
+  } else if (action === 'dec_order') {
+    const currentFraction = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.order === fractionOrder);
+    const nearbyFraction = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.order === fractionNearbyOrder);
+    currentFraction.order -= 1;
+    nearbyFraction.order += 1;
   }
 };
 

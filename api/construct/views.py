@@ -32,14 +32,6 @@ def update_order_research(request):
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def update_order_fraction(request):
-    request_data = json.loads(request.body)
-    result = Fractions.update_order(request_data["fractionPk"], request_data["fractionNearbyPk"], request_data["action"])
-    return status_response(result)
-
-
-@login_required
-@group_required("Конструктор: Лабораторные исследования")
 def change_visibility_research(request):
     request_data = json.loads(request.body)
     result = Researches.change_visibility(request_data["researchPk"])
