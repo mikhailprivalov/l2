@@ -162,7 +162,6 @@
         </div>
       </div>
       <FractionDetail
-        v-if="currentFractionPk"
         :fraction-pk="currentFractionPk"
         :variants="props.refBooks.variants"
       />

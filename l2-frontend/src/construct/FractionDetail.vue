@@ -130,8 +130,10 @@ const getFraction = async () => {
 };
 
 watch(() => [props.fractionPk], () => {
-  getFraction();
-});
+  if (props.fractionPk) {
+    getFraction();
+  }
+}, { immediate: true });
 
 const addRef = (refKey: string) => {
   if (refKey === 'm') {
@@ -152,10 +154,6 @@ const save = async () => {
     root.$emit('msg', 'error', 'Ошибка');
   }
 };
-
-onMounted(() => {
-  getFraction();
-});
 </script>
 
 <style scoped lang="scss">
