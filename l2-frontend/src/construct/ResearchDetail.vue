@@ -87,7 +87,7 @@
           >Биоматериал</label>
           <Treeselect
             v-model="research.laboratoryMaterialId"
-            :options="props.materials"
+            :options="props.refBooks.materials"
             placeholder="Выберите биоматериал"
             class="treeselect-34px"
           />
@@ -127,7 +127,7 @@
             >Подгруппа</label>
             <Treeselect
               v-model="research.subGroupId"
-              :options="props.subGroups"
+              :options="props.refBooks.subGroups"
               class="treeselect-34px"
               placeholder="Выберите подгруппу"
             />
@@ -145,7 +145,7 @@
           :key="tube.pk"
           :tube="tube"
           :tubeidx="idx"
-          :units="props.units"
+          :units="props.refBooks.units"
           @updateOrder="updateOrder"
           @edit="edit"
           @addFraction="addFraction"
@@ -162,7 +162,7 @@
       <FractionDetail
         v-if="currentFractionPk"
         :fraction-pk="currentFractionPk"
-        :variants="props.variants"
+        :variants="props.refBooks.variants"
       />
     </div>
   </div>
@@ -170,7 +170,7 @@
 
 <script setup lang="ts">
 import {
-  getCurrentInstance, ref, watch,
+  getCurrentInstance, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -181,42 +181,23 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
 import FractionDetail from '@/construct/FractionDetail.vue';
+import { refBook } from '@/construct/ConstructLaboratory.vue';
 
 const store = useStore();
 
 const emit = defineEmits(['updateResearch']);
 
 const props = defineProps({
-  researchPk: {
-    type: Number,
+  research: {
+    type: Object,
     required: true,
   },
   departments: {
     type: Array,
     required: true,
   },
-  units: {
-    type: Array,
-    required: true,
-  },
-  materials: {
-    type: Array,
-    required: true,
-  },
-  subGroups: {
-    type: Array,
-    required: true,
-  },
-  variants: {
-    type: Array,
-    required: true,
-  },
-  newResearch: {
-    type: Object,
-    required: true,
-  },
-  departmentId: {
-    type: Number,
+  refBooks: {
+    type: Object as PropType<refBook>,
     required: true,
   },
 });
@@ -276,14 +257,14 @@ const currentFractionPk = ref(null);
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-research', { researchPk: props.researchPk });
+  const { result } = await api('construct/laboratory/get-research', { researchPk: props.research.pk });
   await store.dispatch(actions.DEC_LOADING);
   research.value = result;
   researchShortTitle.value = research.value?.title;
 };
 
-watch(() => props.researchPk, () => {
-  if (props.researchPk !== -1) {
+watch(() => [props.research.pk, props.research.tubes], () => {
+  if (props.research.pk !== -1) {
     getResearch();
     currentFractionPk.value = null;
   } else {
@@ -292,17 +273,18 @@ watch(() => props.researchPk, () => {
       title: '',
       shortTitle: '',
       code: null,
-      order: null,
+      order: props.research.order,
       internalCode: null,
       ecpId: null,
       preparation: '',
-      departmentId: null,
+      departmentId: props.research.departmentId,
       laboratoryMaterialId: null,
       subGroupId: null,
       laboratoryDuration: '',
       tubes: [],
     };
-    for (const tube of props.newResearch.tubes) {
+    console.log('Мы обновились');
+    for (const tube of props.research.tubes) {
       research.value.tubes.push({
         pk: tube.pk,
         title: tube.title,
@@ -319,8 +301,6 @@ watch(() => props.researchPk, () => {
         ],
       });
     }
-    research.value.order = props.newResearch.order;
-    research.value.departmentId = props.departmentId;
     currentFractionPk.value = null;
   }
 }, { immediate: true });
