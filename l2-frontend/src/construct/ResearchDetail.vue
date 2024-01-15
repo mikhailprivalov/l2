@@ -283,7 +283,6 @@ watch(() => [props.research.pk, props.research.tubes], () => {
       laboratoryDuration: '',
       tubes: [],
     };
-    console.log('Мы обновились');
     for (const tube of props.research.tubes) {
       research.value.tubes.push({
         pk: tube.pk,
