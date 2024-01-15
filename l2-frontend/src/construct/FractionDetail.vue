@@ -27,6 +27,12 @@
           v-model="refM.value"
           class="form-control"
         >
+        <button
+          class="btn btn-blue-nb"
+          @click="deleteRef(idx, 'm')"
+        >
+          <i class="fa fa-times" />
+        </button>
       </div>
       <div>
         <button
@@ -50,6 +56,12 @@
           v-model="refF.value"
           class="form-control"
         >
+        <button
+          class="btn btn-blue-nb"
+          @click="deleteRef(idx, 'f')"
+        >
+          <i class="fa fa-times" />
+        </button>
       </div>
       <div>
         <button
@@ -90,7 +102,7 @@ const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   fractionPk: {
-    type: Number,
+    type: [Number, null],
     required: true,
   },
   variants: {
@@ -140,6 +152,14 @@ const addRef = (refKey: string) => {
     fraction.value.refM.push({ age: '', value: '' });
   } else {
     fraction.value.refF.push({ age: '', value: '' });
+  }
+};
+
+const deleteRef = (idx: number, refKey: string) => {
+  if (refKey === 'm') {
+    fraction.value.refM.splice(idx, 1);
+  } else {
+    fraction.value.refF.splice(idx, 1);
   }
 };
 
