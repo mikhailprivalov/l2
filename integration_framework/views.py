@@ -3329,11 +3329,11 @@ def send_laboratory_order(request):
     if not individual and lastname:
         card = Individual.import_from_simple_data(
             {
-                "family": patient["family"],
-                "name": patient["name"],
+                "family": patient["lastname"],
+                "name": patient["firstname"],
                 "patronymic": patient["patronymic"],
                 "sex": patient["sex"],
-                "birthday": patient["birthday"],
+                "birthday": patient["birthdate"],
                 "snils": patient["snils"],
             },
             hospital,
@@ -3442,7 +3442,7 @@ def send_laboratory_order(request):
                 },
             )
 
-    return Response({"ok": False, "message": ""})
+    return Response({"ok": True, "message": "", "directions": result["list_id"]})
 
 
 @api_view(["POST"])
