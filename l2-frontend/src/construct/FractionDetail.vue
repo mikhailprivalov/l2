@@ -87,7 +87,6 @@
 
 import {
   getCurrentInstance,
-  onMounted,
   ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';

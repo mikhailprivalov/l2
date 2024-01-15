@@ -545,7 +545,7 @@ class Researches(models.Model):
                 research_tubes[fraction.relation_id] = {
                     "pk": fraction.relation_id,
                     "color": fraction.relation.tube.color,
-                    "title": fraction.relation.tube.title,
+                    "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
                 }
                 if need_fractions:
                     research_tubes[fraction.relation_id]["fractions"] = [fraction.as_json(fraction)]
