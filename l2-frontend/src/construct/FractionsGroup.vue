@@ -8,8 +8,8 @@
       <colgroup>
         <col style="width: 60px">
         <col style="min-width: 100px">
-        <col style="min-width: 70px">
-        <col style="min-width: 70px">
+        <col style="width: 150px">
+        <col style="width: 120px">
         <col style="min-width: 70px">
         <col style="width: 30px">
       </colgroup>
@@ -48,8 +48,8 @@
         <td class="padding-td">
           <input
             v-model="fraction.title"
-            :title="fraction.title"
             v-tippy
+            :title="fraction.title"
             class="form-control fraction-input"
             placeholder="Введите название фракции"
           >

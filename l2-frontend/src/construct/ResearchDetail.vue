@@ -115,7 +115,7 @@
             <label
               for="laboratoryDuration"
               class="research-detail-label"
-            >Время (мин)</label>
+            >Время</label>
             <input
               id="laboratoryDuration"
               v-model="research.laboratoryDuration"
@@ -395,5 +395,10 @@ const addFraction = (newFraction: object) => {
 }
 .fraction-group {
   overflow-y: auto;
+}
+.save-button {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
 }
 </style>
