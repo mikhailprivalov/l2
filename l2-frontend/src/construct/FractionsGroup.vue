@@ -102,12 +102,16 @@
         </td>
       </tr>
     </table>
-    <button
-      class="btn btn-blue-nb"
-      @click="addFraction"
-    >
-      Добавить
-    </button>
+    <div class="flex-right">
+      <div class="add-button">
+        <button
+          class="transparent-button"
+          @click="addFraction"
+        >
+          <i class="fa fa-plus" />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -280,5 +284,14 @@ const addFraction = () => {
   &__single-value {
     line-height: 28px !important;
   }
+}
+
+.flex-right {
+  display: flex;
+  justify-content: flex-end;
+}
+.add-button {
+  display: flex;
+  width: 30px;
 }
 </style>

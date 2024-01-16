@@ -174,7 +174,6 @@ const save = async () => {
 .main {
   border-left: 1px solid #b1b1b1;
   margin-left: 10px;
-  margin-bottom: 10px;
   padding-left: 10px;
   position: relative;
   overflow-y: auto;
