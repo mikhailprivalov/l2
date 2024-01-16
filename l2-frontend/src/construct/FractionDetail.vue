@@ -71,14 +71,6 @@
           Добавить
         </button>
       </div>
-      <div class="flex-end">
-        <button
-          class="btn btn-blue-nb"
-          @click="save"
-        >
-          Сохранить
-        </button>
-      </div>
     </div>
   </div>
 </template>
@@ -183,11 +175,11 @@ const save = async () => {
   padding-left: 10px;
 }
 .fraction-detail {
-  height: 100%;
   background-color: #fff;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
   padding: 10px 5px 10px 5px;
+  overflow-y: auto;
 }
 .flex {
   display: flex;

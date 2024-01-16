@@ -153,14 +153,6 @@
             @edit="edit"
             @addFraction="addFraction"
           />
-          <div class="margin-bottom flex-right">
-            <button
-              class="btn btn-blue-nb"
-              @click="updateResearch"
-            >
-              Сохранить
-            </button>
-          </div>
         </div>
         <FractionDetail
           :fraction-pk="currentFractionPk"
@@ -181,7 +173,10 @@
         </div>
       </div>
       <div>
-        <button class="btn btn-blue-nb">
+        <button
+          class="btn btn-blue-nb"
+          @click="updateResearch"
+        >
           Сохранить
         </button>
       </div>
@@ -382,8 +377,7 @@ const addFraction = (newFraction: object) => {
 }
 .margin-root {
   margin: 0 10px 0 10px;
-  height: calc(100vh - 97px);
-  overflow-y: auto;
+  height: calc(100vh - 105px);
 }
 .margin {
   margin: 0 5px;
@@ -412,6 +406,8 @@ const addFraction = (newFraction: object) => {
 }
 .research-fractions {
   display: grid;
+  position: relative;
+  height: 65%;
   grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 350px));
 }
 .fraction-group {
