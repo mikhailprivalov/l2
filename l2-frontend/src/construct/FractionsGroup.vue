@@ -211,7 +211,7 @@ const addFraction = () => {
   padding: 10px 5px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
-  overflow-y: auto;
+  min-width: 540px;
 }
 .table {
   table-layout: fixed;
@@ -232,7 +232,6 @@ const addFraction = () => {
 .fraction-input {
   height: 28px;
 }
-
 .button {
   width: 100%;
   display: flex;

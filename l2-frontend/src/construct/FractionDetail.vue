@@ -2,11 +2,14 @@
   <div class="main">
     <div class="fraction-detail">
       <h6>Фракция - {{ fraction.title }}</h6>
+      <label>По умолчанию</label>
+      <input class="form-control">
       <label>Варианты</label>
       <Treeselect
         v-model="fraction.variantsId"
         :options="props.variants"
         :clearable="false"
+        :append-to-body="true"
       />
       <label>Формула</label>
       <input
@@ -173,6 +176,8 @@ const save = async () => {
   margin-left: 10px;
   margin-bottom: 10px;
   padding-left: 10px;
+  position: relative;
+  overflow-y: auto;
 }
 .fraction-detail {
   background-color: #fff;

@@ -369,6 +369,8 @@ const addFraction = (newFraction: object) => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   padding: 10px 0;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
+  max-height: 185px;
+  overflow-y: auto;
 }
 .flex-col {
   display: flex;
@@ -407,11 +409,12 @@ const addFraction = (newFraction: object) => {
 .research-fractions {
   display: grid;
   position: relative;
-  height: 65%;
   grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 350px));
+  height: calc(100vh - 365px);
 }
 .fraction-group {
   overflow-y: auto;
+  position: relative;
 }
 .save-button {
   position: absolute;
