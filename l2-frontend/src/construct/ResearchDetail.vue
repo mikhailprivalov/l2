@@ -1,170 +1,190 @@
 <template>
-  <div class="margin-root">
-    <h4 class="header">
-      Редактирование анализа - {{ researchShortTitle }}
-    </h4>
-    <div class="research-detail">
-      <div>
-        <div class="margin">
-          <label
-            for="title"
-            class="research-detail-label"
-          >Полное наименование</label>
-          <input
-            id="title"
-            v-model="research.title"
-            v-tippy
-            :title="research.title"
-            class="form-control"
-            placeholder="Введите полное наименование"
-          >
-        </div>
-        <div class="margin">
-          <label
-            for="shortTitle"
-            class="research-detail-label"
-          >Краткое наименование</label>
-          <input
-            id="shortTitle"
-            v-model="research.shortTitle"
-            class="form-control"
-            placeholder="Введите краткое наименование"
-          >
-        </div>
-        <div class="margin">
-          <label
-            class="research-detail-label"
-          >Подразделение</label>
-          <Treeselect
-            v-model="research.departmentId"
-            :options="props.departments"
-            :clearable="false"
-            class="treeselect-34px"
-            placeholder="Выберите подразделение"
-          />
-        </div>
-      </div>
-      <div>
-        <div class="flex-col">
-          <div class="margin flex-item">
+  <div>
+    <div class="margin-root">
+      <h4 class="header">
+        Редактирование анализа - {{ researchShortTitle }}
+      </h4>
+      <div class="research-detail">
+        <div>
+          <div class="margin">
             <label
-              for="code"
+              for="title"
               class="research-detail-label"
-            >Код НМУ</label>
+            >Полное наименование</label>
             <input
-              id="code"
-              v-model="research.code"
+              id="title"
+              v-model="research.title"
+              v-tippy
+              :title="research.title"
               class="form-control"
-              placeholder="Введите код"
+              placeholder="Введите полное наименование"
             >
           </div>
-          <div class="margin flex-item">
+          <div class="margin">
             <label
-              for="ecpId"
+              for="shortTitle"
               class="research-detail-label"
-            >Код ЕЦП</label>
+            >Краткое наименование</label>
             <input
-              id="ecpId"
-              v-model="research.ecpId"
+              id="shortTitle"
+              v-model="research.shortTitle"
               class="form-control"
-              placeholder="Введите код"
+              placeholder="Введите краткое наименование"
             >
           </div>
-          <div class="margin flex-item">
-            <label
-              for="internalCode"
-              class="research-detail-label"
-            >Код внутренний</label>
-            <input
-              id="internalCode"
-              v-model="research.internalCode"
-              class="form-control"
-              placeholder="Введите код"
-            >
-          </div>
-        </div>
-        <div class="margin">
-          <label
-            class="research-detail-label"
-          >Биоматериал</label>
-          <Treeselect
-            v-model="research.laboratoryMaterialId"
-            :options="props.refBooks.materials"
-            placeholder="Выберите биоматериал"
-            class="treeselect-34px"
-          />
-        </div>
-      </div>
-      <div>
-        <div class="margin">
-          <label
-            for="preparation"
-            class="research-detail-label"
-          >Подготовка</label>
-          <textarea
-            id="preparation"
-            v-model="research.preparation"
-            class="form-control"
-            style="height: 90px"
-            rows="4"
-            placeholder="Введите подготовку (напр. 'Не требуется')"
-          />
-        </div>
-        <div class="flex-col">
-          <div class="margin flex-item">
-            <label
-              for="laboratoryDuration"
-              class="research-detail-label"
-            >Время</label>
-            <input
-              id="laboratoryDuration"
-              v-model="research.laboratoryDuration"
-              class="form-control"
-              type="number"
-            >
-          </div>
-          <div class="margin flex-item">
+          <div class="margin">
             <label
               class="research-detail-label"
-            >Подгруппа</label>
+            >Подразделение</label>
             <Treeselect
-              v-model="research.subGroupId"
-              :options="props.refBooks.subGroups"
+              v-model="research.departmentId"
+              :options="props.departments"
+              :clearable="false"
               class="treeselect-34px"
-              placeholder="Выберите подгруппу"
+              placeholder="Выберите подразделение"
             />
           </div>
         </div>
+        <div>
+          <div class="flex-col">
+            <div class="margin flex-item">
+              <label
+                for="code"
+                class="research-detail-label"
+              >Код НМУ</label>
+              <input
+                id="code"
+                v-model="research.code"
+                class="form-control"
+                placeholder="Введите код"
+              >
+            </div>
+            <div class="margin flex-item">
+              <label
+                for="ecpId"
+                class="research-detail-label"
+              >Код ЕЦП</label>
+              <input
+                id="ecpId"
+                v-model="research.ecpId"
+                class="form-control"
+                placeholder="Введите код"
+              >
+            </div>
+            <div class="margin flex-item">
+              <label
+                for="internalCode"
+                class="research-detail-label"
+              >Код внутренний</label>
+              <input
+                id="internalCode"
+                v-model="research.internalCode"
+                class="form-control"
+                placeholder="Введите код"
+              >
+            </div>
+          </div>
+          <div class="margin">
+            <label
+              class="research-detail-label"
+            >Биоматериал</label>
+            <Treeselect
+              v-model="research.laboratoryMaterialId"
+              :options="props.refBooks.materials"
+              placeholder="Выберите биоматериал"
+              class="treeselect-34px"
+            />
+          </div>
+        </div>
+        <div>
+          <div class="margin">
+            <label
+              for="preparation"
+              class="research-detail-label"
+            >Подготовка</label>
+            <textarea
+              id="preparation"
+              v-model="research.preparation"
+              class="form-control"
+              style="height: 90px"
+              rows="4"
+              placeholder="Введите подготовку (напр. 'Не требуется')"
+            />
+          </div>
+          <div class="flex-col">
+            <div class="margin flex-item">
+              <label
+                for="laboratoryDuration"
+                class="research-detail-label"
+              >Время</label>
+              <input
+                id="laboratoryDuration"
+                v-model="research.laboratoryDuration"
+                class="form-control"
+                type="number"
+              >
+            </div>
+            <div class="margin flex-item">
+              <label
+                class="research-detail-label"
+              >Подгруппа</label>
+              <Treeselect
+                v-model="research.subGroupId"
+                :options="props.refBooks.subGroups"
+                class="treeselect-34px"
+                placeholder="Выберите подгруппу"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <h4 class="header">
+        Фракции
+      </h4>
+      <div class="research-fractions">
+        <div class="fraction-group">
+          <FractionsGroup
+            v-for="(tube, idx) in research.tubes"
+            :key="tube.pk"
+            :tube="tube"
+            :tubeidx="idx"
+            :units="props.refBooks.units"
+            @updateOrder="updateOrder"
+            @edit="edit"
+            @addFraction="addFraction"
+          />
+          <div class="margin-bottom flex-right">
+            <button
+              class="btn btn-blue-nb"
+              @click="updateResearch"
+            >
+              Сохранить
+            </button>
+          </div>
+        </div>
+        <FractionDetail
+          :fraction-pk="currentFractionPk"
+          :variants="props.refBooks.variants"
+        />
       </div>
     </div>
-    <h4 class="header">
-      Фракции
-    </h4>
-    <div class="research-fractions">
-      <div class="fraction-group">
-        <FractionsGroup
-          v-for="(tube, idx) in research.tubes"
-          :key="tube.pk"
-          :tube="tube"
-          :tubeidx="idx"
-          :units="props.refBooks.units"
-          @updateOrder="updateOrder"
-          @edit="edit"
-          @addFraction="addFraction"
-        />
-        <div class="margin-bottom flex-right">
-          <button
-            class="btn btn-blue-nb"
-            @click="updateResearch"
-          >
-            Сохранить
+    <div class="bottom-panel">
+      <div class="tube-add">
+        <div>
+          <label class="research-detail-label">Ёмкости</label>
+          <Treeselect class="treeselect-34px" />
+        </div>
+        <div>
+          <button class="btn btn-blue-nb">
+            Добавить
           </button>
         </div>
       </div>
-      <FractionDetail
-        :fraction-pk="currentFractionPk"
-        :variants="props.refBooks.variants"
-      />
+      <div>
+        <button class="btn btn-blue-nb">
+          Сохранить
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -362,6 +382,8 @@ const addFraction = (newFraction: object) => {
 }
 .margin-root {
   margin: 0 10px 0 10px;
+  height: calc(100vh - 97px);
+  overflow-y: auto;
 }
 .margin {
   margin: 0 5px;
@@ -399,5 +421,16 @@ const addFraction = (newFraction: object) => {
   position: absolute;
   bottom: 5px;
   right: 5px;
+}
+.bottom-panel {
+  display: flex;
+  margin: 0 10px 5px 15px;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.tube-add {
+  max-width: 500px;
+  display: flex;
+  align-items: flex-end;
 }
 </style>
