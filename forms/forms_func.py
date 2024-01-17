@@ -727,6 +727,7 @@ def hosp_extract_get_data(hosp_last_num):
     final_diagnos, other_diagnos, near_diagnos, outcome, final_diagnos_mkb, other_diagnos_mkb, near_diagnos_mkb, additional_data_ill = '', '', '', '', '', '', '', ''
     days_count, result_hospital, manager_depart, room_num, transfer_to = '', '', '', '', ''
     ln_data, ln_vk_data, external_reason_mkb = '', '', ''
+    final_diagnos_mkb_dict, other_diagnos_mkb_dict, near_diagnos_mkb_dict, external_reason_mkb_dict = [], [], [], []
 
     if list_values:
         for i in list_values:
@@ -767,7 +768,7 @@ def hosp_extract_get_data(hosp_last_num):
                 final_diagnos_mkb_row = final_diagnos_mkb_details.get("rows", [])
                 final_diagnos_mkb = []
                 for rr in final_diagnos_mkb_row:
-                    final_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
+                    final_diagnos_mkb_dict.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
             if i[3] == "Осложнения основного заболевания код по МКБ":
                 other_diagnos_mkb_data = i[2]
                 other_diagnos_mkb_details = {}
@@ -779,7 +780,7 @@ def hosp_extract_get_data(hosp_last_num):
                 other_diagnos_mkb_row = other_diagnos_mkb_details.get("rows", [])
                 other_diagnos_mkb = []
                 for rr in other_diagnos_mkb_row:
-                    other_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
+                    other_diagnos_mkb_dict.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({rr[1]})"})
             if i[3] == 'Сопутствующие заболевания код по МКБ':
                 near_diagnos_mkb_data = i[2]
                 near_diagnos_mkb_details = {}
@@ -791,7 +792,7 @@ def hosp_extract_get_data(hosp_last_num):
                 near_diagnos_mkb_row = near_diagnos_mkb_details.get("rows", [])
                 near_diagnos_mkb = []
                 for rr in near_diagnos_mkb_row:
-                    near_diagnos_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')}. {rr[1] if len(rr) > 1 else '' }"})
+                    near_diagnos_mkb_dict.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')}. {rr[1] if len(rr) > 1 else '' }"})
             if i[3] == 'Внешняя причина при травмах, отравлениях код по МКБ':
                 external_reason_mkb_data = i[2]
                 external_reason_mkb_details = {}
@@ -805,7 +806,7 @@ def hosp_extract_get_data(hosp_last_num):
                 if len(external_reason_mkb_row) > 0:
                     for rr in external_reason_mkb_row:
                         adds_data = rr[1] if len(rr) > 1 else ""
-                        external_reason_mkb.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({adds_data})"})
+                        external_reason_mkb_dict.append({"code": json.loads(rr[0]).get('code', ''), "data": f"{json.loads(rr[0]).get('title', '')} ({adds_data})"})
             if i[3] == 'Дополнительные сведения о заболевании':
                 additional_data_ill = i[2]
             if i[3] == 'Куда переведен':
@@ -827,6 +828,10 @@ def hosp_extract_get_data(hosp_last_num):
         'other_diagnos_mkb': other_diagnos_mkb,
         'near_diagnos_mkb': near_diagnos_mkb,
         'external_reason_mkb': external_reason_mkb,
+        'final_diagnos_mkb_dict': final_diagnos_mkb_dict,
+        'other_diagnos_mkb_dict': other_diagnos_mkb_dict,
+        'near_diagnos_mkb_dict': near_diagnos_mkb_dict,
+        'external_reason_mkb_dict': external_reason_mkb_dict,
         'extract_iss': hosp_extract_iss,
         'days_count': days_count,
         'result_hospital': result_hospital,
