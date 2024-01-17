@@ -6,14 +6,14 @@
       <input class="form-control">
       <label>Варианты</label>
       <Treeselect
-        v-model="fraction.variantsId"
+        v-model="props.fraction.variantsId"
         :options="props.variants"
         :clearable="false"
         :append-to-body="true"
       />
       <label>Формула</label>
       <input
-        v-model="fraction.formula"
+        v-model="props.fraction.formula"
         class="form-control"
       >
       <label>Рефернсы М</label>
@@ -93,10 +93,9 @@ import api from '@/api';
 import { useStore } from '@/store';
 
 const store = useStore();
-const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
-  fractionPk: {
-    type: [Number, null],
+  fraction: {
+    type: Object,
     required: true,
   },
   variants: {
@@ -129,14 +128,14 @@ const fraction = ref<otherFractionData>({
 });
 
 const getFraction = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-fraction', { fractionPk: props.fractionPk });
-  await store.dispatch(actions.DEC_LOADING);
-  fraction.value = result;
+  // await store.dispatch(actions.INC_LOADING);
+  // const { result } = await api('construct/laboratory/get-fraction', { fractionPk: props.fractionPk });
+  // await store.dispatch(actions.DEC_LOADING);
+  // fraction.value = result;
 };
 
-watch(() => [props.fractionPk], () => {
-  if (props.fractionPk) {
+watch(() => [props.fraction], () => {
+  if (props.fraction.length !== 0) {
     getFraction();
   }
 }, { immediate: true });
@@ -154,18 +153,6 @@ const deleteRef = (idx: number, refKey: string) => {
     fraction.value.refM.splice(idx, 1);
   } else {
     fraction.value.refF.splice(idx, 1);
-  }
-};
-
-const save = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('construct/laboratory/update-fraction', { fraction: fraction.value });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Сохранено');
-    await getFraction();
-  } else {
-    root.$emit('msg', 'error', 'Ошибка');
   }
 };
 </script>

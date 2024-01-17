@@ -94,7 +94,7 @@
           <div class="button">
             <button
               class="transparent-button"
-              @click="edit(fraction.pk)"
+              @click="edit(fraction.order)"
             >
               <i class="fa fa-pencil" />
             </button>
@@ -184,8 +184,8 @@ const updateOrder = (fractionIdx: number, fractionOrder: number, action: string)
   }
 };
 
-const edit = (fractionPk: number) => {
-  emit('edit', { fractionPk });
+const edit = (fractionOrder: number) => {
+  emit('edit', { fractionOrder, tubeIdx: props.tubeidx });
 };
 
 const getFsli = async ({ action, searchQuery, callback }) => {

@@ -154,10 +154,83 @@
             @addFraction="addFraction"
           />
         </div>
-        <FractionDetail
-          :fraction-pk="currentFractionPk"
-          :variants="props.refBooks.variants"
-        />
+        <div class="main">
+          <div class="fraction-detail">
+            <h6>Фракция - {{ currentFractionData.title }}</h6>
+            <label>По умолчанию</label>
+            <input class="form-control">
+            <label>Варианты</label>
+            <Treeselect
+              v-model="currentFractionData.variantsId"
+              :options="props.refBooks.variants"
+              :clearable="false"
+              :append-to-body="true"
+            />
+            <label>Формула</label>
+            <input
+              v-model="currentFractionData.formula"
+              class="form-control"
+            >
+            <label>Рефернсы М</label>
+            <div
+              v-for="(refM, idx) in currentFractionData.refM"
+              :key="idx"
+              class="flex"
+            >
+              <input
+                v-model="refM.age"
+                class="form-control"
+              >
+              <input
+                v-model="refM.value"
+                class="form-control"
+              >
+              <button
+                class="btn btn-blue-nb"
+                @click="deleteRef(idx, 'm')"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
+            <div>
+              <button
+                class="btn btn-blue-nb"
+                @click="addRef('m')"
+              >
+                Добавить
+              </button>
+            </div>
+            <label>Рефернсы Ж</label>
+            <div
+              v-for="(refF, idx) in currentFractionData.refF"
+              :key="idx"
+              class="flex"
+            >
+              <input
+                v-model="refF.age"
+                class="form-control"
+              >
+              <input
+                v-model="refF.value"
+                class="form-control"
+              >
+              <button
+                class="btn btn-blue-nb"
+                @click="deleteRef(idx, 'f')"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
+            <div>
+              <button
+                class="btn btn-blue-nb"
+                @click="addRef('f')"
+              >
+                Добавить
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="bottom-panel">
@@ -269,7 +342,7 @@ const research = ref<researchData>({
   tubes: [],
 });
 
-const currentFractionPk = ref(null);
+const currentFractionData = ref({});
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -282,7 +355,7 @@ const getResearch = async () => {
 watch(() => [props.research.pk, props.research.tubes], () => {
   if (props.research.pk !== -1) {
     getResearch();
-    currentFractionPk.value = null;
+    currentFractionData.value = {};
   } else {
     research.value = {
       pk: -1,
@@ -316,7 +389,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
         ],
       });
     }
-    currentFractionPk.value = null;
+    currentFractionData.value = {};
   }
 }, { immediate: true });
 
@@ -348,8 +421,8 @@ const updateOrder = async ({
   }
 };
 
-const edit = ({ fractionPk }) => {
-  currentFractionPk.value = fractionPk;
+const edit = ({ fractionOrder, tubeIdx }) => {
+  currentFractionData.value = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.order === fractionOrder);
 };
 
 const addFraction = (newFraction: object) => {
@@ -357,6 +430,22 @@ const addFraction = (newFraction: object) => {
     pk: -1, title: '', unitId: null, order: newFraction.order, ecpId: null, fsli: null,
   };
   research.value.tubes[newFraction.tubeIdx].fractions.push(newFractionData);
+};
+
+const addRef = (refKey: string) => {
+  if (refKey === 'm') {
+    currentFractionData.value.refM.push({ age: '', value: '' });
+  } else {
+    currentFractionData.value.refF.push({ age: '', value: '' });
+  }
+};
+
+const deleteRef = (idx: number, refKey: string) => {
+  if (refKey === 'm') {
+    currentFractionData.value.refM.splice(idx, 1);
+  } else {
+    currentFractionData.value.refF.splice(idx, 1);
+  }
 };
 
 </script>
