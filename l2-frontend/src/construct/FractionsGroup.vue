@@ -201,10 +201,13 @@ const getFsli = async ({ action, searchQuery, callback }) => {
 };
 
 const addFraction = () => {
-  const newFraction = {
-    order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
-  };
-  emit('addFraction', newFraction);
+  const emptyFraction = props.tube.fractions.find(fraction => fraction.title.trim().length === 0);
+  if (!emptyFraction) {
+    const newFraction = {
+      order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
+    };
+    emit('addFraction', newFraction);
+  }
 };
 </script>
 
