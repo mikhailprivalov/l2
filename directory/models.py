@@ -534,6 +534,7 @@ class Researches(models.Model):
         }
         return result
 
+
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
         fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
@@ -541,8 +542,7 @@ class Researches(models.Model):
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
                 fractionData = fraction.as_json(fraction)
-                fractionData["refM"] = [{"age": key, "value": value} for key, value in fractionData["refM"].items()] if isinstance(fractionData["refF"], dict) else []
-                fractionData["refF"] = [{"age": key, "value": value} for key, value in fractionData["refF"].items()] if isinstance(fractionData["refF"], dict) else []
+                fractionData["refM"], fractionData["refF"] = Fractions.convert_ref(fractionData["refM"], fractionData["refF"])
                 research_tubes[fraction.relation_id]["fractions"].append(fractionData)
             elif not research_tubes.get(fraction.relation_id):
                 research_tubes[fraction.relation_id] = {
@@ -551,7 +551,9 @@ class Researches(models.Model):
                     "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
                 }
                 if need_fractions:
-                    research_tubes[fraction.relation_id]["fractions"] = [fraction.as_json(fraction)]
+                    fractionData = fraction.as_json(fraction)
+                    fractionData["refM"], fractionData["refF"] = Fractions.convert_ref(fractionData["refM"], fractionData["refF"])
+                    research_tubes[fraction.relation_id]["fractions"] = [fractionData]
         return research_tubes
 
     @staticmethod
@@ -1149,28 +1151,10 @@ class Fractions(models.Model):
         return result
 
     @staticmethod
-    def get_fraction(fraction_pk: int):
-        fraction = Fractions.objects.get(pk=fraction_pk)
-        refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()] if isinstance(fraction.ref_m, dict) else []
-        refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()] if isinstance(fraction.ref_f, dict) else []
-        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM, "refF": refF}
-        return result
-
-    @staticmethod
-    def update_fraction(fraction_data: dict):
-        fraction = Fractions.objects.get(pk=fraction_data["pk"])
-        fraction.variants_id = fraction_data["variantsId"]
-        fraction.formula = fraction_data["formula"].strip()
-        ref_m_dict = {}
-        ref_f_dict = {}
-        for ref in fraction_data["refM"]:
-            ref_m_dict[ref["age"].strip()] = ref["value"].strip()
-        for ref in fraction_data["refF"]:
-            ref_f_dict[ref["age"].strip()] = ref["value"].strip()
-        fraction.ref_m = ref_m_dict
-        fraction.ref_f = ref_f_dict
-        fraction.save()
-        return True
+    def convert_ref(ref_m, ref_f):
+        ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+        ref_f = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+        return ref_m, ref_f
 
     def __str__(self):
         return self.research.title + " | " + self.title

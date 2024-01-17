@@ -298,6 +298,10 @@ interface fractionsData {
   order: number,
   ecpId: number | string,
   fsli: number,
+  variantsId: number,
+  formula: string,
+  refM: object[],
+  refF: object[],
 }
 
 export interface tubeData {
@@ -385,6 +389,10 @@ watch(() => [props.research.pk, props.research.tubes], () => {
             order: 1,
             ecpId: '',
             fsli: -1,
+            variantsId: -1,
+            formula: '',
+            refM: [],
+            refF: [],
           },
         ],
       });
@@ -427,7 +435,16 @@ const edit = ({ fractionOrder, tubeIdx }) => {
 
 const addFraction = (newFraction: object) => {
   const newFractionData = {
-    pk: -1, title: '', unitId: null, order: newFraction.order, ecpId: null, fsli: null,
+    pk: -1,
+    title: '',
+    unitId: null,
+    order: newFraction.order,
+    ecpId: null,
+    fsli: null,
+    variantsId: -1,
+    formula: '',
+    refM: [],
+    refF: [],
   };
   research.value.tubes[newFraction.tubeIdx].fractions.push(newFractionData);
 };
