@@ -521,4 +521,27 @@ const deleteRef = (idx: number, refKey: string) => {
   display: flex;
   align-items: flex-end;
 }
+
+.main {
+  border-left: 1px solid #b1b1b1;
+  margin-left: 10px;
+  padding-left: 10px;
+  position: relative;
+  overflow-y: auto;
+}
+.fraction-detail {
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
+  padding: 10px 5px 10px 5px;
+  overflow-y: auto;
+}
+.flex {
+  display: flex;
+}
+.flex-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
 </style>

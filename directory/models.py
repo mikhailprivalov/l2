@@ -540,7 +540,10 @@ class Researches(models.Model):
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
-                research_tubes[fraction.relation_id]["fractions"].append(fraction.as_json(fraction))
+                fractionData = fraction.as_json(fraction)
+                fractionData["refM"] = [{"age": key, "value": value} for key, value in fractionData["refM"].items()] if isinstance(fractionData["refF"], dict) else []
+                fractionData["refF"] = [{"age": key, "value": value} for key, value in fractionData["refF"].items()] if isinstance(fractionData["refF"], dict) else []
+                research_tubes[fraction.relation_id]["fractions"].append(fractionData)
             elif not research_tubes.get(fraction.relation_id):
                 research_tubes[fraction.relation_id] = {
                     "pk": fraction.relation_id,
@@ -1138,6 +1141,10 @@ class Fractions(models.Model):
             "ecpId": fraction.ecp_id,
             "fsli": fraction.fsli,
             "order": fraction.sort_weight,
+            "variantsId": fraction.variants_id,
+            "formula": fraction.formula,
+            "refM": fraction.ref_m,
+            "refF": fraction.ref_f,
         }
         return result
 
