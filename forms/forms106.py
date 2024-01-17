@@ -881,19 +881,19 @@ def form_02(request_data):
 
     title_page.append(Paragraph(f"{bold_open}Диагноз окончательный при выписке из стационара:{bold_close}", style))
     title_page.append(Paragraph("Основное заболевание:", style))
-    for i in hosp_extract_data["final_diagnos_mkb"]:
+    for i in hosp_extract_data["final_diagnos_mkb_dict"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph("Осложнения основного заболевания:", style))
-    for i in hosp_extract_data["other_diagnos_mkb"]:
+    for i in hosp_extract_data["other_diagnos_mkb_dict"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph("Внешняя причина при травмах, отравления:", style))
-    for i in hosp_extract_data["external_reason_mkb"]:
+    for i in hosp_extract_data["external_reason_mkb_dict"]:
         title_page.append(Paragraph(f"{i.get('data')}  {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
     title_page.append(Paragraph("Сопутствующие заболевания", style))
-    for i in hosp_extract_data["near_diagnos_mkb"]:
+    for i in hosp_extract_data["near_diagnos_mkb_dict"]:
         title_page.append(Paragraph(f"{i.get('data')} {bold_open}код по МКБ:{bold_close} {i.get('code')} ", style))
     title_page.append(Spacer(1, 2 * mm))
 
