@@ -626,8 +626,6 @@ class Researches(models.Model):
             "laboratoryDuration": research.laboratory_duration,
             "tubes": [value for _, value in research_tubes.items()],
         }
-
-        print(result["tubes"])
         return result
 
     @staticmethod
@@ -675,8 +673,7 @@ class Researches(models.Model):
                 fraction_title = fraction["title"].strip() if fraction["title"] else ''
                 ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
                 unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
-                ref_m = {ref["age"].strip(): ref["value"].strip() for ref in fraction["refM"] if ref["age"]}
-                ref_f = {ref["age"].strip(): ref["value"].strip() for ref in fraction["refF"] if ref["age"]}
+                ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
                 if fractions:
                     current_fractions = fractions.filter(pk=fraction["pk"]).first()
                 if current_fractions:
@@ -685,7 +682,7 @@ class Researches(models.Model):
                     current_fractions.fsli = fraction["fsli"]
                     current_fractions.sort_weight = fraction["order"]
                     current_fractions.unit_id = fraction["unitId"]
-                    current_fractions.variants_id = fraction["variantsId"]
+                    current_fractions.variants_id = fraction.get("variantsId", None)
                     current_fractions.formula = fraction["formula"]
                     current_fractions.ref_m = ref_m
                     current_fractions.ref_f = ref_f
@@ -693,7 +690,7 @@ class Researches(models.Model):
                 else:
                     new_fraction = Fractions(
                         research_id=research.pk, title=fraction_title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"],
-                        variants_id=fraction["variantsId"], formula=fraction["formula"], ref_m=ref_m, ref_f=ref_f
+                        variants_id=fraction.get("variantsId", None), formula=fraction["formula"], ref_m=ref_m, ref_f=ref_f
                     )
                     new_fraction.save()
         return True
@@ -1159,9 +1156,13 @@ class Fractions(models.Model):
         return result
 
     @staticmethod
-    def convert_ref(ref_m, ref_f):
-        convert_ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
-        convert_ref_f = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_f, dict) else []
+    def convert_ref(ref_m, ref_f, for_save=False):
+        if for_save:
+            convert_ref_m = {ref["age"].strip(): ref["value"].strip() for ref in ref_m if ref_m}
+            convert_ref_f = {ref["age"].strip(): ref["value"].strip() for ref in ref_f if ref_f}
+        else:
+            convert_ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+            convert_ref_f = [{"age": key, "value": value} for key, value in ref_f.items()] if isinstance(ref_f, dict) else []
         return convert_ref_m, convert_ref_f
 
     def __str__(self):

@@ -155,7 +155,10 @@
           />
         </div>
         <div class="main">
-          <div class="fraction-detail">
+          <div
+            v-if="currentFractionData.title"
+            class="fraction-detail"
+          >
             <h6>Фракция - {{ currentFractionData.title }}</h6>
             <label>По умолчанию</label>
             <input class="form-control">
@@ -175,18 +178,18 @@
             <div
               v-for="(refM, idx) in currentFractionData.refM"
               :key="idx"
-              class="flex"
+              class="flex ref-row"
             >
               <input
                 v-model="refM.age"
-                class="form-control"
+                class="form-control reference-input-left"
               >
               <input
                 v-model="refM.value"
-                class="form-control"
+                class="form-control reference-input-right"
               >
               <button
-                class="btn btn-blue-nb"
+                class="reference-button-right transparent-button "
                 @click="deleteRef(idx, 'm')"
               >
                 <i class="fa fa-times" />
@@ -194,28 +197,28 @@
             </div>
             <div>
               <button
-                class="btn btn-blue-nb"
+                class="transparent-button"
                 @click="addRef('m')"
               >
-                Добавить
+                <i class="fa fa-plus"></i>
               </button>
             </div>
             <label>Рефернсы Ж</label>
             <div
               v-for="(refF, idx) in currentFractionData.refF"
               :key="idx"
-              class="flex"
+              class="flex ref-row"
             >
               <input
                 v-model="refF.age"
-                class="form-control"
+                class="form-control reference-label-left"
               >
               <input
                 v-model="refF.value"
-                class="form-control"
+                class="form-control reference-label-right"
               >
               <button
-                class="btn btn-blue-nb"
+                class="transparent-button reference-button-right"
                 @click="deleteRef(idx, 'f')"
               >
                 <i class="fa fa-times" />
@@ -223,10 +226,10 @@
             </div>
             <div>
               <button
-                class="btn btn-blue-nb"
+                class="transparent-button"
                 @click="addRef('f')"
               >
-                Добавить
+                <i class="fa fa-plus"></i>
               </button>
             </div>
           </div>
@@ -269,7 +272,6 @@ import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
-import FractionDetail from '@/construct/FractionDetail.vue';
 import { refBook } from '@/construct/ConstructLaboratory.vue';
 
 const store = useStore();
@@ -291,17 +293,22 @@ const props = defineProps({
   },
 });
 
+interface reference {
+  age: string | null,
+  value: string | null,
+}
+
 interface fractionsData {
   pk: number,
   title: string,
   unitId: number,
   order: number,
-  ecpId: number | string,
+  ecpId: string,
   fsli: number,
   variantsId: number,
   formula: string,
-  refM: object[],
-  refF: object[],
+  refM: reference[],
+  refF: reference[],
 }
 
 export interface tubeData {
@@ -318,7 +325,7 @@ interface researchData {
   code: number | null,
   order: number,
   internalCode: number | null,
-  ecpId: number | null,
+  ecpId: string,
   preparation: string | null,
   departmentId: number,
   laboratoryMaterialId: number,
@@ -337,7 +344,7 @@ const research = ref<researchData>({
   code: null,
   order: null,
   internalCode: null,
-  ecpId: null,
+  ecpId: '',
   preparation: '',
   departmentId: null,
   laboratoryMaterialId: null,
@@ -346,20 +353,33 @@ const research = ref<researchData>({
   tubes: [],
 });
 
-const currentFractionData = ref({});
+const defaultFraction = ref<fractionsData>({
+  ecpId: '',
+  formula: '',
+  fsli: null,
+  order: null,
+  pk: -1,
+  refF: [],
+  refM: [],
+  title: '',
+  unitId: null,
+  variantsId: null,
+});
+
+const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-research', { researchPk: props.research.pk });
   await store.dispatch(actions.DEC_LOADING);
   research.value = result;
-  researchShortTitle.value = research.value?.title;
+  researchShortTitle.value = research.value.shortTitle ? research.value.shortTitle : research.value.title;
 };
 
 watch(() => [props.research.pk, props.research.tubes], () => {
   if (props.research.pk !== -1) {
     getResearch();
-    currentFractionData.value = {};
+    currentFractionData.value = { ...defaultFraction.value };
   } else {
     research.value = {
       pk: -1,
@@ -368,7 +388,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
       code: null,
       order: props.research.order,
       internalCode: null,
-      ecpId: null,
+      ecpId: '',
       preparation: '',
       departmentId: props.research.departmentId,
       laboratoryMaterialId: null,
@@ -383,21 +403,12 @@ watch(() => [props.research.pk, props.research.tubes], () => {
         color: tube.color,
         fractions: [
           {
-            pk: -1,
-            title: '',
-            unitId: -1,
-            order: 1,
-            ecpId: '',
-            fsli: -1,
-            variantsId: -1,
-            formula: '',
-            refM: [],
-            refF: [],
+            ...defaultFraction.value,
           },
         ],
       });
     }
-    currentFractionData.value = {};
+    currentFractionData.value = { ...defaultFraction.value };
   }
 }, { immediate: true });
 
@@ -435,17 +446,9 @@ const edit = ({ fractionOrder, tubeIdx }) => {
 
 const addFraction = (newFraction: object) => {
   const newFractionData = {
-    pk: -1,
-    title: '',
-    unitId: null,
-    order: newFraction.order,
-    ecpId: null,
-    fsli: null,
-    variantsId: -1,
-    formula: '',
-    refM: [],
-    refF: [],
+    ...defaultFraction.value,
   };
+  newFractionData.order = newFraction.order;
   research.value.tubes[newFraction.tubeIdx].fractions.push(newFractionData);
 };
 
@@ -561,4 +564,32 @@ const deleteRef = (idx: number, refKey: string) => {
   justify-content: flex-end;
 }
 
+.reference-input-left {
+  border-radius: 4px 0 0 4px;
+}
+.reference-input-right {
+  border-radius: 0;
+}
+.reference-button-right {
+  border-radius: 0 4px 4px 0 !important;
+}
+
+.transparent-button {
+  background-color: transparent;
+  align-self: stretch;
+  color: #434A54;
+  border: 1px solid #AAB2BD;
+  border-radius: 4px;
+}
+.transparent-button:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+}
+.transparent-button:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
+}
+.ref-row {
+  margin-bottom: 2px;
+}
 </style>
