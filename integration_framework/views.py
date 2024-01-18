@@ -2022,11 +2022,10 @@ def get_cda_data(pk):
 @authentication_classes([])
 @permission_classes([])
 def eds_get_cda_data(request):
-    token = request.META.get("HTTP_AUTHORIZATION")
-    token = token.replace("Bearer ", "")
-
-    if not token or not DoctorProfile.objects.filter(eds_token=token).exists():
-        return Response({"ok": False})
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    if not token_obj.unlimited_access:
+        return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
     pk = body.get("pk")
