@@ -541,9 +541,9 @@ class Researches(models.Model):
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
-                fractionData = fraction.as_json(fraction)
-                fractionData["refM"], fractionData["refF"] = Fractions.convert_ref(fractionData["refM"], fractionData["refF"])
-                research_tubes[fraction.relation_id]["fractions"].append(fractionData)
+                fraction_data = fraction.as_json(fraction)
+                fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                research_tubes[fraction.relation_id]["fractions"].append(fraction_data)
             elif not research_tubes.get(fraction.relation_id):
                 research_tubes[fraction.relation_id] = {
                     "pk": fraction.relation_id,
@@ -551,9 +551,9 @@ class Researches(models.Model):
                     "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
                 }
                 if need_fractions:
-                    fractionData = fraction.as_json(fraction)
-                    fractionData["refM"], fractionData["refF"] = Fractions.convert_ref(fractionData["refM"], fractionData["refF"])
-                    research_tubes[fraction.relation_id]["fractions"] = [fractionData]
+                    fraction_data = fraction.as_json(fraction)
+                    fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                    research_tubes[fraction.relation_id]["fractions"] = [fraction_data]
         return research_tubes
 
     @staticmethod
@@ -626,6 +626,8 @@ class Researches(models.Model):
             "laboratoryDuration": research.laboratory_duration,
             "tubes": [value for _, value in research_tubes.items()],
         }
+
+        print(result["tubes"])
         return result
 
     @staticmethod
@@ -645,8 +647,8 @@ class Researches(models.Model):
             research.internal_code = research_internal_code
             research.preparation = research_data["preparation"]
             research.podrazdeleniye_id = research_data["departmentId"]
-            research.laboratory_material_id = research_data["laboratoryMaterialId"]
-            research.sub_group_id = research_data["subGroupId"]
+            research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
+            research.sub_group_id = research_data.get("subGroupId", None)
             research.laboratory_duration = research_data["laboratoryDuration"]
             research.save()
             fractions = Fractions.objects.filter(research_id=research.pk)
@@ -669,23 +671,29 @@ class Researches(models.Model):
             return False
         for tube in research_data["tubes"]:
             for fraction in tube["fractions"]:
+                current_fractions = None
+                fraction_title = fraction["title"].strip() if fraction["title"] else ''
+                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
+                ref_m = {ref["age"].strip(): ref["value"].strip() for ref in fraction["refM"] if ref["age"]}
+                ref_f = {ref["age"].strip(): ref["value"].strip() for ref in fraction["refF"] if ref["age"]}
                 if fractions:
                     current_fractions = fractions.filter(pk=fraction["pk"]).first()
-                else:
-                    current_fractions = None
                 if current_fractions:
-                    current_fractions.title = fraction["title"].strip()
+                    current_fractions.title = fraction_title
                     current_fractions.ecp_id = fraction["ecpId"].strip()
                     current_fractions.fsli = fraction["fsli"]
                     current_fractions.sort_weight = fraction["order"]
                     current_fractions.unit_id = fraction["unitId"]
+                    current_fractions.variants_id = fraction["variantsId"]
+                    current_fractions.formula = fraction["formula"]
+                    current_fractions.ref_m = ref_m
+                    current_fractions.ref_f = ref_f
                     current_fractions.save()
                 else:
-                    title = fraction["title"].strip() if fraction["title"] else ''
-                    ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
-                    unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
                     new_fraction = Fractions(
-                        research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"]
+                        research_id=research.pk, title=fraction_title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"],
+                        variants_id=fraction["variantsId"], formula=fraction["formula"], ref_m=ref_m, ref_f=ref_f
                     )
                     new_fraction.save()
         return True
@@ -1152,9 +1160,9 @@ class Fractions(models.Model):
 
     @staticmethod
     def convert_ref(ref_m, ref_f):
-        ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
-        ref_f = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
-        return ref_m, ref_f
+        convert_ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+        convert_ref_f = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_f, dict) else []
+        return convert_ref_m, convert_ref_f
 
     def __str__(self):
         return self.research.title + " | " + self.title
