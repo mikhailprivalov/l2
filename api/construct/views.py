@@ -4,6 +4,7 @@ import simplejson as json
 from directory.models import Researches, Fractions, Unit, LaboratoryMaterial, SubGroup, ResultVariants
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
+from researches.models import Tubes
 from utils.response import status_response
 
 
@@ -61,5 +62,6 @@ def get_lab_ref_books(request):
     materials = LaboratoryMaterial.get_materials()
     subgroups = SubGroup.get_groups()
     variants = ResultVariants.get_all()
-    result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants}
+    tubes = Tubes.get_all()
+    result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants, "tubes": tubes}
     return JsonResponse({"result": result})

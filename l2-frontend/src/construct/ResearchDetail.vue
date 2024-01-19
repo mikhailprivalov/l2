@@ -42,6 +42,7 @@
               :clearable="false"
               class="treeselect-34px"
               placeholder="Выберите подразделение"
+              :append-to-body="true"
             />
           </div>
         </div>
@@ -93,6 +94,7 @@
               :options="props.refBooks.materials"
               placeholder="Выберите биоматериал"
               class="treeselect-34px"
+              :append-to-body="true"
             />
           </div>
         </div>
@@ -133,6 +135,7 @@
                 :options="props.refBooks.subGroups"
                 class="treeselect-34px"
                 placeholder="Выберите подгруппу"
+                :append-to-body="true"
               />
             </div>
           </div>
@@ -200,7 +203,7 @@
                 class="transparent-button"
                 @click="addRef('m')"
               >
-                <i class="fa fa-plus"></i>
+                <i class="fa fa-plus" />
               </button>
             </div>
             <label>Рефернсы Ж</label>
@@ -229,7 +232,7 @@
                 class="transparent-button"
                 @click="addRef('f')"
               >
-                <i class="fa fa-plus"></i>
+                <i class="fa fa-plus" />
               </button>
             </div>
           </div>
@@ -240,10 +243,18 @@
       <div class="tube-add">
         <div>
           <label class="research-detail-label">Ёмкости</label>
-          <Treeselect class="treeselect-34px" />
+          <Treeselect
+            v-model="selectedTubes"
+            value-format="object"
+            class="treeselect-34px"
+            :options="props.refBooks.tubes"
+          />
         </div>
         <div>
-          <button class="btn btn-blue-nb">
+          <button
+            class="btn btn-blue-nb"
+            @click="addTubes"
+          >
             Добавить
           </button>
         </div>
@@ -299,7 +310,7 @@ interface reference {
 }
 
 interface fractionsData {
-  pk: number,
+  id: number,
   title: string,
   unitId: number,
   order: number,
@@ -312,7 +323,8 @@ interface fractionsData {
 }
 
 export interface tubeData {
-  pk: number,
+  id: number,
+  tubeId: number,
   title: string,
   color: string,
   fractions: fractionsData[],
@@ -333,6 +345,12 @@ interface researchData {
   laboratoryDuration: string,
   tubes: tubeData[]
 }
+
+const selectedTubes = ref({
+  id: -1,
+  label: '',
+  color: '',
+});
 const researchShortTitle = ref('');
 
 const root = getCurrentInstance().proxy.$root;
@@ -357,8 +375,8 @@ const defaultFraction = ref<fractionsData>({
   ecpId: '',
   formula: '',
   fsli: null,
-  order: null,
-  pk: -1,
+  order: 1,
+  id: -1,
   refF: [],
   refM: [],
   title: '',
@@ -367,6 +385,17 @@ const defaultFraction = ref<fractionsData>({
 });
 
 const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });
+
+const addTubes = () => {
+  const tubesData = {
+    id: -1,
+    tubeId: selectedTubes.value.id,
+    title: selectedTubes.value.label,
+    color: selectedTubes.value.color,
+    fractions: [{ ...defaultFraction.value }],
+  };
+  research.value.tubes.push(tubesData);
+};
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -398,7 +427,8 @@ watch(() => [props.research.pk, props.research.tubes], () => {
     };
     for (const tube of props.research.tubes) {
       research.value.tubes.push({
-        pk: tube.pk,
+        id: tube.pk,
+        tubeId: tube.tubeId,
         title: tube.title,
         color: tube.color,
         fractions: [

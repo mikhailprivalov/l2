@@ -546,7 +546,8 @@ class Researches(models.Model):
                 research_tubes[fraction.relation_id]["fractions"].append(fraction_data)
             elif not research_tubes.get(fraction.relation_id):
                 research_tubes[fraction.relation_id] = {
-                    "pk": fraction.relation_id,
+                    "id": fraction.relation_id,
+                    "tubeId": fraction.relation.tube_id,
                     "color": fraction.relation.tube.color,
                     "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
                 }
@@ -668,6 +669,12 @@ class Researches(models.Model):
         else:
             return False
         for tube in research_data["tubes"]:
+            print(tube)
+            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+            if not relation:
+                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+                relation = ReleationsFT(tube_id=tube_relation.pk)
+                relation.save()
             for fraction in tube["fractions"]:
                 current_fractions = None
                 fraction_title = fraction["title"].strip() if fraction["title"] else ''
@@ -675,7 +682,8 @@ class Researches(models.Model):
                 unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
                 ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
                 if fractions:
-                    current_fractions = fractions.filter(pk=fraction["pk"]).first()
+                    print(fraction)
+                    current_fractions = fractions.filter(pk=fraction["id"]).first()
                 if current_fractions:
                     current_fractions.title = fraction_title
                     current_fractions.ecp_id = fraction["ecpId"].strip()
@@ -689,7 +697,7 @@ class Researches(models.Model):
                     current_fractions.save()
                 else:
                     new_fraction = Fractions(
-                        research_id=research.pk, title=fraction_title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"],
+                        research_id=research.pk, title=fraction_title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=relation.pk, sort_weight=fraction["order"],
                         variants_id=fraction.get("variantsId", None), formula=fraction["formula"], ref_m=ref_m, ref_f=ref_f
                     )
                     new_fraction.save()
@@ -1142,7 +1150,7 @@ class Fractions(models.Model):
     @staticmethod
     def as_json(fraction) -> dict:
         result = {
-            "pk": fraction.pk,
+            "id": fraction.pk,
             "title": fraction.title,
             "unitId": fraction.unit_id,
             "ecpId": fraction.ecp_id,

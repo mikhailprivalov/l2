@@ -158,12 +158,14 @@ export interface refBook {
   materials: object[],
   subGroups: object[],
   variants: object[],
+  tubes: object[],
 }
 const refBooks = ref<refBook>({
   units: [],
   materials: [],
   subGroups: [],
   variants: [],
+  tubes: [],
 });
 
 const getRefbooks = async () => {

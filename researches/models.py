@@ -61,6 +61,16 @@ class Tubes(models.Model):
                 pr += r.group(1) + r.group(2)
         return pr
 
+    @staticmethod
+    def get_all():
+        result = [
+            {
+                "id": tube.pk,
+                "label": tube.title,
+                "color": tube.color,
+            } for tube in Tubes.objects.all()]
+        return result
+
     class Meta:
         verbose_name = 'Вид ёмкости'
         verbose_name_plural = 'Виды ёмкостей'
