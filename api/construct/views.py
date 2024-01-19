@@ -4,6 +4,7 @@ import simplejson as json
 from directory.models import Researches, Fractions, Unit, LaboratoryMaterial, SubGroup, ResultVariants
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
+from researches.models import Tubes
 from utils.response import status_response
 
 
@@ -27,14 +28,6 @@ def get_tubes(request):
 def update_order_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_order(request_data["researchPk"], request_data["researchNearbyPk"], request_data["action"])
-    return status_response(result)
-
-
-@login_required
-@group_required("Конструктор: Лабораторные исследования")
-def update_order_fraction(request):
-    request_data = json.loads(request.body)
-    result = Fractions.update_order(request_data["fractionPk"], request_data["fractionNearbyPk"], request_data["action"])
     return status_response(result)
 
 
@@ -69,21 +62,6 @@ def get_lab_ref_books(request):
     materials = LaboratoryMaterial.get_materials()
     subgroups = SubGroup.get_groups()
     variants = ResultVariants.get_all()
-    result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants}
+    tubes = Tubes.get_all()
+    result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants, "tubes": tubes}
     return JsonResponse({"result": result})
-
-
-@login_required
-@group_required("Конструктор: Лабораторные исследования")
-def get_fraction(request):
-    request_data = json.loads(request.body)
-    result = Fractions.get_fraction(request_data["fractionPk"])
-    return JsonResponse({"result": result})
-
-
-@login_required
-@group_required("Конструктор: Лабораторные исследования")
-def update_fraction(request):
-    request_data = json.loads(request.body)
-    result = Fractions.update_fraction(request_data["fraction"])
-    return status_response(result)

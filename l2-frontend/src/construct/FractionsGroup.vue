@@ -8,8 +8,8 @@
       <colgroup>
         <col style="width: 60px">
         <col style="min-width: 100px">
-        <col style="min-width: 70px">
-        <col style="min-width: 70px">
+        <col style="width: 150px">
+        <col style="width: 120px">
         <col style="min-width: 70px">
         <col style="width: 30px">
       </colgroup>
@@ -24,7 +24,7 @@
         </tr>
       </thead>
       <tr
-        v-for="(fraction, idx) in props.tube.fractions"
+        v-for="(fraction, idx) in sortedFractions"
         :key="fraction.pk"
       >
         <td>
@@ -32,14 +32,14 @@
             <button
               :class="isFirstRow(fraction.order) ? 'transparent-button-disabled' : 'transparent-button'"
               :disabled="isFirstRow(fraction.order)"
-              @click="updateOrder(idx, fraction.pk, fraction.order, 'dec_order')"
+              @click="updateOrder(idx, fraction.order, 'dec_order')"
             >
               <i class="glyphicon glyphicon-arrow-up" />
             </button>
             <button
               :class="isLastRow(fraction.order) ? 'transparent-button-disabled' : 'transparent-button'"
               :disabled="isLastRow(fraction.order)"
-              @click="updateOrder(idx, fraction.pk, fraction.order, 'inc_order')"
+              @click="updateOrder(idx, fraction.order, 'inc_order')"
             >
               <i class="glyphicon glyphicon-arrow-down" />
             </button>
@@ -48,6 +48,8 @@
         <td class="padding-td">
           <input
             v-model="fraction.title"
+            v-tippy
+            :title="fraction.title"
             class="form-control fraction-input"
             placeholder="Введите название фракции"
           >
@@ -92,7 +94,7 @@
           <div class="button">
             <button
               class="transparent-button"
-              @click="edit(fraction.pk)"
+              @click="edit(fraction.order)"
             >
               <i class="fa fa-pencil" />
             </button>
@@ -100,12 +102,16 @@
         </td>
       </tr>
     </table>
-    <button
-      class="btn btn-blue-nb"
-      @click="addFraction"
-    >
-      Добавить
-    </button>
+    <div class="flex-right">
+      <div class="add-button">
+        <button
+          class="transparent-button"
+          @click="addFraction"
+        >
+          <i class="fa fa-plus" />
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -139,11 +145,16 @@ const props = defineProps({
 });
 const emit = defineEmits(['updateOrder', 'edit', 'addFraction']);
 
+const sortedFractions = computed(() => {
+  const res = [...props.tube.fractions];
+  const result = res.sort((x, y) => x.order - y.order);
+  return result;
+});
+
 const minMaxOrder = computed(() => {
-  const { fractions } = props.tube;
   let min = 0;
   let max = 0;
-  for (const fraction of fractions) {
+  for (const fraction of sortedFractions.value) {
     if (min === 0) {
       min = fraction.order;
     } else {
@@ -157,20 +168,24 @@ const minMaxOrder = computed(() => {
 const isFirstRow = (order: number) => order === minMaxOrder.value.min;
 const isLastRow = (order: number) => order === minMaxOrder.value.max;
 
-const updateOrder = (fractionIdx: number, fractionPk: number, fractionOrder: number, action: string) => {
+const updateOrder = (fractionIdx: number, fractionOrder: number, action: string) => {
   if (action === 'inc_order' && fractionOrder < minMaxOrder.value.max) {
-    const fractionNearbyPk = props.tube.fractions[fractionIdx + 1].pk;
-    emit('updateOrder', { fractionPk, fractionNearbyPk, action });
+    const fractionNearbyOrder = sortedFractions.value[fractionIdx + 1].order;
+    emit('updateOrder', {
+      tubeIdx: props.tubeidx, fractionNearbyOrder, fractionOrder, action,
+    });
   } else if (action === 'dec_order' && fractionOrder > minMaxOrder.value.min) {
-    const fractionNearbyPk = props.tube.fractions[fractionIdx - 1].pk;
-    emit('updateOrder', { fractionPk, fractionNearbyPk, action });
+    const fractionNearbyOrder = sortedFractions.value[fractionIdx - 1].order;
+    emit('updateOrder', {
+      tubeIdx: props.tubeidx, fractionNearbyOrder, fractionOrder, action,
+    });
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
 };
 
-const edit = (fractionPk: number) => {
-  emit('edit', { fractionPk });
+const edit = (fractionOrder: number) => {
+  emit('edit', { fractionOrder, tubeIdx: props.tubeidx });
 };
 
 const getFsli = async ({ action, searchQuery, callback }) => {
@@ -186,10 +201,13 @@ const getFsli = async ({ action, searchQuery, callback }) => {
 };
 
 const addFraction = () => {
-  const newFraction = {
-    order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
-  };
-  emit('addFraction', newFraction);
+  const emptyFraction = props.tube.fractions.find(fraction => fraction.title.trim().length === 0);
+  if (!emptyFraction) {
+    const newFraction = {
+      order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
+    };
+    emit('addFraction', newFraction);
+  }
 };
 </script>
 
@@ -200,7 +218,7 @@ const addFraction = () => {
   padding: 10px 5px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
-  overflow-y: auto;
+  min-width: 540px;
 }
 .table {
   table-layout: fixed;
@@ -221,7 +239,6 @@ const addFraction = () => {
 .fraction-input {
   height: 28px;
 }
-
 .button {
   width: 100%;
   display: flex;
@@ -270,5 +287,14 @@ const addFraction = () => {
   &__single-value {
     line-height: 28px !important;
   }
+}
+
+.flex-right {
+  display: flex;
+  justify-content: flex-end;
+}
+.add-button {
+  display: flex;
+  width: 30px;
 }
 </style>

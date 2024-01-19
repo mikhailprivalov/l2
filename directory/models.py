@@ -540,15 +540,20 @@ class Researches(models.Model):
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
-                research_tubes[fraction.relation_id]["fractions"].append(fraction.as_json(fraction))
+                fraction_data = fraction.as_json(fraction)
+                fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                research_tubes[fraction.relation_id]["fractions"].append(fraction_data)
             elif not research_tubes.get(fraction.relation_id):
                 research_tubes[fraction.relation_id] = {
-                    "pk": fraction.relation_id,
+                    "id": fraction.relation_id,
+                    "tubeId": fraction.relation.tube_id,
                     "color": fraction.relation.tube.color,
-                    "title": fraction.relation.tube.title,
+                    "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
                 }
                 if need_fractions:
-                    research_tubes[fraction.relation_id]["fractions"] = [fraction.as_json(fraction)]
+                    fraction_data = fraction.as_json(fraction)
+                    fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                    research_tubes[fraction.relation_id]["fractions"] = [fraction_data]
         return research_tubes
 
     @staticmethod
@@ -640,8 +645,8 @@ class Researches(models.Model):
             research.internal_code = research_internal_code
             research.preparation = research_data["preparation"]
             research.podrazdeleniye_id = research_data["departmentId"]
-            research.laboratory_material_id = research_data["laboratoryMaterialId"]
-            research.sub_group_id = research_data["subGroupId"]
+            research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
+            research.sub_group_id = research_data.get("subGroupId", None)
             research.laboratory_duration = research_data["laboratoryDuration"]
             research.save()
             fractions = Fractions.objects.filter(research_id=research.pk)
@@ -654,8 +659,8 @@ class Researches(models.Model):
                 internal_code=research_internal_code,
                 preparation=research_data["preparation"],
                 podrazdeleniye_id=research_data["departmentId"],
-                laboratory_material_id=research_data["laboratoryMaterialId"],
-                sub_group_id=research_data["subGroupId"],
+                laboratory_material_id=research_data.get("laboratoryMaterialId", None),
+                sub_group_id=research_data.get("subGroupId", None),
                 laboratory_duration=research_data["laboratoryDuration"],
                 sort_weight=research_data["order"],
             )
@@ -663,23 +668,43 @@ class Researches(models.Model):
         else:
             return False
         for tube in research_data["tubes"]:
+            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+            if not relation:
+                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+                relation = ReleationsFT(tube_id=tube_relation.pk)
+                relation.save()
             for fraction in tube["fractions"]:
+                current_fractions = None
+                fraction_title = fraction["title"].strip() if fraction["title"] else ''
+                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
+                ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
                 if fractions:
-                    current_fractions = fractions.filter(pk=fraction["pk"]).first()
-                else:
-                    current_fractions = None
+                    current_fractions = fractions.filter(pk=fraction["id"]).first()
                 if current_fractions:
-                    current_fractions.title = fraction["title"].strip()
+                    current_fractions.title = fraction_title
                     current_fractions.ecp_id = fraction["ecpId"].strip()
                     current_fractions.fsli = fraction["fsli"]
+                    current_fractions.sort_weight = fraction["order"]
                     current_fractions.unit_id = fraction["unitId"]
+                    current_fractions.variants_id = fraction.get("variantsId", None)
+                    current_fractions.formula = fraction["formula"]
+                    current_fractions.ref_m = ref_m
+                    current_fractions.ref_f = ref_f
                     current_fractions.save()
                 else:
-                    title = fraction["title"].strip() if fraction["title"] else ''
-                    ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
-                    unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
                     new_fraction = Fractions(
-                        research_id=research.pk, title=title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=tube["pk"], sort_weight=fraction["order"]
+                        research_id=research.pk,
+                        title=fraction_title,
+                        ecp_id=ecp_id,
+                        fsli=fraction["fsli"],
+                        unit_id=unit_id,
+                        relation_id=relation.pk,
+                        sort_weight=fraction["order"],
+                        variants_id=fraction.get("variantsId", None),
+                        formula=fraction["formula"],
+                        ref_m=ref_m,
+                        ref_f=ref_f,
                     )
                     new_fraction.save()
         return True
@@ -1131,52 +1156,28 @@ class Fractions(models.Model):
     @staticmethod
     def as_json(fraction) -> dict:
         result = {
-            "pk": fraction.pk,
+            "id": fraction.pk,
             "title": fraction.title,
             "unitId": fraction.unit_id,
             "ecpId": fraction.ecp_id,
             "fsli": fraction.fsli,
             "order": fraction.sort_weight,
+            "variantsId": fraction.variants_id,
+            "formula": fraction.formula,
+            "refM": fraction.ref_m,
+            "refF": fraction.ref_f,
         }
         return result
 
     @staticmethod
-    def update_order(fraction_pk: int, fraction_nearby_pk: int, action: str):
-        fraction = Fractions.objects.get(pk=fraction_pk)
-        fraction_nearby = Fractions.objects.get(pk=fraction_nearby_pk)
-        if action == 'inc_order':
-            fraction.sort_weight += 1
-            fraction_nearby.sort_weight -= 1
-        elif action == 'dec_order':
-            fraction.sort_weight -= 1
-            fraction_nearby.sort_weight += 1
-        fraction.save()
-        fraction_nearby.save()
-        return True
-
-    @staticmethod
-    def get_fraction(fraction_pk: int):
-        fraction = Fractions.objects.get(pk=fraction_pk)
-        refM = [{"age": key, "value": value} for key, value in fraction.ref_m.items()] if isinstance(fraction.ref_m, dict) else []
-        refF = [{"age": key, "value": value} for key, value in fraction.ref_f.items()] if isinstance(fraction.ref_f, dict) else []
-        result = {"pk": fraction.pk, "title": fraction.title, "variantsId": fraction.variants_id, "formula": fraction.formula, "refM": refM, "refF": refF}
-        return result
-
-    @staticmethod
-    def update_fraction(fraction_data: dict):
-        fraction = Fractions.objects.get(pk=fraction_data["pk"])
-        fraction.variants_id = fraction_data["variantsId"]
-        fraction.formula = fraction_data["formula"].strip()
-        ref_m_dict = {}
-        ref_f_dict = {}
-        for ref in fraction_data["refM"]:
-            ref_m_dict[ref["age"].strip()] = ref["value"].strip()
-        for ref in fraction_data["refF"]:
-            ref_f_dict[ref["age"].strip()] = ref["value"].strip()
-        fraction.ref_m = ref_m_dict
-        fraction.ref_f = ref_f_dict
-        fraction.save()
-        return True
+    def convert_ref(ref_m, ref_f, for_save=False):
+        if for_save:
+            convert_ref_m = {ref["age"].strip(): ref["value"].strip() for ref in ref_m if ref_m}
+            convert_ref_f = {ref["age"].strip(): ref["value"].strip() for ref in ref_f if ref_f}
+        else:
+            convert_ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+            convert_ref_f = [{"age": key, "value": value} for key, value in ref_f.items()] if isinstance(ref_f, dict) else []
+        return convert_ref_m, convert_ref_f
 
     def __str__(self):
         return self.research.title + " | " + self.title

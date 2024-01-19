@@ -34,6 +34,7 @@
       </div>
       <button
         class="btn btn-blue-nb nbr"
+        @click="addResearch"
       >
         <i class="glyphicon glyphicon-plus" />
         Добавить
@@ -41,15 +42,10 @@
     </div>
     <div class="content-construct">
       <ResearchDetail
-        v-if="currentResearchPk"
-        :research-pk="currentResearchPk"
-        :new-research="newResearch"
-        :department-id="department"
+        v-if="currentResearch.pk"
+        :research="currentResearch"
+        :ref-books="refBooks"
         :departments="departments.slice(1)"
-        :units="units"
-        :materials="materials"
-        :sub-groups="subGroups"
-        :variants="variants"
         @updateResearch="getTubes"
       />
     </div>
@@ -88,29 +84,34 @@ const search = ref('');
 
 const researchTubes = ref([]);
 
-const currentResearchPk = ref(null);
+const currentResearch = ref({
+  pk: null, order: 1, departmentId: department.value, tubes: null,
+});
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-tubes', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
-  currentResearchPk.value = null;
+  currentResearch.value = {
+    pk: null, order: 1, departmentId: department.value, tubes: null,
+  };
 };
 
 const edit = ({ researchPk }) => {
-  currentResearchPk.value = researchPk;
+  currentResearch.value.pk = researchPk;
 };
 
-const newResearch = ref({});
-
 const add = (newResearchData: object) => {
-  currentResearchPk.value = -1;
-  newResearch.value = newResearchData;
+  currentResearch.value = {
+    pk: -1, order: newResearchData.order, departmentId: department.value, tubes: newResearchData.tubes,
+  };
 };
 
 watch([department], () => {
   getTubes();
-  currentResearchPk.value = null;
+  currentResearch.value = {
+    pk: null, order: null, departmentId: department.value, tubes: null,
+  };
 });
 
 const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
@@ -153,19 +154,32 @@ const changeVisibility = async ({ researchPk }) => {
   }
 };
 
-const units = ref([]);
-const materials = ref([]);
-const subGroups = ref([]);
-const variants = ref([]);
+const addResearch = () => {
+  currentResearch.value = {
+    pk: -1, order: 1, departmentId: department.value, tubes: [],
+  };
+};
+
+export interface refBook {
+  units: object[],
+  materials: object[],
+  subGroups: object[],
+  variants: object[],
+  tubes: object[],
+}
+const refBooks = ref<refBook>({
+  units: [],
+  materials: [],
+  subGroups: [],
+  variants: [],
+  tubes: [],
+});
 
 const getRefbooks = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/laboratory/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
-  units.value = result.units;
-  materials.value = result.materials;
-  subGroups.value = result.subGroups;
-  variants.value = result.variants;
+  refBooks.value = result;
 };
 
 onMounted(() => {
@@ -210,8 +224,5 @@ onMounted(() => {
   border-radius: 0;
   margin: 0;
   flex: 0 0 34px;
-}
-.content-construct {
-  overflow-y: auto;
 }
 </style>
