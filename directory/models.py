@@ -659,8 +659,8 @@ class Researches(models.Model):
                 internal_code=research_internal_code,
                 preparation=research_data["preparation"],
                 podrazdeleniye_id=research_data["departmentId"],
-                laboratory_material_id=research_data["laboratoryMaterialId"],
-                sub_group_id=research_data["subGroupId"],
+                laboratory_material_id=research_data.get("laboratoryMaterialId", None),
+                sub_group_id=research_data.get("subGroupId", None),
                 laboratory_duration=research_data["laboratoryDuration"],
                 sort_weight=research_data["order"],
             )
