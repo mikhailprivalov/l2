@@ -34,6 +34,7 @@
       </div>
       <button
         class="btn btn-blue-nb nbr"
+        @click="addResearch"
       >
         <i class="glyphicon glyphicon-plus" />
         Добавить
@@ -84,7 +85,7 @@ const search = ref('');
 const researchTubes = ref([]);
 
 const currentResearch = ref({
-  pk: null, order: null, departmentId: department.value, tubes: null,
+  pk: null, order: 1, departmentId: department.value, tubes: null,
 });
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -92,7 +93,7 @@ const getTubes = async () => {
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
   currentResearch.value = {
-    pk: null, order: null, departmentId: department.value, tubes: null,
+    pk: null, order: 1, departmentId: department.value, tubes: null,
   };
 };
 
@@ -151,6 +152,12 @@ const changeVisibility = async ({ researchPk }) => {
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
+};
+
+const addResearch = () => {
+  currentResearch.value = {
+    pk: -1, order: 1, departmentId: department.value, tubes: [],
+  };
 };
 
 export interface refBook {

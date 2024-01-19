@@ -427,7 +427,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
     };
     for (const tube of props.research.tubes) {
       research.value.tubes.push({
-        id: tube.pk,
+        id: tube.id,
         tubeId: tube.tubeId,
         title: tube.title,
         color: tube.color,
