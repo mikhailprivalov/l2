@@ -61,6 +61,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления для подразделения")
+    profile_ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Профиль отделения код ecp")
 
     def get_title(self):
         return self.short_title or self.title

@@ -233,10 +233,10 @@ def get_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False,
         WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
           is_paraclinic = TRUE
         WHEN %(is_lab)s = FALSE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-          is_doc_refferal = TRUE
+          is_doc_refferal = TRUE or is_form = TRUE
         
         WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE  THEN 
-          is_paraclinic = TRUE or is_doc_refferal = TRUE
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE
              
         WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = FALSE THEN
             podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
@@ -245,10 +245,10 @@ def get_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False,
           is_paraclinic = TRUE and is_doc_refferal = FALSE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
         
         WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-          is_paraclinic = FALSE and is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+          is_paraclinic = FALSE and is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
         
         WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE THEN
-          is_paraclinic = TRUE or is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
         END
         )
         
