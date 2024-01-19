@@ -681,7 +681,6 @@ class Researches(models.Model):
                 unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
                 ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
                 if fractions:
-                    print(fraction)
                     current_fractions = fractions.filter(pk=fraction["id"]).first()
                 if current_fractions:
                     current_fractions.title = fraction_title
