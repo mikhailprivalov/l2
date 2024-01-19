@@ -344,6 +344,12 @@ def author_doctor(doctor_confirm_obj, is_recursion=False):
     author["name"]["family"] = doctor_confirm_obj.family
     author["name"]["name"] = doctor_confirm_obj.name
     author["name"]["patronymic"] = doctor_confirm_obj.patronymic
+    author["rmis_login"] = doctor_confirm_obj.rmis_login
+    author["rmis_password"] = doctor_confirm_obj.rmis_password
+    author["rmis_employee_id"] = doctor_confirm_obj.rmis_employee_id
+    author["rmis_resource_id"] = doctor_confirm_obj.rmis_resource_id
+    author["rmis_department_id"] = doctor_confirm_obj.podrazdeleniye.ecp_code
+
     return author
 
 
