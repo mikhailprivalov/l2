@@ -534,7 +534,6 @@ class Researches(models.Model):
         }
         return result
 
-
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
         fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
