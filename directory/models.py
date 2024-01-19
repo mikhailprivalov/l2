@@ -694,8 +694,17 @@ class Researches(models.Model):
                     current_fractions.save()
                 else:
                     new_fraction = Fractions(
-                        research_id=research.pk, title=fraction_title, ecp_id=ecp_id, fsli=fraction["fsli"], unit_id=unit_id, relation_id=relation.pk, sort_weight=fraction["order"],
-                        variants_id=fraction.get("variantsId", None), formula=fraction["formula"], ref_m=ref_m, ref_f=ref_f
+                        research_id=research.pk,
+                        title=fraction_title,
+                        ecp_id=ecp_id,
+                        fsli=fraction["fsli"],
+                        unit_id=unit_id,
+                        relation_id=relation.pk,
+                        sort_weight=fraction["order"],
+                        variants_id=fraction.get("variantsId", None),
+                        formula=fraction["formula"],
+                        ref_m=ref_m,
+                        ref_f=ref_f,
                     )
                     new_fraction.save()
         return True
