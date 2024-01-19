@@ -68,7 +68,9 @@ class Tubes(models.Model):
                 "id": tube.pk,
                 "label": tube.title,
                 "color": tube.color,
-            } for tube in Tubes.objects.all()]
+            }
+            for tube in Tubes.objects.all()
+        ]
         return result
 
     class Meta:
