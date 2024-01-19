@@ -669,7 +669,6 @@ class Researches(models.Model):
         else:
             return False
         for tube in research_data["tubes"]:
-            print(tube)
             relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
             if not relation:
                 tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
