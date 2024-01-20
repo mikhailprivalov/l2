@@ -677,16 +677,16 @@ class Researches(models.Model):
                 current_fractions = None
                 fraction_title = fraction["title"].strip() if fraction["title"] else ''
                 ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
-                unit_id = fraction["unitId"] if fraction["unitId"] != -1 else None
+                unit_id = fraction.get("unitId", None)
                 ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
                 if fractions:
                     current_fractions = fractions.filter(pk=fraction["id"]).first()
                 if current_fractions:
                     current_fractions.title = fraction_title
-                    current_fractions.ecp_id = fraction["ecpId"].strip()
-                    current_fractions.fsli = fraction["fsli"]
+                    current_fractions.ecp_id = ecp_id
+                    current_fractions.fsli = fraction.get("fsli", None)
                     current_fractions.sort_weight = fraction["order"]
-                    current_fractions.unit_id = fraction["unitId"]
+                    current_fractions.unit_id = unit_id
                     current_fractions.variants_id = fraction.get("variantsId", None)
                     current_fractions.formula = fraction["formula"]
                     current_fractions.ref_m = ref_m
@@ -1088,7 +1088,7 @@ class Unit(models.Model):
         result = [
             {
                 "id": unit.pk,
-                "label": unit.title,
+                "label": f'{unit.short_title} — {unit.title} - {unit.code}',
             }
             for unit in Unit.objects.filter(hide=False)
         ]

@@ -51,7 +51,7 @@
             v-tippy
             :title="fraction.title"
             class="form-control fraction-input"
-            placeholder="Введите название фракции"
+            placeholder="Введите название"
           >
         </td>
         <td class="padding-td">
@@ -88,6 +88,13 @@
             >
               {{ node.raw.id || fraction.fsli }}
             </div>
+            <label
+              slot="option-label"
+              slot-scope="{ node }"
+              v-tippy
+              :title="node.label"
+              class="fsli-options"
+            > {{ node.label }}</label>
           </Treeselect>
         </td>
         <td>
@@ -152,14 +159,10 @@ const sortedFractions = computed(() => {
 });
 
 const minMaxOrder = computed(() => {
-  let min = 0;
-  let max = 0;
+  let min = sortedFractions.value[0].order;
+  let max = sortedFractions.value[0].order;
   for (const fraction of sortedFractions.value) {
-    if (min === 0) {
-      min = fraction.order;
-    } else {
-      min = Math.min(min, fraction.order);
-    }
+    min = Math.min(min, fraction.order);
     max = Math.max(max, fraction.order);
   }
   return { min, max };
@@ -194,7 +197,7 @@ const getFsli = async ({ action, searchQuery, callback }) => {
     callback(
       null,
       data.map(i => (
-        { id: i.code_fsli, label: `${i.title}-${i.short_title}-${i.sample}-${i.synonym}-${i.nmu}` }
+        { id: i.code_fsli, label: `${i.code_fsli} ${i.title}-${i.short_title}-${i.sample}-${i.synonym} ${i.nmu}` }
       )),
     );
   }
@@ -296,5 +299,12 @@ const addFraction = () => {
 .add-button {
   display: flex;
   width: 30px;
+}
+.fsli-options {
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-bottom: 0
 }
 </style>

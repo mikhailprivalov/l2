@@ -37,7 +37,11 @@
             </button>
           </div>
         </td>
-        <td class="border research-title">
+        <td
+          v-tippy
+          class="border research-title"
+          :title="research.title"
+        >
           {{ research.title }}
         </td>
         <td class="border">
@@ -78,12 +82,17 @@
       </tr>
     </table>
     <div> {{ props.tube.tubes.length > 0 ? 'Ёмкости' : 'Ёмкости не привязаны' }}</div>
-    <ColorTitled
+    <div
       v-for="currentTube in props.tube.tubes"
-      :key="currentTube.pk"
-      :color="currentTube.color"
-      :title="currentTube.title"
-    />
+      :key="currentTube.id"
+      class="tube-edit"
+      @click="editRelation(currentTube.id)"
+    >
+      <ColorTitled
+        :color="currentTube.color"
+        :title="currentTube.title"
+      />
+    </div>
   </div>
 </template>
 
@@ -99,17 +108,13 @@ const props = defineProps({
   },
 });
 const root = getCurrentInstance().proxy.$root;
-const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit', 'add']);
+const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit', 'add', 'editRelationTube']);
 
 const minMaxOrder = computed(() => {
-  let min = 0;
-  let max = 0;
+  let min = props.tube.researches[0].order;
+  let max = props.tube.researches[0].order;
   for (const row of props.tube.researches) {
-    if (min === 0) {
-      min = row.order;
-    } else {
-      min = Math.min(min, row.order);
-    }
+    min = Math.min(min, row.order);
     max = Math.max(max, row.order);
   }
   return { min, max };
@@ -141,6 +146,11 @@ const edit = (researchPk: number) => {
 const addResearch = () => {
   emit('add', { tubes: props.tube.tubes, order: minMaxOrder.value.max + 1 });
 };
+
+const editRelation = (relationId) => {
+  emit('editRelationTube', { relationId });
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -148,7 +158,7 @@ const addResearch = () => {
   table-layout: fixed;
 }
 .border {
-  border: 1px solid #bbb;;
+  border: 1px solid #bbb;
 }
 .research {
   background-color: #fff;
@@ -162,11 +172,9 @@ const addResearch = () => {
 .research:not(:first-child) {
   margin-top: 0;
 }
-
 .research:last-child {
   margin-bottom: 0;
 }
-
 .research-title {
   white-space: nowrap;
   overflow: hidden;
@@ -175,7 +183,6 @@ const addResearch = () => {
   padding-top: 1px;
   padding-bottom: 1px;
 }
-
 .button {
   width: 100%;
   display: flex;
@@ -183,7 +190,6 @@ const addResearch = () => {
   flex-direction: row;
   justify-content: stretch;
 }
-
 .transparent-button {
   background-color: transparent;
   align-self: stretch;
@@ -191,7 +197,6 @@ const addResearch = () => {
   color: #434A54;
   border: none;
   padding: 1px 0;
-
 }
 .transparent-button:hover {
   background-color: #434a54;
@@ -210,5 +215,17 @@ const addResearch = () => {
   flex: 1;
   border: none;
   padding: 1px 0;
+}
+
+.tube-edit {
+  cursor: pointer;
+}
+.tube-edit:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+}
+.tube-edit:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>
