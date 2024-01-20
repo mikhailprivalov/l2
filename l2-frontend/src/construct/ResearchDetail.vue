@@ -247,8 +247,28 @@
             v-model="selectedTubes"
             value-format="object"
             class="treeselect-34px"
+            placeholder="Выберите ёмкость"
             :options="props.refBooks.tubes"
-          />
+          >
+            <div
+              slot="value-label"
+              slot-scope="{ node }"
+            >
+              <ColorTitled
+                :title="node.label"
+                :color="node.raw.color"
+              />
+            </div>
+            <div
+              slot="option-label"
+              slot-scope="{ node }"
+            >
+              <ColorTitled
+                :title="node.label"
+                :color="node.raw.color"
+              />
+            </div>
+          </Treeselect>
         </div>
         <div>
           <button
@@ -284,6 +304,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
 import { refBook } from '@/construct/ConstructLaboratory.vue';
+import ColorTitled from '@/ui-cards/ColorTitled.vue';
 
 const store = useStore();
 
@@ -348,7 +369,7 @@ interface researchData {
 
 const selectedTubes = ref({
   id: -1,
-  label: '',
+  label: 'Выберите ёмкость',
   color: '',
 });
 const researchShortTitle = ref('');
