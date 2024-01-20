@@ -37,7 +37,11 @@
             </button>
           </div>
         </td>
-        <td class="border research-title" :title="research.title" v-tippy>
+        <td
+          v-tippy
+          class="border research-title"
+          :title="research.title"
+        >
           {{ research.title }}
         </td>
         <td class="border">
@@ -78,19 +82,63 @@
       </tr>
     </table>
     <div> {{ props.tube.tubes.length > 0 ? 'Ёмкости' : 'Ёмкости не привязаны' }}</div>
-    <ColorTitled
+    <div
       v-for="currentTube in props.tube.tubes"
-      :key="currentTube.pk"
-      :color="currentTube.color"
-      :title="currentTube.title"
-    />
+      :key="currentTube.id"
+      class="tube-edit"
+      @click="editTube(currentTube.id)"
+    >
+      <ColorTitled
+        :color="currentTube.color"
+        :title="currentTube.title"
+      />
+    </div>
+    <Modal
+      v-if="showModal"
+      ref="modal"
+      margin-top="30px"
+      margin-left-right="auto"
+      max-width="1500px"
+      height="700px"
+      show-footer="true"
+      white-bg="true"
+      width="100%"
+      @close="hideModal"
+    >
+      <span slot="header">Редактирование шаблона</span>
+      <div
+        slot="body"
+      >
+        <iframe
+          id="myframe"
+          width="1470"
+          height="605"
+          :src="`/ui/construct/related-tube/${editTubeId}`"
+        />
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-10" />
+          <div class="col-xs-2">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hideModal"
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance } from 'vue';
+import { computed, getCurrentInstance, ref } from 'vue';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 const props = defineProps({
   tube: {
@@ -137,6 +185,23 @@ const edit = (researchPk: number) => {
 const addResearch = () => {
   emit('add', { tubes: props.tube.tubes, order: minMaxOrder.value.max + 1 });
 };
+
+const showModal = ref(false);
+const editTubeId = ref(-1);
+const editTube = (tubeId) => {
+  editTubeId.value = tubeId;
+  showModal.value = true;
+};
+
+const modal = ref(null);
+const hideModal = () => {
+  showModal.value = false;
+  if (modal.value) {
+    modal.value.$el.style.display = 'none';
+  }
+
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -206,5 +271,17 @@ const addResearch = () => {
   flex: 1;
   border: none;
   padding: 1px 0;
+}
+
+.tube-edit {
+  cursor: pointer;
+}
+.tube-edit:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+}
+.tube-edit:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>
