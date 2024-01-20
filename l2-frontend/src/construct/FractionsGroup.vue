@@ -51,12 +51,14 @@
             v-tippy
             :title="fraction.title"
             class="form-control fraction-input"
-            placeholder="Введите название фракции"
+            placeholder="Введите название"
           >
         </td>
         <td class="padding-td">
           <Treeselect
             v-model="fraction.unitId"
+            v-tippy
+            :title="fraction.unitId"
             :options="props.units"
             placeholder="Ед. изм."
             class="treeselect-28px"
@@ -73,6 +75,7 @@
         <td class="padding-td">
           <Treeselect
             v-model="fraction.fsli"
+            v-tippy
             :async="true"
             :load-options="getFsli"
             class="treeselect-28px"
@@ -81,6 +84,7 @@
             no-results-text="Не найдено"
             search-prompt-text="Начните писать для поиска"
             :cache-options="false"
+            :title="fraction.fsli"
           >
             <div
               slot="value-label"
@@ -88,6 +92,13 @@
             >
               {{ node.raw.id || fraction.fsli }}
             </div>
+            <label
+              slot="option-label"
+              slot-scope="{ node }"
+              v-tippy
+              :title="node.label"
+              class="fsli-options"
+            > {{ node.label }}</label>
           </Treeselect>
         </td>
         <td>
@@ -190,7 +201,7 @@ const getFsli = async ({ action, searchQuery, callback }) => {
     callback(
       null,
       data.map(i => (
-        { id: i.code_fsli, label: `${i.title}-${i.short_title}-${i.sample}-${i.synonym}-${i.nmu}` }
+        { id: i.code_fsli, label: `${i.code_fsli} ${i.title}-${i.short_title}-${i.sample}-${i.synonym}-${i.nmu}` }
       )),
     );
   }
@@ -292,5 +303,12 @@ const addFraction = () => {
 .add-button {
   display: flex;
   width: 30px;
+}
+.fsli-options {
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-bottom: 0
 }
 </style>
