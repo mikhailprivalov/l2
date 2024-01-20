@@ -97,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, ref } from 'vue';
+import { computed, getCurrentInstance } from 'vue';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 

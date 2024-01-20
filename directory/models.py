@@ -1088,7 +1088,7 @@ class Unit(models.Model):
         result = [
             {
                 "id": unit.pk,
-                "label": unit.title,
+                "label": f'{unit.short_title} — {unit.title} - {unit.code}',
             }
             for unit in Unit.objects.filter(hide=False)
         ]

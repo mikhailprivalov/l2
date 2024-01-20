@@ -469,6 +469,7 @@ const updateResearch = async () => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
+    await getResearch();
     emit('updateResearch');
   } else {
     root.$emit('msg', 'error', 'Ошибка');

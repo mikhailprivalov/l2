@@ -57,8 +57,6 @@
         <td class="padding-td">
           <Treeselect
             v-model="fraction.unitId"
-            v-tippy
-            :title="fraction.unitId"
             :options="props.units"
             placeholder="Ед. изм."
             class="treeselect-28px"
@@ -75,7 +73,6 @@
         <td class="padding-td">
           <Treeselect
             v-model="fraction.fsli"
-            v-tippy
             :async="true"
             :load-options="getFsli"
             class="treeselect-28px"
@@ -84,7 +81,6 @@
             no-results-text="Не найдено"
             search-prompt-text="Начните писать для поиска"
             :cache-options="false"
-            :title="fraction.fsli"
           >
             <div
               slot="value-label"
