@@ -37,11 +37,7 @@
             </button>
           </div>
         </td>
-        <td
-          v-tippy
-          class="border research-title"
-          :title="research.title"
-        >
+        <td class="border research-title" :title="research.title" v-tippy>
           {{ research.title }}
         </td>
         <td class="border">
@@ -106,14 +102,10 @@ const root = getCurrentInstance().proxy.$root;
 const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit', 'add']);
 
 const minMaxOrder = computed(() => {
-  let min = 0;
-  let max = 0;
+  let min = props.tube.researches[0].order;
+  let max = props.tube.researches[0].order;
   for (const row of props.tube.researches) {
-    if (min === 0) {
-      min = row.order;
-    } else {
-      min = Math.min(min, row.order);
-    }
+    min = Math.min(min, row.order);
     max = Math.max(max, row.order);
   }
   return { min, max };

@@ -152,14 +152,10 @@ const sortedFractions = computed(() => {
 });
 
 const minMaxOrder = computed(() => {
-  let min = 0;
-  let max = 0;
+  let min = sortedFractions.value[0].order;
+  let max = sortedFractions.value[0].order;
   for (const fraction of sortedFractions.value) {
-    if (min === 0) {
-      min = fraction.order;
-    } else {
-      min = Math.min(min, fraction.order);
-    }
+    min = Math.min(min, fraction.order);
     max = Math.max(max, fraction.order);
   }
   return { min, max };

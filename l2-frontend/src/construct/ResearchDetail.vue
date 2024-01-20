@@ -548,7 +548,7 @@ const deleteRef = (idx: number, refKey: string) => {
 .research-fractions {
   display: grid;
   position: relative;
-  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 350px));
+  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 320px));
   height: calc(100vh - 365px);
 }
 .fraction-group {
