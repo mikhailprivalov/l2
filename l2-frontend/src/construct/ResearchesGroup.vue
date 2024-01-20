@@ -37,7 +37,11 @@
             </button>
           </div>
         </td>
-        <td class="border research-title">
+        <td
+          v-tippy
+          class="border research-title"
+          :title="research.title"
+        >
           {{ research.title }}
         </td>
         <td class="border">
