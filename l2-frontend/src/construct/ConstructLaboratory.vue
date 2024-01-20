@@ -92,9 +92,6 @@ const getTubes = async () => {
   const { result } = await api('construct/laboratory/get-tubes', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
-  currentResearch.value = {
-    pk: null, order: 1, departmentId: department.value, tubes: null,
-  };
 };
 
 const edit = ({ researchPk }) => {
