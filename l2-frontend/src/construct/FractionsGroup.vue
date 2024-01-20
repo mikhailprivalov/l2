@@ -201,7 +201,7 @@ const getFsli = async ({ action, searchQuery, callback }) => {
     callback(
       null,
       data.map(i => (
-        { id: i.code_fsli, label: `${i.code_fsli} ${i.title}-${i.short_title}-${i.sample}-${i.synonym}-${i.nmu}` }
+        { id: i.code_fsli, label: `${i.code_fsli} ${i.title}-${i.short_title}-${i.sample}-${i.synonym} ${i.nmu}` }
       )),
     );
   }
