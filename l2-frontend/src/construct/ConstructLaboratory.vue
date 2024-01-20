@@ -245,7 +245,7 @@ onMounted(() => {
 <style scoped lang="scss">
 .two-col {
   display: grid;
-  grid-template-columns: minmax(200px, 400px) minmax(150px, auto);
+  grid-template-columns: minmax(200px, 380px) minmax(150px, auto);
   margin-bottom: 5px;
   height: calc(100vh - 36px);
 }

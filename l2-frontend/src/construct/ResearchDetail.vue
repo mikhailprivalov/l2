@@ -183,16 +183,22 @@
               :key="idx"
               class="flex ref-row"
             >
-              <input
-                v-model="refM.age"
-                class="form-control reference-input-left"
-              >
-              <input
-                v-model="refM.value"
-                class="form-control reference-input-right"
-              >
+              <div>
+                <label>Возраст</label>
+                <input
+                  v-model="refM.age"
+                  class="form-control reference-input-left"
+                >
+              </div>
+              <div>
+                <label>Значение</label>
+                <input
+                  v-model="refM.value"
+                  class="form-control reference-input-right"
+                >
+              </div>
               <button
-                class="reference-button-right transparent-button "
+                class="reference-button-right transparent-button ref-button"
                 @click="deleteRef(idx, 'm')"
               >
                 <i class="fa fa-times" />
@@ -212,16 +218,22 @@
               :key="idx"
               class="flex ref-row"
             >
-              <input
-                v-model="refF.age"
-                class="form-control reference-label-left"
-              >
-              <input
-                v-model="refF.value"
-                class="form-control reference-label-right"
-              >
+              <div>
+                <label>Возраст</label>
+                <input
+                  v-model="refF.age"
+                  class="form-control reference-input-left"
+                >
+              </div>
+              <div>
+                <label>Значение</label>
+                <input
+                  v-model="refF.value"
+                  class="form-control reference-input-right"
+                >
+              </div>
               <button
-                class="transparent-button reference-button-right"
+                class="transparent-button reference-button-right ref-button"
                 @click="deleteRef(idx, 'f')"
               >
                 <i class="fa fa-times" />
@@ -570,7 +582,7 @@ const deleteRef = (idx: number, refKey: string) => {
 .research-fractions {
   display: grid;
   position: relative;
-  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 320px));
+  grid-template-columns: repeat(auto-fit, minmax(200px, auto) minmax(150px, 290px));
   height: calc(100vh - 365px);
 }
 .fraction-group {
@@ -628,7 +640,7 @@ const deleteRef = (idx: number, refKey: string) => {
 
 .transparent-button {
   background-color: transparent;
-  align-self: stretch;
+  align-self: flex-end;
   color: #434A54;
   border: 1px solid #AAB2BD;
   border-radius: 4px;
@@ -643,5 +655,8 @@ const deleteRef = (idx: number, refKey: string) => {
 }
 .ref-row {
   margin-bottom: 2px;
+}
+.ref-button {
+  padding: 6px 6px;
 }
 </style>
