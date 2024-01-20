@@ -86,51 +86,13 @@
       v-for="currentTube in props.tube.tubes"
       :key="currentTube.id"
       class="tube-edit"
-      @click="editTube(currentTube.id)"
+      @click="editRelation(currentTube.id)"
     >
       <ColorTitled
         :color="currentTube.color"
         :title="currentTube.title"
       />
     </div>
-    <Modal
-      v-if="showModal"
-      ref="modal"
-      margin-top="30px"
-      margin-left-right="auto"
-      max-width="1500px"
-      height="700px"
-      show-footer="true"
-      white-bg="true"
-      width="100%"
-      @close="hideModal"
-    >
-      <span slot="header">Редактирование шаблона</span>
-      <div
-        slot="body"
-      >
-        <iframe
-          id="myframe"
-          width="1470"
-          height="605"
-          :src="`/ui/construct/related-tube/${editTubeId}`"
-        />
-      </div>
-      <div slot="footer">
-        <div class="row">
-          <div class="col-xs-10" />
-          <div class="col-xs-2">
-            <button
-              class="btn btn-primary-nb btn-blue-nb"
-              type="button"
-              @click="hideModal"
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
   </div>
 </template>
 
@@ -138,7 +100,6 @@
 import { computed, getCurrentInstance, ref } from 'vue';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
-import Modal from '@/ui-cards/Modal.vue';
 
 const props = defineProps({
   tube: {
@@ -147,7 +108,7 @@ const props = defineProps({
   },
 });
 const root = getCurrentInstance().proxy.$root;
-const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit', 'add']);
+const emit = defineEmits(['updateOrder', 'changeVisibility', 'edit', 'add', 'editRelationTube']);
 
 const minMaxOrder = computed(() => {
   let min = props.tube.researches[0].order;
@@ -186,20 +147,8 @@ const addResearch = () => {
   emit('add', { tubes: props.tube.tubes, order: minMaxOrder.value.max + 1 });
 };
 
-const showModal = ref(false);
-const editTubeId = ref(-1);
-const editTube = (tubeId) => {
-  editTubeId.value = tubeId;
-  showModal.value = true;
-};
-
-const modal = ref(null);
-const hideModal = () => {
-  showModal.value = false;
-  if (modal.value) {
-    modal.value.$el.style.display = 'none';
-  }
-
+const editRelation = (relationId) => {
+  emit('editRelationTube', { relationId });
 };
 
 </script>
@@ -209,7 +158,7 @@ const hideModal = () => {
   table-layout: fixed;
 }
 .border {
-  border: 1px solid #bbb;;
+  border: 1px solid #bbb;
 }
 .research {
   background-color: #fff;
@@ -223,11 +172,9 @@ const hideModal = () => {
 .research:not(:first-child) {
   margin-top: 0;
 }
-
 .research:last-child {
   margin-bottom: 0;
 }
-
 .research-title {
   white-space: nowrap;
   overflow: hidden;
@@ -236,7 +183,6 @@ const hideModal = () => {
   padding-top: 1px;
   padding-bottom: 1px;
 }
-
 .button {
   width: 100%;
   display: flex;
@@ -244,7 +190,6 @@ const hideModal = () => {
   flex-direction: row;
   justify-content: stretch;
 }
-
 .transparent-button {
   background-color: transparent;
   align-self: stretch;
@@ -252,7 +197,6 @@ const hideModal = () => {
   color: #434A54;
   border: none;
   padding: 1px 0;
-
 }
 .transparent-button:hover {
   background-color: #434a54;

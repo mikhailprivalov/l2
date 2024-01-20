@@ -24,6 +24,7 @@
           @changeVisibility="changeVisibility"
           @edit="edit"
           @add="add"
+          @editRelationTube="editRelation"
         />
         <div
           v-if="filteredResearchTubes.length === 0"
@@ -49,6 +50,44 @@
         @updateResearch="getTubes"
       />
     </div>
+    <Modal
+      v-if="showModal"
+      ref="modal"
+      margin-top="30px"
+      margin-left-right="auto"
+      max-width="1500px"
+      height="700px"
+      show-footer="true"
+      white-bg="true"
+      width="100%"
+      @close="hideModal"
+    >
+      <span slot="header">Настройка ёмкости ({{ editTubeId }}) </span>
+      <div
+        slot="body"
+      >
+        <iframe
+          id="myframe"
+          width="1470"
+          height="605"
+          :src="`/ui/construct/related-tube/${editTubeId}`"
+        />
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-10" />
+          <div class="col-xs-2">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="hideModal"
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -65,6 +104,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import ResearchDetail from '@/construct/ResearchDetail.vue';
 import ResearchesGroup from '@/construct/ResearchesGroup.vue';
+import Modal from '@/ui-cards/Modal.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -177,6 +217,22 @@ const getRefbooks = async () => {
   const { result } = await api('construct/laboratory/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
   refBooks.value = result;
+};
+
+const showModal = ref(false);
+const editTubeId = ref(-1);
+const editRelation = ({ relationId }) => {
+  editTubeId.value = relationId;
+  showModal.value = true;
+};
+
+const modal = ref(null);
+const hideModal = () => {
+  getTubes();
+  showModal.value = false;
+  if (modal.value) {
+    modal.value.$el.style.display = 'none';
+  }
 };
 
 onMounted(() => {
