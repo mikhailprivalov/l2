@@ -13,7 +13,7 @@ from django.utils import dateformat
 from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
-from reportlab.graphics.barcode import eanbc, qr
+from reportlab.graphics.barcode import eanbc, qr, createBarcodeDrawing
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, A6
@@ -905,7 +905,7 @@ def print_history(request):
     c.setFont('OpenSans', 20)
 
     paddingx = 17
-    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований", "Емкость не принята (замечания)"]
+    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований", "Штрих пробирки"]
     tw = w - paddingx * 4.5
     tx = paddingx * 3
     ty = 90
@@ -963,7 +963,8 @@ def print_history(request):
                 if len(research_tmp) > 38:
                     research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
-                tmp.append(Paragraph("", styleSheet["BodyText"]))
+                bcd = createBarcodeDrawing('Code128', value=obj["tube_id"], humanReadable=0, barHeight=5 * mm, width=43 * mm)
+                tmp.append(bcd)
 
                 data.append(tmp)
                 num += 1
@@ -974,17 +975,18 @@ def print_history(request):
                     ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                     ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
                     ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 1),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                    ('TOPPADDING', (0, 0), (-1, -1), 1),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                    ('TOPPADDING', (0, 0), (-1, -1), 2 * mm),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                    ('LEFTPADDING', (-1, 1), (-1, -1), -6 * mm),
                 ]
             )
             for span in merge_list:  # Цикл объединения ячеек
                 for pos in range(0, 6):
                     style.add('INNERGRID', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
                     style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.23), int(tw * 0.08), int(tw * 0.23), int(tw * 0.31), int(tw * 0.14)], style=style)
+            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.21), int(tw * 0.1), int(tw * 0.23), int(tw * 0.29), int(tw * 0.17)], style=style)
 
             t.canv = c
             wt, ht = t.wrap(0, 0)
