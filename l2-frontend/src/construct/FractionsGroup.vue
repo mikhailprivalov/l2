@@ -8,7 +8,7 @@
       <colgroup>
         <col style="width: 60px">
         <col style="min-width: 100px">
-        <col style="width: 150px">
+        <col style="width: 170px">
         <col style="width: 120px">
         <col style="min-width: 70px">
         <col style="width: 30px">
@@ -57,12 +57,9 @@
           >
         </td>
         <td class="padding-td">
-          <Treeselect
-            v-model="fraction.unitId"
-            :options="props.units"
-            placeholder="Ед. изм."
-            class="treeselect-28px"
-            :append-to-body="true"
+          <UnitTreeselect
+            :option="props.units"
+            :select="fraction.unitId"
           />
         </td>
         <td class="padding-td">
@@ -137,6 +134,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
 import api from '@/api';
+import UnitTreeselect from '@/construct/unitTreeselect.vue';
 
 const root = getCurrentInstance().proxy.$root;
 
