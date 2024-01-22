@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from directory.models import LaboratoryMaterial, Researches
-from openpyxl import load_workbook
+from directory.models import Researches
 
 
 class Command(BaseCommand):
