@@ -81,6 +81,8 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
         data["Номер"] = f"{data['Префикс номера']}{data['Номер']}"
     doctor_confirm_obj = iss.doc_confirmation
+    if doctor_confirm_obj.replace_doctor_cda:
+        doctor_confirm_obj = doctor_confirm_obj.replace_doctor_cda
     if iss.doc_confirmation.hospital.legal_auth_doc_id and SettingManager.get("use_def_hospital_legal_auth", default='false', default_type='b'):
         doctor_legal_confirm_obj = DoctorProfile.objects.get(pk=int(iss.doc_confirmation.hospital.legal_auth_doc_id))
     author_data = author_doctor(doctor_confirm_obj)
