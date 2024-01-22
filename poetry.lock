@@ -1915,13 +1915,13 @@ files = [
 
 [[package]]
 name = "pdf2docx"
-version = "0.5.6"
+version = "0.5.7"
 description = "Open source Python library converting pdf to docx."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "pdf2docx-0.5.6-py3-none-any.whl", hash = "sha256:aa92fce6b85af03405d63a8af760bdfa08e2a4ffa32dff7f234bc377fa4585fd"},
-    {file = "pdf2docx-0.5.6.tar.gz", hash = "sha256:364c8b78a6c1cfd96a1d2c659b06ba90fc116535c998e398641da80a8b5262c2"},
+    {file = "pdf2docx-0.5.7-py3-none-any.whl", hash = "sha256:73791191b90c3a73ea2c011ce6e01fd9275e8a41b04868256f2b6cef79e73345"},
+    {file = "pdf2docx-0.5.7.tar.gz", hash = "sha256:5498e6a74607d1f9fb0f2730a349097152a8bebc87c5c3610a0f6a162028eed2"},
 ]
 
 [package.dependencies]
@@ -3107,4 +3107,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "55a993bdb10bb6c73e73011a5b62e43b62c028d2523fa7073dc54244bf7cb927"
+content-hash = "1e6a8bd66bbda8b641ced496871763060c69a4b55b2b6e9afb02209c8f4f3115"
