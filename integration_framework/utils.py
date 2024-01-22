@@ -349,6 +349,17 @@ def author_doctor(doctor_confirm_obj, is_recursion=False):
     author["rmis_employee_id"] = doctor_confirm_obj.rmis_employee_id
     author["rmis_resource_id"] = doctor_confirm_obj.rmis_resource_id
     author["rmis_department_id"] = doctor_confirm_obj.podrazdeleniye.ecp_code
+    additional_data = None
+    if doctor_confirm_obj.additional_info:
+        if "{" in doctor_confirm_obj.additional_info and "}" in doctor_confirm_obj.additional_info:
+            try:
+                additional_data = json.loads(doctor_confirm_obj.additional_info)
+                if not additional_data or not isinstance(additional_data, dict):
+                    additional_data = {}
+            except Exception:
+                additional_data = None
+
+    author["additional_data"] = additional_data
 
     return author
 
