@@ -48,7 +48,9 @@
         <td class="padding-td">
           <input
             v-model="fraction.title"
-            v-tippy
+            v-tippy="{
+              maxWidth: '50%',
+            }"
             :title="fraction.title"
             class="form-control fraction-input"
             placeholder="Введите название"
@@ -91,7 +93,9 @@
             <label
               slot="option-label"
               slot-scope="{ node }"
-              v-tippy
+              v-tippy="{
+                maxWidth: '50%'
+              }"
               :title="node.label"
               class="fsli-options"
             > {{ node.label }}</label>

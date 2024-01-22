@@ -14,7 +14,9 @@
             <input
               id="title"
               v-model="research.title"
-              v-tippy
+              v-tippy="{
+                maxWidth: '50%'
+              }"
               :title="research.title"
               class="form-control"
               placeholder="Введите полное наименование"
