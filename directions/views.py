@@ -978,8 +978,8 @@ def print_history(request):
                     ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
                     ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                    ('TOPPADDING', (0, 0), (-1, -1), 2 * mm),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                    ('TOPPADDING', (0, 0), (-1, -1), 1),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
                     ('LEFTPADDING', (-1, 1), (-1, -1), -5 * mm),
                 ]
             )
