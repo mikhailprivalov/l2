@@ -109,6 +109,7 @@ class DoctorProfile(models.Model):
     date_extract_employee = models.DateField(help_text='Дата выписки запрошена', db_index=True, default=None, blank=True, null=True)
     date_stop_certificate = models.DateField(help_text='Дата окончания сертификата', db_index=True, default=None, blank=True, null=True)
     replace_doctor_cda = models.ForeignKey('self', related_name='used_doctor_cda', help_text="Замена доктора для cda", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    additional_info = models.TextField(default='', blank=True, help_text='Дополнительная информация описывать словарем {}')
 
     @staticmethod
     def get_system_profile():
