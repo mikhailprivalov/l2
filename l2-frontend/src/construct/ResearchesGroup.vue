@@ -38,7 +38,9 @@
           </div>
         </td>
         <td
-          v-tippy
+          v-tippy="{
+            maxWidth: '340px',
+          }"
           class="border research-title"
           :title="research.title"
         >
