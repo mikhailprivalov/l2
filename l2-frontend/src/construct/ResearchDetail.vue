@@ -180,25 +180,23 @@
               class="form-control"
             >
             <label>Рефернсы М</label>
+            <div class="ref-label-group">
+              <label class="ref-label">Возраст</label>
+              <label class="ref-label">Значение</label>
+            </div>
             <div
               v-for="(refM, idx) in currentFractionData.refM"
               :key="idx"
               class="flex ref-row"
             >
-              <div>
-                <label>Возраст</label>
-                <input
-                  v-model="refM.age"
-                  class="form-control reference-input-left"
-                >
-              </div>
-              <div>
-                <label>Значение</label>
-                <input
-                  v-model="refM.value"
-                  class="form-control reference-input-right"
-                >
-              </div>
+              <input
+                v-model="refM.age"
+                class="form-control reference-input-left"
+              >
+              <input
+                v-model="refM.value"
+                class="form-control reference-input-right"
+              >
               <button
                 class="reference-button-right transparent-button ref-button"
                 @click="deleteRef(idx, 'm')"
@@ -215,25 +213,23 @@
               </button>
             </div>
             <label>Рефернсы Ж</label>
+            <div class="ref-label-group">
+              <label class="ref-label">Возраст</label>
+              <label class="ref-label">Значение</label>
+            </div>
             <div
               v-for="(refF, idx) in currentFractionData.refF"
               :key="idx"
               class="flex ref-row"
             >
-              <div>
-                <label>Возраст</label>
-                <input
-                  v-model="refF.age"
-                  class="form-control reference-input-left"
-                >
-              </div>
-              <div>
-                <label>Значение</label>
-                <input
-                  v-model="refF.value"
-                  class="form-control reference-input-right"
-                >
-              </div>
+              <input
+                v-model="refF.age"
+                class="form-control reference-input-left"
+              >
+              <input
+                v-model="refF.value"
+                class="form-control reference-input-right"
+              >
               <button
                 class="transparent-button reference-button-right ref-button"
                 @click="deleteRef(idx, 'f')"
@@ -660,5 +656,12 @@ const deleteRef = (idx: number, refKey: string) => {
 }
 .ref-button {
   padding: 6px 6px;
+}
+.ref-label-group {
+  display: flex;
+  width: calc(100% - 11px);
+}
+.ref-label {
+  flex-grow: 1;
 }
 </style>
