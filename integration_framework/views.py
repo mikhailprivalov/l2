@@ -2010,6 +2010,7 @@ def get_cda_data(pk):
                     "gender_code": 2 if ind.sex.lower() == "ж" else 1,
                     "gender_title": "Женский" if ind.sex.lower() == "ж" else "Мужской",
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
+                    "birthdate_dots": ind.birthday.strftime("%d.%m.%Y"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
                     "address": data_individual["main_address"],
                 },
