@@ -963,8 +963,9 @@ def print_history(request):
                 if len(research_tmp) > 38:
                     research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
-                bcd = createBarcodeDrawing('Code128', value=obj["tube_id"], humanReadable=0, barHeight=5 * mm, barWidth=0.7)
-                tmp.append(bcd)
+                if shownum:
+                    bcd = createBarcodeDrawing('Code128', value=obj["tube_id"], humanReadable=0, barHeight=5 * mm, barWidth=0.7)
+                    tmp.append(bcd)
 
                 data.append(tmp)
                 num += 1
@@ -977,8 +978,8 @@ def print_history(request):
                     ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
                     ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-                    ('TOPPADDING', (0, 0), (-1, -1), 2 * mm),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                    ('TOPPADDING', (0, 0), (-1, -1), 1),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
                     ('LEFTPADDING', (-1, 1), (-1, -1), -5 * mm),
                 ]
             )
