@@ -45,7 +45,7 @@
             </button>
           </div>
         </td>
-        <td class="padding-td">
+        <td :class="fraction.hide ? 'padding-td hide-background': 'padding-td'">
           <input
             v-model="fraction.title"
             v-tippy="{
@@ -56,7 +56,7 @@
             placeholder="Введите название"
           >
         </td>
-        <td class="padding-td">
+        <td :class="fraction.hide ? 'padding-td hide-background': 'padding-td'">
           <TippyTreeselect
             :options-list="props.units"
             :select-item="fraction.unitId"
@@ -64,14 +64,14 @@
             @inputValue="inputUnit"
           />
         </td>
-        <td class="padding-td">
+        <td :class="fraction.hide ? 'padding-td hide-background': 'padding-td'">
           <input
             v-model="fraction.ecpId"
             class="form-control fraction-input"
             placeholder="Введите код"
           >
         </td>
-        <td class="padding-td">
+        <td :class="fraction.hide ? 'padding-td hide-background': 'padding-td'">
           <Treeselect
             v-model="fraction.fsli"
             :async="true"
@@ -314,5 +314,9 @@ const addFraction = () => {
   text-overflow: ellipsis;
   overflow: hidden;
   margin-bottom: 0
+}
+.hide-background {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
 }
 </style>

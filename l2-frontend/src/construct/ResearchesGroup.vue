@@ -40,7 +40,7 @@
         <VueTippyTd
           :text="research.title"
           tippy-max-width="340px"
-          class="border research-title"
+          :class="research.hide ? 'border research-title hide-background' : 'border research-title'"
         />
         <td class="border">
           <div class="button">
@@ -181,6 +181,10 @@ const editRelation = (relationId) => {
   padding-left: 3px;
   padding-top: 1px;
   padding-bottom: 1px;
+}
+.hide-background {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
 }
 .button {
   width: 100%;
