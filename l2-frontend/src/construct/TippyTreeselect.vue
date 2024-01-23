@@ -6,6 +6,7 @@
     :options="props.optionsList"
     placeholder="Ед. изм."
     :clearable="false"
+    :disabled="props.hide"
     class="treeselect-28px"
     :append-to-body="true"
     :title="title"
@@ -32,6 +33,10 @@ const props = defineProps({
   },
   rowIndex: {
     type: Number,
+    required: false,
+  },
+  hide: {
+    type: Boolean,
     required: false,
   },
 });
