@@ -165,6 +165,15 @@
             class="fraction-detail"
           >
             <h6>Фракция - {{ currentFractionData.title }}</h6>
+            <div class="flex">
+              <label for="fractionHide">Скрыто</label>
+              <input
+                id="fractionHide"
+                v-model="currentFractionData.hide"
+                class="hide-input"
+                type="checkbox"
+              >
+            </div>
             <label>По умолчанию</label>
             <input class="form-control">
             <label>Варианты</label>
@@ -349,6 +358,7 @@ interface fractionsData {
   fsli: number,
   variantsId: number,
   formula: string,
+  hide: boolean,
   refM: reference[],
   refF: reference[],
 }
@@ -411,6 +421,7 @@ const defaultFraction = ref<fractionsData>({
   refF: [],
   refM: [],
   title: '',
+  hide: false,
   unitId: null,
   variantsId: null,
 });
@@ -663,5 +674,9 @@ const deleteRef = (idx: number, refKey: string) => {
 }
 .ref-label {
   flex-grow: 1;
+}
+.hide-input {
+  margin: -3px 0 0 5px;
+  width: 15px;
 }
 </style>

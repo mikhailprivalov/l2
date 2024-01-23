@@ -689,6 +689,7 @@ class Researches(models.Model):
                     current_fractions.unit_id = unit_id
                     current_fractions.variants_id = fraction.get("variantsId", None)
                     current_fractions.formula = fraction["formula"]
+                    current_fractions.hide = fraction["hide"]
                     current_fractions.ref_m = ref_m
                     current_fractions.ref_f = ref_f
                     current_fractions.save()
@@ -703,6 +704,7 @@ class Researches(models.Model):
                         sort_weight=fraction["order"],
                         variants_id=fraction.get("variantsId", None),
                         formula=fraction["formula"],
+                        hide=fraction["hide"],
                         ref_m=ref_m,
                         ref_f=ref_f,
                     )
@@ -1164,6 +1166,7 @@ class Fractions(models.Model):
             "order": fraction.sort_weight,
             "variantsId": fraction.variants_id,
             "formula": fraction.formula,
+            "hide": fraction.hide,
             "refM": fraction.ref_m,
             "refF": fraction.ref_f,
         }
