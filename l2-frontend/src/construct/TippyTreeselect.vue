@@ -21,18 +21,13 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-interface option {
-  id: number,
-  label: string,
-}
-
 const props = defineProps({
   selectItem: {
     type: null,
     required: true,
   },
   optionsList: {
-    type: Object as PropType<option[]>,
+    type: Array,
     required: true,
   },
   rowIndex: {
