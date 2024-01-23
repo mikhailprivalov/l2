@@ -208,7 +208,6 @@ const getFsli = async ({ action, searchQuery, callback }) => {
 };
 
 const inputUnit = ({ selectedItem, rowIndex }) => {
-  console.log(selectedItem, rowIndex);
   sortedFractions.value[rowIndex].unitId = selectedItem;
 };
 

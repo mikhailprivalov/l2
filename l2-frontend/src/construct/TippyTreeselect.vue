@@ -15,11 +15,16 @@
 
 <script setup lang="ts">
 import {
-  onMounted, ref, watch,
+  onMounted, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+interface option {
+  id: number,
+  label: string,
+}
 
 const props = defineProps({
   selectItem: {
@@ -27,7 +32,7 @@ const props = defineProps({
     required: true,
   },
   optionsList: {
-    type: Array,
+    type: Object as PropType<option[]>,
     required: true,
   },
   rowIndex: {
