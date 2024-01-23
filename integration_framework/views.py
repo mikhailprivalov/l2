@@ -18,7 +18,7 @@ from api.dicom import check_dicom_study
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
 from api.models import Application
 from api.patients.views import patients_search_card
-from api.stationar.stationar_func import desc_to_data
+from api.stationar.stationar_func import desc_to_data, hosp_get_data_direction
 from api.views import mkb10_dict
 from clients.utils import find_patient
 from contracts.models import PriceCategory, PriceCoast, PriceName
@@ -2030,7 +2030,11 @@ def eds_get_cda_data(request):
 
     body = json.loads(request.body)
     pk = body.get("pk")
-
+    is_extract = body.get("isExtract") == "1"
+    if is_extract:
+        result = hosp_get_data_direction(pk, site_type=7, type_service='None', level=2)
+        if len(result) > 0:
+            pk = result[0].get("direction")
     return Response(get_cda_data(pk))
 
 
