@@ -808,7 +808,7 @@
             class="row left-padding-10"
           >
             <div
-              class="col-xs-6 left-padding"
+              class="col-xs-6 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -823,6 +823,22 @@
                   :flatten-search-results="true"
                   placeholder="Кабинеты не указаны"
                 />
+              </div>
+            </div>
+            <div
+              class="col-xs-6 left-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Дополнительно</span>
+                <input
+                  v-model="user.additionalInfo"
+                  v-tippy
+                  title="Дополнительная информация описывать словарем { key: value }"
+                  class="form-control"
+                >
               </div>
             </div>
           </div>
@@ -1016,6 +1032,7 @@ export default {
         date_stop_certificate: '',
         replace_doctor_cda: -1,
         department_doctors: [],
+        additionalInfo: '{}',
       },
       selected_hospital: -1,
       open_pk: -2,
