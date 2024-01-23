@@ -5,7 +5,7 @@
         <h4 class="header">
           Редактирование анализа - {{ researchShortTitle }}
         </h4>
-        <button class="btn btn-blue-nb additional">
+        <button @click="showAdditionalModal" class="btn btn-blue-nb additional">
           Доп-но
         </button>
       </div>
@@ -314,6 +314,10 @@
         </button>
       </div>
     </div>
+    <LabResearchAdditional
+      v-if="showAdditional"
+      @hideAdditionalModal="hideAdditionalModal"
+    />
   </div>
 </template>
 
@@ -331,6 +335,7 @@ import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
 import { refBook } from '@/construct/ConstructLaboratory.vue';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import LabResearchAdditional from '@/modals/LabResearchAdditional.vue';
 
 const store = useStore();
 
@@ -394,6 +399,14 @@ interface researchData {
   tubes: tubeData[]
 }
 
+const showAdditional = ref(false);
+
+const hideAdditionalModal = () => {
+  showAdditional.value = false;
+};
+const showAdditionalModal = () => {
+  showAdditional.value = true;
+};
 const selectedTubes = ref({
   id: -1,
   label: 'Выберите ёмкость',
