@@ -16,7 +16,7 @@
 
 <script setup lang="ts">
 import {
-  onMounted, PropType, ref, watch,
+  onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 

@@ -25,7 +25,7 @@
       </thead>
       <tr
         v-for="(fraction, idx) in sortedFractions"
-        :key="fraction.pk"
+        :key="fraction.id"
       >
         <td>
           <div class="button">
