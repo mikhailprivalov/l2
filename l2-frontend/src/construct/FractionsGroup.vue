@@ -109,7 +109,8 @@
         <td>
           <div class="button">
             <button
-              class="transparent-button"
+              :disabled="!fraction.title"
+              :class="fraction.title ? 'transparent-button' : 'transparent-button-disabled'"
               @click="edit(fraction.order)"
             >
               <i class="fa fa-pencil" />

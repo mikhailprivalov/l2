@@ -1,9 +1,14 @@
 <template>
   <div>
     <div class="margin-root">
-      <h4 class="header">
-        Редактирование анализа - {{ researchShortTitle }}
-      </h4>
+      <div class="flex">
+        <h4 class="header">
+          Редактирование анализа - {{ researchShortTitle }}
+        </h4>
+        <button class="btn btn-blue-nb additional">
+          Доп-но
+        </button>
+      </div>
       <div class="research-detail">
         <div>
           <div class="margin">
@@ -292,6 +297,7 @@
         <div>
           <button
             class="btn btn-blue-nb"
+            :disabled="!selectedTubes"
             @click="addTubes"
           >
             Добавить
@@ -301,6 +307,7 @@
       <div>
         <button
           class="btn btn-blue-nb"
+          :disabled="!research.title"
           @click="updateResearch"
         >
           Сохранить
@@ -578,7 +585,7 @@ const deleteRef = (idx: number, refKey: string) => {
   flex-basis: 145px;
 }
 .header {
-  margin: 10px 0 10px 17px;
+  margin: 10px 5px 10px 17px;
 }
 .flex-right {
   display: flex;
@@ -678,5 +685,10 @@ const deleteRef = (idx: number, refKey: string) => {
 .hide-input {
   margin: -3px 0 0 5px;
   width: 15px;
+}
+.additional {
+  height: 30px;
+  padding: 0 12px;
+  align-self: center;
 }
 </style>
