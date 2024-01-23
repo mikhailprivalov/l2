@@ -47,7 +47,7 @@
         </td>
         <td class="padding-td">
           <input
-            v-model="fraction.title"
+            v-model.trim="fraction.title"
             v-tippy="{
               maxWidth: '50%',
             }"

@@ -18,7 +18,7 @@
             >Полное наименование</label>
             <input
               id="title"
-              v-model="research.title"
+              v-model.trim="research.title"
               v-tippy="{
                 maxWidth: '50%'
               }"
