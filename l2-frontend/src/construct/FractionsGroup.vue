@@ -48,19 +48,20 @@
         <td class="padding-td">
           <input
             v-model="fraction.title"
-            v-tippy
+            v-tippy="{
+              maxWidth: '50%',
+            }"
             :title="fraction.title"
             class="form-control fraction-input"
             placeholder="Введите название"
           >
         </td>
         <td class="padding-td">
-          <Treeselect
-            v-model="fraction.unitId"
-            :options="props.units"
-            placeholder="Ед. изм."
-            class="treeselect-28px"
-            :append-to-body="true"
+          <TippyTreeselect
+            :options-list="props.units"
+            :select-item="fraction.unitId"
+            :row-index="idx"
+            @inputValue="inputUnit"
           />
         </td>
         <td class="padding-td">
@@ -91,7 +92,9 @@
             <label
               slot="option-label"
               slot-scope="{ node }"
-              v-tippy
+              v-tippy="{
+                maxWidth: '50%'
+              }"
               :title="node.label"
               class="fsli-options"
             > {{ node.label }}</label>
@@ -133,6 +136,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
 import api from '@/api';
+import TippyTreeselect from '@/construct/TippyTreeselect.vue';
 
 const root = getCurrentInstance().proxy.$root;
 
@@ -201,6 +205,10 @@ const getFsli = async ({ action, searchQuery, callback }) => {
       )),
     );
   }
+};
+
+const inputUnit = ({ selectedItem, rowIndex }) => {
+  sortedFractions.value[rowIndex].unitId = selectedItem;
 };
 
 const addFraction = () => {
