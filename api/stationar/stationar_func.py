@@ -612,6 +612,3 @@ def get_assignments(direction_id: int):
             results[-1]["research_title"].append(f"{i.research_title}; ")
         prev_directions_id = i.napravlenie_id
     return results
-
-
-
