@@ -2031,7 +2031,6 @@ def eds_get_cda_data(request):
     body = json.loads(request.body)
     pk = body.get("pk")
     is_extract = body.get("isExtract") == "1"
-    
     if is_extract:
         result = hosp_get_data_direction(pk, site_type=7, type_service='None', level=2)
         if len(result) > 0:
