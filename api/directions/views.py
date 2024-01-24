@@ -3619,7 +3619,7 @@ def tubes_register_get(request):
 
     for pk in pks:
         val = TubesRegistration.objects.get(number=pk)
-        issledovanie_in_tube = Issledovaniya.objects.filter(tubes__in=[val.pk]).first()
+        issledovanie_in_tube = Issledovaniya.objects.filter(tubes__id=val.pk).first()
         if issledovanie_in_tube:
             all_issledovania = Issledovaniya.objects.filter(napravleniye_id=issledovanie_in_tube.napravleniye_id)
             for issledovanie in all_issledovania:
