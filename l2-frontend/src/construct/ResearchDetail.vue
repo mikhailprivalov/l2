@@ -5,7 +5,10 @@
         <h4 class="header">
           Редактирование анализа - {{ researchShortTitle }}
         </h4>
-        <button @click="showAdditionalModal" class="btn btn-blue-nb additional">
+        <button
+          class="btn btn-blue-nb additional"
+          @click="showAdditionalModal"
+        >
           Доп-но
         </button>
       </div>
@@ -316,6 +319,7 @@
     </div>
     <LabResearchAdditional
       v-if="showAdditional"
+      :research-id="research.pk"
       @hideAdditionalModal="hideAdditionalModal"
     />
   </div>
@@ -407,6 +411,11 @@ const hideAdditionalModal = () => {
 const showAdditionalModal = () => {
   showAdditional.value = true;
 };
+
+const updateAdditional = ({ selectVariant, selectTemplate, instruction }) => {
+  research.value.vari;
+};
+
 const selectedTubes = ref({
   id: -1,
   label: 'Выберите ёмкость',

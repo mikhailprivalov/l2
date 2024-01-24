@@ -3,7 +3,7 @@
     ref="modal"
     margin-top="30px"
     margin-left-right="auto"
-    max-width="1500px"
+    max-width="1000px"
     height="360px"
     show-footer="true"
     white-bg="true"
@@ -16,14 +16,21 @@
     >
       <label>Памятка</label>
       <textarea
+        v-model="instruction"
         class="form-control"
         rows="4"
       />
       <label>Варианты комментариев</label>
-      <Treeselect />
+      <Treeselect v-model="selectVariant" />
       <label>Шаблон формы</label>
-      <Treeselect />
-      <button class="btn btn-blue-nb">
+      <Treeselect
+        v-model="selectTemplate"
+        :options="templatesForm"
+      />
+      <button
+        class="btn btn-blue-nb"
+        @click="update"
+      >
         Сохранить
       </button>
     </div>
@@ -46,20 +53,26 @@
 
 <script setup lang="ts">
 
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-// const props = defineProps({
-//   editRelationId: {
-//     type: Number,
-//     required: true,
-//   },
-// });
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
+
+const props = defineProps({
+  researchId: {
+    type: Number,
+    required: true,
+  },
+});
 const emit = defineEmits(['hideAdditionalModal']);
+const store = useStore();
+
 const modal = ref(null);
 const hideModal = () => {
   emit('hideAdditionalModal');
@@ -67,4 +80,38 @@ const hideModal = () => {
     modal.value.$el.style.display = 'none';
   }
 };
+
+const researchAdditionalData = ref({});
+const selectVariant = ref(null);
+const variants = ref([]);
+const selectTemplate = ref(null);
+const instruction = ref(null);
+
+const templatesForm = ref([
+  { id: 0, label: '0' },
+  { id: 1, label: '1' },
+  { id: 2, label: '2' },
+  { id: 3, label: '3' },
+  { id: 4, label: '4' },
+]);
+
+const getAdditionalData = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-research-additional-data', { researchId: props.researchId });
+  await store.dispatch(actions.DEC_LOADING);
+  researchAdditionalData.value = result;
+};
+
+const getCommentVariants = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/laboratory/get-comments-variants');
+  await store.dispatch(actions.DEC_LOADING);
+  variants.value = result;
+};
+
+onMounted(() => {
+  getCommentVariants();
+  getAdditionalData();
+});
+
 </script>
