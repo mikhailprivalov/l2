@@ -37,13 +37,11 @@
             </button>
           </div>
         </td>
-        <td
-          v-tippy
+        <VueTippyTd
+          :text="research.title"
+          tippy-max-width="340px"
           class="border research-title"
-          :title="research.title"
-        >
-          {{ research.title }}
-        </td>
+        />
         <td class="border">
           <div class="button">
             <button
@@ -100,6 +98,7 @@
 import { computed, getCurrentInstance } from 'vue';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const props = defineProps({
   tube: {

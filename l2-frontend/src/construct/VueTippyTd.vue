@@ -1,6 +1,8 @@
 <template>
   <td
-    v-tippy
+    v-tippy="{
+      maxWidth: tippyMaxWidth,
+    }"
     :title="show ? text : null"
     @mouseenter="showTitle"
   >
@@ -15,6 +17,10 @@ export default {
     text: {
       type: String,
       required: true,
+    },
+    tippyMaxWidth: {
+      type: String,
+      required: false,
     },
   },
   data() {
