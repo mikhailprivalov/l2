@@ -808,7 +808,7 @@
             class="row left-padding-10"
           >
             <div
-              class="col-xs-6 left-padding"
+              class="col-xs-6 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -874,6 +874,27 @@
                   placeholder="Врач для CDA"
                   :append-to-body="true"
                   :clearable="false"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Доп. инфо</span>
+                <textarea
+                  title="Дополнительная информация описывать словарем { key: value }"
+                  v-tippy
+                  v-model="user.additionalInfo"
+                  class="form-control border-top-none"
+                  rows="3"
                 />
               </div>
             </div>
@@ -1016,6 +1037,7 @@ export default {
         date_stop_certificate: '',
         replace_doctor_cda: -1,
         department_doctors: [],
+        additionalInfo: '{}',
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -1335,7 +1357,7 @@ export default {
 }
 
 .left-wrapper {
-  height: calc(100% - 73px);
+  height: calc(100% - 75px);
   padding-top: 5px;
   overflow-y: auto;
 }
@@ -1553,5 +1575,8 @@ li.selected {
 }
 .left-padding-10 {
   padding-left: 10px
+}
+.border-top-none {
+  border-top: 0;
 }
 </style>
