@@ -2840,6 +2840,11 @@ def last_field_result(request):
         if len(work_data) >= 2:
             work_department = work_data[1]
         result = {"value": work_department.strip()}
+    elif request_data["fieldPk"].find('%db_department') != -1:
+        work_data = ""
+        if c.work_department_db:
+            work_data = c.work_department_db.title
+        result = {"value": work_data.strip()}
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
         result = {"value": c.harmful_factor}
     elif request_data["fieldPk"].find('%proto_operation') != -1:
