@@ -10,6 +10,6 @@ urlpatterns = [
     path('laboratory/get-research', views.get_lab_research),
     path('laboratory/update-research', views.update_lab_research),
     path('laboratory/get-ref-books', views.get_lab_ref_books),
-    path('laboratory/get-research-additional-data', views.get_lab_ref_books),
-    path('laboratory/get-comments-variants', views.get_lab_ref_books),
+    path('laboratory/get-research-additional-data', views.get_lab_research_additional_data),
+    path('laboratory/get-comments-variants', views.get_comments_variants),
 ]

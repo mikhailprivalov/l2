@@ -53,13 +53,13 @@
 
 <script setup lang="ts">
 
-import { onMounted, ref } from 'vue';
+import {
+  getCurrentInstance, onMounted, ref,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
@@ -72,6 +72,7 @@ const props = defineProps({
 });
 const emit = defineEmits(['hideAdditionalModal']);
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
 const modal = ref(null);
 const hideModal = () => {
@@ -97,7 +98,7 @@ const templatesForm = ref([
 
 const getAdditionalData = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-research-additional-data', { researchId: props.researchId });
+  const { result } = await api('construct/laboratory/get-research-additional-data', { researchPk: props.researchId });
   await store.dispatch(actions.DEC_LOADING);
   researchAdditionalData.value = result;
 };
@@ -107,6 +108,10 @@ const getCommentVariants = async () => {
   const { result } = await api('construct/laboratory/get-comments-variants');
   await store.dispatch(actions.DEC_LOADING);
   variants.value = result;
+};
+
+const update = async () => {
+  root.$emit('msg', 'ok', 'Сохранено');
 };
 
 onMounted(() => {

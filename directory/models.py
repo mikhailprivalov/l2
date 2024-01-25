@@ -711,6 +711,12 @@ class Researches(models.Model):
                     new_fraction.save()
         return True
 
+    @staticmethod
+    def get_lab_additional_data(research_pk: int):
+        current_research = Researches.objects.get(pk=research_pk)
+        result = { "instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template }
+        return result
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -1063,6 +1069,11 @@ class MaterialVariants(models.Model):
 
     def __str__(self):
         return str(self.get_variants())
+
+    @staticmethod
+    def get_all():
+        result = MaterialVariants.objects.all()
+        return result
 
     class Meta:
         verbose_name = 'Вариант комментария'

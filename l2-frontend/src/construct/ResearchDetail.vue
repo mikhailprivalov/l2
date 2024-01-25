@@ -412,10 +412,6 @@ const showAdditionalModal = () => {
   showAdditional.value = true;
 };
 
-const updateAdditional = ({ selectVariant, selectTemplate, instruction }) => {
-  research.value.vari;
-};
-
 const selectedTubes = ref({
   id: -1,
   label: 'Выберите ёмкость',
