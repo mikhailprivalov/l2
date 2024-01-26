@@ -62,8 +62,8 @@
             :options-list="props.units"
             :select-item="fraction.unitId"
             :row-index="idx"
-            :hide="fraction.hide"
             :class="fraction.hide ? 'hide-treeselect' : ''"
+            :hide="fraction.hide"
             @inputValue="inputUnit"
           />
         </td>
@@ -80,7 +80,7 @@
             v-model="fraction.fsli"
             :async="true"
             :load-options="getFsli"
-            :class="fraction.hide ? 'hide-treeselect treeselect-28px' : 'treeselect-28px'"
+            :class="fraction.hide ? 'hide-treeselect' : 'treeselect-28px'"
             :append-to-body="true"
             loading-text="Загрузка"
             placeholder="Введите код"
@@ -318,6 +318,11 @@ const addFraction = () => {
     background-image: linear-gradient(#6c7a89, #56616c);
     color: #fff;
     cursor: not-allowed;
+    line-height: 28px !important;
+  }
+}
+::v-deep .hide-treeselect .vue-treeselect {
+  &__placeholder {
     line-height: 28px !important;
   }
 }

@@ -73,7 +73,3 @@ onMounted(() => {
   appendValue();
 });
 </script>
-
-<style scoped lang="scss">
-
-</style>
