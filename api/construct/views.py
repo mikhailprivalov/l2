@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
-from directory.models import Researches, Fractions, Unit, LaboratoryMaterial, SubGroup, ResultVariants
+from directory.models import Researches, Unit, LaboratoryMaterial, SubGroup, ResultVariants, MaterialVariants
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -64,4 +64,19 @@ def get_lab_ref_books(request):
     variants = ResultVariants.get_all()
     tubes = Tubes.get_all()
     result = {"units": units, "materials": materials, "subGroups": subgroups, "variants": variants, "tubes": tubes}
+    return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def get_comments_variants(request):
+    result = MaterialVariants.get_all()
+    return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def get_lab_research_additional_data(request):
+    request_data = json.loads(request.body)
+    result = Researches.get_lab_additional_data(request_data["researchPk"])
     return JsonResponse({"result": result})

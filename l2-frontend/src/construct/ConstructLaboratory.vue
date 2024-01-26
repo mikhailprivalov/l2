@@ -50,44 +50,11 @@
         @updateResearch="getTubes"
       />
     </div>
-    <Modal
-      v-if="showModal"
-      ref="modal"
-      margin-top="30px"
-      margin-left-right="auto"
-      max-width="1500px"
-      height="700px"
-      show-footer="true"
-      white-bg="true"
-      width="100%"
-      @close="hideModal"
-    >
-      <span slot="header">Настройка ёмкости ({{ editTubeId }}) </span>
-      <div
-        slot="body"
-      >
-        <iframe
-          id="myframe"
-          width="1470"
-          height="605"
-          :src="`/ui/construct/related-tube/${editTubeId}`"
-        />
-      </div>
-      <div slot="footer">
-        <div class="row">
-          <div class="col-xs-10" />
-          <div class="col-xs-2">
-            <button
-              class="btn btn-primary-nb btn-blue-nb"
-              type="button"
-              @click="hideModal"
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
-      </div>
-    </Modal>
+    <RelationTubeEdit
+      v-if="editRelationId"
+      :edit-relation-id="editRelationId"
+      @hideModal="hideModal"
+    />
   </div>
 </template>
 
@@ -104,7 +71,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import ResearchDetail from '@/construct/ResearchDetail.vue';
 import ResearchesGroup from '@/construct/ResearchesGroup.vue';
-import Modal from '@/ui-cards/Modal.vue';
+import RelationTubeEdit from '@/modals/RelationTubeEdit.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -219,20 +186,14 @@ const getRefbooks = async () => {
   refBooks.value = result;
 };
 
-const showModal = ref(false);
-const editTubeId = ref(-1);
+const editRelationId = ref(null);
 const editRelation = ({ relationId }) => {
-  editTubeId.value = relationId;
-  showModal.value = true;
+  editRelationId.value = relationId;
 };
 
-const modal = ref(null);
 const hideModal = () => {
   getTubes();
-  showModal.value = false;
-  if (modal.value) {
-    modal.value.$el.style.display = 'none';
-  }
+  editRelationId.value = null;
 };
 
 onMounted(() => {

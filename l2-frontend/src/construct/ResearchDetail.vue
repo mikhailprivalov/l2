@@ -1,9 +1,14 @@
 <template>
   <div>
     <div class="margin-root">
-      <h4 class="header">
-        Редактирование анализа - {{ researchShortTitle }}
-      </h4>
+      <div class="flex">
+        <h4
+          class="header"
+          @click="showAdditionalModal"
+        >
+          Редактирование анализа - {{ researchShortTitle }}
+        </h4>
+      </div>
       <div class="research-detail">
         <div>
           <div class="margin">
@@ -13,7 +18,7 @@
             >Полное наименование</label>
             <input
               id="title"
-              v-model="research.title"
+              v-model.trim="research.title"
               v-tippy="{
                 maxWidth: '50%'
               }"
@@ -165,6 +170,15 @@
             class="fraction-detail"
           >
             <h6>Фракция - {{ currentFractionData.title }}</h6>
+            <div class="flex">
+              <label for="fractionHide">Скрыто</label>
+              <input
+                id="fractionHide"
+                v-model="currentFractionData.hide"
+                class="hide-input"
+                type="checkbox"
+              >
+            </div>
             <label>По умолчанию</label>
             <input class="form-control">
             <label>Варианты</label>
@@ -283,6 +297,7 @@
         <div>
           <button
             class="btn btn-blue-nb"
+            :disabled="!selectedTubes"
             @click="addTubes"
           >
             Добавить
@@ -292,12 +307,18 @@
       <div>
         <button
           class="btn btn-blue-nb"
+          :disabled="!research.title"
           @click="updateResearch"
         >
           Сохранить
         </button>
       </div>
     </div>
+    <LabResearchAdditional
+      v-if="showAdditional"
+      :research-id="research.pk"
+      @hideAdditionalModal="hideAdditionalModal"
+    />
   </div>
 </template>
 
@@ -315,6 +336,7 @@ import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
 import { refBook } from '@/construct/ConstructLaboratory.vue';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
+import LabResearchAdditional from '@/modals/LabResearchAdditional.vue';
 
 const store = useStore();
 
@@ -349,6 +371,7 @@ interface fractionsData {
   fsli: number,
   variantsId: number,
   formula: string,
+  hide: boolean,
   refM: reference[],
   refF: reference[],
 }
@@ -376,6 +399,15 @@ interface researchData {
   laboratoryDuration: string,
   tubes: tubeData[]
 }
+
+const showAdditional = ref(false);
+
+const hideAdditionalModal = () => {
+  showAdditional.value = false;
+};
+const showAdditionalModal = () => {
+  showAdditional.value = true;
+};
 
 const selectedTubes = ref({
   id: -1,
@@ -411,6 +443,7 @@ const defaultFraction = ref<fractionsData>({
   refF: [],
   refM: [],
   title: '',
+  hide: false,
   unitId: null,
   variantsId: null,
 });
@@ -479,7 +512,11 @@ const updateResearch = async () => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
-    await getResearch();
+    if (research.value.pk !== -1) {
+      await getResearch();
+    } else {
+      researchShortTitle.value = research.value.shortTitle ? research.value.shortTitle : research.value.title;
+    }
     emit('updateResearch');
   } else {
     root.$emit('msg', 'error', 'Ошибка');
@@ -567,7 +604,7 @@ const deleteRef = (idx: number, refKey: string) => {
   flex-basis: 145px;
 }
 .header {
-  margin: 10px 0 10px 17px;
+  margin: 10px 5px 10px 17px;
 }
 .flex-right {
   display: flex;
@@ -663,5 +700,14 @@ const deleteRef = (idx: number, refKey: string) => {
 }
 .ref-label {
   flex-grow: 1;
+}
+.hide-input {
+  margin: -3px 0 0 5px;
+  width: 15px;
+}
+.additional {
+  height: 30px;
+  padding: 0 12px;
+  align-self: center;
 }
 </style>

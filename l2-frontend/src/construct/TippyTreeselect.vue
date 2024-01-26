@@ -6,6 +6,7 @@
     :options="props.optionsList"
     placeholder="Ед. изм."
     :clearable="false"
+    :disabled="props.hide"
     class="treeselect-28px"
     :append-to-body="true"
     :title="title"
@@ -15,7 +16,7 @@
 
 <script setup lang="ts">
 import {
-  onMounted, PropType, ref, watch,
+  onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -32,6 +33,10 @@ const props = defineProps({
   },
   rowIndex: {
     type: Number,
+    required: false,
+  },
+  hide: {
+    type: Boolean,
     required: false,
   },
 });
@@ -68,7 +73,3 @@ onMounted(() => {
   appendValue();
 });
 </script>
-
-<style scoped lang="scss">
-
-</style>

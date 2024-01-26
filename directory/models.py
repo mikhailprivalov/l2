@@ -689,6 +689,7 @@ class Researches(models.Model):
                     current_fractions.unit_id = unit_id
                     current_fractions.variants_id = fraction.get("variantsId", None)
                     current_fractions.formula = fraction["formula"]
+                    current_fractions.hide = fraction["hide"]
                     current_fractions.ref_m = ref_m
                     current_fractions.ref_f = ref_f
                     current_fractions.save()
@@ -703,11 +704,18 @@ class Researches(models.Model):
                         sort_weight=fraction["order"],
                         variants_id=fraction.get("variantsId", None),
                         formula=fraction["formula"],
+                        hide=fraction["hide"],
                         ref_m=ref_m,
                         ref_f=ref_f,
                     )
                     new_fraction.save()
         return True
+
+    @staticmethod
+    def get_lab_additional_data(research_pk: int):
+        current_research = Researches.objects.get(pk=research_pk)
+        result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
+        return result
 
 
 class HospitalService(models.Model):
@@ -1062,6 +1070,11 @@ class MaterialVariants(models.Model):
     def __str__(self):
         return str(self.get_variants())
 
+    @staticmethod
+    def get_all():
+        result = [{"id": variant.pk, "label": variant.values} for variant in MaterialVariants.objects.all()]
+        return result
+
     class Meta:
         verbose_name = 'Вариант комментария'
         verbose_name_plural = 'Варианты комментариев'
@@ -1164,6 +1177,7 @@ class Fractions(models.Model):
             "order": fraction.sort_weight,
             "variantsId": fraction.variants_id,
             "formula": fraction.formula,
+            "hide": fraction.hide,
             "refM": fraction.ref_m,
             "refF": fraction.ref_f,
         }

@@ -25,7 +25,7 @@
       </thead>
       <tr
         v-for="(fraction, idx) in sortedFractions"
-        :key="fraction.pk"
+        :key="fraction.id"
       >
         <td>
           <div class="button">
@@ -47,12 +47,13 @@
         </td>
         <td class="padding-td">
           <input
-            v-model="fraction.title"
+            v-model.trim="fraction.title"
             v-tippy="{
               maxWidth: '50%',
             }"
             :title="fraction.title"
-            class="form-control fraction-input"
+            :disabled="fraction.hide"
+            :class="fraction.hide ? 'hide-background form-control fraction-input' : 'form-control fraction-input'"
             placeholder="Введите название"
           >
         </td>
@@ -61,14 +62,17 @@
             :options-list="props.units"
             :select-item="fraction.unitId"
             :row-index="idx"
+            :class="fraction.hide ? 'hide-treeselect' : ''"
+            :hide="fraction.hide"
             @inputValue="inputUnit"
           />
         </td>
         <td class="padding-td">
           <input
             v-model="fraction.ecpId"
-            class="form-control fraction-input"
+            :class="fraction.hide ? 'hide-background form-control fraction-input' : 'form-control fraction-input'"
             placeholder="Введите код"
+            :disabled="fraction.hide"
           >
         </td>
         <td class="padding-td">
@@ -76,10 +80,12 @@
             v-model="fraction.fsli"
             :async="true"
             :load-options="getFsli"
-            class="treeselect-28px"
+            :class="fraction.hide ? 'hide-treeselect' : 'treeselect-28px'"
             :append-to-body="true"
             loading-text="Загрузка"
+            placeholder="Введите код"
             no-results-text="Не найдено"
+            :disabled="fraction.hide"
             search-prompt-text="Начните писать для поиска"
             :cache-options="false"
           >
@@ -103,7 +109,8 @@
         <td>
           <div class="button">
             <button
-              class="transparent-button"
+              :disabled="!fraction.title"
+              :class="fraction.title ? 'transparent-button' : 'transparent-button-disabled'"
               @click="edit(fraction.order)"
             >
               <i class="fa fa-pencil" />
@@ -299,6 +306,26 @@ const addFraction = () => {
     line-height: 28px !important;
   }
 }
+::v-deep .hide-treeselect .vue-treeselect {
+  &__control {
+    height: 28px !important;
+    background-image: linear-gradient(#6c7a89, #56616c);
+    color: #fff;
+    cursor: not-allowed;
+  }
+  &__placehoder,
+  &__single-value {
+    background-image: linear-gradient(#6c7a89, #56616c);
+    color: #fff;
+    cursor: not-allowed;
+    line-height: 28px !important;
+  }
+}
+::v-deep .hide-treeselect .vue-treeselect {
+  &__placeholder {
+    line-height: 28px !important;
+  }
+}
 
 .flex-right {
   display: flex;
@@ -314,5 +341,9 @@ const addFraction = () => {
   text-overflow: ellipsis;
   overflow: hidden;
   margin-bottom: 0
+}
+.hide-background {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
 }
 </style>
