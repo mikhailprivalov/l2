@@ -964,7 +964,7 @@ def print_history(request):
                     research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
                 if shownum:
-                    bcd = createBarcodeDrawing('Code128', value=obj["tube_id"], humanReadable=0, barHeight=5 * mm, barWidth=0.7)
+                    bcd = createBarcodeDrawing('Code128', value=obj["tube_id"], humanReadable=0, barHeight=3.1 * mm, barWidth=0.7)
                     tmp.append(bcd)
 
                 data.append(tmp)
@@ -985,9 +985,10 @@ def print_history(request):
             )
             for span in merge_list:  # Цикл объединения ячеек
                 for pos in range(0, 6):
+
                     style.add('INNERGRID', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
                     style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.21), int(tw * 0.1), int(tw * 0.23), int(tw * 0.29), int(tw * 0.17)], style=style)
+            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.21), int(tw * 0.1), int(tw * 0.23), int(tw * 0.33), int(tw * 0.13)], style=style)
 
             t.canv = c
             wt, ht = t.wrap(0, 0)
