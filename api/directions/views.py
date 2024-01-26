@@ -2840,6 +2840,11 @@ def last_field_result(request):
         if len(work_data) >= 2:
             work_department = work_data[1]
         result = {"value": work_department.strip()}
+    elif request_data["fieldPk"].find('%db_department') != -1:
+        work_data = ""
+        if c.work_department_db:
+            work_data = c.work_department_db.title
+        result = {"value": work_data.strip()}
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
         result = {"value": c.harmful_factor}
     elif request_data["fieldPk"].find('%proto_operation') != -1:
@@ -3623,8 +3628,9 @@ def tubes_register_get(request):
         if issledovanie_in_tube:
             all_issledovania = Issledovaniya.objects.filter(napravleniye_id=issledovanie_in_tube.napravleniye_id)
             for issledovanie in all_issledovania:
-                issledovanie.tubes.add(val.pk)
-                issledovanie.save()
+                if len(issledovanie.tubes.all()) == 0:
+                    issledovanie.tubes.add(val.pk)
+                    issledovanie.save()
         if not val.doc_get and not val.time_get:
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()
