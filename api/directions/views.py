@@ -3628,8 +3628,9 @@ def tubes_register_get(request):
         if issledovanie_in_tube:
             all_issledovania = Issledovaniya.objects.filter(napravleniye_id=issledovanie_in_tube.napravleniye_id)
             for issledovanie in all_issledovania:
-                issledovanie.tubes.add(val.pk)
-                issledovanie.save()
+                if len(issledovanie.tubes.all()) == 0:
+                    issledovanie.tubes.add(val.pk)
+                    issledovanie.save()
         if not val.doc_get and not val.time_get:
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()
