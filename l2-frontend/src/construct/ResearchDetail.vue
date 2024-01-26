@@ -512,7 +512,11 @@ const updateResearch = async () => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
-    await getResearch();
+    if (research.value.pk !== -1) {
+      await getResearch();
+    } else {
+      researchShortTitle.value = research.value.shortTitle ? research.value.shortTitle : research.value.title;
+    }
     emit('updateResearch');
   } else {
     root.$emit('msg', 'error', 'Ошибка');
