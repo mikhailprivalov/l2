@@ -714,7 +714,7 @@ class Researches(models.Model):
     @staticmethod
     def get_lab_additional_data(research_pk: int):
         current_research = Researches.objects.get(pk=research_pk)
-        result = { "instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template }
+        result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
         return result
 
 
@@ -1072,7 +1072,7 @@ class MaterialVariants(models.Model):
 
     @staticmethod
     def get_all():
-        result = MaterialVariants.objects.all()
+        result = [{"id": variant.pk, "label": variant.values} for variant in MaterialVariants.objects.all()]
         return result
 
     class Meta:

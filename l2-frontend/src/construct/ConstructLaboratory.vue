@@ -71,7 +71,6 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import ResearchDetail from '@/construct/ResearchDetail.vue';
 import ResearchesGroup from '@/construct/ResearchesGroup.vue';
-import Modal from '@/ui-cards/Modal.vue';
 import RelationTubeEdit from '@/modals/RelationTubeEdit.vue';
 
 const store = useStore();

@@ -2,15 +2,12 @@
   <div>
     <div class="margin-root">
       <div class="flex">
-        <h4 class="header">
-          Редактирование анализа - {{ researchShortTitle }}
-        </h4>
-        <button
-          class="btn btn-blue-nb additional"
+        <h4
+          class="header"
           @click="showAdditionalModal"
         >
-          Доп-но
-        </button>
+          Редактирование анализа - {{ researchShortTitle }}
+        </h4>
       </div>
       <div class="research-detail">
         <div>

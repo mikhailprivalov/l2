@@ -4,15 +4,15 @@
     margin-top="30px"
     margin-left-right="auto"
     max-width="1000px"
-    height="360px"
+    height="560px"
     show-footer="true"
-    white-bg="true"
     width="100%"
     @close="hideModal"
   >
     <span slot="header">Настройка анализа ({{ 'ff' }}) </span>
     <div
       slot="body"
+      class="root"
     >
       <label>Памятка</label>
       <textarea
@@ -21,7 +21,10 @@
         rows="4"
       />
       <label>Варианты комментариев</label>
-      <Treeselect v-model="selectVariant" />
+      <Treeselect
+        v-model="selectVariant"
+        :options="variants"
+      />
       <label>Шаблон формы</label>
       <Treeselect
         v-model="selectTemplate"
@@ -120,3 +123,9 @@ onMounted(() => {
 });
 
 </script>
+
+<style scoped lang="scss">
+.root {
+  height: 439px;
+}
+</style>
