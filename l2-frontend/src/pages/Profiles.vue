@@ -890,9 +890,9 @@
               >
                 <span class="input-group-addon">Доп. инфо</span>
                 <textarea
-                  title="Дополнительная информация описывать словарем { key: value }"
-                  v-tippy
                   v-model="user.additionalInfo"
+                  v-tippy
+                  title="Дополнительная информация описывать словарем { key: value }"
                   class="form-control border-top-none"
                   rows="3"
                 />
