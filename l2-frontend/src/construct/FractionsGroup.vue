@@ -307,12 +307,18 @@ const addFraction = () => {
   }
 }
 ::v-deep .hide-treeselect .vue-treeselect {
-  &__control,
+  &__control {
+    height: 28px !important;
+    background-image: linear-gradient(#6c7a89, #56616c);
+    color: #fff;
+    cursor: not-allowed;
+  }
   &__placehoder,
   &__single-value {
     background-image: linear-gradient(#6c7a89, #56616c);
     color: #fff;
     cursor: not-allowed;
+    line-height: 28px !important;
   }
 }
 
