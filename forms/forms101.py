@@ -4546,7 +4546,7 @@ def create_questions_list(questions, styleCenter, style):
 
 def form_18(request_data):
     """
-    Согласие на мед.вмешательство
+    Согласие на мед. вмешательство
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -4669,7 +4669,7 @@ def form_18(request_data):
     objs.append(Paragraph('3. Лабораторные методы исследования, в том числе в сторонних организациях на основе заключенных договоров.', style))
     objs.append(Paragraph('4. Функциональные методы исследования.', style))
     objs.append(Paragraph('5. Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура), введение лекарственных препаратов', style))
-    objs.append(Paragraph('6. ________________________________________________________________________________________________', style))
+    objs.append(Paragraph('6. Рентгенологические методы исследования', style))
     objs.append(Paragraph('Необходимость других методов обследования и лечения будет мне разъяснена дополнительно;', style))
     objs.append(
         Paragraph(
