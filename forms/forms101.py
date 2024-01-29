@@ -4546,7 +4546,7 @@ def create_questions_list(questions, styleCenter, style):
 
 def form_18(request_data):
     """
-    Согласие на мед.вмешательство
+    Согласие на мед. вмешательство
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -4669,7 +4669,7 @@ def form_18(request_data):
     objs.append(Paragraph('3. Лабораторные методы исследования, в том числе в сторонних организациях на основе заключенных договоров.', style))
     objs.append(Paragraph('4. Функциональные методы исследования.', style))
     objs.append(Paragraph('5. Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура), введение лекарственных препаратов', style))
-    objs.append(Paragraph('6. ________________________________________________________________________________________________', style))
+    objs.append(Paragraph('6. Рентгенологические методы исследования', style))
     objs.append(Paragraph('Необходимость других методов обследования и лечения будет мне разъяснена дополнительно;', style))
     objs.append(
         Paragraph(
@@ -5249,12 +5249,12 @@ def form_21(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (эндоскопия)')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (эндоскопия, узи)')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerif"
-    style.fontSize = 12
+    style.fontSize = 10
     style.alignment = TA_JUSTIFY
 
     styleLeft = deepcopy(style)
@@ -5262,7 +5262,7 @@ def form_21(request_data):
     styleLeft.alignment = TA_LEFT
 
     styleHeader = deepcopy(style)
-    styleHeader.fontSize = 14
+    styleHeader.fontSize = 13
     styleHeader.leading = 14
     styleHeader.alignment = TA_CENTER
 
@@ -5277,7 +5277,7 @@ def form_21(request_data):
     objs = []
     space = 3.5 * mm
 
-    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (ЭНДОСКОПИЧЕСКОЕ ВМЕШАТЕЛЬСТВО)</b>', style=styleHeader))
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (ЭНДОСКОПИЧЕСКОЕ ВМЕШАТЕЛЬСТВО, УЛЬТРАЗВУКОВОЕ ИССЛЕДОВАНИЕ)</b>', style=styleHeader))
     objs.append(Spacer(1, space))
 
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())

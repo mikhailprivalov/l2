@@ -29,7 +29,7 @@ export default [
       { url: '/forms/pdf?type=101.16&card_pk={card}', title: 'Согласие на препарат "вне инструкции"', type: '101.16' },
       { url: '/forms/pdf?type=101.17&card_pk={card}', title: 'Согласие на проведение МРТ', type: '101.17' },
       { url: '/forms/pdf?type=101.20&card_pk={card}', title: 'Согласие на мед. вмешательство (кт)', type: '101.20' },
-      { url: '/forms/pdf?type=101.21&card_pk={card}', title: 'Согласие на мед. вмешательство (эндоскопия)', type: '101.21' },
+      { url: '/forms/pdf?type=101.21&card_pk={card}', title: 'Согласие на мед. вмешательство (эндоскопия, узи)', type: '101.21' },
       { url: '/forms/pdf?type=101.29&card_pk={card}', title: 'Согласие на мед. вмешательство (R, КТ, ЭНД)', type: '101.29' },
       { url: '/forms/pdf?type=101.26&card_pk={card}', title: 'Согласие на мед. вмешательство (члх)', type: '101.26' },
       { url: '/forms/pdf?type=101.27&card_pk={card}', title: 'Передача работодателю заключения', type: '101.27' },
