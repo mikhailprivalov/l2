@@ -5249,12 +5249,12 @@ def form_21(request_data):
 
     buffer = BytesIO()
 
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (эндоскопия)')
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (эндоскопия, узи)')
 
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerif"
-    style.fontSize = 12
+    style.fontSize = 10
     style.alignment = TA_JUSTIFY
 
     styleLeft = deepcopy(style)
@@ -5262,7 +5262,7 @@ def form_21(request_data):
     styleLeft.alignment = TA_LEFT
 
     styleHeader = deepcopy(style)
-    styleHeader.fontSize = 14
+    styleHeader.fontSize = 13
     styleHeader.leading = 14
     styleHeader.alignment = TA_CENTER
 
@@ -5277,7 +5277,7 @@ def form_21(request_data):
     objs = []
     space = 3.5 * mm
 
-    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (ЭНДОСКОПИЧЕСКОЕ ВМЕШАТЕЛЬСТВО)</b>', style=styleHeader))
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (ЭНДОСКОПИЧЕСКОЕ ВМЕШАТЕЛЬСТВО, УЛЬТРАЗВУКОВОЕ ИССЛЕДОВАНИЕ)</b>', style=styleHeader))
     objs.append(Spacer(1, space))
 
     date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
