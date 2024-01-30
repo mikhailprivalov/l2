@@ -1842,8 +1842,6 @@ def form_13(request_data):
         elif i["title"] == "Цех, участок ОПУ":
             department = i["value"]
         elif i["title"] == "Группа здоровья":
-            group_health = i["value"]
-        elif i["title"] == "Группа здоровья":
             tmp_json = json.loads(i["value"])
             group_health = tmp_json["title"]
         elif i["title"] == "SCORE-риск":
