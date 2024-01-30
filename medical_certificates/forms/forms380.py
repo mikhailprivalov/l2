@@ -1816,7 +1816,7 @@ def form_13(request_data):
         "Цех, участок ОПУ",
         "Группа здоровья",
         "SCORE-риск",
-        "Председатель врачебной комиссии"
+        "Председатель врачебной комиссии",
     ]
 
     result = fields_result_only_title_fields(iss, title_fields)
