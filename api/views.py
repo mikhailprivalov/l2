@@ -3355,6 +3355,7 @@ def print_medical_examination_data(request):
                     "napr_id": napr_id,
                 }
             )
+
             saved_file_pdf = simple_save_pdf_file(fc)
             files_data.append(saved_file_pdf)
 
