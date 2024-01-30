@@ -39,7 +39,7 @@ def form_01(request_data):
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
     napr = Napravleniya.objects.filter(pk__in=work_dir)
-    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title and n.client == ind_card]
+    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title.lower() and n.client == ind_card]
     if not dir_temp:
         return False
 
@@ -198,7 +198,7 @@ def form_02(request_data):
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
     napr = Napravleniya.objects.filter(pk__in=work_dir)
-    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title and n.client == ind_card]
+    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title.lower() and n.client == ind_card]
     if not dir_temp:
         return False
 
