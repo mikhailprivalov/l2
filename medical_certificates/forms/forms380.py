@@ -1848,7 +1848,6 @@ def form_13(request_data):
         elif i["title"] == "Председатель врачебной комиссии":
             chairman = i["value"]
 
-
     fwb.append(Paragraph('Медицинское заключение по результатам предварительного', styleCenterBold))
     fwb.append(Paragraph(f'медицинского осмотра (обследования) № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
