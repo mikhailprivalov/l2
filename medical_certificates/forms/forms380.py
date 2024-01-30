@@ -1843,6 +1843,9 @@ def form_13(request_data):
             department = i["value"]
         elif i["title"] == "Группа здоровья":
             group_health = i["value"]
+        elif i["title"] == "Группа здоровья":
+            tmp_json = json.loads(i["value"])
+            group_health = tmp_json["title"]
         elif i["title"] == "SCORE-риск":
             score_risk = i["value"]
         elif i["title"] == "Председатель врачебной комиссии":
@@ -1851,7 +1854,7 @@ def form_13(request_data):
     fwb.append(Paragraph('Медицинское заключение по результатам предварительного', styleCenterBold))
     fwb.append(Paragraph(f'медицинского осмотра (обследования) № {direction}', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
-    fwb.append(Paragraph(f'1. Ф.И.О:  {fio}, {born} ', style))
+    fwb.append(Paragraph(f'1. Ф.И.О:  {fio} ', style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'2. Дата рождения: {born}', style))
     fwb.append(Spacer(1, 3 * mm))
@@ -1876,20 +1879,19 @@ def form_13(request_data):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f"7 Группа здоровья: {group_health}", style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"Сердечно-сосудистый риск по шкале SCORE:  {score_risk}", style))
+    fwb.append(Paragraph(f"8. Сердечно-сосудистый риск по шкале SCORE:  {score_risk}", style))
     fwb.append(Spacer(1, 5 * mm))
-    fwb.append(Paragraph(f"Председатель врачебной комиссии________________________({chairman}) {date}", style))
+    fwb.append(Paragraph(f"Председатель врачебной комиссии________________({chairman}) {date}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph('М.П.', style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'________________________________________________ (________________________) {date}', style))
+    fwb.append(Paragraph(f'________________________________ (__________________) {date}', style))
     fwb.append(Spacer(1, 8 * mm))
     space_symbol = '&nbsp;'
-    fwb.append(Paragraph(f'(подпись работника (освидетельствуемого){space_symbol *60} {fio_short} {date} г.', style))
+    fwb.append(Paragraph(f'(подпись работника (освидетельствуемого){space_symbol * 40} {fio_short} {date} г.', style))
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph("*Передается  работодателю  и  приобщается  к  личному  делу  работника (освидетельствуемого)", styleT))
     fwb.append(Paragraph("**Перечислить  в соответствии с Перечнем вредных факторов и Перечнем", styleT))
-    fwb = show_qr_lk_address(fwb)
 
     doc.build(fwb)
     pdf = buffer.getvalue()
