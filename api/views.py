@@ -3359,7 +3359,6 @@ def print_medical_examination_data(request):
             files_data.append(saved_file_pdf)
 
     buffer = simple_join_two_pdf_files(files_data)
-
     id_file = simple_save_pdf_file(buffer)
     hash_file = correspondence_set_file_hash(id_file)
     return JsonResponse({"id": hash_file})

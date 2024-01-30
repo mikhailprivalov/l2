@@ -338,7 +338,6 @@ def form_02(request_data):
             result_join_pdf = join_two_pdf_data(f_print_direction, http_params, request_data['user'], buffer, ind_card)
         if not result_join_pdf:
             result_join_pdf = pdf
-
         return result_join_pdf
 
     buffer.close()
