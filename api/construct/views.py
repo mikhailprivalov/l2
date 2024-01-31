@@ -52,7 +52,7 @@ def get_lab_research(request):
 def update_lab_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_lab_research(request_data["research"])
-    return status_response(result)
+    return JsonResponse(result)
 
 
 @login_required
