@@ -1623,6 +1623,9 @@ def directions_paraclinic_form(request):
 
                 iss = {
                     "pk": i.pk,
+                    "amd": d.amd_status,
+                    "amd_number": d.amd_number,
+                    "direction_pk": d.pk,
                     "research": {
                         "pk": i.research_id,
                         "title": i.research.title,
@@ -1645,6 +1648,7 @@ def directions_paraclinic_form(request):
                         "r_type": i.research.r_type,
                         "show_more_services": i.research.show_more_services and not i.research.is_form and not i.research.is_microbiology,
                         "enabled_add_files": i.research.enabled_add_files,
+                        "is_need_send_egisz": i.research.is_need_send_egisz,
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
                     "examination_date": i.get_medical_examination(),
@@ -2596,14 +2600,17 @@ def directions_paraclinic_history(request):
             "all_saved": True,
             "amd": direction.amd_status,
             "amd_number": direction.amd_number,
+            "is_need_send_egisz": True,
         }
         for i in Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
-            iss = {"title": i.research.get_title(), "saved": i.time_save is not None, "confirmed": i.time_confirmation is not None}
+            iss = {"title": i.research.get_title(), "saved": i.time_save is not None, "confirmed": i.time_confirmation is not None, "is_need_send_egisz": i.research.is_need_send_egisz}
             d["iss"].append(iss)
             if not iss["saved"]:
                 d["all_saved"] = False
             if not iss["confirmed"]:
                 d["all_confirmed"] = False
+            if not iss["is_need_send_egisz"]:
+                d["is_need_send_egisz"] = False
         response["directions"].append(d)
     return JsonResponse(response)
 
