@@ -463,7 +463,7 @@ const addTubes = () => {
 
 const getResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-research', { researchPk: props.research.pk });
+  const { result } = await api('construct/laboratory/get-research', { researchPk: research.value.pk });
   await store.dispatch(actions.DEC_LOADING);
   research.value = result;
   researchShortTitle.value = research.value.shortTitle ? research.value.shortTitle : research.value.title;
@@ -471,6 +471,7 @@ const getResearch = async () => {
 
 watch(() => [props.research.pk, props.research.tubes], () => {
   if (props.research.pk !== -1) {
+    research.value.pk = props.research.pk;
     getResearch();
     currentFractionData.value = { ...defaultFraction.value };
   } else {
@@ -508,15 +509,14 @@ watch(() => [props.research.pk, props.research.tubes], () => {
 
 const updateResearch = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('construct/laboratory/update-research', { research: research.value });
+  const { ok, pk } = await api('construct/laboratory/update-research', { research: research.value });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    root.$emit('msg', 'ok', 'Обновлено');
-    if (research.value.pk !== -1) {
-      await getResearch();
-    } else {
-      researchShortTitle.value = research.value.shortTitle ? research.value.shortTitle : research.value.title;
+    if (pk) {
+      research.value.pk = pk;
     }
+    root.$emit('msg', 'ok', 'Обновлено');
+    await getResearch();
     emit('updateResearch');
   } else {
     root.$emit('msg', 'error', 'Ошибка');

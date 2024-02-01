@@ -631,6 +631,7 @@ class Researches(models.Model):
 
     @staticmethod
     def update_lab_research(research_data):
+        research_pk = None
         research_title = research_data["title"].strip() if research_data["title"] else None
         research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ''
         research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ''
@@ -666,6 +667,7 @@ class Researches(models.Model):
                 sort_weight=research_data["order"],
             )
             research.save()
+            research_pk = research.pk
         else:
             return False
         for tube in research_data["tubes"]:
@@ -710,7 +712,9 @@ class Researches(models.Model):
                         ref_f=ref_f,
                     )
                     new_fraction.save()
-        return True
+        if research_pk:
+            return {"ok": True, "pk": research_pk}
+        return {"ok": True}
 
     @staticmethod
     def get_lab_additional_data(research_pk: int):
