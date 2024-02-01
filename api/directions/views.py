@@ -2601,7 +2601,7 @@ def directions_paraclinic_history(request):
             "all_saved": True,
             "amd": direction.amd_status,
             "amd_number": direction.amd_number,
-            "is_need_send_egisz": True
+            "is_need_send_egisz": True,
         }
         for i in Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
             iss = {"title": i.research.get_title(), "saved": i.time_save is not None, "confirmed": i.time_confirmation is not None, "is_need_send_egisz": i.research.is_need_send_egisz}
