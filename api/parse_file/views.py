@@ -86,8 +86,7 @@ def create_patient(family_data, name_data, patronymic_data, birthday_data, gende
     return patient_card
 
 
-def search_patient(snils_data, request_user, family_data, name_data, patronymic_data, birthday_data, gender_data):
-    patient_card = None
+def get_background_token():
     application = Application.objects.filter(active=True, is_background_worker=True).first()
     if application:
         bearer_token = f"Bearer {application.key}"
@@ -95,7 +94,12 @@ def search_patient(snils_data, request_user, family_data, name_data, patronymic_
         new_application = Application(name="background_worker", is_background_worker=True)
         new_application.save()
         bearer_token = f"Bearer {new_application.key}"
+    return bearer_token
 
+
+def search_patient(snils_data, request_user, family_data, name_data, patronymic_data, birthday_data):
+    patient_card = None
+    bearer_token = get_background_token()
     params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
     request_obj = HttpRequest()
     request_obj._body = params
@@ -111,7 +115,7 @@ def search_patient(snils_data, request_user, family_data, name_data, patronymic_
             possible_family = find_and_replace(family_data, "е", "ё")
             patient_card = search_by_possible_fio(request_obj, name_data, patronymic_data, birthday_data, possible_family)
             if patient_card is None:
-                return None
+                return patient_card
     elif current_patient.data.get("patient_data") and type(current_patient.data.get("patient_data")) != list:
         patient_card_pk = current_patient.data["patient_data"]["card"]
         patient_card = Card.objects.filter(pk=patient_card_pk).first()
