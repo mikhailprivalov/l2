@@ -812,13 +812,11 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
-            print(researches_sql)
             if Researches.objects.filter(pk=research_id).first().is_monitoring:
                 result = custom_research.custom_monitoring_research_data(researches_sql)
                 ws = custom_research.custom_monitorimg_research_base(ws, d1, d2, result, research_title[0])
             else:
                 result = custom_research.custom_research_data(researches_sql)
-                print(result)
                 ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
         else:
