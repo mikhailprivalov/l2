@@ -50,6 +50,7 @@ def custom_research_base(ws1, d1, d2, result_query, research_title):
 
     columns = [
         ('Направление', 15),
+        ('Источник', 15),
         ('Пациент', 45),
         ('Пол', 10),
         ('Дата рождения', 26),
