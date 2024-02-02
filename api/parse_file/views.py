@@ -209,7 +209,7 @@ def add_factors_from_file(request):
             if fio_data is None and snils_data is None:
                 incorrect_patients.append({"fio": f"Строка: {index}", "reason": "Отсутствует данные"})
                 continue
-            patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data, gender_data)
+            patient_card = search_patient(snils_data, request.user, family_data, name_data, patronymic_data, birthday_data)
             if patient_card is None:
                 patient_card = create_patient(family_data, name_data, patronymic_data, birthday_data, gender_data)
             harmful_factors_data, incorrect_factor = find_factors(code_harmful_data)
