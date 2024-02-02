@@ -94,6 +94,8 @@ const changeWorkTime = async (workTime: object) => {
     start, end, rowIndex, columnKey,
   } = workTime;
   // await store.dispatch(actions.INC_LOADING);
+  filteredEmployees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
+  root.$emit('msg', 'ok', 'Обновлено');
   // const { ok, message } = await api('/working-time/get-work-time', {
   //   documentId: props.workTimeDocumentId,
   // });
