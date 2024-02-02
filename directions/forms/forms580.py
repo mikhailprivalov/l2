@@ -43,7 +43,7 @@ def form_01(request_data):
 
     buffer = BytesIO()
     pagesize = (80 * mm, 120 * mm)
-    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=0 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
+    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=2 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
@@ -55,7 +55,7 @@ def form_01(request_data):
 
     styleFL = deepcopy(style)
     styleFL.firstLineIndent = 0
-    styleFL.fontSize = 20
+    styleFL.fontSize = 16
 
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
@@ -91,13 +91,13 @@ def form_01(request_data):
             ],
         ]
 
-        tbl = Table(opinion, colWidths=(33 * mm, 42 * mm))
+        tbl = Table(opinion, colWidths=(30 * mm, 45 * mm))
         tbl.setStyle(
             TableStyle(
                 [
                     ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (1, 0), (-1, -1), -1 * mm),
+                    ('LEFTPADDING', (1, 0), (-1, -1), -5 * mm),
                     ('LEFTPADDING', (0, 0), (-1, -1), -0.3 * mm),
                 ]
             )

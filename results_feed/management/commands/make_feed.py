@@ -22,6 +22,6 @@ class Command(BaseCommand):
         cnt = 0
         for direction in directions:
             cnt += 1
-            ResultFeed.insert_feed_by_direction(direction)
+            ResultFeed.insert_feed_by_direction(direction, disable_send=True)
             self.stdout.write(f"{cnt}/{directions.count()}")
         self.stdout.write("Готово")

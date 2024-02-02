@@ -22,6 +22,9 @@ def get_release_info_from_github_by_version(version):
 
 def get_current_version():
     try:
+        if sys.platform == 'win32':
+            v = subprocess.check_output(["powershell", ".\\current-version.ps1"]).decode().strip()
+            return f'v{v}'
         return f'v{subprocess.check_output(["./current-version.sh"]).decode().strip()}'
     except subprocess.CalledProcessError as e:
         print("Error: {}".format(e))

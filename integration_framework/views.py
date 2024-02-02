@@ -18,7 +18,7 @@ from api.dicom import check_dicom_study
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
 from api.models import Application
 from api.patients.views import patients_search_card
-from api.stationar.stationar_func import desc_to_data
+from api.stationar.stationar_func import desc_to_data, hosp_get_data_direction
 from api.views import mkb10_dict
 from clients.utils import find_patient
 from contracts.models import PriceCategory, PriceCoast, PriceName
@@ -95,8 +95,9 @@ from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
-from .models import CrieOrder, ExternalService, IndividualAuth
+from .models import CrieOrder, ExternalService, IndividualAuth, IPLimitter
 from laboratory.settings import COVID_RESEARCHES_PK
+from .tasks import send_code_cascade, stop_code_cascade
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
 from directory.sql_func import get_lab_research_reference_books
@@ -419,6 +420,7 @@ def issledovaniye_data(request):
                 "unitCode": u.code if u else None,
                 "ref": refs,
                 "interpretation": "N" if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else "A",
+                "ecpId": r.fraction.get_ecp_code(),
             }
         )
 
@@ -445,6 +447,7 @@ def issledovaniye_data(request):
             "comments": i.lab_comment,
             "isGistology": i.research.is_gistology,
             "isParaclinic": i.research.is_paraclinic,
+            "ecpResearchId": i.research.ecp_id,
         }
     )
 
@@ -2007,6 +2010,7 @@ def get_cda_data(pk):
                     "gender_code": 2 if ind.sex.lower() == "ж" else 1,
                     "gender_title": "Женский" if ind.sex.lower() == "ж" else "Мужской",
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
+                    "birthdate_dots": ind.birthday.strftime("%d.%m.%Y"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
                     "address": data_individual["main_address"],
                 },
@@ -2019,15 +2023,18 @@ def get_cda_data(pk):
 @authentication_classes([])
 @permission_classes([])
 def eds_get_cda_data(request):
-    token = request.META.get("HTTP_AUTHORIZATION")
-    token = token.replace("Bearer ", "")
-
-    if not token or not DoctorProfile.objects.filter(eds_token=token).exists():
-        return Response({"ok": False})
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    if not token_obj.unlimited_access:
+        return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
     pk = body.get("pk")
-
+    is_extract = body.get("isExtract") == "1"
+    if is_extract:
+        result = hosp_get_data_direction(pk, site_type=7, type_service='None', level=2)
+        if len(result) > 0:
+            pk = result[0].get("direction")
     return Response(get_cda_data(pk))
 
 
@@ -3131,7 +3138,7 @@ def get_price_data(request):
     if price:
         data_price = PriceCoast.objects.filter(price_name=price)
         result = [
-            {"title": i.research.title, "shortTtile": i.research.short_title, "coast": i.coast, "internalCode": i.research.internal_code, "researchCodeNMU": i.research.code}
+            {"title": i.research.title, "shortTitle": i.research.short_title, "coast": i.coast, "internalCode": i.research.internal_code, "researchCodeNMU": i.research.code}
             for i in data_price
         ]
     return Response({"data": result})
@@ -3234,14 +3241,7 @@ def get_research_fields(request):
     paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False).order_by("order")
     paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False).order_by("order")
     data_fields = [
-        {
-            "title": i.title,
-            "id": i.pk,
-            "typeId": i.field_type,
-            "typeTitle": i.get_field_type_display(),
-            "inputTemplates": json.loads(i.input_templates)
-        }
-        for i in paraclinic_input_fields
+        {"title": i.title, "id": i.pk, "typeId": i.field_type, "typeTitle": i.get_field_type_display(), "inputTemplates": json.loads(i.input_templates)} for i in paraclinic_input_fields
     ]
     research = Researches.objects.get(pk=research_id)
 
@@ -3333,11 +3333,11 @@ def send_laboratory_order(request):
     if not individual and lastname:
         card = Individual.import_from_simple_data(
             {
-                "family": patient["family"],
-                "name": patient["name"],
+                "family": patient["lastname"],
+                "name": patient["firstname"],
                 "patronymic": patient["patronymic"],
                 "sex": patient["sex"],
-                "birthday": patient["birthday"],
+                "birthday": patient["birthdate"],
                 "snils": patient["snils"],
             },
             hospital,
@@ -3446,7 +3446,7 @@ def send_laboratory_order(request):
                 },
             )
 
-    return Response({"ok": False, "message": ""})
+    return Response({"ok": True, "message": "", "directions": result["list_id"]})
 
 
 @api_view(["POST"])
@@ -3457,10 +3457,13 @@ def client_register(request):
     phone = str(body.get("phone"))
     os = str(body.get("os"))
 
+    ip = Log.get_client_ip(request)
+
+    if IPLimitter.check_limit(ip):
+        return Response({"ok": False, "message": "Too many requests"})
+
     if len(phone) != 10 or not phone.isdigit() or phone[0] != "9":
         return Response({"ok": False, "message": "Неверный формат телефона"})
-
-    normalized_phones = Phones.normalize_to_search(phone)
 
     code = body.get("code")
 
@@ -3472,13 +3475,6 @@ def client_register(request):
     if token is not None and not isinstance(token, str):
         return Response({"ok": False, "message": "Неверный формат токена"})
 
-    individual = Individual.objects.filter(
-        Q(card__phones__normalized_number__in=normalized_phones)
-        | Q(card__phones__number__in=normalized_phones)
-        | Q(card__phone__in=normalized_phones)
-        | Q(card__doctorcall__phone__in=normalized_phones)
-    ).first()
-
     ok = False
     need_code = False
     api_token = None
@@ -3486,23 +3482,23 @@ def client_register(request):
     message = None
 
     if token is None or code is None:
-        if not individual:
-            api_token = uuid.uuid4().hex
-        else:
-            IndividualAuth.objects.filter(individual=individual).delete()
-
-            code_n = random.randint(0, 9)
-            code_x = random.randint(0, 9)
-            code_y = random.randint(0, 9)
-            code = f"{code_n}{code_x}{code_n}{code_y}"
-            auth = IndividualAuth.objects.create(
-                individual=individual,
-                device_os=os,
-                confirmation_code=code,
-                used_phone=Phones.format_as_plus_7(phone),
-            )
-            api_token = auth.token
-            print({"code": code})  # noqa: T001,T201
+        code_n = random.randint(0, 9)
+        code_x = random.randint(0, 9)
+        code_y = random.randint(0, 9)
+        code = f"{code_n}{code_x}{code_n}{code_y}"
+        auth = IndividualAuth.objects.create(
+            device_os=os,
+            confirmation_code=code,
+            used_phone=Phones.format_as_plus_7(phone),
+        )
+        api_token = auth.token
+        send_code_cascade.apply_async(
+            kwargs={
+                "phone": phone,
+                "auth_id": auth.pk,
+            },
+            countdown=1,
+        )
 
         need_code = True
     else:
@@ -3510,7 +3506,7 @@ def client_register(request):
             token=token,
             is_confirmed=False,
             device_os=os,
-            individual=individual,
+            used_phone=Phones.format_as_plus_7(phone),
         ).first()
 
         if auth:
@@ -3528,6 +3524,12 @@ def client_register(request):
             auth.save(update_fields=["is_confirmed"])
             ok = True
             api_token = token
+            stop_code_cascade.apply_async(
+                kwargs={
+                    'auth_id': auth.pk,
+                },
+                countdown=1,
+            )
 
     return Response(
         {
@@ -3560,13 +3562,28 @@ def client_logout(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_info(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
+
+    individuals = list(individual_auth.individuals)
 
     return Response(
         {
-            "id": individual.individual.pk,
-            "fullName": f"{individual.individual.fio(dots=True, short=True)} {individual.individual.age_s()}",
-            "phone": individual.used_phone or "--",
+            "rows": [
+                {
+                    "id": individual.pk,
+                    "fullName": f"{individual.fio(dots=True, short=True)} {individual.age_s()}",
+                    "phone": individual_auth.used_phone or "--",
+                }
+                for individual in individuals
+            ]
+            if individuals
+            else [
+                {
+                    "id": -1,
+                    "fullName": "Нет данных",
+                    "phone": individual_auth.used_phone or "--",
+                }
+            ]
         }
     )
 
@@ -3603,16 +3620,18 @@ def client_categories(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_results_list(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
     body = json.loads(request.body)
     category = body.get("category")
+    user_id = body.get("userId")
     page = max(min(body.get("page", 1), 1000), 1)
     page_size = max(min(body.get("pageSize", 20), 20), 10)
 
     if category not in ["all", *[x[0] for x in ResultFeed.CATEGORIES]]:
         return Response({"rows": [], "total": 0, "pages": 0, "page": page, "pageSize": page_size})
 
-    rows = ResultFeed.objects.filter(individual=individual.individual)
+    individual = individual_auth.individuals.get(pk=user_id)
+    rows = ResultFeed.objects.filter(individual=individual)
     if category != "all":
         rows = rows.filter(category=category)
     rows = rows.order_by("-result_confirmed_at")
@@ -3635,11 +3654,13 @@ def client_results_list(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_results_pdf(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
     body = json.loads(request.body)
     unique_id = body.get("id")
+    user_id = body.get("userId")
 
-    result: ResultFeed = ResultFeed.objects.filter(individual=individual.individual, unique_id=unique_id).first()
+    individual = individual_auth.individuals.get(pk=user_id)
+    result: ResultFeed = ResultFeed.objects.filter(individual=individual, unique_id=unique_id).first()
 
     if not result:
         return Response({"data": ""})
@@ -3661,3 +3682,20 @@ def client_results_pdf(request):
     pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode("utf-8")
 
     return Response({"data": pdf_content, "name": f"{result.direction_id}.pdf"})
+
+
+@api_view(["POST"])
+@authentication_classes([IndividualAuthentication])
+@permission_classes([])
+def client_fcm(request):
+    individual: IndividualAuth = request.user
+    body = json.loads(request.body)
+    token = body.get("token")
+
+    if not token:
+        return Response({"ok": False, "message": "Неверный формат токена"})
+
+    individual.fcm_token = token
+    individual.save(update_fields=["fcm_token"])
+
+    return Response({"ok": True})

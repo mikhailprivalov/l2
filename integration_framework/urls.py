@@ -69,4 +69,5 @@ urlpatterns = [
     path('client/categories', views.client_categories),
     path('client/results/pdf', views.client_results_pdf),
     path('client/results', views.client_results_list),
+    path('client/fcm', views.client_fcm),
 ]

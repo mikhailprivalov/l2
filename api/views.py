@@ -1446,6 +1446,7 @@ def user_view(request):
             "date_stop_certificate": None,
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
+            "additionalInfo": "{}",
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1464,6 +1465,7 @@ def user_view(request):
                     temp_result.append(i.researches_id)
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
         resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
+        department_doctors = users.DoctorProfile.objects.filter(podrazdeleniye_id=doc.podrazdeleniye_id)
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1500,6 +1502,9 @@ def user_view(request):
             "date_extract_employee": doc.date_extract_employee,
             "resource_schedule": resource_researches,
             "notControlAnketa": doc.not_control_anketa,
+            "replace_doctor_cda": doc.replace_doctor_cda_id if doc.replace_doctor_cda_id else -1,
+            "department_doctors": [{"id": x.pk, "label": f"{x.get_fio()}"} for x in department_doctors],
+            "additionalInfo": doc.additional_info,
         }
 
     return JsonResponse({"user": data})
@@ -1533,6 +1538,7 @@ def user_save_view(request):
     external_access = ud.get("external_access", False)
     not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
+    additional_info = ud.get("additionalInfo", "{}")
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1540,6 +1546,9 @@ def user_save_view(request):
     if date_extract_employee == "":
         date_extract_employee = None
     date_stop_certificate = ud.get("date_stop_certificate")
+    replace_doctor_cda = ud.get("replace_doctor_cda")
+    if replace_doctor_cda == -1:
+        replace_doctor_cda = None
     if date_stop_certificate == "":
         date_stop_certificate = None
 
@@ -1645,6 +1654,8 @@ def user_save_view(request):
             doc.date_stop_external_access = date_stop_external_access
             doc.date_extract_employee = date_extract_employee
             doc.date_stop_certificate = date_stop_certificate
+            doc.replace_doctor_cda_id = replace_doctor_cda
+            doc.additional_info = additional_info
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
@@ -2086,6 +2097,7 @@ def construct_menu_data(request):
     pages = [
         {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
         {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
+        {"url": "/ui/construct/laboratory", "title": "Лабораторные исследования(н)", "access": ["Конструктор: Лабораторные исследования"], "module": None},
         {
             "url": "/ui/construct/descriptive",
             "title": "Описательные протоколы и консультации",
@@ -3347,7 +3359,6 @@ def print_medical_examination_data(request):
             files_data.append(saved_file_pdf)
 
     buffer = simple_join_two_pdf_files(files_data)
-
     id_file = simple_save_pdf_file(buffer)
     hash_file = correspondence_set_file_hash(id_file)
     return JsonResponse({"id": hash_file})

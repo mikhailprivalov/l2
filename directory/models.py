@@ -134,6 +134,38 @@ class MethodLaboratoryAnalisis(models.Model):
         verbose_name_plural = 'Методика анализа'
 
 
+class LaboratoryMaterial(models.Model):
+    title = models.CharField(max_length=64, help_text="Биоматериал")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    @staticmethod
+    def get_materials():
+        result = [{"id": material.pk, "label": material.title} for material in LaboratoryMaterial.objects.all()]
+        return result
+
+    class Meta:
+        verbose_name = 'Биоматериал'
+        verbose_name_plural = 'Биоматериалы'
+
+
+class SubGroup(models.Model):
+    title = models.CharField(max_length=64, help_text="Подгруппа услуги")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    @staticmethod
+    def get_groups():
+        result = [{"id": group.pk, "label": group.title} for group in SubGroup.objects.all()]
+        return result
+
+    class Meta:
+        verbose_name = 'Погруппа услуги'
+        verbose_name_plural = 'Подгруппы услуг'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -250,6 +282,7 @@ class Researches(models.Model):
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
     is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
     is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
+    is_complex = models.BooleanField(default=False, blank=True, help_text="Это комплексная услуга", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -305,6 +338,11 @@ class Researches(models.Model):
     cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
+    laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text='Биоматериал', on_delete=models.SET_NULL)
+    sub_group = models.ForeignKey(SubGroup, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
+    laboratory_duration = models.CharField(max_length=3, default='', blank=True, verbose_name='Срок выполнения')
+    is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -487,6 +525,203 @@ class Researches(models.Model):
             return -13
         return self.site_type_id
 
+    @staticmethod
+    def as_json(research):
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "hide": research.hide,
+            "order": research.sort_weight,
+        }
+        return result
+
+    @staticmethod
+    def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
+        research_tubes = {}
+        for fraction in fractions:
+            if research_tubes.get(fraction.relation_id) and need_fractions:
+                fraction_data = fraction.as_json(fraction)
+                fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                research_tubes[fraction.relation_id]["fractions"].append(fraction_data)
+            elif not research_tubes.get(fraction.relation_id):
+                research_tubes[fraction.relation_id] = {
+                    "id": fraction.relation_id,
+                    "tubeId": fraction.relation.tube_id,
+                    "color": fraction.relation.tube.color,
+                    "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
+                }
+                if need_fractions:
+                    fraction_data = fraction.as_json(fraction)
+                    fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                    research_tubes[fraction.relation_id]["fractions"] = [fraction_data]
+        return research_tubes
+
+    @staticmethod
+    def get_laboratory_researches(podrazdelenie_id: int):
+        if podrazdelenie_id == -1:
+            podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
+            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by('pk')
+        else:
+            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by('pk')
+        return researches
+
+    @staticmethod
+    def get_tubes(podrazdelenie_id: int):
+        tubes = {}
+        researches = Researches.get_laboratory_researches(podrazdelenie_id)
+        for research in researches:
+            research_tubes = Researches.get_tube_data(research.pk)
+            tubes_info = [value for _, value in research_tubes.items()]
+            tubes_keys = tuple(research_tubes.keys())
+            if tubes.get(tubes_keys):
+                tubes[tubes_keys]["researches"].append(research.as_json(research))
+            else:
+                tubes[tubes_keys] = {
+                    "researches": [research.as_json(research)],
+                    "tubes": tubes_info,
+                }
+
+        result = [{"researches": sorted(value["researches"], key=lambda d: d["order"]), "tubes": value["tubes"]} for _, value in tubes.items()]
+        return result
+
+    @staticmethod
+    def update_order(research_pk: int, research_nearby_pk: int, action: str):
+        research = Researches.objects.get(pk=research_pk)
+        research_nearby = Researches.objects.get(pk=research_nearby_pk)
+        if action == 'inc_order':
+            research.sort_weight += 1
+            research_nearby.sort_weight -= 1
+        elif action == 'dec_order':
+            research.sort_weight -= 1
+            research_nearby.sort_weight += 1
+        research.save()
+        research_nearby.save()
+        return True
+
+    @staticmethod
+    def change_visibility(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        if research.hide:
+            research.hide = False
+        else:
+            research.hide = True
+        research.save()
+        return True
+
+    @staticmethod
+    def get_research(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        research_tubes = Researches.get_tube_data(research_pk, True)
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "shortTitle": research.short_title,
+            "code": research.code,
+            "internalCode": research.internal_code,
+            "ecpId": research.ecp_id,
+            "preparation": research.preparation,
+            "departmentId": research.podrazdeleniye_id,
+            "laboratoryMaterialId": research.laboratory_material_id,
+            "subGroupId": research.sub_group_id,
+            "laboratoryDuration": research.laboratory_duration,
+            "tubes": [value for _, value in research_tubes.items()],
+        }
+        return result
+
+    @staticmethod
+    def update_lab_research(research_data):
+        research_pk = None
+        research_title = research_data["title"].strip() if research_data["title"] else None
+        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ''
+        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ''
+        research_code = research_data["code"].strip() if research_data["code"] else ''
+        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ''
+        research = Researches.objects.filter(pk=research_data["pk"]).first()
+        fractions = None
+        if research and research_title:
+            research.title = research_title
+            research.short_title = research_short_title
+            research.code = research_code
+            research.ecp_id = research_ecp_id
+            research.internal_code = research_internal_code
+            research.preparation = research_data["preparation"]
+            research.podrazdeleniye_id = research_data["departmentId"]
+            research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
+            research.sub_group_id = research_data.get("subGroupId", None)
+            research.laboratory_duration = research_data["laboratoryDuration"]
+            research.save()
+            fractions = Fractions.objects.filter(research_id=research.pk)
+        elif research_title:
+            research = Researches(
+                title=research_title,
+                short_title=research_short_title,
+                ecp_id=research_ecp_id,
+                code=research_code,
+                internal_code=research_internal_code,
+                preparation=research_data["preparation"],
+                podrazdeleniye_id=research_data["departmentId"],
+                laboratory_material_id=research_data.get("laboratoryMaterialId", None),
+                sub_group_id=research_data.get("subGroupId", None),
+                laboratory_duration=research_data["laboratoryDuration"],
+                sort_weight=research_data["order"],
+            )
+            research.save()
+            research_pk = research.pk
+        else:
+            return False
+        for tube in research_data["tubes"]:
+            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+            if not relation:
+                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+                relation = ReleationsFT(tube_id=tube_relation.pk)
+                relation.save()
+            for fraction in tube["fractions"]:
+                current_fractions = None
+                fraction_title = fraction["title"].strip() if fraction["title"] else ''
+                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                unit_id = fraction.get("unitId", None)
+                ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
+                if fractions:
+                    current_fractions = fractions.filter(pk=fraction["id"]).first()
+                if current_fractions:
+                    current_fractions.title = fraction_title
+                    current_fractions.ecp_id = ecp_id
+                    current_fractions.fsli = fraction.get("fsli", None)
+                    current_fractions.sort_weight = fraction["order"]
+                    current_fractions.unit_id = unit_id
+                    current_fractions.variants_id = fraction.get("variantsId", None)
+                    current_fractions.formula = fraction["formula"]
+                    current_fractions.hide = fraction["hide"]
+                    current_fractions.ref_m = ref_m
+                    current_fractions.ref_f = ref_f
+                    current_fractions.save()
+                else:
+                    new_fraction = Fractions(
+                        research_id=research.pk,
+                        title=fraction_title,
+                        ecp_id=ecp_id,
+                        fsli=fraction["fsli"],
+                        unit_id=unit_id,
+                        relation_id=relation.pk,
+                        sort_weight=fraction["order"],
+                        variants_id=fraction.get("variantsId", None),
+                        formula=fraction["formula"],
+                        hide=fraction["hide"],
+                        ref_m=ref_m,
+                        ref_f=ref_f,
+                    )
+                    new_fraction.save()
+        if research_pk:
+            return {"ok": True, "pk": research_pk}
+        return {"ok": True}
+
+    @staticmethod
+    def get_lab_additional_data(research_pk: int):
+        current_research = Researches.objects.get(pk=research_pk)
+        result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
+        return result
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -567,6 +802,19 @@ class AuxService(models.Model):
 
     def __str__(self):
         return f"{self.main_research.title} - {self.aux_research.title} - {self.hide}"
+
+
+class ComplexService(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Комплексная услуга", on_delete=models.CASCADE, db_index=True)
+    slave_research = models.ForeignKey(Researches, related_name='slave_service', help_text="Простая услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+
+    class Meta:
+        verbose_name = 'Комплексная услуга'
+        verbose_name_plural = 'Комплексные услуги'
+
+    def __str__(self):
+        return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
 
 
 class ParaclinicInputGroups(models.Model):
@@ -805,6 +1053,11 @@ class ResultVariants(models.Model):
     def get_variants(self):
         return self.values.split('|')
 
+    @staticmethod
+    def get_all():
+        result = [{"id": variants.pk, "label": variants.values} for variants in ResultVariants.objects.all()]
+        return result
+
     def __str__(self):
         return str(self.get_variants())
 
@@ -821,6 +1074,11 @@ class MaterialVariants(models.Model):
 
     def __str__(self):
         return str(self.get_variants())
+
+    @staticmethod
+    def get_all():
+        result = [{"id": variant.pk, "label": variant.values} for variant in MaterialVariants.objects.all()]
+        return result
 
     class Meta:
         verbose_name = 'Вариант комментария'
@@ -842,6 +1100,17 @@ class Unit(models.Model):
     code = models.CharField(max_length=4, db_index=True, verbose_name='Код')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
     ucum = models.CharField(max_length=55, default='', blank=True, verbose_name='UCUM')
+
+    @staticmethod
+    def get_units():
+        result = [
+            {
+                "id": unit.pk,
+                "label": f'{unit.short_title} — {unit.title} - {unit.code}',
+            }
+            for unit in Unit.objects.filter(hide=False)
+        ]
+        return result
 
     def __str__(self) -> str:
         return f"{self.code} — {self.short_title} – {self.title}"
@@ -877,6 +1146,7 @@ class Fractions(models.Model):
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код теста в ЕЦП')
 
     def get_unit(self):
         if self.unit:
@@ -897,6 +1167,36 @@ class Fractions(models.Model):
 
     def get_fsli_code(self):
         return (self.fsli or '').strip()
+
+    def get_ecp_code(self):
+        return (self.ecp_id or '').strip()
+
+    @staticmethod
+    def as_json(fraction) -> dict:
+        result = {
+            "id": fraction.pk,
+            "title": fraction.title,
+            "unitId": fraction.unit_id,
+            "ecpId": fraction.ecp_id,
+            "fsli": fraction.fsli,
+            "order": fraction.sort_weight,
+            "variantsId": fraction.variants_id,
+            "formula": fraction.formula,
+            "hide": fraction.hide,
+            "refM": fraction.ref_m,
+            "refF": fraction.ref_f,
+        }
+        return result
+
+    @staticmethod
+    def convert_ref(ref_m, ref_f, for_save=False):
+        if for_save:
+            convert_ref_m = {ref["age"].strip(): ref["value"].strip() for ref in ref_m if ref_m}
+            convert_ref_f = {ref["age"].strip(): ref["value"].strip() for ref in ref_f if ref_f}
+        else:
+            convert_ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+            convert_ref_f = [{"age": key, "value": value} for key, value in ref_f.items()] if isinstance(ref_f, dict) else []
+        return convert_ref_m, convert_ref_f
 
     def __str__(self):
         return self.research.title + " | " + self.title

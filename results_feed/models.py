@@ -4,6 +4,8 @@ from django.db import models
 
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
+from hospitals.models import Hospitals
+from integration_framework.tasks import send_has_result
 
 
 class ResultFeed(models.Model):
@@ -17,7 +19,8 @@ class ResultFeed(models.Model):
     )
 
     unique_id = models.CharField(max_length=128, db_index=True, unique=True)
-    hospital = models.ForeignKey('hospitals.Hospitals', on_delete=models.CASCADE, db_index=True)
+    hospital = models.ForeignKey('hospitals.Hospitals', on_delete=models.CASCADE, db_index=True, related_name='feed_hospital')
+    owner = models.ForeignKey('hospitals.Hospitals', on_delete=models.CASCADE, db_index=True, related_name='feed_owner')
     individual = models.ForeignKey('clients.Individual', on_delete=models.CASCADE, db_index=True)
     card = models.ForeignKey('clients.Card', on_delete=models.CASCADE)
     direction = models.ForeignKey('directions.Napravleniya', on_delete=models.CASCADE, db_index=True)
@@ -51,7 +54,7 @@ class ResultFeed(models.Model):
         }
 
     @staticmethod
-    def insert_feed_by_direction(direction: Napravleniya):
+    def insert_feed_by_direction(direction: Napravleniya, disable_send=False):
         if not SettingManager.l2('feed'):
             return None
 
@@ -84,9 +87,14 @@ class ResultFeed(models.Model):
         if not category:
             return None
 
+        individual = direction.client.individual
+        individual_owner = individual.owner
+
+        if individual_owner and individual_owner != Hospitals.get_default_hospital():
+            return None
+
         direction.sync_confirmed_fields(skip_post=True)
         hospital = direction.get_hospital()
-        individual = direction.client.individual
         card = direction.client
         direction_created_at = direction.data_sozdaniya
         result_confirmed_at = direction.last_confirmed_at
@@ -97,9 +105,10 @@ class ResultFeed(models.Model):
         unique_id_raw = f'{individual.pk}_{card.pk}_{direction.pk}'
         unique_id = hashlib.sha1(unique_id_raw.encode('utf-8')).hexdigest()
 
-        return ResultFeed.objects.create(
+        feed = ResultFeed.objects.create(
             unique_id=unique_id,
             hospital=hospital,
+            owner=individual_owner or hospital,
             individual=individual,
             card=card,
             direction=direction,
@@ -109,6 +118,11 @@ class ResultFeed(models.Model):
             direction_created_at=direction_created_at,
             result_confirmed_at=result_confirmed_at,
         )
+
+        if not disable_send:
+            send_has_result.apply_async(args=[feed.unique_id])
+
+        return feed
 
     @staticmethod
     def remove_feed_by_direction(direction: Napravleniya):
