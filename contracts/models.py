@@ -225,6 +225,13 @@ class CompanyDepartment(models.Model):
         company_departments = CompanyDepartment.objects.filter(company_id=company_id)
         return [{"id": d.id, "label": d.title} for d in company_departments]
 
+    @staticmethod
+    def save_department(company_id: int, department_title: str):
+        new_department = CompanyDepartment(title=department_title, company_id=company_id)
+        new_department.save()
+        return new_department
+
+
     class Meta:
         verbose_name = "Отдел компании"
         verbose_name_plural = "Отделы компаний"

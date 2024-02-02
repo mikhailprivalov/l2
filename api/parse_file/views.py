@@ -19,7 +19,7 @@ from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast, Company, MedicalExamination
+from contracts.models import PriceCoast, Company, MedicalExamination, CompanyDepartment
 import directions.models as directions
 from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups, ParaclinicInputField
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
@@ -141,10 +141,16 @@ def find_factors(harmful_factors: list):
     return harmful_factors_data, incorrect_factor
 
 
-def add_factors_data(patient_card: Card, position: str, factors_data: list, exam_data: str, company_inn: str):
+def add_factors_data(patient_card: Card, position: str, factors_data: list, exam_data: str, company_inn: str, department: str):
     try:
         PatientHarmfullFactor.save_card_harmful_factor(patient_card.pk, factors_data)
         company_obj = Company.objects.filter(inn=company_inn).first()
+        department_obj = CompanyDepartment.objects.filter(company_id=company_obj.pk, title=department).first()
+        if department_obj:
+            patient_card.work_department_db_id = department_obj.pk
+        else:
+            new_department = CompanyDepartment.save_department(company_obj.pk, department)
+            patient_card.work_department_db_id = new_department.pk
         patient_card.work_position = position.strip()
         patient_card.work_place_db = company_obj
         patient_card.save()
@@ -161,7 +167,8 @@ def add_factors_from_file(request):
     wb = load_workbook(filename=company_file)
     ws = wb.worksheets[0]
     starts = False
-    snils, fio, birthday, gender, inn_company, code_harmful, position, examination_date = (
+    snils, fio, birthday, gender, inn_company, code_harmful, position, examination_date, department = (
+        None,
         None,
         None,
         None,
@@ -183,6 +190,7 @@ def add_factors_from_file(request):
                 code_harmful = cells.index("код вредности")
                 position = cells.index("должность")
                 examination_date = cells.index("дата мед. осмотра")
+                department = cells.index("cтруктурное подразделение")
                 starts = True
         else:
             if company_inn != cells[inn_company].strip():
@@ -206,6 +214,7 @@ def add_factors_from_file(request):
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверный формат даты/несуществующая дата в файле: {e}"})
                 continue
             gender_data = cells[gender][0]
+            department_data = cells[department]
             if fio_data is None and snils_data is None:
                 incorrect_patients.append({"fio": f"Строка: {index}", "reason": "Отсутствует данные"})
                 continue
@@ -215,7 +224,7 @@ def add_factors_from_file(request):
             harmful_factors_data, incorrect_factor = find_factors(code_harmful_data)
             if incorrect_factor:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Неверные факторы: {incorrect_factor}"})
-            patient_updated = add_factors_data(patient_card, cells[position], harmful_factors_data, exam_data, company_inn)
+            patient_updated = add_factors_data(patient_card, cells[position], harmful_factors_data, exam_data, company_inn, department_data)
             if not patient_updated["ok"]:
                 incorrect_patients.append({"fio": cells[fio], "reason": f"Сохранение не удалось, ошибка: {patient_updated['message']}"})
 
