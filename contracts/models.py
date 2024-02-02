@@ -231,7 +231,6 @@ class CompanyDepartment(models.Model):
         new_department.save()
         return new_department
 
-
     class Meta:
         verbose_name = "Отдел компании"
         verbose_name_plural = "Отделы компаний"
