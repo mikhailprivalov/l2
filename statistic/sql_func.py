@@ -443,7 +443,10 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medica
                 date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
                 clients_individual.sex as patient_sex,
                 clients_card.main_address as patient_main_address,
-                directions_napravleniya.parent_id as parent
+                directions_napravleniya.parent_id as parent,
+                
+                directions_istochnikifinansirovaniya.title as fin_source
+                
                 FROM public.directions_paraclinicresult
                 LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
                 LEFT JOIN directory_paraclinicinputfield ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
@@ -452,6 +455,7 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medica
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+                LEFT JOIN directions_istochnikifinansirovaniya ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id
                 WHERE 
                   directions_issledovaniya.research_id=%(research_id)s
                   and directory_paraclinicinputfield.for_talon = true
