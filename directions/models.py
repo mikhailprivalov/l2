@@ -1108,7 +1108,7 @@ class Napravleniya(models.Model):
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
             price_name_id=price_name_id,
-            id_in_hospital=id_in_hospital
+            id_in_hospital=id_in_hospital,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
