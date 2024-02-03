@@ -3371,8 +3371,19 @@ def send_laboratory_order(request):
     additional_order_number_by_service = {}
     for tube in tubes:
         tube_number = tube.get("tubeNumber")
+        if not tube_number:
+            return Response({"ok": False, "message": "не указан tubeNumber "})
+
+        if not directions.NumberGenerator.check_value_for_organization(hospital, int(tube_number)):
+            return Response({"ok": False, "message": f"Номер {tube_number} not valid. May be NumberGenerator is over or order number exists"})
+
+        if directions.TubesRegistration.objects.filter(number=int(tube_number)).first():
+            return Response({"ok": False, "message": f"Номер {tube_number} уже существует"})
+
         internal_research_code_by_tube_number[tube_number] = []
         for data_research in tube.get("researches"):
+            if not Researches.objects.filter(hide=False, internal_code=data_research.get("internalCode")).first():
+                return Response({"ok": False, "message": "Некорректный номер услуги internalCode"})
             internal_research_code_by_tube_number[tube_number].append(data_research.get("internalCode"))
             additional_order_number_by_service[data_research.get("internalCode")] = data_research.get("additionalNumber")
     order_numbers = []
