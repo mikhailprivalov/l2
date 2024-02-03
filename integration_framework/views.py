@@ -3365,6 +3365,10 @@ def send_laboratory_order(request):
 
     if order_internal_id is None:
         return Response({"ok": False, "message": "Некорректный номер заказа orderData.internalId"})
+    else:
+        id_in_hospital = limit_str(order_internal_id, 15)
+        if Napravleniya.objects.filter(id_in_hospital=id_in_hospital, hospital=hospital).first():
+            return Response({"ok": False, "message": f"Уже существует номер заказа {id_in_hospital} в orderData.internalId для текуще организации"})
 
     tubes = order_data.get("tubes")
     internal_research_code_by_tube_number = {}
@@ -3439,6 +3443,7 @@ def send_laboratory_order(request):
                 hospital_override=hospital.pk,
                 services_by_additional_order_num=services_by_additional_order_num,
                 price_name=price_id,
+                id_in_hospital=id_in_hospital,
             )
 
             if not result["r"]:
