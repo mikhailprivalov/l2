@@ -190,7 +190,7 @@ def add_factors_from_file(request):
                 code_harmful = cells.index("код вредности")
                 position = cells.index("должность")
                 examination_date = cells.index("дата мед. осмотра")
-                department = cells.index("структурное подразделение")
+                department = cells.index("подразделение")
                 starts = True
         else:
             if company_inn != cells[inn_company].strip():
