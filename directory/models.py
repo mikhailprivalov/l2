@@ -175,7 +175,6 @@ class SubGroupPadrazdeleniye(models.Model):
         podrazdeleniye = Podrazdeleniya.objects.filter(pk=department_pk).first()
         SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye).delete()
         for t_b in tb_data:
-            print(t_b)
             subgroup = SubGroupDirectory.objects.filter(pk=t_b['subgroupId']).first()
             if subgroup:
                 if not SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye, subgroup=subgroup).exists():

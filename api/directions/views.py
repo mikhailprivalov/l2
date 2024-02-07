@@ -3937,10 +3937,6 @@ def eds_documents(request):
                     cda_xml = cda_data.get('result', {}).get('content')
                 elif SettingManager.l2('cdator'):
                     if not iss_obj.research.cda_template_file:
-                        print("#####")
-                        print("cda_eds_data:")
-                        print(cda_eds_data)
-                        print("#####")
                         cda_data = cdator_gen_xml(cda_eds_data["generatorName"], direction_data=cda_eds_data["data"])
                         cda_xml = cda_data.get('result', {}).get('content')
                     else:
