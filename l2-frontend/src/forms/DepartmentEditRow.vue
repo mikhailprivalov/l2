@@ -29,12 +29,35 @@
       />
     </td>
     <td>
-      <i
-        v-if="department.type === '7'"
-        class="fa fa-bed"
-        style="margin-top: 10px; margin-left: 7px"
-      />
+      <div>
+        <a
+          href="#"
+          class="a-under"
+          style="padding-right: 10px"
+          @click.prevent="editDepartment(department.pk)"
+        >
+          <i
+            v-if="department.type === '7'"
+            v-tippy
+            class="fa fa-bed"
+            style="margin-top: 10px; margin-left: 7px"
+            title="Настройки подразделения"
+          />
+          <i
+            v-if="department.type === '2'"
+            v-tippy
+            class="fa-solid fa-vials"
+            style="margin-top: 10px; margin-left: 7px"
+            title="Настройки подразделения"
+          />
+        </a>
+      </div>
     </td>
+    <SubGroupsDepartment
+      v-if="subgroups_department"
+      :department_pk="department.pk"
+      :readonly="false"
+    />
   </tr>
 </template>
 
@@ -45,10 +68,11 @@ import _ from 'lodash';
 
 import departmentsDirectory from '@/api/departments-directory';
 import * as actions from '@/store/action-types';
+import SubGroupsDepartment from '@/modals/SubGroupDepartment.vue';
 
 export default {
   name: 'DepartmentEditRow',
-  components: { Treeselect },
+  components: { Treeselect, SubGroupsDepartment },
   props: {
     can_edit: {
       type: Boolean,
@@ -67,6 +91,7 @@ export default {
     return {
       updated: false,
       timer: null,
+      subgroups_department: false,
     };
   },
   computed: {
@@ -90,6 +115,11 @@ export default {
     department_oid() {
       this.save_clear_deb();
     },
+  },
+  created() {
+    this.$root.$on('hide_subgroups_department', () => {
+      this.subgroups_department = false;
+    });
   },
   beforeMount() {
     clearTimeout(this.timer);
@@ -127,6 +157,9 @@ export default {
       }
 
       await this.$store.dispatch(actions.GET_ALL_DEPARTMENTS);
+    },
+    editDepartment(iDdepartment) {
+      this.subgroups_department = true;
     },
   },
 };
