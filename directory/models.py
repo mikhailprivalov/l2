@@ -150,20 +150,45 @@ class LaboratoryMaterial(models.Model):
         verbose_name_plural = 'Биоматериалы'
 
 
-class SubGroup(models.Model):
+class SubGroupDirectory(models.Model):
     title = models.CharField(max_length=64, help_text="Подгруппа услуги")
 
     def __str__(self):
         return "%s" % self.title
 
-    @staticmethod
-    def get_groups():
-        result = [{"id": group.pk, "label": group.title} for group in SubGroup.objects.all()]
-        return result
-
     class Meta:
         verbose_name = 'Погруппа услуги'
         verbose_name_plural = 'Подгруппы услуг'
+
+
+class SubGroupPadrazdeleniye(models.Model):
+    subgroup = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.CASCADE)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+
+    @staticmethod
+    def get_subgroup_podrazdeleniye(podrazdeleniye):
+        subgroups = SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye)
+        return [{"subgroupId": p.subgroup.pk, "id": p.subgroup.pk, "label": p.subgroup.title} for p in subgroups]
+
+    @staticmethod
+    def save_subgroups_department(department_pk, tb_data):
+        podrazdeleniye = Podrazdeleniya.objects.filter(pk=department_pk).first()
+        SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye).delete()
+        for t_b in tb_data:
+            print(t_b)
+            subgroup = SubGroupDirectory.objects.filter(pk=t_b['subgroupId']).first()
+            if subgroup:
+                if not SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye, subgroup=subgroup).exists():
+                    SubGroupPadrazdeleniye(podrazdeleniye=podrazdeleniye, subgroup=subgroup).save()
+
+        return True
+
+    def __str__(self):
+        return f"{self.subgroup.title} - {self.podrazdeleniye.title}"
+
+    class Meta:
+        verbose_name = 'Свзяь погруппы и подздаления'
+        verbose_name_plural = 'Связи погрупп и подздалений'
 
 
 class Researches(models.Model):
@@ -340,7 +365,7 @@ class Researches(models.Model):
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text='Биоматериал', on_delete=models.SET_NULL)
-    sub_group = models.ForeignKey(SubGroup, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
+    sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default='', blank=True, verbose_name='Срок выполнения')
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
 
