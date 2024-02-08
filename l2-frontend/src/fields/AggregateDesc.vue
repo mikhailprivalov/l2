@@ -91,6 +91,7 @@ const makeKey = (t, group) => `${group}${delimiter}${t}`;
 export default {
   props: {
     pk: {},
+    caseDirection: {},
     extract: {
       type: Boolean,
       default: false,
@@ -171,7 +172,11 @@ export default {
       return s.split(delimiter)[1];
     },
     async load() {
-      this.data = await stationarPoint.aggregateDesc(this, ['pk', 'extract', 'r_type']);
+      if (this.caseDirection) {
+        this.data = await this.$api('cases/aggregate', this, ['caseDirection'], { view: this.r_type });
+      } else {
+        this.data = await stationarPoint.aggregateDesc(this, ['pk', 'extract', 'r_type']);
+      }
     },
     fix_html(v) {
       let lv = v;

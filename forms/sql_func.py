@@ -101,7 +101,8 @@ def get_covid_to_json(researches, d_s, d_e):
                     doc_oms.doc_number as oms_number,
                     doc_passport.serial as passport_serial,
                     doc_passport.doc_number as passport_number,
-                    doc_snils.doc_number as snils_number
+                    doc_snils.doc_number as snils_number,
+                    tube_number
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya 
                 ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -114,12 +115,13 @@ def get_covid_to_json(researches, d_s, d_e):
                 LEFT JOIN directory_fractions
                 ON directions_result.fraction_id=directory_fractions.id
                 LEFT JOIN (
-                SELECT issledovaniya_id,
-                tubesregistration_id,
-                to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'YYYY-MM-DD') AS get_tubes
-                FROM directions_issledovaniya_tubes
-                LEFT JOIN directions_tubesregistration
-                ON directions_tubesregistration.id = directions_issledovaniya_tubes.tubesregistration_id
+                    SELECT issledovaniya_id,
+                    tubesregistration_id,
+                    to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'YYYY-MM-DD') AS get_tubes,
+                    "number" as tube_number
+                    FROM directions_issledovaniya_tubes
+                    LEFT JOIN directions_tubesregistration
+                    ON directions_tubesregistration.id = directions_issledovaniya_tubes.tubesregistration_id
                 ) as tubes
                 ON tubes.issledovaniya_id = directions_issledovaniya.id
                 LEFT JOIN (
@@ -199,6 +201,27 @@ def sort_direction_by_file_name_contract(directions, is_create_contract):
             order by directions_napravleniya.num_contract, directory_researches.file_name_contract, directions_issledovaniya.napravleniye_id       
         """,
             params={'directions': directions, 'is_create_contract': is_create_contract},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_research_data_for_contract_specification(price_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            contracts_pricecoast.research_id,
+            contracts_pricecoast.coast,
+            contracts_pricecoast.number_services_by_contract,
+            directory_researches.title as research_title,
+            directory_researches.code as research_code
+            FROM contracts_pricecoast
+            LEFT JOIN directory_researches on
+            directory_researches.id = contracts_pricecoast.research_id
+            WHERE contracts_pricecoast.price_name_id = %(price_id)s       
+        """,
+            params={'price_id': price_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows

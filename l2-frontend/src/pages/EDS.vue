@@ -375,7 +375,7 @@
 
 <script lang="ts">
 import {
-  createDetachedSignature, createHash, getSystemInfo, getUserCertificates,
+  createDetachedSignature, createHash, getCertificate, getSystemInfo, getUserCertificates,
 } from 'crypto-pro';
 import moment from 'moment';
 import Vue from 'vue';
@@ -390,7 +390,7 @@ import usersPoint from '@/api/user-point';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
-import { convertSubjectNameToTitle } from '@/utils';
+import { convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
   { id: 'mo', label: 'Подписи медицинской организации' },
@@ -515,6 +515,16 @@ export default class EDS extends Vue {
 
   signingProcess: any;
 
+  get noOGRN() {
+    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
+
+    if (!cert) {
+      return false;
+    }
+
+    return !subjectNameHasOGRN(null, cert.subjectName);
+  }
+
   get accessToMO() {
     return (this.$store.getters.user_data.groups || []).includes('ЭЦП Медицинской организации');
   }
@@ -565,7 +575,7 @@ export default class EDS extends Vue {
   get certificatesDisplay() {
     return this.certificates.map(c => ({
       thumbprint: c.thumbprint,
-      name: convertSubjectNameToTitle(null, c.subjectName, c.name),
+      name: convertSubjectNameToTitle(null, c.subjectName),
     }));
   }
 
@@ -682,6 +692,11 @@ export default class EDS extends Vue {
   }
 
   async listSign() {
+    if (this.noOGRN && this.selectedSignatureMode === 'Медицинская организация') {
+      this.$error('Отсутствует ОГРН в сертификате');
+      return;
+    }
+
     if (this.signingProcess.active) {
       return;
     }
@@ -696,6 +711,9 @@ export default class EDS extends Vue {
     this.signingProcess.currentOperation = '';
     this.signingProcess.totalDocuments = this.rowsChecked.reduce((a, b) => a + b.documents.length, 0);
     this.signingProcess.currentDocument = 0;
+
+    const cert = await getCertificate(this.selectedCertificate);
+
     for (const r of this.rowsChecked) {
       try {
         this.signingProcess.currentOperation = `${r.pk} получение документов`;
@@ -731,6 +749,12 @@ export default class EDS extends Vue {
               pk: d.pk,
               sign,
               mode: this.selectedSignatureMode,
+              certThumbprint: this.selectedCertificate,
+              certDetails: cert ? {
+                subjectName: cert.subjectName,
+                validFrom: cert.validFrom,
+                validTo: cert.validTo,
+              } : null,
             });
 
             if (ok) {

@@ -27,9 +27,10 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Result, Issledovaniya, RmisServices, ParaclinicResult, RMISOrgs, RMISServiceInactive, TubesRegistration, Diagnoses
 from directory.models import Fractions, ParaclinicInputGroups, Researches
+from ecp_integration.integration import search_patient_ecp_by_fio, search_patient_ecp_by_person_id
 from hospitals.models import Hospitals
 from laboratory import settings as l2settings
-from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY
+from laboratory.settings import MAX_RMIS_THREADS, RMIS_PROXY, ECP_SEARCH_PATIENT
 from laboratory.utils import strdate, strtime, localtime, strfdatetime, current_time
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.sql_func import get_confirm_direction
@@ -711,47 +712,63 @@ class Patients(BaseRequester):
     def import_individual_to_base(self, query, fio=False, limit=10) -> clients_models.Individual or None:
         return_rows = []
         if fio:
-            qs = self.client.searchIndividual(**query)[:limit]
+            if ECP_SEARCH_PATIENT.get("search"):
+                patient = {
+                    "family": query.get("surname").replace("%", ""),
+                    "name": query.get("name").replace("%", ""),
+                    "patronymic": query.get("patrName").replace("%", ""),
+                    "birthday": query.get("birthDate"),
+                    "snils": "",
+                }
+                qs = search_patient_ecp_by_fio(patient, return_first_element=False)
+            else:
+                qs = self.client.searchIndividual(**query)[:limit]
         else:
             qs = [query.upper()]
         polis_type = clients_models.DocumentType.objects.filter(title="Полис ОМС")[0]
         for q in qs:
-            individual_row = None
             if q != "":
-                individual_row = self.client.getIndividual(q)
-            if individual_row and (individual_row["surname"] or individual_row["name"] or individual_row["patrName"]) and individual_row["birthDate"] is not None:
-                qq = dict(
-                    family=(individual_row["surname"] or "").title(),
-                    name=(individual_row["name"] or "").title(),
-                    patronymic=(individual_row["patrName"] or "").title(),
-                    birthday=individual_row["birthDate"],
-                    sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"),
-                )
-                individual_set = clients_models.Individual.objects.filter(**qq)
-                if not individual_set.exists():
-                    individual_set = [clients_models.Individual(**qq)]
-                    individual_set[0].save()
-                individual = individual_set[0]
-                document_ids = self.client.getIndividualDocuments(q)
-                for document_id in document_ids:
-                    document_object = self.client.getDocument(document_id)
-                    if document_object["type"] in self.polis_types_id_list and document_object["active"]:
-                        q = dict(
-                            document_type=polis_type,
-                            serial=document_object["series"] or "",
-                            number=document_object["number"] or "",
-                            individual=individual,
-                            is_active=True,
+                individual = None
+                if not ECP_SEARCH_PATIENT.get("search"):
+                    individual_row = self.client.getIndividual(q)
+                    if individual_row and (individual_row["surname"] or individual_row["name"] or individual_row["patrName"]) and individual_row["birthDate"] is not None:
+                        qq = dict(
+                            family=(individual_row["surname"] or "").title(),
+                            name=(individual_row["name"] or "").title(),
+                            patronymic=(individual_row["patrName"] or "").title(),
+                            birthday=individual_row["birthDate"],
+                            sex={"1": "м", "2": "ж"}.get(individual_row["gender"], "м"),
                         )
-                        if clients_models.Document.objects.filter(**q).exists():
-                            if q['number'] and not q['serial']:
-                                break
-                            continue
-                        doc = clients_models.Document(**q)
-                        doc.save()
-                        if q['number'] and not q['serial']:
-                            break
-                individual.sync_with_rmis(c=self.main_client, forced_data=individual_row)
+                        individual_set = clients_models.Individual.objects.filter(**qq)
+                        if not individual_set.exists():
+                            individual_set = [clients_models.Individual(**qq)]
+                            individual_set[0].save()
+                        individual = individual_set[0]
+                        document_ids = self.client.getIndividualDocuments(q)
+                        for document_id in document_ids:
+                            document_object = self.client.getDocument(document_id)
+                            if document_object["type"] in self.polis_types_id_list and document_object["active"]:
+                                q = dict(
+                                    document_type=polis_type,
+                                    serial=document_object["series"] or "",
+                                    number=document_object["number"] or "",
+                                    individual=individual,
+                                    is_active=True,
+                                )
+                                if clients_models.Document.objects.filter(**q).exists():
+                                    if q['number'] and not q['serial']:
+                                        break
+                                    continue
+                                doc = clients_models.Document(**q)
+                                doc.save()
+                                if q['number'] and not q['serial']:
+                                    break
+                            individual.sync_with_rmis(c=self.main_client, forced_data=individual_row)
+
+                if ECP_SEARCH_PATIENT.get("search"):
+
+                    individual_row = search_patient_ecp_by_person_id(q)
+                    individual = clients_models.Individual.import_from_ecp(individual_row)
                 return_rows.append(individual)
         return return_rows
 

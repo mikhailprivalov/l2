@@ -167,7 +167,7 @@ export default class ReceiveByDirection extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { q } = this;
     const {
-      ok, researches, invalid,
+      ok, researches, invalid, message,
     } = await this.$api(
       '/laboratory/receive-one-by-one',
       this,
@@ -175,7 +175,10 @@ export default class ReceiveByDirection extends Vue {
       { q },
     );
     for (const msg of invalid) {
-      this.$root.$emit('msg', 'error', msg);
+      this.$error(msg);
+    }
+    if (message) {
+      this.$error(message);
     }
     this.lastResearches = researches;
     this.receiveStatuses = ok;

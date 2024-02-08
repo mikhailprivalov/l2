@@ -21,7 +21,5 @@ declare global {
     printResults: (pks: string[]) => void
     today: Date
     getFormattedDate: (d: Date) => string
-    posthog: any
-    posthogInit: (posthog: any, orgId?: string, orgTitle?: string, userId?: number) => void
   }
 }

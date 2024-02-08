@@ -5,6 +5,7 @@ from django.db.models import Q
 from openpyxl import load_workbook
 
 import clients.models as clients
+from contracts.models import Company
 
 
 class Command(BaseCommand):
@@ -79,6 +80,7 @@ class Command(BaseCommand):
                     house = cells.index("дом")
                     room = cells.index("квартриа")
                     district_gin = cells.index("участок-жк")
+                    company = cells.index("работа")
                     city = cells.index("город")
                     street = cells.index("улица")
                     pasport_serial = cells.index("серия")
@@ -94,6 +96,19 @@ class Command(BaseCommand):
                     | Q(document_type__title__iexact="Полис ОМС", number=cells[polis])
                     | Q(document_type__title__iexact="Паспорт гражданина РФ", serial=cells[pasport_serial], number=cells[pasport_num])
                 ).first()
+                current_company = None
+                if cells[company]:
+                    companies = Company.objects.filter(cells[company]).first()
+                    if companies:
+                        current_company = companies.title
+                    else:
+                        try:
+                            cp = Company(title=cells[company], short_title=cells[company])
+                            cp.save()
+                            current_company = cp
+                        except:
+                            current_company = None
+
                 if ind:
                     add_dist = get_district(cells[distict_num], cells[district_gin])
                     i = ind.individual
@@ -103,7 +118,8 @@ class Command(BaseCommand):
                             c.number_poliklinika = cells[num_card]
                             c.district = add_dist[0]
                             c.ginekolog_district = add_dist[1]
-                            c.save(update_fields=['number_poliklinika', 'district', 'ginekolog_district'])
+                            c.work_place_db = current_company
+                            c.save(update_fields=['number_poliklinika', 'district', 'ginekolog_district', 'work_place_db'])
                     else:
                         # создать карту L2
                         m_address = ' '.join('{}, {}, д.{}, кв.{}'.format(cells[city], cells[street], cells[house], cells[room]).strip().split())
@@ -116,6 +132,7 @@ class Command(BaseCommand):
                             ginekolog_district=add_dist[1],
                             main_address=m_address,
                             fact_address=m_address,
+                            work_place_db=current_company,
                         )
                         print('Добавлена карта: \n', c)  # noqa: T001
                 else:
@@ -151,5 +168,6 @@ class Command(BaseCommand):
                         ginekolog_district=add_dist[1],
                         main_address=m_address,
                         fact_address=m_address,
+                        work_place_db=current_company,
                     )
                     print('Добавлена карта: \n', c)  # noqa: T001

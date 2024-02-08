@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from typing import Union
 from django.utils import timezone
 
+from laboratory.utils import current_year
+
 
 def try_strptime(s, formats=('%d.%m.%Y',), delta: timedelta = None) -> Union[datetime, None]:
     for fmt in formats:
@@ -63,3 +65,10 @@ def valid_date(s):
 def date_iter_range(start_date, end_date, more_1=False, step=1):
     for n in range(0, int((end_date - start_date).days) + (1 if more_1 else 0), step):
         yield start_date + timedelta(n)
+
+
+def age_for_year(born):
+    year_today = current_year()
+    last_date = datetime.strptime(f'31.12.{year_today}', '%d.%m.%Y').date()
+    born_date = datetime.strptime(born, '%Y-%m-%d').date()
+    return last_date.year - born_date.year - ((last_date.month, last_date.day) < (born_date.month, born_date.day))

@@ -1,21 +1,28 @@
 # import os
 import json
+import os
 
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
 import datetime
 
-# from io import BytesIO
-# from datetime import datetime
-# from pdf2docx import Converter
-# from docx import Document
-# import fitz
-# from pdf2docx import Page
-# from appconf.manager import SettingManager
+from io import BytesIO
+from pdf2docx import Converter
+from docx import Document
+from appconf.manager import SettingManager
 from forms.sql_func import get_covid_to_json, get_extra_notification_data_for_pdf
-from laboratory.settings import COVID_RESEARCHES_PK, CENTRE_GIGIEN_EPIDEMIOLOGY, REGION, EXCLUDE_HOSP_SEND_EPGU, EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
+from laboratory.settings import (
+    COVID_RESEARCHES_PK,
+    CENTRE_GIGIEN_EPIDEMIOLOGY,
+    REGION,
+    EXCLUDE_HOSP_SEND_EPGU,
+    EXTRA_MASTER_RESEARCH_PK,
+    EXTRA_SLAVE_RESEARCH_PK,
+    DISABLED_AUTO_PRINT_DATE_IN_FORMS,
+)
 from utils.dates import normalize_date
 from hospitals.models import Hospitals
+from utils.xh import save_tmp_file
 
 
 def pdf(request):
@@ -32,62 +39,57 @@ def pdf(request):
     response['Content-Disposition'] = 'inline; filename="form-' + t + '.pdf"'
 
     f = import_string('forms.forms' + t[0:3] + '.form_' + t[4:6])
+    disable_date = False
+    if 'form_' + t[4:6] in DISABLED_AUTO_PRINT_DATE_IN_FORMS:
+        disable_date = True
+
     response.write(
         f(
             request_data={
                 **dict(request.GET.items()),
                 "user": request.user,
                 "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                "disable_date": disable_date,
             }
         )
     )
     return response
 
 
-# def docx(request):
-#     response = HttpResponse(content_type='application/application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-#     t = request.GET.get("type")
-#     f = import_string('forms.forms' + t[0:3] + '.form_' + t[4:6])
-#     pdf = f(
-#         request_data={
-#             **dict(request.GET.items()),
-#             "user": request.user,
-#             "hospital": request.user.doctorprofile.get_hospital(),
-#         }
-#     )
-#
-#     buffer = BytesIO()
-#     buffer.write(pdf)
-#     buffer.seek(0)
-#
-#     today = datetime.now()
-#     date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-#     date_now_str = str(date_now1)
-#     dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-#     docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')
-#     cv = MyConverter(buffer)
-#     cv.convert(docx_file, start=0, end=None)
-#     cv.close()
-#     doc = Document(docx_file)
-#     os.remove(docx_file)
-#     buffer.close()
-#
-#     response['Content-Disposition'] = 'attachment; filename="form-' + t + '.docx"'
-#     doc.save(response)
-#
-#     return response
+def docx(request):
+    response = HttpResponse(content_type='application/application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    t = request.GET.get("type")
+    f = import_string('forms.forms' + t[0:3] + '.form_' + t[4:6])
+    pdf = f(
+        request_data={
+            **dict(request.GET.items()),
+            "user": request.user,
+            "hospital": request.user.doctorprofile.get_hospital(),
+        }
+    )
 
+    buffer = BytesIO()
+    buffer.write(pdf)
+    buffer.seek(0)
 
-# def save(form, filename: str):
-#     with open(filename, 'wb') as f:
-#         f.write(form.read())
-#
-#
-# class MyConverter(Converter):
-#     def __init__(self, buffer):
-#         self.filename_pdf = 'xx.pdf'
-#         self._fitz_doc = fitz.Document(stream=buffer, filename=self.filename_pdf)
-#         self._pages = [Page(fitz_page) for fitz_page in self._fitz_doc]
+    today = datetime.datetime.now()
+    date_now1 = datetime.datetime.strftime(today, "%Y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(date_now1)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    docx_file = os.path.join(dir_param, date_now_str + '_dir.docx')
+    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+    save_tmp_file(buffer, filename=file_dir)
+    cv = Converter(file_dir)
+    cv.convert(docx_file, start=0, end=None)
+    cv.close()
+    doc = Document(docx_file)
+    os.remove(docx_file)
+    buffer.close()
+
+    response['Content-Disposition'] = 'attachment; filename="form-' + t + '.docx"'
+    doc.save(response)
+
+    return response
 
 
 def extra_nofication(request):
@@ -244,3 +246,7 @@ def get_epid_data(directions, with_confirm):
             temp_data['master_field_results'].append({'master_field_title': i.master_field_title, 'master_value': master_value})
 
     return data
+
+
+def generate_xml(request):
+    return

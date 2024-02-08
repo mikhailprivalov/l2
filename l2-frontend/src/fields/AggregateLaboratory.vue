@@ -203,6 +203,7 @@ const makeKey = (t, group) => `${group}${delimiter}${t}`;
 export default {
   props: {
     pk: {},
+    caseDirection: {},
     extract: {
       type: Boolean,
       default: false,
@@ -297,7 +298,11 @@ export default {
     async load() {
       this.excluded.dateDir = [];
       this.excluded.titles = [];
-      this.data = await stationarPoint.aggregateLaboratory(this, ['pk', 'extract']);
+      if (this.caseDirection) {
+        this.data = await this.$api('cases/aggregate', this, ['caseDirection'], { view: 'laboratory' });
+      } else {
+        this.data = await stationarPoint.aggregateLaboratory(this, ['pk', 'extract']);
+      }
     },
     excludedTitle(t, group) {
       const title = makeKey(t, group);

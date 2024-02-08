@@ -232,6 +232,8 @@ export default {
         const cardPk = params.get('card_pk');
         const ofname = params.get('ofname');
         const ofnameDep = params.get('ofname_dep');
+        const q = params.get('q');
+
         if (rmisUid) {
           window.history.pushState('', '', window.location.href.split('?')[0]);
           for (const row of this.bases) {
@@ -266,6 +268,21 @@ export default {
             this.query = `card_pk:${cardPk}`;
             this.search_after_loading = true;
           }
+        } else if (q) {
+          window.history.pushState('', '', window.location.href.split('?')[0]);
+
+          for (const b of this.bases) {
+            if (b.internal_type) {
+              this.base = b.pk;
+              break;
+            }
+          }
+
+          if (this.base === -1) {
+            this.base = this.bases[0].pk;
+          }
+          this.query = q;
+          this.search_after_loading = true;
         } else {
           this.base = this.bases[0].pk;
         }
@@ -356,10 +373,6 @@ export default {
         transition: .5s ease-in opacity;
       }
     }
-  }
-
-  .nbr {
-    border-radius: 0;
   }
 
   .bob {

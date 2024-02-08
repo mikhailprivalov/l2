@@ -7,6 +7,7 @@
       animation: 'fade',
       duration: 0,
       theme: 'light',
+      interactive: true,
       placement: 'bottom',
       popperOptions: {
         modifiers: {
@@ -36,6 +37,12 @@
     >
       {{ direction.researches_short[0] || direction.researches[0] }}
     </div>
+    <div
+      v-if="idInPrintQueueStatus"
+      style="float: right"
+    >
+      <i class="fa-solid fa-layer-group" />
+    </div>
 
     <div
       :id="`tp-${direction.pk}`"
@@ -55,15 +62,50 @@
             {{ r }}
           </li>
         </ul>
+        <div
+          v-if="direction.confirm"
+          class="padding-plan-queue"
+        >
+          <a
+            v-if="!idInPrintQueueStatus"
+            href="#"
+            style="float: right"
+            @click.prevent="addIdToPlan"
+          >В очередь печати</a>
+          <a
+            v-if="idInPrintQueueStatus"
+            href="#"
+            style="float: right"
+            @click.prevent="delIdFromPlan"
+          >Удалить из очереди</a>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
+
+import { PRINT_QUEUE_ADD_ELEMENT, PRINT_QUEUE_DEL_ELEMENT } from '@/store/action-types';
+
 export default {
   name: 'DisplayDirection',
   props: ['direction'],
+  computed: {
+    idInPrintQueueStatus() {
+      return this.$store.getters.idInQueue(this.direction.pk);
+    },
+  },
+  methods: {
+    addIdToPlan() {
+      const id = [this.direction.pk];
+      this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
+    },
+    delIdFromPlan() {
+      const id = this.direction.pk;
+      this.$store.dispatch(PRINT_QUEUE_DEL_ELEMENT, { id });
+    },
+  },
 };
 </script>
 
@@ -105,5 +147,9 @@ export default {
 .t-right {
   display: inline-block;
   vertical-align: top;
+}
+
+.padding-plan-queue {
+  padding-top: 10px;
 }
 </style>

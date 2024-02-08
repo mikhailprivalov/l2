@@ -34,12 +34,11 @@
             <div class="wrapper" id="research-form"></div>
         </div>
     </div>
-    <div class="modal" id="tube_directory_Modal" tabindex="-1" role="dialog" aria-labelledby="tube_directory_Modal">
+    <div class="modal" id="tube_directory_Modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                     <h4 class="modal-title" id="tube_directory_Modal">Справочник ёмкостей</h4>
                 </div>
                 <div class="modal-body">
@@ -53,13 +52,26 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="tune-modal" tabindex="-1" role="dialog" aria-labelledby="tune-modal-title">
+    <div class="modal fade" id="tune-modal" tabindex="-1" role="dialog">
         <div class="modal-dialog" style="width: 100%;height: 100%;margin:0;padding:0;overflow: hidden">
             <div class="modal-content" style="height: auto;min-height: 100%;border-radius: 0;">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                            aria-hidden="true">&times;</span></button>
-                    <h4 class="modal-title" id="tune-modal-title">Настройка анализа</h4>
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h4 class="modal-title">Настройка анализа</h4>
+                </div>
+                <div class="modal-body" style="position: initial;"></div>
+                <div class="modal-footer" style="position: absolute;bottom: -10px;left: 0;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="tune-tube-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" style="width: 100%;height: 100%;margin:0;padding:0;overflow: hidden">
+            <div class="modal-content" style="height: auto;min-height: 100%;border-radius: 0;">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                    <h4 class="modal-title">Настройка ёмкости исследований</h4>
                 </div>
                 <div class="modal-body" style="position: initial;"></div>
                 <div class="modal-footer" style="position: absolute;bottom: -10px;left: 0;">
@@ -418,7 +430,6 @@
     <script src="{% static 'js/jquery.clearsearch.js' %}"></script>
     <script src="{% static 'js/jquery-ui.min.js' %}"></script>
     <script>
-
         let tune = {"uet_doc": {}, "uet_lab": {}, "edit_mode": 0};
 
         let fraction_types = {
@@ -431,6 +442,25 @@
         let rdl = false;
         let refshow = false;
         let scrollto = "";
+
+        function openModalWithFrame(modalId, url) {
+            $(`#${modalId}`).modal('show');
+            $(`#${modalId}`).on("hidden.bs.modal", function () {
+                location.reload();
+            });
+            $(`#${modalId} .modal-body`).html(`<iframe
+width="100%"
+style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px"
+frameborder="0"
+scrolling="yes"
+allowtransparency="true"
+src="${url}"
+></iframe>`);
+        }
+
+        function modifyTube(tubeId) {
+            openModalWithFrame('tune-tube-modal', `/ui/construct/related-tube/${tubeId}`);
+        }
 
         $(document).ready(function () {
             $(window).resize(function () {
@@ -505,17 +535,26 @@
             $("<h4></h4>").html("Редактор исследования &mdash; <span id='lab_r'>...</span>").appendTo($(form));
             const row = $("<div class='row'></div>").appendTo($(form));
             const cloumn1 = $("<div class='col-md-6'></div>").appendTo($(row));
-            let group = $("<div class=\"input-group\" style='margin-bottom: 5px'></div>").appendTo($(cloumn1));
-            $('<span class="input-group-addon" style="min-width: 110px">Название</span>').appendTo($(group));
+            let group = $(`<div class="input-group" style='margin-bottom: 5px'></div>`).appendTo($(cloumn1));
+            $('<span class="input-group-addon" style="min-width: 157px">Название (полное)</span>').appendTo($(group));
             $("<input class='form-control' id='research_title' />").appendTo($(group));
 
-            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn1));
-            $('<span class="input-group-addon" style="min-width: 110px">Код по НМУ</span>').appendTo($(group));
+            group = $(`<div class="input-group" style='margin-bottom: 5px'></div>`).appendTo($(cloumn1));
+            $('<span class="input-group-addon" style="min-width: 157px">Название (краткое)</span>').appendTo($(group));
+            $("<input class='form-control' id='research_short_title' />").appendTo($(group));
+
+            group = $(`<div class="input-group"></div>`).appendTo($(cloumn1));
+            $('<span class="input-group-addon" style="min-width: 157px">Код по НМУ</span>').appendTo($(group));
             $("<input class='form-control' value='' id='nmu' />").appendTo($(group));
 
             const cloumn3 = $("<div class='col-md-6'></div>").appendTo($(row));
-            group = $("<div class=\"input-group\"></div>").appendTo($(cloumn3));
-            $('<span class="input-group-addon">Подготовка</span>').appendTo($(group));
+
+            group = $(`<div class="input-group" style='margin-bottom: 5px'></div>`).appendTo($(cloumn3));
+            $('<span class="input-group-addon" style="min-width: 136px">Внутренний код</span>').appendTo($(group));
+            $("<input class='form-control' value='' id='internalCode' />").appendTo($(group));
+
+            group = $(`<div class="input-group"></div>`).appendTo($(cloumn3));
+            $('<span class="input-group-addon" style="min-width: 136px">Подготовка</span>').appendTo($(group));
             $('<textarea class="form-control" id="preparation" rows="3"></textarea>').appendTo($(group));
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn" onclick="tune_research(' + resid + '); return false;" class="btn btn-default btn-blue2-nb"><i class="glyphicon glyphicon-cog"></i> Видимость фракций, референсы и доп. параметры</a></span>');
             $(form).append('<span style="float: right;padding-top:15px;margin-left:10px"><a href="#" id="tunebtn-ng" onclick="tune_research(' + resid + ', true); return false;" class="btn btn-default btn-blue2-nb"><i class="fa fa-wrench"></i> Коды ФСЛИ</a></span>');
@@ -552,8 +591,10 @@
             if (resid > -1) {
                 $.ajax({url: "/directory/research?id=" + id, method: "GET"}).done(function (data) {
                     $("#research_title").val(data.title);
+                    $("#research_short_title").val(data.shortTitle);
                     lab_r = data.lab;
                     $("#nmu").val(data.nmu);
+                    $("#internalCode").val(data.internalCode);
                     $("#preparation").val(data.preparation);
                     fractiontubes = data.fractiontubes;
                     $("#tunebtn").removeAttr("disabled");
@@ -986,7 +1027,7 @@
 
                         if (!$(".one-tube #tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id)).length) {
                             $(row).addClass("has-tube-{0}".f(v.tubes[Object.keys(v.tubes)[0]].id));
-                            let obj = $('<div class="well tube tube-drag" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
+                            let obj = $('<div class="well tube tube-drag" onclick="modifyTube({0})" id="tube-{0}"></div>'.f(v.tubes[Object.keys(v.tubes)[0]].id)).appendTo(tubes_list);
                             obj = $('<div></div>').appendTo(obj);
                             g = $('<div class="sq"></div>').appendTo(obj);
                             $('<div class="color-sq"></div>').appendTo(g).css({backgroundColor: v.tubes[Object.keys(v.tubes)[0]].color});
@@ -999,13 +1040,13 @@
 
                     }
                     else {
-                        $(tubes_list).append('<div class="well">Ёмкости не приязаны</div>');
+                        $(tubes_list).append('<div class="well">Ёмкости не привязаны</div>');
                     }
                     g = $('<div class="btn-group research-obj"></div>').appendTo(researches_list);
                     $(g).attr("pk", v.pk);
                     $(g).append('<div class="btn btn-default flex-05 up" pk="{0}"><i class="glyphicon glyphicon-arrow-up"></i></div>'.f(v.pk))
                     $(g).append('<div class="btn btn-default flex-05 down" pk="{0}"><i class="glyphicon glyphicon-arrow-down"></i></div>'.f(v.pk))
-                    $(g).append('<div class="btn btn-default research-title" style="z-index:0;" class="{1}">{0}</div>'.f(v.title))
+                    $(g).append('<div class="btn btn-default research-title" style="z-index:0;" class="{1}">{0}</div>'.f(v.shortTitle))
                     //  $(g).append('<div class="btn btn-default col-md-1" onclick="copy({0});" title="Копия">Коп.</div>'.f(v.pk));
                     $(g).append(`<div class="btn btn-default flex-1" id='hide-bth-${v.pk}' onclick="toggle_hide(${v.pk});" title="Скрыть/показать">${v.hide ? 'Пок.' : 'Скр.'}</div>`)
                     $(g).append('<div class="btn btn-default flex-1" onclick="edit_research({0});"><i class="glyphicon glyphicon-pencil"></i></div>'.f(v.pk))
@@ -1081,9 +1122,11 @@
             let research = {
                 id: resid,
                 lab: $("#select-lab option:selected").val(),
-                title: $("#research_title").val(),
+                title: $("#research_title").val().trim(),
+                shortTitle: $("#research_short_title").val().trim(),
                 nmu: $("#nmu").val(),
-                preparation: $("#preparation").val(),
+                internalCode: $("#internalCode").val(),
+                preparation: $("#preparation").val().trim(),
                 fraction: lfractions
             };
             console.log(research);
@@ -1128,16 +1171,7 @@
         }
 
         function tune_research(id, isng) {
-            $('#tune-modal').modal('show');
-            $("#tune-modal .modal-body").html(`<iframe
-width="100%"
-style="height: calc(100% - 100px); width: 100%; display: block;position: absolute;padding-right:30px"
-frameborder="0"
-scrolling="yes"
-allowtransparency="true"
-src="/construct/researches/tune${isng ? '-ng' : ''}?pk=${id}"
-></iframe>`);
-            console.log("ID: {0}".f(id));
+            openModalWithFrame('tune-modal', `/construct/researches/tune${isng ? '-ng' : ''}?pk=${id}`);
         }
 
         function syncUpDown() {

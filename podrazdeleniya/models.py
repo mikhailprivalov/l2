@@ -16,6 +16,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     DIRECTIONPARAMS = 12
     APPLICATIONS = 13
     MONITORINGS = 14
+    CASE = 16
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -31,6 +32,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (DIRECTIONPARAMS, "Параметры для направления"),
         (APPLICATIONS, "Заявления"),
         (MONITORINGS, "Мониторинги"),
+        (CASE, "Случаи"),
     )
 
     ODII_TYPES = (
@@ -54,13 +56,20 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     can_has_pacs = models.BooleanField(default=False, blank=True)
     odii_type = models.PositiveSmallIntegerField(choices=ODII_TYPES, default=None, null=True, blank=True, help_text="Оказываемые виды инструментальных услуг")
     oid = models.CharField(max_length=55, default="", blank=True, help_text='OID подразделения')
-    nsi_title = models.CharField(max_length=50, default='', blank=True, help_text='по ФРМО')
+    nsi_title = models.CharField(max_length=255, default='', blank=True, help_text='по ФРМО')
     hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
     ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код для ECP")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
+    print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления для подразделения")
+    profile_ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Профиль отделения код ecp")
 
     def get_title(self):
         return self.short_title or self.title
+
+    @staticmethod
+    def get_podrazdeleniya(p_type: int):
+        result = [{"id": podrazdelenie.pk, "label": podrazdelenie.title} for podrazdelenie in Podrazdeleniya.objects.filter(p_type=p_type).order_by('title')]
+        return result
 
     def __str__(self):
         return self.title
@@ -84,6 +93,8 @@ class Room(models.Model):
     title = models.CharField(max_length=64, verbose_name='Название кабинета')
     type = models.PositiveSmallIntegerField(choices=TYPES, default=COMMON, db_index=True, verbose_name='Тип')
     hide = models.BooleanField(default=False, blank=True, db_index=True, verbose_name='Скрыть')
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Подразделение', db_index=True, on_delete=models.CASCADE)
+    is_card_storage = models.BooleanField(default=False, blank=True, db_index=True, verbose_name='Картохранилище')
 
     def __str__(self):
         return f"{self.hospital} — {self.title}"

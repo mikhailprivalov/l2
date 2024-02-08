@@ -129,7 +129,7 @@
         v-else
         class="btn btn-default"
         href="#"
-        @click="sendToVI"
+        @click.prevent="sendToVI"
       >
         Отправить в ВИМИС
       </a>
@@ -138,7 +138,7 @@
 </template>
 
 <script lang="ts">
-import { createDetachedSignature, createHash } from 'crypto-pro';
+import { createDetachedSignature, createHash, getCertificate } from 'crypto-pro';
 
 import * as actions from '@/store/action-types';
 
@@ -165,6 +165,10 @@ export default {
     direction: {
       type: Number,
       required: true,
+    },
+    noOGRN: {
+      type: Boolean,
+      required: false,
     },
   },
   data() {
@@ -207,6 +211,13 @@ export default {
     },
     ok() {
       return this.emptySignatures.length === 0;
+    },
+    invalidMessage() {
+      if (!this.noOGRN || this.selectedSignatureMode !== 'Медицинская организация') {
+        return null;
+      }
+
+      return 'Отсутствует ОГРН в сертификате';
     },
   },
   watch: {
@@ -265,6 +276,10 @@ export default {
       this.$root.$emit('eds:reload-document', this.direction);
     },
     async addSign(fast = false) {
+      if (this.invalidMessage) {
+        this.$error(this.invalidMessage);
+        return;
+      }
       if (!fast) {
         try {
           await this.$dialog.confirm(
@@ -286,10 +301,23 @@ export default {
 
         const m = await createHash(bodyEncoded);
         const sign = await createDetachedSignature(this.thumbprint, m);
+        let cert = null;
+        try {
+          cert = await getCertificate(this.thumbprint);
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.log(e);
+        }
         const { ok, message } = await this.$api('/directions/eds/add-sign', {
           pk: this.d.pk,
           sign,
           mode: this.selectedSignatureMode,
+          certThumbprint: this.thumbprint,
+          certDetails: cert ? {
+            subjectName: cert.subjectName,
+            validFrom: cert.validFrom,
+            validTo: cert.validTo,
+          } : null,
         });
 
         if (ok) {

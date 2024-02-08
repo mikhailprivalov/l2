@@ -631,7 +631,7 @@
               />
             </div>
             <div
-              class="col-xs-10"
+              :class="current_resource_pk !== -1 ? 'col-xs-9' : 'col-xs-10'"
               style="padding-right: 0"
             >
               <div
@@ -646,15 +646,29 @@
               </div>
             </div>
             <div
-              style="float: right; padding-right: 20px"
+              v-if="current_resource_pk !== -1"
+              style="padding-right: 0;text-align: right"
+              class="col-xs-1"
+            >
+              <button
+                v-tippy
+                class="btn btn-blue-nb"
+                title="Отмена"
+                @click="current_resource_title = ''; resource_researches = []; current_resource_pk = -1;"
+              >
+                <i class="fa fa-times" />
+              </button>
+            </div>
+            <div
+              style="padding-right: 20px;text-align: right"
               class="col-xs-2"
             >
               <button
-                :disabled="!valid"
+                :disabled="!valid || resource_researches.length === 0 || current_resource_title.length === 0"
                 class="btn btn-blue-nb"
                 @click="save_resource"
               >
-                Сохранить ресурс
+                {{ current_resource_pk !== -1 ? 'Обновить ресурс' : 'Сохранить ресурс' }}
               </button>
             </div>
           </div>
@@ -666,7 +680,14 @@
               v-for="row in rows"
               :key="row.pk"
               class="research"
+              :class="current_resource_pk === row.pk && 'research-active'"
             >
+              <strong
+                v-if="row.title"
+                class="t-r"
+              >
+                {{ row.title }}
+              </strong>
               <span
                 v-for="res in row.researches"
                 :key="res.pk"
@@ -684,7 +705,7 @@
               <button
                 class="btn btn-blue-nb sidebar-btn"
                 style="font-size: 12px"
-                @click="open_schedule"
+                @click="open_schedule(row.pk)"
               >
                 Расписание
               </button>
@@ -695,8 +716,7 @@
             class="row"
           >
             <div
-              class="col-xs-4"
-              style="padding-right: 0"
+              class="col-xs-4 right-padding"
             >
               <div
                 class="input-group"
@@ -708,6 +728,174 @@
                   type="number"
                   class="form-control"
                 >
+              </div>
+            </div>
+          </div>
+          <div
+            v-if="modules.limit_age_patient_registration"
+            class="row"
+          >
+            <div
+              class="col-xs-12"
+              style="padding-right: 0"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Квоты на запись по времени для подразделений</span>
+                <textarea
+                  v-model="user.available_quotas_time"
+                  v-autosize="user.available_quotas_time"
+                  :placeholder='`{"id-подразделения1": "10:00-15:00", "id-подразделения2": "15:00-16:00"}` /* eslint-disable-line vue/html-quotes,max-len */'
+                  class="form-control noresize"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div class="more-title">
+              Анализаторы:
+              <button
+                class="btn btn-blue-nb sidebar-btn"
+                style="font-size: 13px"
+              >
+                <i
+                  v-if="setup_analyzer"
+                  v-tippy="{ placement: 'bottom'}"
+                  class="glyphicon glyphicon-circle-arrow-up"
+                  title="Скрыть"
+                  @click="change_setup_analyzer"
+                />
+                <i
+                  v-else
+                  v-tippy="{ placement: 'bottom' }"
+                  class="glyphicon glyphicon-circle-arrow-down"
+                  title="Выбрать"
+                  @click="change_setup_analyzer"
+                />
+              </button>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              v-if="setup_analyzer"
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">Анализаторы</span>
+              <select
+                v-model="analyzers"
+                class="form-control"
+                multiple
+                style="height: 136px"
+              >
+                <option
+                  v-for="l in analyzers_list"
+                  :key="l.pk"
+                  :value="l.pk"
+                >
+                  {{ l.label }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="col-xs-6 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Кабинеты</span>
+                <Treeselect
+                  v-model="user.rooms"
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="true"
+                  :options="user.rooms_list"
+                  :flatten-search-results="true"
+                  placeholder="Кабинеты не указаны"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="row left-padding-10">
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Дата выписки из кадров</span>
+                <input
+                  v-model="user.date_extract_employee"
+                  class="form-control"
+                  type="date"
+                >
+              </div>
+            </div>
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Срок сертификата</span>
+                <input
+                  v-model="user.date_stop_certificate"
+                  class="form-control"
+                  type="date"
+                >
+              </div>
+            </div>
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Исполнитель в протколе</span>
+                <Treeselect
+                  v-model="user.replace_doctor_cda"
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="user.department_doctors"
+                  placeholder="Врач для CDA"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Доп. инфо</span>
+                <textarea
+                  v-model="user.additionalInfo"
+                  v-tippy
+                  title="Дополнительная информация описывать словарем { key: value }"
+                  class="form-control border-top-none"
+                  rows="3"
+                />
               </div>
             </div>
           </div>
@@ -743,6 +931,7 @@ import usersPoint from '@/api/user-point';
 import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
+import UrlData from '@/UrlData';
 
 const toTranslit = function (text) {
   return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
@@ -813,10 +1002,14 @@ export default {
     return {
       filter: '',
       departments: [],
+      analyzers: [],
+      analyzers_list: [],
       specialities: [],
       positions: [],
       districts: [],
+      doctor_profiles: [],
       resource_researches: [],
+      setup_analyzer: false,
       setup_forbidden: false,
       setup_resource: false,
       resource_templates_list: [],
@@ -840,6 +1033,11 @@ export default {
         date_stop_external_access: '',
         resource_schedule: [],
         notControlAnketa: false,
+        date_extract_employee: '',
+        date_stop_certificate: '',
+        replace_doctor_cda: -1,
+        department_doctors: [],
+        additionalInfo: '{}',
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -967,9 +1165,12 @@ export default {
     this.resource_researches = [];
     this.current_resource_title = '';
   },
+  mounted() {
+    this.getAllAnalyzers();
+  },
   methods: {
-    open_schedule() {
-      window.open('/ui/schedule', '_blank');
+    open_schedule(pk) {
+      window.open(`/ui/schedule#${UrlData.objectToData({ resourceSelected: pk })}`, '_blank');
     },
     current_resource_researches(row) {
       for (const res of this.resource_templates_list) {
@@ -977,21 +1178,37 @@ export default {
           this.resource_researches = res.researches;
           this.current_resource_pk = row.pk;
           this.current_resource_title = res.title;
+          break;
         }
       }
     },
+    async getAllAnalyzers() {
+      const list = await this.$api('analyzers/all-analyzers');
+      this.analyzers_list = list.data;
+    },
     async save_resource() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await this.$api('schedule/save-resource', {
+      const { ok, message } = await this.$api('schedule/save-resource', {
         pk: this.user.doc_pk,
         resource_researches: this.resource_researches,
         res_pk: this.current_resource_pk,
         res_title: this.current_resource_title,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', message);
+        if (this.current_resource_pk === -1) {
+          this.current_resource_title = '';
+          this.resource_researches = [];
+        }
+        await this.reloadResources();
+      }
     },
     change_setup_forbidden() {
       this.setup_forbidden = !this.setup_forbidden;
+    },
+    change_setup_analyzer() {
+      this.setup_analyzer = !this.setup_analyzer;
     },
     change_setup_resource() {
       this.setup_resource = !this.setup_resource;
@@ -1022,12 +1239,13 @@ export default {
         this.departments = [];
       }
       const {
-        departments, specialities, positions, districts,
+        departments, specialities, positions, districts, doctorProfiles,
       } = await usersPoint.loadUsers(this, 'selected_hospital');
       this.departments = departments;
       this.specialities = specialities;
       this.positions = positions;
       this.districts = districts;
+      this.doctor_profiles = doctorProfiles;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async open(pk, dep = null) {
@@ -1049,11 +1267,22 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       this.open_pk = pk;
     },
+    async reloadResources() {
+      if (!this.open_pk) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { user } = await usersPoint.loadUser({ pk: this.open_pk });
+      this.user.resource_schedule = user.resource_schedule;
+      this.resource_templates_list = this.user.resource_schedule;
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, npk, message } = await usersPoint.saveUser({
         pk: this.open_pk,
         user_data: this.user,
+        groupsAnalyzer: this.analyzers,
         hospital_pk: this.selected_hospital,
       });
       if (ok) {
@@ -1075,6 +1304,7 @@ export default {
     },
     async close() {
       this.open_pk = -2;
+      this.analyzers = [];
       this.user = {
         family: '',
         name: '',
@@ -1127,7 +1357,7 @@ export default {
 }
 
 .left-wrapper {
-  height: calc(100% - 73px);
+  height: calc(100% - 75px);
   padding-top: 5px;
   overflow-y: auto;
 }
@@ -1311,19 +1541,21 @@ li.selected {
 
 .research {
   background-color: #fff;
-  padding: 5px;
+  padding: 5px 5px 5px 0;
   margin: 10px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
   position: relative;
+  border-left: 5px solid #fff;
 
   &.rhide {
     background-image: linear-gradient(#6c7a89, #56616c);
     color: #fff;
   }
 
-  hr {
+  &-active {
+    border-left: 5px solid #37bc9b;
   }
 }
 
@@ -1340,5 +1572,11 @@ li.selected {
 }
 .right-padding {
   padding-right: 0
+}
+.left-padding-10 {
+  padding-left: 10px
+}
+.border-top-none {
+  border-top: 0;
 }
 </style>

@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import { POSITION, TYPE } from 'vue-toastification/src/ts/constants';
 
-import { sendEvent } from '@/metrics';
 import ChatToast from '@/ui-cards/Chat/ChatToast.vue';
 import * as actions from '@/store/action-types';
 import directionsPoint from '@/api/directions-point';
@@ -17,63 +16,58 @@ export default (instance: Vue): void => {
   instance.$root.$on('no-loader-in-header', status => instance.$store.dispatch(actions.SET_LOADER_IN_HEADER, !status));
 
   instance.$root.$on('print:directions', pks => {
-    printForm('/directions/pdf?napr_id={pks}', pks);
-    sendEvent('print', {
-      type: 'directions',
-      pks,
-    });
+    const url = '/ui/directions/preview?napr_id={pks}';
+    printForm(url, pks);
   });
 
   instance.$root.$on('print:hosp', pks => {
     printForm('/barcodes/hosp?napr_id={pks}', pks);
-    sendEvent('print', {
-      type: 'hosp',
-      pks,
-    });
   });
 
   instance.$root.$on('print:directions:contract', pks => {
     printForm('/directions/pdf?napr_id={pks}&contract=1', pks);
-    sendEvent('print', {
-      type: 'directions-contract',
-      pks,
-    });
+  });
+
+  instance.$root.$on('print:directions:appendix', pks => {
+    printForm('/directions/pdf?napr_id={pks}&appendix=1', pks);
   });
 
   instance.$root.$on('print:barcodes', pks => {
     printForm('/barcodes/tubes?napr_id={pks}', pks);
-    sendEvent('print', {
-      type: 'barcodes',
-      pks,
-    });
   });
 
   instance.$root.$on('print:barcodes:iss', pks => {
     printForm('/barcodes/tubes?iss_ids={pks}', pks);
-    sendEvent('print', {
-      type: 'barcodes:iss',
-      pks,
-    });
   });
 
   instance.$root.$on('print:results', pks => {
-    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}`;
+    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}&sort=${0}`;
     printForm(url, pks);
-    sendEvent('print', {
-      type: 'results',
-      pks,
-    });
   });
 
   instance.$root.$on('print:example', pks => {
     const url = '/ui/results/preview?pk={pks}&portion=1';
     printForm(url, pks);
-    sendEvent('print', { type: 'example', pks });
   });
 
   instance.$root.$on('print:directions_list', pks => {
     printForm('/statistic/xls?pk={pks}&type=directions_list', pks);
-    sendEvent('print', { type: 'directions_list', pks });
+  });
+
+  instance.$root.$on('directions:resend-patient-email-results', async ids => {
+    await instance.$api('directions/resend-results', { ids });
+    // eslint-disable-next-line max-len
+    instance.$ok('Запланирована повторная отправка результатов.\nРезультаты должны быть подтверждены полностью.\nУ пациента должен быть заполнен email и разраешена отправка.');
+  });
+
+  instance.$root.$on('directions:need_order_redirection', async ids => {
+    await instance.$api('directions/need-order-redirection', { ids });
+    // eslint-disable-next-line max-len
+    instance.$ok('Запланирована повторная отправка направления исполнителю');
+  });
+
+  instance.$root.$on('print:aggregate_laboratory_results', async pks => {
+    window.open(`/forms/docx?type=113.02&directions=${pks}`, '_blank');
   });
 
   instance.$root.$on('msg', (type, message, timeout: number | void | null, payload: any | void) => {
@@ -88,11 +82,6 @@ export default (instance: Vue): void => {
     } else if (type === 'info') {
       t = TYPE.INFO;
     }
-
-    sendEvent('toast', {
-      type,
-      message,
-    });
 
     if (type === 'message' && payload) {
       instance.$toast({
@@ -161,38 +150,11 @@ export default (instance: Vue): void => {
       hospital_override: hospitalOverride = -1,
       monitoring = false,
       priceCategory = null,
+      caseId,
+      caseByDirection = false,
+      slotFactId = null,
+      cbWithIds,
     }) => {
-      sendEvent('generate-directions', {
-        type,
-        cardPk,
-        finSourcePk,
-        diagnos,
-        researches,
-        operator,
-        ofname,
-        historyNum,
-        comments,
-        counts,
-        forRmis,
-        rmisData,
-        vichCode,
-        count,
-        discount,
-        needContract,
-        parentIss,
-        kk,
-        localizations,
-        serviceLocations,
-        directionPurpose,
-        directionsCount,
-        externalOrganization,
-        parentSlaveHosp,
-        hospitalDepartmentOverride,
-        hospitalOverride,
-        monitoring,
-        priceCategory,
-      });
-
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
         return;
@@ -237,6 +199,10 @@ export default (instance: Vue): void => {
           hospital_department_override: hospitalDepartmentOverride,
           hospital_override: hospitalOverride,
           priceCategory,
+          caseId,
+          caseByDirection,
+          type,
+          slotFactId,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);
@@ -252,6 +218,8 @@ export default (instance: Vue): void => {
               } else {
                 instance.$root.$emit('print:directions', data.directions);
               }
+            } else if (type === 'complect-document') {
+              instance.$root.$emit('print:directions:appendix', data.directions);
             } else if (type === 'barcode') {
               instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}
               ${data.messageLimit}`);
@@ -261,6 +229,14 @@ export default (instance: Vue): void => {
               ${data.messageLimit}`);
             } else if (type === 'save-and-open-embedded-form' && monitoring) {
               instance.$root.$emit('embedded-form:open', data.directions[0]);
+            } else if (type === 'calculate-cost') {
+              instance.$root.$emit('msg', 'ok', `Сумма: ${data.message}`, 10000);
+              return;
+            } else if (type === 'emit-open') {
+              instance.$root.$emit('msg', 'ok', `Направления созданы: ${data.directions.join(', ')}
+              ${data.messageLimit}`);
+              cbWithIds?.(data.directions);
+              return;
             }
             instance.$root.$emit(`researches-picker:clear_all${kk}`);
             instance.$root.$emit(`researches-picker:directions_created${kk}`);
@@ -271,4 +247,20 @@ export default (instance: Vue): void => {
         });
     },
   );
+
+  Vue.prototype.$msg = (type, message, timeout: number | void | null, payload: any | void) => {
+    instance.$root.$emit('msg', type, message, timeout, payload);
+  };
+
+  Vue.prototype.$error = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'error', message, timeout);
+  };
+
+  Vue.prototype.$info = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'info', message, timeout);
+  };
+
+  Vue.prototype.$ok = (message, timeout: number | void | null) => {
+    instance.$root.$emit('msg', 'ok', message, timeout);
+  };
 };

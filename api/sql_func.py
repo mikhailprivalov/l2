@@ -6,7 +6,7 @@ from utils.db import namedtuplefetchall
 
 def dispensarization_research(sex, age, client_id, d_start, d_end):
     """
-    на входе: пол, возраст,
+    На входе: пол, возраст,
     выход: pk - исследований, справочника "DispensaryRouteSheet"
     :return:
     """
@@ -82,7 +82,7 @@ def get_fraction_result(client_id, fraction_id, count=1):
     return row
 
 
-def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:00:00', months_ago='-1'):
+def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:00:00', months_ago='-1', parent_iss=-1, use_parent_iss='-1'):
     """
     на входе: id-поля, id-карты,
     выход: последний результат поля
@@ -91,10 +91,15 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id,   
-            directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
+            SELECT 
+            directions_napravleniya.client_id, 
+            directions_issledovaniya.napravleniye_id,   
+            directions_issledovaniya.research_id, 
+            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
-            directions_paraclinicresult.value, directions_paraclinicresult.field_id
+            directions_paraclinicresult.value, 
+            directions_paraclinicresult.field_id,
+            directions_napravleniya.parent_id
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya 
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -106,12 +111,26 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
             AND CASE WHEN %(current_year)s != '1900-01-01 00:00:00' THEN 
                      directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > %(current_year)s
                      WHEN %(months_ago)s != '-1' THEN 
-                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK'  - interval %(months_ago)s)
+                     directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s > (current_date AT TIME ZONE 'ASIA/IRKUTSK' - interval %(months_ago)s)
                      WHEN %(current_year)s = '1900-01-01 00:00:00' THEN directions_issledovaniya.time_confirmation is not Null
+                END
+            AND CASE WHEN %(use_parent_iss)s != '-1' THEN 
+                     directions_napravleniya.parent_id in %(parent_iss)s
+                     WHEN %(use_parent_iss)s = '-1' THEN 
+                     directions_issledovaniya.time_confirmation is not Null
                 END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
             """,
-            params={'client_p': client_id, 'field_id': field_id, 'count_p': count, 'tz': TIME_ZONE, 'current_year': current_year, 'months_ago': months_ago},
+            params={
+                'client_p': client_id,
+                'field_id': field_id,
+                'count_p': count,
+                'tz': TIME_ZONE,
+                'current_year': current_year,
+                'months_ago': months_ago,
+                'parent_iss': parent_iss,
+                'use_parent_iss': use_parent_iss,
+            },
         )
 
         row = cursor.fetchall()
@@ -119,7 +138,6 @@ def get_field_result(client_id, field_id, count=1, current_year='1900-01-01 00:0
 
 
 def users_by_group(title_groups, hosp_id):
-
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -280,7 +298,7 @@ def search_data_by_param(
                 LEFT JOIN directory_paraclinicinputfield on directions_paraclinicresult.field_id=directory_paraclinicinputfield.id
                 
                 WHERE 
-                    directions_issledovaniya.research_id=%(research_id)s 
+                    directions_issledovaniya.research_id in %(research_id)s 
                     and (directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(date_create_start)s AND %(date_create_end)s)
                 AND CASE WHEN %(case_number)s != '-1' THEN directions_napravleniya.additional_number = %(case_number)s 
                          WHEN %(case_number)s = '-1' THEN directions_napravleniya.cancel is not Null 
@@ -296,7 +314,7 @@ def search_data_by_param(
                      and directions_issledovaniya.time_confirmation is NOT NULL
                      WHEN %(date_examination_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END
-                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s
+                AND CASE WHEN %(doc_confirm)s > -1 THEN directions_issledovaniya.doc_confirmation_id = %(doc_confirm)s or directions_napravleniya.planed_doctor_executor_id = %(doc_confirm)s
                          WHEN %(doc_confirm)s = -1 THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN %(date_registred_start)s != '1900-01-01 00:00:00' THEN
@@ -382,6 +400,28 @@ def search_text_stationar(date_create_start, date_create_end, final_text):
                 'final_text': final_text,
                 'tz': TIME_ZONE,
             },
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def search_case_by_card_date(card_id, plan_date_start_case, research_case_id, limit):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                directions_napravleniya.id as case_direction_number,
+                directions_issledovaniya.id as case_issledovaniye_number
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                WHERE 
+                    directions_issledovaniya.research_id = %(research_case_id)s
+                    and directions_issledovaniya.plan_start_date AT TIME ZONE %(tz)s = %(plan_date_start_case)s
+                    and directions_napravleniya.client_id = %(card_id)s 
+                LIMIT %(limit)s
+            """,
+            params={'card_id': card_id, 'plan_date_start_case': plan_date_start_case, 'research_case_id': research_case_id, 'tz': TIME_ZONE, 'limit': limit},
         )
 
         rows = namedtuplefetchall(cursor)

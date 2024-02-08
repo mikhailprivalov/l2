@@ -91,7 +91,7 @@
                     <td>{{ direction_data.diagnos }}</td>
                   </tr>
                   <tr v-else>
-                    <td>Огранизация</td>
+                    <td>Организация</td>
                     <td>{{ direction_data.imported_org }}</td>
                   </tr>
                   <tr v-if="l2_decriptive_coexecutor">
@@ -116,12 +116,16 @@
                       Рег. номер
                     </td>
                     <td class="cl-td">
-                      <div class="input-group">
+                      <div class="input-group additional-number-group input-group-flex">
                         <input
-                          id="create-title"
                           v-model.trim="direction_data.additionalNumber"
                           class="form-control"
                           :disabled="visit_status"
+                        >
+                        <input
+                          :value="direction_data.additionalNumberYear || currentYear"
+                          class="form-control"
+                          readonly
                         >
                         <span class="input-group-btn">
                           <button
@@ -255,7 +259,7 @@
                           class="btn btn-blue-nb"
                           @click="make_visit()"
                         >
-                          Регистрация забора биоматерала
+                          Регистрация забора биоматериала
                         </button>
                       </template>
                       <button
@@ -546,10 +550,7 @@ import usersPoint from '@/api/user-point';
 import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 
-/**
-     * @return {number}
-     */
-function TryParseInt(str, defaultValue) {
+function TryParseInt(str, defaultValue): number {
   let retValue = defaultValue;
   if (str !== null) {
     if (str.length > 0) {
@@ -592,6 +593,8 @@ export default {
       laborantUsers: [],
       manualDateVisit: false,
       toEnter: null,
+      currentDate: moment().format('YYYY-MM-DD'),
+      currentDateInterval: null,
     };
   },
   computed: {
@@ -644,6 +647,9 @@ export default {
     l2_decriptive_additional_number() {
       return this.$store.getters.modules.l2_decriptive_additional_number;
     },
+    currentYear() {
+      return moment(this.currentDate).format('YYYY');
+    },
   },
   watch: {
     journal_date() {
@@ -660,15 +666,17 @@ export default {
     l2_decriptive_coexecutor: {
       immediate: true,
       async handler() {
-        const { users } = await usersPoint.loadUsersByGroup({
-          group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
-          position: ['лаборант'],
-        });
+        const [{ users }, rows] = await Promise.all([
+          usersPoint.loadUsersByGroup({
+            group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+            position: ['лаборант'],
+          }),
+          usersPoint.loadUsersByGroup({
+            group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
+            position: ['врач'],
+          }),
+        ]);
         this.laborantUsers = users;
-        const rows = await usersPoint.loadUsersByGroup({
-          group: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
-          position: ['врач'],
-        });
         this.users = rows.users;
       },
     },
@@ -676,6 +684,13 @@ export default {
   mounted() {
     this.load_journal();
     this.load_recv_journal();
+    this.getCurrentTime();
+    this.currentDateInterval = setInterval(() => {
+      this.getCurrentTime();
+    }, 60000);
+  },
+  beforeDestroy() {
+    clearInterval(this.currentDateInterval);
   },
   methods: {
     report(t) {
@@ -707,6 +722,7 @@ export default {
       if (this.$refs.modalProtocol) {
         this.$refs.modalProtocol.$el.style.display = 'none';
       }
+      this.focus();
     },
     cancel() {
       this.loaded_pk = -1;
@@ -744,6 +760,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       this.in_load = true;
       this.cancel();
+      this.getCurrentTime();
       directionsPoint.getDirectionsServices({ pk: this.query_int }).then((data) => {
         if (data.ok) {
           this.loaded_pk = data.loaded_pk;
@@ -773,9 +790,11 @@ export default {
     async clearAdditionalNumber() {
       const data = await this.$api('directions/clear-register-number', {
         additionalNumber: this.direction_data.additionalNumber,
+        additionalNumberYear: this.direction_data.additionalNumberYear,
         pk: this.loaded_pk,
       });
       this.direction_data.additionalNumber = '';
+      this.direction_data.additionalNumberYear = null;
       if (data.ok) {
         this.$root.$emit('msg', 'ok', data.message);
       } else {
@@ -798,6 +817,7 @@ export default {
         coExecutor: this.direction_data.coExecutor,
         planedDoctorExecutor: this.direction_data.planedDoctorExecutor,
         additionalNumber: this.direction_data.additionalNumber,
+        additionalNumberYear: this.direction_data.additionalNumberYear || this.currentYear,
         gistologyReceiveTime: this.direction_data.gistology_receive_time,
         visitDate: this.visit_date,
       }).then((data) => {
@@ -841,6 +861,12 @@ export default {
         this.in_load = false;
         this.load_recv_journal();
       });
+    },
+    async getCurrentTime() {
+      const { date } = await this.$api('current-time');
+      if (date) {
+        this.currentDate = date;
+      }
     },
   },
 };
@@ -904,5 +930,25 @@ export default {
 
 .status-none {
   color: #cf3a24;
+}
+
+.additional-number-group {
+  .form-control {
+    &:first-child {
+      flex: 1;
+    }
+    &:nth-child(2) {
+      width: 58px;
+    }
+  }
+
+  .input-group-btn {
+    width: 42px;
+    flex: 0 42px;
+
+    .btn {
+      margin-left: 0!important;
+    }
+  }
 }
 </style>

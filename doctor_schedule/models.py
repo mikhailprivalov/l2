@@ -22,7 +22,13 @@ class ScheduleResource(models.Model):
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
 
     def __str__(self):
-        return f"{self.pk} — {self.executor} — {', '.join([x.get_title() for x in self.service.all()[:5]])} {self.room}, {self.department}, {self.speciality}"
+        parts = [
+            f"{self.pk} — {self.executor} — {', '.join([x.get_title() for x in self.service.all()[:5]])} {self.room or ''}".strip(),
+            str(self.department),
+            str(self.speciality),
+            f'"{self.title}"' if self.title else '',
+        ]
+        return ", ".join([x for x in parts if x])
 
     class Meta:
         unique_together = (
@@ -81,8 +87,11 @@ class SlotFact(models.Model):
     status = models.PositiveSmallIntegerField(choices=STATUS, blank=True, db_index=True, verbose_name='Статус')
     external_slot_id = models.CharField(max_length=255, default='', blank=True, verbose_name='Внешний ИД')
     service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
-    direction = models.ForeignKey(Napravleniya, verbose_name='Направление', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
+    direction = models.ForeignKey(Napravleniya, verbose_name='Направление', db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     is_cito = models.BooleanField(default=False, blank=True, verbose_name='ЦИТО', db_index=True)
+    fin_source = models.ForeignKey(
+        'directions.IstochnikiFinansirovaniya', verbose_name='Источник финансирования', db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f"{self.pk} — {self.patient} {self.get_status_display()} {self.plan}"

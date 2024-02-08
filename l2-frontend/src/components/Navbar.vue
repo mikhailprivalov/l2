@@ -110,6 +110,7 @@
           <EcpSchedule />
         </ul>
         <ExpertiseStatus v-if="meta.showExpertiseStatus" />
+        <PrintQueue v-if="meta.showPrintQueue" />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
             <button
@@ -183,7 +184,6 @@ import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
-import { sendEvent } from '@/metrics';
 
 @Component({
   computed: mapGetters([
@@ -203,6 +203,7 @@ import { sendEvent } from '@/metrics';
     ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
     Favorites: () => import('@/ui-cards/Favorites.vue'),
+    PrintQueue: () => import('@/ui-cards/PrintQueue.vue'),
     HelpLinkField: () => import('@/ui-cards/HelpLinkField.vue'),
     OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
@@ -262,7 +263,6 @@ export default class Navbar extends Vue {
 
   // eslint-disable-next-line class-methods-use-this
   reload() {
-    sendEvent('reload-with-new-version', {});
     window.location.reload();
   }
 }

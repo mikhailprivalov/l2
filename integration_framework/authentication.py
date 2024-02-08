@@ -1,9 +1,11 @@
 from functools import wraps
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from rest_framework import authentication
 from rest_framework import exceptions
 
 from api.models import Application
+from integration_framework.models import IndividualAuth
 
 
 class TokenAuthentication(authentication.BaseAuthentication):
@@ -20,6 +22,25 @@ class TokenAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('No such active APP with token')
 
         return app, None
+
+
+class IndividualAuthentication(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        if not token or not token.startswith('Basic '):
+            raise exceptions.AuthenticationFailed('No such token')
+        token = token.replace('Basic ', '')
+        try:
+            individual: IndividualAuth = IndividualAuth.objects.filter(token=token, is_confirmed=True).first()
+        except ValidationError:
+            raise exceptions.AuthenticationFailed('No such token')
+        if not individual:
+            raise exceptions.AuthenticationFailed('No such active APP with token')
+
+        individual.last_activity = timezone.now()
+        individual.save(update_fields=['last_activity'])
+
+        return individual, None
 
 
 def can_use_schedule_only(function):

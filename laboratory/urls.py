@@ -21,7 +21,7 @@ if not settings.DEBUG:
     handler500 = mainmenu.views.v500
 
 
-urlpatterns = [
+urlpatterns = ([] if not settings.PROMETHEUS_ENABLED else [path('prometheus/', include('django_prometheus.urls'))]) + [
     path('favicon.ico', RedirectView.as_view(url='/static/icon/favicon.ico', permanent=True)),
     path('', home, name='home'),
     re_path(r'^ui/(?P<path>.*)$', mainmenu.views.ui),
@@ -40,7 +40,10 @@ urlpatterns = [
     path('laboratory/', include('results.urls')),
     path('statistic/xls', statistic.views.statistic_xls),
     path('statistic/screening', statistic.views.sreening_xls),
+    path('statistic/open-xls', statistic.views.open_xls),
+    path('statistic/harmful-factors', statistic.views.get_harmful_factors),
     path('ajax_select/', include(ajax_select_urls)),
+    path('admin/login/', RedirectView.as_view(url='/')),
     path('admin/', admin.site.urls),
     path('construct/', include('construct.urls')),
     path('api/', include('api.urls')),

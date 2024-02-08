@@ -3,6 +3,7 @@ import random
 import string
 import uuid
 
+import pyotp
 from django.contrib.auth.models import User, Group
 from django.db import models, transaction
 from django.utils import timezone
@@ -13,6 +14,7 @@ from laboratory.redis import get_redis_client
 from laboratory.settings import EMAIL_HOST, MEDIA_ROOT
 from podrazdeleniya.models import Podrazdeleniya
 from users.tasks import send_login, send_new_email_code, send_new_password, send_old_email_code
+from utils.string import make_short_name_form
 
 
 class Speciality(models.Model):
@@ -33,15 +35,6 @@ class Speciality(models.Model):
     class Meta:
         verbose_name = 'Специальность'
         verbose_name_plural = 'Специальности'
-
-
-def add_dots_if_not_digit(w: str, dots):
-    w = w.strip()
-    if not w:
-        return ''
-    if not w.isdigit() and len(w) > 0:
-        w = w[0] + ("." if dots else "")
-    return w
 
 
 class Position(models.Model):
@@ -72,6 +65,7 @@ class DoctorProfile(models.Model):
     user = models.OneToOneField(User, null=True, blank=True, help_text='Ссылка на Django-аккаунт', on_delete=models.CASCADE)
     specialities = models.ForeignKey(Speciality, blank=True, default=None, null=True, help_text='Специальности пользователя', on_delete=models.CASCADE)
     fio = models.CharField(max_length=255, help_text='ФИО')  # DEPRECATED
+    totp_secret = models.CharField(max_length=64, blank=True, default=None, null=True, help_text='Секретный ключ для двухфакторной авторизации')
     family = models.CharField(max_length=255, help_text='Фамилия', blank=True, default=None, null=True)
     name = models.CharField(max_length=255, help_text='Имя', blank=True, default=None, null=True)
     patronymic = models.CharField(max_length=255, help_text='Отчество', blank=True, default=None, null=True)
@@ -97,18 +91,39 @@ class DoctorProfile(models.Model):
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="", db_index=True)
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
-    disabled_forms = models.CharField(max_length=255, help_text='Отключеные формы перчислить ч/з запятую', blank=True, default="")
+    disabled_forms = models.CharField(max_length=255, help_text='Отключенные формы перчислить ч/з запятую', blank=True, default="")
     disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")
     disabled_statistic_reports = models.CharField(max_length=255, help_text='Отключить доступ к статистике категории-отчету ч/з запятую', blank=True, default="")
-    disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещеные источники финансирвоания')
+    disabled_fin_source = models.ManyToManyField("directions.IstochnikiFinansirovaniya", blank=True, help_text='Запрещенные источники финансирования')
     external_access = models.BooleanField(default=False, blank=True, help_text='Разрешен внешний доступ')
     date_stop_external_access = models.DateField(help_text='Окончание внешнего доступа', db_index=True, default=None, blank=True, null=True)
-    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая служба', on_delete=models.CASCADE)
     not_control_anketa = models.BooleanField(default=False, blank=True, help_text='Не контролировать заполнение Анкет')
     signature_stamp_pdf = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на файл подписи pdf")
     last_online = models.DateTimeField(default=None, blank=True, null=True, help_text="Когда пользователь был в сети")
     cabinet = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Кабинет приема")
     max_age_patient_registration = models.SmallIntegerField(help_text='Ограничения возраста записи указать в месяцах', default=-1)
+    available_quotas_time = models.TextField(default='', blank=True, help_text='Доступная запись для подразделений по времени {"id-подразделения": "10:00-15:00"}')
+    is_system_user = models.BooleanField(default=False, blank=True)
+    room_access = models.ManyToManyField('podrazdeleniya.Room', blank=True, help_text='Доступ к кабинетам')
+    date_extract_employee = models.DateField(help_text='Дата выписки запрошена', db_index=True, default=None, blank=True, null=True)
+    date_stop_certificate = models.DateField(help_text='Дата окончания сертификата', db_index=True, default=None, blank=True, null=True)
+    replace_doctor_cda = models.ForeignKey('self', related_name='used_doctor_cda', help_text="Замена доктора для cda", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    additional_info = models.TextField(default='', blank=True, help_text='Дополнительная информация описывать словарем {}')
+
+    @staticmethod
+    def get_system_profile():
+        doc = DoctorProfile.objects.filter(is_system_user=True).first()
+
+        if not doc:
+            user = User.objects.create_user(uuid.uuid4().hex)
+            user.is_active = True
+            user.save()
+            doc = DoctorProfile(user=user, fio='Системный Пользователь', is_system_user=True)
+            doc.save()
+            doc.get_fio_parts()
+
+        return doc
 
     @property
     def notify_queue_key_base(self):
@@ -198,7 +213,6 @@ class DoctorProfile(models.Model):
     def mark_as_offline(self):
         cache.delete(self.online_key)
         hospital = self.get_hospital()
-
         cache_key = f"chats:users-by-departments:{hospital.pk}"
         cache.delete(cache_key)
 
@@ -303,6 +317,8 @@ class DoctorProfile(models.Model):
             "snils": self.snils,
             "speciality": self.specialities.n3_id if self.specialities else None,
             "position": self.position.n3_id if self.position else None,
+            "positionCode": self.position.n3_id if self.position else None,
+            "positionName": self.position.title if self.position else None,
             "family": self.family,
             "name": self.name,
             "patronymic": self.patronymic,
@@ -311,6 +327,7 @@ class DoctorProfile(models.Model):
     @property
     def uploading_data(self):
         return {
+            "id": self.pk,
             "pk": self.pk,
             "n3Id": self.n3_id,
             "externalId": self.rmis_employee_id,
@@ -405,7 +422,7 @@ class DoctorProfile(models.Model):
     def get_full_fio(self):
         return " ".join(self.get_fio_parts()).strip()
 
-    def get_fio(self, dots=True):
+    def get_fio(self, dots=True, with_space=True):
         """
         Функция формирования фамилии и инициалов (Иванов И.И.)
         :param dots:
@@ -413,13 +430,13 @@ class DoctorProfile(models.Model):
         """
         fio_parts = self.get_fio_parts()
 
-        return f"{fio_parts[0]} {add_dots_if_not_digit(fio_parts[1], dots)} {add_dots_if_not_digit(fio_parts[2], dots)}".strip()
+        return make_short_name_form(fio_parts[0], fio_parts[1], fio_parts[2], dots, with_space)
 
     def is_member(self, groups: list) -> bool:
         """
         Проверка вхождения пользователя в группу
         :param groups: названия групп
-        :return: bool, входит ли в указаную группу
+        :return: bool, входит ли в указанную группу
         """
         return self.user.groups.filter(name__in=groups).exists()
 
@@ -443,6 +460,17 @@ class DoctorProfile(models.Model):
         if self.last_online:
             return int(self.last_online.timestamp())
         return None
+
+    def check_totp(self, code, ip):
+        if not self.totp_secret:
+            return True
+        key = f"{self.pk}:{code}"
+        prev_ip = cache.get(key)
+        if prev_ip and prev_ip != ip:
+            return False
+        cache.set(key, ip, 60)
+        totp = pyotp.TOTP(self.totp_secret)
+        return totp.verify(code)
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
@@ -575,6 +603,11 @@ class AssignmentResearches(models.Model):
         verbose_name = 'Исследование для шаблона назначений'
         verbose_name_plural = 'Исследования для шаблонов назначений'
 
+    @staticmethod
+    def get_researches_by_template(template_pks):
+        template_reearches = AssignmentResearches.objects.filter(template_id__in=template_pks)
+        return [i.research_id for i in template_reearches]
+
 
 class AvailableResearchByGroup(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
@@ -594,7 +627,7 @@ class DistrictResearchLimitAssign(models.Model):
         (0, 'День'),
         (1, 'Месяц'),
     )
-    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая службая', on_delete=models.CASCADE)
+    district_group = models.ForeignKey('clients.District', blank=True, default=None, null=True, help_text='Участковая служба', on_delete=models.CASCADE)
     research = models.ForeignKey('directory.Researches', related_name='услуга', blank=True, default=None, null=True, help_text='Услуга', on_delete=models.CASCADE)
     limit_count = models.PositiveSmallIntegerField(default=None, blank=True, null=True)
     type_period_limit = models.SmallIntegerField(choices=PERIOD_TYPES, help_text='Тип ограничения на период', default=0)

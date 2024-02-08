@@ -28,10 +28,12 @@ def directory_researches(request):
                 research_obj = Researches.objects.get(pk=int(research["id"]))
 
             research_obj.title = research["title"]
+            research_obj.short_title = research["shortTitle"]
             if not research["preparation"]:
                 research["preparation"] = "Не требуется"
             research_obj.preparation = research["preparation"]
             research_obj.code = research["nmu"]
+            research_obj.internal_code = research.get("internalCode") or ''
             research_obj.save()
             if research["id"] == -1:
                 pass
@@ -84,7 +86,16 @@ def directory_researches(request):
         i = 0
         for research in researches:
             i += 1
-            resdict = {"pk": research.pk, "title": research.title, "tubes": {}, "tubes_c": 0, "readonly": False, "hide": research.hide, "sort_weight": research.sort_weight}
+            resdict = {
+                "pk": research.pk,
+                "title": research.title,
+                "shortTitle": research.get_title(),
+                "tubes": {},
+                "tubes_c": 0,
+                "readonly": False,
+                "hide": research.hide,
+                "sort_weight": research.sort_weight,
+            }
             if directions.Issledovaniya.objects.filter(research=research).exists():
                 resdict["readonly"] = True
             fractions = Fractions.objects.filter(research=research).order_by("pk", "sort_weight")
@@ -97,7 +108,6 @@ def directory_researches(request):
                         "title": fraction.relation.tube.title,
                         "num": fraction.sort_weight,
                     }
-            # return_result["researches"][str(research.sort_weight) + "-" + str(i)] = resdict
             return_result["researches"].append(resdict)
         return_result["researches"] = sorted(return_result["researches"], key=lambda d: d["pk"])
     return JsonResponse(return_result)
@@ -233,8 +243,10 @@ def directory_research(request):
         id = int(request.GET["id"])
         research = Researches.objects.get(pk=id)
         return_result["title"] = research.title
+        return_result["shortTitle"] = research.short_title
         return_result["lab"] = research.podrazdeleniye.get_title()
         return_result["nmu"] = research.code
+        return_result["internalCode"] = research.internal_code or ''
         return_result["preparation"] = research.preparation
         return_result["edit_mode"] = research.edit_mode
         return_result["readonly"] = bool(directions.Issledovaniya.objects.filter(research=research).exists())

@@ -147,6 +147,14 @@ export default {
       }
       return false;
     },
+    can_edit_case() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Редактирование случая') {
+          return true;
+        }
+      }
+      return false;
+    },
   },
   watch: {
     department: {
@@ -276,6 +284,10 @@ export default {
           if (this.modules.l2_gistology) {
             d.push({ value: -8, label: '– Гистология' });
           }
+        }
+
+        if (this.modules.l2_case && this.can_edit_case) {
+          d.push({ value: -14, label: 'Случаи' });
         }
       }
 

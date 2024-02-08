@@ -19,34 +19,28 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        fio = 0
         rgt = 1
         otd = 2
-        login = 3
         otds = {}
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
-                if "Сотрудник" in cells and "Должность" in cells and "Подразделение" in cells:
+                if "Должность" in cells and "Подразделение" in cells:
                     starts = True
-                    fio = cells.index("Сотрудник")
+                    last_name = cells.index("Фамилия")
+                    first_name = cells.index("Имя")
+                    patronymic = cells.index("Отчество")
                     rgt = cells.index("Должность")
                     otd = cells.index("Подразделение")
-                    login = cells.index("Логин")
                     continue
             else:
-                f = cells[fio].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip().title()
+                family = cells[last_name].replace(" ", "")
+                name = cells[first_name].replace(" ", "")
+                two_name = cells[patronymic].replace(" ", "")
                 r = cells[rgt].replace(" ", "").replace(".", ",").split(",")
                 o = fixF(cells[otd].replace("   ", " ").replace("  ", " ").replace("  ", " ").strip())
-                account = cells[login]
-
-                fs = f.split(" ")
-                if len(fs) == 0:
-                    continue
                 self.stdout.write("-------------------")
-                fso = [fs[0]]
-                if len(fs) > 1:
-                    fso.extend([x[0] for x in fs[1:]])
+                fso = f"{family}{name[:1]}{two_name[:1]}"
 
                 if o not in otds:
                     ps = pod.Podrazdeleniya.objects.filter(title=o).first()
@@ -62,26 +56,19 @@ class Command(BaseCommand):
                         ps.save()
                     otds[o] = ps
                 o = otds[o]
-                username = translit(''.join(fso).lower())
-
-                if account and len(account) > 0:
-                    if '@' in account:
-                        username = account.split('@')[0]
-                    else:
-                        username = account
-
-                us = users.DoctorProfile.objects.filter(fio=f, podrazdeleniye=o, user__username=username).first()
+                username = translit(fso).lower()
+                us = users.DoctorProfile.objects.filter(user__username=username).first()
                 if not us:
                     user = User.objects.create_user(username)
                     user.set_password("123456")
                     user.is_active = True
                     user.save()
-                    us = users.DoctorProfile(user=user, fio=f, podrazdeleniye=o)
+                    us = users.DoctorProfile(user=user, family=family, name=name, patronymic=two_name, fio=f"{family} {name} {two_name}", podrazdeleniye=o)
                     us.save()
                     us.get_fio_parts()
                     self.stdout.write("Добавлен пользователь " + username + ". Необходимо сменить пароль (по умолчанию 123456)!")
                 user = us.user
                 user.groups.clear()
                 for rpk in r:
-                    g = Group.objects.get(pk=rpk)
+                    g = Group.objects.filter(pk=int(rpk)).first()
                     user.groups.add(g)

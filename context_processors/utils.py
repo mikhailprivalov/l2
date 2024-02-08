@@ -29,7 +29,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:6'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:7'
         data = cache.get(k)
         if not data:
             pages = [
@@ -49,6 +49,13 @@ def menu(request):
                     "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача", "Лаборант", "Врач-лаборант", "Просмотр журнала", "Свидетельство о смерти-доступ"],
                 },
                 {"url": "/ui/directions/print", "title": "Печать направлений", "nt": False, "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"]},
+                {
+                    "url": "/ui/transfer-card",
+                    "title": "Движение карт",
+                    "nt": False,
+                    "access": ["Лечащий врач", "Врач-лаборант", "Оператор лечащего врача"],
+                    "module": "l2_transfer_card",
+                },
                 {"url": "/ui/results-by-department-or-doctor", "title": "Печать по отделению или врачу", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": "/ui/biomaterial/get", "title": "Забор биоматериала", "nt": False, "access": ["Заборщик биоматериала"]},
                 {"url": "/mainmenu/receive", "title": "Приём биоматериала", "nt": False, "access": ["Получатель биоматериала"]},
@@ -110,6 +117,13 @@ def menu(request):
                     "access": ["Врач параклиники", "Врач консультаций", "Свидетельство о смерти-доступ"],
                     "module": "paraclinic_module",
                 },
+                {
+                    "url": "/ui/case-control",
+                    "title": "Случаи обслуживания",
+                    "nt": False,
+                    "access": ['Врач параклиники', 'Врач консультаций'],
+                    "module": "l2_case",
+                },
                 {"url": '/ui/stationar', "title": "Стационар", "nt": False, "access": ["Врач стационара", "t, ad, p"], "module": "l2_hosp"},
                 {
                     "url": '/ui/plan-operations',
@@ -123,6 +137,12 @@ def menu(request):
                     "title": "Поиск описательных результатов",
                     "nt": False,
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Врач консультаций", "Врач стационара"],
+                },
+                {
+                    "url": "/ui/analyzers",
+                    "title": "Управление анализаторами",
+                    "nt": False,
+                    "access": ["Управление анализаторами"],
                 },
                 {"url": '/ui/list-wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/ui/doc-call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
@@ -190,7 +210,7 @@ def menu(request):
                     "access": ["Отправка результатов в организации"],
                     "module": "l2_send_orgs_email_results",
                 },
-                {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": []},
+                {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
             ]
 
             hp = SettingManager.get(key="home_page", default="false")

@@ -55,6 +55,8 @@
 <script lang="ts">
 import moment from 'moment';
 
+import * as actions from '@/store/action-types';
+
 export default {
   model: {
     event: 'modified',
@@ -164,6 +166,7 @@ export default {
       this.activeSlotResource = resourcePk;
     },
     async loadSlots() {
+      await this.$store.dispatch(actions.INC_LOADING);
       const { result } = await this.$api('schedule/available-slots', {
         research_pk: this.servicePk,
         date_start: this.activeDate,
@@ -176,6 +179,7 @@ export default {
       } else {
         this.slots = [];
       }
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     checkDate(forced = false) {
       if (this.displayDates.length > 0 && (forced || !this.displayDates.includes(this.activeDate))) {
@@ -198,6 +202,7 @@ export default {
       this.startDate = this.startDate.clone().add(7, 'days');
     },
     async loadAvailableDates() {
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!this.startDate) {
         return;
       }
@@ -210,6 +215,7 @@ export default {
       this.datesAvailable = data;
       this.loading = false;
       this.checkDate(true);
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     changeValue(newVal) {
       this.$emit('modified', newVal);

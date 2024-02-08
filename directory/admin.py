@@ -167,7 +167,10 @@ class ResParaclinicInputField(admin.ModelAdmin):
         'group',
     )
     list_filter = ('group__research',)
-    search_fields = ('group__research__title',)
+    search_fields = (
+        'id',
+        'group__research__title',
+    )
 
 
 class ResParaclinicInputGroups(admin.ModelAdmin):
@@ -245,6 +248,40 @@ class PhenotypeAdmin(admin.ModelAdmin):
     search_fields = ('title', 'fsli', 'lis')
 
 
+class SetOrderResearchAdmin(admin.ModelAdmin):
+    list_display = ('set_research', 'research')
+    list_filter = ('set_research',)
+    autocomplete_fields = ('research',)
+
+
+class SetResearchAdmin(admin.ModelAdmin):
+    list_display = ('title',)
+
+
+class SetAuxService(admin.ModelAdmin):
+    list_display = (
+        'main_research',
+        'aux_research',
+        'hide',
+    )
+    list_display_links = (
+        'main_research',
+        'aux_research',
+    )
+
+
+class SetComplexService(admin.ModelAdmin):
+    list_display = (
+        'main_research',
+        'slave_research',
+        'hide',
+    )
+    list_display_links = (
+        'main_research',
+        'slave_research',
+    )
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -274,3 +311,10 @@ admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)
 admin.site.register(models.PatientControlParam, ResPatientControlParam)
 admin.site.register(models.Phenotype, PhenotypeAdmin)
+admin.site.register(models.SetResearch, SetResearchAdmin)
+admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
+admin.site.register(models.AuxService, SetAuxService)
+admin.site.register(models.ComplexService, SetComplexService)
+admin.site.register(models.LaboratoryMaterial)
+admin.site.register(models.SubGroupDirectory)
+admin.site.register(models.SubGroupPadrazdeleniye)

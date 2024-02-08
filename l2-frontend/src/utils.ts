@@ -352,40 +352,37 @@ export const getFormattedDate = (date: Date | void): string => {
 
 export const convertSubjectNameToCertObject = (subjectName: string): any => {
   const result = {};
-  const parts = subjectName.split(/(, )?([a-zа-яё]+)=/gi);
-  const p = parts.slice(2).filter((s) => s !== ', ');
+  const parts = subjectName.split(/([а-яa-z]+=|[а-яa-z]+\s[а-яa-z]+=)/iug);
+  const p = parts.slice(1);
   for (let i = 0; i < p.length; i += 2) {
-    result[p[i]] = p[i + 1];
+    const key = p[i].replace('=', '');
+    const value = p[i + 1];
+    result[key] = value.length > 2 ? value.slice(0, -2) : value;
   }
 
   return result;
 };
 
-export const convertSubjectNameToTitle = (object: any, subjectName: string | null, name: string) => {
+export const convertSubjectNameToTitle = (object: any, subjectName: string | null) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
   // eslint-disable-next-line no-console
   console.log(obj);
   // eslint-disable-next-line no-console
   console.log(subjectName);
+  return [obj.SN, obj.G, obj.SNILS, obj.T].filter(Boolean).join(' ');
+};
 
-  if (!obj.SNILS && obj['СНИЛС']) {
-    obj.SNILS = obj['СНИЛС'];
+export const subjectNameHasOGRN = (object: any, subjectName: string | null) => {
+  const obj = object || convertSubjectNameToCertObject(subjectName);
+
+  let ogrn = obj['ОГРН'] || null;
+
+  if (!ogrn) {
+    ogrn = Object.entries(obj).find(([, v]) => v === 'ОГРН')?.[0] || null;
   }
 
-  let result = `НЕТ СНИЛС ${name}`;
-  if (obj.CN) {
-    if (obj.T && obj.SN && obj.G) {
-      let CN = obj.CN.replace('"""', '""');
-
-      if (CN.length > 1 && CN[0] === '"' && CN[CN.length - 1] === '"') {
-        CN = CN.slice(1, -1);
-      }
-      CN = CN.replace('""', '"');
-      result = `${!obj.SNILS ? 'НЕТ СНИЛС ' : ''}${obj.SN} ${obj.G}${obj.SNILS ? `, ${obj.SNILS}` : ''} — ${obj.T} — ${CN}`;
-    }
-  }
-  return result;
+  return String(ogrn || '').length === 13;
 };
 
 export const validateEmail = (email: string) => Boolean(
@@ -412,3 +409,7 @@ export const selectFile = (contentType: string | null): Promise<File> => new Pro
 
   input.click();
 });
+
+export const setLocalStorageDataJson = (name, value) => {
+  window.localStorage.setItem(name, JSON.stringify(value));
+};

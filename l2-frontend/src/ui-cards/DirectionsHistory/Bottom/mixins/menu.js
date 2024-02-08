@@ -51,6 +51,33 @@ const menuItems = [
       }
     },
   },
+  {
+    title: 'Печать набора документов',
+    handler() {
+      this.$root.$emit('print:directions:appendix', this.checked);
+    },
+  },
+  {
+    title: 'Отправить результаты на email пациента',
+    requiredModule: 'l2_send_patients_email_results',
+    handler() {
+      this.$root.$emit('directions:resend-patient-email-results', this.checked);
+    },
+  },
+  {
+    title: 'экспорт в docx',
+    requiredModule: 'l2_docx_aggregate_laboratory_results',
+    handler() {
+      this.$root.$emit('print:aggregate_laboratory_results', this.checked);
+    },
+  },
+  {
+    title: 'Отправить внешнему исполнителю',
+    requiredModule: 'l2_need_order_redirection',
+    handler() {
+      this.$root.$emit('directions:need_order_redirection', this.checked);
+    },
+  },
 ];
 
 export default {

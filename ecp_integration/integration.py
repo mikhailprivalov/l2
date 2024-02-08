@@ -1,16 +1,16 @@
 import logging
 from urllib.parse import urljoin
 import requests
+from dateutil.relativedelta import relativedelta
 
 from appconf.manager import SettingManager
 import simplejson as json
 
 from ecp_integration.sql_func import get_doctors_rmis_location_by_research
-from laboratory.utils import current_time
-from rmis_integration.client import Settings
-from utils.dates import normalize_dash_date
+from laboratory.utils import current_time, TZ, strdatetimeru
+from utils.dates import normalize_dash_date, normalize_dots_date
 from django.core.cache import cache
-from laboratory.settings import RMIS_PROXY
+from laboratory.settings import RMIS_PROXY, ECP_SEARCH_PATIENT
 from datetime import timedelta
 import datetime
 
@@ -44,9 +44,15 @@ def make_request_get(path, query="", sess_id="", method="GET", get_sess_id=False
 
 
 def request_get_sess_id():
-    login = Settings.get("login")
-    password = Settings.get("password")
-    data = make_request_get("user/login", query=f"Login={login}&Password={password}", get_sess_id=True)
+    login = SettingManager.get("rmis_login")
+    password = SettingManager.get("rmis_password")
+    if ECP_SEARCH_PATIENT.get("search"):
+        login = ECP_SEARCH_PATIENT.get("login")
+        password = ECP_SEARCH_PATIENT.get("password")
+    data = cache.get("ecp_sess_id")
+    if not data:
+        data = make_request_get("user/login", query=f"Login={login}&Password={password}", get_sess_id=True)
+        cache.set("ecp_sess_id", data, 60 * 30)
     return data
 
 
@@ -107,6 +113,8 @@ def get_slot_ecp(person_id, slot_id):
 def search_patient_ecp_by_person_id(person_id):
     sess_id = request_get_sess_id()
     result = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)
+    if not result.get('data') or len(result.get('data')) == 0:
+        return None
     patient = result['data'][0]
     patient_snils = patient.get("PersonSnils_Snils", "")
     result = make_request_get(
@@ -123,6 +131,36 @@ def search_patient_ecp_by_person_id(person_id):
     return patient
 
 
+def search_patient_polis_by_person_id(person_id):
+    sess_id = request_get_sess_id()
+    result = make_request_get("Polis", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)
+    polis = result['data'][0]
+    enp = ""
+    if polis.get("Polis_Num"):
+        enp = polis.get("Polis_Num")
+    return enp
+
+
+def search_patient_ecp_by_fio(patient, return_first_element=True):
+    sess_id = request_get_sess_id()
+    result = make_request_get(
+        "PersonList",
+        query=f"Sess_id={sess_id}&"
+        f"PersonSurName_SurName={patient['family']}&"
+        f"PersonFirName_FirName={patient['name']}&"
+        f"PersonSecName_SecName={patient['patronymic']}&"
+        f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
+        sess_id=sess_id,
+    )
+    if not result or not result.get("data"):
+        return None
+    if return_first_element:
+        individual = result['data'][0]
+        return individual['Person_id']
+    else:
+        return [i['Person_id'] for i in result['data']]
+
+
 def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id):
     doctors = get_doctors_rmis_location_by_research(research_pk, hospital_id)
     doctors_has_free_date = {}
@@ -132,11 +170,11 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
         if "@R" in d.rmis_location:
             key_time = "TimeTableResource_begTime"
             rmis_location_resource = d.rmis_location[:-2]
-            date_start = f"{date_start} 08:00:00"
-            date_end = f"{date_end} 23:00:00"
+            date_start_r = f"{date_start} 08:00:00"
+            date_end_r = f"{date_end} 23:00:00"
             req_result = make_request_get(
                 "TimeTableResource/TimeTableResourceFreeDateTime",
-                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start}&TimeTableResource_end={date_end}",
+                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start_r}&TimeTableResource_end={date_end_r}",
                 sess_id=sess_id,
             )
         else:
@@ -146,6 +184,9 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                 query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}",
                 sess_id=sess_id,
             )
+
+        if req_result.get('data') is None:
+            return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
             message = ""
@@ -173,13 +214,15 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
 
 
-def get_doctor_ecp_free_slots_by_date(rmis_location, date):
+def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00'):
     sess_id = request_get_sess_id()
+    if not sess_id:
+        return []
     if "@R" in rmis_location:
         key_time = "TimeTableResource_begTime"
         type_slot = "TimeTableResource_id"
         rmis_location_resource = rmis_location[:-2]
-        date = f"{date} 08:00:00"
+        date = f"{date} {time}"
         req_result = make_request_get(
             "TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}", sess_id=sess_id
         )
@@ -190,8 +233,21 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date):
     free_slots = req_result['data']
     if len(free_slots) > 0:
         slots = sorted(free_slots, key=lambda k: k[key_time])
-        return [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
+        free_slots_params = [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
+        if type_slot == "TimeTableGraf_id":
+            for param in free_slots_params:
+                slot_type_id = get_time_table_graf_by_id(param["pk"], sess_id)
+                param["slotTypeId"] = slot_type_id
+        return free_slots_params
     return []
+
+
+def get_time_table_graf_by_id(graf_id, sess_id):
+    req_result = make_request_get("TimeTableGraf/TimeTableGrafById", query=f"Sess_id={sess_id}&TimeTableGraf_id={graf_id}", sess_id=sess_id)
+    graf_data = req_result['data']
+    if len(graf_data) > 0:
+        return graf_data[0]['TimeTableType_id']
+    return ""
 
 
 def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
@@ -204,28 +260,13 @@ def register_patient_ecp_slot(patient_ecp_id, slot_id, slot_type):
             "TimeTableResource/TimeTableResourceWrite", query=f"Sess_id={sess_id}&Person_id={patient_ecp_id}&TimeTableResource_id={slot_id}", sess_id=sess_id, method="POST"
         )
     if req_result:
-        register_result = req_result['data']
+        register_result = req_result.get('data')
         if req_result['error_code'] == 0 and register_result[slot_type] == slot_id and patient_ecp_id == register_result['Person_id']:
             return {'register': True}
+        if req_result['error_code'] == 6:
+            return {'register': False, "message": req_result.get('error_msg')}
 
     return {'register': False, "message": "Неудачная попытка записи"}
-
-
-def search_patient_ecp_by_fio(patient):
-    sess_id = request_get_sess_id()
-    result = make_request_get(
-        "PersonList",
-        query=f"Sess_id={sess_id}&"
-        f"PersonSurName_SurName={patient['family']}&"
-        f"PersonFirName_FirName={patient['name']}&"
-        f"PersonSecName_SecName={patient['patronymic']}&"
-        f"PersonBirthDay_BirthDay={patient['birthday']}&PersonSnils_Snils={patient['snils']}",
-        sess_id=sess_id,
-    )
-    if not result or not result.get("data"):
-        return None
-    individual = result['data'][0]
-    return individual['Person_id']
 
 
 def get_ecp_time_table_list_patient(patient_ecp_id):
@@ -295,3 +336,64 @@ def cancel_ecp_patient_record(time_table_id, type_slot, reason_cancel=1):
             if cancel_direction["error_code"] == 0:
                 return True
     return False
+
+
+def fill_slot_ecp_free_nearest(direction):
+    for i in direction.issledovaniya_set.all():
+        if i.research.auto_register_on_rmis_location:
+            slots = get_random_doctor_slots(i.research.auto_register_on_rmis_location)
+            if len(slots) > 0:
+                slot_id = slots[0].get('pk', None)
+                type_slot = slots[0].get('typeSlot', None)
+                ecp_id = None
+                if slot_id and type_slot:
+                    ecp_id = direction.client.get_ecp_id()
+                if ecp_id:
+                    register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+
+
+def get_random_doctor_slots(medstaff_fact_id):
+    date_find_start = current_time().astimezone(TZ)
+    step = 0
+    slots = []
+    for d in range(7):
+        date_find = date_find_start + relativedelta(days=d, minutes=1)
+        normal_data = strdatetimeru(date_find).split(' ')
+        date_find = normalize_dots_date(normal_data[0])
+        time_find = '08:00:00'
+        if step == 0:
+            time_find = normal_data[1]
+        slots = get_doctor_ecp_free_slots_by_date(medstaff_fact_id, date_find, time_find)
+        step += 1
+        if len(slots) > 0:
+            break
+    return slots
+
+
+def fill_slot_from_xlsx(medstaff_fact_id, patient):
+    slots = get_random_doctor_slots(medstaff_fact_id)
+    if len(slots) > 0:
+        slot_id = slots[0].get('pk', None)
+        type_slot = slots[0].get('typeSlot', None)
+        ecp_id = None
+        if slot_id and type_slot:
+            ecp_id = search_patient_ecp_by_fio(patient)
+        if ecp_id:
+            return register_patient_ecp_slot(ecp_id, slot_id, type_slot)
+    return False
+
+
+def attach_patient_ecp(person_id, lpu_region_id, date_begin, lpu_id, lpu_region_type_id):
+    sess_id = request_get_sess_id()
+    result = make_request_get(
+        "PersonCard",
+        query=f"Sess_id={sess_id}&LpuRegion_id={lpu_region_id}&PersonCard_begDate={date_begin}&Person_id={person_id}&Lpu_id={lpu_id}&"
+        f"LpuAttachType_id=1&PersonCard_IsAttachCondit=0&LpuRegionType_id={lpu_region_type_id}",
+        sess_id=sess_id,
+        method="POST",
+    )
+    if not result or not result.get("PersonCard_id"):
+        return None
+    person_card_id = result['PersonCard_id']
+    person_card_attach_id = result['PersonCardAttach_id']
+    return (person_card_id, person_card_attach_id)

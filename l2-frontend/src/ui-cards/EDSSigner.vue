@@ -60,6 +60,7 @@
       :thumbprint="selectedCertificate"
       :direction="directionPk"
       :executors="executors"
+      :no-o-g-r-n="noOGRN"
     />
 
     <div
@@ -84,6 +85,7 @@
           <button
             type="button"
             class="btn btn-default btn-primary-nb"
+            :disabled="!!invalidMessage"
             @click="addSign"
           >
             Подписать все вложения
@@ -92,10 +94,10 @@
       </div>
     </div>
     <div
-      v-if="error"
+      v-if="error || invalidMessage"
       class="status-error"
     >
-      <h4><strong>{{ message }}</strong></h4>
+      <h4><strong>{{ message || invalidMessage }}</strong></h4>
     </div>
   </div>
 </template>
@@ -103,9 +105,10 @@
 <script lang="ts">
 import { getSystemInfo, getUserCertificates } from 'crypto-pro';
 import moment from 'moment';
+import { debounce } from 'lodash/function';
 
 import * as actions from '@/store/action-types';
-import { convertSubjectNameToTitle } from '@/utils';
+import { convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 import EDSDocument from './EDSDocument.vue';
 
@@ -156,7 +159,7 @@ export default {
     certificatesDisplay() {
       return this.certificates.map(c => ({
         thumbprint: c.thumbprint,
-        name: convertSubjectNameToTitle(null, c.subjectName, c.name),
+        name: convertSubjectNameToTitle(null, c.subjectName),
       }));
     },
     isDocAllowedSign() {
@@ -176,6 +179,22 @@ export default {
       }
 
       return Object.keys(r);
+    },
+    noOGRN() {
+      const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
+
+      if (!cert) {
+        return false;
+      }
+
+      return !subjectNameHasOGRN(null, cert.subjectName);
+    },
+    invalidMessage() {
+      if (!this.noOGRN || this.selectedSignatureMode !== 'Медицинская организация') {
+        return null;
+      }
+
+      return 'Отсутствует ОГРН в сертификате';
     },
   },
   watch: {
@@ -200,7 +219,7 @@ export default {
     this.init();
     this.$root.$on('eds:reload-document', direction => {
       if (this.directionPk === direction) {
-        this.loadStatus();
+        this.loadStatusDebounced();
       }
     });
   },
@@ -218,6 +237,9 @@ export default {
       this.message = message;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
+    loadStatusDebounced: debounce(function loadStatusDebounced() {
+      this.loadStatus();
+    }, 100),
     async addSign() {
       try {
         await this.$dialog.confirm(
@@ -265,7 +287,7 @@ export default {
       }
     },
     async init() {
-      await Promise.all([this.loadStatus(), this.getEDSStatus()]);
+      await Promise.all([this.loadStatusDebounced(), this.getEDSStatus()]);
     },
   },
 };

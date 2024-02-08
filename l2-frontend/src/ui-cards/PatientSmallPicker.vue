@@ -50,6 +50,7 @@
           class="form-control bob"
           placeholder="Введите запрос"
           maxlength="255"
+          :readonly="disabled"
           @keyup.enter="search"
         >
         <span
@@ -71,7 +72,7 @@
             style="margin-right: -2px"
             class="btn last btn-blue-nb nbr"
             type="button"
-            :disabled="!query_valid || inLoading"
+            :disabled="!query_valid || inLoading || disabled"
             @click="search"
           >
             Поиск
@@ -197,6 +198,9 @@ export default {
       required: false,
     },
     value: {},
+    disabled: {
+      type: Boolean,
+    },
   },
   data() {
     return {
@@ -302,6 +306,13 @@ export default {
         .split(' ')
         .map(s => s.charAt(0).toUpperCase() + s.substring(1))
         .join(' ');
+      if (this.query.toLowerCase().includes('card_pk:')) {
+        setTimeout(() => {
+          if (this.query.toLowerCase().includes('card_pk:')) {
+            this.search();
+          }
+        }, 30);
+      }
     },
     bases() {
       this.check_base();
@@ -382,15 +393,18 @@ export default {
           this.base = this.bases[0].pk;
         }
         window.$(this.$refs.q).focus();
-        this.emit_input();
+        this.emit_input(false);
         if (ns) {
           this.search();
         }
       }
     },
-    emit_input() {
+    emit_input(forced = true) {
       let pk = null;
       if ('pk' in this.selected_card) pk = this.selected_card.pk;
+      if (!forced && pk === null && this.value) {
+        return;
+      }
       this.$emit('input', pk);
       if (this.card) {
         this.$emit('update:card', this.selected_card);
@@ -590,10 +604,6 @@ td:not(.select-td) {
       transition: 0.5s ease-in opacity;
     }
   }
-}
-
-.nbr {
-  border-radius: 0;
 }
 
 .bob {

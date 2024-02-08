@@ -126,3 +126,52 @@ class ResCardControlParam(admin.ModelAdmin):
     raw_id_fields = ('card',)
 
     search_fields = ('card__pk',)
+
+
+@admin.register(models.HarmfulFactor)
+class ResHarmfulFactor(admin.ModelAdmin):
+    autocomplete_fields = ['template']
+
+    list_display = (
+        'title',
+        'description',
+    )
+    list_display_links = (
+        'title',
+        'description',
+    )
+
+
+@admin.register(models.PatientHarmfullFactor)
+class ResPatientHarmfullFactor(admin.ModelAdmin):
+    list_display = (
+        'card',
+        'harmful_factor',
+    )
+    list_display_links = (
+        'card',
+        'harmful_factor',
+    )
+    raw_id_fields = (
+        'card',
+        'harmful_factor',
+    )
+
+
+@admin.register(models.CardMovementRoom)
+class ResCardMovementRoom(admin.ModelAdmin):
+    list_display = (
+        'card',
+        'room_out',
+        'room_in',
+        'doc_who_issued',
+        'date_issued',
+        'doc_who_received',
+        'date_received',
+    )
+    list_display_links = (
+        'card',
+        'room_out',
+        'room_in',
+    )
+    raw_id_fields = ('card',)

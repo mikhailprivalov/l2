@@ -23,10 +23,12 @@ from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
 
 from laboratory.utils import localtime, current_year, strfdatetime
-from users.models import Speciality, DoctorProfile
+from podrazdeleniya.models import Room
+from users.models import Speciality, DoctorProfile, AssignmentTemplates
 from django.contrib.postgres.fields import ArrayField
 
 from utils.common import get_system_name
+from utils.age import plural_age, MODE_DAYS, MODE_MONTHES, MODE_YEARS
 
 TESTING = 'test' in sys.argv[1:] or 'jenkins' in sys.argv[1:]
 
@@ -55,6 +57,8 @@ class Individual(models.Model):
     time_tfoms_last_sync = models.DateTimeField(default=None, null=True, blank=True)
     ecp_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в ЕЦП")
     time_add = models.DateTimeField(default=timezone.now, null=True, blank=True)
+    owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец данных", db_index=True, on_delete=models.PROTECT)
+    owner_patient_id = models.CharField(max_length=128, default=None, null=True, blank=True, db_index=True, help_text="Код в организации-владелеце")
 
     def first(self):
         return self
@@ -205,7 +209,7 @@ class Individual(models.Model):
                         doc = Document(**data)
                         doc.save()
                         if out:
-                            out.write("Добавление докумена: %s" % doc)
+                            out.write("Добавление документа: %s" % doc)
                         kk = "%s_%s_%s" % (doc.document_type_id, doc.serial, doc.number)
                         save_docs.append(kk)
                         continue
@@ -387,20 +391,7 @@ class Individual(models.Model):
             if ages.exists():
                 r = ages[0].s
             else:
-                import pymorphy2
-
-                morph = pymorphy2.MorphAnalyzer()
-                if age == 0:
-                    _let = morph.parse("лет ")[0]
-                elif age < 5:
-                    _let = morph.parse("год")[0]
-                elif age <= 20:
-                    _let = morph.parse("лет ")[0]
-                elif 5 > age % 10 > 0:
-                    _let = morph.parse("год")[0]
-                else:
-                    _let = morph.parse("лет ")[0]
-                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                r = plural_age(age, mode=MODE_YEARS)
                 AgeCache(n=age, t=0, s=r).save()
         elif monthes > 0:
             age = monthes
@@ -409,18 +400,7 @@ class Individual(models.Model):
             if ages.exists():
                 r = ages[0].s
             else:
-                import pymorphy2
-
-                morph = pymorphy2.MorphAnalyzer()
-                if age == 0:
-                    _let = morph.parse("месяцев ")[0]
-                elif age == 1:
-                    _let = morph.parse("месяц ")[0]
-                elif age < 5:
-                    _let = morph.parse("месяца ")[0]
-                else:
-                    _let = morph.parse("месяцев ")[0]
-                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                r = plural_age(age, mode=MODE_MONTHES)
                 AgeCache(n=age, t=1, s=r).save()
         else:
             age = days
@@ -429,22 +409,7 @@ class Individual(models.Model):
             if ages.exists():
                 r = ages[0].s
             else:
-                import pymorphy2
-
-                morph = pymorphy2.MorphAnalyzer()
-                if age == 0:
-                    _let = morph.parse("дней ")[0]
-                elif age == 1:
-                    _let = morph.parse("день ")[0]
-                elif age < 5:
-                    _let = morph.parse("дня ")[0]
-                elif age <= 20:
-                    _let = morph.parse("дней ")[0]
-                elif 5 > age % 10 > 0:
-                    _let = morph.parse("день")[0]
-                else:
-                    _let = morph.parse("дней ")[0]
-                r = "{0} {1}".format(age, _let.make_agree_with_number(age).word).strip()
+                r = plural_age(age, mode=MODE_DAYS)
                 AgeCache(n=age, t=2, s=r).save()
         return r
 
@@ -548,8 +513,8 @@ class Individual(models.Model):
         enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
 
         if not individual:
-            if snils_type and patient_data.get('Person_Snils'):
-                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['Person_Snils']).first()
+            if snils_type and patient_data.get('PersonSnils_Snils'):
+                individual = Individual.objects.filter(document__document_type=snils_type, document__number=patient_data['PersonSnils_Snils']).first()
             if not individual and enp_type and patient_data.get('enp'):
                 individual = Individual.objects.filter(document__document_type=enp_type, document__number=patient_data['enp']).first()
 
@@ -574,8 +539,8 @@ class Individual(models.Model):
             individual.save(update_fields=['family', 'name', 'patronymic', 'birthday', 'sex', 'ecp_id'])
 
         snils_doc = None
-        if snils_type and patient_data.get('Person_Snils'):
-            snils = patient_data['Person_Snils']
+        if snils_type and patient_data.get('PersonSnils_Snils'):
+            snils = patient_data['PersonSnils_Snils']
             snils = ''.join([s for s in snils if s.isdigit()])
             if not Document.objects.filter(individual=individual, document_type=snils_type).exists():
                 snils_doc = Document(
@@ -626,6 +591,7 @@ class Individual(models.Model):
                             cdu.first().save(update_fields=['document'])
                     else:
                         CardDocUsage(card=card, document=snils_doc).save()
+        return individual
 
     @staticmethod
     def import_from_tfoms(data: Union[dict, List], individual: Union['Individual', None] = None, no_update=False, need_return_individual=False, need_return_card=False):
@@ -642,6 +608,7 @@ class Individual(models.Model):
         patronymic = data.get('patronymic', '').title().strip()
         gender = data.get('gender', '').lower().strip()
         bdate = data.get('birthdate', '').split(' ')[0]
+        insurer_full_code = data.get('insurer_full_code', '')
 
         if gender == 'm':
             gender = 'м'
@@ -653,12 +620,28 @@ class Individual(models.Model):
         card = None
 
         if family and name and gender and bdate:
+            passport_type = DocumentType.objects.filter(title__startswith="Паспорт гражданина РФ").first()
+            birth_cert_type = DocumentType.objects.filter(title__startswith="Свидетельство о рождении").first()
             enp = (data.get('enp') or '').strip()
             birthday = datetime.strptime(bdate, "%d.%m.%Y" if '.' in bdate else "%Y-%m-%d").date()
             address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.').strip()
-            passport_number = data.get('passport_number', '').strip()
-            passport_serial = data.get('passport_serial', '').strip()
-            passport_seria = passport_serial or data.get('passport_seria', '').strip()
+            document_type = data.get('document_type', '').strip()
+            document_seria = data.get('document_seria', '').strip()
+            document_number = data.get('document_number', '').strip()
+            birth_cert_number, birth_cert_seria, passport_number, passport_seria = None, None, None, None
+            if birth_cert_type and document_type == birth_cert_type.tfoms_type:
+                birth_cert_number = document_number
+                birth_cert_seria = document_seria
+            elif passport_type and document_type == passport_type.tfoms_type:
+                passport_number = document_number
+                passport_seria = document_seria
+            if not document_type:
+                passport_number = data.get('passport_number', '').strip()
+                passport_serial = data.get('passport_serial', '').strip()
+                passport_seria = passport_serial or data.get('passport_seria', '').strip()
+                if len(passport_seria.split('-')) > 1:
+                    birth_cert_number = passport_number
+                    birth_cert_seria = passport_seria
             snils = (data.get('snils') or '').replace(' ', '').replace('-', '')
 
             q_idp = dict(tfoms_idp=idp or '##fakeidp##')
@@ -698,7 +681,7 @@ class Individual(models.Model):
                 ce = Card.objects.filter(individual=i, base__internal_type=True).first()
                 if no_update and ce:
                     print('No update')  # noqa: T001
-                    polis = i.add_or_update_doc(enp_type, '', enp)
+                    polis = i.add_or_update_doc(enp_type, '', enp, insurer_full_code)
                     if polis:
                         cdu = CardDocUsage.objects.filter(card=ce, document__document_type=polis.document_type)
                         if not cdu.exists():
@@ -754,20 +737,21 @@ class Individual(models.Model):
 
             enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
             snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
-            passport_type = DocumentType.objects.filter(title__startswith="Паспорт гражданина РФ").first()
 
             if snils_type and snils:
                 print('Sync SNILS')  # noqa: T001
                 i.add_or_update_doc(snils_type, '', snils)
 
-            if passport_type and passport_seria and passport_number:
+            if birth_cert_type and birth_cert_seria and birth_cert_number:
+                i.add_or_update_doc(birth_cert_type, birth_cert_seria, birth_cert_number)
+            elif passport_type and passport_seria and passport_number:
                 print('Sync PASSPORT')  # noqa: T001
                 i.add_or_update_doc(passport_type, passport_seria, passport_number)
 
             enp_doc = None
             if enp_type and enp:
                 print('Sync ENP')  # noqa: T001
-                enp_doc = i.add_or_update_doc(enp_type, '', enp)
+                enp_doc = i.add_or_update_doc(enp_type, '', enp, insurer_full_code)
 
             print('Sync L2 card')  # noqa: T001
             card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
@@ -786,14 +770,83 @@ class Individual(models.Model):
 
         return updated_data
 
-    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str):
+    @staticmethod
+    def import_from_simple_data(data: dict, owner, patient_id_company, email, phone):
+        family = data.get('family', '').title().strip()
+        name = data.get('name', '').title().strip()
+        patronymic = data.get('patronymic', '').title().strip()
+        sex = data.get('sex', '').lower().strip()
+        birthday = data.get('birthday', '').split(' ')[0]
+        snils = data.get('snils', '').split(' ')[0]
+
+        i = None
+        card = None
+
+        if family and name and sex and birthday:
+            birthday = datetime.strptime(birthday, "%d.%m.%Y" if '.' in birthday else "%Y-%m-%d").date()
+
+            indv = Individual.objects.filter(
+                family=family,
+                name=name,
+                patronymic=patronymic,
+                birthday=birthday,
+                sex=sex,
+                owner=owner,
+            )
+
+            if not indv or not indv.exists():
+                i = Individual(
+                    family=family,
+                    name=name,
+                    patronymic=patronymic,
+                    birthday=birthday,
+                    sex=sex,
+                    owner=owner,
+                    owner_patient_id=patient_id_company,
+                )
+                i.save()
+            else:
+                i = indv.first()
+                updated = []
+
+                if i.family != family:
+                    i.family = family
+                    updated.append('family')
+
+                if i.name != name:
+                    i.name = name
+                    updated.append('name')
+
+                if i.patronymic != patronymic:
+                    i.patronymic = patronymic
+                    updated.append('patronymic')
+
+                if i.sex != sex:
+                    i.sex = sex
+                    updated.append('sex')
+
+                if i.birthday != birthday:
+                    i.birthday = birthday
+                    updated.append('birthday')
+
+                if updated:
+                    i.save(update_fields=updated)
+
+        if i:
+            snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
+            document_snils = i.add_or_update_doc(snils_type, '', snils)
+            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils)
+
+        return card
+
+    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str, insurer_full_code=""):
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() > 1:
             ds.delete()
 
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() == 0:
-            d = Document(individual=self, document_type=doc_type, serial=serial, number=number)
+            d = Document(individual=self, document_type=doc_type, serial=serial, number=number, insurer_full_code=insurer_full_code)
             d.save()
         else:
             d: Document = ds.first()
@@ -806,6 +859,9 @@ class Individual(models.Model):
             if d.number != number:
                 d.number = number
                 updated.append('number')
+            if d.insurer_full_code != insurer_full_code:
+                d.insurer_full_code = insurer_full_code
+                updated.append('insurer_full_code')
 
             if updated:
                 d.save(update_fields=updated)
@@ -820,6 +876,7 @@ class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
     check_priority = models.IntegerField(default=0, help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")
     rmis_type = models.CharField(max_length=10, default=None, blank=True, null=True)
+    tfoms_type = models.CharField(max_length=10, default=None, blank=True, null=True)
 
     def __str__(self):
         return "{} | {} | ^{}".format(self.pk, self.title, self.check_priority)
@@ -846,11 +903,12 @@ class Document(models.Model):
     number = models.CharField(max_length=30, blank=True, help_text="Номер")
     individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True, blank=True, help_text="Документ активен")
-    date_start = models.DateField(help_text="Дата начала действия докумена", blank=True, null=True)
-    date_end = models.DateField(help_text="Дата окончания действия докумена", blank=True, null=True)
+    date_start = models.DateField(help_text="Дата начала действия документа", blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания действия документа", blank=True, null=True)
     who_give = models.TextField(default="", blank=True, help_text="Кто выдал")
     from_rmis = models.BooleanField(default=True, blank=True)
     rmis_uid = models.CharField(max_length=11, default=None, blank=True, null=True)
+    insurer_full_code = models.CharField(max_length=11, default="", blank=True, null=True, help_text="Код страховой")
 
     @property
     def date_start_local(self):
@@ -866,11 +924,11 @@ class Document(models.Model):
     @staticmethod
     def get_all_doc(docs):
         """
-        возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
+        Возвращает словарь словарей documents. Данные о документах: паспорт : номер: серия, полис: номер, снислс: номер
         """
         documents = {
             'passport': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
-            'polis': {'serial': "", 'num': "", 'issued': ""},
+            'polis': {'serial': "", 'num': "", 'issued': "", "insurer_full_code": ""},
             'snils': {'num': ""},
             'bc': {'num': "", 'serial': "", 'date_start': "", 'issued': ""},
         }
@@ -890,6 +948,7 @@ class Document(models.Model):
                 documents["polis"]["serial"] = d.serial
                 documents["polis"]["date_start"] = "" if not d.date_start else d.date_start.strftime("%d.%m.%Y")
                 documents["polis"]["issued"] = d.who_give
+                documents["polis"]["insurer_full_code"] = d.insurer_full_code
 
             if d.document_type.title == 'Свидетельство о рождении':
                 documents["bc"]["num"] = d.number
@@ -976,6 +1035,9 @@ class CardBase(models.Model):
     order_weight = models.SmallIntegerField(default=0)
     forbidden_create_napr = models.BooleanField(help_text="Запрет создания направлений", default=False)
 
+    def get_fin_sources(self):
+        return [{'id': x.pk, 'label': x.title} for x in self.istochnikifinansirovaniya_set.filter(hide=False).order_by('-order_weight')]
+
     def __str__(self):
         return "{0} - {1}".format(self.title, self.short_title)
 
@@ -998,6 +1060,33 @@ class District(models.Model):
         verbose_name_plural = 'Участки'
 
 
+class HarmfulFactor(models.Model):
+    title = models.CharField(max_length=255, help_text='Наименование')
+    description = models.CharField(max_length=1024, help_text='Описание', blank=True, default=None, null=True)
+    template = models.ForeignKey(AssignmentTemplates, db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+    cpp_key = models.UUIDField(null=True, blank=True, editable=False, help_text="UUID, с справочника", db_index=True)
+    nsi_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
+
+    class Meta:
+        verbose_name = 'Фактор вредности'
+        verbose_name_plural = 'Факторы вредности'
+
+    @staticmethod
+    def get_template_by_factor(factor_pks):
+        factors = HarmfulFactor.objects.filter(pk__in=factor_pks)
+        return [i.template.pk for i in factors]
+
+    @staticmethod
+    def as_json(factor):
+        json = {
+            "id": factor.pk,
+            "title": factor.title,
+            "description": factor.description,
+            "template_id": factor.template_id,
+        }
+        return json
+
+
 class Card(models.Model):
     AGENT_CHOICES = (
         ('mother', "Мать"),
@@ -1017,9 +1106,9 @@ class Card(models.Model):
     AGENT_NEED_DOC = ['curator', 'agent']
     AGENT_CANT_SELECT = ['payer']
 
-    number = models.CharField(max_length=20, blank=True, help_text="Идетификатор карты", db_index=True)
+    number = models.CharField(max_length=20, blank=True, help_text="Идентификатор карты", db_index=True)
     base = models.ForeignKey(CardBase, help_text="База карты", db_index=True, on_delete=models.PROTECT)
-    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.CASCADE)
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.PROTECT)
     is_archive = models.BooleanField(default=False, blank=True, db_index=True, help_text="Карта в архиве")
     polis = models.ForeignKey(Document, help_text="Документ для карты", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     main_diagnosis = models.CharField(max_length=36, blank=True, default='', help_text="Основной диагноз", db_index=True)
@@ -1032,21 +1121,26 @@ class Card(models.Model):
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
+    work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")  # DEPRECATED
+    work_department_db = models.ForeignKey('contracts.CompanyDepartment', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место отдела из базы")
     mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     father = models.ForeignKey('self', related_name='father_p', help_text="Отец", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator = models.ForeignKey('self', related_name='curator_p', help_text="Опекун", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     curator_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание опекуна")
     agent = models.ForeignKey('self', related_name='agent_p', help_text="Представитель (из учреждения, родственник)", blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-оснвоание представителя")
+    agent_doc_auth = models.CharField(max_length=255, blank=True, default='', help_text="Документ-основание представителя")
     payer = models.ForeignKey('self', related_name='payer_p', help_text="Плательщик", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     who_is_agent = models.CharField(max_length=7, choices=AGENT_CHOICES, blank=True, default='', help_text="Законный представитель пациента", db_index=True)
     district = models.ForeignKey(District, default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
     ginekolog_district = models.ForeignKey(District, related_name='ginekolog_district', default=None, null=True, blank=True, help_text="Участок", on_delete=models.SET_NULL)
 
     anamnesis_of_life = models.TextField(default='', blank=True, help_text='Анамнез жизни')
-    number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идетификатор карты поликлиника", db_index=True)
+    number_poliklinika = models.CharField(max_length=20, blank=True, default='', help_text="Идентификатор карты поликлиника", db_index=True)
     phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
     harmful_factor = models.CharField(max_length=255, blank=True, default='', help_text="Фактор вредности")
+
+    email = models.CharField(max_length=255, blank=True, default='')
+    send_to_email = models.BooleanField(default=False, blank=True, db_index=True, help_text="Отправлять результаты на почту")
 
     medbook_prefix = models.CharField(max_length=3, blank=True, default='', db_index=True, help_text="Префикс номера мед.книжки")
     medbook_number = models.CharField(max_length=16, blank=True, default='', db_index=True, help_text="Номер мед.книжки")
@@ -1056,6 +1150,9 @@ class Card(models.Model):
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     death_date = models.DateField(help_text='Дата смерти', db_index=True, default=None, blank=True, null=True)
     contact_trust_health = models.CharField(max_length=400, help_text='Кому доверяю состояние здоровья', blank=True, default="")
+    room_location = models.ForeignKey(Room, default=None, blank=True, null=True, help_text="Кабинет нахождения карты", db_index=True, on_delete=models.SET_NULL)
+
+    owner = models.ForeignKey('hospitals.Hospitals', default=None, blank=True, null=True, help_text="Организация-владелец карты", db_index=True, on_delete=models.PROTECT)
 
     @property
     def main_address_full(self):
@@ -1180,6 +1277,7 @@ class Card(models.Model):
                 docs.append(Document.objects.filter(pk=cd[d])[0])
         ind_data['doc'] = docs if not full_empty else []
         ind_data['fio'] = self.individual.fio()
+        ind_data['sex'] = self.individual.sex
         ind_data['family'] = self.individual.family
         ind_data['name'] = self.individual.name
         ind_data['patronymic'] = self.individual.patronymic
@@ -1195,6 +1293,7 @@ class Card(models.Model):
         if not only_json_serializable:
             ind_data['work_place_db'] = self.work_place_db
         ind_data['work_position'] = self.work_position
+        ind_data['work_department'] = self.work_department
         ind_data['sex'] = self.individual.sex
 
         # document "Паспорт РФ"
@@ -1223,6 +1322,7 @@ class Card(models.Model):
         # document= "полис ОМС"
         ind_data['oms'] = {}
         ind_data['oms']['polis_num'] = ind_documents["polis"]["num"]
+        ind_data['oms']['number'] = ind_documents["polis"]["num"]
         ind_data['enp'] = ind_documents["polis"]["num"]
         if not ind_data['oms']['polis_num']:
             ind_data['oms']['polis_num'] = None if empty else '___________________________'
@@ -1231,7 +1331,14 @@ class Card(models.Model):
             ind_data['oms']['polis_serial'] = None if empty else '________'
         # ind_data['oms']['polis_date_start'] = ind_documents["polis"]["date_start"]
         ind_data['oms']['polis_issued'] = (None if empty else '') if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['oms']['issueOrgName'] = '' if not ind_documents["polis"]["issued"] else ind_documents["polis"]["issued"]
+        ind_data['insurer_full_code'] = '' if not ind_documents["polis"]["insurer_full_code"] else ind_documents["polis"]["insurer_full_code"]
+        ind_data['oms']['issueOrgCode'] = ind_data['insurer_full_code']
         ind_data['ecp_id'] = self.individual.ecp_id
+
+        patient_harmfull_factors = PatientHarmfullFactor.objects.filter(card=self)
+        harmful_factors_title = [f"{i.harmful_factor.title}" for i in patient_harmfull_factors]
+        ind_data['harmfull_factors'] = ";".join(harmful_factors_title)
 
         return ind_data
 
@@ -1275,12 +1382,16 @@ class Card(models.Model):
         force=False,
         updated_data=None,
         snils: Union['Document', None] = None,
+        owner=None,
+        email=email,
+        phone=phone,
     ):
-        if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
+        f = {'owner': owner} if owner else {}
+        if distinct and card_orig and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
             return None
 
-        if force and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True).exists():
-            c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True)[0]
+        if force and Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f).exists():
+            c = Card.objects.filter(individual=card_orig.individual if not force else (individual or card_orig.individual), base__internal_type=True, **f)[0]
             updated = []
 
             if address and c.main_address != address:
@@ -1322,6 +1433,9 @@ class Card(models.Model):
                 main_diagnosis='' if not card_orig else card_orig.main_diagnosis,
                 main_address=address or ('' if not card_orig else card_orig.main_address),
                 fact_address='' if not card_orig else card_orig.fact_address,
+                phone=phone,
+                email=email,
+                **f,
             )
             c.save()
             if polis:
@@ -1436,6 +1550,31 @@ class DispensaryReg(models.Model):
     class Meta:
         verbose_name = 'Д-учет'
         verbose_name_plural = 'Д-учет'
+
+
+class PatientHarmfullFactor(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    harmful_factor = models.ForeignKey(HarmfulFactor, default=None, blank=True, null=True, db_index=True, help_text='Фактор вредности', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Фактор вредности у пациента'
+        verbose_name_plural = 'Факторы вредности пациентов'
+
+    @staticmethod
+    def get_card_harmful_factor(card):
+        patient_harmful_factors = PatientHarmfullFactor.objects.filter(card=card)
+        return [{"factorId": p.harmful_factor.pk} for p in patient_harmful_factors]
+
+    @staticmethod
+    def save_card_harmful_factor(card_pk, tb_data):
+        card = Card.objects.filter(pk=card_pk).first()
+        PatientHarmfullFactor.objects.filter(card=card).delete()
+        for t_b in tb_data:
+            harmfull = HarmfulFactor.objects.filter(pk=t_b['factorId']).first()
+            if harmfull:
+                PatientHarmfullFactor(card=card, harmful_factor=harmfull).save()
+
+        return True
 
 
 class AdditionalPatientDispensaryPlan(models.Model):
@@ -1692,6 +1831,13 @@ class Phones(models.Model):
         return n
 
     @staticmethod
+    def format_as_plus_7(n):
+        phone = Phones.nn(n)
+        if len(phone) != 11:
+            return phone[:11]
+        return f"+7 {phone[1:4]} {phone[4:7]}-{phone[7:9]}-{phone[9:]}"
+
+    @staticmethod
     def normalize_to_search(n):
         nn = Phones.nn(n)
 
@@ -1722,7 +1868,7 @@ class BenefitType(models.Model):
         (4, 'ВЗН'),
     )
 
-    title = models.CharField(max_length=255, help_text='Каегория льготы')
+    title = models.CharField(max_length=255, help_text='Категория льготы')
     hide = models.BooleanField(help_text="Скрыть категорию", default=False)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
 
@@ -1863,3 +2009,52 @@ class CardControlParam(models.Model):
                 continue
             elif i.get("isSelected", False):
                 CardControlParam(card_id=card_pk, patient_control_param_id=i["id"]).save()
+
+
+class CardMovementRoom(models.Model):
+    card = models.ForeignKey(Card, help_text="Карта", db_index=True, on_delete=models.CASCADE)
+    room_out = models.ForeignKey(Room, help_text="Кабинет откуда", related_name="room_out", default=None, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
+    room_in = models.ForeignKey(Room, help_text="Кабинет куда ", default=None, blank=True, null=True, related_name="room_in", db_index=True, on_delete=models.CASCADE)
+    doc_who_issued = models.ForeignKey(DoctorProfile, related_name="doc_who_issued", default=None, blank=True, null=True, help_text='Отправитель', on_delete=models.SET_NULL)
+    date_issued = models.DateTimeField(auto_now_add=True, help_text='Дата выдачи карт', db_index=True)
+    doc_who_received = models.ForeignKey(DoctorProfile, related_name="doc_who_received", default=None, blank=True, null=True, help_text='Приемщик', on_delete=models.SET_NULL)
+    date_received = models.DateTimeField(default=None, blank=True, null=True, help_text='Дата подтверждения получения', db_index=True)
+    comment = models.CharField(max_length=128, help_text='Комментарий движения', default="")
+
+    @staticmethod
+    def transfer_send(cards, room_out_id, room_in_id, doc_who_issued_id):
+        for i in cards:
+            CardMovementRoom(card_id=i['id'], room_out_id=room_out_id, room_in_id=room_in_id, doc_who_issued_id=doc_who_issued_id).save()
+            card = Card.objects.filter(id=i['id']).first()
+            card.room_location_id = room_in_id
+            card.save()
+        return True
+
+    @staticmethod
+    def transfer_accept(cards, room_out_id, room_in_id, doc_who_received_id):
+        for i in cards:
+            transfer_card = CardMovementRoom.objects.filter(card_id=i['id'], room_out_id=room_out_id, room_in_id=room_in_id, doc_who_received_id=None).first()
+            transfer_card.doc_who_received_id = doc_who_received_id
+            today = datetime.now().date()
+            transfer_card.date_received = today
+            transfer_card.save()
+        return True
+
+    @staticmethod
+    def get_await_accept(room_in_ids):
+        card_objs = CardMovementRoom.objects.filter(room_in_id__in=room_in_ids)
+        rooms_out = []
+        rooms_out_result = []
+        for i in card_objs:
+            if i.room_out.id not in rooms_out:
+                rooms_out_result.append({"id": i.room_out.id, "label": i.room_out.title})
+                rooms_out.append(i.room_out.id)
+        return rooms_out_result
+
+    @staticmethod
+    def get_accept_card(
+        room_out_id,
+        room_in_id,
+    ):
+        card_ids = CardMovementRoom.objects.values_list("card_id", flat=True).filter(room_in_id=room_in_id, room_out_id=room_out_id, date_received=None, doc_who_received=None)
+        return Card.objects.filter(id__in=card_ids)

@@ -19,7 +19,7 @@ from api.procedure_list.views import get_procedure_by_dir
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER
-from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list
+from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list, get_assignments
 from reportlab.lib import colors
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.shapes import Drawing
@@ -120,19 +120,19 @@ def form_01(request_data):
             temp_obj = [
                 Paragraph(' <u>Температура (°C)</u>', style),
                 Spacer(1, 2 * mm),
-                draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 1, 250 * mm, 27 * mm),
+                draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
                 Spacer(1, 10 * mm),
             ]
             objs.append(KeepTogether(temp_obj))
 
-    if 'Пульс (уд/с)' in titles and 'Пульс (уд/с)' in result:
-        result_data = result['Пульс (уд/с)']
+    if 'Пульс (уд/м)' in titles and 'Пульс (уд/м)' in result:
+        result_data = result['Пульс (уд/м)']
         min_max = result_data['min_max']
         count_param = count_len_param(result_data, count_in_graph)
         for i in range(count_param):
             elements = count_graph_el(count_in_graph, result_data)
             temp_obj = [
-                Paragraph(' <u>Пульс (уд/с)</u>', style),
+                Paragraph(' <u>Пульс (уд/м)</u>', style),
                 Spacer(1, 2 * mm),
                 draw_temper_pulse({'data': elements[0], 'xtext': elements[1], 'min_max': min_max}, 10, 250 * mm, 27 * mm),
                 Spacer(1, 10 * mm),
@@ -140,7 +140,7 @@ def form_01(request_data):
             objs.append(KeepTogether(temp_obj))
 
     diastolic = 'Диастолическое давление (мм рт.с)'
-    systolic = 'Диастолическое давление (мм рт.с)'
+    systolic = 'Систолическое давление (мм рт.с)'
     if 'Давление' in titles and diastolic in result and systolic in result:
         result_data = {diastolic: result[diastolic], systolic: result[systolic]}
         min_max_diastolic = result_data[diastolic]['min_max']
@@ -472,6 +472,125 @@ def form_02(request_data):
         end += slice_count
 
     doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_03(request_data):
+    """
+    Лист назначений
+    """
+
+    direction_id = json.loads(request_data["hosp_pk"])
+    ind_card = Napravleniya.objects.get(pk=direction_id)
+    patient_card = ind_card.client.pk
+    patient_data = ind_card.client.get_data_individual()
+    assignments = get_assignments(direction_id)
+    if sys.platform == "win32":
+        locale.setlocale(locale.LC_ALL, "rus_rus")
+    else:
+        locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
+
+    pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
+    pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=7 * mm, topMargin=40 * mm, bottomMargin=10 * mm, title="Лист назначений")
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
+    tableTitle = deepcopy(style)
+    tableTitle.fontName = "PTAstraSerifBold"
+    tableTitle.alignment = TA_LEFT
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenterBold = deepcopy(styleCenter)
+    styleCenterBold.fontName = "PTAstraSerifBold"
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    objs = []
+
+    table_data = [
+        [
+            Paragraph("Медицинское вмешательство", tableTitle),
+            Paragraph("Дата назначения", tableTitle),
+            Paragraph("Подпись лечащего врача (врача-специалиста), сделавшего назначение", tableTitle),
+            Paragraph("Дата и время исполнения назначения", tableTitle),
+            Paragraph("Фамилия, имя, отчество (при наличии) и подпись медицинского работника, ответственного за исполнение назначения", tableTitle),
+        ],
+    ]
+    assignments_data = [
+        [
+            Paragraph(f'{" ".join(i["research_title"])}', style),
+            Paragraph(f'{i["create_date"]}', styleCenter),
+            Paragraph(f'{i["who_assigned"]}', styleCenter),
+            Paragraph(f'{i["time_confirmation"]}', styleCenter),
+            Paragraph(f'{i["who_confirm"]}', styleCenter),
+        ]
+        for i in assignments
+    ]
+
+    table_data.extend(assignments_data)
+
+    columns_width = [None, 40 * mm, 43 * mm, 35 * mm, 40 * mm]
+
+    tbl = Table(table_data, repeatRows=1, colWidths=columns_width, hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3 * mm),
+                ("TOPPADDING", (0, 0), (-1, -1), 1 * mm),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
+    )
+
+    objs.append(tbl)
+
+    def first_pages(canvas, doc):
+        canvas.saveState()
+        table_data = [
+            [
+                Paragraph("Лист назначений", styleHeader),
+            ],
+            [
+                Paragraph(f"История болезни № {direction_id}", styleCenterBold),
+            ],
+        ]
+        tbl = Table(table_data, colWidths=100 * mm, hAlign='CENTER')
+        tbl.wrapOn(canvas, 105 * mm, 195 * mm)
+        tbl.drawOn(canvas, 105 * mm, 195 * mm)
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(17 * mm, 185 * mm, "Фамилия, имя, отчество (при наличии):")
+        canvas.setFont("PTAstraSerifReg", 12)
+        canvas.drawString(95 * mm, 185 * mm, f"{patient_data['fio']}")
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(17 * mm, 180 * mm, "Дата рождения:")
+        canvas.setFont("PTAstraSerifReg", 12)
+        canvas.drawString(48 * mm, 180 * mm, f"{patient_data['born']}")
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(68 * mm, 180 * mm, "г. № медицинской карты:")
+        canvas.setFont("PTAstraSerifReg", 12)
+        canvas.drawString(118 * mm, 180 * mm, f"{patient_card}")
+        canvas.setFont("PTAstraSerifBold", 12)
+        canvas.drawString(17 * mm, 175 * mm, "Диагноз (основное заболевание): ")
+        canvas.restoreState()
+
+    def later_pages(canvas, doc):
+        first_pages(canvas, doc)
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf

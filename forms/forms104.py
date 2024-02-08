@@ -43,7 +43,7 @@ def form_01(request_data):
     napr = Napravleniya.objects.filter(id__in=ind_dir)
     dir_temp = []
 
-    # Проверить, что все направления принадлежат к одной карте и имеют ист. финансирования "Платно"
+    # Проверить, что все направления принадлежат к одной карте и имеют ист.финансирования "Платно"
     for n in napr:
         if (n.istochnik_f_id in ist_f_list) and (n.client == ind_card):
             dir_temp.append(n.pk)

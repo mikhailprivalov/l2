@@ -1,4 +1,5 @@
 import os.path
+import uuid
 from datetime import date, datetime
 from io import BytesIO
 
@@ -12,7 +13,7 @@ from django.utils import dateformat
 from django.utils.text import Truncator
 from django.views.decorators.csrf import csrf_exempt
 from reportlab.graphics import renderPDF
-from reportlab.graphics.barcode import eanbc, qr
+from reportlab.graphics.barcode import eanbc, qr, createBarcodeDrawing
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, A6
@@ -27,20 +28,24 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from transliterate import translit
 
 import directory.models as directory
+from directions.sql_func import get_researches_by_number_directions
+from users.models import DoctorProfile
+from api.sql_func import search_case_by_card_date
 from hospitals.models import Hospitals
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult, IstochnikiFinansirovaniya
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE, PRINT_APPENDIX_PAGE_DIRECTION
 from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
-from utils.dates import try_parse_range
+from utils.dates import try_parse_range, normalize_dots_date
 from django.utils.module_loading import import_string
 
 from utils.matrix import transpose
 from utils.xh import save_tmp_file, translation_number_from_decimal
+from users.models import User
 
 w, h = A4
 
@@ -120,7 +125,7 @@ def gen_pdf_execlist(request):
                         + str(inobj.issledovaniya_set.first().napravleniye_id)
                         + "<br/>"
                         + "№ ёмкости: "
-                        + str(inobj.pk)
+                        + str(inobj.number)
                         + "<br/>"
                         + Truncator(inobj.issledovaniya_set.first().napravleniye.doc.podrazdeleniye.title).chars(19)
                         + "<br/><br/>"
@@ -166,9 +171,16 @@ def gen_pdf_execlist(request):
 def gen_pdf_dir(request):
     """Генерация PDF направлений"""
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
+    appendix = request.GET.get("appendix", 0)
+    narrow_format = request.GET.get("narrowFormat", "0") == "1"
+
+    req_from_additional_pages = False
+    req_from_appendix_pages = False
     if direction_id == []:
         request_direction_id = json.loads(request.body)
         direction_id = request_direction_id.get("napr_id", "[]")
+        req_from_additional_pages = request_direction_id.get("from_additional_pages", False)
+        req_from_appendix_pages = request_direction_id.get("from_appendix_pages", False)
     if SettingManager.get("pdf_auto_print", "true", "b") and not request.GET.get('normis') and not request.GET.get('embedded'):
         pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
 
@@ -202,6 +214,20 @@ def gen_pdf_dir(request):
         )
         .order_by('pk')
     )
+
+    if narrow_format:
+        from directions.forms.forms580 import form_01 as form_80
+        fc = form_80(
+            request_data={
+                **dict(request.GET.items()),
+                "user": request.user,
+                "card_pk": dn[0].client_id,
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            }
+        )
+        if fc:
+            response.write(fc)
+            return response
 
     donepage = dn.exclude(issledovaniya__research__direction_form=0)
     donepage = donepage.exclude(external_organization__isnull=False)
@@ -308,16 +334,26 @@ def gen_pdf_dir(request):
     # Проверить, если единый источник финансирвоания у направлений и title==платно, тогода печатать контракт
     fin_ist_set = set()
     card_pk_set = set()
+    setup_print_additional_page_direction = {}
     for n in dn:
         if n.istochnik_f:
             fin_ist_set.add(n.istochnik_f)
         card_pk_set.add(n.client_id)
+        iss = Issledovaniya.objects.filter(napravleniye=n)
+        for i in iss:
+            if i.research.podrazdeleniye and i.research.podrazdeleniye.print_additional_page_direction:
+                setup_print_additional_page_direction = json.loads(i.research.podrazdeleniye.print_additional_page_direction)
+            if i.research.print_additional_page_direction:
+                setup_print_additional_page_direction = json.loads(i.research.print_additional_page_direction)
 
     internal_type = n.client.base.internal_type
 
     fin_status = None
-    if fin_ist_set and fin_ist_set.pop().title.lower() == 'платно':
-        fin_status = True
+    fin_title = None
+    if fin_ist_set:
+        fin_title = fin_ist_set.pop().title.lower()
+        if fin_title == 'платно':
+            fin_status = True
 
     if request.GET.get("contract") and internal_type:
         if request.GET["contract"] == '1' and SettingManager.get("direction_contract", default='False', default_type='b'):
@@ -336,41 +372,84 @@ def gen_pdf_dir(request):
                         "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                     }
                 )
-                if fc:
-                    fc_buf = BytesIO()
-                    fc_buf.write(fc)
-                    fc_buf.seek(0)
-                    buffer.seek(0)
-                    from pdfrw import PdfReader, PdfWriter
-
-                    today = datetime.now()
-                    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
-                    date_now_str = str(n.client_id) + str(date_now1)
-                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-                    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
-                    file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
-                    save_tmp_file(buffer, filename=file_dir)
-                    save_tmp_file(fc_buf, filename=file_contract)
-                    pdf_all = BytesIO()
-                    inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
-                    writer = PdfWriter()
-                    for inpfn in inputs:
-                        writer.addpages(PdfReader(inpfn).pages)
-                    writer.write(pdf_all)
-                    pdf_out = pdf_all.getvalue()
-                    pdf_all.close()
+                if fc and not req_from_appendix_pages:
+                    pdf_out = exteranl_add_pdf(fc, buffer, n)
                     response.write(pdf_out)
-                    buffer.close()
-                    os.remove(file_dir)
-                    os.remove(file_contract)
-                    fc_buf.close()
                     return response
 
+    if (PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title, None) or setup_print_additional_page_direction.get(fin_title, None)) and not req_from_additional_pages:
+        type_additional_pdf = PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE.get(fin_title)
+        if setup_print_additional_page_direction.get(fin_title, None):
+            type_additional_pdf = setup_print_additional_page_direction.get(fin_title)
+        additional_page = import_string('forms.forms112.' + type_additional_pdf.split(".")[0])
+        if additional_page:
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card_pk_set.pop(),
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": type_additional_pdf.split(".")[1],
+                    "fin_title": fin_title,
+                }
+            )
+            if fc:
+                pdf_out = exteranl_add_pdf(fc, buffer, n)
+                response.write(pdf_out)
+                return response
+
+    if appendix == '1' and PRINT_APPENDIX_PAGE_DIRECTION and not req_from_appendix_pages:
+        type_additional_pdf = PRINT_APPENDIX_PAGE_DIRECTION.get(fin_title)
+        if type_additional_pdf:
+            additional_page = import_string('forms.forms112.' + type_additional_pdf.split(".")[0])
+            fc = additional_page(
+                request_data={
+                    **dict(request.GET.items()),
+                    "user": request.user,
+                    "card_pk": card_pk_set.pop(),
+                    "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+                    "type_additional_pdf": type_additional_pdf.split(".")[1],
+                    "fin_title": fin_title,
+                }
+            )
+            if fc:
+                pdf_out = exteranl_add_pdf(fc, buffer, n)
+                response.write(pdf_out)
+                return response
+
     buffer.close()  # Закрытие буфера
-
     response.write(pdf)  # Запись PDF в ответ
-
     return response
+
+
+def exteranl_add_pdf(fc_cur, buffer_cur, n_cl):
+    fc_buf = BytesIO()
+    fc_buf.write(fc_cur)
+    fc_buf.seek(0)
+    buffer_cur.seek(0)
+    from pdfrw import PdfReader, PdfWriter
+
+    today = datetime.now()
+    date_now1 = datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
+    date_now_str = str(n_cl.client_id) + str(date_now1)
+    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+    file_dir = os.path.join(dir_param, date_now_str + '_dir.pdf')
+    file_contract = os.path.join(dir_param, date_now_str + '_contract.pdf')
+    save_tmp_file(buffer_cur, filename=file_dir)
+    save_tmp_file(fc_buf, filename=file_contract)
+    pdf_all = BytesIO()
+    inputs = [file_contract] if SettingManager.get("only_contract", default='False', default_type='b') else [file_dir, file_contract]
+    writer = PdfWriter()
+    for inpfn in inputs:
+        writer.addpages(PdfReader(inpfn).pages)
+    writer.write(pdf_all)
+    pdf_out_cur = pdf_all.getvalue()
+    pdf_all.close()
+    os.remove(file_dir)
+    os.remove(file_contract)
+    buffer_cur.close()
+    fc_buf.close()
+    return pdf_out_cur
 
 
 def framePage(canvas):
@@ -434,7 +513,6 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     c.setFont('OpenSans', 14)
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
 
-    c.setFont('OpenSans', 14)
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
     c.setFont('OpenSans', 20)
@@ -447,7 +525,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     if history_num and len(history_num) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + history_num)
     elif additional_num and len(additional_num) > 0:
-        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(additional_num).strip()})")
+        c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 67) + (h / 2) * yn, f"({str(additional_num).strip()})")
     elif dir.client.number_poliklinika and len(dir.client.number_poliklinika) > 0:
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, f"({str(dir.client.number_poliklinika).strip()})")
 
@@ -455,12 +533,18 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
         c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 70) + (h / 2) * yn, "№ истории: " + dir.history_num)
 
     c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 80) + (h / 2) * yn, "ФИО: " + dir.client.individual.fio())
-    c.setFont('OpenSans', 18)
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "код " + translation_number_from_decimal(int(dir.client.number)))
-    c.setFont('OpenSans', 9)
-    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 90) + (h / 2) * yn, "д/р: {} ({})".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir)))
 
-    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {} {} {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type(), " - пол:", dir.client.individual.sex))
+    c.setFont('OpenSans', 13.5)
+    c.drawRightString(w / 2 * (xn + 1) - paddingx, (h / 2 - height - 80) + (h / 2) * yn, "Код {}".format(translation_number_from_decimal(int(dir.client.pk))))
+
+    c.setFont('OpenSans', 9)
+    c.drawRightString(
+        w / 2 * (xn + 1) - paddingx,
+        (h / 2 - height - 90) + (h / 2) * yn,
+        "Д/р: {} ({}) – {}".format(dir.client.individual.bd(), dir.client.individual.age_s(direction=dir), dir.client.individual.sex),
+    )
+
+    c.drawString(paddingx + (w / 2 * xn), (h / 2 - height - 90) + (h / 2) * yn, "{}: {}".format("ID" if dir.client.base.is_rmis else "Номер карты", dir.client.number_with_type()))
     diagnosis = dir.diagnos.strip()[:35]
     if not dir.imported_from_rmis:
         if diagnosis != "":
@@ -503,6 +587,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                 -9: 'Формы',
                 -11: 'Заявления',
                 -12: 'Мониторинги',
+                -14: 'Случай',
             }[rtp]
             # if rtp == -6:
             #     has_micro = True
@@ -783,18 +868,22 @@ def print_history(request):
     c = canvas.Canvas(buffer, pagesize=A4)  # Холст
     tubes = []
     if not filter:
-        tubes = TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date())
+        tubes = list(TubesRegistration.objects.filter(doc_get=request.user.doctorprofile).order_by('time_get').exclude(time_get__lt=datetime.now().date()))
     else:
         for v in filterArray:
-            tubes.append(TubesRegistration.objects.get(pk=v))
+            tubes.append(TubesRegistration.objects.get(number=v))
     labs = {}  # Словарь с пробирками, сгруппироваными по лаборатории
     for v in tubes:  # Перебор пробирок
-        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
+        iss = Issledovaniya.objects.filter(tubes__number=v.number)  # Получение исследований для пробирки
         iss_list = []  # Список исследований
-        k = v.doc_get.podrazdeleniye.title + "@" + str(iss[0].research.get_podrazdeleniye().title)
+        podr = iss[0].research.get_podrazdeleniye()
+        podr_title = podr.title if podr else ""
+        doc_podr = v.doc_get and v.doc_get.podrazdeleniye
+        doc_podr_title = doc_podr.title if doc_podr else ""
+        k = doc_podr_title + "@" + podr_title
         for val in iss:  # Цикл перевода полученных исследований в список
             iss_list.append(val.research.title)
-        if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+        if k not in labs.keys():  # Добавление списка в словарь если по ключу k нет ничего в словаре labs
             labs[k] = []
         for value in iss_list:  # Перебор списка исследований
             labs[k].append(
@@ -802,12 +891,12 @@ def print_history(request):
                     "type": v.type.tube.title,
                     "researches": value,
                     "client-type": iss[0].napravleniye.client.base.short_title,
-                    "lab_title": iss[0].research.get_podrazdeleniye().title,
+                    "lab_title": podr_title,
                     "time": strtime(v.time_get),
                     "dir_id": iss[0].napravleniye_id,
-                    "podr": v.doc_get.podrazdeleniye.title,
+                    "podr": doc_podr_title,
                     "reciver": None,
-                    "tube_id": str(v.id),
+                    "tube_id": str(v.number),
                     "history_num": iss[0].napravleniye.history_num,
                     "fio": iss[0].napravleniye.client.individual.fio(short=True, dots=True),
                 }
@@ -816,7 +905,7 @@ def print_history(request):
     c.setFont('OpenSans', 20)
 
     paddingx = 17
-    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований", "Емкость не принята (замечания)"]
+    data_header = ["№", "ФИО, № истории", "№ емкости", "Тип емкости", "Наименования исследований", "Штрих пробирки"]
     tw = w - paddingx * 4.5
     tx = paddingx * 3
     ty = 90
@@ -874,7 +963,9 @@ def print_history(request):
                 if len(research_tmp) > 38:
                     research_tmp = research_tmp[0 : -(len(research_tmp) - 38)] + "..."
                 tmp.append(Paragraph(research_tmp, styleSheet["BodyText"]))
-                tmp.append(Paragraph("", styleSheet["BodyText"]))
+                if shownum:
+                    bcd = createBarcodeDrawing('Code128', value=obj["tube_id"], humanReadable=0, barHeight=3.1 * mm, barWidth=0.7)
+                    tmp.append(bcd)
 
                 data.append(tmp)
                 num += 1
@@ -885,17 +976,19 @@ def print_history(request):
                     ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                     ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
                     ('VALIGN', (0, 0), (-1, -1), "MIDDLE"),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 1),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
                     ('RIGHTPADDING', (0, 0), (-1, -1), 1),
                     ('TOPPADDING', (0, 0), (-1, -1), 1),
                     ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+                    ('LEFTPADDING', (-1, 1), (-1, -1), -5 * mm),
                 ]
             )
             for span in merge_list:  # Цикл объединения ячеек
                 for pos in range(0, 6):
+
                     style.add('INNERGRID', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.28, colors.white)
                     style.add('BOX', (pos, merge_list[span][0]), (pos, merge_list[span][0] + len(merge_list[span])), 0.2, colors.black)
-            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.23), int(tw * 0.08), int(tw * 0.23), int(tw * 0.31), int(tw * 0.14)], style=style)
+            t = Table(data, colWidths=[int(tw * 0.03), int(tw * 0.21), int(tw * 0.1), int(tw * 0.23), int(tw * 0.33), int(tw * 0.13)], style=style)
 
             t.canv = c
             wt, ht = t.wrap(0, 0)
@@ -972,3 +1065,98 @@ def px(x=0.0):
 def pxr(x=0.0):
     x *= mm
     return w - x
+
+
+def create_case_by_cards(cards):
+    research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
+    doc = DoctorProfile.objects.filter(fio='Системный Пользователь', is_system_user=True).first()
+    if not doc:
+        user = User.objects.create_user(uuid.uuid4().hex)
+        user.is_active = True
+        user.save()
+        doc = DoctorProfile(user=user, fio='Системный Пользователь', is_system_user=True)
+        doc.save()
+        doc.get_fio_parts()
+    card_directions = {}
+    number_directons = None
+    for card in cards:
+        card_id = card.get("card_id")
+        researches = card.get("research")
+        plan_start_date_case = normalize_dots_date(card.get("date"))
+        plan_start_date_case = f"{plan_start_date_case} 00:00:00"
+        result_search_case = search_case_by_card_date(card_id, plan_start_date_case, research_case.pk, 1)
+        case_issledovaniye_number, case_direction_number = None, None
+        for i in result_search_case:
+            case_issledovaniye_number = i.case_issledovaniye_number
+            case_direction_number = i.case_direction_number
+            break
+        financing_source = IstochnikiFinansirovaniya.objects.filter(title__in=["Профосмотр", "Юрлицо"]).first()
+
+        if case_issledovaniye_number:
+            number_directons = Napravleniya.objects.values_list("id", flat=True).filter(parent_case_id=case_issledovaniye_number)
+            researches_sql = get_researches_by_number_directions(tuple(number_directons))
+            current_researches_case = set([i.research_id for i in researches_sql])
+            api_researches = set(researches)
+            api_researches -= current_researches_case
+            researches = list(api_researches)
+            result = Napravleniya.gen_napravleniya_by_issledovaniya(
+                card_id,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: researches},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                price_name=None,
+                case_id=case_direction_number,
+                case_by_direction=True,
+                plan_start_date=plan_start_date_case,
+            )
+        else:
+            napravleniye_case = Napravleniya.gen_napravleniye(
+                card_id,
+                doc,
+                financing_source,
+                "",
+                "",
+                doc,
+                -1,
+                doc,
+            )
+
+            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_start_date_case)
+            issledovaniye_case.save()
+            result = Napravleniya.gen_napravleniya_by_issledovaniya(
+                card_id,
+                "",
+                financing_source.pk,
+                "",
+                None,
+                doc,
+                {-1: researches},
+                {},
+                False,
+                {},
+                vich_code="",
+                count=1,
+                discount=0,
+                rmis_slot=None,
+                price_name=None,
+                case_id=napravleniye_case.pk,
+                case_by_direction=True,
+                plan_start_date=plan_start_date_case,
+            )
+        if number_directons:
+            number_directons = [i for i in number_directons]
+        else:
+            number_directons = []
+        number_directons.extend(result.get("list_id"))
+        card_directions[card_id] = list(set(number_directons))
+    return card_directions

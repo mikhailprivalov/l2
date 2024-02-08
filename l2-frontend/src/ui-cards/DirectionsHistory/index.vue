@@ -73,7 +73,7 @@
       <table class="table table-responsive table-bordered table-one">
         <colgroup>
           <col width="66">
-          <col width="70">
+          <col width="77">
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
@@ -84,7 +84,10 @@
             <th class="text-center">
               Дата
             </th>
-            <th v-if="active_type !== 5 && active_type !== 6">
+            <th v-if="active_type === 7">
+              № случ.
+            </th>
+            <th v-else-if="active_type !== 5 && active_type !== 6">
               № напр.
             </th>
             <th v-else-if="active_type === 5">
@@ -119,7 +122,7 @@
       <table class="table table-responsive table-bordered no-first-border-top table-hover table-two">
         <colgroup>
           <col width="66">
-          <col width="70">
+          <col width="77">
           <col>
           <col width="65">
           <col :width="!!iss_pk ? 200 : 150">
@@ -169,11 +172,28 @@
                   {{ row.pk }}
                 </a>
               </span>
+              <span v-else-if="active_type === 7">
+                <a
+                  :href="`/ui/case-control#{%22pk%22:${row.pk}}`"
+                  target="_blank"
+                  class="a-under"
+                >
+                  {{ row.pk }}
+                </a>
+              </span>
               <span v-else>{{ row.pk }}</span>
+              <span v-if="row.has_aux">
+                <AuxResearch
+                  :main-direction="row.pk"
+                  :aux-research="row.aux_researches"
+                /></span>
             </td>
             <td
               class="researches"
-              :title="row.researches"
+              :title="row.researches +
+                (row.planed_doctor !== '' ? ' Назначен: ' + row.planed_doctor: '') +
+                (row.register_number !== '' ? ' (' + row.register_number + ')': '')
+              "
             >
               {{ row.researches }}
             </td>
@@ -185,10 +205,12 @@
                   (row.maybe_onco ? '. Онкоподозрение' : '') +
                   (row.is_expertise
                     ? row.expertise_status > 0
-                      ? ' (экспертиза БЕЗ заменчаний)'
+                      ? ' (экспертиза БЕЗ замечаний)'
                       : ' (экспертза С замечаниями)'
                     : '') + (row.person_contract_pk > 0 ? ' (Договор-' + row.person_contract_pk +
-                    ' (Направления: ' + row.person_contract_dirs+ ')': '')
+                    ' (Направления: ' + row.person_contract_dirs + ')': '') +
+                  (row.planed_doctor !== '' ? ' Назначен: ' + row.planed_doctor: '') +
+                  (row.register_number !== '' ? ' (' + row.register_number + ')': '')
               "
               :class="['status-' + row.status]"
             >
@@ -373,6 +395,7 @@ import { mapGetters } from 'vuex';
 import _ from 'lodash';
 
 import { Research } from '@/types/research';
+import AuxResearch from '@/ui-cards/AuxResearch.vue';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 
@@ -393,7 +416,9 @@ function truncate(s, n, useWordBoundary) {
 
 export default {
   name: 'DirectionsHistory',
-  components: { SelectPickerM, DateRange, Bottom },
+  components: {
+    SelectPickerM, DateRange, Bottom, AuxResearch,
+  },
   props: {
     patient_pk: {
       type: Number,
@@ -436,6 +461,7 @@ export default {
         { pk: 4, title: 'Созданы пользователем' },
         { pk: 5, title: 'Договоры пациента' },
         { pk: 6, title: 'Регистратура пациента', module: 'rmisQueue' },
+        { pk: 7, title: 'Случаи пациента' },
       ],
       active_type: this.onlyType || 3,
       checked_obj: {},
@@ -557,8 +583,8 @@ export default {
       // eslint-disable-next-line max-len
       window.open(`/forms/pdf?type=111.01&card_pk=${card}&rmis_location=${rmisLocation}&date=${date}&time=${time}&researches=${researches}&pageFormat=${pageFormat}&typeSlot=${typeSlot}`, '_blank');
     },
-    async load_history_safe() {
-      await this.load_history_debounced(true);
+    load_history_safe() {
+      this.load_history_debounced(true);
     },
     async cancel_talon(slotId, patentPk, rmisLocation, typeSlot) {
       try {
@@ -583,7 +609,7 @@ export default {
       const s = Object.values(researches || {}).map((r: Research) => ({
         value: String(r.pk),
         label: truncate(r.full_title || r.title, 70, true),
-      }));
+      })).filter(({ value }) => !value.startsWith('template-'));
       if (s.length === 0) {
         return;
       }
@@ -617,6 +643,9 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
 
       const data = await directionsPoint.cancelDirection({ pk });
+      if (data.forbidden) {
+        this.$root.$emit('msg', 'warning', 'Недостаточно прав для отмены направлений');
+      }
 
       for (const dir of this.directions) {
         if (dir.pk === pk) {

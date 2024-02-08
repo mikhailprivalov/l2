@@ -24,6 +24,22 @@
               </td>
             </tr>
             <tr>
+              <th>Профиль</th>
+              <td class="cl-td">
+                <Treeselect
+                  v-model="profileResearch"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="profilesResearch"
+                  placeholder="Профиль не выбран"
+                  :append-to-body="true"
+                  class="treeselect-noborder"
+                  :clearable="false"
+                  :disabled="isSearchStationar"
+                />
+              </td>
+            </tr>
+            <tr>
               <th>Услуга</th>
               <td class="cl-td">
                 <Treeselect
@@ -35,7 +51,7 @@
                   :append-to-body="true"
                   class="treeselect-noborder"
                   :clearable="false"
-                  :disabled="isSearchStationar"
+                  :disabled="isSearchStationar || isProfileResearch"
                 />
               </td>
             </tr>
@@ -290,7 +306,7 @@
             <tr>
               <th>Номер</th>
               <th v-if="!isSearchStationar">
-                Организция
+                Организация
               </th>
               <th v-else>
                 История болезни
@@ -400,6 +416,8 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       year: moment().year(),
       research: -1,
       researches: [],
+      profileResearch: -1,
+      profilesResearch: [],
       caseNumber: '',
       directionNumber: '',
       hospCheck: false,
@@ -429,6 +447,9 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
     await this.$api('researches/descriptive-research').then(rows => {
       this.researches = rows;
     });
+    await this.$api('researches/profiles-research').then(rows => {
+      this.profilesResearch = rows;
+    });
     const { users } = await usersPoint.loadUsersByGroup({
       group: [
         'Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ',
@@ -444,6 +465,7 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
     searchStationar() {
       if (this.searchStationar) {
         this.research = -1;
+        this.profileResearch = -1;
         this.caseNumber = '';
         this.directionNumber = '';
         this.hospCheck = false;
@@ -454,12 +476,19 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
         this.dateGet = '';
       }
     },
+    profileResearch() {
+      if (this.profileResearch > 0) {
+        this.research = -1;
+      }
+    },
   },
 })
 export default class SearchPage extends Vue {
   year: number;
 
   research: number;
+
+  profileResearch: number;
 
   hospitalId: number;
 
@@ -504,11 +533,16 @@ export default class SearchPage extends Vue {
   statisticParams: any[];
 
   get isValid() {
-    return this.searchStationar || (!!this.year && !!this.research && this.research !== -1);
+    return this.searchStationar || (!!this.year && !!this.research && this.research !== -1)
+        || (!!this.year && this.profileResearch !== -1);
   }
 
   get isSearchStationar() {
     return this.searchStationar;
+  }
+
+  get isProfileResearch() {
+    return this.profileResearch !== -1;
   }
 
   get userGroups() {
@@ -525,6 +559,7 @@ export default class SearchPage extends Vue {
     const data = {
       year_period: this.year,
       research_id: this.research,
+      profile_research_id: this.profileResearch,
       case_number: this.caseNumber,
       directionNumber: this.directionNumber,
       hospitalId: this.hospitalId,

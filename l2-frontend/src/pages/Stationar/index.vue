@@ -314,6 +314,10 @@
             class="top-right fa fa-times"
             @click="close_list_directions"
           />
+          <i
+            class="top-left fa-solid fa-layer-group"
+            @click="addIdToPlan"
+          />
         </div>
         <div
           v-for="d in list_directions"
@@ -425,6 +429,13 @@
                   class="btn btn-blue-nb"
                   @click.prevent="print_results(opened_form_pk)"
                 >Печать</a>
+                <a
+                  v-tippy
+                  title="docx формат"
+                  href="#"
+                  class="btn btn-blue-nb"
+                  @click.prevent="print_results_docx(opened_form_pk)"
+                ><i class="fa-solid fa-file-word" /></a>
               </template>
               <div v-frag>
                 <a
@@ -639,7 +650,7 @@
             </div>
           </div>
           <div
-            :key="row.research.version"
+            :key="row.confirmed ? row.pk : row.research.version"
             class="control-row"
           >
             <div class="res-title">
@@ -668,12 +679,55 @@
             >
               Сброс подтверждения
             </button>
+
+            <template v-if="amd && row.research.is_need_send_egisz">
+              <div
+                v-if="row.amd === 'planned'"
+                class="amd amd-planned"
+              >
+                ЕГИСЗ
+              </div>
+              <div
+                v-if="row.amd === 'error' && row.confirmed"
+                class="amd amd-error"
+              >
+                ЕГИСЗ
+              </div>
+              <div
+                v-if="row.amd === 'need' && row.confirmed"
+                class="amd amd-need"
+              >
+                ЕГИСЗ
+              </div>
+              <div
+                v-if="row.amd === 'ok'"
+                class="amd amd-ok"
+              >
+                ЕГИСЗ
+              </div>
+              <button
+                v-if="row.amd === 'need' || row.amd === 'error'"
+                class="btn btn-blue-nb"
+                @click="send_to_amd([row.direction_pk])"
+              >
+                Отправить в ЕГИСЗ
+              </button>
+            </template>
+
             <button
               class="btn btn-blue-nb"
               @click="close_form"
             >
               Закрыть
             </button>
+            <KeepAlive>
+              <EDSDirection
+                v-if="row.research.is_extract"
+                :key="`${direction}_${!!row.confirmed}`"
+                :direction-pk="opened_form_pk"
+                :all_confirmed="!!row.confirmed"
+              />
+            </KeepAlive>
             <div
               v-if="!r(row) && !row.confirmed"
               class="status-list"
@@ -711,7 +765,11 @@
             :directions="every ? tree.map((d) => d.direction) : [direction]"
           />
           <AggregatePharmacotherapy
-            v-if="opened_list_key === 'pharmacotherapy'"
+            v-if="opened_list_key === 'assignments'"
+            :direction="direction"
+          />
+          <AggregateAssignments
+            v-if="opened_list_key === 'assignments'"
             :direction="direction"
           />
         </div>
@@ -821,7 +879,20 @@
         class="registry-body"
       >
         <div class="text-left">
-          <div class="content-picker">
+          <div>
+            <h6>Профиль</h6>
+            <Treeselect
+              v-model="hospResearch"
+              class="treeselect-nbr treeselect-32px"
+              :multiple="false"
+              :options="stationar_researches_change_hosp"
+              placeholder="Не выбран"
+              @input="plus(currentKey)"
+            />
+          </div>
+          <div
+            class="content-picker service-top-padding"
+          >
             <ResearchPick
               v-for="row in hosp_services"
               :key="row.pk"
@@ -944,6 +1015,8 @@ import AmbulatoryData from '@/modals/AmbulatoryData.vue';
 import RadioField from '@/fields/RadioField.vue';
 import ResultsByYear from '@/ui-cards/PatientResults/ResultsByYear.vue';
 import ResultControlParams from '@/ui-cards/PatientResults/ResultControlParams.vue';
+import { PRINT_QUEUE_ADD_ELEMENT } from '@/store/action-types';
+import AggregateAssignments from '@/fields/AggregateAssignments.vue';
 
 import Favorite from './Favorite.vue';
 import DisplayDirection from './DisplayDirection.vue';
@@ -952,6 +1025,7 @@ import menuMixin from './mixins/menu';
 
 export default {
   components: {
+    AggregateAssignments,
     RadioField,
     Treeselect,
     Favorite,
@@ -977,6 +1051,7 @@ export default {
     ResearchesPicker: () => import('@/ui-cards/ResearchesPicker.vue'),
     Modal: () => import('@/ui-cards/Modal.vue'),
     PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
+    EDSDirection: () => import('@/ui-cards/EDSDirection.vue'),
   },
   mixins: [menuMixin],
   data() {
@@ -1034,6 +1109,8 @@ export default {
       prev_department: '',
       change_department: false,
       tableFieldsErrors: {},
+      hospResearch: -1,
+      currentKey: -1,
     };
   },
   computed: {
@@ -1065,6 +1142,15 @@ export default {
         ...(this.stationar_researches || []).filter((r) => r.title !== this.issTitle && !r.hide),
       ];
     },
+    stationar_researches_change_hosp() {
+      return [
+        {
+          id: -1,
+          label: 'Не выбрано',
+        },
+        ...(this.stationar_researches || []),
+      ];
+    },
     bases_obj() {
       return this.bases.reduce(
         (a, b) => ({
@@ -1090,6 +1176,9 @@ export default {
       if (this.openPlusId === 'consultation') {
         return [4];
       }
+      if (this.openPlusId === 'forms') {
+        return [11];
+      }
       if (this.openPlusId === null) {
         return [2, 3, 4];
       }
@@ -1113,6 +1202,9 @@ export default {
         }
       }
       return false;
+    },
+    amd() {
+      return this.$store.getters.modules.l2_amd;
     },
   },
   watch: {
@@ -1167,6 +1259,13 @@ export default {
     });
   },
   methods: {
+    async send_to_amd(pks) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await directionsPoint.sendAMD({ pks });
+      this.$root.$emit('msg', 'ok', 'Отправка запланирована');
+      this.reload_if_need();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
     getDepartmentTitle(pk) {
       return this.departments.find((d) => d.id === pk)?.label || '';
     },
@@ -1354,6 +1453,10 @@ export default {
       this.$root.$emit('current_history_direction', { history_num: this.direction, patient: this.patient });
       await this.$store.dispatch(actions.DEC_LOADING);
     },
+    addIdToPlan() {
+      const id = this.list_directions.filter((d) => d.confirm).map((d) => d.pk).reverse();
+      this.$store.dispatch(PRINT_QUEUE_ADD_ELEMENT, { id });
+    },
     print_all_list() {
       this.$root.$emit(
         'print:results',
@@ -1380,12 +1483,15 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async plus(key) {
+      this.currentKey = key;
+      this.direction_service = -1;
       const mode = this.plusDirectionsMode[key] ? 'directions' : 'stationar';
       if (mode === 'stationar') {
         await this.$store.dispatch(actions.INC_LOADING);
         const { data } = await stationarPoint.hospServicesByType({
           direction: this.direction,
           r_type: key,
+          hospResearch: this.hospResearch,
         });
         this.hosp_services = data;
         if (data.length === 1) {
@@ -1404,6 +1510,8 @@ export default {
       this.create_directions_data = [];
       this.hosp_services = [];
       this.direction_service = -1;
+      this.currentKey = -1;
+      this.hospResearch = -1;
 
       if (this.$refs.modalStationar?.$el) {
         this.$refs.modalStationar.$el.style.display = 'none';
@@ -1420,6 +1528,9 @@ export default {
     },
     print_results(pk) {
       this.$root.$emit('print:results', [pk]);
+    },
+    print_results_docx(pk) {
+      window.open(`/forms/docx?type=113.01&direction=${pk}`, '_blank');
     },
     reload_if_need(noСlose = false) {
       if (!this.opened_list_key) {
@@ -1868,6 +1979,18 @@ export default {
           color: #000;
         }
       }
+      .top-left {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 3px;
+        color: lightgray;
+        cursor: pointer;
+
+        &:hover {
+          color: #000;
+        }
+      }
     }
 
     .direction-block {
@@ -2214,5 +2337,29 @@ export default {
 }
 .result-by-year {
   padding-right: 10px;
+}
+
+.service-top-padding {
+  padding-top: 10px;
+}
+
+.amd {
+  font-weight: bold;
+
+  &-need {
+    color: #0c698b;
+  }
+
+  &-error {
+    color: #cf3a24;
+  }
+
+  &-planned {
+    color: #d9be00;
+  }
+
+  &-ok {
+    color: #049372;
+  }
 }
 </style>

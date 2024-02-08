@@ -3,6 +3,7 @@ from typing import Union
 import uuid
 
 from django.db import models
+from users.models import DoctorProfile
 
 import directory.models as directory_models
 
@@ -32,9 +33,14 @@ class Application(models.Model):
     decimal_places = models.PositiveIntegerField(default=4)
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
     hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
+    companies = models.ManyToManyField('contracts.Company', blank=True)
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
     can_access_schedule = models.BooleanField(default=False, help_text="У приложения есть доступ к расписанию")
+    csv_header = models.CharField(max_length=255, blank=True, null=True, help_text="Заголовок CSV файла")
+    is_background_worker = models.BooleanField(default=False)
+    unlimited_access = models.BooleanField(default=False, help_text="Доступ без ограничений")
+    can_load_file_result = models.BooleanField(default=False, help_text="Результаты загружаются файлом")
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:
@@ -80,14 +86,14 @@ class Application(models.Model):
             if d:
                 t_filter = dict(issledovaniya__napravleniye__pk=p)
             else:
-                t_filter = dict(pk=p)
+                t_filter = dict(number=p)
             tubes = TubesRegistration.objects.filter(**t_filter)
             for i in Issledovaniya.objects.filter(tubes__in=tubes, time_confirmation__isnull=True):
                 r.append({"pk": ps, "iss": i})
         return r
 
     def truncate(self, f):
-        return math.floor(f * 10 ** self.decimal_places) / 10 ** self.decimal_places
+        return math.floor(f * 10**self.decimal_places) / 10**self.decimal_places
 
 
 class RelationFractionASTM(models.Model):
@@ -120,6 +126,8 @@ class Analyzer(models.Model):
     MODES = ((0, "TCP Connection"),)
 
     title = models.CharField(max_length=60, help_text="Название")
+    port = models.PositiveSmallIntegerField(blank=True, null=True, help_text="Номер порта анализатора")
+    service_name = models.CharField(max_length=60, help_text="Название службы Systemd", null=True, blank=True)
     protocol = models.IntegerField(choices=PROTOCOLS, help_text="Поддерживаемый протокол")
     mode = models.IntegerField(choices=MODES, help_text="Режим")
     connection_string = models.TextField(help_text="Строка подключения")
@@ -133,10 +141,23 @@ class Analyzer(models.Model):
         verbose_name_plural = 'Анализаторы'
 
 
+class ManageDoctorProfileAnalyzer(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, help_text="Пользователь, который принадлежит к этому анализатору", on_delete=models.CASCADE)
+    analyzer = models.ForeignKey(Analyzer, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.doctor_profile} — {self.analyzer}"
+
+    class Meta:
+        verbose_name = 'Управление анализатором'
+        verbose_name_plural = 'Управление анализаторами'
+
+
 class RelationCultureASTM(models.Model):
     """
     Модель соответствия фракций из ASTM для LIS
     """
+
     astm_field = models.CharField(max_length=127, help_text="ASTM-поле", db_index=True)
     culture = models.ForeignKey(directory_models.Culture, help_text="Культура", on_delete=models.CASCADE)
 

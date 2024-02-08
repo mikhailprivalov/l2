@@ -2789,3 +2789,22 @@ input[type="date"].form-control {
   background: none;
   padding: 0;
 }
+
+.formulate-input {
+  margin-bottom: 0;
+  padding-bottom: 2px;
+}
+
+.formulate-input-wrapper {
+  padding-bottom: 18px;
+
+  & + .formulate-input-errors {
+    margin-top: -18px;
+
+    .formulate-input-error {
+      font-size: 12px;
+      line-height: 15px;
+      margin-bottom: 3px;
+    }
+  }
+}

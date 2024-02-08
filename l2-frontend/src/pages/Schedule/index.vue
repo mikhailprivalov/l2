@@ -122,6 +122,7 @@ import Component from 'vue-class-component';
 import moment, { Moment } from 'moment';
 
 import * as actions from '@/store/action-types';
+import UrlData from '@/UrlData';
 
 import DaysGridNatural from './DaysGridNatural.vue';
 
@@ -153,6 +154,8 @@ import DaysGridNatural from './DaysGridNatural.vue';
       await this.getScheduleWeek();
       const { ok } = await this.$api('schedule/schedule-access', { resourcePk: this.resourceSelected });
       this.canChangeSchedule = !!ok;
+
+      UrlData.set({ resourceSelected: this.resourceSelected });
     },
     displayDays() {
       this.getScheduleWeek();
@@ -194,6 +197,13 @@ export default class Schedule extends Vue {
     if (options) {
       this.defaultResourceOptions = options;
     }
+
+    const urlPk = UrlData.getKey('resourceSelected');
+
+    if (urlPk !== undefined && urlPk !== null && options.find(({ children }) => children.find(({ id }) => id === urlPk))) {
+      this.resourceSelected = urlPk;
+    }
+
     this.userGroups = this.$store.getters.user_data.groups || [];
   }
 
@@ -259,7 +269,8 @@ export default class Schedule extends Vue {
   left: 0;
   right: 0;
   bottom: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .days-message {

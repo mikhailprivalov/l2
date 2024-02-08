@@ -151,6 +151,23 @@
               />
             </td>
           </tr>
+          <tr v-if="needChangeCase">
+            <th :class="needSelectCase && 'has-error-message'">
+              Случай пациента:
+            </th>
+            <td class="cl-td">
+              <Treeselect
+                v-model="research_case"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-noborder treeselect-wide"
+                :options="patient_case"
+                :append-to-body="true"
+                placeholder="По умолчанию"
+                :clearable="false"
+              />
+            </td>
+          </tr>
           <tr v-if="direction_purpose_enabled && !hide_params">
             <th>Цель направления:</th>
             <td class="cl-td">
@@ -177,7 +194,7 @@
               />
             </td>
           </tr>
-          <tr v-if="!has_only_stationar && !hide_params">
+          <tr v-if="(!has_only_stationar && !hide_params) && !hide_show_count_param">
             <th>Кол-во повторений:</th>
             <td class="cl-td">
               <input
@@ -199,7 +216,7 @@
               </span>
             </td>
           </tr>
-          <tr v-else-if="!hide_params">
+          <tr v-else-if="!hide_params && has_only_stationar">
             <th>Отделение стационара</th>
             <td class="cl-td">
               <Treeselect
@@ -299,10 +316,10 @@
           v-tippy
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
-          title="Сохранить и заполнить монитиринг"
+          title="Сохранить и заполнить мониторинг"
           @click="generate('save-and-open-embedded-form')"
         >
-          <span>Сохранить и заполнить монитиринг</span>
+          <span>Сохранить и заполнить мониторинг</span>
         </button>
       </template>
       <template v-else-if="create_and_open">
@@ -333,7 +350,7 @@
           title="Сохранить и распечатать направления"
           @click="generate('direction')"
         >
-          <span>Сохранить и распечатать</span>
+          <span>Сохранить и печать</span>
         </button>
         <button
           v-tippy
@@ -342,7 +359,7 @@
           title="Сохранить и распечатать штрих-коды"
           @click="generate('barcode')"
         >
-          <span>Сохранить и распечатать штрих-коды</span>
+          <span>Сохранить и печать ш/к</span>
         </button>
         <button
           v-tippy
@@ -351,7 +368,26 @@
           title="Сохранить без печати"
           @click="generate('just-save')"
         >
-          <span>Сохранить без печати</span>
+          <span>Без печати</span>
+        </button>
+        <button
+          v-tippy
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          title="Сохранить и распечатать дополнительные документы"
+          @click="generate('complect-document')"
+        >
+          <span>Набор документов</span>
+        </button>
+        <button
+          v-if="show_calculate_researches"
+          v-tippy
+          class="btn btn-blue-nb top-inner-select"
+          :disabled="!can_save"
+          title="Рассчитать стоимость"
+          @click="generate('calculate-cost')"
+        >
+          <span>Сумма</span>
         </button>
       </template>
     </div>
@@ -515,8 +551,9 @@
                 <tr :key="row.pk">
                   <td colspan="5">
                     <SelectedResearchesParams
+                      v-if="selectedCard"
                       :research="form_params[row.pk]"
-                      :selected_card="selected_card"
+                      :selected_card="selectedCard"
                     />
                   </td>
                 </tr>
@@ -526,8 +563,9 @@
         </table>
         <template v-else>
           <SelectedResearchesParams
+            v-if="selectedCard"
             :research="global_research_direction_param"
-            :selected_card="selected_card"
+            :selected_card="selectedCard"
           />
         </template>
       </div>
@@ -656,6 +694,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    parentCase: {
+      type: Number,
+      required: false,
+    },
+    caseByDirection: {
+      type: Boolean,
+      default: false,
+    },
   },
   data() {
     return {
@@ -672,6 +718,7 @@ export default {
       hospital_department_override: -1,
       hospital_overrides: [{ id: -1, label: 'По умолчанию' }],
       hospital_override: -1,
+      research_case: -2,
       service_locations: {},
       need_update_comment: [],
       need_update_localization: [],
@@ -693,9 +740,14 @@ export default {
       directions_count: '1',
       researches_direction_params: {},
       tableFieldsErrors: {},
+      selectedCardLocal: null,
+      patient_case: [{ id: -2, label: ' Не выбрано ' }],
     };
   },
   computed: {
+    selectedCard() {
+      return this.selected_card || this.selectedCardLocal;
+    },
     has_stationar() {
       for (const pk of this.researches) {
         if (this.is_stationar(pk)) {
@@ -718,11 +770,17 @@ export default {
     direction_purpose_enabled() {
       return this.$store.getters.modules.l2_direction_purpose && this.kk !== 'stationar';
     },
+    hide_show_count_param() {
+      return this.$store.getters.modules.l2_hide_show_count_param;
+    },
+    show_calculate_researches() {
+      return this.$store.getters.modules.l2_calculate_researches;
+    },
     external_organizations_enabled() {
       return this.$store.getters.modules.l2_external_organizations && this.kk !== 'stationar';
     },
     directions_params_enabled() {
-      return this.$store.getters.modules.directions_params && this.kk !== 'stationar' && !this.simple;
+      return this.$store.getters.modules.directions_params && !this.simple;
     },
     l2_price_with_categories() {
       return this.$store.getters.modules.l2_price_with_categories;
@@ -748,6 +806,12 @@ export default {
     needShowPriceCategory() {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
     },
+    needChangeCase() {
+      return this.$store.getters.modules.l2_case && this.kk !== 'stationar' && this.kk !== 'cd';
+    },
+    needRequiredChooseCase() {
+      return this.$store.getters.modules.l2_required_choose_caseChoose;
+    },
     researches_departments() {
       const r = {};
       const deps = {
@@ -767,7 +831,7 @@ export default {
       for (const pk of this.researches) {
         if (this.$store.getters.researches_obj[pk]) {
           const res = this.$store.getters.researches_obj[pk];
-          const d = res.department_pk && !res.doc_refferal ? res.department_pk : -2;
+          const d = res.department_pk && !res.doc_refferal && !res.is_case ? res.department_pk : -2;
           if (!(d in r)) {
             r[d] = {
               pk: d,
@@ -802,7 +866,7 @@ export default {
         if (this.researches.filter(r => r !== -1).length === 0) {
           return false;
         }
-      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selected_card?.isArchive) {
+      } else if (this.fin === -1 || this.researches.length === 0 || this.card_pk === -1 || this.selectedCard?.isArchive) {
         return false;
       }
 
@@ -818,6 +882,10 @@ export default {
         return false;
       }
 
+      if (this.needSelectCase) {
+        return false;
+      }
+
       return !this.researches.find(pk => {
         if (!this.form_params[pk]) {
           return false;
@@ -828,6 +896,9 @@ export default {
     },
     needSelectHospital() {
       return this.canChangeHospitalDirection && this.hospital_override === -1;
+    },
+    needSelectCase() {
+      return (!this.parentCase && this.needChangeCase && this.research_case === -2 && this.needRequiredChooseCase);
     },
     need_update_object() {
       const r = [];
@@ -886,8 +957,20 @@ export default {
     discount() {
       this.discount = Math.min(Math.max(parseInt(this.discount, 10) || 0, 0), 100);
     },
-    card_pk() {
-      this.clear_fin();
+    card_pk: {
+      async handler() {
+        this.clear_fin();
+        this.load_patient_open_case();
+
+        this.selectedCardLocal = null;
+        if (this.card_pk === null || this.card_pk === -1 || this.selected_card) {
+          return;
+        }
+
+        const cardData = await this.$api(`patients/card/simple/${this.card_pk}`);
+        this.selectedCardLocal = cardData;
+      },
+      immediate: true,
     },
     base() {
       this.fin = -1;
@@ -1299,6 +1382,8 @@ export default {
         hospital_department_override: this.hospital_department_override,
         hospital_override: this.hospital_override,
         monitoring: this.monitoring,
+        caseId: this.parentCase || this.research_case,
+        caseByDirection: !!this.parentCase && this.caseByDirection,
       });
     },
     clear_all() {
@@ -1310,6 +1395,7 @@ export default {
       this.global_current_direction_param = -1;
       this.hospital_department_override = -1;
       this.hospital_override = -1;
+      this.research_case = -2;
       this.tableFieldsErrors = {};
     },
     clear_fin() {
@@ -1371,6 +1457,12 @@ export default {
       const { data, hospitals } = await this.$api('procedural-list/suitable-departments');
       this.hospital_department_overrides = [{ id: -1, label: 'По умолчанию' }, ...data];
       this.hospital_overrides = [{ id: -1, label: 'По умолчанию' }, ...hospitals];
+    },
+    async load_patient_open_case() {
+      const patientOpenCase = await this.$api('directions/patient-open-case', { card_pk: this.card_pk });
+      this.patient_case = [
+        { id: -2, label: ' Не выбрано ' },
+        { id: -1, label: ' Создать новый случай' }, ...patientOpenCase.data];
     },
   },
 };

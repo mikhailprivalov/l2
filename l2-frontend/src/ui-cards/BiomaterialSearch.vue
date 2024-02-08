@@ -77,14 +77,14 @@
           <th>Карта</th>
           <td>{{ client && client.card }}</td>
         </tr>
-        <tr v-if="!direction || !direction.imported_from_rmis">
+        <tr v-if="!direction || (!direction.imported_from_rmis && !direction.isExternal)">
           <th>Л/врач</th>
           <td>
             {{ direction && direction.doc.fio }}
             {{ direction && direction.doc.otd }}
           </td>
         </tr>
-        <tr v-if="direction && direction.imported_from_rmis">
+        <tr v-if="direction && (direction.imported_from_rmis || direction.isExternal)">
           <th>Организация</th>
           <td>{{ direction.imported_org }}</td>
         </tr>
@@ -170,7 +170,7 @@
             <label
               v-else
               v-tippy
-              title="Переключить статус забора всех неисполенных ёмкостей"
+              title="Переключить статус забора всех неисполненных ёмкостей"
               @click.prevent="toggleGlobalCheck"
             >
               <input
@@ -473,7 +473,7 @@ export default class BiomaterialSearch extends Vue {
 
   scannerBuffer: string;
 
-  clearTimer: null | number;
+  clearTimer: null | any;
 
   direction: any;
 

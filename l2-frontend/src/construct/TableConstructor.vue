@@ -212,6 +212,39 @@
             @change="updatedSettings"
           />
         </div>
+        <div
+          v-if="columns.settings[i].type === 'relatedMultiselect'"
+          style="margin-bottom: 10px"
+        >
+          <div
+            class="input-group"
+            style="margin-bottom: 10px"
+          >
+            <span class="input-group-addon">Связанная колонка</span>
+            <select
+              v-model="columns.settings[i].linked"
+              class="form-control"
+              @change="updatedSettings"
+            >
+              <option :value="null">
+                - не выбрано
+              </option>
+              <option
+                v-for="(_, j) in columns.settings"
+                v-if="/* eslint-disable-line vue/no-use-v-if-with-v-for */ j !== i"
+                :key="j"
+                :value="j"
+              >
+                {{ columns.titles[j] }}
+              </option>
+            </select>
+          </div>
+          <TableMultiselectEditor
+            v-model="columns.settings[i].multiVariants"
+            :linked-variants="getVariantsOfLinked(i)"
+            @change="updatedSettings"
+          />
+        </div>
         <v-collapse-wrapper v-if="columns.settings[i].type !== 'rowNumber'">
           <div
             v-collapse-toggle
@@ -277,6 +310,7 @@ import VueCodeditor from 'vue-codeditor';
 import SelectField from '@/fields/SelectField.vue';
 import RadioField from '@/fields/RadioField.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
+import TableMultiselectEditor from '@/construct/TableMutiselectEditor.vue';
 
 const DEFAULT_TITLES = ['Колонка 1', 'Колонка 2'];
 
@@ -296,12 +330,15 @@ const COLUMN_TYPES = [
   [36, 'МКБ-комбинация (1489, 692)'],
   [23, 'Ссылка на значение'],
   [35, 'Врач'],
+  ['relatedMultiselect', 'Зависимый множественный выбор'],
 ];
 
 const DEFAULT_SETTINGS = () => ({
   type: 0,
   lines: 1,
   variants: '',
+  multiVariants: [],
+  linked: null,
   width: '',
   validator: '',
 });
@@ -313,6 +350,7 @@ export default {
     SelectField,
     MKBFieldForm,
     VueCodeditor,
+    TableMultiselectEditor,
   },
   props: {
     row: {},
@@ -356,6 +394,21 @@ export default {
     this.checkTable();
   },
   methods: {
+    getVariantsOfLinked(i) {
+      const linkedIndex = this.columns.settings[i].linked;
+
+      if (linkedIndex === null) {
+        return '';
+      }
+
+      const linked = this.columns.settings[linkedIndex];
+
+      if (linked.type !== 10 && linked.type !== 12) {
+        return '';
+      }
+
+      return linked.variants;
+    },
     updateValidator: debounce(function (i, v) {
       this.columns.settings[i].validator = v;
       this.updateValue();
@@ -470,8 +523,9 @@ export default {
                 // eslint-disable-next-line prefer-destructuring
                 r[i] = v[0];
               }
-            } else {
+            } else if (t !== 'relatedMultiselect') {
               this.columns.settings[i].variants = '';
+              this.columns.settings[i].multiVariants = [];
             }
           }
         }

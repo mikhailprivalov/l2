@@ -530,7 +530,7 @@ def form_04(c: Canvas, dir: Napravleniya):
         if dir.parent:
             hosp_nums_obj = hosp_get_hosp_direction(dir.parent.napravleniye_id)
             if len(hosp_nums_obj) > 0:
-                clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)
+                clinical_diagnos = hosp_get_clinical_diagnos(hosp_nums_obj)[0]
 
         objs.append(Paragraph(f"Диагноз, дата заболевания:  <font face=\"PTAstraSerifBold\">{clinical_diagnos}</font>", style))
         objs.append(Paragraph('_______________________________________________________________________________________________________', style))
@@ -1213,5 +1213,115 @@ def form_08(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
                 print_frame.split(p, c)
                 c.showPage()
                 print_frame = Frame(0 * mm, mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+
+    printForm(dir_obj)
+
+
+def form_09(c: Canvas, dir_obj: Union[QuerySet, List[Napravleniya]]):
+    # Универсальное на 80 mm
+    def printForm(dir: Napravleniya):
+        if sys.platform == 'win32':
+            locale.setlocale(locale.LC_ALL, 'rus_rus')
+        else:
+            locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+        pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+        pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+        styleSheet = getSampleStyleSheet()
+        style = styleSheet["Normal"]
+        style.fontName = "PTAstraSerifReg"
+        style.fontSize = 12
+        style.leading = 12
+        style.spaceAfter = 1.5 * mm
+
+        styleBold = deepcopy(style)
+        styleBold.fontName = 'PTAstraSerifBold'
+
+        styleCenterBold = deepcopy(style)
+        styleCenterBold.alignment = TA_CENTER
+        styleCenterBold.fontSize = 12
+        styleCenterBold.leading = 15
+        styleCenterBold.fontName = 'PTAstraSerifBold'
+
+        styleT = deepcopy(style)
+        styleT.alignment = TA_LEFT
+        styleT.fontSize = 12
+        styleT.leading = 4.5 * mm
+        styleT.face = 'PTAstraSerifReg'
+
+        styleTCentre = deepcopy(styleT)
+        styleTCentre.alignment = TA_CENTER
+        styleTCentre.fontSize = 13
+
+        objs = []
+
+        objs.append(Paragraph(f"Направление № {dir.pk}", style=styleCenterBold))
+        patient_data = dir.client.get_data_individual()
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            patient_data['serial'] = patient_data['bc_serial']
+            patient_data['num'] = patient_data['bc_num']
+        else:
+            patient_data['serial'] = patient_data['passport_serial']
+            patient_data['num'] = patient_data['passport_num']
+        opinion = [
+            [
+                Paragraph("ФИО:", styleT),
+                Paragraph(f"{dir.client.individual.fio()}", styleT),
+            ],
+            [
+                Paragraph("Пол:", styleT),
+                Paragraph(f"{dir.client.individual.sex}", styleT),
+            ],
+            [
+                Paragraph("Дата рождения:", styleT),
+                Paragraph(f"{dir.client.individual.bd()} ({dir.client.individual.age_s(direction=dir)})", styleT),
+            ],
+            [
+                Paragraph("№ полиса:", styleT),
+                Paragraph(f"{patient_data['oms']['polis_num']}", styleT),
+            ],
+            [
+                Paragraph("СНИЛС:", styleT),
+                Paragraph(f"{patient_data['snils']}", styleT),
+            ],
+            [
+                Paragraph("Документ: ", styleT),
+                Paragraph(f"{patient_data['type_doc']} гражданина России,{patient_data['serial']}, {patient_data['num']}", styleT),
+            ],
+            [
+                Paragraph("Адрес : ", styleT),
+                Paragraph(f"{patient_data['main_address']}", styleT),
+            ],
+            [
+                Paragraph("Ds и дата заболевания: ", styleT),
+                Paragraph("", styleT),
+            ],
+            [
+                Paragraph("Материал, дата забора", styleT),
+                Paragraph("", styleT),
+            ],
+        ]
+
+        tbl = Table(opinion, colWidths=(40 * mm, 140 * mm))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white), ('LEFTPADDING', (1, 0), (-1, -1), 2 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(tbl)
+
+        objs.append(Spacer(1, 6 * mm))
+
+        tbl = Table(opinion, colWidths=(90 * mm, 90 * mm))
+        tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.black), ('LEFTPADDING', (1, 0), (-1, -1), 2 * mm), ('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+        objs.append(tbl)
+
+        objs.append(Spacer(1, 4 * mm))
+        objs.append(Paragraph('"___ " __________ 20__ г. Подпись___________________', style=style))
+
+        print_frame = Frame(0 * mm, mm, 80 * mm, 150 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
+        for p in objs:
+            while print_frame.add(p, c) == 0:
+                print_frame.split(p, c)
+                c.showPage()
+                print_frame = Frame(0 * mm, mm, 80 * mm, 150 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
 
     printForm(dir_obj)

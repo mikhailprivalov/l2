@@ -184,7 +184,7 @@ def hosp_tree_direction(iss):
     return row
 
 
-def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology):
+def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclinic, hosp_is_doc_refferal, hosp_is_lab, hosp_is_hosp, hosp_level, hosp_is_all, hosp_morfology, hosp_form=False):
     """
     парам: услуга
     Вернуть стуркутру в след порядке:
@@ -242,14 +242,14 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             
             t_research AS (SELECT directory_researches.id as research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, 
             is_stom, is_hospital, is_microbiology, is_slave_hospital, is_citology, is_gistology, t_podrazdeleniye.title as podr_title, 
-            t_podrazdeleniye.p_type FROM directory_researches
+            t_podrazdeleniye.p_type, is_form FROM directory_researches
                 LEFT JOIN t_podrazdeleniye ON t_podrazdeleniye.id = directory_researches.podrazdeleniye_id),
 
             t_hospital_service AS (SELECT site_type, slave_research_id FROM directory_hospitalservice
             WHERE 
               CASE 
                WHEN %(hosp_level)s > -1 THEN 
-                    main_research_id = %(main_research)s
+                    EXISTS (SELECT id FROM r)
                WHEN %(hosp_level)s = -1 THEN 
                   EXISTS (SELECT id FROM r)
               END),
@@ -266,11 +266,13 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
             is_hospital = true and site_type is NULL
             when %(hosp_is_doc_refferal)s = TRUE THEN
             is_doc_refferal = true and site_type is NULL
+            when %(hosp_form)s = TRUE THEN
+            is_form = true and site_type is NULL
             when %(hosp_morfology)s = TRUE THEN
             (is_microbiology = true or is_citology = true or is_gistology = true) and site_type is NULL
             when %(hosp_is_lab)s = TRUE THEN
             is_paraclinic = FALSE and is_doc_refferal = FALSE and is_stom = FALSE and is_hospital = FALSE and is_microbiology = FALSE 
-                and is_citology = FALSE and is_gistology = FALSE and site_type is NULL AND is_slave_hospital = FALSE
+                and is_citology = FALSE and is_gistology = FALSE and site_type is NULL AND is_slave_hospital = FALSE AND is_form = FALSE
             when %(hosp_site_type)s = -1 and %(hosp_is_all)s = TRUE THEN
                 EXISTS (SELECT id FROM r)
             END       
@@ -279,7 +281,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
 
             SELECT DISTINCT "id", date_create, time_create, parent_id, napravleniye_id, iss, date_confirm, time_confirm, research_id, title,
             diagnos, "level", research_iddir, podrazdeleniye_id, is_paraclinic, is_doc_refferal, is_stom, is_hospital, 
-            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital, cancel, is_citology, is_gistology FROM t_all WHERE 
+            is_microbiology, podr_title, p_type, site_type, slave_research_id, short_title, is_slave_hospital, cancel, is_citology, is_gistology, is_form FROM t_all WHERE 
                 CASE 
                 WHEN %(hosp_level)s > -1 THEN 
                     level = %(hosp_level)s
@@ -299,6 +301,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
                 'hosp_level': hosp_level,
                 'hosp_is_all': hosp_is_all,
                 'hosp_morfology': hosp_morfology,
+                'hosp_form': hosp_form,
                 'tz': TIME_ZONE,
             },
         )
@@ -307,7 +310,7 @@ def hospital_get_direction(iss, main_research, hosp_site_type, hosp_is_paraclini
 
 
 def get_research_by_dir(numdir):
-    """выход стр-ра:
+    """Выход стр-ра:
     issledovaniya.id - для последующего поиска подчинений по исследованию
     directions_issledovaniya.research_id - является main_research
     """

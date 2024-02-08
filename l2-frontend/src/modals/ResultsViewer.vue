@@ -362,6 +362,7 @@ export default {
   methods: {
     hide_modal() {
       this.$root.$emit('hide_results');
+      this.$emit('hide');
       if (this.$refs.modal) {
         this.$refs.modal.$el.style.display = 'none';
       }

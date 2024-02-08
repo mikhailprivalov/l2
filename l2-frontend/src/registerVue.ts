@@ -18,15 +18,14 @@ import plural from 'plural-ru';
 import moment from 'moment';
 import VueFormulate from '@braid/vue-formulate';
 import { ru } from '@braid/vue-formulate-i18n';
-import error2json from '@stdlib/error-to-json';
 // @ts-ignore
 import VueImg from 'v-img';
-
-import { sendEvent } from '@/metrics';
+import { veLoading } from 'vue-easytable';
 
 import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 import api from './api';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
+import FormulateObjectSelect from './fields/FormulateObjectSelect.vue';
 
 moment.locale('ru');
 
@@ -35,6 +34,7 @@ export default (): void => {
   Vue.prototype.$asVI = () => window.SYSTEM_AS_VI;
   Vue.prototype.$systemTitle = () => (Vue.prototype.$asVI() ? 'VI' : 'L2');
   Vue.prototype.$l2LogoClass = () => window.L2_LOGO_CLASS;
+  Vue.prototype.$veLoading = veLoading;
   Vue.prototype.$api = api;
 
   const VueInputMask = {
@@ -59,9 +59,19 @@ export default (): void => {
   Vue.use(VueCollapse);
   Vue.use(PortalVue);
   Vue.use(VueFullscreen);
+  Vue.component('FormulateObjectSelect', FormulateObjectSelect);
   Vue.use(VueFormulate, {
     plugins: [ru],
     locale: 'ru',
+    library: {
+      'object-select': {
+        classification: 'id',
+        component: 'FormulateObjectSelect',
+        slotProps: {
+          component: ['formType'],
+        },
+      },
+    },
   });
   Vue.use(VueImg);
   Vue.prototype.$api = api;
@@ -117,6 +127,5 @@ export default (): void => {
     // eslint-disable-next-line no-console
     console.error(error);
     vm.$root.$emit('msg', 'error', `Vue Error: ${error}`);
-    sendEvent('vue_error', { error: error2json(error) });
   };
 };

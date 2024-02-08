@@ -93,16 +93,37 @@ class CdaFields(models.Model):
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу", db_index=True)
     is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение", db_index=True)
     is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления", db_index=True)
+    is_extract = models.BooleanField(default=False, blank=True, help_text="Это выписка", db_index=True)
 
     def __str__(self):
         return f"{self.code} - {self.title}"
 
     @staticmethod
-    def get_cda_params(is_doc_refferal, is_treatment, is_form):
+    def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):
+        result = [{"id": -1, "label": "Пусто"}]
         if is_doc_refferal:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
-        if is_treatment:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_treatment=True).order_by("title")]]
-        if is_form:
-            return [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_form=True).order_by("title")]]
-        return [{"id": -1, "label": "Пусто"}]
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
+        elif is_treatment:
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_treatment=True).order_by("title")]]
+        elif is_form:
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_form=True).order_by("title")]]
+        elif is_extract:
+            result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_extract=True).order_by("title")]]
+
+        return result
+
+
+class ProfessionsWorkersPositionsRefbook(models.Model):
+    """
+    Профессии рабочих и должностей служащих: 1.2.643.5.1.13.13.99.2.855
+    """
+
+    code = models.CharField(max_length=20, db_index=True, help_text='Код')
+    title = models.CharField(max_length=1000, db_index=True, help_text='Полное наименование')
+
+    def __str__(self):
+        return f"{self.code} – {self.title}"
+
+    class Meta:
+        verbose_name = "Профессия рабочих и должностей служащих"
+        verbose_name_plural = "Профессии рабочих и должностей служащих"

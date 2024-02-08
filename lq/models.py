@@ -43,7 +43,7 @@ class VoiceDo(models.Model):
         return "{}".format(self.title)
 
     class Meta:
-        verbose_name = 'Звуковой ресуры'
+        verbose_name = 'Звуковой ресурс'
         verbose_name_plural = 'Звуковые ресурсы'
 
 

@@ -92,7 +92,7 @@
                 :update_value="updateValue(field)"
                 :value="field.value"
                 :values="field.values_to_input"
-                :confirmed="confirmed"
+                :confirmed="confirmed || userGroups.includes(field.deniedGroup)"
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
@@ -102,7 +102,7 @@
               >
                 <TextFieldWithTemplates
                   v-model="field.value"
-                  :confirmed="confirmed"
+                  :confirmed="confirmed || userGroups.includes(field.deniedGroup)"
                   :field-pk="field.pk"
                   :lines="field.lines"
                 />
@@ -113,14 +113,14 @@
               >
                 <input
                   v-model="field.value"
-                  :readonly="confirmed || field.not_edit"
+                  :readonly="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   class="form-control"
                   style="width: 160px"
                   type="date"
                 >
               </div>
               <div
-                v-else-if="field.field_type === 2 && !confirmed"
+                v-else-if="field.field_type === 2 && !confirmed && !userGroups.includes(field.deniedGroup)"
                 class="field-value mkb10"
               >
                 <MKBFieldForm
@@ -141,10 +141,12 @@
                   :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
                   :formula="field.default_value"
                   :patient="patient"
+                  :can-edit="field.can_edit"
+                  :disabled="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
-                v-else-if="field.field_type === 2 && confirmed"
+                v-else-if="(field.field_type === 2 && confirmed) || userGroups.includes(field.deniedGroup)"
                 class="field-value"
               >
                 <input
@@ -159,7 +161,7 @@
               >
                 <TreeSelectField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :variants="field.values_to_input"
                 />
               </div>
@@ -169,7 +171,7 @@
               >
                 <SearchFractionValueField
                   v-model="field.value"
-                  :readonly="confirmed || field.not_edit"
+                  :readonly="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   :fraction-pk="field.default_value"
                   :client-pk="patient.card_pk"
                 />
@@ -180,7 +182,7 @@
               >
                 <RadioField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :variants="field.values_to_input"
                 />
               </div>
@@ -190,7 +192,7 @@
               >
                 <SearchFieldValueField
                   v-model="field.value"
-                  :readonly="confirmed || field.not_edit"
+                  :readonly="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   :field-pk="field.default_value"
                   :client-pk="patient.card_pk"
                   :lines="field.lines"
@@ -205,8 +207,8 @@
               >
                 <RichTextEditor
                   v-model="field.value"
-                  :readonly="confirmed || field.not_edit"
-                  :disabled="confirmed"
+                  :readonly="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -217,7 +219,7 @@
                   v-model="field.value"
                   :pk="pk"
                   extract
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -237,7 +239,7 @@
               >
                 <NumberField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -247,7 +249,7 @@
                 <NumberRangeField
                   v-model="field.value"
                   :variants="field.values_to_input"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -256,7 +258,7 @@
               >
                 <input
                   v-model="field.value"
-                  :readonly="confirmed || field.not_edit"
+                  :readonly="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   class="form-control"
                   style="width: 110px"
                   type="time"
@@ -270,7 +272,7 @@
                   :fields="field.values_to_input"
                   :iss="pk"
                   :field_pk="field.pk"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -279,7 +281,7 @@
               >
                 <TextareaAutocomplete
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -288,7 +290,7 @@
               >
                 <LaboratoryPreviousResults
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -297,7 +299,7 @@
               >
                 <DiagnosticPreviousResults
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -306,7 +308,7 @@
               >
                 <DocReferralPreviousResults
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>
               <div
@@ -318,7 +320,7 @@
                   :variants="field.values_to_input"
                   :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
                   :field-pk="field.pk"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :card_pk="patient.card_pk"
                   :iss_pk="pk"
                 />
@@ -331,7 +333,7 @@
                   v-model="field.value"
                   :oid="field.values_to_input"
                   :field-title="field.title"
-                  :disabled="confirmed || field.not_edit"
+                  :disabled="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   :field-pk="field.default_value"
                   :iss_pk="pk"
                   :client-pk="patient.card_pk"
@@ -343,7 +345,7 @@
               >
                 <AddressFiasField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :client-pk="patient.card_pk"
                   :edit-title="`${group.title} ${field.title}`.trim()"
                   :strict="false"
@@ -356,7 +358,7 @@
                 <NumberGeneratorField
                   v-model="field.value"
                   :number-key="field.default_value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :iss-pk="pk"
                   :field-pk="field.pk"
                 />
@@ -368,7 +370,7 @@
                 <NumberGeneratorField
                   v-model="field.value"
                   :number-key="field.default_value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :iss-pk="pk"
                   :field-pk="field.pk"
                 />
@@ -379,7 +381,7 @@
               >
                 <TfomsAttachmentField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :client-pk="patient.card_pk"
                 />
               </div>
@@ -389,7 +391,7 @@
               >
                 <MKBFieldTreeselect
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   dictionary="mkb10.6"
                   :field-pk="field.default_value"
                   :iss_pk="pk"
@@ -402,7 +404,7 @@
               >
                 <MKBFieldTreeselect
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   dictionary="mkb10.5"
                   :field-pk="field.default_value"
                   :iss_pk="pk"
@@ -415,7 +417,7 @@
               >
                 <MKBFieldTreeselect
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   dictionary="mkb10.4"
                   :field-pk="field.default_value"
                   :iss_pk="pk"
@@ -428,7 +430,7 @@
               >
                 <DoctorProfileTreeselectField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :sign_org="field.sign_organization"
                 />
               </div>
@@ -438,7 +440,7 @@
               >
                 <MKBFieldTreeselect
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   dictionary="mkb10.combined"
                   :field-pk="field.default_value"
                   :iss_pk="pk"
@@ -452,7 +454,7 @@
                 <ProcedureListResult
                   v-model="field.value"
                   istresult
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :pk="pk"
                 />
               </div>
@@ -462,7 +464,7 @@
               >
                 <DynamicDirectoryField
                   v-model="field.value"
-                  :disabled="confirmed"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                   :edit-title="`${group.title} ${field.title}`.trim()"
                   :directory="field.values_to_input[0]"
                 />
@@ -593,6 +595,9 @@ export default {
     },
     groups() {
       return this.research.groups;
+    },
+    userGroups() {
+      return this.$store.getters.user_data.groups || [];
     },
   },
   watch: {

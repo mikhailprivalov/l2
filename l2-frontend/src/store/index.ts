@@ -6,18 +6,22 @@ import cards from './modules/cards';
 import directory from './modules/directory';
 import user from './modules/user';
 import chats from './modules/chats';
+import printQueue from './modules/printQueue';
+import edit from './modules/edit';
 import * as actions from './action-types';
 import * as mutations from './mutation-types';
 
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+const store = new Vuex.Store({
   modules: {
     departments,
     cards,
     directory,
     user,
     chats,
+    printQueue,
+    edit,
   },
   state: {
     globalLoadingCounter: 0,
@@ -87,3 +91,6 @@ export default new Vuex.Store({
     fullPageLoader: (state, getters) => getters.authenticateLoading || state.globalLoadingCounter,
   },
 });
+
+export default store;
+export const useStore = () => store;

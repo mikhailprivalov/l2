@@ -1,6 +1,7 @@
 from django.db import connection
 
 from laboratory.settings import TIME_ZONE
+from utils.db import namedtuplefetchall
 
 
 def get_research(title_podr, vertical_result_display):
@@ -77,7 +78,7 @@ def get_distinct_research(list_research_id, list_dirs, is_text_research=False):
 
 def get_distinct_fraction(list_iss):
     """
-    возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
+    Возвращает уникальные фракци(id, title, units), которые присутствуют во всех исследованиях
     """
     with connection.cursor() as cursor:
         cursor.execute(
@@ -97,7 +98,7 @@ def get_distinct_fraction(list_iss):
 
 def get_result_fraction(list_iss):
     """
-    возвращает результат: дата, фракция, значение(value)
+    Возвращает результат: дата, фракция, значение(value)
     """
     with connection.cursor() as cursor:
         cursor.execute(
@@ -206,3 +207,35 @@ def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
         )
         row = cursor.fetchall()
     return row
+
+
+def get_assignments_by_history(history_id: int):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+             SELECT public.directions_napravleniya.id as napravlenie_id, public.directions_napravleniya.data_sozdaniya,
+            public.users_doctorprofile.fio as who_assigned, doc_list.fio as who_confirm, public.directions_napravleniya.total_confirmed, 
+            public.directions_issledovaniya.time_confirmation, public.directory_researches.id as research_id, public.directory_researches.title as research_title
+
+            FROM public.directions_issledovaniya
+            INNER JOIN public.directions_napravleniya
+              ON public.directions_issledovaniya.napravleniye_id = public.directions_napravleniya.id
+            INNER JOIN public.directory_researches
+              ON public.directions_issledovaniya.research_id = public.directory_researches.id
+            INNER JOIN public.users_doctorprofile
+              ON public.directions_napravleniya.doc_id = public.users_doctorprofile.id
+            LEFT JOIN (SELECT id, fio FROM public.users_doctorprofile) as doc_list
+              ON public.directions_issledovaniya.doc_confirmation_id = doc_list.id
+              
+            WHERE public.directions_napravleniya.parent_id = %(history_id)s
+            AND (is_paraclinic = true OR is_doc_refferal = true OR is_microbiology = true OR is_citology = true OR is_gistology = true OR 
+                 (is_paraclinic = False AND is_doc_refferal = False AND is_microbiology = False AND is_citology = False AND is_gistology = False 
+                  AND is_slave_hospital = False AND is_hospital = False))
+            AND public.directions_napravleniya.cancel != true
+                  
+            ORDER BY public.directions_napravleniya.data_sozdaniya
+                  """,
+            params={"history_id": history_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

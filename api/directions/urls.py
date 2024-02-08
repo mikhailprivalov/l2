@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('generate', views.directions_generate),
+    path('aux-generate', views.aux_directions_generate),
     path('add-additional-issledovaniye', views.add_additional_issledovaniye),
     path('rmis-directions', views.directions_rmis_directions),
     path('rmis-direction', views.directions_rmis_direction),
@@ -60,4 +61,8 @@ urlpatterns = [
     path('check-direction', views.check_direction),
     path('send-results-to-hospital', views.send_results_to_hospital),
     path('directions-by-hospital-sent', views.get_directions_by_hospital_sent),
+    path('meta-info', views.meta_info),
+    path('resend-results', views.resend_results),
+    path('need-order-redirection', views.need_order_redirection),
+    path('patient-open-case', views.patient_open_case),
 ]

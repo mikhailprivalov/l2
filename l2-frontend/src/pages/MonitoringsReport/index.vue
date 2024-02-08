@@ -206,9 +206,7 @@
                 v-tippy
                 :title="`${r.hospTitle} – ${r.confirm}`"
                 v-html="/*eslint-disable-line vue/no-v-html*/ r.hospTitle || '&nbsp;'"
-              >
-                {{ r.hospTitle }}
-              </td>
+              />
               <td>
                 {{ r.direction }}
               </td>

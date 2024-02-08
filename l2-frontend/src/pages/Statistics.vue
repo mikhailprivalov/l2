@@ -143,24 +143,6 @@
               />
             </div>
           </div>
-
-          <div
-            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
-            :key="PARAMS_TYPES.COMPANY"
-            class="input-group"
-          >
-            <span class="input-group-addon">Компания:</span>
-            <treeselect
-              v-model="values.company"
-              class="treeselect-noborder treeselect-wide"
-              :multiple="false"
-              :disable-branch-nodes="true"
-              :options="companies"
-              :clearable="true"
-              placeholder="Компания не выбана"
-            />
-          </div>
-
           <div
             v-if="checkReportParam(PARAMS_TYPES.FIN_SOURCE)"
             :key="PARAMS_TYPES.FIN_SOURCE"
@@ -189,7 +171,81 @@
               </optgroup>
             </select>
           </div>
-
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.COMPANY)"
+            :key="PARAMS_TYPES.COMPANY"
+            class="input-group"
+          >
+            <span class="input-group-addon">Контрагент:</span>
+            <treeselect
+              v-if="!l2_company_statistic_async_search"
+              v-model="values.company"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="companies"
+              :clearable="true"
+              placeholder="Компания не выбана"
+            />
+            <Treeselect
+              v-else
+              v-model="values.company"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              class="treeselect-wide treeselect-nbr"
+              :async="true"
+              :append-to-body="true"
+              :clearable="true"
+              :z-index="10001"
+              placeholder="Укажите организацию"
+              :load-options="loadCompaniesAsyncSearch"
+              loading-text="Загрузка"
+              no-results-text="Не найдено"
+              search-prompt-text="Начните писать для поиска"
+              :cache-options="false"
+              open-direction="top"
+              :open-on-focus="true"
+            >
+              <div
+                slot="value-label"
+                slot-scope="{ node }"
+              >
+                {{ node.raw.label || card.work_place_db_title }}
+              </div>
+            </Treeselect>
+          </div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.RESEARCH_SETS)"
+            :key="PARAMS_TYPES.RESEARCH_SETS"
+            class="input-group"
+          >
+            <span class="input-group-addon">Набор услуг:</span>
+            <treeselect
+              v-model="values.researchSet"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="researchSets"
+              :clearable="true"
+              placeholder="Набор услуг для отчета"
+            />
+          </div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.TYPE_DEPARTMENT)"
+            :key="PARAMS_TYPES.TYPE_DEPARTMENT"
+            class="input-group"
+          >
+            <span class="input-group-addon">Тип подразделения:</span>
+            <treeselect
+              v-model="values.typeDepartment"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="typeDepartments"
+              :clearable="true"
+              placeholder="Тип подразделения"
+            />
+          </div>
           <div
             v-if="checkReportParam(PARAMS_TYPES.MONTH_YEAR)"
             :key="PARAMS_TYPES.MONTH_YEAR"
@@ -289,6 +345,14 @@
               :values.sync="values.dateValues"
             />
           </div>
+          <div v-if="checkReportParam(PARAMS_TYPES.LOAD_FILE)">
+            <LoadFile
+              title-button="Загрузить из файла"
+              file-filter="XLSX"
+              :research-set="values.researchSet"
+              tag="div"
+            />
+          </div>
           <div
             v-if="titleReportStattalonFields.includes(currentReport.title)"
             class="input-group"
@@ -327,10 +391,17 @@
                 type="checkbox"
               > Настройки из протокола
             </label>
+            <span class="mediacl-exam-padding">
+              <label>
+                <input
+                  v-model="values.medicalExam"
+                  type="checkbox"
+                > По дате осмотра
+              </label>
+            </span>
           </div>
-
           <a
-            v-if="reportUrl"
+            v-if="reportUrl && !checkReportParam(PARAMS_TYPES.LOAD_FILE)"
             class="btn btn-blue-nb"
             type="button"
             :href="reportUrl"
@@ -338,7 +409,7 @@
           >
             Сформировать отчёт
           </a>
-          <div v-else-if="dateRangeInvalid">
+          <div v-else-if="dateRangeInvalid && !unlimitPeridStatistic ">
             <strong>Диапазон дат должен быть не больше двух месяцев</strong>
           </div>
         </div>
@@ -353,15 +424,16 @@ import Component from 'vue-class-component';
 import moment from 'moment';
 import _ from 'lodash';
 // @ts-ignore
-import DatePicker from 'v-calendar/lib/components/date-picker.umd';
-import Treeselect from '@riophae/vue-treeselect';
+import DatePicker from 'v-calendar/src/components/DatePicker.vue';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import LaboratoryPicker from '@/fields/LaboratoryPicker.vue';
-import DateSelector from '@/fields/DateSelector.vue';
 import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
+import LoadFile from '@/ui-cards/LoadFile.vue';
+import DateSelector from '@/fields/DateSelector.vue';
 
 const PARAMS_TYPES = {
   DATE_RANGE: 'DATE_RANGE',
@@ -371,10 +443,13 @@ const PARAMS_TYPES = {
   USERS: 'USERS',
   USER_OR_DEP: 'USER_OR_DEP',
   FIN_SOURCE: 'FIN_SOURCE',
+  RESEARCH_SETS: 'RESEARCH_SETS',
+  LOAD_FILE: 'LOAD_FILE',
   RESEARCH: 'RESEARCH',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
   SPECIAL_FIELDS: 'SPECIAL_FIELDS',
+  TYPE_DEPARTMENT: 'TYPE_DEPARTMENT',
 };
 
 const STATS_CATEGORIES = {
@@ -439,18 +514,25 @@ const STATS_CATEGORIES = {
         title: 'По услуге',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
-          + 'purposes=<purposes>&special-fields=<special-fields>&date-start=<date-start>&date-end=<date-end>',
+          + 'purposes=<purposes>&special-fields=<special-fields>&medical-exam=<medical-exam>'
+          + '&date-start=<date-start>&date-end=<date-end>',
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
-        title: 'Диспасеризация',
+        title: 'Диспансеризация',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-dispanserization&date-start=<date-start>&date-end=<date-end>',
+      },
+      expertise: {
+        groups: ['Статистика-экспертиза'],
+        title: 'Экспертиза стационара',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-hosp-expertise&date-start=<date-start>&date-end=<date-end>',
       },
     },
   },
   prof: {
-    title: 'Профосмотры',
+    title: 'Профосмотры (своды)',
     groups: ['Статистика-профосмотры'],
     reports: {
       contragents: {
@@ -462,8 +544,29 @@ const STATS_CATEGORIES = {
       consolidate: {
         groups: ['Статистика-профосмотры'],
         title: 'Сводный',
+        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+            + 'company=<company>&research-set=<research-set>',
+      },
+      registryProfit: {
+        groups: ['Статистика-реестр начислений'],
+        title: 'Реестр начислений',
         params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
-        url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
+        url: '/statistic/xls?type=statistics-registry-profit&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>',
+      },
+      typeDepartments: {
+        groups: ['Статистика-профосмотры'],
+        title: 'По подразделениям',
+        params: [PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.TYPE_DEPARTMENT, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=consolidate-type-department&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+            + 'type-department=<type-department>',
+      },
+      patinetExamSetResearch: {
+        groups: ['Статистика-профосмотры'],
+        title: 'По пациентам из Excel',
+        params: [PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.LOAD_FILE],
+        url: '/statistic/xls?type=consolidate-type-department&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
+            + 'type-department=<type-department>',
       },
     },
   },
@@ -552,6 +655,9 @@ const getVaues = () => ({
   dateValues: null,
   users: [],
   finSource: -1,
+  researchSet: null,
+  typeDepartment: null,
+  depByType: null,
   user: null,
   dep: null,
   research: null,
@@ -561,6 +667,7 @@ const getVaues = () => ({
   purposes: [],
   resultTreatment: [],
   specialFields: false,
+  medicalExam: false,
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -568,6 +675,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
 
 @Component({
   components: {
+    LoadFile,
     LaboratoryPicker,
     DatePicker,
     Treeselect,
@@ -588,12 +696,17 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       },
       users: [],
       companies: [],
+      researchSets: [],
+      typeDepartments: [],
       disabled_categories: [],
       disabled_reports: [],
+      unlimit_period_statistic_groups: [],
       purposes: [],
       specialFields: false,
+      medicalExam: false,
       resultTreatment: [],
       titleReportStattalonFields: [],
+      titleReportAllFinSourceNeed: [],
     };
   },
   watch: {
@@ -612,11 +725,14 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
   mounted() {
     this.loadUsers();
     this.loadCompanies();
+    this.loadResearchSets();
+    this.loadTypeDepartments();
     this.loadPurposes();
     this.loadResultTreatment();
     this.loadTitleReportStattalonFields();
     this.get_disabled_categories();
     this.get_disabled_reports();
+    this.getUnlimitPeriodStatisticGroups();
   },
 })
 export default class Statistics extends Vue {
@@ -636,9 +752,15 @@ export default class Statistics extends Vue {
 
   companies: any[];
 
+  researchSets: any[];
+
+  typeDepartments: any[];
+
   purposes: any[];
 
   specialFields: boolean;
+
+  medicalExam: boolean;
 
   resultTreatment: any[];
 
@@ -648,10 +770,23 @@ export default class Statistics extends Vue {
 
   disabled_reports: any[];
 
+  unlimit_period_statistic_groups: any[];
+
   research: number | null;
+
+  titleReportAllFinSourceNeed: any[];
 
   get userGroups() {
     return this.$store.getters.user_data.groups || [];
+  }
+
+  get unlimitPeridStatistic() {
+    for (const g of this.$store.getters.user_data.groups || []) {
+      if (this.unlimit_period_statistic_groups.includes(g)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   async loadUsers() {
@@ -659,6 +794,16 @@ export default class Statistics extends Vue {
     const { users } = await usersPoint.loadUsersByGroup({ group: '*' });
     this.users = users;
     await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadCompaniesAsyncSearch({ action, searchQuery, callback }) {
+    if (action === ASYNC_SEARCH) {
+      const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
+      callback(
+        null,
+        data.map(d => ({ id: `${d.id}`, label: `${d.title}` })),
+      );
+    }
   }
 
   get deps() {
@@ -669,6 +814,20 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows } = await this.$api('companies');
     this.companies = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadResearchSets() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { data } = await this.$api('/get-research-sets');
+    this.researchSets = data;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadTypeDepartments() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { data } = await this.$api('/get-type-departments');
+    this.typeDepartments = data;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -688,8 +847,9 @@ export default class Statistics extends Vue {
 
   async loadTitleReportStattalonFields() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const { rows } = await this.$api('title-report-filter-stattalon-fields');
-    this.titleReportStattalonFields = rows;
+    const rows = await this.$api('title-report-filter-stattalon-fields');
+    this.titleReportStattalonFields = rows.hasStattalonFilter;
+    this.titleReportAllFinSourceNeed = rows.allFinSource;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -698,6 +858,10 @@ export default class Statistics extends Vue {
       .filter(id => this.STATS_CATEGORIES[id].groups.some(g => this.userGroups.includes(g)
         && !this.disabled_categories.includes(this.STATS_CATEGORIES[id].title)))
       .map(id => ({ id, label: this.STATS_CATEGORIES[id].title }));
+  }
+
+  get l2_company_statistic_async_search() {
+    return this.$store.getters.modules.l2_company_statistic_async_search;
   }
 
   get categoryReport() {
@@ -725,8 +889,16 @@ export default class Statistics extends Vue {
     return this.currentCategory.reports[this.selectedReport];
   }
 
+  makeBaseWithAllSource(base) {
+    if (this.titleReportAllFinSourceNeed.includes(this.currentReport.title)) {
+      return { ...base, fin_sources: [...base.fin_sources, { pk: -100, title: 'Все', default_diagnos: '' }] };
+    }
+    return { ...base };
+  }
+
   get bases() {
-    return (this.$store.getters.bases || []).filter(b => !b.hide);
+    const basesUpdate = this.$store.getters.bases.map(base => this.makeBaseWithAllSource(base));
+    return (basesUpdate || []).filter(b => !b.hide && b.internal_type);
   }
 
   checkReportParam(...params) {
@@ -788,8 +960,18 @@ export default class Statistics extends Vue {
         if (this.values.finSource === -1) {
           return null;
         }
-
         url = url.replace('<fin-source>', this.values.finSource);
+      }
+
+      if (this.PARAMS_TYPES.RESEARCH_SETS === p) {
+        if (_.isNil(this.values.researchSet)) {
+          url = url.replace('<research-set>', -1);
+        }
+        url = url.replace('<research-set>', this.values.researchSet);
+      }
+
+      if (this.PARAMS_TYPES.TYPE_DEPARTMENT === p) {
+        url = url.replace('<type-department>', this.values.typeDepartment);
       }
 
       if (this.PARAMS_TYPES.RESEARCH === p) {
@@ -799,6 +981,7 @@ export default class Statistics extends Vue {
 
         url = url.replace('<research>', this.values.research);
         url = url.replace('<special-fields>', this.values.specialFields);
+        url = url.replace('<medical-exam>', this.values.medicalExam);
         if (this.values.purposes.length > 0) {
           url = url.replace('<purposes>', this.values.purposes);
         } else {
@@ -808,7 +991,7 @@ export default class Statistics extends Vue {
 
       if (this.PARAMS_TYPES.COMPANY === p) {
         if (_.isNil(this.values.company)) {
-          return null;
+          url = url.replace('<company>', -1);
         }
 
         url = url.replace('<company>', this.values.company);
@@ -828,6 +1011,9 @@ export default class Statistics extends Vue {
   }
 
   get dateRangeInvalid() {
+    if (this.unlimitPeridStatistic) {
+      return false;
+    }
     if (
       this.currentReport?.params.includes(this.PARAMS_TYPES.DATE_RANGE)
       && this.values.dateRange.start
@@ -852,6 +1038,11 @@ export default class Statistics extends Vue {
   async get_disabled_reports() {
     const resultData = await this.$api('disabled-reports');
     this.disabled_reports = resultData.rows;
+  }
+
+  async getUnlimitPeriodStatisticGroups() {
+    const resultData = await this.$api('unlimit-period-statistic-groups');
+    this.unlimit_period_statistic_groups = resultData.rows;
   }
 }
 </script>
@@ -977,5 +1168,9 @@ $colwidths: 300px;
 .row-v-header {
   font-weight: bold;
   margin-bottom: 3px;
+}
+
+.mediacl-exam-padding {
+  padding-left: 30px;
 }
 </style>

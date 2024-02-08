@@ -7,9 +7,9 @@ from typing import Optional, List
 import pytz_deprecation_shim as pytz
 import simplejson as json
 from django.contrib.auth.decorators import login_required
+from django.core.validators import validate_email
 
 from api.patients.common_func import get_card_control_param
-from api.patients.sql_func import get_patient_control_params
 from ecp_integration.integration import search_patient_ecp_by_person_id
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
@@ -40,8 +40,9 @@ from clients.models import (
     ScreeningRegPlan,
     AdditionalPatientDispensaryPlan,
     CardControlParam,
+    PatientHarmfullFactor,
 )
-from contracts.models import Company
+from contracts.models import Company, CompanyDepartment, MedicalExamination
 from directions.models import Issledovaniya
 from directory.models import Researches, PatientControlParam
 from laboratory import settings
@@ -80,7 +81,10 @@ def full_patient_search_data(p, query):
         else:
             btday = None
         if btday:
-            btday = btday[2] + "-" + btday[1] + "-" + btday[0]
+            if len(btday) == 2 and len(btday[1]) == 6:
+                btday = btday[1][2:] + "-" + btday[1][:2] + "-" + btday[0]
+            else:
+                btday = btday[2] + "-" + btday[1] + "-" + btday[0]
             rmis_req["birthDate"] = btday
     return f, n, p, rmis_req, split
 
@@ -163,7 +167,7 @@ def patients_search_card(request):
             objects = objects.filter(document__serial=pass_s, document__number=pass_n, document__document_type__title='Паспорт гражданина РФ')
 
         snils = str(form.get('snils', ''))
-        if pass_n:
+        if snils:
             objects = objects.filter(document__number=snils, document__document_type__title='СНИЛС')
 
         medbook_number = str(form.get('medbookNumber', ''))
@@ -181,7 +185,7 @@ def patients_search_card(request):
                     | Q(card__phone__in=normalized_phones)
                     | Q(card__doctorcall__phone__in=normalized_phones)
                 )
-    if is_ecp_search:
+    if is_ecp_search and query or (query and ":" in query[0]):
         ecp_id = query.split(':')[1]
         patient_data = search_patient_ecp_by_person_id(ecp_id)
         if patient_data and (patient_data.get('PersonSnils_Snils') or patient_data.get('enp')):
@@ -508,6 +512,12 @@ def patients_get_card_data(request, card_id):
     ]
     rc = Card.objects.filter(base__is_rmis=True, individual=card.individual)
     d = District.objects.all().order_by('-sort_weight', '-id')
+
+    age = card.individual.age()
+    if age < 14:
+        doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all().exclude(title__startswith="Паспорт гражданина РФ")]
+    else:
+        doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]
     return JsonResponse(
         {
             **i,
@@ -520,6 +530,7 @@ def patients_get_card_data(request, card_id):
             "custom_workplace": card.work_place != "",
             "work_place_db": card.work_place_db_id or -1,
             "work_place_db_title": card.work_place_db.title if card.work_place_db else "",
+            "work_department_db": card.work_department_db.pk if card.work_department_db else -1,
             "district": card.district_id or -1,
             "districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
             "ginekolog_district": card.ginekolog_district_id or -1,
@@ -538,7 +549,7 @@ def patients_get_card_data(request, card_id):
             "payer": None if not card.payer else card.payer.get_fio_w_card(),
             "payer_pk": card.payer_id,
             "rmis_uid": rc[0].number if rc.exists() else None,
-            "doc_types": [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()],
+            "doc_types": doc_types,
             "number_poli": card.number_poliklinika,
             "harmful": card.harmful_factor,
             "medbookPrefix": card.medbook_prefix,
@@ -549,6 +560,29 @@ def patients_get_card_data(request, card_id):
             "medbookTypePrev": card.medbook_type,
             "isArchive": card.is_archive,
             "contactTrustHealth": card.contact_trust_health,
+        }
+    )
+
+
+@login_required
+def patients_get_card_simple_data(request, card_id):
+    card = Card.objects.get(pk=card_id)
+    base = card.base
+    individual = card.individual
+
+    return JsonResponse(
+        {
+            "pk": card_id,
+            "age": individual.age_s(),
+            "base": {"pk": base.pk, "title": base.title, "short_title": base.short_title, "internal_type": base.internal_type},
+            "birthday": individual.bd(),
+            "family": individual.family,
+            "name": individual.name,
+            "twoname": individual.patronymic,
+            "patronymic": individual.patronymic,
+            "individual_pk": individual.pk,
+            "isArchive": card.is_archive,
+            "main_diagnosis": card.main_diagnosis,
         }
     )
 
@@ -624,18 +658,23 @@ def patients_card_save(request):
         c.fact_address = request_data["fact_address"]
         c.fact_address_fias = None
         c.fact_address_details = None
-
-    c.number_poliklinika = request_data.get("number_poli", "")
     if request_data["custom_workplace"] or not Company.objects.filter(pk=request_data.get("work_place_db", -1)).exists():
         c.work_place_db = None
         c.work_place = request_data["work_place"] if request_data["custom_workplace"] else ''
     else:
         c.work_place_db = Company.objects.get(pk=request_data["work_place_db"])
         c.work_place = ''
+    if not CompanyDepartment.objects.filter(pk=request_data.get("work_department_db", -1)).exists():
+        c.work_department_db = None
+    else:
+        c.work_department_db = CompanyDepartment.objects.filter(pk=request_data["work_department_db"]).first()
     c.district_id = request_data["district"] if request_data["district"] != -1 else None
     c.ginekolog_district_id = request_data["gin_district"] if request_data["gin_district"] != -1 else None
     c.work_position = request_data["work_position"]
+    c.work_department = request_data["work_department"]
     c.phone = request_data["phone"]
+    c.email = request_data.get("email", "")
+    c.send_to_email = bool(request_data.get("send_to_email", False))
     c.harmful_factor = request_data.get("harmful", "")
     c.contact_trust_health = request_data.get("contactTrustHealth", "")
     medbook_type = request_data.get("medbookType", "")
@@ -667,6 +706,14 @@ def patients_card_save(request):
         except Exception as e:
             logger.exception(e)
             messages.append(str(e))
+    number_poli = request_data.get("number_poli", "")
+    if number_poli:
+        card_number_poli = Card.objects.filter(number_poliklinika=number_poli)
+        for cnp in card_number_poli:
+            if cnp.number_poliklinika == number_poli and cnp != c:
+                messages.append("Номер карты ТФОМС занят")
+                return JsonResponse({"result": "false", "message": message, "messages": messages, "card_pk": card_pk, "individual_pk": individual_pk})
+    c.number_poliklinika = number_poli
     c.save()
     if c.individual.primary_for_rmis:
         try:
@@ -701,6 +748,31 @@ def patients_card_unarchive(request):
         card.is_archive = False
         card.save()
     return JsonResponse({"ok": True})
+
+
+@login_required
+def patients_harmful_factors(request):
+    request_data = json.loads(request.body)
+    pk = request_data['card_pk']
+    card = Card.objects.get(pk=pk)
+    rows = PatientHarmfullFactor.get_card_harmful_factor(card)
+    return JsonResponse(rows, safe=False)
+
+
+@login_required
+def patients_save_harmful_factors(request):
+    request_data = json.loads(request.body)
+    tb_data = request_data.get('tb_data', '')
+    card_pk = int(request_data.get('card_pk', -1))
+    date_med_exam = request_data.get('dateMedExam')
+    if len(tb_data) < 1:
+        return JsonResponse({'message': 'Ошибка в количестве'})
+    if date_med_exam:
+        MedicalExamination.update_date(card_pk, date_med_exam)
+    result = PatientHarmfullFactor.save_card_harmful_factor(card_pk, tb_data)
+    if result:
+        return JsonResponse({'ok': True, 'message': 'Сохранено'})
+    return JsonResponse({'ok': False, 'message': 'ошибка'})
 
 
 def individual_search(request):
@@ -828,6 +900,13 @@ def update_cdu(request):
 
 
 def sync_rmis(request):
+    request_data = json.loads(request.body)
+    card = Card.objects.get(pk=request_data["card_pk"])
+    card.individual.sync_with_rmis()
+    return JsonResponse({"ok": True})
+
+
+def sync_ecp(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
     card.individual.sync_with_rmis()
@@ -1081,6 +1160,20 @@ def update_screening_reg_plan(request):
     ScreeningRegPlan.update_plan(request_data)
 
     return JsonResponse({"ok": True})
+
+
+def validate_email_view(request):
+    request_data = json.loads(request.body)
+    email = request_data['email']
+
+    try:
+        if email:
+            validate_email(email)
+            return JsonResponse({"ok": True})
+    except:
+        pass
+
+    return JsonResponse({"ok": False})
 
 
 def load_vaccine(request):
@@ -1446,7 +1539,7 @@ def load_anamnesis(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
     history = []
-    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk'):
+    for a in AnamnesisHistory.objects.filter(card=card).order_by('-pk') if not request_data.get('skipHistory') else []:
         history.append(
             {
                 "pk": a.pk,
@@ -1462,6 +1555,9 @@ def load_anamnesis(request):
         "text": card.anamnesis_of_life,
         "history": history,
     }
+    if request_data.get('withPatient'):
+        data['patient'] = card.get_fio_w_card()
+
     return JsonResponse(data)
 
 

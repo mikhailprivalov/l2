@@ -20,7 +20,7 @@ class DoctorCall(models.Model):
         (1, 'Больничный лист продление'),
         (2, 'Вызов врача-Неотложная помощь'),
         (3, 'Обострение хронического заболевания'),
-        (4, 'Активное наблюдени'),
+        (4, 'Активное наблюдение'),
         (5, 'Другое'),
         (6, 'Лекарственное обеспечение'),
         (7, 'Заявка на отправку результата COVID-19'),
@@ -213,7 +213,7 @@ class DoctorCall(models.Model):
     def doctor_call_cancel(data, doc_who_create):
         doc_call = DoctorCall.objects.filter(pk=data['pk_doc_call'])[0]
         doc_call.doc_who_create = doc_who_create
-        doc_call.cancel = not doc_call.canceled
+        doc_call.cancel = not doc_call.cancel
         doc_call.save()
 
         slog.Log(

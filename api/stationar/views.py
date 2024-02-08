@@ -4,7 +4,16 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
-from api.stationar.stationar_func import get_direction_attrs, hosp_get_lab_iss, forbidden_edit_dir, hosp_get_hosp_direction, hosp_get_text_iss, get_temperature_list, desc_to_data
+from api.stationar.stationar_func import (
+    get_direction_attrs,
+    hosp_get_lab_iss,
+    forbidden_edit_dir,
+    hosp_get_hosp_direction,
+    hosp_get_text_iss,
+    get_temperature_list,
+    desc_to_data,
+    get_assignments,
+)
 from clients.models import Card
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import HospitalService
@@ -104,7 +113,7 @@ def counts(request):
 
     for i in Issledovaniya.objects.filter(napravleniye__pk__in=hosps, research__is_hospital=True).distinct():
         for k in HospitalService.TYPES_BY_KEYS:
-            hss = HospitalService.objects.filter(main_research=i.research, site_type=HospitalService.TYPES_BY_KEYS[k])
+            hss = HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS[k])
             nested = Napravleniya.objects.filter(parent=i, issledovaniya__research__in=[x.slave_research for x in hss]).distinct()
             result[k] += nested.count()
         result["laboratory"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__podrazdeleniye__p_type=2).distinct().count()
@@ -116,7 +125,8 @@ def counts(request):
             .distinct()
             .count()
         )
-        result["pharmacotherapy"] = ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
+        result["pharmacotherapy"] += ProcedureList.objects.filter(history=i.napravleniye, cancel=False, diary__issledovaniya__time_confirmation__isnull=False).count()
+        result["forms"] += Napravleniya.objects.filter(parent=i, issledovaniya__research__is_form=True).distinct().count()
         result["all"] += Napravleniya.objects.filter(parent=i).count()
     return JsonResponse(dict(result))
 
@@ -130,7 +140,10 @@ def hosp_services_by_type(request):
     result = []
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
-        for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=i.research, hide=False):
+        hosp_research = i.research
+        if int(data['hospResearch']) > -1:
+            hosp_research = int(data['hospResearch'])
+        for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=hosp_research, hide=False):
             result.append(
                 {
                     "pk": hs.pk,
@@ -208,6 +221,7 @@ def aggregate_desc(request):
     if type_service == "diaries":
         iss = Issledovaniya.objects.get(pk=pk)
         diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"], main_research=iss.research)]
+        diaries_researches = [x.slave_research for x in HospitalService.objects.filter(site_type=HospitalService.TYPES_BY_KEYS["diaries"])]
         num_dirs = [x.pk for x in Napravleniya.objects.filter(issledovaniya__research__in=diaries_researches, parent=iss, issledovaniya__time_confirmation__isnull=False)]
         result = desc_to_data(num_dirs, True)
     else:
@@ -280,3 +294,12 @@ def change_department(request):
             "to": dep_to,
         }
     )
+
+
+@login_required
+@group_required("Врач стационара")
+def aggregate_assignments(request):
+    request_data = json.loads(request.body)
+    direction_id = request_data["direction_id"]
+    results = get_assignments(direction_id)
+    return JsonResponse({"data": results})

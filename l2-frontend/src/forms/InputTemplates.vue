@@ -25,7 +25,7 @@
           margin-left-right="auto"
           @close="open = false"
         >
-          <span slot="header">Ваши шалоны поля {{ `${group.title} ${field.title}`.trim() }}</span>
+          <span slot="header">Ваши шаблоны поля {{ `${group.title} ${field.title}`.trim() }}</span>
           <div
             slot="body"
             class="popup-body"
@@ -77,7 +77,15 @@
                       <button
                         v-tippy
                         class="btn btn-blue-nb2"
-                        title="Применить шаблон"
+                        title="Добавить значение"
+                        @click="useTemplateAppend(t.value)"
+                      >
+                        <i class="fas fa-plus" />
+                      </button>
+                      <button
+                        v-tippy
+                        class="btn btn-blue-nb2"
+                        title="Заменить значение"
                         @click="useTemplate(t.value)"
                       >
                         <i class="fas fa-check" />
@@ -194,6 +202,26 @@ export default {
       this.open = false;
       this.$root.$emit('msg', 'ok', 'Шаблон применён', 2000);
     },
+    useTemplateAppend(v) {
+      if (!v) {
+        return;
+      }
+      let result = this.field.value.trim();
+      let vToAppend: string = v;
+
+      if (result.length > 0) {
+        const li = result.length - 1;
+        if (result[li] === '.') {
+          vToAppend = vToAppend.charAt(0).toLocaleUpperCase() + vToAppend.slice(1);
+        }
+
+        vToAppend = ` ${vToAppend}`;
+      }
+
+      result += vToAppend;
+
+      this.useTemplate(result);
+    },
   },
 };
 </script>
@@ -217,8 +245,8 @@ textarea {
 
 .t-group {
   .form-control {
-    width: calc(100% - 80px);
-    flex: 0 calc(100% - 80px);
+    width: calc(100% - 120px);
+    flex: 0 calc(100% - 120px);
   }
 
   .input-group-btn {

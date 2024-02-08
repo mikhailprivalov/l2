@@ -400,7 +400,6 @@ def result_dashboard_func(result_dashboard, result, sum_by_field=False, default_
 
 
 def unique_date_field(chart_id, result_sql_select):
-
     unique_dates = {i.date for i in result_sql_select if i.chart_id == chart_id}
     unique_dates = sorted(list(unique_dates))
     date_str = [i.strftime("%d.%m") for i in unique_dates]

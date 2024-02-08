@@ -1,4 +1,5 @@
 import hashlib
+from typing import Optional
 
 import simplejson
 from django.core.cache import cache
@@ -9,7 +10,7 @@ import appconf.models as appconf
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-6"
+    VERSION = f"{laboratory.VERSION}-14"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -35,7 +36,7 @@ class SettingManager:
         post_save.connect(save_setting, sender=appconf.Setting)
 
     @staticmethod
-    def get(key, default=None, default_type='s', rebuild=False):
+    def get(key, default: Optional[str] = None, default_type: str = 's', rebuild=False):
         no_cache = '#no-cache#' in key
         k = f'setting_manager:v{SettingManager.VERSION}:{key}'
         cv = cache.get(k) if not no_cache and not rebuild else None
@@ -121,6 +122,8 @@ class SettingManager:
                     "hosp",
                     "rmis_queue",
                     "benefit",
+                    "harmful_factor",
+                    "company_statistic_async_search",
                     "microbiology",
                     "citology",
                     "gistology",
@@ -155,7 +158,24 @@ class SettingManager:
                     "decriptive_additional_number",
                     "employee_job",
                     "send_orgs_email_results",
+                    "send_patients_email_results",
+                    "docx_aggregate_laboratory_results",
+                    "need_order_redirection",
                     "chats",
+                    "csv_load_file",
+                    "transfer_card",
+                    "disable_death_cert",
+                    "price_customer",
+                    "price_externel_performer",
+                    "ftp",
+                    "case",
+                    "hide_show_count_param",
+                    "fraction_comment",
+                    "required_choose_case",
+                    "calculate_researches",
+                    "schedule_in_protocol",
+                    "feed",
+                    "equipment_load_file",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -202,6 +222,7 @@ class SettingManager:
                 12: SettingManager.get("directions_params", default='false', default_type='b'),
                 13: SettingManager.l2("applications"),
                 14: SettingManager.l2("monitorings"),
+                16: SettingManager.l2("case"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)

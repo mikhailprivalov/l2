@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
@@ -27,6 +28,17 @@ class ReleationsFT(models.Model):
 
     tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
+    max_researches_per_tube = models.IntegerField(default=None, blank=True, null=True, help_text="Максимальное количество исследований для пробирки")
+    is_default_external_tube = models.BooleanField(default=False, blank=True, db_index=True)
+
+    @staticmethod
+    def get_default_external_tube():
+        tube = ReleationsFT.objects.filter(is_default_external_tube=True).first()
+
+        if not tube:
+            tube = ReleationsFT.objects.create(tube=Tubes.get_default_external_tube(), receive_in_lab=True, is_default_external_tube=True)
+
+        return tube
 
     def __str__(self):
         return "%d %s" % (self.pk, self.tube.title)
@@ -65,11 +77,12 @@ class ResearchSite(models.Model):
     TYPES = (
         (0, 'Консультация врача'),
         (1, 'Лечение'),
-        (2, 'Стоматалогия'),
+        (2, 'Стоматология'),
         (3, 'Стационар'),
         (4, 'Микробиология'),
         (7, 'Формы'),
         (10, 'Мониторинги'),
+        (12, 'Случаи'),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -121,6 +134,62 @@ class MethodLaboratoryAnalisis(models.Model):
         verbose_name_plural = 'Методика анализа'
 
 
+class LaboratoryMaterial(models.Model):
+    title = models.CharField(max_length=64, help_text="Биоматериал")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    @staticmethod
+    def get_materials():
+        result = [{"id": material.pk, "label": material.title} for material in LaboratoryMaterial.objects.all()]
+        return result
+
+    class Meta:
+        verbose_name = 'Биоматериал'
+        verbose_name_plural = 'Биоматериалы'
+
+
+class SubGroupDirectory(models.Model):
+    title = models.CharField(max_length=64, help_text="Подгруппа услуги")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = 'Погруппа услуги'
+        verbose_name_plural = 'Подгруппы услуг'
+
+
+class SubGroupPadrazdeleniye(models.Model):
+    subgroup = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.CASCADE)
+    podrazdeleniye = models.ForeignKey(Podrazdeleniya, help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
+
+    @staticmethod
+    def get_subgroup_podrazdeleniye(podrazdeleniye):
+        subgroups = SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye)
+        return [{"subgroupId": p.subgroup.pk, "id": p.subgroup.pk, "label": p.subgroup.title} for p in subgroups]
+
+    @staticmethod
+    def save_subgroups_department(department_pk, tb_data):
+        podrazdeleniye = Podrazdeleniya.objects.filter(pk=department_pk).first()
+        SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye).delete()
+        for t_b in tb_data:
+            subgroup = SubGroupDirectory.objects.filter(pk=t_b['subgroupId']).first()
+            if subgroup:
+                if not SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye, subgroup=subgroup).exists():
+                    SubGroupPadrazdeleniye(podrazdeleniye=podrazdeleniye, subgroup=subgroup).save()
+
+        return True
+
+    def __str__(self):
+        return f"{self.subgroup.title} - {self.podrazdeleniye.title}"
+
+    class Meta:
+        verbose_name = 'Свзяь погруппы и подздаления'
+        verbose_name_plural = 'Связи погрупп и подздалений'
+
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -132,13 +201,15 @@ class Researches(models.Model):
         (38002, '38002. ИО - Направление на МСКТ'),
         (38003, '38003. ИО - Направление на COVID-19'),
         (38004, '38004. ИО - Направление на Микробиологию'),
-        (38005, '38005. ИО - Напрвление в др. организацию'),
+        (38005, '38005. ИО - Направление в др. организацию'),
         (38006, '38006. ИО - Заявление на ВМП'),
         (38007, '38007. ИО - С параметрами по умолчанию'),
         (38008, '38008. ИО - Универсальное на бак.исследование'),
         (48001, '48001. ИО - Направление на Гистологию'),
         (38101, '38101. ИО - Направление в ИДЦ Ковид'),
         (38102, '38102. ИО - Направление в ИДЦ обследование'),
+        (38103, '38103. ИО - Направление в СПИД-центр'),
+        (38104, '38104. ИО - Направление на химико-токсикологические исследования'),
     )
 
     RESULT_FORMS = (
@@ -153,17 +224,22 @@ class Researches(models.Model):
         (10402, '104.02 - Направление на ВМП'),
         (10403, '104.03 - Рапорт на ВМП'),
         (10404, '104.04 - Заявление на возврат'),
+        (10405, '104.05 - Анкета для оформления ЭЛН'),
         (10501, '105.01 - Свидетельство о смерти'),
         (10601, '106.01 - Свидетельство о о перинатальной смерти'),
         (10701, '107.01 - МСЭ'),
         (10801, '108.01 - 83-МПР'),
         (10901, '109.01 - 131/у'),
         (11001, '110.01 - Антирабическая карта'),
+        (11002, '110.02 - Заключение ВК по психиатрическому освидетельствованию'),
+        (11101, '111.01 - Карта профосмотра несовершеннолетнего N 030-ПО/у-17'),
+        (11201, '112.01 - Извещение о НР ЛП'),
     )
 
     RESULT_TITLE_FORMS = (
         (0, 'По умолчанию'),
         (10001, '100.01 - Выписка из амб карты'),
+        (10002, '100.02 - Клеше'),
     )
 
     CO_EXECUTOR_MODES = (
@@ -210,7 +286,7 @@ class Researches(models.Model):
     template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
     comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу', on_delete=models.SET_NULL)
     groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории', db_index=True)
-    onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не можеть быть назначено', on_delete=models.SET_NULL)
+    onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не может быть назначено', on_delete=models.SET_NULL)
     can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
     code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?", db_index=True)
@@ -228,6 +304,9 @@ class Researches(models.Model):
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
+    is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
+    is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
+    is_complex = models.BooleanField(default=False, blank=True, help_text="Это комплексная услуга", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -240,7 +319,7 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием", db_index=True)
-    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True)
+    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True, db_index=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
     co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
     microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True, help_text="Пробирка для микробиологического исследования", on_delete=models.SET_NULL)
@@ -273,8 +352,40 @@ class Researches(models.Model):
     enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
     oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
+    oid_title = models.CharField(max_length=255, default="", db_index=True, help_text="oid-название документа 1.2.643.5.1.13.13.11.1520")
     uet_refferal_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
     uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
+    print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
+    auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
+    plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
+    cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
+    cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
+    n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
+    laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text='Биоматериал', on_delete=models.SET_NULL)
+    sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
+    laboratory_duration = models.CharField(max_length=3, default='', blank=True, verbose_name='Срок выполнения')
+    is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
+
+    @staticmethod
+    def save_plan_performer(tb_data):
+        research = Researches.objects.all()
+        for r in research:
+            r.plan_external_performing_organization = None
+            r.save()
+
+        for t_b in tb_data:
+            research = Researches.objects.filter(pk=t_b['researchId']).first()
+            if research:
+                research.plan_external_performing_organization_id = t_b['planExternalPerformerId']
+                research.save()
+        return True
+
+    @staticmethod
+    def get_plan_performer():
+        plan_performer = Researches.objects.filter(plan_external_performing_organization__isnull=False).order_by("title")
+        return [{"researchId": p.id, "planExternalPerformerId": p.plan_external_performing_organization_id} for p in plan_performer]
 
     @staticmethod
     def filter_type(t):
@@ -292,6 +403,7 @@ class Researches(models.Model):
             14: dict(is_application=True),
             15: dict(is_monitoring=True),
             16: dict(is_expertise=True),
+            17: dict(is_case=True),
         }
         return ts.get(t + 1, {})
 
@@ -319,6 +431,8 @@ class Researches(models.Model):
             return -13
         if self.is_microbiology or self.is_citology or self.is_gistology:
             return 2 - Podrazdeleniya.MORFOLOGY
+        if self.is_case:
+            return -14
         return self.podrazdeleniye_id or -2
 
     @property
@@ -330,12 +444,14 @@ class Researches(models.Model):
             or self.is_paraclinic
             or self.is_microbiology
             or self.is_hospital
+            or self.is_case
             or self.is_citology
             or self.is_gistology
             or self.is_form
             or self.is_direction_params
             or self.is_monitoring
             or self.is_expertise
+            or self.is_aux
         )
 
     def get_flag_types_n3(self):
@@ -346,6 +462,7 @@ class Researches(models.Model):
             "isParaclinic": self.is_paraclinic,
             "isForm": self.is_form,
             "isDeathCertificate": self.pk == DEATH_RESEARCH_PK,
+            "isDischarge": self.is_extract,
         }
 
     @property
@@ -392,6 +509,20 @@ class Researches(models.Model):
             return self.microbiology_tube.title if self.microbiology_tube else ''
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
 
+    def get_podrazdeleniye_short_title(self):
+        if self.is_microbiology:
+            return self.microbiology_tube.title if self.microbiology_tube else ''
+        return self.podrazdeleniye.get_title() if self.podrazdeleniye else ""
+
+    def get_podrazdeleniye_title_recieve_recieve(self):
+        if self.plan_external_performing_organization:
+            result = self.plan_external_performing_organization.short_title
+        elif self.is_microbiology:
+            result = self.microbiology_tube.title if self.microbiology_tube else ''
+        else:
+            result = self.podrazdeleniye.title if self.podrazdeleniye else ""
+        return result
+
     def get_title(self):
         return self.short_title or self.title
 
@@ -418,6 +549,203 @@ class Researches(models.Model):
             return -13
         return self.site_type_id
 
+    @staticmethod
+    def as_json(research):
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "hide": research.hide,
+            "order": research.sort_weight,
+        }
+        return result
+
+    @staticmethod
+    def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
+        research_tubes = {}
+        for fraction in fractions:
+            if research_tubes.get(fraction.relation_id) and need_fractions:
+                fraction_data = fraction.as_json(fraction)
+                fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                research_tubes[fraction.relation_id]["fractions"].append(fraction_data)
+            elif not research_tubes.get(fraction.relation_id):
+                research_tubes[fraction.relation_id] = {
+                    "id": fraction.relation_id,
+                    "tubeId": fraction.relation.tube_id,
+                    "color": fraction.relation.tube.color,
+                    "title": f"{fraction.relation.tube.title} ({fraction.relation_id})",
+                }
+                if need_fractions:
+                    fraction_data = fraction.as_json(fraction)
+                    fraction_data["refM"], fraction_data["refF"] = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"])
+                    research_tubes[fraction.relation_id]["fractions"] = [fraction_data]
+        return research_tubes
+
+    @staticmethod
+    def get_laboratory_researches(podrazdelenie_id: int):
+        if podrazdelenie_id == -1:
+            podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
+            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by('pk')
+        else:
+            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by('pk')
+        return researches
+
+    @staticmethod
+    def get_tubes(podrazdelenie_id: int):
+        tubes = {}
+        researches = Researches.get_laboratory_researches(podrazdelenie_id)
+        for research in researches:
+            research_tubes = Researches.get_tube_data(research.pk)
+            tubes_info = [value for _, value in research_tubes.items()]
+            tubes_keys = tuple(research_tubes.keys())
+            if tubes.get(tubes_keys):
+                tubes[tubes_keys]["researches"].append(research.as_json(research))
+            else:
+                tubes[tubes_keys] = {
+                    "researches": [research.as_json(research)],
+                    "tubes": tubes_info,
+                }
+
+        result = [{"researches": sorted(value["researches"], key=lambda d: d["order"]), "tubes": value["tubes"]} for _, value in tubes.items()]
+        return result
+
+    @staticmethod
+    def update_order(research_pk: int, research_nearby_pk: int, action: str):
+        research = Researches.objects.get(pk=research_pk)
+        research_nearby = Researches.objects.get(pk=research_nearby_pk)
+        if action == 'inc_order':
+            research.sort_weight += 1
+            research_nearby.sort_weight -= 1
+        elif action == 'dec_order':
+            research.sort_weight -= 1
+            research_nearby.sort_weight += 1
+        research.save()
+        research_nearby.save()
+        return True
+
+    @staticmethod
+    def change_visibility(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        if research.hide:
+            research.hide = False
+        else:
+            research.hide = True
+        research.save()
+        return True
+
+    @staticmethod
+    def get_research(research_pk: int):
+        research = Researches.objects.get(pk=research_pk)
+        research_tubes = Researches.get_tube_data(research_pk, True)
+        result = {
+            "pk": research.pk,
+            "title": research.title,
+            "shortTitle": research.short_title,
+            "code": research.code,
+            "internalCode": research.internal_code,
+            "ecpId": research.ecp_id,
+            "preparation": research.preparation,
+            "departmentId": research.podrazdeleniye_id,
+            "laboratoryMaterialId": research.laboratory_material_id,
+            "subGroupId": research.sub_group_id,
+            "laboratoryDuration": research.laboratory_duration,
+            "tubes": [value for _, value in research_tubes.items()],
+        }
+        return result
+
+    @staticmethod
+    def update_lab_research(research_data):
+        research_pk = None
+        research_title = research_data["title"].strip() if research_data["title"] else None
+        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ''
+        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ''
+        research_code = research_data["code"].strip() if research_data["code"] else ''
+        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ''
+        research = Researches.objects.filter(pk=research_data["pk"]).first()
+        fractions = None
+        if research and research_title:
+            research.title = research_title
+            research.short_title = research_short_title
+            research.code = research_code
+            research.ecp_id = research_ecp_id
+            research.internal_code = research_internal_code
+            research.preparation = research_data["preparation"]
+            research.podrazdeleniye_id = research_data["departmentId"]
+            research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
+            research.sub_group_id = research_data.get("subGroupId", None)
+            research.laboratory_duration = research_data["laboratoryDuration"]
+            research.save()
+            fractions = Fractions.objects.filter(research_id=research.pk)
+        elif research_title:
+            research = Researches(
+                title=research_title,
+                short_title=research_short_title,
+                ecp_id=research_ecp_id,
+                code=research_code,
+                internal_code=research_internal_code,
+                preparation=research_data["preparation"],
+                podrazdeleniye_id=research_data["departmentId"],
+                laboratory_material_id=research_data.get("laboratoryMaterialId", None),
+                sub_group_id=research_data.get("subGroupId", None),
+                laboratory_duration=research_data["laboratoryDuration"],
+                sort_weight=research_data["order"],
+            )
+            research.save()
+            research_pk = research.pk
+        else:
+            return False
+        for tube in research_data["tubes"]:
+            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+            if not relation:
+                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+                relation = ReleationsFT(tube_id=tube_relation.pk)
+                relation.save()
+            for fraction in tube["fractions"]:
+                current_fractions = None
+                fraction_title = fraction["title"].strip() if fraction["title"] else ''
+                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                unit_id = fraction.get("unitId", None)
+                ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
+                if fractions:
+                    current_fractions = fractions.filter(pk=fraction["id"]).first()
+                if current_fractions:
+                    current_fractions.title = fraction_title
+                    current_fractions.ecp_id = ecp_id
+                    current_fractions.fsli = fraction.get("fsli", None)
+                    current_fractions.sort_weight = fraction["order"]
+                    current_fractions.unit_id = unit_id
+                    current_fractions.variants_id = fraction.get("variantsId", None)
+                    current_fractions.formula = fraction["formula"]
+                    current_fractions.hide = fraction["hide"]
+                    current_fractions.ref_m = ref_m
+                    current_fractions.ref_f = ref_f
+                    current_fractions.save()
+                else:
+                    new_fraction = Fractions(
+                        research_id=research.pk,
+                        title=fraction_title,
+                        ecp_id=ecp_id,
+                        fsli=fraction["fsli"],
+                        unit_id=unit_id,
+                        relation_id=relation.pk,
+                        sort_weight=fraction["order"],
+                        variants_id=fraction.get("variantsId", None),
+                        formula=fraction["formula"],
+                        hide=fraction["hide"],
+                        ref_m=ref_m,
+                        ref_f=ref_f,
+                    )
+                    new_fraction.save()
+        if research_pk:
+            return {"ok": True, "pk": research_pk}
+        return {"ok": True}
+
+    @staticmethod
+    def get_lab_additional_data(research_pk: int):
+        current_research = Researches.objects.get(pk=research_pk)
+        result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
+        return result
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -425,12 +753,13 @@ class HospitalService(models.Model):
         (1, 'Дневник'),
         (2, 'ВК'),
         (3, 'Операция'),
-        (4, 'Фармакотерапия'),
+        (4, 'Назначения'),
         (5, 'Физиотерапия'),
         (6, 'Эпикриз'),
         (7, 'Выписка'),
         (8, 'Больничный лист'),
         (9, 't, ad, p – лист'),
+        (11, 'Формы'),
     )
 
     TYPES_BY_KEYS = {
@@ -438,7 +767,7 @@ class HospitalService(models.Model):
         'diaries': 1,
         'vc': 2,
         'operation': 3,
-        'pharmacotherapy': 4,
+        'assignments': 4,
         'physiotherapy': 5,
         'epicrisis': 6,
         'extracts': 7,
@@ -451,12 +780,13 @@ class HospitalService(models.Model):
         1: 'diaries',
         2: 'vc',
         3: 'operation',
-        4: 'pharmacotherapy',
+        4: 'assignments',
         5: 'physiotherapy',
         6: 'epicrisis',
         7: 'extracts',
         8: 'bl',
         9: 't, ad, p sheet',
+        11: 'forms',
     }
 
     TYPES_REVERSED = {
@@ -465,6 +795,7 @@ class HospitalService(models.Model):
         "consultation": "is_doc_refferal",
         "diaries": "diaries",
         "morfology": "is_morfology",
+        "forms": "is_form",
         "all": "None",
     }
 
@@ -482,6 +813,32 @@ class HospitalService(models.Model):
     class Meta:
         verbose_name = 'Стационарная услуга'
         verbose_name_plural = 'Стационарные услуги'
+
+
+class AuxService(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Главная услуга", on_delete=models.CASCADE, db_index=True)
+    aux_research = models.ForeignKey(Researches, related_name='aux_protocol', help_text="Вспомогательная услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+
+    class Meta:
+        verbose_name = 'Вспомогательная услуга'
+        verbose_name_plural = 'Вспомогательные услуги'
+
+    def __str__(self):
+        return f"{self.main_research.title} - {self.aux_research.title} - {self.hide}"
+
+
+class ComplexService(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Комплексная услуга", on_delete=models.CASCADE, db_index=True)
+    slave_research = models.ForeignKey(Researches, related_name='slave_service', help_text="Простая услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+
+    class Meta:
+        verbose_name = 'Комплексная услуга'
+        verbose_name_plural = 'Комплексные услуги'
+
+    def __str__(self):
+        return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
 
 
 class ParaclinicInputGroups(models.Model):
@@ -531,6 +888,11 @@ class PatientControlParam(models.Model):
     def get_contol_param_in_system():
         contol_param_system = PatientControlParam.objects.filter().order_by("order")
         return [{"id": cc.pk, "title": cc.title, "purpose": ""} for cc in contol_param_system]
+
+    @staticmethod
+    def as_json(param):
+        json_data = {"pk": param.pk, "title": param.title, "code": param.code, "all_patient_control": param.all_patient_contol, "order": param.order}
+        return json_data
 
 
 class ParaclinicInputField(models.Model):
@@ -590,6 +952,7 @@ class ParaclinicInputField(models.Model):
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
+    can_edit_computed = models.BooleanField(default=False, blank=True)
     sign_organization = models.BooleanField(default=False, blank=True, help_text='Подпись от организации')
     visibility = models.TextField(default='', blank=True)
     helper = models.CharField(max_length=999, blank=True, default='')
@@ -600,6 +963,7 @@ class ParaclinicInputField(models.Model):
     control_param = models.TextField(default='', blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
     cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
+    denied_group = models.ForeignKey(Group, default=None, null=True, blank=True, on_delete=models.SET_NULL)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
@@ -635,7 +999,7 @@ class ParaclinicInputField(models.Model):
 class ParaclinicTemplateName(models.Model):
     DEFAULT_TEMPLATE_TITLE = 'По умолчанию'
 
-    title = models.CharField(max_length=255, help_text='Название шаблона запонение полей')
+    title = models.CharField(max_length=255, help_text='Название шаблона заполнения полей')
     research = models.ForeignKey(Researches, on_delete=models.CASCADE, db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрыть шаблон")
 
@@ -685,7 +1049,7 @@ class AutoAdd(models.Model):
 
     class Meta:
         verbose_name = 'Автоматическое добавление назначений'
-        verbose_name_plural = 'Автоматическоие добавления назначений'
+        verbose_name_plural = 'Автоматическое добавления назначений'
 
 
 class References(models.Model):
@@ -713,6 +1077,11 @@ class ResultVariants(models.Model):
     def get_variants(self):
         return self.values.split('|')
 
+    @staticmethod
+    def get_all():
+        result = [{"id": variants.pk, "label": variants.values} for variants in ResultVariants.objects.all()]
+        return result
+
     def __str__(self):
         return str(self.get_variants())
 
@@ -729,6 +1098,11 @@ class MaterialVariants(models.Model):
 
     def __str__(self):
         return str(self.get_variants())
+
+    @staticmethod
+    def get_all():
+        result = [{"id": variant.pk, "label": variant.values} for variant in MaterialVariants.objects.all()]
+        return result
 
     class Meta:
         verbose_name = 'Вариант комментария'
@@ -750,6 +1124,17 @@ class Unit(models.Model):
     code = models.CharField(max_length=4, db_index=True, verbose_name='Код')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
     ucum = models.CharField(max_length=55, default='', blank=True, verbose_name='UCUM')
+
+    @staticmethod
+    def get_units():
+        result = [
+            {
+                "id": unit.pk,
+                "label": f'{unit.short_title} — {unit.title} - {unit.code}',
+            }
+            for unit in Unit.objects.filter(hide=False)
+        ]
+        return result
 
     def __str__(self) -> str:
         return f"{self.code} — {self.short_title} – {self.title}"
@@ -774,7 +1159,7 @@ class Fractions(models.Model):
     max_iterations = models.IntegerField(default=1, verbose_name='Максимальное число итераций', blank=True)
     variants = models.ForeignKey(ResultVariants, null=True, blank=True, verbose_name='Варианты подсказок результатов', on_delete=models.SET_NULL)
     variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, verbose_name='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name='Вес соритировки')
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name='Вес сортировки')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие фракции', db_index=True)
     render_type = models.IntegerField(default=0, blank=True, verbose_name='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
     options = models.CharField(max_length=511, default="", blank=True, verbose_name='Варианты для динамического числа полей')
@@ -785,6 +1170,7 @@ class Fractions(models.Model):
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
+    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код теста в ЕЦП')
 
     def get_unit(self):
         if self.unit:
@@ -806,6 +1192,36 @@ class Fractions(models.Model):
     def get_fsli_code(self):
         return (self.fsli or '').strip()
 
+    def get_ecp_code(self):
+        return (self.ecp_id or '').strip()
+
+    @staticmethod
+    def as_json(fraction) -> dict:
+        result = {
+            "id": fraction.pk,
+            "title": fraction.title,
+            "unitId": fraction.unit_id,
+            "ecpId": fraction.ecp_id,
+            "fsli": fraction.fsli,
+            "order": fraction.sort_weight,
+            "variantsId": fraction.variants_id,
+            "formula": fraction.formula,
+            "hide": fraction.hide,
+            "refM": fraction.ref_m,
+            "refF": fraction.ref_f,
+        }
+        return result
+
+    @staticmethod
+    def convert_ref(ref_m, ref_f, for_save=False):
+        if for_save:
+            convert_ref_m = {ref["age"].strip(): ref["value"].strip() for ref in ref_m if ref_m}
+            convert_ref_f = {ref["age"].strip(): ref["value"].strip() for ref in ref_f if ref_f}
+        else:
+            convert_ref_m = [{"age": key, "value": value} for key, value in ref_m.items()] if isinstance(ref_m, dict) else []
+            convert_ref_f = [{"age": key, "value": value} for key, value in ref_f.items()] if isinstance(ref_f, dict) else []
+        return convert_ref_m, convert_ref_f
+
     def __str__(self):
         return self.research.title + " | " + self.title
 
@@ -820,7 +1236,7 @@ class Absorption(models.Model):
     """
 
     fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее', db_index=True, on_delete=models.CASCADE)
-    flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглащяется главной', on_delete=models.CASCADE)
+    flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглощается главной', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.flower.__str__() + " -> " + self.fupper.__str__()
@@ -858,7 +1274,7 @@ class DispensaryRouteSheet(models.Model):
     age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
-    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес сортировки')
 
     def __str__(self):
         return "{} , - возраст, {} - пол, {}, {}-sort".format(self.age_client, self.sex_client, self.research, self.sort_weight)
@@ -893,7 +1309,7 @@ class ScreeningPlan(models.Model):
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
     research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, включенное в список', on_delete=models.CASCADE)
     period = models.PositiveSmallIntegerField(db_index=True, help_text='Период (1 раз в лет/года)', validators=[MinValueValidator(1), MaxValueValidator(100)])
-    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес соритировки')
+    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес сортировки')
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие', db_index=True)
 
     def __str__(self):
@@ -954,7 +1370,7 @@ class Culture(models.Model):
         return self.title
 
     def get_full_title(self):
-        return f'{self.group_culture.title} {self.title}'.strip()
+        return f'{self.title}'.strip()
 
     class Meta:
         verbose_name = 'Культура'
@@ -1190,3 +1606,25 @@ class AntibioticSets(models.Model):
                 set_obj.antibiotics.add(*element_ant)
 
         return elements
+
+
+class SetResearch(models.Model):
+    title = models.CharField(max_length=255, help_text="Название набора")
+    hide = models.BooleanField(default=False, blank=True, help_text='Скрыть', db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Набор исследований'
+        verbose_name_plural = 'Наборы исследований'
+
+
+class SetOrderResearch(models.Model):
+    set_research = models.ForeignKey(SetResearch, default=None, help_text='Набор', db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, default=None, help_text='Исследование', db_index=True, on_delete=models.CASCADE)
+    order = models.IntegerField(help_text='Порядок')
+
+    class Meta:
+        verbose_name = 'Исследование в наборе'
+        verbose_name_plural = 'Исследования в наборе'

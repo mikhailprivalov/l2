@@ -61,13 +61,13 @@ class ListWait(models.Model):
     def list_wait_change_status(data, doc_who_create):
         list_wait = ListWait.objects.filter(pk=data['pk_list_wait'])[0]
         list_wait.doc_who_create = doc_who_create
-        list_wait.status = data['status']
+        list_wait.work_status = data['status']
         list_wait.save()
 
         slog.Log(
             key=list_wait.pk,
             type=80006,
-            body=json.dumps({"card_pk": list_wait.client.pk, "status": list_wait.status}),
+            body=json.dumps({"card_pk": list_wait.client.pk, "status": list_wait.work_status}),
             user=doc_who_create,
         ).save()
         return list_wait.pk

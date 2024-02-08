@@ -21,7 +21,7 @@
         </label>
         <input
           id="change-group-title"
-          v-model="title"
+          v-model.trim="title"
           class="form-control"
         >
       </div>

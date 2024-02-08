@@ -13,6 +13,7 @@ const stateInitial = {
     loading: true,
     modules: {},
     groups: [],
+    hospital: null,
   },
   menu: {
     buttons: [],
@@ -24,28 +25,7 @@ const stateInitial = {
 
 const getters = {
   user_data: state => state.data,
-  fio_short: (state, g) => {
-    if (!g.user_data || !g.user_data.fio) {
-      return 'Unauthenticated';
-    }
-
-    return String(g.user_data.fio)
-      .split(' ')
-      .map((p, i) => {
-        if (!p) {
-          return p;
-        }
-
-        if (i === 0 || p.length === 1) {
-          return `${p} `;
-        }
-
-        return `${p[0]}.`;
-      })
-      .filter(Boolean)
-      .join('')
-      .trim();
-  },
+  fio_short: (state, g) => g.user_data?.shortFio ?? 'Гость',
   user_hospital_title: state => state.data?.hospital_title,
   authenticated: state => Boolean(state.data?.auth),
   currentDocPk: state => state.data?.doc_pk,

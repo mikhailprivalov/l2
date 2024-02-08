@@ -46,15 +46,19 @@
       class="resource"
     >
       <div class="resource-title">
-        Доступное время <span v-if="showLimitMessage" class="messageAgeLimit">{{ showLimitMessage }}</span>
+        Доступное время <span
+          v-if="showLimitMessage"
+          class="messageAgeLimit"
+        >{{ showLimitMessage }}</span>
       </div>
       <div class="resource-slots">
         <div
           v-for="s in slots"
           :key="s.pk"
           class="resource-slot"
-          :class="activeSlot === s.pk && 'active'"
-          @click="selectSlot(s.pk, s.title, s.typeSlot)"
+          :class="[{'doctor-self-slot': s.slotTypeId === '10', 'forbidden-slot': s.slotTypeId === '8'},
+                   activeSlot === s.pk && 'active' ]"
+          @click="selectSlot(s.pk, s.title, s.typeSlot, s.slotTypeId)"
         >
           {{ s.title }}
         </div>
@@ -99,6 +103,7 @@ export default {
       activeSlot: null,
       activeSlotTitle: null,
       typeSlot: null,
+      slotTypeId: null,
     };
   },
   computed: {
@@ -170,12 +175,14 @@ export default {
     },
   },
   methods: {
-    selectSlot(slotPk, slotTitle, typeSlot) {
+    selectSlot(slotPk, slotTitle, typeSlot, slotTypeId) {
       this.activeSlot = slotPk;
       this.activeSlotTitle = slotTitle;
       this.typeSlot = typeSlot;
+      this.slotTypeId = slotTypeId;
     },
     async loadSlots() {
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!this.activeDoctor || !this.activeDate) {
         return;
       }
@@ -188,8 +195,8 @@ export default {
       } else {
         this.slots = result;
       }
-
       this.checkSlot();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     checkDate(forced = false) {
       if (this.displayDates.length > 0 && (forced || !this.displayDates.includes(this.activeDate))) {
@@ -231,6 +238,7 @@ export default {
       this.startDate = this.startDate.clone().add(7, 'days');
     },
     async loadAvailableDates() {
+      await this.$store.dispatch(actions.INC_LOADING);
       if (!this.startDate) {
         return;
       }
@@ -239,6 +247,9 @@ export default {
         data: {
           doctors_has_free_date: doctors,
           unique_date: dates,
+        } = {
+          doctors_has_free_date: {},
+          unique_date: [],
         },
       } = await this.$api('ecp/available-slots-of-dates', {
         research_pk: this.servicePk,
@@ -253,6 +264,7 @@ export default {
       this.loading = false;
       this.checkDate(true);
       this.checkDoctor();
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
     async fillSlot() {
       if (!this.activeSlot) {
@@ -263,8 +275,10 @@ export default {
         slot_id: this.activeSlot,
         card_pk: this.cardId,
         type_slot: this.typeSlot,
+        slot_type_id: this.slotTypeId,
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
+        slot_title: this.activeSlotTitle,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
@@ -379,4 +393,13 @@ export default {
     }
   }
 }
+
+.doctor-self-slot {
+  background: rgba(#4cae4c, 0.6);
+}
+
+.forbidden-slot {
+  background: rgba(#042693, 0.3);
+}
+
 </style>

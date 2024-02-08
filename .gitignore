@@ -238,3 +238,8 @@ external_system/settings/phones_org.json
 **/.vscode/
 /forms/contracts/
 /forms/contract_forms/
+/forms/additional_pages/
+!/forms/additional_pages/default.json
+/ftp_orders/hl7_rule
+!/ftp_orders/hl7_rule/default.json
+/xml_generate/templates/

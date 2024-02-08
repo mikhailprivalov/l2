@@ -34,6 +34,13 @@
                       @click="modalEmail = true"
                     >установить email</a>
                   </template>
+                  <br>
+                  Двухфакторная аутентификация:
+                  <a
+                    href="#"
+                    class="a-under-reversed"
+                    @click="modalTwoFactor = true"
+                  >{{ hasTOTP ? 'активирована' : 'не активна' }} <i class="fa fa-pencil" /></a>
                 </div>
                 <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
                   {{ fio_dep }}
@@ -41,7 +48,6 @@
                   <a
                     href="/logout"
                     class="btn btn-blue-nb"
-                    @click="logout"
                   >Выход</a>
                 </div>
               </div>
@@ -106,7 +112,6 @@
               :to="forms_url"
               class="panel-body"
               target="_blank"
-              @click="addFeedback"
             >
               <span><i class="fas fa-comment" /> Оставить отзыв</span>
             </router-link>
@@ -208,6 +213,109 @@
                   :disabled="loading"
                   type="button"
                   @click="modalPassword = false"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="TOTP"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="modalTwoFactor"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          margin-left-right="auto"
+          :no-close="!!loading"
+          @close="modalTwoFactor = false"
+        >
+          <span slot="header">Двухфакторная аутентификация</span>
+          <div
+            v-if="!hasTOTP"
+            slot="body"
+            class="popup-body"
+          >
+            <div class="alert-modal">
+              Двухфакторная аутентификация не настроена!
+            </div>
+            <div class="alert-modal">
+              Для настройки двухфакторной аутентификации вам необходимо установить приложение<br>
+              <strong>TOTP совместимое приложение</strong> на ваш мобильный телефон<br>
+              или воспользоваться специальными сервисами.
+            </div>
+            <div>
+              <img
+                :src="secretQRBase64"
+                alt="qr-code"
+                class="qr-code"
+              >
+              <input
+                :value="secretCode"
+                type="text"
+                class="form-control mb10"
+                readonly
+              >
+              <input
+                v-model="checkCode"
+                type="text"
+                class="form-control mb10"
+                placeholder="Введите код из приложения"
+              >
+              <button
+                class="btn btn-blue-nb"
+                :disabled="loading"
+                type="button"
+                @click="doCheckCode"
+              >
+                Проверить код
+              </button>
+            </div>
+          </div>
+          <div
+            v-else
+            slot="body"
+            class="popup-body"
+          >
+            <div class="alert-modal">
+              Двухфакторная аутентификация настроена!
+            </div>
+            <div class="alert-modal">
+              Для отключения двухфакторной аутентификации вам необходимо ввести код из приложения.
+            </div>
+            <div>
+              <input
+                v-model="checkCode"
+                type="text"
+                class="form-control mb10"
+                placeholder="Введите код из приложения"
+              >
+              <button
+                class="btn btn-blue-nb"
+                :disabled="loading"
+                type="button"
+                @click="doCheckCodeDisable"
+              >
+                Проверить код и отключить двухфакторную аутентификацию
+              </button>
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-12 text-right">
+                <button
+                  class="btn btn-blue-nb"
+                  :disabled="loading"
+                  type="button"
+                  @click="modalTwoFactor = false"
                 >
                   Закрыть
                 </button>
@@ -362,7 +470,6 @@ import { mapGetters } from 'vuex';
 import Modal from '@/ui-cards/Modal.vue';
 import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
-import { sendEvent } from '@/metrics';
 import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
 
 @Component({
@@ -378,6 +485,10 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
       hasNewCodeRequest: false,
       confirmationCode: '',
       newConfirmationCode: '',
+      modalTwoFactor: false,
+      secretQRBase64: null,
+      secretCode: null,
+      checkCode: '',
     };
   },
   watch: {
@@ -392,11 +503,32 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
     hasNewCodeRequest() {
       this.newConfirmationCode = '';
     },
+    async modalTwoFactor() {
+      if (this.modalTwoFactor) {
+        if (!this.hasTOTP) {
+          this.loading = true;
+          const {
+            qrCode = null, secretCode = null, ok, message,
+          } = await this.$api('users/generate-totp-code');
+          if (!ok) {
+            this.$root.$emit('msg', 'error', message);
+            this.modalTwoFactor = false;
+          }
+          this.loading = false;
+          this.secretQRBase64 = qrCode;
+          this.secretCode = secretCode;
+        }
+      } else {
+        this.secretQRBase64 = null;
+        this.secretCode = null;
+      }
+      this.checkCode = '';
+    },
   },
   computed: {
     ...mapGetters(['menu', 'user_data']),
     buttons() {
-      if (!this.menu || !this.menu.buttons) {
+      if (!this.menu?.buttons) {
         return [];
       }
 
@@ -407,6 +539,9 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
     },
     email() {
       return this.user_data?.email;
+    },
+    hasTOTP() {
+      return this.user_data?.hasTOTP;
     },
     forms_url() {
       return this.user_data?.modules.forms_url;
@@ -446,6 +581,14 @@ export default class MenuPage extends Vue {
   hasCodeRequest: boolean;
 
   hasNewCodeRequest: boolean;
+
+  modalTwoFactor: boolean;
+
+  secretQRBase64: string | null;
+
+  secretCode: string | null;
+
+  checkCode: string;
 
   get system() {
     return this.$systemTitle();
@@ -543,26 +686,51 @@ export default class MenuPage extends Vue {
     }
   }
 
+  async doCheckCode() {
+    this.loading = true;
+    const { ok, message } = await this.$api('/users/set-totp', this, 'secretCode', {
+      confirmationCode: this.checkCode,
+    });
+    if (ok) {
+      this.$root.$emit('msg', 'ok', 'Двухфакторная аутентификация активирована');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      this.$root.$emit('msg', 'error', message);
+      this.loading = false;
+    }
+  }
+
+  async doCheckCodeDisable() {
+    this.loading = true;
+    const { ok, message } = await this.$api('/users/disable-totp', {
+      confirmationCode: this.checkCode,
+    });
+    if (ok) {
+      this.$root.$emit('msg', 'ok', 'Двухфакторная аутентификация отключена');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } else {
+      this.$root.$emit('msg', 'error', message);
+      this.loading = false;
+    }
+  }
+
   get chatsEnabled() {
     return this.$store.getters.chatsEnabled;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  logout() {
-    window.posthog?.reset();
-    window.posthogInit(
-      window.posthog,
-    );
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  addFeedback() {
-    sendEvent('add_feedback', {});
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.qr-code {
+  width: 100%;
+  max-width: 200px;
+  margin: 10px auto;
+}
+
 .groups-btns {
   padding: 0;
   margin-right: 0;

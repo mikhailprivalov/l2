@@ -267,6 +267,19 @@
         </div>
       </div>
       <div
+        class="row"
+      >
+        <div
+          class="col-xs-6"
+        >
+          <div class="info-row">
+            <template v-if="card.ecp_id">
+              ЕЦП ИД {{ card.ecp_id }}
+            </template>
+          </div>
+        </div>
+      </div>
+      <div
         v-if="card_pk < 0"
         class="row"
       >
@@ -436,6 +449,7 @@
                   :cache-options="false"
                   open-direction="top"
                   :open-on-focus="true"
+                  @input="changeCompany(card.work_place_db)"
                 >
                   <div
                     slot="value-label"
@@ -462,6 +476,19 @@
                 :select-first="true"
                 maxlength="128"
                 src="/api/autocomplete?value=:keyword&type=work_position"
+              />
+            </div>
+            <div class="form-row sm-f">
+              <div class="row-t">
+                Отдел
+              </div>
+              <Treeselect
+                v-model="card.work_department_db"
+                :multiple="false"
+                class="treeselect-wide treeselect-26px treeselect-nbr"
+                :z-index="5001"
+                placeholder="Укажите отдел"
+                :options="companyDepartments"
               />
             </div>
             <div class="form-row sm-f">
@@ -656,6 +683,33 @@
           </div>
         </div>
         <div
+          v-if="l2_send_patients_email_results"
+          class="row"
+          style="margin-bottom: 10px"
+        >
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+              <div class="row-t">
+                <input
+                  v-model="card.send_to_email"
+                  v-tippy="{ placement: 'bottom', arrow: true }"
+                  type="checkbox"
+                  title="Отправлять результаты на почту"
+                  style="height: auto; flex: 0 23px"
+                >
+                Email
+              </div>
+              <input
+                v-model.trim="card.email"
+                type="email"
+                class="form-control"
+                :disabled="!card.send_to_email"
+                :placeholder="card.send_to_email ? 'введите адрес' : ''"
+              >
+            </div>
+          </div>
+        </div>
+        <div
           class="row"
           style="margin-bottom: 10px"
         >
@@ -821,7 +875,7 @@
             </button>
           </div>
           <input
-            v-model="new_card_num"
+            v-model.trim="new_card_num"
             type="text"
             class="form-control"
             placeholder="Введите номер карты"
@@ -1224,6 +1278,7 @@ export default {
         fact_address_full: JSON.stringify({ address: '', fias: null, details: null }),
         work_place: '',
         work_position: '',
+        work_department: '',
         family: '',
         patronymic: '',
         name: '',
@@ -1237,7 +1292,9 @@ export default {
         docs: [],
         docs_to_delete: [],
         rmis_uid: null,
+        ecp_id: null,
         work_place_db: null,
+        work_department_db: null,
         work_place_db_title: '',
         doc_types: [],
         main_docs: {},
@@ -1260,6 +1317,8 @@ export default {
         agent_doc: null,
         agent_pk: null,
         phone: '',
+        email: '',
+        send_to_email: false,
         harmful: '',
         tfoms_idp: null,
         tfoms_enp: null,
@@ -1286,6 +1345,7 @@ export default {
       loading: false,
       loaded: false,
       new_card_num: '',
+      companyDepartments: [],
     };
   },
   computed: {
@@ -1297,6 +1357,9 @@ export default {
     },
     l2_profcenter() {
       return this.$store.getters.modules.l2_profcenter;
+    },
+    l2_send_patients_email_results() {
+      return this.$store.getters.modules.l2_send_patients_email_results;
     },
     medbook_auto_start() {
       const value = Number(this.$store.getters.modules.medbook_auto_start);
@@ -1434,6 +1497,12 @@ export default {
     }, 100);
   },
   methods: {
+    async changeCompany(currentCompany) {
+      const { data } = await this.$api('company-departments-find', {
+        company_db: currentCompany,
+      });
+      this.companyDepartments = data;
+    },
     async loadCompanies({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
         const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
@@ -1496,6 +1565,16 @@ export default {
       this.save(true);
     },
     async save(hideAfter = false) {
+      if (this.card.send_to_email && this.card.email) {
+        await this.$store.dispatch(actions.INC_LOADING);
+        const r = await this.$api('patients/validate-email', { email: this.card.email });
+        await this.$store.dispatch(actions.DEC_LOADING);
+
+        if (!r.ok) {
+          this.$root.$emit('msg', 'error', 'Введён некорректный email');
+          return;
+        }
+      }
       if (!this.valid) {
         return;
       }
@@ -1515,10 +1594,14 @@ export default {
           'work_place',
           'main_diagnosis',
           'work_position',
+          'work_department',
           'work_place_db',
+          'work_department_db',
           'custom_workplace',
           'district',
           'phone',
+          'email',
+          'send_to_email',
           'number_poli',
           'harmful',
           'medbookPrefix',
@@ -1535,7 +1618,13 @@ export default {
         },
       );
       if (data.result !== 'ok') {
-        this.$root.$emit('msg', 'error', 'Сохранение прошло не удачно');
+        let message = 'Сохранение прошло не удачно';
+        if (Array.isArray(data.messages)) {
+          for (const msg of data.messages) {
+            message = `${message} ${msg}`;
+          }
+        }
+        this.$root.$emit('msg', 'error', message);
         await this.$store.dispatch(actions.DEC_LOADING);
         return;
       }

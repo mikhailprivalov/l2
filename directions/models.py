@@ -4,6 +4,8 @@ import collections
 import logging
 import uuid
 
+from django.db.models import Max
+
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures
 import datetime
@@ -23,9 +25,19 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
-from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc
+from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research
+from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
-from laboratory.settings import PERINATAL_DEATH_RESEARCH_PK, DISPANSERIZATION_SERVICE_PK, EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED, RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION
+from laboratory.settings import (
+    PERINATAL_DEATH_RESEARCH_PK,
+    DISPANSERIZATION_SERVICE_PK,
+    EXCLUDE_DOCTOR_PROFILE_PKS_ANKETA_NEED,
+    RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
+    AUTO_PRINT_RESEARCH_DIRECTION,
+    NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
+    MEDIA_ROOT,
+)
+from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
 import slog.models as slog
 import users.models as umodels
@@ -38,7 +50,6 @@ from refprocessor.processor import RefProcessor
 from users.models import DoctorProfile
 import contracts.models as contracts
 from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes, Place
-
 
 from appconf.manager import SettingManager
 from utils.dates import normalize_dots_date
@@ -87,12 +98,18 @@ class CustomResearchOrdering(models.Model):
         verbose_name_plural = 'Пользовательские сортировки исследований'
 
 
+class NoGenerator(Exception):
+    pass
+
+
 class TubesRegistration(models.Model):
     """
     Таблица с пробирками для исследований
     """
 
     id = models.AutoField(primary_key=True, db_index=True)
+    number = models.BigIntegerField(db_index=True, help_text='Номер ёмкости', blank=True, null=True, default=None)
+    chunk_number = models.PositiveSmallIntegerField(db_index=True, blank=True, null=True, default=None, help_text='Номер разложения ёмкости на несколько')
     type = models.ForeignKey(directory.ReleationsFT, help_text='Тип ёмкости', on_delete=models.CASCADE)
     time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
@@ -101,6 +118,37 @@ class TubesRegistration(models.Model):
     barcode = models.CharField(max_length=255, null=True, blank=True, help_text='Штрих-код или номер ёмкости', db_index=True)
     notice = models.CharField(max_length=512, default="", blank=True, help_text='Замечания', db_index=True)
     daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия ёмкости среди дня в лаборатории')
+    is_defect = models.BooleanField(default=False, blank=True, verbose_name='Дефект')
+    defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
+
+    @staticmethod
+    def make_default_external_tube(number: int):
+        external_tube = directory.ReleationsFT.get_default_external_tube()
+        return TubesRegistration.objects.create(number=number, type=external_tube)
+
+    @staticmethod
+    def make_external_tube(number: int, research):
+        fraction = directory.Fractions.objects.filter(research=research).first()
+        external_tube = fraction.relation
+        return TubesRegistration.objects.create(number=number, type=external_tube)
+
+    @staticmethod
+    def get_tube_number_generator_pk(hospital: Hospitals):
+        if hospital.is_default:
+            if not NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).exists():
+                max_number = TubesRegistration.objects.aggregate(Max('number'))['number__max']
+                generator = NumberGenerator.objects.create(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, year=-1, is_active=True, start=1, end=None, last=max_number, prepend_length=0)
+            else:
+                generator = NumberGenerator.objects.get(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True)
+        else:
+            generator = NumberGenerator.objects.filter(hospital=hospital, key=NumberGenerator.TUBE_NUMBER, is_active=True).first()
+            if not generator:
+                if hospital.strict_tube_numbers:
+                    raise NoGenerator("Generator not found for hospital %s" % hospital.safe_short_title)
+                else:
+                    def_hospital = Hospitals.get_default_hospital()
+                    return TubesRegistration.get_tube_number_generator_pk(def_hospital)
+        return generator.pk
 
     @property
     def time_get_local(self):
@@ -110,8 +158,12 @@ class TubesRegistration(models.Model):
     def time_recive_local(self):
         return localtime(self.time_recive)
 
+    @property
+    def researches_count(self):
+        return self.issledovaniya_set.all().count()
+
     def __str__(self):
-        return "%d %s (%s, %s) %s" % (self.pk, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
+        return "%d %s (%s, %s) %s" % (self.number, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
 
     def day_num(self, doc, num):
         if not self.getstatus():
@@ -138,9 +190,9 @@ class TubesRegistration(models.Model):
 
         self.time_get = timezone.now()
         self.doc_get = doc_get
-        self.barcode = self.pk
+        self.barcode = str(self.number)
         self.save()
-        slog.Log(key=str(self.pk), type=9, body="", user=doc_get).save()
+        slog.Log(key=str(self.number), type=9, body="", user=doc_get).save()
 
     def getstatus(self, one_by_one=False):
         """
@@ -163,7 +215,7 @@ class TubesRegistration(models.Model):
         self.time_recive = timezone.now()
         self.doc_recive = doc_r
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=11, body=json.dumps({"Замечание не приёма": self.notice}) if self.notice != "" else "").save()
+        slog.Log(key=str(self.number), user=doc_r, type=11, body=json.dumps({"Замечание не приёма": self.notice}) if self.notice != "" else "").save()
 
     def set_notice(self, doc_r, notice):
         """
@@ -178,7 +230,7 @@ class TubesRegistration(models.Model):
             self.time_recive = None
         self.notice = notice
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=12, body=json.dumps({"Замечание не приёма": self.notice})).save()
+        slog.Log(key=str(self.number), user=doc_r, type=12, body=json.dumps({"Замечание не приёма": self.notice})).save()
 
     def clear_notice(self, doc_r):
         old_notice = self.notice
@@ -186,7 +238,7 @@ class TubesRegistration(models.Model):
             return
         self.notice = ""
         self.save()
-        slog.Log(key=str(self.pk), user=doc_r, type=4000, body=json.dumps({"Удалённое замечание": old_notice})).save()
+        slog.Log(key=str(self.number), user=doc_r, type=4000, body=json.dumps({"Удалённое замечание": old_notice})).save()
 
     def rstatus(self, check_not=False):
         """
@@ -204,7 +256,7 @@ class TubesRegistration(models.Model):
         """
         if self.barcode and self.barcode.isnumeric():
             return self.barcode
-        return self.id
+        return self.number
 
     def get_details(self):
         if not self.time_get or not self.doc_get:
@@ -359,6 +411,27 @@ class ExternalOrganization(models.Model):
         verbose_name_plural = 'Внешние организации'
 
 
+class RegisteredOrders(models.Model):
+    order_number = models.BigIntegerField(db_index=True, help_text='Номер заказа', blank=True, null=True, default=None)
+    organization = models.ForeignKey(Hospitals, on_delete=models.PROTECT, db_index=True)
+    services = ArrayField(models.CharField(max_length=255), help_text='Услуги заказа')
+    patient_card = models.ForeignKey(Clients.Card, db_index=True, on_delete=models.PROTECT)
+    file_name = models.CharField(max_length=255, db_index=True)
+    totally_completed = models.BooleanField(default=False, db_index=True, help_text='Все исследования по заказу завершены')
+    need_check_for_results_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление результатов')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.order_number} {self.patient_card}"
+
+    class Meta:
+        verbose_name = 'Внешний заказ направления'
+        verbose_name_plural = 'Внешние заказы направлений'
+
+    def get_registered_orders_by_file_name(self):
+        return RegisteredOrders.objects.values_list("id", flat=True).filter(file_name=self.file_name)
+
+
 class Napravleniya(models.Model):
     """
     Таблица направлений
@@ -427,6 +500,7 @@ class Napravleniya(models.Model):
     parent_slave_hosp = models.ForeignKey(
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
+    parent_case = models.ForeignKey('Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL)
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
@@ -445,6 +519,7 @@ class Napravleniya(models.Model):
     amd_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
+    amd_message = models.TextField(blank=True, null=True, default=None, help_text="Сообщение об ошибке АМД")
     purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация', on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
@@ -457,6 +532,7 @@ class Napravleniya(models.Model):
     qr_check_token = models.UUIDField(null=True, default=None, blank=True, unique=True, help_text='Токен для проверки результата по QR внешним сервисом')
     title_org_initiator = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Организация направитель')
     ogrn_org_initiator = models.CharField(max_length=13, default=None, blank=True, null=True, help_text='ОГРН организации направитель')
+    onkor_message_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='Onkor message id', db_index=True)
     n3_odli_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД ОДЛИ', db_index=True)
     n3_iemk_ok = models.BooleanField(default=False, blank=True, null=True)
     ecp_ok = models.BooleanField(default=False, blank=True, null=True)
@@ -467,13 +543,25 @@ class Napravleniya(models.Model):
     eds_total_signed_at = models.DateTimeField(help_text='Дата и время полного подписания', db_index=True, blank=True, default=None, null=True)
     co_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="doc_co_executor", db_index=True, help_text='Со-исполнитель', on_delete=models.SET_NULL)
     register_number = models.CharField(db_column='additional_number', max_length=24, blank=True, default='', help_text="Дополнительный номер при регистрации направления", db_index=True)
+    register_number_year = models.SmallIntegerField(blank=True, default=None, null=True, help_text="Год при регистрации направления", db_index=True)
     planed_doctor_executor = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="planed_doctor", db_index=True, help_text='Планируемый врач', on_delete=models.SET_NULL)
     total_confirmed = models.BooleanField(verbose_name='Результат полностью подтверждён', blank=True, default=False, db_index=True)
     last_confirmed_at = models.DateTimeField(help_text='Дата и время последнего подтверждения', db_index=True, blank=True, default=None, null=True)
     emdr_id = models.CharField(max_length=40, default=None, blank=True, null=True, help_text='ИД РЭМД', db_index=True)
     email_with_results_sent = models.BooleanField(verbose_name='Результаты отправлены на почту', blank=True, default=False, db_index=True)
+    celery_send_task_ids = ArrayField(models.CharField(max_length=64), default=list, blank=True, db_index=True)
+    external_order = models.ForeignKey(RegisteredOrders, default=None, blank=True, null=True, db_index=True, on_delete=models.PROTECT, help_text='Внешний заказ')
+    need_order_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление заказа')
+    order_redirection_number = models.CharField(max_length=24, default=None, blank=True, null=True, db_index=True, help_text='Номер перенаправленного заказа')
+    external_executor_hospital = models.ForeignKey(
+        Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
+    )
+    time_send_hl7 = models.DateTimeField(help_text='Дата и время отправки заказа', db_index=True, blank=True, default=None, null=True)
+    price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
+    cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
+    need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
 
-    def sync_confirmed_fields(self):
+    def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
         no_unconfirmed_iss = not Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=True).exists()
 
@@ -494,25 +582,33 @@ class Napravleniya(models.Model):
         if updated:
             self.save(update_fields=updated)
 
+        if not skip_post:
+            if self.is_all_confirm():
+                self.post_confirmation()
+            else:
+                self.post_reset_confirmation()
+
     def get_eds_title(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
 
         for i in iss:
             research: directory.Researches = i.research
-            if research.desc:
+            if research.desc or research.is_extract:
                 return research.title
         return 'Лабораторное исследование'
 
     def get_eds_generator(self):
         iss = Issledovaniya.objects.filter(napravleniye=self)
-
+        gen_name = 'Laboratory_min'
         for i in iss:
             research: directory.Researches = i.research
             if research.is_paraclinic:
-                return 'Instrumental'
-            if research.desc:
-                return research.generator_name
-        return 'Laboratory_min'
+                gen_name = 'Instrumental'
+            elif research.desc:
+                gen_name = research.generator_name
+            elif research.is_extract:
+                gen_name = 'DischargeSummary_min'
+        return gen_name
 
     def required_signatures(self, fast=False, need_save=False):
         if self.eds_total_signed or (fast and self.eds_required_documents and self.eds_required_signature_types):
@@ -692,6 +788,13 @@ class Napravleniya(models.Model):
     @property
     def visit_date_local(self):
         return localtime(self.visit_date)
+
+    @property
+    def services(self) -> List[directory.Researches]:
+        result = []
+        for iss in self.issledovaniya_set.all().order_by('research__title'):
+            result.append(iss.research)
+        return result
 
     def __str__(self):
         return "%d для пациента %s (врач %s, выписал %s, %s, %s, %s, par: [%s])" % (
@@ -952,11 +1055,16 @@ class Napravleniya(models.Model):
         parent_id=None,
         parent_auto_gen_id=None,
         parent_slave_hosp_id=None,
+        parent_case_id=None,
         rmis_slot=None,
         direction_purpose="NONE",
         external_organization="NONE",
         price_category=-1,
         hospital=-1,
+        external_order=None,
+        price_name_id=None,
+        slot_fact_id=None,
+        id_in_hospital=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -981,6 +1089,10 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
+        if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
+            price_name_id = price_name_obj.pk
+
         dir = Napravleniya(
             client=client,
             doc=doc if not for_rmis else None,
@@ -991,8 +1103,12 @@ class Napravleniya(models.Model):
             parent_id=parent_id,
             parent_auto_gen_id=parent_auto_gen_id,
             parent_slave_hosp_id=parent_slave_hosp_id,
+            parent_case_id=parent_case_id,
             rmis_slot_id=rmis_slot,
             hospital=doc.hospital or Hospitals.get_default_hospital(),
+            external_order=external_order,
+            price_name_id=price_name_id,
+            id_in_hospital=id_in_hospital,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1021,6 +1137,12 @@ class Napravleniya(models.Model):
         if save:
             dir.save()
         dir.set_polis()
+        if slot_fact_id:
+            from doctor_schedule.models import SlotFact
+
+            f = SlotFact.objects.get(pk=slot_fact_id)
+            f.direction = dir
+            f.save(update_fields=['direction'])
         return dir
 
     @staticmethod
@@ -1177,12 +1299,28 @@ class Napravleniya(models.Model):
         hospital_department_override=-1,
         hospital_override=-1,
         price_category=-1,
+        external_order: Optional[RegisteredOrders] = None,
+        services_by_additional_order_num=None,
+        price_name=None,
+        case_id=-2,
+        case_by_direction=False,
+        plan_start_date=None,
+        slot_fact_id=None,
+        id_in_hospital=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+        if case_id > -1 and case_by_direction:
+            iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
+            if iss:
+                case_id = iss.pk
+            else:
+                result["message"] = "Ошибка привязки к случаю"
+                return result
         if not Clients.Card.objects.filter(pk=client_id).exists():
             result["message"] = "Карта в базе не зарегистрирована, попробуйте выполнить поиск заново"
             return result
         pk_reseerches = []
+        issledovaniye_case_id = None
         for v in researches.values():
             pk_reseerches.extend(v)
         card = Clients.Card.objects.get(pk=client_id)
@@ -1259,10 +1397,14 @@ class Napravleniya(models.Model):
 
         ofname_id = ofname_id or -1
         ofname = None
-
+        auto_print_direction_research = []
+        control_actual_research_period = SettingManager.get("control_actual_research_period", default='false', default_type='b')
+        doctor_control_actual_research = False
         if client_id and researches:  # если client_id получен и исследования получены
             if ofname_id > -1:
                 ofname = umodels.DoctorProfile.objects.get(pk=ofname_id)
+            if control_actual_research_period and not doc_current.has_group("Безлимитное назначение услуг"):
+                doctor_control_actual_research = True
 
             no_attach = False
             conflict_list = []
@@ -1270,7 +1412,6 @@ class Napravleniya(models.Model):
             limit_research_to_assign = {}
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
-
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
@@ -1315,10 +1456,23 @@ class Napravleniya(models.Model):
                 # получить прайс
                 work_place_link = card.work_place_db
                 price_obj = IstochnikiFinansirovaniya.get_price_modifier(finsource, work_place_link)
-
+                if AUTO_PRINT_RESEARCH_DIRECTION:
+                    auto_print_direction_research = AUTO_PRINT_RESEARCH_DIRECTION.get("researches")
+                    repeat_research = list(set(res) & set(auto_print_direction_research))
+                    auto_print_direction_research = list(set(auto_print_direction_research) - set(repeat_research))
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
+                    filter = {
+                        "napravleniye__client__id": client_id,
+                        "research__pk": v,
+                    }
+                    last_iss = Issledovaniya.objects.filter(**filter, time_confirmation__isnull=False).order_by("-time_confirmation").first()
+                    if doctor_control_actual_research and research.actual_period_result > 0 and last_iss:
+                        delta = current_time() - last_iss.time_confirmation
+                        if delta.days <= research.actual_period_result:
+                            result["messageLimit"] = f" {result.get('messageLimit', '')} \n Срок действия {research.title} - {research.actual_period_result} дн."
+                            continue
                     if hospital_department_override == -1 and research.is_hospital:
                         if research.podrazdeleniye is None:
                             result["message"] = "Не указано отделение"
@@ -1330,16 +1484,23 @@ class Napravleniya(models.Model):
                         result["messageLimit"] = f"{result.get('messageLimit', '')} \n {limit_research_to_assign[v]}"
                         continue
 
-                    dir_group = -1
-                    if research.direction and external_organization == "NONE":
-                        dir_group = research.direction_id
-
-                    if v in only_lab_researches and external_organization != "NONE":
-                        dir_group = dir_group_onlylab
-
-                    research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
-                    if research_data_params:
+                    if external_order:
+                        dir_group = external_order.order_number
+                        research_data_params = None
+                    else:
                         dir_group = -1
+                        if research.direction and external_organization == "NONE":
+                            dir_group = research.direction_id
+
+                        if v in only_lab_researches and external_organization != "NONE":
+                            dir_group = dir_group_onlylab
+
+                        if research.plan_external_performing_organization:
+                            dir_group = research.plan_external_performing_organization_id + 900000
+
+                        research_data_params = direction_form_params.get(str(v), None) if direction_form_params else None
+                        if research_data_params:
+                            dir_group = -1
                     period_param_hour, period_param_day, period_param_month = None, None, None
                     period_param_quarter, period_param_halfyear, period_param_year, type_period = None, None, None, None
                     period_param_week_date_start, period_param_week_day_start, week_date_start_end = None, None, None
@@ -1387,6 +1548,39 @@ class Napravleniya(models.Model):
                             result["message"] = "Данный мониторинг уже создан"
                             return result
 
+                    if case_id > -2:
+                        if case_id == -1:
+                            napravleniye_case = Napravleniya.gen_napravleniye(
+                                client_id,
+                                doc_current if not for_rmis else None,
+                                finsource,
+                                diagnos,
+                                history_num,
+                                doc_current,
+                                ofname_id,
+                                ofname,
+                                for_rmis=for_rmis,
+                                rmis_data=rmis_data,
+                                parent_id=parent_iss,
+                                parent_auto_gen_id=parent_auto_gen,
+                                parent_slave_hosp_id=parent_slave_hosp,
+                                rmis_slot=rmis_slot,
+                                direction_purpose=direction_purpose,
+                                external_organization=external_organization,
+                                price_category=price_category,
+                                hospital=hospital_override,
+                                external_order=external_order,
+                                price_name_id=price_name,
+                                slot_fact_id=slot_fact_id,
+                                id_in_hospital=id_in_hospital,
+                            )
+                            research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
+                            issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
+                            issledovaniye_case.save()
+                            issledovaniye_case_id = issledovaniye_case.pk
+                        elif case_id > 0:
+                            issledovaniye_case_id = case_id
+
                     if (dir_group > -1 and dir_group not in directions_for_researches.keys()) or (dir_group == dir_group_onlylab and dir_group not in directions_for_researches.keys()):
                         directions_for_researches[dir_group] = Napravleniya.gen_napravleniye(
                             client_id,
@@ -1402,11 +1596,16 @@ class Napravleniya(models.Model):
                             parent_id=parent_iss,
                             parent_auto_gen_id=parent_auto_gen,
                             parent_slave_hosp_id=parent_slave_hosp,
+                            parent_case_id=issledovaniye_case_id,
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                             price_category=price_category,
                             hospital=hospital_override,
+                            external_order=external_order,
+                            price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
+                            id_in_hospital=id_in_hospital,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1430,11 +1629,16 @@ class Napravleniya(models.Model):
                             parent_id=parent_iss,
                             parent_auto_gen_id=parent_auto_gen,
                             parent_slave_hosp_id=parent_slave_hosp,
+                            parent_case_id=issledovaniye_case_id,
                             rmis_slot=rmis_slot,
                             direction_purpose=direction_purpose,
                             external_organization=external_organization,
                             price_category=price_category,
                             hospital=hospital_override,
+                            external_order=external_order,
+                            price_name_id=price_name,
+                            slot_fact_id=slot_fact_id,
+                            id_in_hospital=id_in_hospital,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1464,10 +1668,32 @@ class Napravleniya(models.Model):
 
                     if research_howmany == 1:
                         research_howmany = count
+                    ext_additional_num = None
+                    if services_by_additional_order_num:
+                        external_additional_order_number = services_by_additional_order_num[research.pk]
+                        ext_additional_num = ExternalAdditionalOrder.objects.filter(external_add_order=external_additional_order_number).first()
+                        if not ext_additional_num:
+                            ext_additional_num = ExternalAdditionalOrder.objects.create(external_add_order=external_additional_order_number)
+                            ext_additional_num.save()
 
                     issledovaniye = Issledovaniya(
-                        napravleniye=directions_for_researches[dir_group], research=research, coast=research_coast, discount=research_discount, how_many=research_howmany, deferred=False
+                        napravleniye=directions_for_researches[dir_group],
+                        research=research,
+                        coast=research_coast,
+                        discount=research_discount,
+                        how_many=research_howmany,
+                        deferred=False,
+                        external_add_order=ext_additional_num,
                     )
+
+                    if not directions_for_researches[dir_group].need_order_redirection and research.plan_external_performing_organization:
+                        directions_for_researches[dir_group].need_order_redirection = True
+                        directions_for_researches[dir_group].external_executor_hospital = research.plan_external_performing_organization
+                        directions_for_researches[dir_group].save(update_fields=["need_order_redirection", "external_executor_hospital"])
+                    elif not directions_for_researches[dir_group].need_order_redirection and NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL:
+                        directions_for_researches[dir_group].need_order_redirection = True
+                        directions_for_researches[dir_group].external_executor_hospital = Hospitals.objects.filter(is_default=True).first()
+                        directions_for_researches[dir_group].save(update_fields=["need_order_redirection", "external_executor_hospital"])
 
                     loc = ""
                     if str(research.pk) in localizations:
@@ -1521,10 +1747,23 @@ class Napravleniya(models.Model):
                         childrens[issledovaniye.pk][raa.reversed_type].append(raa.pk)
 
                     FrequencyOfUseResearches.inc(research, doc_current)
+
+                tube: Optional[TubesRegistration] = None
+
+                if external_order:
+                    research = directory.Researches.objects.get(pk=res[0])
+                    tube = TubesRegistration.make_external_tube(external_order.order_number, research)
+
+                v: Napravleniya
                 for k, v in directions_for_researches.items():
                     if Issledovaniya.objects.filter(napravleniye=v, research__need_vich_code=True).exists():
                         v.vich_code = vich_code
                         v.save()
+
+                    if tube:
+                        for iss in Issledovaniya.objects.filter(napravleniye=v):
+                            iss.tubes.add(tube)
+
                 result["r"] = True
                 slog.Log(
                     key=json.dumps(result["list_id"]),
@@ -1544,6 +1783,7 @@ class Napravleniya(models.Model):
                             "comments": comments,
                             "count": count,
                             "discount": discount,
+                            "external_order": external_order.order_number if external_order else None,
                         }
                     ),
                 ).save()
@@ -1590,6 +1830,41 @@ class Napravleniya(models.Model):
                     result_sorted[i.file_name_contract].append(i.napravleniye_id)
             for k, v in result_sorted.items():
                 create_contract(v, client_id)
+        if auto_print_direction_research:
+            month_ago = AUTO_PRINT_RESEARCH_DIRECTION.get("month_ago")
+            check_result = check_confirm_patient_research(client_id, tuple(auto_print_direction_research), month_ago)
+            check_result = [ch.research_id for ch in check_result]
+            check_result_research = list(set(auto_print_direction_research) - set(check_result))
+            check_direction = check_create_direction_patient_by_research(client_id, tuple(check_result_research), month_ago)
+            for ch_dir in check_direction:
+                check_result_research.remove(ch_dir.research_id)
+                result["list_id"].append(ch_dir.direction_id)
+            for research_dir in check_result_research:
+                new_direction = Napravleniya.gen_napravleniye(
+                    client_id,
+                    doc_current if not for_rmis else None,
+                    finsource,
+                    diagnos,
+                    history_num,
+                    doc_current,
+                    ofname_id,
+                    ofname,
+                    for_rmis=for_rmis,
+                    rmis_data=rmis_data,
+                    parent_id=parent_iss,
+                    parent_auto_gen_id=parent_auto_gen,
+                    parent_slave_hosp_id=parent_slave_hosp,
+                    rmis_slot=rmis_slot,
+                    direction_purpose=direction_purpose,
+                    external_organization=external_organization,
+                    price_category=price_category,
+                    hospital=hospital_override,
+                    slot_fact_id=slot_fact_id,
+                    id_in_hospital=id_in_hospital,
+                )
+                result["list_id"].append(new_direction.pk)
+                Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()
+
         return result
 
     def has_save(self):
@@ -1612,6 +1887,46 @@ class Napravleniya(models.Model):
         :return: True, если всё подтверждено
         """
         return all([x.time_confirmation is not None for x in Issledovaniya.objects.filter(napravleniye=self)])
+
+    def post_confirmation(self):
+        if SettingManager.l2("send_patients_email_results") and self.is_all_confirm() and self.client.send_to_email and self.client.email:
+            rt = SettingManager.get("lab_reset_confirm_time_min") * 60 + 1
+            task_id = str(uuid.uuid4())
+            send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
+            self.celery_send_task_ids = (self.celery_send_task_ids or []) + [task_id]
+            self.save(update_fields=['celery_send_task_ids'])
+            slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
+
+        if self.external_order:
+            totally_confirmed_all_directions_in_order = True
+
+            for direction in Napravleniya.objects.filter(external_order=self.external_order).exclude(pk=self.pk):
+                if not direction.is_all_confirm():
+                    totally_confirmed_all_directions_in_order = False
+                    break
+
+            if self.external_order.totally_completed != totally_confirmed_all_directions_in_order:
+                self.external_order.totally_completed = totally_confirmed_all_directions_in_order
+                self.external_order.save()
+
+        from results_feed.models import ResultFeed
+
+        ResultFeed.insert_feed_by_direction(self)
+
+    def post_reset_confirmation(self):
+        if self.celery_send_task_ids:
+            task_ids = self.celery_send_task_ids
+            celeryapp.control.revoke(task_ids, terminate=True)
+            self.celery_send_task_ids = []
+            self.save(update_fields=['celery_send_task_ids'])
+            slog.Log.log(key=self.pk, type=180003, body={"task_ids": task_ids})
+        if self.external_order and self.external_order.totally_completed:
+            self.external_order.totally_completed = False
+            self.external_order.need_check_for_results_redirection = False
+            self.external_order.save()
+
+        from results_feed.models import ResultFeed
+        ResultFeed.remove_feed_by_direction(self)
 
     def last_time_confirm(self):
         return Issledovaniya.objects.filter(napravleniye=self).order_by('-time_confirmation').values_list('time_confirmation', flat=True).first()
@@ -1673,11 +1988,6 @@ class Napravleniya(models.Model):
         return None if not self.doc.podrazdeleniye else self.doc.podrazdeleniye.rmis_department_title
 
     def get_attr(self):
-        """
-        Получает на входе объект Направление
-        возвращает словарь атрибутов направлению
-        :return:
-        """
         napr_data = {}
         ind_data = self.client.get_data_individual()
         napr_data['client_fio'] = ind_data['fio']
@@ -1737,9 +2047,11 @@ def get_direction_file_path(instance: 'DirectionDocument', filename):
 class DirectionDocument(models.Model):
     PDF = 'pdf'
     CDA = 'cda'
+    CPP = 'cpp'
     FILE_TYPES = (
         (PDF, PDF),
         (CDA, CDA),
+        (CPP, CPP),
     )
 
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направление")
@@ -1758,12 +2070,109 @@ class DirectionDocument(models.Model):
         verbose_name_plural = 'Документы направлений'
 
 
+class SignatureCertificateDetails(models.Model):
+    """
+    Детали сертификата подписи
+    """
+
+    thumbprint = models.CharField(max_length=44, verbose_name='Отпечаток сертификата', db_index=True, unique=True)
+    owner = models.CharField(max_length=256, verbose_name='Владелец сертификата')
+    valid_from = models.DateTimeField(verbose_name='Дата и время начала действия сертификата')
+    valid_to = models.DateTimeField(verbose_name='Дата и время окончания действия сертификата')
+    details_original = models.TextField(verbose_name='Исходные данные владельца сертификата')
+
+    def __str__(self) -> str:
+        return f"{self.thumbprint} — {self.owner}"
+
+    @staticmethod
+    def parse_details(details: Union[dict, str]) -> Optional[dict]:
+        if isinstance(details, str):
+            try:
+                parsed_details = json.loads(details)
+                if not isinstance(parsed_details, dict):
+                    parsed_details = None
+            except:
+                parsed_details = None
+        elif isinstance(details, dict):
+            parsed_details = details
+        else:
+            parsed_details = None
+
+        if not parsed_details or not parsed_details.get('subjectName') or not parsed_details.get('validFrom') or not parsed_details.get('validTo'):
+            return None
+
+        try:
+            sn = parsed_details["subjectName"]
+            name_parts = ["", ""]
+            sn = sn.split(",")
+            for s in sn:
+                if s.strip().startswith("SN="):
+                    name_parts[0] = s.strip()[3:]
+                elif s.strip().startswith("G="):
+                    name_parts[1] = s.strip()[2:]
+            name = " ".join(name_parts).strip()
+        except:
+            name = None
+
+        try:
+            valid_from = datetime.datetime.strptime(parsed_details['validFrom'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            valid_to = datetime.datetime.strptime(parsed_details['validTo'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        except:
+            valid_from = None
+            valid_to = None
+
+        if not name or not valid_from or not valid_to:
+            return None
+
+        return {
+            "owner": name,
+            "valid_from": valid_from,
+            "valid_to": valid_to,
+        }
+
+    @staticmethod
+    def get_or_update(thumbprint: str, details: str) -> Optional['SignatureCertificateDetails']:
+        cert_details = SignatureCertificateDetails.objects.filter(thumbprint=thumbprint).first()
+        if cert_details:
+            if cert_details.details_original != details:
+                parsed_details = SignatureCertificateDetails.parse_details(details)
+                if not parsed_details:
+                    return None
+
+                cert_details.details_original = details
+                cert_details.owner = parsed_details["owner"]
+                cert_details.valid_from = parsed_details["valid_from"]
+                cert_details.valid_to = parsed_details["valid_to"]
+
+                cert_details.save()
+            return cert_details
+
+        parsed_details = SignatureCertificateDetails.parse_details(details)
+        if not parsed_details:
+            return None
+
+        cert_details = SignatureCertificateDetails(
+            thumbprint=thumbprint,
+            owner=parsed_details["owner"],
+            valid_from=parsed_details["valid_from"],
+            valid_to=parsed_details["valid_to"],
+            details_original=details,
+        )
+        cert_details.save()
+        return cert_details
+
+    class Meta:
+        verbose_name = 'Детали сертификата подписи'
+        verbose_name_plural = 'Детали сертификатов подписи'
+
+
 class DocumentSign(models.Model):
     document = models.ForeignKey(DirectionDocument, on_delete=models.CASCADE, db_index=True, verbose_name="Документ")
     executor = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Исполнитель подписи', on_delete=models.CASCADE)
     signed_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время подписи")
     sign_type = models.CharField(max_length=32, db_index=True, verbose_name='Тип подписи')
     sign_value = models.TextField(verbose_name="Значение подписи")
+    sign_certificate = models.ForeignKey(SignatureCertificateDetails, on_delete=models.CASCADE, verbose_name="Сертификат подписи", blank=True, null=True, default=None)
 
     def __str__(self) -> str:
         return f"{self.document} — {self.sign_type} – {self.executor}"
@@ -1806,6 +2215,17 @@ class PersonContract(models.Model):
         pers_contract.save()
 
 
+class ExternalAdditionalOrder(models.Model):
+    external_add_order = models.CharField(max_length=255, db_index=True, blank=True, null=True, default=None, help_text='Внешний номер для услуги')
+
+    def __str__(self):
+        return f"{self.external_add_order}"
+
+    class Meta:
+        verbose_name = 'Внешний лабораторный номер заказа'
+        verbose_name_plural = 'Внешние лабораторные номера заказов'
+
+
 class Issledovaniya(models.Model):
     """
     Направления на исследования
@@ -1826,7 +2246,7 @@ class Issledovaniya(models.Model):
     executor_confirmation = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="executor_confirmation", db_index=True, help_text='Профиль оператора, заполнившего результат', on_delete=models.SET_NULL
     )
-    deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли иследование', db_index=True)
+    deferred = models.BooleanField(default=False, blank=True, help_text='Флаг, отложено ли исследование', db_index=True)
     comment = models.CharField(max_length=255, default="", blank=True, help_text='Комментарий (отображается на ёмкости)')
     lab_comment = models.TextField(default="", null=True, blank=True, help_text='Комментарий, оставленный лабораторией')
     api_app = models.ForeignKey(Application, null=True, blank=True, default=None, help_text='Приложение API, через которое результаты были сохранены', on_delete=models.SET_NULL)
@@ -1876,13 +2296,15 @@ class Issledovaniya(models.Model):
     gen_direction_with_research_after_confirm = models.ForeignKey(
         directory.Researches, related_name='research_after_confirm', null=True, blank=True, help_text='Авто назначаемое при подтверждении', on_delete=models.SET_NULL
     )
-    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязаных к стационарному случаю')
-    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязаных к стационарному случаю')
+    aggregate_lab = JSONField(null=True, blank=True, default=None, help_text='ID направлений лаборатории, привязанных к стационарному случаю')
+    aggregate_desc = JSONField(null=True, blank=True, default=None, help_text='ID направлений описательных, привязанных к стационарному случаю')
     microbiology_conclusion = models.TextField(default=None, null=True, blank=True, help_text='Заключение по микробиологии')
     hospital_department_override = models.ForeignKey(Podrazdeleniya, blank=True, null=True, default=None, help_text="Отделение стационара", on_delete=models.SET_NULL)
     doc_add_additional = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_add_additional", db_index=True, help_text='Профиль-добавил исполнитель дополнительные услуги', on_delete=models.SET_NULL
     )
+    external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
+    plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
 
     @property
     def time_save_local(self):
@@ -1945,7 +2367,7 @@ class Issledovaniya(models.Model):
         )
 
     def __str__(self):
-        return "%s %s" % (str(self.napravleniye), self.research.title)
+        return f"{self.pk} - {self.napravleniye.pk}-{self.napravleniye.client.get_fio_w_card()}"
 
     def is_get_material(self):
         """
@@ -2018,6 +2440,34 @@ class Issledovaniya(models.Model):
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'
+
+
+class NapravleniyaHL7LinkFiles(models.Model):
+    HL7_ORIG_ORDER = 'HL7_ORIG_ORDER'
+    HL7_FINISH_ORDER = 'HL7_FINISH_ORDER'
+    HL7_ORIG_RESULT = 'HL7_ORIG_RESULT'
+    FILE_TYPES = (
+        (HL7_ORIG_ORDER, HL7_ORIG_ORDER),
+        (HL7_FINISH_ORDER, HL7_FINISH_ORDER),
+        (HL7_ORIG_RESULT, HL7_ORIG_RESULT),
+    )
+
+    napravleniye = models.ForeignKey(Napravleniya, on_delete=models.CASCADE, db_index=True, verbose_name="Направления")
+    file_type = models.CharField(max_length=30, db_index=True, verbose_name="Тип файла")
+    upload_file = models.FileField(blank=True, null=True, default=None, max_length=255, verbose_name="Файл документа")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время записи")
+
+    def __str__(self) -> str:
+        return f"{self.napravleniye} — {self.file_type} – {self.created_at}"
+
+    def create_hl7_file_path(napravleniye_id, filename):
+        if not os.path.exists(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id))):
+            os.makedirs(os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id)))
+        return os.path.join(MEDIA_ROOT, 'hl7_files', str(napravleniye_id), filename)
+
+    class Meta:
+        verbose_name = 'HL7-файл'
+        verbose_name_plural = 'HL7-файлы'
 
 
 def get_file_path(instance: 'IssledovaniyaFiles', filename):
@@ -2387,7 +2837,7 @@ class ParaclinicResult(models.Model):
         previus_result = ParaclinicResult.anesthesia_value_get(iss_pk, field_pk)
         if previus_result:
             try:
-                previus_result = json.loads(previus_result)
+                previus_result = json.loads(previus_result.replace("'", '"'))
             except:
                 previus_result = None
         else:
@@ -2571,6 +3021,7 @@ class Result(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
     fraction = models.ForeignKey(directory.Fractions, help_text='Фракция из исследования', db_index=True, on_delete=models.CASCADE)
     value = models.TextField(null=True, blank=True, help_text='Значение')
+    comment = models.TextField(null=True, blank=True, help_text='Комментарий к значению')
     iteration = models.IntegerField(default=1, null=True, help_text='Итерация')
     is_normal = models.CharField(max_length=255, default="", null=True, blank=True, help_text="Это норма?")
     selected_reference = models.IntegerField(default=-2, blank=True, help_text="Выбранный референс")
@@ -2687,9 +3138,9 @@ class Result(models.Model):
             v = str(v).replace(" ", "")
             for j in range(1, 9):
                 for i in range(0, 12):
-                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10 ** i)))
+                    v = v.replace("%s*10<sup>%s</sup>" % (j, i), str(j * (10**i)))
             for i in range(0, 12):
-                v = v.replace("10<sup>%s</sup>" % str(i), str(10 ** i))
+                v = v.replace("10<sup>%s</sup>" % str(i), str(10**i))
             return v
 
         def val_normalize(v):
@@ -2936,27 +3387,100 @@ class DirectionsHistory(models.Model):
         return directions
 
 
+class GeneratorValuesAreOver(Exception):
+    pass
+
+
+class GeneratorOverlap(Exception):
+    pass
+
+
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
     PERINATAL_DEATH_FORM_NUMBER = 'deathPerinatalNumber'
+    TUBE_NUMBER = 'tubeNumber'
+    EXTERNAL_ORDER_NUMBER = 'externalOrderNumber'
 
     KEYS = (
         (DEATH_FORM_NUMBER, 'Номер свидетельства о смерти'),
         (PERINATAL_DEATH_FORM_NUMBER, 'Номер свидетельства о перинатальной смерти'),
+        (TUBE_NUMBER, 'Номер ёмкости биоматериала'),
+        (EXTERNAL_ORDER_NUMBER, 'Номер внешнего заказ для отправки'),
     )
 
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, db_index=True, verbose_name='Больница')
     key = models.CharField(choices=KEYS, max_length=128, db_index=True, verbose_name='Тип диапазона')
     year = models.IntegerField(verbose_name='Год', db_index=True)
     is_active = models.BooleanField(verbose_name='Активность диапазона', db_index=True)
-    start = models.PositiveIntegerField(verbose_name='Начало диапазона')
-    end = models.PositiveIntegerField(verbose_name='Конец диапазона')
-    last = models.PositiveIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
-    free_numbers = ArrayField(models.PositiveIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
+    start = models.PositiveBigIntegerField(verbose_name='Начало диапазона')
+    end = models.PositiveBigIntegerField(verbose_name='Конец диапазона', null=True, blank=True, default=None)
+    last = models.PositiveBigIntegerField(verbose_name='Последнее значение диапазона', null=True, blank=True)
+    free_numbers = ArrayField(models.PositiveBigIntegerField(verbose_name='Свободные номера'), default=list, blank=True)
     prepend_length = models.PositiveSmallIntegerField(verbose_name='Длина номера', help_text='Если номер короче, впереди будет добавлено недостающее кол-во "0"')
 
     def __str__(self):
         return f"{self.hospital} {self.key} {self.year} {self.is_active} {self.start} — {self.end} ({self.last})"
+
+    def get_min_last_value(self):
+        has_overlap = False
+        min_last_value = self.last if self.last else (self.start - 1)
+        has_free_number = False
+        if self.free_numbers:
+            min_last_orig = min_last_value
+            min_last_value = min(min_last_value, *self.free_numbers)
+            has_free_number = min_last_orig != min_last_value
+        if self.key == NumberGenerator.TUBE_NUMBER and self.end is None and not has_free_number:
+            includes_generators = (
+                NumberGenerator.objects.exclude(pk=self.pk)
+                .exclude(end__isnull=True)
+                .filter(key=NumberGenerator.TUBE_NUMBER, start__lte=min_last_value + 1, end__gte=min_last_value + 1)
+                .order_by('end')
+            )
+            for gen in includes_generators:
+                min_last_orig = min_last_value
+                min_last_value = max(min_last_value + 1, gen.end + 1)
+                if min_last_orig + 1 != min_last_value:
+                    has_overlap = True
+        return min_last_value, has_overlap
+
+    def get_next_value(self):
+        min_last_value, has_overlap = self.get_min_last_value()
+        if not self.last or self.last == min_last_value:
+            next_value = min_last_value + 1
+            if (self.end is not None or (not self.hospital.is_default)) and next_value > self.end:
+                raise GeneratorValuesAreOver('Значения генератора закончились')
+            self.last = next_value
+        else:
+            next_value = min_last_value
+            if has_overlap:
+                self.last = next_value
+        self.free_numbers = [x for x in self.free_numbers if x != next_value]
+        self.save(update_fields=['last', 'free_numbers'])
+
+        if self.key == NumberGenerator.TUBE_NUMBER and TubesRegistration.objects.filter(number=next_value).exists():
+            return self.get_next_value()
+
+        return next_value
+
+    def get_prepended_next_value(self):
+        next_value = self.get_next_value()
+        next_value = str(next_value).zfill(self.prepend_length)
+        return next_value
+
+    @staticmethod
+    def check_value_for_organization(organization: Hospitals, value: int):
+        generator = NumberGenerator.objects.filter(
+            key=NumberGenerator.TUBE_NUMBER,
+            hospital=organization,
+            is_active=True,
+            start__lte=value,
+            end__gte=value,
+        ).first()
+
+        if not generator:
+            return not organization.strict_tube_numbers
+
+        return generator.start <= value <= generator.end and not TubesRegistration.objects.filter(number=value).exists()
 
     class Meta:
         verbose_name = 'Диапазон номеров'

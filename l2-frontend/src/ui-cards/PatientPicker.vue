@@ -440,15 +440,29 @@
                 />
               </td>
             </tr>
-            <tr v-if="selected_card.medbookNumber">
+            <tr v-if="selected_card.medbookNumber || l2_harmful_factor">
               <td class="table-header-row">
                 Мед.книжка:
               </td>
               <td
                 class="table-content-row"
-                colspan="3"
               >
                 <strong>{{ selected_card.medbookNumber }}</strong>
+              </td>
+              <td
+                class="cl-td"
+                colspan="2"
+              >
+                <button
+                  v-tippy="{ placement: 'bottom', arrow: true }"
+                  class="btn last btn-blue-nb nbr"
+                  style="height: 31px; float: right"
+                  type="button"
+                  title="Факторы вредности"
+                  @click="open_harmful_factor()"
+                >
+                  <i class="fa fa-bolt" />
+                </button>
               </td>
             </tr>
             <tr v-if="!hasSnils">
@@ -609,6 +623,12 @@
       :card_data="selected_card"
       :readonly="false"
     />
+    <HarmfulFactor
+      v-if="harmful_factor"
+      :card_pk="selected_card.pk"
+      :card_data="selected_card"
+      :readonly="false"
+    />
     <AmbulatoryData
       v-if="ambulatory_data && selected_card.pk"
       :card_pk="selected_card.pk"
@@ -692,11 +712,11 @@ import Modal from '@/ui-cards/Modal.vue';
 import L2CardCreate from '@/modals/L2CardCreate.vue';
 import DReg from '@/modals/DReg.vue';
 import Benefit from '@/modals/Benefit.vue';
+import HarmfulFactor from '@/modals/HarmfulFactor.vue';
 import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
 import Vaccine from '@/modals/Vaccine.vue';
 import AmbulatoryData from '@/modals/AmbulatoryData.vue';
-import { sendEvent } from '@/metrics';
 
 const tfomsRe = /^([А-яЁё-]+) ([А-яЁё-]+)( ([А-яЁё-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$/;
 
@@ -709,6 +729,7 @@ export default {
     L2CardCreate,
     DReg,
     Benefit,
+    HarmfulFactor,
     AmbulatoryData,
   },
   props: {
@@ -766,6 +787,8 @@ export default {
       },
       dreg: false,
       benefit: false,
+      harmful_factor: false,
+      template_editor: false,
       vaccine: false,
       suggests: {
         focused: -1,
@@ -821,6 +844,9 @@ export default {
     },
     l2_benefit() {
       return this.$store.getters.modules.l2_benefit;
+    },
+    l2_harmful_factor() {
+      return this.$store.getters.modules.l2_harmful_factor;
     },
     force_rmis_search() {
       return Boolean(this.$store.getters.modules.l2_force_rmis_search);
@@ -1009,6 +1035,12 @@ export default {
     this.$root.$on('hide_benefit', () => {
       this.benefit = false;
     });
+    this.$root.$on('hide_harmful_factor', () => {
+      this.harmful_factor = false;
+    });
+    this.$root.$on('hide_template_editor', () => {
+      this.template_editor = false;
+    });
     this.$root.$on('hide_vaccine', () => {
       this.vaccine = false;
     });
@@ -1106,19 +1138,12 @@ export default {
     },
     select_suggest(i) {
       this.founded_cards = this.suggests.data;
-      sendEvent('patient-picker:search-select-suggest', {
-        query: this.normalized_query,
-        suggestsCount: this.suggests.data.length,
-      });
       window.$('input').each(function () {
         window.$(this).trigger('blur');
       });
       this.select_card(i);
     },
     clear_input() {
-      sendEvent('patient-picker:search-clear-input', {
-        query: this.normalized_query,
-      });
       this.query = '';
       window.$(this.$refs.q).focus();
     },
@@ -1170,9 +1195,6 @@ export default {
           this.$store.dispatch(actions.DEC_LOADING);
           this.anamnesis = true;
         });
-      sendEvent('patient-picker:open-anamnesis', {
-        card_pk: this.selected_card.pk,
-      });
     },
     hide_modal_anamnesis() {
       if (this.$refs.modalAnamnesis) {
@@ -1180,30 +1202,21 @@ export default {
       }
       this.anamnesis_data = {};
       this.anamnesis = false;
-      sendEvent('patient-picker:hide-modal-anamnesis', {
-        card_pk: this.selected_card.pk,
-      });
     },
     an_tab(tab) {
       this.an_state.tab = tab;
     },
     open_dreg() {
       this.dreg = true;
-      sendEvent('patient-picker:open-dreg', {
-        card_pk: this.selected_card.pk,
-      });
     },
     open_vaccine() {
       this.vaccine = true;
-      sendEvent('patient-picker:open-vaccine', {
-        card_pk: this.selected_card.pk,
-      });
     },
     open_benefit() {
       this.benefit = true;
-      sendEvent('patient-picker:open-benefit', {
-        card_pk: this.selected_card.pk,
-      });
+    },
+    open_harmful_factor() {
+      this.harmful_factor = true;
     },
     open_ambulatory_data() {
       this.ambulatory_data = true;
@@ -1214,10 +1227,6 @@ export default {
       } else {
         this.editor_pk = this.selected_card.pk;
       }
-      sendEvent('patient-picker:open-editor', {
-        card_pk: this.selected_card.pk,
-        editor_pk: this.editor_pk,
-      });
     },
     format_number(a) {
       if (a.length === 6) {
@@ -1290,9 +1299,6 @@ export default {
       this.suggests.loading = false;
       this.suggests.data = [];
       this.selected_card = this.founded_cards[index];
-      sendEvent('patient-picker:select-card', {
-        card_pk: this.selected_card.pk,
-      });
       if (this.selected_card.base_pk) {
         if (this.base && this.base !== this.selected_card.base_pk) {
           this.query = '';
@@ -1329,6 +1335,8 @@ export default {
         const openEdit = params.get('open_edit') === 'true';
         const ofname = params.get('ofname');
         const ofnameDep = params.get('ofname_dep');
+        const q = params.get('q');
+
         if (rmisUid) {
           window.history.pushState('', '', window.location.href.split('?')[0]);
           let hasInternal = false;
@@ -1376,6 +1384,21 @@ export default {
             this.search_after_loading = true;
             this.open_edit_after_loading = openEdit;
           }
+        } else if (q) {
+          window.history.pushState('', '', window.location.href.split('?')[0]);
+
+          for (const b of this.bases) {
+            if (b.internal_type) {
+              this.base = b.pk;
+              break;
+            }
+          }
+
+          if (this.base === -1) {
+            this.base = this.bases[0].pk;
+          }
+          this.query = q;
+          this.search_after_loading = true;
         } else {
           this.base = this.bases[0].pk;
         }
@@ -1465,10 +1488,6 @@ export default {
         window.$(this).trigger('blur');
       });
       this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Поиск карты' });
-      sendEvent('patient-picker:search', {
-        query: q,
-        base: this.selected_base,
-      });
       patientsPoint
         .searchCard({
           type: this.base,
@@ -1480,11 +1499,6 @@ export default {
         .then((result) => {
           this.clear();
           if (result.results) {
-            sendEvent('patient-picker:search:success', {
-              query: q,
-              base: this.selected_base,
-              resultsCount: result.results.length,
-            });
             this.founded_cards = result.results;
             if (this.founded_cards.length > 1) {
               this.showModal = true;

@@ -6,6 +6,7 @@
     >
       <div
         class="panel panel-flt"
+        :class="{'ignore-body': ignoreBody}"
         :style="{
           minWidth,
           maxWidth,
@@ -39,7 +40,7 @@
         >
           <div
             class="panel-body"
-            :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }"
+            :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true', 'ignore-body': ignoreBody }"
           >
             <slot name="body">
               default body
@@ -49,7 +50,7 @@
         <div
           v-else
           class="panel-body"
-          :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true' }"
+          :class="{ white_bg: whiteBg === 'true', overflowUnset: overflowUnset === 'true', 'ignore-body': ignoreBody }"
         >
           <slot name="body">
             default body
@@ -126,6 +127,11 @@ export default {
       type: Number,
       required: false,
       default: null,
+    },
+    ignoreBody: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 };

@@ -24,6 +24,8 @@ const updateWIA = creator({ url: 'patients/individuals/update-wia' }, {});
 
 const syncRmis = creator({ url: 'patients/individuals/sync-rmis' }, {});
 
+const syncEcp = creator({ url: 'patients/individuals/sync-ecp' }, {});
+
 const syncTfoms = creator({ url: 'patients/individuals/sync-tfoms' }, {});
 
 const loadVaccine = creator({ url: 'patients/individuals/load-vaccine' }, {});
@@ -57,6 +59,7 @@ export default {
   searchIndividual,
   searchL2Card,
   syncRmis,
+  syncEcp,
   syncTfoms,
   getCard,
   sendCard,

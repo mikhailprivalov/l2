@@ -29,7 +29,7 @@
               <div class="input-group">
                 <input
                   id="create-title"
-                  v-model="editElementTitle"
+                  v-model.trim="editElementTitle"
                   class="form-control"
                   :placeholder="`${searchTypesObject}: введите название`"
                 >
@@ -79,6 +79,7 @@
 
         <button
           class="btn btn-blue-nb sidebar-footer"
+          :disabled="!editElementTitle"
           @click="save_element"
         >
           Сохранить
@@ -148,7 +149,7 @@
 
         <div class="input-group">
           <input
-            v-model="newgroup"
+            v-model.trim="newgroup"
             class="form-control"
             :placeholder="`Добавить: ${searchTypesGroups}`"
           >
@@ -156,7 +157,8 @@
             <button
               v-tippy="{ placement : 'bottom' }"
               class="btn btn-default btn-primary-nb"
-              :title="`Соханить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`"
+              :title="`Сохранить в &#171;${searchTypesGroups.toUpperCase().trim()}&#187;`"
+              :disabled="!newgroup"
               @click="addNewGroup"
             >
               <i class="fa fa-floppy-o" />
@@ -195,7 +197,7 @@
                 v-if="selected2.title !== 'Все'"
                 v-tippy="{ placement : 'bottom'}"
                 class="btn btn-blue-nb sidebar-btn"
-                title="Удалть из Набора"
+                title="Удалить из набора"
                 @click="delFromlistSetsElements(element)"
               >
                 <i class="fa fa-times" />
@@ -279,7 +281,6 @@ export default {
       typesObject: [
         'Бактерии',
         'Антибиотики',
-        'Бактериофаги',
       ],
       typesGroups: ['Группы'],
       searchTypesObject: 'Бактерии',

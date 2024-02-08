@@ -826,6 +826,7 @@ def statistic_research_death_base(ws1, d1, d2, research_titile):
         ('ОКПО', 16),
         ('ОКАТО', 16),
         ('Экспертиза', 35),
+        ('Основания определения', 35),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -909,6 +910,7 @@ def statistic_research_death_base_card(ws1, d1, d2, research_titile):
         ('ОКПО', 16),
         ('ОКАТО', 16),
         ('Экспертиза', 35),
+        ('Основания определения', 35),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -1007,8 +1009,11 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
                 is_dict = False
         if not is_dict:
             place_death_details = "-"
-
-        ws1.cell(row=r, column=26).value = place_death_details
+        try:
+            title_pace_death = place_death_details.get("address")
+        except:
+            title_pace_death = place_death_details
+        ws1.cell(row=r, column=26).value = title_pace_death
         # Название стационара
         ws1.cell(row=r, column=27).value = i.get("МО", "")
         # ДТП
@@ -1028,6 +1033,10 @@ def statistic_research_death_data(ws1, researches, expertise_final_data):
         if expertise_final_data.get(i.get('issledovaniye_id', ""), ""):
             experise = expertise_final_data.get(i.get('issledovaniye_id', ""), "")
         ws1.cell(row=r, column=34).value = experise
+        base_death = i["Основания для определения причины смерти"]
+        type_worker = i["Тип медицинского работника"]
+        ws1.cell(row=r, column=35).value = base_death.get("title", "-")
+        ws1.cell(row=r, column=36).value = type_worker.get("title", "-")
 
         rows = ws1[f'A{r}:AH{r}']
         for row in rows:
@@ -1147,6 +1156,10 @@ def statistic_research_death_data_card(ws1, researches):
         ws1.cell(row=r, column=31).value = type_where_death
         ws1.cell(row=r, column=32).value = i["hosp_okpo"]
         ws1.cell(row=r, column=33).value = i["hosp_okato"]
+        base_death = i["Основания для определения причины смерти"]
+        type_worker = i["Тип медицинского работника"]
+        ws1.cell(row=r, column=35).value = base_death.get("title", "-")
+        ws1.cell(row=r, column=36).value = type_worker.get("title", "-")
 
         rows = ws1[f'A{r}:AG{r}']
         for row in rows:

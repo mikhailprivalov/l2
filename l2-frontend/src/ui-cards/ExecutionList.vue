@@ -20,7 +20,7 @@
         margin-left-right="auto"
         @close="open = false"
       >
-        <span slot="header">Создание листа исполения</span>
+        <span slot="header">Создание листа исполнения</span>
         <div slot="body">
           <div class="filters">
             <div class="date-filter">

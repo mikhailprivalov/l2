@@ -32,7 +32,7 @@ from laboratory.utils import strfdatetime
 
 def form_01(request_data):
     """
-    форма Пасопрт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
+    Форма Паспорт здоровья Приказ Министерства здравоохранения и социального развития РФ от 12 апреля 2011 г. N 302н
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])
     patient_data = ind_card.get_data_individual()
@@ -359,7 +359,7 @@ def form_02(request_data):
     """
     Форма 025/у - титульный лист амбулаторной карты
     Приказ Минздрава России от 15.12.2014 N 834н (ред. от 09.01.2018)
-    http://docs.cntd.ru/document/436733768) Об утверждении критериев оценки качества медицинской помощи
+    http://docs.cntd.ru/document/436733768 Об утверждении критериев оценки качества медицинской помощи
     ПРИКАЗ Минздрава России от 10 мая 2017 года N 203н https://minjust.consultant.ru/documents/35361
     """
     ind_card = Card.objects.get(pk=request_data["card_pk"])

@@ -40,7 +40,7 @@ import VueApexCharts from 'vue-apexcharts';
 
 import stationarPoint from '@/api/stationar-point';
 
-const charts = ['Температура (°C)', 'Пульс (уд/с)', 'Давление'];
+const charts = ['Температура (°C)', 'Пульс (уд/м)', 'Давление'];
 
 const mergeData = {
   'Систолическое давление (мм рт.с)': 'Давление',

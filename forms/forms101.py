@@ -541,7 +541,10 @@ def form_03(request_data):
 
     date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
     objs.append(Spacer(1, 5 * mm))
-    objs.append(Paragraph('{} г.'.format(date_now), style))
+    if not request_data.get("disable_date"):
+        objs.append(Paragraph(f'{date_now} г.', style))
+    else:
+        objs.append(Spacer(1, 3 * mm))
     objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
     objs.append(Paragraph('(дата оформления)', styleBottom))
 
@@ -561,7 +564,7 @@ def form_03(request_data):
 
 def form_04(request_date):
     """
-    отказ от медицинского вмешательства в отношении определенных видов медицинских вмешательств
+    Отказ от медицинского вмешательства в отношении определенных видов медицинских вмешательств
     --------------------------------------------------------------------------------------------------------------
     Приказ Министерства здравоохранения РФ от 20 декабря 2012 г. N 1177н
     "Об утверждении порядка дачи информированного добровольного согласия на медицинское вмешательство и
@@ -3589,9 +3592,6 @@ def form_15(request_data):
     elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
         who_patient = 'ребёнка'
 
-    patient_status = ''
-    patient_status_creative_case = ''
-    patient_status_genitive_case = ''
     if agent_status:
         person_data = p_agent.get_data_individual()
         patient_status = 'представляемому'
@@ -4230,6 +4230,2596 @@ def form_11(request_data):
         canvas.restoreState()
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_17(request_data):
+    """
+    Согласие на проведение МРТ
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+        patient_status = 'представляемому'
+        patient_status_genitive_case = 'представляемого'
+        patient_status_pronoun_genitive_case = 'его'
+        patient_status_nominative_case = 'представляемый'
+        patient_signature = f"<font face='Symbola'>\u2713</font>Подпись законного представителя пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
+    else:
+        person_data = patient_data
+        patient_status = 'мне'
+        patient_status_genitive_case = 'меня'
+        patient_status_pronoun_genitive_case = 'моего'
+        patient_status_nominative_case = 'я'
+        patient_signature = f"<font face='Symbola'>\u2713</font>Подпись пациента<u>{17 * ' &nbsp;'}</u> /<u>{person_data['fio']}</u>"
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на проведение МРТ')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 10
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+
+    objs = []
+    space = 2.5 * mm
+
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА ПРОВЕДЕНИЕ МАГНИТНО-РЕЗОНАНСНОЙ ТОМОГРАФИИ (ОПРОСНОЙ ЛИСТ)</b>', style=styleHeader))
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Paragraph(f'{patient_status} назначена магнитно-резонансная томография (МРТ)', style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(указать область, вид исследования)', styleCenterMin))
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            '<b>Я подтверждаю, что мне в доступной и понятной форме разъяснены особенности исследования, абсолютные и относительные противопоказания, а также наличие '
+            'возможного риска при проведении исследования</b>',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            f'<b>Я подтверждаю отсутствие у {patient_status_genitive_case} в теле любых металлических инородных тел, кардиостимулятора, ферромагнитных имплантов (протезы '
+            'внутреннего уха, тазобедренного сустава, клипсы на кровеносных сосудах и т.д.), отсутствие беременности и подтверждаю свое согласие на выполнение мне '
+            'исследования МРТ</b>',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>ПРИ НАЛИЧИИ МЕТАЛЛИЧЕСКИХ ИМПЛАНТОВ:</b>', styleLeft))
+    objs.append(Paragraph('(вопрос о возможности проведения исследования решается в индивидуальном порядке врачом кабинета на основании представленной медицинской документации)', style))
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            f'Что {patient_status} установлены следующие импланты (указать тип – стент, клипса, фиксирующая конструкция, кава-фильтр, клапан и т.д.), дату установки и '
+            'наличие паспорта на имплант:',
+            style,
+        )
+    )
+    opinion = [
+        [Paragraph('1.', style), Paragraph('', style)],
+        [Paragraph('2.', style), Paragraph('', style)],
+    ]
+    tbl = Table(opinion, colWidths=[3.5 * mm, 186.5 * mm], hAlign='LEFT')
+    table_style = [('VALIGN', (0, 0), (-1, -1), 'MIDDLE'), ('RIGHTPADDING', (0, 0), (-1, -1), 0), ('LEFTPADDING', (0, 0), (-1, -1), 0), ('LINEBELOW', (1, 0), (-1, -1), 0.5, colors.black)]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+    objs.append(
+        Paragraph(
+            'В случае отсутствия документации на установленные импланты, либо отсутствия в представленной документации сведений о безопасности проведения МРТ с данным '
+            f'имплантом я понимаю, что назначенное {patient_status} исследование не безопасно, т.к. установленные импланты могут сместиться под воздействием магнитного поля  '
+            'и/или нагреться под воздействием радиочастотных импульсов. Я подтверждаю, что мне в доступной и понятной форме разъяснены последствия опасные для '
+            f'{patient_status_pronoun_genitive_case } здоровья и жизни, связанные с выполнением данного исследования, и я полностью осознаю, что целиком и полностью '
+            'принимаю на себя всю ответственность за возникновение возможных осложнений и подтверждаю выполнение мне исследования МРТ.',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'<b>В случае возникновения у {patient_status_genitive_case} осложнений после проведения исследования, претензий к учреждению иметь не буду.</b>', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
+    objs.append(Paragraph('(Подпись ставится при наличии металлического импланта)', styleCenterMin))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>ПРИ ПРОВЕДЕНИИ МРТ С КОНТРАСТНЫМ УСИЛЕНИЕМ:</b>', styleLeft))
+    objs.append(
+        Paragraph(
+            'Контрастные вещества считают достаточно безопасными, но могут возникать редкие реакции, которые проявляются тошнотой, рвотой, чиханием, сыпью на коже. У '
+            'некоторых пациентов риск появления осложнений значительно выше, к ним относятся:',
+            style,
+        )
+    )
+    objs.append(Paragraph('Лица, которые ранее имели осложнения при введении контрастного препарата;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с аллергическими реакциями, особенно страдающие бронхиальной астмой;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с тяжелыми заболеваниями сердца, почек;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с эпилепсией, либо с повышенной судорожной готовностью;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты принимающие В-адреноблокаторы;', style=style, bulletText='•'))
+    objs.append(Paragraph('Пациенты с анемиями, гемоглобинопатией, печеночной недостаточностью.', style=style, bulletText='•'))
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            'Абсолютными противопоказаниями к в/в введению контрастного препарата являются: Почечная недостаточность со скоростью клубочковой фильтрацией менее 30мл/мин и '
+            'состояние после трансплантации печени.',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'<b>Я уведомлен, что если {patient_status_nominative_case} отношусь к одной из вышеперечисленных категорий, мне необходимо сообщить об этом врачу.</b>', style))
+    objs.append(
+        Paragraph('<b>Я подтверждаю, что мне в доступной и понятной форме разъяснены особенности исследования, а также наличие возможного риска при проведении контрастирования.</b>', style)
+    )
+    objs.append(Paragraph('<b>Я подтверждаю, выполнение мне МРТ исследования с контрастным веществом</b>', style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(указать область, вид исследования)', styleCenterMin))
+    objs.append(
+        Paragraph(
+            f'<b>и даю согласие на проведение необходимых лечебных медицинских мероприятий в случае возникновения у {patient_status_genitive_case} осложнений при проведении '
+            'исследования.</b>',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph('<b>Для уточнения состояния пациента, наличия противопоказаний к проведению МРТ, просим внимательно ознакомиться с анкетой и ответить на поставленные вопросы:</b>', style)
+    )
+    objs.append(Spacer(1, space))
+    questions = [
+        'Проходили ли Вы ранее МРТ исследование?',
+        'Подвергались ли Вы операциям?',
+        'У Вас когда либо были ранения глаза и/или тела металлическим объектом (металлические осколки, стружка, инородные тела и т.п.)?',
+        'Есть ли у Вас клаустрофобия (боязнь замкнутого пространства)?',
+        'Есть ли у Вас анемия или другие заболевания крови?',
+        'Имеете ли Вы диагноз «Эпилепсия» , «Инфаркт», «Инсульт», «Хроническая сердечная недостаточность»?',
+        'Были у Вас (или есть) онкологические заболевания?',
+        'Проходите( или проходили ранее) Вы химиотерапию, лучевую терапию?',
+        'Были ли у Вас заболевания почек, астма или аллергические реакции на какие-либо вещества?',
+        'Была ли у Вас когда либо реакция на контрастный препарат, применяемый при МРТ или МСКТ?',
+        'Беременны ли Вы или подозреваете беременность? Кормите ли Вы грудью?',
+        'Принимаете ли Вы оральные контрацептивные препараты, проходили ли Вы гормональное лечение?',
+        'Состоите ли Вы на учете у психиатра, психоневролога, нарколога?',
+    ]
+    opinion = create_questions_list(questions, styleCenter, style)
+
+    tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('Укажите, есть ли у Вас что либо из нижеперечисленного:', style))
+    objs.append(Spacer(1, space))
+
+    questions = [
+        'Водитель сердечного ритма (кардиостимулятор), протез сердечного клапана',
+        'Имплантированный нейростимулятор',
+        'Сосудистые клипсы любой локализации',
+        'Имплантированный инсулиновый насос',
+        'Металлическое устройство фиксации шеи и/или позвоночника',
+        'Слуховой аппарат, ушной протез',
+        'Любой тип внутрисосудистых фильтров, сеток и т.п.',
+        'Протез орбиты/глаза',
+        'Любой тип хирургического клипа (скрепки)',
+        'Внутрижелудочковый шунт',
+        'Любой имплантированный металлический объект (спица, шуруп, пластина, штифт, стент, проволока и т.п.',
+        'Зубные протезы',
+        'Внутриматочные средства',
+        'Татуировка тела, перманентный макияж глаз/губ, дермальные пластыри',
+    ]
+    opinion = create_questions_list(questions, styleCenter, style)
+
+    tbl = Table(opinion, colWidths=[160 * mm, 15 * mm, 15 * mm], hAlign='LEFT')
+    table_style = [
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]
+    tbl.setStyle(table_style)
+    objs.append(tbl)
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('<b>Если было отмечено хотя бы одно «ДА», МР-исследование может быть противопоказано.</b>', style))
+
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            f'Я даю согласие {hospital_name} на обработку биометрических персональных данных – томограмм, проколов (далее ПД), путем сбора, записи, систематизации, '
+            f'накопления, хранения, уточнения (обновления, изменения) извлечения, использования, передачи любых других действий. {hospital_name} в праве обрабатывать '
+            'предоставленные архивные данные как посредством хранения документов и иных материалов на бумажных носителях, так и посредством включения их в учетные '
+            'системы/электронные базы (путем смешанной обработки).',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            f'Настоящее согласие выдано без ограничения срока действия с правом отзыва в любое время путем направления мной в адрес {hospital_name} соответствующего письменного заявления.',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph(f'{patient_signature}', styleCenter))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def create_questions_list(questions, styleCenter, style):
+    opinion = [
+        [Paragraph('Вопросы', styleCenter), Paragraph('Да', styleCenter), Paragraph('Нет', styleCenter)],
+    ]
+    questions_data = [[Paragraph(i, style), Paragraph('', style), Paragraph('', style)] for i in questions]
+    opinion.extend(questions_data)
+    return opinion
+
+
+def form_18(request_data):
+    """
+    Согласие на мед. вмешательство
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+        patient_status = 'представляемому'
+        patient_status_genitive_case = 'представляемого'
+        patient_status_creative_case = 'представляемым'
+        patient_status_pronoun_genitive_case = 'его'
+    else:
+        person_data = patient_data
+        patient_status = 'мне'
+        patient_status_genitive_case = 'меня'
+        patient_status_creative_case = 'мною'
+        patient_status_pronoun_genitive_case = 'моего'
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 9
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+    styleCenterMin.leading = 10
+    styleCenterMin.spaceAfter = 0 * mm
+
+    styleRightMin = deepcopy(styleCenterMin)
+    styleRightMin.alignment = TA_RIGHT
+
+    objs = []
+    space = 3 * mm
+
+    objs.append(Paragraph('Приложение 1 к приказу №130 от 26.06.23', style=styleRightMin))
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО</b>', style=styleHeader))
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            f'- Мне согласно моей воли даны полные и всесторонние разъяснения о характере, степени тяжести и возможных осложнениях {patient_status_pronoun_genitive_case} заболевания',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'- Я ознакомлен(а) с распорядком и правилами лечебно-охранительного режима, установленного в <b>{hospital_name}</b>, и обязуюсь их соблюдать;', style))
+    objs.append(Paragraph(f'- Добровольно даю свое согласие на проведение {patient_status}, в соответствии с назначениями врача:', style))
+    objs.append(Paragraph('1. Опрос (жалобы, анамнез), объективное обследование', style))
+    objs.append(Paragraph('2. Осмотр узкими специалистами (включая неинвазивные методы диагностики)', style))
+    objs.append(Paragraph('3. Лабораторные методы исследования, в том числе в сторонних организациях на основе заключенных договоров.', style))
+    objs.append(Paragraph('4. Функциональные методы исследования.', style))
+    objs.append(Paragraph('5. Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура), введение лекарственных препаратов', style))
+    objs.append(Paragraph('6. Рентгенологические методы исследования', style))
+    objs.append(Paragraph('Необходимость других методов обследования и лечения будет мне разъяснена дополнительно;', style))
+    objs.append(
+        Paragraph(
+            '- Я информирован(а) о целях, характере и неблагоприятных эффектах диагностических и лечебных процедур, возможности непреднамеренного причинения вреда здоровью, а '
+            f'также о том, что предстоит делать {patient_status} во время их проведения;',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'- Я осознаю что {patient_status} необходимо следовать назначениям (рекомендациям) врача', style))
+    objs.append(Paragraph('- Я осознаю что отказ от назначенного обследования и лечения могут осложнить процесс лечения и отрицательно сказаться на состоянии здоровья', style))
+    objs.append(
+        Paragraph(
+            '- Я поставил(а) в известность врача обо всех проблемах, связанных со здоровьем, в том числе об аллергических проявлениях или индивидуальной непереносимости '
+            f'лекарственных препаратов, обо всех перенесенных {patient_status_creative_case} и известных мне травмах, операциях, заболеваниях, об  вредных факторах, воздействующих на '
+            f'{patient_status_genitive_case} во время жизнедеятельности, о принимаемых лекарственных средствах, о наследственности, а также об употреблении алкоголя, наркотических и '
+            'токсических средств;',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Cогласен(на)/Не согласен(на) на осмотр другими медицинскими работниками и студентами медицинских вузов и колледжей исключительно в медицинских, научных или обучающих целях с '
+            'учетом сохранения врачебной тайны;',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '- Я согласен(а) и разрешаю врачу/ Не согласен(на) в случае необходимости, опубликовать информацию о моем лечении в научных и образовательных целях, в сопровождении иллюстраций '
+            'и описательных текстов, при условии сохранения врачебной тайны и персональных данных; ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '- Разрешаю в случае необходимости осуществлять обмен  данными о пациенте (медицинскими данными) с другими медицинскими организациями, НИИ, медицинскими ВУЗАМИ и СУЗАми. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Ознакомлен(а) и согласен(на) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты, и добровольно даю свое согласие на '
+            f'обследование и лечение {patient_status_genitive_case} в предложенном объеме; ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '- Разрешаю, в случае необходимости, предоставить информацию о диагнозе, степени тяжести и характере заболевания моим родственникам, законным представителям и следующим '
+            'гражданам:',
+            style,
+        )
+    )
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('- Разрешаю посещение в лечебном учреждении представляемого ребенка следующим гражданам: ', style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Spacer(1, 2 * space))
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.fontSize = 8
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_19(request_data):
+    """
+    Отказ от медицинского вмешательства
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Отказ от медицинского вмешательства')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+    styleCenterMin.leading = 10
+    styleCenterMin.spaceAfter = 0 * mm
+
+    objs = []
+    space = 3.5 * mm
+
+    objs.append(Paragraph('<b>ОТКАЗ ОТ МЕДИЦИНСКОГО ВМЕШАТЕЛЬСТВА</b>', style=styleHeader))
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            f'при оказании мне (представляемому лицу) медицинской помощи в {hospital_name} отказываюсь от следующих видов медицинских вмешательств, включенных в Перечень '
+            'определенных видов медицинских вмешательств, на которые граждане дают информированное добровольное согласие ',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    opinion = [
+        [
+            Paragraph('<b>Медицинское вмешательство</b>', styleCenter),
+            Paragraph('<b>Отметка</b>', styleCenter),
+            Paragraph('<b>Медицинское вмешательство</b>', styleCenter),
+            Paragraph('<b>Отметка</b>', styleCenter),
+        ],
+        [
+            Paragraph('Опрос, субъективное обследование (жалобы, анамнез)', style),
+            Paragraph('', style),
+            Paragraph('Рентгенологические методы обследования', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('Осмотр, в том числе объективное обследование (пальпация, перкуссия, аускультация, определение ЧСС, ЧДД, антропометрия, термометрия, пульсометрия)', style),
+            Paragraph('', style),
+            Paragraph('Эндоскопические методы исследования', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('Осмотр узкими специалистами (включая неинвазивные методы диагностики)', style),
+            Paragraph('', style),
+            Paragraph('Танатологическое исследование', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph(
+                'Лабораторные методы исследования (химико-микроскопические, гематологические, цитологические, биохимические, коагулотические, иммунологические, микробиологические, '
+                'молекулярно-генетические, микробиологические, химико-токсикологические), в том числе в сторонних организациях на основе заключенных договоров.',
+                style,
+            ),
+            Paragraph('', style),
+            Paragraph('Телемедицина', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('Функциональные методы исследования.', style),
+            Paragraph('', style),
+            Paragraph('Профилактическая санация полости рта', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура). ', style),
+            Paragraph('', style),
+            Paragraph('Гемотрансфузионная терапия', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('Введение лекарственных препаратов (внутрь, наружно, ингаляционно, парентерально) ', style),
+            Paragraph('', style),
+            Paragraph('Анестезиологическое пособие (в том числе местное обезболивание)', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Оперативное вмешательство', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Диализ', styleLeft),
+            Paragraph('', style),
+        ],
+        [
+            Paragraph('', style),
+            Paragraph('', style),
+            Paragraph('Применения препаратов “off label USE”- Вне инструкции ', styleLeft),
+            Paragraph('', style),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=[73 * mm, 22 * mm, 73 * mm, 22 * mm], hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('SPAN', (0, 7), (0, -1)),
+                ('SPAN', (1, 7), (1, -1)),
+            ]
+        )
+    )
+    objs.append(tbl)
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph("Медицинским работником:", style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(должность, фамилия, имя, отчество (при наличии) медицинского работника)', styleCenterMin))
+    objs.append(
+        Paragraph(
+            'в доступной для меня форме мне разъяснены возможные последствия отказа от вышеуказанных видов медицинских вмешательств, в том числе вероятность развития '
+            'осложнений заболевания (состояния) ',
+            style,
+        )
+    )
+    objs.append(PageBreak())
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(
+        Paragraph(
+            '(указываются возможные последствия отказа от вышеуказанного (вышеуказанных) вида (видов) медицинского вмешательства, в том числе вероятность развития осложнений '
+            'заболевания (состояния))',
+            styleCenterMin,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Мне разъяснено, что при возникновении необходимости в осуществлении одного или нескольких видов медицинских вмешательств, в отношении которых оформлен настоящий '
+            'отказ, я имею право оформить информированное добровольное согласие на такой (такие) вид (виды) медицинского вмешательства.',
+            style,
+        )
+    )
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.fontSize = 8
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_20(request_data):
+    """
+    Согласие на мед. вмешательство (кт)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (кт)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+    styleCenterMin.leading = 10
+    styleCenterMin.spaceAfter = 0 * mm
+
+    objs = []
+    space = 3.5 * mm
+
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (КОМПЬЮТЕРНАЯ ТОМОГРАФИЯ)</b>', style=styleHeader))
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, space))
+
+    objs.append(
+        Paragraph(
+            'на основании статьи 20 Федерального закона №323-ФЗ от 21.11.2011г. «Об основах охраны здоровья граждан в РФ», даю информированное добровольное согласие на '
+            'проведение компьютерной томографии:',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '1. Я в полной мере проинформирован(а) о порядке проведения и содержании всех необходимых диагностических мероприятий, о том, что метод является '
+            'рентгенологическим и связан с облучением.',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '2. Я в полной мере проинформирован(а) о характере предстоящих исследований, связанном с ними риском и возможном развитии неприятных ощущений, осложнений и '
+            'последствий: 1) аллергических реакциях при введении контрастного вещества; 2) возможной клаустрофобии.',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph('3. Я проинформирован(а) о строгих противопоказаниях к исследованию с контрастным усилением: наличие аллергической реакция на йод, йодсодержащие и др. препараты. ', style)
+    )
+    objs.append(Paragraph('4. Я проинформирован(а) об альтернативных данному виду методах диагностики. Я предупрежден(а) о последствиях отказа от предлагаемого метода исследования.', style))
+    objs.append(
+        Paragraph(
+            '5. Мне разъяснено, что в ходе выполнения исследования, может возникнуть необходимость расширения объема диагностических мероприятий. Я доверяю врачам '
+            f'{hospital_name} выполнять все необходимые действия, которые врач-рентгенолог сочтет необходимым для проведения исследования.',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '6. Я предоставил(а) врачу-рентгенологу все известные мне данные о состоянии своего (или лица, законным представителем которого я являюсь) здоровья, а также всю '
+            'известную мне информацию о проблемах, связанных с моим здоровьем (или лица, законным представителем которого я являюсь), в том числе об аллергических проявлениях '
+            'или индивидуальной непереносимости лекарственных препаратов, о беременности (для женщин), обо всех перенесенных мною (лицом, законным представителем которого я '
+            'являюсь) и известных мне травмах, операциях, заболеваниях, об экологических и производственных факторах физической, химической или биологической природы, '
+            'воздействующих на меня (на лицо, законным представителем которого я являюсь) во время жизнедеятельности, о принимаемых лекарственных средствах и указал данную '
+            'информацию в медицинской документации.',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '7. Я согласен(а) на возможное введение контрастного препарата и отрицаю наличие у себя следующих заболеваний: бронхиальная астма; тяжелые заболевания печени '
+            'и/или почек сопровождающиеся печеночной и/или почечной недостаточностью; поливалентную лекарственную аллергию, аллергическую реакцию на йод и йодсодержащие '
+            'препараты.',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '8. Я имел(а) возможность задать все интересующие меня вопросы. Мне даны исчерпывающие ответы на все заданные мной вопросы. Я ознакомлен(а) и согласен(а) со всеми '
+            'пунктами настоящего документа.',
+            style,
+        )
+    )
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('Аллергические реакции:', style))
+    objs.append(Spacer(1, space))
+    objs.append(Paragraph('Беременность:', style))
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.fontSize = 8
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_21(request_data):
+    """
+    Согласие на мед. вмешательство (эндоскопия)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (эндоскопия, узи)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 10
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 13
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+    styleCenterMin.leading = 10
+    styleCenterMin.spaceAfter = 0 * mm
+
+    objs = []
+    space = 3.5 * mm
+
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (ЭНДОСКОПИЧЕСКОЕ ВМЕШАТЕЛЬСТВО, УЛЬТРАЗВУКОВОЕ ИССЛЕДОВАНИЕ)</b>', style=styleHeader))
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, space))
+
+    objs.append(Paragraph('информирован лечащим врачом', style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(Ф.И.О. лечащего врача)', styleCenterMin))
+    objs.append(Paragraph('о назначенном мне (представляемому мной лицу) эндоскопическом вмешательстве, включающего взятие биопсии в необходимом объеме', style))
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Paragraph('(название эндоскопического вмешательства)', styleCenterMin))
+    objs.append(
+        Paragraph('Подтверждаю, что я ознакомлен (ознакомлена) с характером, особенностями и ходом предстоящего мне (представляемому мной лицу) эндоскопического вмешательства', style)
+    )
+    objs.append(
+        Paragraph(
+            'Мне разъяснено, и я осознаю, что во время операции могут возникнуть непредвиденные обстоятельства и осложнения. В таком случае я согласен (согласна) на то, что '
+            'ход операции может быть изменен врачами по их усмотрению. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я предупрежден (предупреждена) и понимаю, что проведение эндоскопического вмешательства сопряжено с рисками непреднамеренного причинения вреда здоровью и даже '
+            'летального исхода. <b>Основными возможными непреднамеренными осложнениями эндоскопического вмешательства являются: разрыв стенки полого органа, отсроченная '
+            'перфорация полого органа вследствие хронического нарушения кровообращения органа, кровотечение, в т.ч. отсроченное; образование гематом, повреждение близлежащих '
+            'органов и тканей; тромбоэмболические осложнения; аллергические реакции и в т.ч. анафилактический шок, ретроградная амнезия; обострение сопутствующей хронической '
+            'патологии, в т.ч. сердечно-сосудистых заболеваний.</b> ',
+            style,
+        )
+    )
+    objs.append(Paragraph('Я предупрежден (предупреждена), что при развитии осложнений может потребоваться проведение операции, и даю свое согласие на это.', style))
+    objs.append(
+        Paragraph(
+            'Я признаю право врача прерывать исследование в случае, если в ходе исследования будет выявлена невозможность продолжения исследования по физиологическим или '
+            'анатомическим причинам, а также факторы, которые могут повлечь за собой осложнения или другие негативные последствия для пациента; выявления объективных, не '
+            'зависящих от воли врача и пациента обстоятельств. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я поставил (поставила) в известность врача обо всех проблемах, связанных со здоровьем, в том числе об аллергических проявлениях или индивидуальной '
+            'непереносимости лекарственных препаратов, обо всех перенесенных мною (представляемым) и известных мне травмах, операциях, заболеваниях, в т.ч. носительстве '
+            'ВИЧ-инфекции, вирусных гепатитах, туберкулезе, инфекциях, передаваемых половым путем, об экологических и производственных факторах физической, химической или '
+            'биологической природы, воздействующих на меня (представляемого) во время жизнедеятельности, принимаемых лекарственных средствах, проводившихся ранее переливаниях '
+            'крови и ее компонентов. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Сообщил (сообщила) правдивые сведения о наследственности, а также об употреблении алкоголя, наркотических и токсических средств. Я признаю свою ответственность в '
+            'случае умышленного сокрытия данной информации от медицинского учреждения и врачей. Я согласен (согласна) на запись хода операции на информационные носители и '
+            'демонстрацию лицам с медицинским образованием исключительно в медицинских, научных или обучающих целях с учетом сохранения врачебной тайны. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Мне была предоставлена возможность задать все интересующие меня вопросы о степени риска и пользе оперативного вмешательства, и врач дал понятные мне ' 'исчерпывающие ответы. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я согласен (согласна) добросовестно сотрудничать с лечащим врачом по вопросам, связанным с оказанием мне медицинской помощи, выполнять рекомендации и немедленно '
+            'сообщать ему о любого рода изменениях моего самочувствия. ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я ознакомлен (ознакомлена) и согласен (согласна) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты и добровольно даю свое '
+            'согласие на эндоскопическое вмешательство, включающее взятие биопсии в необходимом объеме: ',
+            style,
+        )
+    )
+    objs.append(PageBreak())
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.fontSize = 8
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_22(request_data):
+    """
+    Согласие на рентгенологическое исследование
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на рентгенологическое исследование')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на медицинское вмешательство (рентгенологическое исследование)', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_fio_person = '(Ф.И.О .гражданина, контактный телефон)'
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('информирован врачом_________________________________________________________________ ', style=styleLeft))
+    objs.append(Paragraph(f'{16 * space_symbol} {48 * space_symbol} {sign_fio_doc}', styleBottom))
+    objs.append(Paragraph('о назначенном мне (представляемому мной лицу) рентгенологического исследования, ', style=styleLeft))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} {48 * space_symbol} (название исследования)', styleBottom))
+
+    objs.append(Paragraph('Я проинформирован(а) о сущности данного исследования и о том, что оно сопровождается рентгеновским излучением.', style=styleLeft))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('Я также информирован(а) о лучевой нагрузке (дозе), которую я (представляемое мной лицо) получу(чит) в процессе исследования', style=styleLeft))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('Я проинформирован(а) об альтернативных данному виду методах диагностики (КТ, МРТ) и преимуществах данного исследования.', style=styleLeft))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(
+        Paragraph(
+            'Для женщин: Я подтверждаю, что на момент исследования не имею беременности, так как информирована о вредном воздействии рентгеновского излучения на развитие ' 'плода.',
+            style=styleLeft,
+        )
+    )
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('Содержание настоящего документа мною прочитано, разъяснено мне сотрудниками Клиники.', style=styleLeft))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('Мое решение провести исследование является свободным и добровольным, что я удостоверяю своей подписью.', style=styleLeft))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{73 * space_symbol} {sign_fio_person}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_23(request_data):
+    """
+    Согласие на телемедицинских консультаций
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на телемедицинских консультаций')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на проведение телемедицинских консультаций (дистанционной врачебной консультации)', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(
+        Paragraph(
+            'настоящим подтверждаю, что в соответствии со ст.19 Федерального закона № 323-ФЗ «Об основах охраны здоровья граждан в Российской Федерации», согласно моей воли, '
+            'в доступной для меня форме, проинформирован(а) о необходимости проведения дистанционной консультации по поводу болезни несовершеннолетнего',
+            style=styleLeft,
+        )
+    )
+    objs.append(Paragraph(patient_data['fio'], styleFCenter))
+    objs.append(
+        Paragraph(
+            'добровольно, без принуждения, даю согласие на передачу данных о состоянии здоровья представляемого мною несовершеннолетнего, результатов обследования и лечения, '
+            'изображений, полученных в результате диагностических исследований врачами-специалистами областного государственного автономного учреждения здравоохранения '
+            '«Городская Ивано-Матренинская детская клиническая больница», где получаю медицинскую помощь в настоящее время, врачам-специалистам федеральных национальных '
+            'медицинских исследовательских центров и других федеральных, а также областных медицинских учреждений, с целью проведения телемедицинских консультаций посредствам '
+            'медицинской информационной системы для проведения медицинской консультации с применением телемедицинских технологий (дистанционно).',
+            style=style,
+        )
+    )
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(
+        Paragraph(
+            'Я получил(а) полные и всесторонние разъяснения, включая исчерпывающие ответы на заданные мной вопросы об условиях, целях и задачах проведения телемедицинской ' 'консультации.',
+            style=style,
+        )
+    )
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(
+        Paragraph(
+            'Я добровольно, в соответствии со ст. 20 Федерального закона от 21.11.2011 № 323-ФЗ «Об основах охраны здоровья граждан в Российской Федерации», даю свое согласие '
+            'на проведение представляемому мной лицу телемедицинской консультации специалистами федеральных национальных медицинских исследовательских центров и других '
+            'федеральных медицинских учреждений.',
+            style=style,
+        )
+    )
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Я понимаю необходимость проведения телемедицинской консультации, проинформирован(а) о рисках и пользе телемедицинской консультации.', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(
+        Paragraph(
+            'Я осознаю, что полученные в результате телемедицинской консультации заключения будут иметь рекомендательный характер, и что дальнейшее ведение случая моей '
+            'болезни будет осуществляться по решениям лечащего врача.',
+            style=style,
+        )
+    )
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Я не возражаю против передачи данных о болезни, записи телемедицинской консультации на электронные носители и демонстрации лицам с медицинским образованием – '
+                          'исключительно в медицинских, научных или обучающих целях с учетом сохранения врачебной тайны.', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Я разрешаю высылать результаты анализов и иную документацию, содержащую персональные данные в т.ч. данные, отнесенные к врачебной тайне в адрес ОГАУЗ ГИМДКБ для '
+                          'оказания медицинских услуг (в виде сканированного изображения соответствующего бланка).', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Подписывая данное согласие, я проинформирован о том, что электронная почта является открытым источником информации и не защищается ОГАУЗ ГИМДКБ. Я уведомлен и '
+                          'согласен, что за взлом почтового ящика и утечку информации ОГАУЗ ГИМДКБ ответственности не несет.', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Я удостоверяю, что текст информированного согласия на телемедицинскую консультацию мною прочитан, мне понятно назначение данного документа, полученные '
+                          'разъяснения понятны и меня удовлетворяют.', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_24(request_data):
+    """
+    Согласие на трансфузии (переливания)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerifReg', normal='PTAstraSerifReg', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на трансфузии (переливания)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на трансфузию (переливание) донорской крови и (или) ее компонентов или на отказ от трансфузии (переливания) донорской крови '
+                          'и (или) ее компонентов', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('настоящим подтверждаю то, что проинформирован(а)', style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} {48 * space_symbol} {sign_fio_doc}', styleBottom))
+    objs.append(Paragraph('а) о том, что трансфузия -это переливание донорской крови и (или) ее компонентов реципиенту в лечебных целя;', style=style))
+    objs.append(Paragraph('б) о необходимости проведения трансфузии (переливания) донорской крови и (или) ее компонентов и о <b>наличии | отсутствии</b> возможности назначения лекарственных'
+                          ' препаратов в целях коррекции патологических состояний (анемии, нарушения свертываемости крови) в качестве возможной альтернативы трансфузиям (переливаниям) '
+                          'донорской крови и (или) ее компонентов;', style=style))
+    objs.append(Paragraph('в) о целях и методах проведения трансфузии (переливания) донорской крови и (или) ее компонентов;', style=style))
+    objs.append(Paragraph('г) о возможных реакциях и осложнениях, возникающих у реципиентов в связи с трансфузией (переливанием) донорской крови и (или) ее компонентов, таких как',
+                          style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('д) о необходимости обязательного медицинского осмотра и обследования для определения медицинских показаний к трансфузии (переливанию) крови и (или) ее '
+                          'компонентов;', style=style))
+    objs.append(Paragraph('е) о проведении необходимых исследований и проб на индивидуальную совместимость перед трансфузией (переливанием) донорской крови и (или) ее компонентов;',
+                          style=style))
+    objs.append(Paragraph('ж) о выполнении предписаний медицинских работников;', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Я имел(а) возможность задавать любые вопросы и на все вопросы получил(а) исчерпывающие ответы.Получив полную информацию о необходимости проведения трансфузии '
+                          '(переливания) донорской крови и (или) ее компонентов, возможных реакциях и осложнениях, возникающих у реципиентов в связи с трансфузией (переливанием) донорской '
+                          'крови и (или) ее компонентов, я, нижеподписавшийся(аяся', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('<b>соглашаюсь на |  отказываюсь от</b> ', style=styleFCenter))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph('проведение(я) трансфузии (переливания) донорской крови и (или) ее компонентов.', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_25(request_data):
+    """
+    Согласие на почечной терапии
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на почечной терапии')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на проведение заместительной почечной терапии', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('даю информированное добровольное согласие на вид медицинского вмешательства', style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('в доступной для меня форме мне разъяснены:', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('- цели оказания медицинской помощи', style=style))
+    objs.append(Paragraph('- методы оказания медицинской помощи', style=style))
+    objs.append(Paragraph('- связанный с методами риск', style=style))
+    objs.append(Paragraph('- возможные варианты медицинских вмешательств', style=style))
+    objs.append(Paragraph('- предполагаемые результаты оказания медицинской помощи', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Мне разъяснено, что я имею право отказаться от медицинского вмешательства или потребовать его прекращения, за исключением случаев, предусмотренных частью 9 '
+                          'статьи 20 Федерального закона от 21 ноября 2011 года N 323-ФЗ "Об основах охраны здоровья граждан в Российской Федерации".', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Мне предоставлена возможность задать интересующие меня вопросы по поводу целей, методов, рисков, возможных вариантов и предполагаемых результатов медицинского '
+                          'вмешательства.', style=style))
+    objs.append(Spacer(1, 1 * mm))
+    objs.append(Paragraph('Медицинским работником даны ответы на дополнительно возникшие у меня вопросы, в том числе разъяснено:', style=style))
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+
+    objs.append(Paragraph('Сведения о выбранных мною лицах, которым в соответствии с пунктом 5 части 5 статьи 19 Федерального закона от 21 ноября 2011 года N 323-ФЗ "Об основах охраны '
+                          'здоровья граждан в Российской Федерации" может быть передана информация о состоянии моего здоровья или состоянии лица, законным представителем которого я '
+                          'являюсь ', style=style))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_26(request_data):
+    """
+    Согласие на челюстно-лицевой области (в том числе полости рта)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на челюстно-лицевой области (в том числе полости рта)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное добровольное согласие на медицинское вмешательство челюстно-лицевой области (в том числе полости рта)', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    sign_fio_doc = '(Ф.И.О. медицинского работника)'
+    space_symbol = '&nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('даю информированное добровольное согласие на вид медицинского вмешательства', style=style))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(
+        'Мне объяснен в понятной форме план стоматологического обследования, лечения, включая ожидаемые результаты, риск, пути альтернативного лечения, возможные при существующей ситуации '
+        'и данных обстоятельствах, также необходимые исследования, врачебные процедуры и манипуляции, связанные с этим. Альтернативные пути лечения обдуманы мною до принятия решения о виде'
+        ' лечения.',
+        style=style))
+    objs.append(Paragraph('Мне объяснены возможные сопутствующие явления планируемого лечения: длительность, боль, неудобство, припухлость лица, чувствительность к холоду и теплу, синяки '
+                          'на лице, под глазами, шее, долго не проходящее онемение губ, щек, подбородка. Я осведомлен(а) о возможных осложнениях во время анестезии или после ее '
+                          'проведения.', style=style))
+    objs.append(Paragraph('Я предупрежден(а) о риске возможных реакций и осложнений, которые могут возникнуть в результате применения лекарственных препаратов.', style=style))
+    objs.append(
+        Paragraph(
+            'Я предоставил(а) врачу точную историю моего физического и психического здоровья/ здоровья лица, законным представителем которого я являюсь. Мне ясна вся важность передачи '
+            'точной и достоверной информации о состоянии здоровья, а также необходимость выполнения всех полученных от врача указаний, касающихся проведения консервативного лечения, '
+            'которое будет необходимо, рентгенологического контроля и визитов в указанные сроки.',
+            style=style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'В случае возникновения осложнений, требующих дополнительного вмешательства, я даю согласие на оказание медицинских услуг в том объеме, который определит лечащий врач.',
+            style=style,
+        )
+    )
+    objs.append(Paragraph('Я даю разрешение привлекать для оказания стоматологических услуг любого медицинского работника, участие которого в моем лечении будет необходимо.', style=style))
+    objs.append(Paragraph('Я проинформировал(а) лечащего врача обо всех случаях аллергии к медикаментозным препаратам в прошлом и об аллергии в настоящее время.', style=style))
+    objs.append(
+        Paragraph('Я согласен(а) на применение местной анестезии, а также осведомлен(а) о возможных осложнениях во время местной анестезии и при приеме лекарственных средств.', style=style)
+    )
+    objs.append(
+        Paragraph(
+            'Мне разъяснено, что применение местной анестезии может привести к аллергическим реакциям организма на медикаментозные препараты, обмороку, коллапсу, шоку, '
+            'травматизации нервных окончаний и сосудов, проявляющимися потерей чувствительности, невритами, невралгиями и постинъекционными гематомами.',
+            style=style,
+        )
+    )
+    objs.append(Paragraph('Я информирован(а) также об основных преимуществах, сложностях и риске инъекционной анестезии, включая вероятность осложнений.', style=style))
+    objs.append(
+        Paragraph('При этом я информирован(а), что в ряде конкретных случаев медицинское вмешательство без анестезии невозможно. Альтернативой является отказ от лечения', style=style)
+    )
+    objs.append(
+        Paragraph(
+            'Я согласен(а) на проведение медицинской фото- и видеосъемки при условии сохранения врачебной тайны и персональных данных. Я согласен(а) и разрешаю врачу, в случае '
+            'необходимости, опубликовать информацию о моем лечении в научных и образовательных целях, в сопровождении иллюстраций и описательных текстов, при условии сохранения '
+            'врачебной тайны и персональных данных.',
+            style=style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я имел(а) возможность задать все интересующие меня вопросы и получил(а) ответы. Я получил(а) все рекомендации, касающиеся профессиональной гигиены полости рта. '
+            'Я информирован(а) о рекомендациях по уходу за полостью рта.',
+            style=style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я удостоверяю, что текст мною прочитан, полученные объяснения меня полностью удовлетворяют, мне понятно назначение данного документа. Мне также разъяснили значение системы '
+            'нумерации зубов, всех терминов и слов, упомянутых в данном документе и имеющих отношение к лечению.',
+            style=style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Я внимательно ознакомился(лась) с данным документом и понимаю, что он является юридическим и влечет за собой все правовые последствия. При подписании данного согласия '
+            'на меня не оказывалось никакого внешнего давления. У меня была и остаётся возможность либо отказаться от процедуры, либо дать свое согласие.',
+            style=style,
+        )
+    )
+    objs.append(Paragraph('Я проинформировал(а) лечащего врача обо всех случаях аллергии к медикаментозным препаратам в прошлом и об аллергии в настоящее время.', style=style))
+    objs.append(
+        Paragraph('Я согласен(а) на применение местной анестезии, а также осведомлен(а) о возможных осложнениях во время местной анестезии и при приеме лекарственных средств.', style=style))
+    objs.append(Paragraph(
+        'Мне разъяснено, что применение местной анестезии может привести к аллергическим реакциям организма на медикаментозные препараты, обмороку, коллапсу, шоку, травматизации '
+        'нервных окончаний и сосудов, проявляющимися потерей чувствительности, невритами, невралгиями и постинъекционными гематомами.',
+        style=style))
+    objs.append(Paragraph('Я информирован(а) также об основных преимуществах, сложностях и риске инъекционной анестезии, включая вероятность осложнений.', style=style))
+    objs.append(
+        Paragraph('При этом я информирован(а), что в ряде конкретных случаев медицинское вмешательство без анестезии невозможно. Альтернативой является отказ от лечения.', style=style)
+    )
+    objs.append(
+        Paragraph(
+            'Сведения о выбранных мною лицах, которым в соответствии с пунктом 5 части 5 статьи 19 Федерального закона от 21 ноября 2011 года N 323-ФЗ "Об основах охраны здоровья граждан в '
+            'Российской Федерации" может быть передана информация о состоянии моего здоровья или состоянии лица, законным представителем которого я являюсь',
+            style=style,
+        )
+    )
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_symbol}', styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_fio_doc}', styleBottom))
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_27(request_data):
+    """
+    Согласие на передачу работодателю заключения по обязательному психиатрическому освидетельствованию
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=45, topMargin=20, bottomMargin=20, title='Согласие на челюстно-лицевой области (в том числе полости рта)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 12
+    style.alignment = TA_JUSTIFY
+    style.firstLineIndent = 15
+    styleLeft = deepcopy(style)
+    styleLeft.fontName = "PTAstraSerifReg"
+    styleLeft.fontSize = 12
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+    styleHeader = deepcopy(style)
+    styleHeader.fontName = "PTAstraSerifBold"
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+    styleFCenter = deepcopy(style)
+    styleFCenter.alignment = TA_CENTER
+    styleFCenterMin = deepcopy(styleFCenter)
+    styleFCenterMin.fontSize = 8
+    styleBottom = deepcopy(style)
+    styleBottom.fontSize = 8
+
+    objs = []
+
+    objs.append(Paragraph('Информированное согласие работника на передачу работодателю заключения по обязательному психиатрическому освидетельствованию', style=styleHeader))
+    objs.append(Spacer(1, 5 * mm))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    sign_patient_agent = '(Ф.И.О. гражданина или законного представителя гражданина)'
+    space_symbol = '&nbsp;'
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph('Даю согласие на отправление моему работодателю', style=style))
+    objs.append(Spacer(1, 6 * mm))
+    work_title, work_email, work_address = "", "", ""
+    if ind_card.work_place_db:
+        work_title = ind_card.work_place_db.title
+        work_email = ind_card.work_place_db.email
+        work_address = ind_card.work_place_db.legal_address
+
+    objs.append(Paragraph(f'{work_title} {work_address} {work_email}', style=style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph('наименование работодателя, адрес /электронная почта  работодателя', style=styleFCenterMin))
+    objs.append(Spacer(1, 6 * mm))
+    objs.append(Paragraph('«Заключения врачебной комиссии по обязательному психиатрическому освидетельствованию работников, осуществляющих отдельные виды деятельности»', style=style))
+    objs.append(Paragraph('от ________________(дата заключения )', style=style))
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(
+        Paragraph(
+            "которое я проходил в ОГАУЗ «ИГКБ №8» на бумажном носителе, письмом оператора российской государственной почтовой сети «Почта России» или представителю работодателя "
+            "(при предъявлении соответствующего документа) или в форме электронного документа с использованием усиленных квалифицированных электронных подписей всех членов врачебной "
+            "комиссии и его передача работодателю по защищенным каналам связи, исключающим возможность несанкционированного доступа к информации третьих лиц, и с соблюдением требований "
+            "законодательства Российской Федерации о защите персональных данных и врачебной тайны (при наличии технической возможности).",
+            style=style,
+        )
+    )
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleFCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'{16 * space_symbol} (подпись) {38 * space_symbol} {sign_patient_agent}', styleBottom))
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 3 * mm))
+    if not request_data.get("disable_date"):
+        objs.append(Paragraph(f'{date_now} г.', style))
+    else:
+        objs.append(Spacer(1, 3 * mm))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{8 * space_symbol}(дата оформления)', styleBottom))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_28(request_data):
+    """
+    Согласие на мед.вмешательство(травмпункт)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+        patient_status = 'представляемому'
+        patient_status_genitive_case = 'представляемого'
+        patient_status_creative_case = 'представляемым'
+        patient_status_pronoun_genitive_case = 'его'
+    else:
+        person_data = patient_data
+        patient_status = 'мне'
+        patient_status_genitive_case = 'меня'
+        patient_status_creative_case = 'мною'
+        patient_status_pronoun_genitive_case = 'моего'
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (травмпункт)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 11
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+    styleCenterMin.leading = 10
+    styleCenterMin.spaceAfter = 0 * mm
+
+    objs = []
+    space = 3 * mm
+
+    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (ТРАВМПУНКТ)</b>', style=styleHeader))
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            f'- Мне согласно моей воли даны полные и всесторонние разъяснения о характере, степени тяжести и возможных осложнениях {patient_status_pronoun_genitive_case} заболевания',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'- Я ознакомлен(а) с распорядком и правилами лечебно-охранительного режима, установленного в <b>{hospital_name}</b>, и обязуюсь их соблюдать;', style))
+    objs.append(Paragraph(f'- Добровольно даю свое согласие на проведение {patient_status}, в соответствии с назначениями врача:', style))
+    objs.append(Paragraph('1. Опрос (жалобы, анамнез), объективное обследование', style))
+    objs.append(Paragraph('2. Осмотр узкими специалистами (включая неинвазивные методы диагностики)', style))
+    objs.append(Paragraph('3. Лабораторные методы исследования, в том числе в сторонних организациях на основе заключенных договоров.', style))
+    objs.append(Paragraph('4. Функциональные методы исследования.', style))
+    objs.append(Paragraph('5. Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура), введение лекарственных препаратов', style))
+    objs.append(Paragraph('6. Диагностические и лечебные пункции, удаление инородных тел', style))
+    objs.append(Paragraph('7. Рентгенологические исследования костно-мышечной системы', style))
+    objs.append(Paragraph('8. Введение сывороток и вакцин', style))
+    objs.append(Paragraph('9. Мобилизация фиксирующими повязками', style))
+    objs.append(Paragraph('Необходимость других методов обследования и лечения будет мне разъяснена дополнительно;', style))
+    objs.append(
+        Paragraph(
+            '- Я информирован(а) о целях, характере и неблагоприятных эффектах диагностических и лечебных процедур, возможности непреднамеренного причинения вреда здоровью, а '
+            f'также о том, что предстоит делать {patient_status} во время их проведения;',
+            style,
+        )
+    )
+    objs.append(Paragraph(f'- Я осознаю что {patient_status} необходимо следовать назначениям (рекомендациям) врача', style))
+    objs.append(Paragraph('- Я осознаю что отказ от назначенного обследования и лечения могут осложнить процесс лечения и отрицательно сказаться на состоянии здоровья', style))
+    objs.append(
+        Paragraph(
+            '- Я поставил(а) в известность врача обо всех проблемах, связанных со здоровьем, в том числе об аллергических проявлениях или индивидуальной непереносимости '
+            f'лекарственных препаратов, обо всех перенесенных {patient_status_creative_case} и известных мне травмах, операциях, заболеваниях, об  вредных факторах, воздействующих на '
+            f'{patient_status_genitive_case} во время жизнедеятельности, о принимаемых лекарственных средствах, о наследственности, а также об употреблении алкоголя, наркотических и '
+            'токсических средств;',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Cогласен(на)/Не согласен(на) на осмотр другими медицинскими работниками и студентами медицинских вузов и колледжей исключительно в медицинских, научных или обучающих целях с '
+            'учетом сохранения врачебной тайны;',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Ознакомлен(а) и согласен(на) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты, и добровольно даю свое согласие на '
+            f'обследование и лечение {patient_status_genitive_case} в предложенном объеме; ',
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '- Разрешаю, в случае необходимости, предоставить информацию о диагнозе, степени тяжести и характере заболевания моим родственникам, законным представителям и следующим '
+            'гражданам:',
+            style,
+        )
+    )
+    objs.append(Spacer(1, 2 * space))
+    objs.append(HRFlowable(width=190 * mm, color=colors.black))
+    objs.append(Spacer(1, space))
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.fontSize = 8
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_29(request_data):
+    """
+    Согласие на мед.вмешательство (рентген, в т.ч с контрастом, эндоскопическое, кт)
+    """
+    ind_card = Card.objects.get(pk=request_data["card_pk"])
+    patient_data = ind_card.get_data_individual()
+    hospital: Hospitals = request_data["hospital"]
+    hospital_name = hospital.safe_short_title
+
+    agent_status = False
+    if ind_card.who_is_agent:
+        p_agent = getattr(ind_card, ind_card.who_is_agent)
+        agent_status = bool(p_agent)
+
+    # Если владельцу карты меньше 15 лет и не передан представитель, то вернуть ошибку
+    who_patient = 'пациента'
+    if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and not agent_status:
+        return False
+    elif patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i') and agent_status:
+        who_patient = 'ребёнка'
+
+    if agent_status:
+        person_data = p_agent.get_data_individual()
+    else:
+        person_data = patient_data
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerif', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFontFamily('PTAstraSerif', normal='PTAstraSerif', bold='PTAstraSerifBold')
+
+    buffer = BytesIO()
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=5 * mm, title='Согласие на мед. вмешательство (R, КТ, ЭНД)')
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerif"
+    style.fontSize = 11
+    style.alignment = TA_JUSTIFY
+
+    styleLeft = deepcopy(style)
+    styleLeft.firstLineIndent = 0
+    styleLeft.alignment = TA_LEFT
+
+    styleHeader = deepcopy(style)
+    styleHeader.fontSize = 14
+    styleHeader.leading = 14
+    styleHeader.alignment = TA_CENTER
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+
+    styleCenterMin = deepcopy(styleCenter)
+    styleCenterMin.fontSize = 8
+    styleCenterMin.leading = 10
+    styleCenterMin.spaceAfter = 0 * mm
+
+    styleRightMin = deepcopy(styleCenterMin)
+    styleRightMin.alignment = TA_RIGHT
+
+    objs = []
+    space = 3 * mm
+
+    objs.append(Paragraph('Приложение 1 к приказу №130 от 26.06.23', style=styleRightMin))
+    objs.append(
+        Paragraph(
+            '<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО (рентгенологические, в том числе с контрастированием, эндоскопические, компьютерная ' 'томография) </b>',
+            style=styleHeader,
+        )
+    )
+    objs.append(Spacer(1, space))
+
+    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
+    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
+    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
+    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
+    objs.append(
+        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
+    )
+    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+    objs.append(Spacer(1, 5))
+
+    if agent_status:
+        opinion = [
+            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
+            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
+            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
+            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
+        ]
+        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
+        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
+        else:
+            opinion.append(
+                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
+            )
+            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
+
+        objs.extend(opinion)
+
+    objs.append(Spacer(1, space))
+    objs.append(
+        Paragraph(
+            "На основании статьи 20 Федерального закона №323-ФЗ от 21.11.2011г. «Об основах охраны здоровья граждан в РФ», даю информированное добровольное согласие на "
+            "проведение компьютерной томографии:",
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            "1. Я в полной мере проинформирован(а) о порядке проведения и содержании всех необходимых диагностических мероприятий, о том, что ряд методов является "
+            "рентгенологическим и связан с облучением.",
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            "2. Я в полной мере проинформирован(а) о характере предстоящих исследований, связанном с ними риском и возможном развитии неприятных ощущений, осложнений и "
+            "последствий: 1) аллергических реакциях при введении контрастного вещества; 2) возможной клаустрофобии и др.",
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            "3. Я проинформирован(а) о строгих противопоказаниях к исследованию с контрастным усилением: наличие аллергической реакция на йод, йодсодержащие и др. " "препараты.", style
+        )
+    )
+    objs.append(Paragraph("4. Я проинформирован(а) об альтернативных данному виду методах диагностики. Я предупрежден(а) о последствиях отказа от предлагаемого метода исследования.", style))
+    objs.append(
+        Paragraph(
+            "5. Мне разъяснено, что в ходе выполнения исследования, может возникнуть необходимость расширения объема диагностических мероприятий. Я доверяю врачам "
+            f"{hospital_name} выполнять все необходимые действия, которые врач, выполняющий обследование сочтет необходимым для проведения исследования.",
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            "6. Я предоставил(а) врачу все известные мне данные о состоянии своего (или лица, законным представителем которого я являюсь) здоровья, а также всю известную мне "
+            "информацию о проблемах, связанных с моим здоровьем (или лица, законным представителем которого я являюсь), в том числе об аллергических проявлениях или "
+            "индивидуальной непереносимости лекарственных препаратов, о беременности (для женщин), обо всех перенесенных мною (лицом, законным представителем которого я "
+            "являюсь) и известных мне травмах, операциях, заболеваниях, об экологических и производственных факторах физической, химической или биологической природы, "
+            "воздействующих на меня (на лицо, законным представителем которого я являюсь) во время жизнедеятельности, о принимаемых лекарственных средствах и указал данную "
+            "информацию в медицинской документации.",
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            "7. Я согласен(а) на возможное введение контрастного препарата и отрицаю наличие у себя следующих заболеваний: бронхиальная астма; тяжелые заболевания печени "
+            "и/или почек сопровождающиеся печеночной и/или почечной недостаточностью; поливалентную лекарственную аллергию, аллергическую реакцию на йод и "
+            "йодсодержащие препараты.",
+            style,
+        )
+    )
+    objs.append(
+        Paragraph(
+            "8. Я имел(а) возможность задать все интересующие меня вопросы. Мне даны исчерпывающие ответы на все заданные мной вопросы. Я ознакомлен(а) и согласен(а) со "
+            "всеми пунктами настоящего документа.",
+            style,
+        )
+    )
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph("Аллергические реакции:", style))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph("Беременность:", style))
+    objs.append(Paragraph("", style))
+
+    space_bottom = ' &nbsp;'
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'{space_bottom}', style))
+    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
+    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
+
+    objs.append(Spacer(1, 5 * mm))
+
+    styleSign = deepcopy(style)
+    styleSign.fontSize = 8
+    styleSign.firstLineIndent = 0
+
+    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
+    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
+    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
+
+    objs.append(Paragraph('', style))
+    objs.append(Paragraph('', style))
+    doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf

@@ -65,6 +65,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/transfer-card',
+      name: 'transfer_card',
+      component: () => import('@/pages/TransferDocument/TransferCard.vue'),
+      meta: {
+        title: 'Движение карт',
+        groups: ['Лечащий врач', 'Оператор лечащего врача'],
+        narrowLayout: true,
+        module: 'l2_transfer_card',
+      },
+    },
+    {
       path: '/ui/construct/menu',
       name: 'construct_menu',
       component: () => import('@/construct/ConstructMenu.vue'),
@@ -81,6 +92,16 @@ const router = new Router({
           'Конструктор: Настройка организации',
         ],
         narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/laboratory',
+      name: 'construct_laboratory',
+      component: () => import('@/construct/ConstructLaboratory.vue'),
+      meta: {
+        title: 'Лабораторные исследования',
+        fullPageLayout: true,
+        groups: ['Конструктор: Лабораторные исследования'],
       },
     },
     {
@@ -103,12 +124,71 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/employees',
+      name: 'construct_employees',
+      component: () => import('@/construct/ConstructEmployees.vue'),
+      meta: {
+        title: 'Управление сотрудниками',
+        groups: ['Конструктор: Настройка организации'],
+        fullPageLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/price',
       name: 'construct_price',
       component: () => import('@/construct/ConstructPrice.vue'),
       meta: {
         title: 'Настройка прайсов',
         groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/company',
+      name: 'construct_company',
+      component: () => import('@/construct/ConstructCompany.vue'),
+      meta: {
+        title: 'Настройка компаний',
+        groups: ['Конструктор: Настройка организации'],
+      },
+    },
+    {
+      path: '/ui/construct/harmful-factor',
+      name: 'harmful_factor',
+      component: () => import('@/construct/ConstructHarmfulFactor.vue'),
+      meta: {
+        title: 'Факторы вредности',
+        groups: ['Конструктор: Факторы вредности'],
+        narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/research-sets',
+      name: 'research_sets',
+      component: () => import('@/construct/ConstuctResearchSets.vue'),
+      meta: {
+        title: 'Наборы исследований',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/patient-control-param',
+      name: 'construct_patient_control_param',
+      component: () => import('@/construct/ConstructControlParam.vue'),
+      meta: {
+        title: 'Контролируемые параметры пациентов',
+        groups: ['Конструктор: Контролируемые параметры пациентов'],
+        narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/route-perform-service',
+      name: 'construct_route_perform_service',
+      component: () => import('@/construct/ConstructRoutePerformService.vue'),
+      meta: {
+        title: 'Маршрут исследований',
+        groups: ['Конструктор: Маршрут исследований'],
         narrowLayout: true,
       },
     },
@@ -177,11 +257,23 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/case-control',
+      name: 'cases',
+      component: () => import('@/pages/CaseControl/index.vue'),
+      meta: {
+        title: 'Случаи обслуживания',
+        fullPageLayout: true,
+        showPrintQueue: true,
+        groups: ['Врач параклиники', 'Врач консультаций'],
+        module: 'l2_case',
+      },
+    },
+    {
       path: '/ui/search',
       name: 'search',
       component: () => import('@/pages/Search.vue'),
       meta: {
-        title: 'Поиск описательнх результатов',
+        title: 'Поиск описательных результатов',
         groups: ['Лечащий врач', 'Оператор лечащего врача', 'Врач консультаций', 'Врач стационара'],
         module: 'paraclinic_module',
       },
@@ -294,6 +386,7 @@ const router = new Router({
         ],
       },
     },
+    // DEPRECATED
     {
       path: '/ui/cases',
       name: 'cases',
@@ -425,6 +518,7 @@ const router = new Router({
         showHospFavorites: true,
         showOperationPlans: true,
         showExpertiseStatus: true,
+        showPrintQueue: true,
       },
     },
     {
@@ -594,7 +688,7 @@ const router = new Router({
       meta: {
         narrowLayout: true,
         title: 'Инструменты',
-        groups: [],
+        groups: ['Инструменты'],
       },
     },
     {
@@ -604,6 +698,35 @@ const router = new Router({
       meta: {
         emptyLayout: true,
         title: 'Предварительный просмотр бланков результатов',
+      },
+    },
+    {
+      path: '/ui/directions/preview',
+      name: 'directions-preview',
+      component: () => import('@/pages/DirectionsPreview.vue'),
+      meta: {
+        emptyLayout: true,
+        title: 'Предварительный просмотр бланков направлений',
+      },
+    },
+    {
+      path: '/ui/analyzers',
+      name: 'ManageAnalyzer',
+      component: () => import('@/pages/ManageAnalyzers/index.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Управление анализаторами',
+        groups: ['Управление анализаторами'],
+      },
+    },
+    {
+      path: '/ui/construct/related-tube/:id',
+      name: 'construct-related-tube',
+      component: () => import('@/construct/ConstructRelatedTube.vue'),
+      meta: {
+        emptyLayout: true,
+        title: 'Управление ёмкостями фракций',
+        groups: ['Оператор', 'Конструктор: Лабораторные исследования'],
       },
     },
     {
@@ -710,7 +833,7 @@ router.beforeEach(async (to, from, next) => {
       next(nextPath || { name: 'menu' });
     } else if (
       toMatched.some((r) => r.meta.groups)
-      && toMatched.every((r) => !r.meta.groups || !r.meta.groups.find((g) => getters.user_groups.includes(g)))
+      && toMatched.every((r) => !r.meta.groups?.find((g) => getters.user_groups.includes(g)))
       && !getters.user_groups.includes('Admin')
     ) {
       router.app.$toast.warning('Нет доступа.', {
@@ -741,9 +864,6 @@ router.beforeEach(async (to, from, next) => {
 });
 
 router.afterEach(async () => {
-  if (window.posthog) {
-    window.posthog.capture('$pageview');
-  }
   await router.app.$store.dispatch(actions.DEC_G_LOADING);
 });
 

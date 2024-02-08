@@ -27,7 +27,7 @@ export default class CheckBackend extends Vue {
 
   hasError: boolean;
 
-  aliveTimer: number | void;
+  aliveTimer: any | void;
 
   user_data: any;
 

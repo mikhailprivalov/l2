@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   webpack_build_prod:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out source repository

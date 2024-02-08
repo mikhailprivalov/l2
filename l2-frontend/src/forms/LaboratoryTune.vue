@@ -1,7 +1,23 @@
 <template>
   <div class="root">
-    <h4>{{ title }} – коды ФСЛИ</h4>
-
+    <div class="row">
+      <div class="col-xs-5">
+        <h4>{{ title }} – коды ФСЛИ</h4>
+      </div>
+      <div class="col-xs-5">
+        <h4>Период действия результата (в днях)</h4>
+      </div>
+      <div class="col-xs-2 display-header align-header">
+        <input
+          v-model="actualPeriod"
+          type="number"
+          min="0"
+          max="365"
+          step="1"
+          class="form-control"
+        >
+      </div>
+    </div>
     <table class="table table-bordered table-condensed">
       <colgroup>
         <col width="280">
@@ -95,6 +111,7 @@ export default {
       fractions: [],
       title: '',
       unitOptions: [],
+      actualPeriod: 0,
     };
   },
   mounted() {
@@ -103,7 +120,7 @@ export default {
   methods: {
     async loadData() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const [{ fractions, title }, { rows }] = await Promise.all([
+      const [{ fractions, title, actualPeriod }, { rows }] = await Promise.all([
         laboratoryPoint.getFractions(this, 'pk'),
         this.$api('/laboratory/units'),
       ]);
@@ -111,11 +128,12 @@ export default {
       this.unitOptions = rows;
       this.fractions = fractions;
       this.title = title;
+      this.actualPeriod = actualPeriod;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
-      await laboratoryPoint.saveFsli(this, 'fractions');
+      await laboratoryPoint.saveFsli(this, ['fractions', 'pk', 'actualPeriod']);
       this.$root.$emit('msg', 'ok', 'Сохранено');
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -163,5 +181,8 @@ export default {
       width: 100%;
     }
   }
+.display-header {
+  padding-top: 5px;
+}
 }
 </style>

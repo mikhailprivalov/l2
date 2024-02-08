@@ -1,5 +1,6 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils.cell import get_column_letter
+import json
 
 
 def monitoring_xlsx(ws1, monitoring_title, table_data, date):
@@ -48,15 +49,43 @@ def monitoring_xlsx(ws1, monitoring_title, table_data, date):
 
     current_column = 1
     current_row += 1
+    is_show_tables_title = False
+    json_data = {}
     for row in table_data['rows']:
         current_row += 1
         ws1.cell(row=current_row, column=current_column).value = row['hospTitle']
         ws1.cell(row=current_row, column=current_column).style = style_border
         for value in row['values']:
             for v in value:
-                current_column += 1
-                ws1.cell(row=current_row, column=current_column).value = v
-                ws1.cell(row=current_row, column=current_column).style = style_border
+                is_dict = False
+                if type(v) is str and "columns" in v:
+                    try:
+                        json_data = json.loads(v)
+                        is_dict = True
+                    except:
+                        is_dict = False
+                if not is_dict:
+                    current_column += 1
+                    ws1.cell(row=current_row, column=current_column).value = v
+                    ws1.cell(row=current_row, column=current_column).style = style_border
+                if is_dict:
+                    col_title_data = json_data.get("columns")
+                    col_title = col_title_data.get("titles")
+                    start_col = current_column
+                    if not is_show_tables_title:
+                        for c_title in col_title:
+                            start_col += 1
+                            ws1.cell(row=current_row - 1, column=start_col).value = c_title
+                            ws1.cell(row=current_row - 1, column=start_col).style = style_border
+                            is_show_tables_title = True
+                    rows_data = json_data.get("rows")
+                    for r_data in rows_data:
+                        start_col = current_column
+                        for rd in r_data:
+                            start_col += 1
+                            ws1.cell(row=current_row, column=start_col).value = rd
+                            ws1.cell(row=current_row, column=start_col).style = style_border
+                        current_row += 1
         current_column = 1
 
     current_row += 1

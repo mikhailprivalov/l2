@@ -40,7 +40,7 @@ def receive(request):
     else:
         tubes = json.loads(request.POST["data"])
         for tube_get in tubes:
-            tube = TubesRegistration.objects.get(id=tube_get["id"])
+            tube = TubesRegistration.objects.get(number=tube_get["id"])
             if tube_get["status"] and (tube_get["notice"] == "" or (tube.notice not in [None, ""] and tube_get["notice"] == tube.notice)):
                 cleared = tube.notice not in [None, ""]
                 if cleared:
@@ -139,14 +139,14 @@ def receive_execlist(request):
             fractions = [x.title for x in fractions_o]
             if t == "received":
                 tubes = [
-                    x.pk
+                    x.number
                     for x in TubesRegistration.objects.filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile, issledovaniya__research=research)
                     .order_by("daynum")
                     .distinct()
                 ]
             else:
                 tubes = [
-                    x.pk
+                    x.number
                     for x in (
                         TubesRegistration.objects.filter(time_recive__range=(date1, date2), issledovaniya__time_confirmation__isnull=True, issledovaniya__research=research)
                         .filter(Q(issledovaniya__napravleniye__hospital=request.user.doctorprofile.hospital) | Q(issledovaniya__napravleniye__hospital__isnull=True))
@@ -181,8 +181,8 @@ def receive_execlist(request):
                 pg = pages.page(pg_num)
                 for tube_pk in pg.object_list:
                     nn += 1
-                    tube = TubesRegistration.objects.get(pk=tube_pk)
-                    napravleniye = Issledovaniya.objects.filter(tubes__pk=tube_pk)[0].napravleniye
+                    tube = TubesRegistration.objects.get(number=tube_pk)
+                    napravleniye = Issledovaniya.objects.filter(tubes__number=tube_pk)[0].napravleniye
                     tmp = [
                         Paragraph('<font face="OpenSans" size="8">%d</font>' % (tube.daynum if t == "received" else nn), styleSheet["BodyText"]),
                         Paragraph(
@@ -265,7 +265,7 @@ def tubes_get(request):
             if tube.getbc() in k or (tube.rstatus() and filter_type != "received"):
                 continue
             issledovaniya_tmp = []
-            for iss in Issledovaniya.objects.filter(tubes__id=tube.id, research__podrazdeleniye=lab, tubes__time_get__range=(date_start, date_end)):
+            for iss in Issledovaniya.objects.filter(tubes__number=tube.number, research__podrazdeleniye=lab, tubes__time_get__range=(date_start, date_end)):
                 issledovaniya_tmp.append(iss.research.title)
             if len(issledovaniya_tmp) > 0:
                 k.add(tube.getbc())
@@ -343,11 +343,11 @@ def receive_journal(request):
 
     n = 1
     for v in tubes:
-        idv = v.id
+        idv = v.number
         if idv in vids:
             continue
         vids.add(idv)
-        iss = Issledovaniya.objects.filter(tubes__id=v.id)  # Получение исследований для пробирки
+        iss = Issledovaniya.objects.filter(tubes__number=v.number)  # Получение исследований для пробирки
 
         if group == -1:
             iss = iss.filter(research__groups__isnull=True)
@@ -373,7 +373,7 @@ def receive_journal(request):
         if return_type == "pdf":
             n_dict[k] += 1
             if n_dict[k] >= start:
-                if k not in labs.keys():  # Добавление списка в словарь если по ключу k нету ничего в словаре labs
+                if k not in labs.keys():  # Добавление списка в словарь если по ключу k нет ничего в словаре labs
                     labs[k] = []
 
                 if perpage - len(labs[k]) % perpage < len(iss_list):
@@ -392,7 +392,7 @@ def receive_journal(request):
                             "dir_id": iss[0].napravleniye_id,
                             "podr": iss[0].napravleniye.doc.podrazdeleniye.title,
                             "receive_n": str(n),
-                            "tube_id": str(v.id),
+                            "tube_id": str(v.number),
                             "direction": str(iss[0].napravleniye_id),
                             "history_num": iss[0].napravleniye.history_num,
                             "n": n_dict[k],

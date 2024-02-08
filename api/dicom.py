@@ -1,9 +1,13 @@
+import logging
 import socket
 from functools import reduce
 from directions.models import Issledovaniya, Napravleniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
+from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_SERVERS, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
 import requests
 import simplejson as json
+
+
+logger = logging.getLogger(__name__)
 
 
 def sum(x, y):
@@ -40,7 +44,10 @@ def search_dicom_study(direction=None):
             return ''
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
         if dicom_study and dicom_study['study_instance_uid']:
-            return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study["study_instance_uid"]}'
+            if len(DICOM_SERVERS) > 1:
+                return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
+            else:
+                return f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
         else:
             if not check_server_port(DICOM_ADDRESS, DICOM_PORT):
                 return ''
@@ -77,9 +84,14 @@ def find_image_firstly(data_direction):
     for tag in DICOM_SEARCH_TAGS:
         for dir in data_direction:
             data = {'Level': 'Study', 'Query': {tag: dir}, "Expand": True}
-            dicom_study = requests.post(f'{DICOM_SERVER}/tools/find', data=json.dumps(data))
-            if len(dicom_study.json()) > 0:
-                return (dicom_study.json()[0]["ID"], dicom_study.json()[0]["MainDicomTags"]["StudyInstanceUID"])
+            if len(DICOM_SERVERS) > 1:
+                is_dicom_study = check_dicom_study(DICOM_SERVERS, data)
+                if is_dicom_study.get("dicom"):
+                    return is_dicom_study.get("dicom")
+            else:
+                is_dicom_study = check_dicom_study([DICOM_SERVER], data)
+                if is_dicom_study.get("dicom"):
+                    return is_dicom_study.get("dicom")
     return None
 
 
@@ -93,3 +105,26 @@ def change_acsn(link_study, accession_number):
         requests.post(f'{REMOTE_DICOM_SERVER}/peers/{REMOTE_DICOM_PEER}/store', data=link_study)
 
     return link_study
+
+
+def check_dicom_study(servers_addr, data):
+    for server_addr in servers_addr:
+        try:
+            dicom_study = requests.post(f'{server_addr}/tools/find', data=json.dumps(data))
+            result = dicom_study.json()
+            if len(result) > 0:
+                return {"dicom": (result[0]["ID"], result[0]["MainDicomTags"]["StudyInstanceUID"]), "server": server_addr}
+        except Exception as e:
+            logger.error(e)
+    return {}
+
+
+def check_dicom_study_instance_uid(servers_addr, data):
+    for server_addr in servers_addr:
+        try:
+            dicom_study = requests.get(f'{server_addr}/studies/{data}')
+            if dicom_study and len(dicom_study.json()) > 0:
+                return f'{server_addr}/osimis-viewer/app/index.html?study={data}'
+        except Exception as e:
+            logger.error(e)
+    return ''
