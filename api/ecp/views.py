@@ -29,6 +29,9 @@ def get_available_slots(request):
     slots = get_doctor_ecp_free_slots_by_date(
         request_data['doctor_pk'],
         request_data['date'],
+        time='08:00:00',
+        research_pk=request_data['research_pk'],
+        user_data=request.user,
     )
     return JsonResponse({"result": slots})
 

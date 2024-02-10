@@ -228,7 +228,7 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
 
 
-def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00'):
+def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00', research_pk=None, user_data=None):
     req_result = {'data': []}
     sess_id = None
     if rmis_location.find("@L") > -1:
@@ -241,6 +241,15 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00'):
             {key_time: "2024-02-11 09:30:00", type_slot: "4"},
             {key_time: "2024-02-11 09:40:00", type_slot: "5"}
         ]
+        req_result["data"] = []
+        result = get_available_hospital_resource_slot(research_pk, date, date, allow_cito=has_group(user_data, 'Цито-запись в расписании'))
+        for key_is_date, values_date in result['dates'].items():
+            for resource_data in values_date:
+                if resource_data.get("rmis_location") == rmis_location:
+                    for slot_data in resource_data.get("slots"):
+                        data_time = slot_data["title"].split("-")
+                        data_time = f"{data_time[0].strip()}:00"
+                        req_result["data"].append({type_slot: slot_data["pk"], key_time: f"{date} {data_time}"})
     else:
         sess_id = request_get_sess_id()
         if not sess_id:

@@ -189,6 +189,7 @@ export default {
       const { result } = await this.$api('ecp/available-slots', {
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
+        research_pk: this.servicePk,
       });
       if (!result) {
         this.slots = [];
