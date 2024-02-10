@@ -18,6 +18,7 @@ def get_available_slots_of_dates(request):
         request_data['date_start'],
         request_data['date_end'],
         request.user.doctorprofile.get_hospital_id(),
+        request.user,
     )
     return JsonResponse({"data": data})
 
