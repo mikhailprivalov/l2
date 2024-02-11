@@ -234,14 +234,6 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00', rese
     if rmis_location.find("@L") > -1:
         key_time = "InternalTimeTableResource_begTime"
         type_slot = "InternalTimeTableResource_id"
-        req_result["data"] = [
-            {key_time: "2024-02-10 09:00:00", type_slot: "1"},
-            {key_time: "2024-02-10 09:10:00", type_slot: "2"},
-            {key_time: "2024-02-10 09:20:00", type_slot: "3"},
-            {key_time: "2024-02-11 09:30:00", type_slot: "4"},
-            {key_time: "2024-02-11 09:40:00", type_slot: "5"}
-        ]
-        req_result["data"] = []
         result = get_available_hospital_resource_slot(research_pk, date, date, allow_cito=has_group(user_data, 'Цито-запись в расписании'))
         for key_is_date, values_date in result['dates'].items():
             for resource_data in values_date:

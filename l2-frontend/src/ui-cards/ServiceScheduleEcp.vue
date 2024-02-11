@@ -280,6 +280,7 @@ export default {
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
         slot_title: this.activeSlotTitle,
+        research_pk: this.servicePk,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
