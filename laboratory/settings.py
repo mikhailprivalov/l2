@@ -468,7 +468,6 @@ if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
 
 
-
 # db = DATABASES.get('default', {})
 # db['OPTIONS'] = db.get('OPTIONS', {})
 # db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'
