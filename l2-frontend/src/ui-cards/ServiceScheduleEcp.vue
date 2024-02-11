@@ -189,6 +189,7 @@ export default {
       const { result } = await this.$api('ecp/available-slots', {
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
+        research_pk: this.servicePk,
       });
       if (!result) {
         this.slots = [];
@@ -279,6 +280,7 @@ export default {
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
         slot_title: this.activeSlotTitle,
+        research_pk: this.servicePk,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');

@@ -297,8 +297,14 @@ def save(request):
         is_cito = True
 
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
-
     if s:
+        save_slot = save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id, disabled)
+        return status_response(save_slot)
+
+    return status_response(False, 'Слот не найден')
+
+
+def save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id, disabled):
         if card_pk:
             status = {
                 'reserved': 0,
@@ -326,9 +332,7 @@ def save(request):
         else:
             s.disabled = disabled
             s.save(update_fields=['disabled'])
-        return status_response(True)
-
-    return status_response(False, 'Слот не найден')
+        return True
 
 
 @login_required
