@@ -151,6 +151,14 @@
                 >
                   Закрыть
                 </button>
+                <button
+                  v-if="details && details.factId && details.status === 'reserved' && canCancelSlot"
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="cancelSlot"
+                >
+                  Отменить запись
+                </button>
               </div>
               <div class="col-xs-6">
                 <button
@@ -259,6 +267,14 @@ export default class TimeSlot extends Vue {
     return `${this.data.duration * 2}px`;
   }
 
+  get userGroups() {
+    return this.$store.getters.user_data.groups || [];
+  }
+
+  get canCancelSlot() {
+    return this.userGroups.includes('Отмена записи посещения');
+  }
+
   async loadData() {
     this.details = null;
     await this.$store.dispatch(actions.INC_LOADING);
@@ -340,6 +356,26 @@ export default class TimeSlot extends Vue {
   async save() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { ok, message } = await this.$api('/schedule/save', {
+      ...this.data,
+      ...this.details,
+      serviceId: this.details.service.id,
+    });
+
+    if (ok) {
+      this.$root.$emit('msg', 'ok', 'Сохранено');
+      this.close();
+    } else {
+      this.$root.$emit('msg', 'error', message);
+    }
+
+    this.$root.$emit('reload-slots');
+
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async cancelSlot() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await this.$api('/schedule/cancel', {
       ...this.data,
       ...this.details,
       serviceId: this.details.service.id,
