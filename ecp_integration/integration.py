@@ -179,6 +179,8 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                         doctor_internal_schedule_date.append(key_is_date)
             doctor_internal_schedule_date = sorted(set(doctor_internal_schedule_date))
             req_result['data'] = [{key_time: i} for i in doctor_internal_schedule_date]
+            if len(req_result.get('data')) == 0:
+                continue
         else:
             sess_id = request_get_sess_id()
             if d.rmis_location.find("@R") > -1:
@@ -198,9 +200,6 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
                     query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}",
                     sess_id=sess_id,
                 )
-
-        if req_result.get('data') is None:
-            return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
             message = ""
