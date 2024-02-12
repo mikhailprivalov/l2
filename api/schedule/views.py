@@ -27,7 +27,6 @@ from utils.data_verification import data_parse
 from laboratory.utils import localtime
 from utils.dates import try_strptime
 from utils.response import status_response
-import json
 
 
 def delta_to_string(d):
