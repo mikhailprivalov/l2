@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ScheduleResource, SlotPlan, SlotFact, UserResourceModifyRights, ReasonCancelSlot, SlotFactCancel
+from .models import ScheduleResource, SlotPlan, SlotFact, UserResourceModifyRights, ReasonCancelSlot, SlotFactCancel, SlotFactDirection
 
 
 class ScheduleResourceAdmin(admin.ModelAdmin):
@@ -43,4 +43,5 @@ admin.site.register(SlotPlan, SlotPlanAdmin)
 admin.site.register(SlotFact, SlotFactAdmin)
 admin.site.register(UserResourceModifyRights, UserResourceModifyRightsAdmin)
 admin.site.register(ReasonCancelSlot)
+admin.site.register(SlotFactDirection)
 admin.site.register(SlotFactCancel, SlotFactCancelAdmin)

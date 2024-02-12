@@ -106,6 +106,15 @@ class SlotFact(models.Model):
         ordering = ['-id']
 
 
+class SlotFactDirection(models.Model):
+    slot_fact = models.ForeignKey(SlotFact, db_index=True, verbose_name='Слот-факт', on_delete=models.CASCADE)
+    direction = models.ForeignKey(Napravleniya, db_index=True, verbose_name='Направление', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Слот-факт направление'
+        verbose_name_plural = 'Слоты-факт направления'
+
+
 class UserResourceModifyRights(models.Model):
     resources = models.ManyToManyField(ScheduleResource, verbose_name='Ресурсы', db_index=True)
     departments = models.ManyToManyField(Podrazdeleniya, blank=True, default=None, verbose_name='Подразделения', db_index=True)
