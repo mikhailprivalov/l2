@@ -319,7 +319,9 @@ def cancel(request):
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
     if s:
         save_slot = SlotFactCancel.cancel_slot(pk, card_pk, service_id, request.user.doctorprofile)
-        return status_response(save_slot,)
+        return status_response(
+            save_slot,
+        )
 
     return status_response(False, 'Не получилось отменить')
 
