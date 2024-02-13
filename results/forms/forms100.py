@@ -14,7 +14,7 @@ from django.http import HttpRequest
 from math import ceil
 
 
-def form_01(direction, iss, fwb, doc, leftnone, user=None):
+def form_01(direction, iss, fwb, doc, leftnone, user=None, **kwargs):
     # Форма для печати наркозной карты - течения Анестези при операции
 
     styleSheet = getSampleStyleSheet()

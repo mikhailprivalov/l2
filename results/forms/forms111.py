@@ -16,7 +16,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from laboratory.utils import current_time
 
 
-def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     """
     Карта профилактического медицинского осмотра несовершеннолетнего Учетная форма N 030-ПО/у-17
     к приказу Министерства здравоохранения Российской Федерации от 10 августа 2017 г. N 514н

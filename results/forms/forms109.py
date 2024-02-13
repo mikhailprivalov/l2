@@ -16,7 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 
-def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     """
     Карта учета профилактического медицинского осмотра (диспансеризации)
     """

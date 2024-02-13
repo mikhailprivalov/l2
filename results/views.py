@@ -588,7 +588,16 @@ def result_print(request):
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
                 elif form_result:
-                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user)
+                    docs_with_signature_stamps = {}
+                    if with_signature_stamps and direction.total_confirmed:
+                        last_time_confirm = direction.last_time_confirm()
+                        document_for_sign = DirectionDocument.objects.filter(
+                            direction=direction, last_confirmed_at=last_time_confirm, is_archive=False, file_type=DirectionDocument.PDF
+                        ).first()
+                        if document_for_sign:
+                            for sign in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
+                                docs_with_signature_stamps[sign.executor.pk] = True
+                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, docs_with_signature_stamps=docs_with_signature_stamps)
                 elif not protocol_plain_text:
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone, med_certificate)
                 else:

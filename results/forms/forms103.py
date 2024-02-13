@@ -15,7 +15,7 @@ from .flowable import FrameData
 from directions.models import Issledovaniya
 
 
-def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Справка-вождение
     template = add_template(iss, direction, 0)
     fwb.extend(template)
