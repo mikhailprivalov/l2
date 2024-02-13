@@ -390,7 +390,7 @@ import usersPoint from '@/api/user-point';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
-import { convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
+import { convertSubjectNameToCertObject, convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
   { id: 'mo', label: 'Подписи медицинской организации' },
@@ -516,13 +516,17 @@ export default class EDS extends Vue {
   signingProcess: any;
 
   get noOGRN() {
-    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
+    const cert = this.certificatesDisplay.find(c => c.thumbprint === this.selectedCertificate);
 
     if (!cert) {
       return false;
     }
 
     return !subjectNameHasOGRN(null, cert.subjectName);
+  }
+
+  get snilsUser() {
+    return (this.$store.getters.user_data.snils);
   }
 
   get accessToMO() {
@@ -560,7 +564,7 @@ export default class EDS extends Vue {
       return {};
     }
 
-    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
+    const cert = this.certificatesDisplay.find(c => c.thumbprint === this.selectedCertificate);
     if (!cert) {
       return {};
     }
@@ -573,7 +577,20 @@ export default class EDS extends Vue {
   }
 
   get certificatesDisplay() {
-    return this.certificates.map(c => ({
+    const data = this.certificates.filter((cert) => {
+      const certObj = convertSubjectNameToCertObject(cert.subjectName);
+      const snilsCert = certObj['СНИЛС'] || certObj.SNILS;
+      if (this.filters.mode === 'my') {
+        return snilsCert === this.snilsUser;
+      }
+      return !!(certObj.ORGN || certObj['ОГРН']);
+    });
+    if (data.length === 0) {
+      this.selectedCertificate = null;
+    } else {
+      this.selectedCertificate = data[0]?.thumbprint;
+    }c
+    return data.map(c => ({
       thumbprint: c.thumbprint,
       name: convertSubjectNameToTitle(null, c.subjectName),
     }));
@@ -629,10 +646,10 @@ export default class EDS extends Vue {
         console.error(e);
         this.checked = false;
       }
-      if (this.certificates.length > 0) {
+      if (this.certificatesDisplay.length > 0) {
         // eslint-disable-next-line no-console
         console.log('getCertificates', true, this.certificates);
-        this.selectedCertificate = this.certificates[0]?.thumbprint;
+        // this.selectedCertificate = this.certificatesDisplay[0]?.thumbprint;
       } else {
         // eslint-disable-next-line no-console
         console.log('getCertificates', false);
