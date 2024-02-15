@@ -15,7 +15,7 @@ def appointed_base(ws1, d1, d2, researches):
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
 
-    researches[-999]= {"title": "Врач"}
+    researches[-999] = {"title": "Врач"}
     researches = dict(sorted(researches.items()))
     columns = [(v.get("title"), 35) for v in researches.values()]
 
