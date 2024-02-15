@@ -1,19 +1,16 @@
-from copy import deepcopy
-
-import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 
 def appointed_base(ws1, d1, d2, researches):
     style_border = NamedStyle(name="style_border_ca5")
-    bd = Side(style='thin', color="000000")
+    bd = Side(style="thin", color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=11)
-    style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    style_border.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
 
-    ws1.cell(row=2, column=1).value = 'Период:'
-    ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
+    ws1.cell(row=2, column=1).value = "Период:"
+    ws1.cell(row=3, column=1).value = f"c {d1} по {d2}"
 
     researches[-999] = {"title": "Врач"}
     researches = dict(sorted(researches.items()))
@@ -49,10 +46,10 @@ def parse_data(researches_sql, users_final_data, research_data):
 
 def fill_appointed_research_by_doctors(ws1, data, row=6):
     style_border1 = NamedStyle(name="style_border1")
-    bd = Side(style='thin', color="000000")
+    bd = Side(style="thin", color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border1.font = Font(bold=False, size=11)
-    style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
+    style_border1.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
     r = row
     for value in data.values():
         column = 1
