@@ -61,4 +61,4 @@ def fill_appointed_research_by_doctors(ws1, data, row=6):
             ws1.cell(row=r, column=column).style = style_border1
             column += 1
         r += 1
-    return  ws1
+    return ws1
