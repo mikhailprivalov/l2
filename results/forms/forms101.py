@@ -15,7 +15,7 @@ import os.path
 import simplejson as json
 
 
-def form_01(direction, iss, fwb, doc, leftnone, user=None):
+def form_01(direction, iss, fwb, doc, leftnone, user=None, **kwargs):
     # Форма для печати дневников в 3 колонки
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]

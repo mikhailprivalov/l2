@@ -15,7 +15,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 import simplejson as json
 
 
-def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Заключение на ВМП
     pdfmetrics.registerFont(TTFont("PTAstraSerifBold", os.path.join(FONTS_FOLDER, "PTAstraSerif-Bold.ttf")))
     pdfmetrics.registerFont(TTFont("PTAstraSerifReg", os.path.join(FONTS_FOLDER, "PTAstraSerif-Regular.ttf")))
@@ -86,7 +86,7 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     return fwb
 
 
-def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Направление на ВМП
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -200,7 +200,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     return fwb
 
 
-def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Рапорт ВМП
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -316,7 +316,7 @@ def form_03(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     return fwb
 
 
-def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_04(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Заявление на возврат
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -473,7 +473,7 @@ def stamp_signature(styleT, zav=""):
     return tbl
 
 
-def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_05(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Анкета для оформления ЭЛН
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
