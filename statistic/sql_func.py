@@ -331,7 +331,7 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
     return row
 
 
-def statistics_research_create_directions(research_id, d_s, d_e, hospital_id_filter):
+def statistics_research_create_directions(research_id, d_s, d_e, users_docprofile_id):
     """
     На входе: research_id - id-услуги, d_s- дата начала, d_e - дата.кон, fin - источник финансирования
     выход: Физлицо, Дата рождения, Возраст, Карта, Исследование, Источник финансирования, Стоимость, Исполнитель,
@@ -341,69 +341,36 @@ def statistics_research_create_directions(research_id, d_s, d_e, hospital_id_fil
 
     with connection.cursor() as cursor:
         cursor.execute(
-            """ WITH
-    t_hosp AS 
-        (SELECT id, title FROM hospitals_hospitals),
-    t_iss AS
-        (SELECT directions_napravleniya.client_id, directions_issledovaniya.napravleniye_id as napr, directions_napravleniya.hospital_id as hospital_id,
-        directions_napravleniya.vich_code as vich_code, 
-        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
-        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS time_confirm,
+            """
+        SELECT directions_issledovaniya.napravleniye_id as napr,
         to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS create_date_napr,
         to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI:SS') AS create_time_napr, 
-        directions_issledovaniya.doc_confirmation_id as doc, users_doctorprofile.fio as doc_fio,
-        directions_issledovaniya.coast, directions_issledovaniya.discount,
-        directions_issledovaniya.how_many, directions_napravleniya.data_sozdaniya, directions_napravleniya.istochnik_f_id,
-        directions_istochnikifinansirovaniya.title as ist_f,
-        directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation,
-        statistics_tickets_visitpurpose.title as purpose_title,
-        directions_issledovaniya.purpose_id,
-        dir_price_category.title as dir_category,
-        iss_price_category.title as iss_category
+        directions_napravleniya.data_sozdaniya,
+        directions_issledovaniya.research_id as research_id,
+        d_doc.id as doctor_id,
+        d_doc.family as doctor_family,
+        d_doc.name as doctor_name,
+        d_doc.patronymic as doctor_patronymic,
+        d_from_doc.id as d_from_doc_id,
+        d_from_doc.family as d_from_doc_family,
+        d_from_doc.name as d_from_doc_name,
+        d_from_doc.patronymic as d_from_doc_patronymic
         FROM directions_issledovaniya
-        LEFT JOIN directions_napravleniya 
+        LEFT JOIN directions_napravleniya
            ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
-        LEFT JOIN users_doctorprofile
-           ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
-        LEFT JOIN directions_istochnikifinansirovaniya
-        ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id
-        LEFT JOIN statistics_tickets_visitpurpose
-        ON statistics_tickets_visitpurpose.id=directions_issledovaniya.purpose_id
-        LEFT JOIN contracts_pricecategory dir_price_category
-        ON directions_napravleniya.price_category_id=dir_price_category.id
-        LEFT JOIN contracts_pricecategory iss_price_category
-        ON directions_issledovaniya.price_category_id=iss_price_category.id
+        LEFT JOIN users_doctorprofile d_doc
+        ON directions_napravleniya.doc_id = d_doc.id
+        LEFT JOIN users_doctorprofile d_from_doc
+        ON directions_napravleniya.doc_who_create_id = d_from_doc.id
         WHERE directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-        AND directions_issledovaniya.research_id=%(research_id)s 
-        AND 
-            CASE WHEN %(hospital_id_filter)s > 0 THEN
-                directions_napravleniya.hospital_id = %(hospital_id_filter)s
-                WHEN %(hospital_id_filter)s = -1 THEN
-                directions_issledovaniya.napravleniye_id IS NOT NULL
-            END
-           ),
-    t_card AS
-       (SELECT DISTINCT ON (clients_card.id) clients_card.id, clients_card.number AS num_card, 
-        clients_individual.family as ind_family,
-        clients_individual.name AS ind_name, clients_individual.patronymic, 
-        to_char(clients_individual.birthday, 'DD.MM.YYYY') as birthday,
-        clients_individual.birthday as date_born
-        FROM clients_individual
-        LEFT JOIN clients_card ON clients_individual.id = clients_card.individual_id)
-
-        SELECT napr, date_confirm, time_confirm, create_date_napr, create_time_napr, doc_fio, coast, discount, 
-        how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money, ist_f, time_confirmation, num_card, 
-        ind_family, ind_name, patronymic, birthday, date_born,
-        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title, t_iss.vich_code, dir_category, iss_category FROM t_iss
-        LEFT JOIN t_card ON t_iss.client_id = t_card.id
-        LEFT JOIN t_hosp ON t_iss.hospital_id = t_hosp.id
-
-        ORDER BY time_confirmation""",
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id_filter': hospital_id_filter},
+        AND directions_issledovaniya.research_id in %(research_id)s    
+        AND (d_doc.id in %(users_docprofile_id)s or d_from_doc.id in %(users_docprofile_id)s)
+        ORDER BY d_from_doc_id, doctor_id
+        """,
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'users_docprofile_id': users_docprofile_id},
         )
-
-        row = cursor.fetchall()
-    return row
+        rows = namedtuplefetchall(cursor)
+    return rows
 
 
 def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medical_exam):
