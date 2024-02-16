@@ -39,6 +39,7 @@ export default [
         not_internal: true,
         type: '101.01',
       },
+      { url: '/forms/pdf?type=101.30&card_pk={card}', title: 'Согласие на ВИЧ-исследование', type: '101.30' },
       { url: '/forms/pdf?type=101.03&card_pk={card}', title: 'Согласие на мед. вмешательство', type: '101.03' },
       { url: '/forms/pdf?type=101.28&card_pk={card}', title: 'Согласие на мед. вмешательство (травмпункт)', type: '101.28' },
       { url: '/forms/pdf?type=101.18&card_pk={card}', title: 'Согласие на мед. вмешательство', type: '101.18' },
