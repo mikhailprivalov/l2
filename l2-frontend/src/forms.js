@@ -25,6 +25,7 @@ export default [
       { url: '/forms/pdf?type=101.09&card_pk={card}', title: 'Согласие на прерывание беременности', type: '101.09' },
       { url: '/forms/pdf?type=101.06&card_pk={card}', title: 'Согласие COVID-19', type: '101.06' },
       { url: '/forms/pdf?type=101.14&card_pk={card}', title: 'Согласие на оперативное вмешательство', type: '101.14' },
+      { url: '/forms/pdf?type=101.31&card_pk={card}', title: 'Согласие на оперативное вмешательство', type: '101.31' },
       { url: '/forms/pdf?type=101.15&card_pk={card}', title: 'Согласие на анестезиологическое обеспечение', type: '101.15' },
       { url: '/forms/pdf?type=101.16&card_pk={card}', title: 'Согласие на препарат "вне инструкции"', type: '101.16' },
       { url: '/forms/pdf?type=101.17&card_pk={card}', title: 'Согласие на проведение МРТ', type: '101.17' },
