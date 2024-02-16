@@ -131,17 +131,18 @@
     <div class="f gutter gutter-col gutter-column-2" />
     <div
       class="g"
-      :class="{ noMoreModules: !l2_doc_call && !l2_list_wait && !rmis_queue, onlyDocCall: l2_only_doc_call }"
+      :class="{ noMoreModules: !l2_doc_call && !l2_list_wait && !rmis_queue && !schedule_in_protocol,
+                onlyDocCall: l2_only_doc_call }"
     >
       <DirectAndPlanSwitcher
-        v-if="(l2_doc_call || l2_list_wait || rmis_queue) && !l2_only_doc_call"
+        v-if="(l2_doc_call || l2_list_wait || rmis_queue || schedule_in_protocol) && !l2_only_doc_call"
         v-model="mode"
         :bages="modes_counts"
       />
       <div
         v-show="mode === DIRECTION_MODE_DIRECTION"
         v-if="!l2_only_doc_call"
-        :style="(l2_doc_call || l2_list_wait || rmis_queue) && 'border-top: 1px solid #434a54'"
+        :style="(l2_doc_call || l2_list_wait || rmis_queue || schedule_in_protocol) && 'border-top: 1px solid #434a54'"
       >
         <SelectedResearches
           :operator="selected_card.operator"
@@ -177,7 +178,8 @@
         />
       </div>
       <div
-        v-if="rmis_queue && !l2_only_doc_call && mode === DIRECTION_MODE_ECP_REGISTRATION"
+        v-if="(rmis_queue && !l2_only_doc_call && mode === DIRECTION_MODE_ECP_REGISTRATION) ||
+          (schedule_in_protocol && mode === DIRECTION_MODE_ECP_REGISTRATION)"
       >
         <div
           v-if="selected_card.pk"
@@ -335,6 +337,9 @@ export default {
     },
     rmis_queue() {
       return this.$store.getters.modules.l2_rmis_queue;
+    },
+    schedule_in_protocol() {
+      return this.$store.getters.modules.l2_schedule_in_protocol;
     },
   },
   watch: {
