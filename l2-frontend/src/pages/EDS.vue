@@ -516,7 +516,7 @@ export default class EDS extends Vue {
   signingProcess: any;
 
   get noOGRN() {
-    const cert = this.certificatesDisplay.find(c => c.thumbprint === this.selectedCertificate);
+    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
 
     if (!cert) {
       return false;
@@ -564,7 +564,7 @@ export default class EDS extends Vue {
       return {};
     }
 
-    const cert = this.certificatesDisplay.find(c => c.thumbprint === this.selectedCertificate);
+    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
     if (!cert) {
       return {};
     }
@@ -589,7 +589,7 @@ export default class EDS extends Vue {
       this.selectedCertificate = null;
     } else {
       this.selectedCertificate = data[0]?.thumbprint;
-    }c
+    }
     return data.map(c => ({
       thumbprint: c.thumbprint,
       name: convertSubjectNameToTitle(null, c.subjectName),
