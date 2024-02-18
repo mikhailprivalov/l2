@@ -255,7 +255,7 @@
           </div>
         </div>
         <div
-          v-else-if="schedule_in_protocol"
+          v-else-if="schedule_in_protocol && location.resources.length > 0"
           class="location-internal"
         >
           <div class="title">
