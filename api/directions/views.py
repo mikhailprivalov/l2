@@ -4056,7 +4056,7 @@ def eds_to_sign(request):
         day2 = day1 + timedelta(days=1)
         d_qs = d_qs.filter(last_confirmed_at__range=(day1, day2))
         if mode == 'mo':
-            d_qs = d_qs.filter(eds_required_signature_types__contained_by=['Медицинская организация'])
+            d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'])
             if department == -1:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__hospital=request.user.doctorprofile.get_hospital())
             else:
@@ -4089,6 +4089,8 @@ def eds_to_sign(request):
             elif mode == 'my':
                 d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
         else:
+            if mode == 'mo':
+                d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
             # TODO: тут нужен фильтр, что получены все необходимые подписи, кроме Медицинская организация, если mode == 'mo'
             # TODO: тут нужен фильтр, что не получена подпись Врач, если mode == 'my'
             d_qs = d_qs.filter(eds_total_signed=False)
