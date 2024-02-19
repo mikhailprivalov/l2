@@ -273,7 +273,7 @@
             </div>
           </div>
           <div
-            v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue"
+            v-if="modules.l2_rmis_queue || modules.l2_schedule"
             class="row"
           >
             <div
@@ -553,13 +553,13 @@
             </div>
           </div>
           <div
-            v-if="modules.l2_rmis_queue && user.rmis_location !== ''"
+            v-if="(modules.l2_rmis_queue || modules.l2_schedule) && (user.rmis_location !== '')"
             class="more-title"
           >
             Услуги, оказываемые пользователем:
           </div>
           <div
-            v-if="modules.l2_rmis_queue && user.rmis_location !== ''"
+            v-if="(modules.l2_rmis_queue || modules.l2_schedule) && user.rmis_location !== ''"
             class="row"
             style="margin-right: 0"
           >
