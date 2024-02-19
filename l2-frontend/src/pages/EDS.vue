@@ -577,7 +577,7 @@ export default class EDS extends Vue {
   }
 
   get certificatesDisplay() {
-    const data = this.certificates.filter((cert) => {
+    const filteredCertificates = this.certificates.filter((cert) => {
       const certObj = convertSubjectNameToCertObject(cert.subjectName);
       const snilsCert = certObj['СНИЛС'] || certObj.SNILS;
       if (this.filters.mode === 'my') {
@@ -585,12 +585,12 @@ export default class EDS extends Vue {
       }
       return !!(certObj.ORGN || certObj['ОГРН']);
     });
-    if (data.length === 0) {
+    if (filteredCertificates.length === 0) {
       this.selectedCertificate = null;
     } else {
-      this.selectedCertificate = data[0]?.thumbprint;
+      this.selectedCertificate = filteredCertificates[0]?.thumbprint;
     }
-    return data.map(c => ({
+    return filteredCertificates.map(c => ({
       thumbprint: c.thumbprint,
       name: convertSubjectNameToTitle(null, c.subjectName),
     }));
