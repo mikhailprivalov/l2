@@ -598,7 +598,7 @@ export default class EDS extends Vue {
 
   get deps() {
     return [
-      ...this.users.map(d => ({ id: Number(d.id.split('-')[1]) || -1, label: d.label })),
+      ...this.users.map(d => ({ id: d.id, label: d.label })),
       { id: -1, label: 'Все отделения' },
     ];
   }
