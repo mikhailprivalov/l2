@@ -646,10 +646,9 @@ export default class EDS extends Vue {
         console.error(e);
         this.checked = false;
       }
-      if (this.certificatesDisplay.length > 0) {
+      if (this.certificates.length > 0) {
         // eslint-disable-next-line no-console
         console.log('getCertificates', true, this.certificates);
-        // this.selectedCertificate = this.certificatesDisplay[0]?.thumbprint;
       } else {
         // eslint-disable-next-line no-console
         console.log('getCertificates', false);
