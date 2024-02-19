@@ -75,7 +75,7 @@
             <treeselect
               v-model="values.users"
               class="treeselect-noborder treeselect-wide"
-              :multiple="true"
+              :multiple="false"
               :disable-branch-nodes="true"
               :options="users"
               placeholder="Пользователи не выбраны"
@@ -140,6 +140,24 @@
                 :just_search="true"
                 :hidetemplates="true"
                 :oneselect="true"
+              />
+            </div>
+          </div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.RESEARCH_CREATE)"
+            :key="PARAMS_TYPES.RESEARCH_CREATE"
+            class="row-v"
+          >
+            <div class="row-v-header">
+              Услуга:
+            </div>
+            <div class="researches-wrapper">
+              <ResearchesPicker
+                v-model="values.research"
+                autoselect="none"
+                :just_search="true"
+                :hidetemplates="true"
+                :oneselect="false"
               />
             </div>
           </div>
@@ -446,6 +464,7 @@ const PARAMS_TYPES = {
   RESEARCH_SETS: 'RESEARCH_SETS',
   LOAD_FILE: 'LOAD_FILE',
   RESEARCH: 'RESEARCH',
+  RESEARCH_CREATE: 'RESEARCH_CREATE',
   COMPANY: 'COMPANY',
   MONTH_YEAR: 'MONTH_YEAR',
   SPECIAL_FIELDS: 'SPECIAL_FIELDS',
@@ -511,11 +530,18 @@ const STATS_CATEGORIES = {
       },
       research: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
-        title: 'По услуге',
+        title: 'По услуге (результаты)',
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
           + 'purposes=<purposes>&special-fields=<special-fields>&medical-exam=<medical-exam>'
           + '&date-start=<date-start>&date-end=<date-end>',
+      },
+      researchCreate: {
+        groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
+        title: 'По услуге (выписано)',
+        params: [PARAMS_TYPES.RESEARCH_CREATE, PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.USERS],
+        url: '/statistic/xls?type=statistics-create-research&research=<research>&date-start=<date-start>&date-end=<date-end>'
+            + '&users=<users>',
       },
       dispanserization: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
@@ -975,6 +1001,21 @@ export default class Statistics extends Vue {
       }
 
       if (this.PARAMS_TYPES.RESEARCH === p) {
+        if (_.isNil(this.values.research)) {
+          return null;
+        }
+
+        url = url.replace('<research>', this.values.research);
+        url = url.replace('<special-fields>', this.values.specialFields);
+        url = url.replace('<medical-exam>', this.values.medicalExam);
+        if (this.values.purposes.length > 0) {
+          url = url.replace('<purposes>', this.values.purposes);
+        } else {
+          url = url.replace('<purposes>', -1);
+        }
+      }
+
+      if (this.PARAMS_TYPES.RESEARCH_CREATE === p) {
         if (_.isNil(this.values.research)) {
           return null;
         }

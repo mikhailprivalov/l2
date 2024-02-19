@@ -47,11 +47,14 @@ export default {
     rmis_queue() {
       return this.$store.getters.modules.l2_rmis_queue;
     },
+    l2_schedule() {
+      return this.$store.getters.modules.l2_schedule;
+    },
     DIRECTION_MODES() {
       const modes = [
         DIRECTION_MODE_DIRECTION,
       ];
-      if (this.rmis_queue) {
+      if (this.rmis_queue || this.l2_schedule) {
         modes.push(DIRECTION_MODE_ECP_REGISTRATION);
       }
       if (this.l2_doc_call) {
