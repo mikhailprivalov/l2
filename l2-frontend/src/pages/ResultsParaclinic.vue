@@ -703,7 +703,7 @@
                 :iss_pk="row.pk"
                 :count_files="row.countFiles"
               />
-              <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
+              <template v-if="data.direction.all_confirmed && !data.has_monitoring">
                 <a
                   v-if="stat_btn"
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
