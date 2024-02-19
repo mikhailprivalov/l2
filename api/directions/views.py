@@ -4056,7 +4056,7 @@ def eds_to_sign(request):
         day2 = day1 + timedelta(days=1)
         d_qs = d_qs.filter(last_confirmed_at__range=(day1, day2))
         if mode == 'mo':
-            d_qs = d_qs.filter(eds_required_signature_types__contains=['Медицинская организация'])
+            d_qs = d_qs.filter(eds_required_signature_types__contained_by=['Медицинская организация'])
             if department == -1:
                 d_qs = d_qs.filter(issledovaniya__doc_confirmation__hospital=request.user.doctorprofile.get_hospital())
             else:
