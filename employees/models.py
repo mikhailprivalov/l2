@@ -459,11 +459,23 @@ class WorkTimeDocument(models.Model):
         ]
 
 
+class WorkTimeType(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Наименование')
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Тип рабочего времени'
+        verbose_name_plural = 'Типы рабочего времени'
+
+
 class EmployeeWorkTime(models.Model):
     document = models.ForeignKey(WorkTimeDocument, on_delete=models.CASCADE, verbose_name='График')
     employee_position = models.ForeignKey(EmployeePosition, on_delete=models.CASCADE, verbose_name='Должность сотрудника')
     start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
     end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
+    work_time_type = models.ForeignKey(WorkTimeType, default=None, on_delete=models.CASCADE, verbose_name='Тип')
     doctor_profile_saved = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись'
     )
@@ -475,7 +487,7 @@ class EmployeeWorkTime(models.Model):
     def get_employees_template(document: WorkTimeDocument) -> dict:
         year, month = document.month.year, document.month.month
         _, end_month = calendar.monthrange(year, month)
-        template_days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": ""} for day in range(1, end_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": "", "type": ""} for day in range(1, end_month + 1)}
         employees = get_employees_by_department(document.department_id)
         employees_template = {}
         for employee in employees:
