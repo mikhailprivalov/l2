@@ -41,12 +41,13 @@
           v-for="variant in workTimeVariants"
           :key="variant.id"
           class="variant"
-        >
+          :class="activeVariant === variant.id && 'active'"
+          @click="selectVariant(variant.id)">
           {{ `${variant.startWork}-${variant.endWork}` }}
         </div>
       </div>
       <div class="tp-row">
-        <div>
+        <div class="exact-time">
           <label class="tp-label">Начало</label>
           <input
             v-model="startWork"
@@ -54,7 +55,7 @@
             type="time"
           >
         </div>
-        <div>
+        <div class="exact-time">
           <label class="tp-label">Конец</label>
           <input
             v-model="endWork"
@@ -108,7 +109,7 @@ const props = defineProps({
 
 const root = getCurrentInstance().proxy.$root;
 
-const selectVariant = ref(null);
+const activeVariant = ref(null);
 const workTimeVariants = ref([
   { id: 1, startWork: '08:00', endWork: '16:30' },
   { id: 2, startWork: '08:00', endWork: '15:48' },
@@ -116,6 +117,10 @@ const workTimeVariants = ref([
   { id: 4, startWork: '19:48', endWork: '21:00' },
   { id: 5, startWork: '14:48', endWork: '16:00' },
 ]);
+
+const selectVariant = (variantId) => {
+  activeVariant.value = variantId;
+};
 
 const startWork = ref(null);
 const endWork = ref(null);
@@ -182,24 +187,34 @@ button[disabled] {
   height: 34px;
   margin-top: 24px;
 }
-.tp-label {
-  height: 19px;
-}
 .tp {
   height: 120px;
-  width: 323px;
+  width: 254px;
 }
+
 .tp-row {
   display: flex;
   flex-wrap: wrap;
 }
+.tp-label {
+  height: 19px;
+}
+.exact-time {
+  flex: 1;
+}
 .variant {
   background-color: #FFF;
-  margin: 0 2px;
+  font-weight: bold;
+  margin: 1px 2px;
+  padding: 0 1px;
   border: 1px solid grey;
   border-radius: 6px;
-}
-.variant:hover {
-  background-color: #f5f5f5;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+  &.active {
+      background-color: #d9f1d7;
+  }
 }
 </style>
