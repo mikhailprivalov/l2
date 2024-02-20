@@ -16,6 +16,7 @@ def custom_research_data(query_sql):
             parent = f"#{i.parent}" if i.parent else ""
             tmp_result = {
                 "Направление": f"{i.direction_number} - {parent}",
+                "Источник": i.fin_source,
                 "Пациент": i.patient_fio,
                 "Пол": i.patient_sex,
                 "Дата рождения": i.patient_birthday,
@@ -30,7 +31,7 @@ def custom_research_data(query_sql):
         step += 1
         prev_direction = i.direction_number
     result.append(tmp_result.copy())
-    fields = ["Направление", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Исполнитель", "Код врача"]
+    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Исполнитель", "Код врача"]
     fields.extend(custom_fields)
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
@@ -49,6 +50,7 @@ def custom_research_base(ws1, d1, d2, result_query, research_title):
 
     columns = [
         ('Направление', 15),
+        ('Источник', 15),
         ('Пациент', 45),
         ('Пол', 10),
         ('Дата рождения', 26),

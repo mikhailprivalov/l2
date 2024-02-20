@@ -84,7 +84,7 @@ space_symbol = '&nbsp;'
 line_break = "<br/>"
 
 
-def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # МСЭ 088/у
     data = {"ФИО (получатель)": "", "Документ (получатель)": "", "Серия (получатель)": "", "Номер (получатель)": "", "Кем и когда выдан (получатель)": "", "СНИЛС (получатель)": ""}
 

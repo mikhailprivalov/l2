@@ -404,6 +404,8 @@ IDGTL_KEY = ""
 FCM_CERT_PATH = ""
 PROMETHEUS_ENABLED = False
 
+TYPE_NUMBER_SYSTEM = []
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

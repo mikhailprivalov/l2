@@ -11,7 +11,7 @@ import datetime
 from datetime import timedelta
 
 from directory.models import Researches
-from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan
+from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan, SlotFactCancel
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
@@ -297,8 +297,36 @@ def save(request):
         is_cito = True
 
     s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
-
     if s:
+        save_slot = save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id, disabled)
+        return status_response(save_slot)
+
+    return status_response(False, 'Слот не найден')
+
+
+@login_required
+@group_required("Отмена записи")
+def cancel(request):
+    data = data_parse(
+        request.body,
+        {'id': int, 'cardId': int, 'status': str, 'planId': int, 'serviceId': int, 'date': str, 'resource': str, 'disabled': bool, 'finSourceId': int},
+        {'planId': None, 'cardId': None, 'serviceId': None, 'status': 'reserved', 'date': None, 'resource': None, 'disabled': False, 'finSourceId': None},
+    )
+    pk: int = data[0]
+    card_pk: int = data[1]
+    service_id: int = data[4]
+
+    s: SlotPlan = SlotPlan.objects.filter(pk=pk).first()
+    if s:
+        save_slot = SlotFactCancel.cancel_slot(pk, card_pk, service_id, request.user.doctorprofile)
+        return status_response(
+            save_slot,
+        )
+
+    return status_response(False, 'Не получилось отменить')
+
+
+def save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id, disabled):
         if card_pk:
             status = {
                 'reserved': 0,
@@ -326,9 +354,7 @@ def save(request):
         else:
             s.disabled = disabled
             s.save(update_fields=['disabled'])
-        return status_response(True)
-
-    return status_response(False, 'Слот не найден')
+        return True
 
 
 @login_required

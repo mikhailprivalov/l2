@@ -15,7 +15,7 @@ from results.prepare_data import text_to_bold, fields_result_only_title_fields, 
 import simplejson as json
 
 
-def form_01(direction, iss, fwb, doc, leftnone, user=None):
+def form_01(direction, iss, fwb, doc, leftnone, user=None, **kwargs):
     # ПАТОЛОГО-АНАТОМИЧЕСКОЕ заключение
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -145,7 +145,7 @@ def form_01(direction, iss, fwb, doc, leftnone, user=None):
     return fwb
 
 
-def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # ПАТОЛОГО-АНАТОМИЧЕСКОЕ заключение
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
@@ -356,10 +356,13 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     fwb.append(Paragraph(f'{data["Комментарии к заключению и рекомендации"]}', style_ml))
     fwb.append(Paragraph(f'{open_bold_tag}27. Прижизненное патолого-анатомическое исследование выполнили:{close_tag_bold}', style_ml))
     fwb.append(Spacer(1, 3 * mm))
-    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT, iss.doc_confirmation)
+
+    has_any_signature = kwargs.get('has_any_signature', False)
+
+    tbl = gen_table("Врач-патологоанатом", iss.doc_confirmation_fio, styleT, iss.doc_confirmation, has_any_signature=has_any_signature)
     fwb.append(tbl)
     fwb.append(Spacer(1, 7 * mm))
-    tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"], styleT)
+    tbl = gen_table("Врач-специалист, <br/>осуществляющий консультирование", data["Врач-консультант"], styleT, has_any_signature=has_any_signature)
     fwb.append(tbl)
     fwb.append(Spacer(1, 3 * mm))
     date_str = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=iss.time_confirmation)
@@ -368,9 +371,9 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None):
     return fwb
 
 
-def gen_table(title, param, styleT, doctor: DoctorProfile = None):
+def gen_table(title, param, styleT, doctor: DoctorProfile = None, has_any_signature=False):
     img = ""
-    if doctor:
+    if doctor and not has_any_signature:
         file_jpg = doctor.get_signature_stamp_pdf()
         if file_jpg:
             img = Image(

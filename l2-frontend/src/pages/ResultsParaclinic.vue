@@ -255,7 +255,7 @@
           </div>
         </div>
         <div
-          v-else-if="schedule_in_protocol"
+          v-else-if="schedule_in_protocol && location.resources.length > 0"
           class="location-internal"
         >
           <div class="title">
@@ -703,7 +703,7 @@
                 :iss_pk="row.pk"
                 :count_files="row.countFiles"
               />
-              <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
+              <template v-if="data.direction.all_confirmed && !data.has_monitoring">
                 <a
                   v-if="stat_btn"
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"

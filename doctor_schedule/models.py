@@ -106,6 +106,15 @@ class SlotFact(models.Model):
         ordering = ['-id']
 
 
+class SlotFactDirection(models.Model):
+    slot_fact = models.ForeignKey(SlotFact, db_index=True, verbose_name='Слот-факт', on_delete=models.CASCADE)
+    direction = models.ForeignKey(Napravleniya, db_index=True, verbose_name='Направление', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Слот-факт направление'
+        verbose_name_plural = 'Слоты-факт направления'
+
+
 class UserResourceModifyRights(models.Model):
     resources = models.ManyToManyField(ScheduleResource, verbose_name='Ресурсы', db_index=True)
     departments = models.ManyToManyField(Podrazdeleniya, blank=True, default=None, verbose_name='Подразделения', db_index=True)
@@ -116,3 +125,39 @@ class UserResourceModifyRights(models.Model):
     class Meta:
         verbose_name = 'Права доступа к управлению расписанием'
         verbose_name_plural = 'Права доступа к управлению расписанием'
+
+
+class ReasonCancelSlot(models.Model):
+    title = models.CharField(max_length=255, default="", help_text='Причина отмены', db_index=True)
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Причина отмены записи'
+        verbose_name_plural = 'Причины отмены записи'
+
+
+class SlotFactCancel(models.Model):
+    plan = models.ForeignKey(SlotPlan, db_index=True, verbose_name='Слот-план', on_delete=models.CASCADE)
+    patient = models.ForeignKey(Card, verbose_name='Карта пациента', db_index=True, null=True, on_delete=models.SET_NULL)
+    external_slot_id = models.CharField(max_length=255, default='', blank=True, verbose_name='Внешний ИД')
+    service = models.ForeignKey(Researches, verbose_name='Услуга', db_index=True, null=True, blank=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(DoctorProfile, verbose_name='Отмена записи', default=None, blank=True, null=True, on_delete=models.SET_NULL)
+    reason_cancel_slot = models.ForeignKey(ReasonCancelSlot, verbose_name='причина записи', default=None, blank=True, null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"{self.pk} — {self.patient} {self.plan}"
+
+    class Meta:
+        verbose_name = 'Отмена записи на слот'
+        verbose_name_plural = 'Отмена записей на слоты'
+
+    @staticmethod
+    def cancel_slot(plan_id, card_id, service_id, user):
+        s = SlotFactCancel(plan_id=plan_id, patient_id=card_id, service_id=service_id, user=user)
+        s.save()
+        if s:
+            slot_fact = SlotFact.objects.filter(plan_id=plan_id).first()
+            slot_fact.delete()
+        return True

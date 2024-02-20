@@ -184,11 +184,13 @@ export default {
     async loadSlots() {
       await this.$store.dispatch(actions.INC_LOADING);
       if (!this.activeDoctor || !this.activeDate) {
+        await this.$store.dispatch(actions.DEC_LOADING);
         return;
       }
       const { result } = await this.$api('ecp/available-slots', {
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
+        research_pk: this.servicePk,
       });
       if (!result) {
         this.slots = [];
@@ -239,6 +241,9 @@ export default {
     },
     async loadAvailableDates() {
       await this.$store.dispatch(actions.INC_LOADING);
+      this.slots = [];
+      this.doctorsAtDate = {};
+      this.activeDoctor = null;
       if (!this.startDate) {
         return;
       }
@@ -279,6 +284,7 @@ export default {
         doctor_pk: this.activeDoctor,
         date: this.activeDate,
         slot_title: this.activeSlotTitle,
+        research_pk: this.servicePk,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');

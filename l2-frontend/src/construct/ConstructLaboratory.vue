@@ -111,13 +111,6 @@ const add = (newResearchData: object) => {
   };
 };
 
-watch([department], () => {
-  getTubes();
-  currentResearch.value = {
-    pk: null, order: null, departmentId: department.value, tubes: null,
-  };
-});
-
 const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
   const searchTerm = search.value.toLowerCase();
   const result = tubes.researches.filter(research => {
@@ -181,10 +174,18 @@ const refBooks = ref<refBook>({
 
 const getRefbooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-ref-books');
+  const { result } = await api('construct/laboratory/get-ref-books', { departmentId: department.value });
   await store.dispatch(actions.DEC_LOADING);
   refBooks.value = result;
 };
+
+watch([department], () => {
+  getTubes();
+  currentResearch.value = {
+    pk: null, order: null, departmentId: department.value, tubes: null,
+  };
+  getRefbooks();
+});
 
 const editRelationId = ref(null);
 const editRelation = ({ relationId }) => {
