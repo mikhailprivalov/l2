@@ -103,18 +103,18 @@ def form_01(request_data):
                 ]
             )
         )
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(tbl)
         space_symbol = '&nbsp;'
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f'Создано: {strdate(dir.data_sozdaniya)} {strtime(dir.data_sozdaniya)[:5]}', style))
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f'ФИО: {dir.client.individual.fio()}', styleBold))
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f' Д/р: {dir.client.individual.bd()} {space_symbol * 15}{dir.client.individual.age_s(direction=dir)}–{dir.client.individual.sex}', styleBold))
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f'Номер карты: {dir.client.number_with_type()},', style))
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f'Вид финансировния: {dir.client.base.title} - {dir.istochnik_f.title}', style))
 
         issledovaniya = dir.issledovaniya_set.all()
@@ -153,7 +153,7 @@ def form_01(request_data):
                     has_descriptive = True
                     if i.research.podrazdeleniye.can_has_pacs:
                         need_qr_code = True
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f'Вид: {", ".join(vid)}', styleTypeResearch))
 
         service_locations = {}
@@ -241,7 +241,7 @@ def form_01(request_data):
                 ]
             )
         )
-        objs.append(Spacer(1, 2 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(tbl)
 
         if need_qr_code:
@@ -274,7 +274,7 @@ def form_01(request_data):
                     ]
                 )
             )
-            objs.append(Spacer(1, 2 * mm))
+            objs.append(Spacer(1, 1.7 * mm))
             objs.append(tbl)
         if is_laboratory:
             objs.append(Spacer(1, 8 * cm))
