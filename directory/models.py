@@ -554,6 +554,7 @@ class Researches(models.Model):
         result = {
             "pk": research.pk,
             "title": research.title,
+            "internalCode": research.internal_code,
             "hide": research.hide,
             "order": research.sort_weight,
         }
