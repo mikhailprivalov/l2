@@ -258,19 +258,17 @@ def form_01(request_data):
 
             opinion = [
                 [
-                    Paragraph('', styleFL),
                     bcd,
                 ],
             ]
 
-            tbl = Table(opinion, colWidths=(50 * mm, 25 * mm))
+            tbl = Table(opinion, colWidths=(80 * mm))
             tbl.setStyle(
                 TableStyle(
                     [
                         ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('LEFTPADDING', (1, 0), (-1, -1), -1 * mm),
-                        ('LEFTPADDING', (0, 0), (-1, -1), -0.3 * mm),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
                     ]
                 )
             )
