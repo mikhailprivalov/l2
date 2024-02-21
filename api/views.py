@@ -658,6 +658,7 @@ def current_user_info(request):
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
+            ret["snils"] = doctorprofile.snils
             ret["shortFio"] = doctorprofile.get_fio(with_space=False)
             ret["hasTOTP"] = doctorprofile.totp_secret is not None
             ret["email"] = doctorprofile.email or ""
