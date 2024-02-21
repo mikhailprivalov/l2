@@ -4089,8 +4089,10 @@ def eds_to_sign(request):
             elif mode == 'my':
                 d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
         else:
-            # TODO: тут нужен фильтр, что получены все необходимые подписи, кроме Медицинская организация, если mode == 'mo'
-            # TODO: тут нужен фильтр, что не получена подпись Врач, если mode == 'my'
+            if mode == 'mo':
+                d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
+            elif mode == 'my':
+                d_qs = d_qs.exclude(directiondocument__documentsign__sign_type='Врач')
             d_qs = d_qs.filter(eds_total_signed=False)
 
     d: Napravleniya
