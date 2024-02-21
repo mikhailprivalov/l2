@@ -42,8 +42,8 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    pagesize = (80 * mm, 210 * mm)
-    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=2 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
+    pagesize = (80 * mm, 250 * mm)
+    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=5 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
@@ -227,7 +227,7 @@ def form_01(request_data):
                     tmp.append(Paragraph('', style))
                 opinion.append(tmp)
 
-        tbl = Table(opinion, colWidths=(37 * mm, 37 * mm))
+        tbl = Table(opinion, colWidths=(35 * mm, 35 * mm))
         tbl.setStyle(
             TableStyle(
                 [
