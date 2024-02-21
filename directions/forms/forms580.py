@@ -9,7 +9,7 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import mm
+from reportlab.lib.units import mm, cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak
@@ -42,16 +42,19 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    pagesize = (80 * mm, 120 * mm)
-    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=2 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
+    pagesize = (80 * mm, 250 * mm)
+    doc = SimpleDocTemplate(buffer, pagesize=pagesize, leftMargin=2 * mm, rightMargin=5 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
-    style.fontSize = 8
-    style.leading = 7
+    style.fontSize = 11
+    style.leading = 11
     style.spaceAfter = -1 * mm
     style.alignment = TA_JUSTIFY
     style.firstLineIndent = -1 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = "PTAstraSerifBold"
 
     styleFL = deepcopy(style)
     styleFL.firstLineIndent = 0
@@ -79,52 +82,41 @@ def form_01(request_data):
         dir = Napravleniya.objects.filter(pk=direction).first()
         objs.append(Paragraph(f"{dir.hospital_short_title}", styleCenter))
         objs.append(Paragraph(f"({dir.hospital_address}, <br/>{dir.hospital_phones})", styleCenterHospital))
-        objs.append(Paragraph("Направление", styleCenterTitle))
-        objs.append(Spacer(1, 5 * mm))
-        bcd = createBarcodeDrawing('EAN13', value=dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, width=45 * mm)
+        objs.append(Paragraph(f"Направление {dir.pk}", styleFL))
+        bcd = createBarcodeDrawing('EAN13', value=dir.pk + 460000000000, humanReadable=0, barHeight=10 * mm, width=60 * mm)
         bcd.hAlign = 'LEFT'
+        objs.append(Spacer(1, 5 * mm))
 
         opinion = [
             [
-                Paragraph(f'{dir.pk}', styleFL),
                 bcd,
             ],
         ]
 
-        tbl = Table(opinion, colWidths=(30 * mm, 45 * mm))
+        tbl = Table(opinion, colWidths=(80 * mm,))
         tbl.setStyle(
             TableStyle(
                 [
                     ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (1, 0), (-1, -1), -5 * mm),
-                    ('LEFTPADDING', (0, 0), (-1, -1), -0.3 * mm),
+                    ('LEFTPADDING', (0, 0), (-1, -1), -0.1 * mm),
                 ]
             )
         )
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(tbl)
+        space_symbol = '&nbsp;'
+        objs.append(Spacer(1, 1.7 * mm))
+        objs.append(Paragraph(f'Создано: {strdate(dir.data_sozdaniya)} {strtime(dir.data_sozdaniya)[:5]}', style))
+        objs.append(Spacer(1, 1.7 * mm))
+        objs.append(Paragraph(f'ФИО: {dir.client.individual.fio()}', styleBold))
+        objs.append(Spacer(1, 1.7 * mm))
+        objs.append(Paragraph(f' Д/р: {dir.client.individual.bd()} {space_symbol * 15}{dir.client.individual.age_s(direction=dir)}–{dir.client.individual.sex}', styleBold))
+        objs.append(Spacer(1, 1.7 * mm))
+        objs.append(Paragraph(f'Номер карты: {dir.client.number_with_type()},', style))
+        objs.append(Spacer(1, 1.7 * mm))
+        objs.append(Paragraph(f'Вид финансировния: {dir.client.base.title} - {dir.istochnik_f.title}', style))
 
-        opinion = [
-            [Paragraph(f'Создано: {strdate(dir.data_sozdaniya)} {strtime(dir.data_sozdaniya)[:5]}', style), Paragraph('', style)],
-            [Paragraph(f'ФИО: {dir.client.individual.fio()}', style), Paragraph(f'Код {translation_number_from_decimal(int(dir.client.pk))}', style)],
-            [Paragraph(f'Номер карты: {dir.client.number_with_type()}', style), Paragraph(f'Д/р: {dir.client.individual.bd()}', style)],
-            [Paragraph('Диагноз (МКБ 10):', style), Paragraph(f'({dir.client.individual.age_s(direction=dir)})–{dir.client.individual.sex}', style)],
-            [Paragraph(f'Вид финансировния: {dir.client.base.title} - {dir.istochnik_f.title}', style), Paragraph('', style)],
-        ]
-
-        tbl = Table(opinion, colWidths=(53 * mm, 22 * mm))
-        tbl.setStyle(
-            TableStyle(
-                [
-                    ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
-                    ('TOPPADDING', (0, 0), (-1, -1), 0.5 * mm),
-                ]
-            )
-        )
-
-        objs.append(tbl)
         issledovaniya = dir.issledovaniya_set.all()
 
         vid = []
@@ -132,6 +124,7 @@ def form_01(request_data):
         has_doc_refferal = False
         need_qr_code = False
         values = []
+        is_laboratory = False
         for i in issledovaniya:
             rtp = i.research.reversed_type
             if rtp < -1:
@@ -154,10 +147,13 @@ def form_01(request_data):
                 rt = i.research.podrazdeleniye.get_title()
             if rt not in vid:
                 vid.append(rt)
+                if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.LABORATORY:
+                    is_laboratory = True
                 if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
                     has_descriptive = True
                     if i.research.podrazdeleniye.can_has_pacs:
                         need_qr_code = True
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(Paragraph(f'Вид: {", ".join(vid)}', styleTypeResearch))
 
         service_locations = {}
@@ -193,15 +189,15 @@ def form_01(request_data):
                 ns[v["n"]] = v["n"]
                 tmp = [
                     Paragraph(
-                        '<font face="OpenSans" size="8">'
+                        '<font face="PTAstraSerifReg" size="11">'
                         + ("" if one_sl else "№{}: ".format(v["n"]))
                         + xh.fix(v["full_title"])
-                        + ("" if not v["comment"] else " <font face=\"OpenSans\" size=\"" + str(8 * 0.8) + "\">[{}]</font>".format(v["comment"]))
+                        + ("" if not v["comment"] else " <font face=\"PTAstraSerifReg\" size=\"" + str(11 * 0.8) + "\">[{}]</font>".format(v["comment"]))
                         + ("" if not v["hospital_department_replaced_title"] else f"<br/>Направлен в: {v['hospital_department_replaced_title']}")
                         + "</font>",
                         style,
                     ),
-                    Paragraph('<font face="OpenSans" size="8">' + xh.fix(v["info"]) + "</font>", style),
+                    Paragraph('<font face="PTAstraSerifReg" size="11">' + xh.fix(v["info"]) + "</font>", style),
                 ]
                 opinion.append(tmp)
         else:
@@ -231,7 +227,7 @@ def form_01(request_data):
                     tmp.append(Paragraph('', style))
                 opinion.append(tmp)
 
-        tbl = Table(opinion, colWidths=(37 * mm, 37 * mm))
+        tbl = Table(opinion, colWidths=(35 * mm, 35 * mm))
         tbl.setStyle(
             TableStyle(
                 [
@@ -241,10 +237,11 @@ def form_01(request_data):
                     ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
                     ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
                     ('TOPPADDING', (0, 0), (-1, -1), 0.4 * mm),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 2 * mm),
                 ]
             )
         )
-        objs.append(Spacer(1, 1 * mm))
+        objs.append(Spacer(1, 1.7 * mm))
         objs.append(tbl)
 
         if need_qr_code:
@@ -261,25 +258,24 @@ def form_01(request_data):
 
             opinion = [
                 [
-                    Paragraph('', styleFL),
                     bcd,
                 ],
             ]
 
-            tbl = Table(opinion, colWidths=(50 * mm, 25 * mm))
+            tbl = Table(opinion, colWidths=(80 * mm))
             tbl.setStyle(
                 TableStyle(
                     [
                         ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('LEFTPADDING', (1, 0), (-1, -1), -1 * mm),
-                        ('LEFTPADDING', (0, 0), (-1, -1), -0.3 * mm),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
                     ]
                 )
             )
-            objs.append(Spacer(1, 2 * mm))
+            objs.append(Spacer(1, 1.7 * mm))
             objs.append(tbl)
-        objs.append(Spacer(1, 2 * mm))
+        if is_laboratory:
+            objs.append(Spacer(1, 8 * cm))
         if not dir.imported_from_rmis:
             if dir.doc_who_create and dir.doc_who_create != dir.doc:
                 objs.append(Paragraph(f"Выписал:{Truncator(dir.doc_who_create.get_fio() (dir.doc_who_create.podrazdeleniye.title).chars(63))}", style))
