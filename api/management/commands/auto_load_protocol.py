@@ -34,7 +34,6 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
         stdout.write(fp)
-        self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         title_fields = "fio,lastname,firstname,patronymic,sex,birthday,address,snils,enp,Диагноз,Дата осмотра,Группа здоровья,Вид места жительства"
         id_doc_profile = int(kwargs["id_doc_profile"])
