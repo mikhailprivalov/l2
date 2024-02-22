@@ -579,6 +579,7 @@ class DocumentFactTimeWork(models.Model):
                     }
     """
 
+
     tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
 
