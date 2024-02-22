@@ -768,13 +768,13 @@ termcolor = "*"
 
 [[package]]
 name = "firebase-admin"
-version = "6.3.0"
+version = "6.4.0"
 description = "Firebase Admin Python SDK"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "firebase_admin-6.3.0-py3-none-any.whl", hash = "sha256:fcada47664f38b6da67fd924108b98029370554c9f762895d3f83e912cac5ab9"},
-    {file = "firebase_admin-6.3.0.tar.gz", hash = "sha256:f040625b8cd3a15f99f84a797fe288ad5993c4034c355b7df3c37a99d39400e6"},
+    {file = "firebase_admin-6.4.0-py3-none-any.whl", hash = "sha256:aa06f19f0aa8b9b929dbe5cd13677c9ba05fe7ff819564f420aae02c645c6322"},
+    {file = "firebase_admin-6.4.0.tar.gz", hash = "sha256:4ac83ee00abe68498b9f08d701b550a77b3a59efba610a9e2fb3d7b1515166c6"},
 ]
 
 [package.dependencies]
@@ -3107,4 +3107,4 @@ caching = ["psycopg2"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "55a993bdb10bb6c73e73011a5b62e43b62c028d2523fa7073dc54244bf7cb927"
+content-hash = "ddb0bf51a63e656d236defc4c1be9bd2e573088f380644809f113430b36d6e3f"
