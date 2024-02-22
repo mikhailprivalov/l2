@@ -592,16 +592,18 @@ class DocumentFactTimeWork(models.Model):
     @staticmethod
     def get_fact_time_work_document(tabel_pk):
         data = ""
+        result = {}
         if tabel_pk > -1:
             document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
             data = json.loads(document_fact_time)
             for person in data.get("personData") or []:
                 for employeee in person.get("employeeData") or []:
                     tmp_dates = sorted(employeee.get("dates", []).copy())
-                    tmp_night_hours_dates = ['' for i in range(len(tmp_dates))]
-                    tmp_night_hours = employeee.get("nightHours", {})
-                    tmp_common_hours = employeee.get("commonHours", {})
-        return data
+                    result[person][employeee]['tmp_night_hours_dates'] = ['' for i in range(len(tmp_dates))]
+                    result[person][employeee]['tmp_night_hours']= employeee.get("nightHours", {})
+                    result[person][employeee]['tmp_common_hours'] = employeee.get("commonHours", {})
+
+        return result
 
 
 class Holidays(models.Model):
