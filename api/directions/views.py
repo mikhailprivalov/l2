@@ -3866,7 +3866,7 @@ def eds_documents(request):
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
     if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
-        direction.client.individual.sync_with_tfoms()
+        # direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
             return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "У пациента некорректный СНИЛС"})
