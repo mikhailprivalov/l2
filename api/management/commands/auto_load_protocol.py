@@ -31,15 +31,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
-        print(fp)
+        print(fp) # noqa: T001
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         title_fields = "fio,lastname,firstname,patronymic,sex,birthday,address,snils,enp,Диагноз,Дата осмотра,Группа здоровья,Вид места жительства"
         id_doc_profile = int(kwargs["id_doc_profile"])
-        print(id_doc_profile)
+        print(id_doc_profile) # noqa: T001
         id_research = int(kwargs["id_research"])
-        print(id_research)
-        print(title_fields)
+        print(id_research) # noqa: T001
+        print(title_fields) # noqa: T001
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         doc_profile = DoctorProfile.objects.filter(pk=id_doc_profile).first()
@@ -164,7 +164,7 @@ class Command(BaseCommand):
                                                         data_result[f.title] = res
                                                         continue
                                     directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
-                        print('Добавлена карта: \n', direction.pk, card)
+                        print('Добавлена карта: \n', direction.pk, card) # noqa: T001
                         eds_documents_data = json.dumps({'pk': direction.pk})
                         eds_documents_obj = HttpRequest()
                         eds_documents_obj._body = eds_documents_data
@@ -175,5 +175,5 @@ class Command(BaseCommand):
                     message = "Серверная ошибка"
                     return {"ok": False, "message": message}
                 step += 1
-                print(step)
-                print('Добавлена карта: \n', direction.pk, card)
+                print(step) # noqa: T001
+                print('Добавлена карта: \n', direction.pk, card) # noqa: T001
