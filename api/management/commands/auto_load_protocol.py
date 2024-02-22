@@ -175,5 +175,5 @@ class Command(BaseCommand):
                     message = "Серверная ошибка"
                     return {"ok": False, "message": message}
                 step += 1
-                print(step) # noqa: T001
-                print('Добавлена карта: \n', direction.pk, card) # noqa: T001
+                print(step)  # noqa: T001
+                print('Добавлена карта: \n', direction.pk, card)  # noqa: T001
