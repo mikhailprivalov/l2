@@ -1982,7 +1982,8 @@ def get_cda_data(pk):
     p_enp = bool(re.search(p_enp_re, card.get_data_individual()["oms"]["polis_num"]))
     insurer_full_code = card.get_data_individual()["insurer_full_code"]
     if not insurer_full_code:
-        card.individual.sync_with_tfoms()
+        pass
+        # card.individual.sync_with_tfoms()
     insurer_full_code = card.get_data_individual()["insurer_full_code"]
     smo_title = ""
     smo_id = ""

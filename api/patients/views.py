@@ -233,8 +233,9 @@ def patients_search_card(request):
                     Individual.objects.filter(family__startswith=initials[0], name__startswith=initials[1], patronymic__startswith=initials[2], birthday=btday, card__base=card_type)
                 )
                 if ((card_type.is_rmis and len(objects) == 0) or (card_type.internal_type and inc_rmis)) and not suggests:
-                    c = Client(modules="patients")
-                    objects += c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
+                    # c = Client(modules="patients")
+                    # objects += c.patients.import_individual_to_base({"surname": query[0] + "%", "name": query[1] + "%", "patrName": query[2] + "%", "birthDate": btday}, fio=True)
+                    pass
             except Exception as e:
                 logger.exception(e)
         elif re.search(p2, query):
@@ -258,8 +259,9 @@ def patients_search_card(request):
                 objects = list(objects)
                 try:
                     if not c:
-                        c = Client(modules="patients")
-                    objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
+                        pass
+                        # c = Client(modules="patients")
+                    # objects += c.patients.import_individual_to_base(rmis_req, fio=True, limit=10 - len(objects))
                 except Exception as e:
                     logger.exception(e)
 
