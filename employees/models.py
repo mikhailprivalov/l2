@@ -12,35 +12,35 @@ from utils.dates import try_strptime
 
 
 class Employee(models.Model):
-    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    family = models.CharField(max_length=64, verbose_name='Фамилия')
-    name = models.CharField(max_length=64, verbose_name='Имя')
-    patronymic = models.CharField(max_length=64, verbose_name='Отчество')
-    snils = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Табельный номер', db_index=True)
-    is_active = models.BooleanField(default=True, verbose_name='Активен')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name="Медицинское учреждение")
+    family = models.CharField(max_length=64, verbose_name="Фамилия")
+    name = models.CharField(max_length=64, verbose_name="Имя")
+    patronymic = models.CharField(max_length=64, verbose_name="Отчество")
+    snils = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     doctorprofile_created = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_employee_created'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, создавшего запись", related_name="employees_employee_created"
     )
     doctorprofile_updated = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, обновившего запись", related_name="employees_employee_updated"
     )
 
     def __str__(self):
-        return f'{self.family} {self.name} {self.patronymic} ({self.hospital})'.strip()
+        return f"{self.family} {self.name} {self.patronymic} ({self.hospital})".strip()
 
     @property
     def json(self):
         return {
-            'id': self.id,
-            'family': self.family,
-            'name': self.name,
-            'patronymic': self.patronymic,
-            'hospitalId': self.hospital_id,
-            'isActive': self.is_active,
-            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
-            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
+            "id": self.id,
+            "family": self.family,
+            "name": self.name,
+            "patronymic": self.patronymic,
+            "hospitalId": self.hospital_id,
+            "isActive": self.is_active,
+            "createdAt": strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            "updatedAt": strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
@@ -99,36 +99,36 @@ class Employee(models.Model):
     def validate_values(hospital_id, family, name, patronymic, current_id=None):
         fields_with_errors = []
         if not family:
-            fields_with_errors.append('фамилия')
+            fields_with_errors.append("фамилия")
         if not name:
-            fields_with_errors.append('имя')
+            fields_with_errors.append("имя")
         if fields_with_errors:
             raise ValueError(f"Некорректно заполнены: {', '.join(fields_with_errors)}")
 
         if Employee.objects.filter(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic).exclude(id=current_id).exists():
-            raise ValueError('Такой сотрудник уже существует')
+            raise ValueError("Такой сотрудник уже существует")
 
     class Meta:
-        verbose_name = 'Сотрудник'
-        verbose_name_plural = 'Сотрудники'
+        verbose_name = "Сотрудник"
+        verbose_name_plural = "Сотрудники"
         indexes = [
-            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active']),
+            models.Index(fields=["hospital", "family", "name", "patronymic", "is_active"]),
         ]
-        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active')
-        ordering = ('hospital__short_title', 'hospital__title', 'family', 'name', 'patronymic')
+        unique_together = ("hospital", "family", "name", "patronymic", "is_active")
+        ordering = ("hospital__short_title", "hospital__title", "family", "name", "patronymic")
 
 
 class Position(models.Model):
-    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=64, verbose_name='Название должности')
-    is_active = models.BooleanField(default=True, verbose_name='Активна')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name="Медицинское учреждение")
+    name = models.CharField(max_length=64, verbose_name="Название должности")
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     doctorprofile_created = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_position_created'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, создавшего запись", related_name="employees_position_created"
     )
     doctorprofile_updated = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_position_updated'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, обновившего запись", related_name="employees_position_updated"
     )
 
     def __str__(self):
@@ -137,12 +137,12 @@ class Position(models.Model):
     @property
     def json(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'hospitalId': self.hospital_id,
-            'isActive': self.is_active,
-            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
-            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
+            "id": self.id,
+            "name": self.name,
+            "hospitalId": self.hospital_id,
+            "isActive": self.is_active,
+            "createdAt": strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            "updatedAt": strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
@@ -194,31 +194,31 @@ class Position(models.Model):
     @staticmethod
     def validate_values(hospital_id, name, current_id=None):
         if not name:
-            raise ValueError('Название должности не указано')
+            raise ValueError("Название должности не указано")
         if Position.objects.filter(hospital_id=hospital_id, name=name).exclude(id=current_id).exists():
-            raise ValueError('Должность с таким названием уже существует')
+            raise ValueError("Должность с таким названием уже существует")
 
     class Meta:
-        verbose_name = 'Должность'
-        verbose_name_plural = 'Должности'
+        verbose_name = "Должность"
+        verbose_name_plural = "Должности"
         indexes = [
-            models.Index(fields=['hospital', 'name', 'is_active']),
+            models.Index(fields=["hospital", "name", "is_active"]),
         ]
-        unique_together = ('hospital', 'name')
-        ordering = ('hospital__short_title', 'hospital__title', 'name')
+        unique_together = ("hospital", "name")
+        ordering = ("hospital__short_title", "hospital__title", "name")
 
 
 class Department(models.Model):
-    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=64, verbose_name='Название отдела')
-    is_active = models.BooleanField(default=True, verbose_name='Активен')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name="Медицинское учреждение")
+    name = models.CharField(max_length=64, verbose_name="Название отдела")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     doctorprofile_created = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_department_created'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, создавшего запись", related_name="employees_department_created"
     )
     doctorprofile_updated = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_department_updated'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, обновившего запись", related_name="employees_department_updated"
     )
 
     def __str__(self):
@@ -227,13 +227,13 @@ class Department(models.Model):
     @property
     def json(self):
         return {
-            'id': self.id,
-            'name': self.name,
-            'hospitalId': self.hospital_id,
-            'isActive': self.is_active,
-            'childrenElementsCount': EmployeePosition.objects.filter(department=self, is_active=True).count(),
-            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
-            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
+            "id": self.id,
+            "name": self.name,
+            "hospitalId": self.hospital_id,
+            "isActive": self.is_active,
+            "childrenElementsCount": EmployeePosition.objects.filter(department=self, is_active=True).count(),
+            "createdAt": strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            "updatedAt": strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
@@ -298,67 +298,67 @@ class Department(models.Model):
     @staticmethod
     def validate_values(hospital_id, name, current_id=None):
         if not name:
-            raise ValueError('Название отдела не указано')
+            raise ValueError("Название отдела не указано")
 
         departments = Department.objects.filter(hospital_id=hospital_id, name=name)
         if current_id:
             departments = departments.exclude(id=current_id)
 
         if departments.exists():
-            raise ValueError('Отдел с таким названием уже существует')
+            raise ValueError("Отдел с таким названием уже существует")
 
     class Meta:
-        verbose_name = 'Отдел'
-        verbose_name_plural = 'Отделы'
+        verbose_name = "Отдел"
+        verbose_name_plural = "Отделы"
         indexes = [
-            models.Index(fields=['hospital', 'name', 'is_active']),
+            models.Index(fields=["hospital", "name", "is_active"]),
         ]
-        unique_together = ('hospital', 'name')
-        ordering = ('hospital__short_title', 'hospital__title', 'name')
+        unique_together = ("hospital", "name")
+        ordering = ("hospital__short_title", "hospital__title", "name")
 
 
 class TypeWorkTime(models.Model):
-    title = models.CharField(max_length=255, help_text='Занятость (осн | внутр.свом| внеш. совм)')
+    title = models.CharField(max_length=255, help_text="Занятость (осн | внутр.свом| внеш. совм)")
 
     def __str__(self):
         return f"{self.title}"
 
     class Meta:
-        verbose_name = 'Тип занятости'
-        verbose_name_plural = 'Типы занятости'
+        verbose_name = "Тип занятости"
+        verbose_name_plural = "Типы занятости"
 
 
 class EmployeePosition(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name='Сотрудник')
-    position = models.ForeignKey(Position, on_delete=models.CASCADE, verbose_name='Должность')
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Отдел')
-    rate = models.FloatField(verbose_name='Ставка')
-    is_active = models.BooleanField(default=True, verbose_name='Активна')
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Сотрудник")
+    position = models.ForeignKey(Position, on_delete=models.CASCADE, verbose_name="Должность")
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name="Отдел")
+    rate = models.FloatField(verbose_name="Ставка")
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата обновления")
     doctorprofile_created = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, создавшего запись', related_name='employees_employee_position_created'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, создавшего запись", related_name="employees_employee_position_created"
     )
     doctorprofile_updated = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_position_updated'
+        "users.DoctorProfile", on_delete=models.CASCADE, blank=True, null=True, verbose_name="Профиль пользователя, обновившего запись", related_name="employees_employee_position_updated"
     )
-    tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text='Табельный номер', db_index=True)
+    tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
     type_work_time = models.ForeignKey(TypeWorkTime, null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return f'{self.employee} — {self.position} (ставка {self.rate})'
+        return f"{self.employee} — {self.position} (ставка {self.rate})"
 
     @property
     def json(self):
         return {
-            'id': self.id,
-            'employeeId': self.employee_id,
-            'positionId': self.position_id,
-            'departmentId': self.department_id,
-            'rate': self.rate,
-            'isActive': self.is_active,
-            'createdAt': strfdatetime(self.created_at, "%d.%m.%Y %X"),
-            'updatedAt': strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
+            "id": self.id,
+            "employeeId": self.employee_id,
+            "positionId": self.position_id,
+            "departmentId": self.department_id,
+            "rate": self.rate,
+            "isActive": self.is_active,
+            "createdAt": strfdatetime(self.created_at, "%d.%m.%Y %X"),
+            "updatedAt": strfdatetime(self.updated_at, "%d.%m.%Y %X") if self.updated_at else None,
         }
 
     @staticmethod
@@ -416,9 +416,9 @@ class EmployeePosition(models.Model):
         else:
             employee_position = EmployeePosition.objects.filter(employee_id=employee_id, position_id=position_id, department_id=department_id)
         if employee_position.exists():
-            raise ValueError('Такая должность уже существует')
+            raise ValueError("Такая должность уже существует")
         if rate < 0:
-            raise ValueError('Ставка не может быть отрицательной')
+            raise ValueError("Ставка не может быть отрицательной")
 
     @staticmethod
     @staticmethod
@@ -428,62 +428,65 @@ class EmployeePosition(models.Model):
         if department_id:
             employees = EmployeePosition.objects.filter(department_id=department_id)
         if employees:
-            result = [{
-                "personLastName": emp.employee.family,
-                "personFirstName": emp.employee.name,
-                "personPatronymic": emp.employee.patronymic,
-                "personPk": emp.employee.pk,
-                "personSnils": emp.employee.snils,
-                "tabelNumber": emp.tabel_number,
-                "rate": emp.rate,
-                "typeWorkTime": emp.type_work_time.title,
-                "typePostPk": emp.type_work_time.pk,
-                "postPk": emp.position.pk,
-                "postTitle": emp.position.title,
-                "departmentPk": department_id,
-            } for emp in employees]
+            result = [
+                {
+                    "personLastName": emp.employee.family,
+                    "personFirstName": emp.employee.name,
+                    "personPatronymic": emp.employee.patronymic,
+                    "personPk": emp.employee.pk,
+                    "personSnils": emp.employee.snils,
+                    "tabelNumber": emp.tabel_number,
+                    "rate": emp.rate,
+                    "typeWorkTime": emp.type_work_time.title,
+                    "typePostPk": emp.type_work_time.pk,
+                    "postPk": emp.position.pk,
+                    "postTitle": emp.position.title,
+                    "departmentPk": department_id,
+                }
+                for emp in employees
+            ]
 
         return result
 
     class Meta:
-        verbose_name = 'Должность сотрудника'
-        verbose_name_plural = 'Должности сотрудников'
+        verbose_name = "Должность сотрудника"
+        verbose_name_plural = "Должности сотрудников"
         indexes = [
-            models.Index(fields=['employee', 'position', 'department', 'rate', 'is_active']),
+            models.Index(fields=["employee", "position", "department", "rate", "is_active"]),
         ]
-        unique_together = ('employee', 'position', 'department', 'is_active')
-        ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
+        unique_together = ("employee", "position", "department", "is_active")
+        ordering = ("employee__family", "employee__name", "employee__patronymic", "position__name", "department__name", "rate", "is_active")
 
 
 class TabelDocuments(models.Model):
-    STATUS_APPROVED = 'STATUS_APPROVED'
-    STATUS_CHECK = 'STATUS_CHECK'
-    STATUS_TO_CORRECT = 'STATUS_TO_CORRECT'
+    STATUS_APPROVED = "STATUS_APPROVED"
+    STATUS_CHECK = "STATUS_CHECK"
+    STATUS_TO_CORRECT = "STATUS_TO_CORRECT"
 
     STATUS_TYPES = (
-        (STATUS_APPROVED, 'Утвержден'),
-        (STATUS_CHECK, 'На проверке'),
-        (STATUS_TO_CORRECT, 'Исправить'),
+        (STATUS_APPROVED, "Утвержден"),
+        (STATUS_CHECK, "На проверке"),
+        (STATUS_TO_CORRECT, "Исправить"),
     )
 
-    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text='Профиль автора', on_delete=models.SET_NULL)
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
     doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
-    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения табеля')
-    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время сохранения табеля')
-    month_tabel = models.DateField(help_text='Месяц учета', db_index=True, default=None, blank=True, null=True)
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время подтверждения табеля")
+    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время сохранения табеля")
+    month_tabel = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
     department = models.ForeignKey(Department, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     is_actual = models.BooleanField(help_text="Акутальный", default=True)
     version = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
-    parent_document = models.ForeignKey('self', related_name='parent_tabel_document', help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    parent_document = models.ForeignKey("self", related_name="parent_tabel_document", help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
     status = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=STATUS_TYPES, help_text="Статус")
-    doc_change_status = models.ForeignKey(DoctorProfile, related_name='doc_change_status', null=True, blank=True, db_index=True, help_text='Профиль проверяющего', on_delete=models.SET_NULL)
+    doc_change_status = models.ForeignKey(DoctorProfile, related_name="doc_change_status", null=True, blank=True, db_index=True, help_text="Профиль проверяющего", on_delete=models.SET_NULL)
     doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
-    time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время изменения статуса')
+    time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время изменения статуса")
 
     class Meta:
-        verbose_name = 'Табель-документ'
-        verbose_name_plural = 'Табель-документы'
+        verbose_name = "Табель-документ"
+        verbose_name_plural = "Табель-документы"
 
     @staticmethod
     def create_tabel_document(data, docprofile):
@@ -503,7 +506,7 @@ class TabelDocuments(models.Model):
             department_id=department_pk,
             is_actual=True,
             parent_document_id=data.get("parentDocumentPk", None),
-            version=version
+            version=version,
         ).save()
         if data.get("withConfirm", None):
             td.time_confirmation = timezone.now()
@@ -526,30 +529,30 @@ class TabelDocuments(models.Model):
 
 
 class FactTimeWork(models.Model):
-    STATUS_WORK = 'STATUS_WORK'
-    STATUS_HOLIDAY = 'STATUS_HOLIDAY'
-    STATUS_SICK = 'STATUS_HOLIDAY'
-    STATUS_BUSINESS_TRIP = 'STATUS_BUSINESS_TRIP'
-    STATUS_DISMISS = 'STATUS_DISMISS'
+    STATUS_WORK = "STATUS_WORK"
+    STATUS_HOLIDAY = "STATUS_HOLIDAY"
+    STATUS_SICK = "STATUS_HOLIDAY"
+    STATUS_BUSINESS_TRIP = "STATUS_BUSINESS_TRIP"
+    STATUS_DISMISS = "STATUS_DISMISS"
 
     STATUS_TYPES = (
-        (STATUS_WORK, 'Работа'),
-        (STATUS_HOLIDAY, 'Отпуск'),
-        (STATUS_HOLIDAY, 'Больничный'),
-        (STATUS_BUSINESS_TRIP, 'Командировка'),
-        (STATUS_DISMISS, 'Уволен'),
+        (STATUS_WORK, "Работа"),
+        (STATUS_HOLIDAY, "Отпуск"),
+        (STATUS_HOLIDAY, "Больничный"),
+        (STATUS_BUSINESS_TRIP, "Командировка"),
+        (STATUS_DISMISS, "Уволен"),
     )
 
     tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     employee = models.ForeignKey(EmployeePosition, null=True, blank=True, default=None, on_delete=models.SET_NULL)
-    date = models.DateField(help_text='Дата учета', db_index=True, default=None, blank=True, null=True)
+    date = models.DateField(help_text="Дата учета", db_index=True, default=None, blank=True, null=True)
     night_hours = models.DecimalField(max_digits=10, decimal_places=2)
     common_hours = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=STATUS_TYPES, help_text="Статус")
 
     class Meta:
-        verbose_name = 'Табель времени - акутальный'
-        verbose_name_plural = 'Табели времени (актуальные данные)'
+        verbose_name = "Табель времени - акутальный"
+        verbose_name_plural = "Табели времени (актуальные данные)"
 
 
 class DocumentFactTimeWork(models.Model):
@@ -575,12 +578,13 @@ class DocumentFactTimeWork(models.Model):
                         ]
                     }
     """
+
     tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
 
     class Meta:
-        verbose_name = 'Табель документ'
-        verbose_name_plural = 'Табель документы'
+        verbose_name = "Табель документ"
+        verbose_name_plural = "Табель документы"
 
     @staticmethod
     def save_fact_time_work_document(tabel_pk, data_document):
@@ -599,9 +603,9 @@ class DocumentFactTimeWork(models.Model):
             for person in data.get("personData") or []:
                 for employeee in person.get("employeeData") or []:
                     tmp_dates = sorted(employeee.get("dates", []).copy())
-                    result[person][employeee]['tmp_night_hours_dates'] = ['' for i in range(len(tmp_dates))]
-                    result[person][employeee]['tmp_night_hours']= employeee.get("nightHours", {})
-                    result[person][employeee]['tmp_common_hours'] = employeee.get("commonHours", {})
+                    result[person][employeee]["tmp_night_hours_dates"] = ["" for i in range(len(tmp_dates))]
+                    result[person][employeee]["tmp_night_hours"] = employeee.get("nightHours", {})
+                    result[person][employeee]["tmp_common_hours"] = employeee.get("commonHours", {})
 
         return result
 
@@ -614,5 +618,5 @@ class Holidays(models.Model):
         return f"{self.year} {self.day}"
 
     class Meta:
-        verbose_name = 'Праздничный день'
-        verbose_name_plural = 'Праздничные дни'
+        verbose_name = "Праздничный день"
+        verbose_name_plural = "Праздничные дни"
