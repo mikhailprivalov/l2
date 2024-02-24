@@ -14,9 +14,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from utils.nsi_directories import NSI
-import simplejson as json
-from django.http import HttpRequest
-from api.directions.views import eds_documents
+from api.directions.views import process_to_sign_direction
 
 logger = logging.getLogger("IF")
 
@@ -166,15 +164,12 @@ class Command(BaseCommand):
                                                         continue
                                     directions.ParaclinicResult(issledovaniye=iss, field=f, field_type=f.field_type, value=data_result.get(f.title)).save()
                         stdout.write(f"Добавлена карта: \n, {direction.pk}, {card}")
-                        eds_documents_data = json.dumps({"pk": direction.pk})
-                        eds_documents_obj = HttpRequest()
-                        eds_documents_obj._body = eds_documents_data
-                        eds_documents_obj.user = doc_profile.user
-                        eds_documents(eds_documents_obj)
+                        result = process_to_sign_direction(direction, direction.pk, doc_profile.user, iss)
+                        stdout.write(f"sign_data: {result}")
                 except Exception as e:
                     logger.exception(e)
                     message = "Серверная ошибка"
                     return {"ok": False, "message": message}
-                step += 1
-                stdout.write(f"{step}")
-                stdout.write(f"Добавлена карта: \n, {direction.pk}, {card}")
+            step += 1
+            stdout.write(f"{step}")
+            stdout.write(f"Добавлена карта: \n, {direction.pk}, {card}")

@@ -3877,6 +3877,12 @@ def eds_documents(request):
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
 
+    documents = process_to_sign_direction(direction, pk, request.user, iss_obj)
+
+    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
+
+
+def process_to_sign_direction(direction, pk, user, iss_obj):
     required_signatures = direction.required_signatures(need_save=True)
 
     documents = []
@@ -3926,7 +3932,7 @@ def eds_documents(request):
                         "inline": '1',
                         "protocol_plain_text": '1',
                     },
-                    'user': request.user,
+                    'user': user,
                     'plain_response': True,
                 }
                 filename = f'{pk}-{last_time_confirm}.pdf'
@@ -3969,8 +3975,7 @@ def eds_documents(request):
         }
 
         documents.append(document)
-
-    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
+    return documents
 
 
 @login_required
