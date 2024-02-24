@@ -14,8 +14,6 @@ from django.db import transaction
 from django.utils import timezone
 
 from utils.nsi_directories import NSI
-import simplejson as json
-from django.http import HttpRequest
 from api.directions.views import eds_documents, process_to_sign_direction
 
 logger = logging.getLogger("IF")
