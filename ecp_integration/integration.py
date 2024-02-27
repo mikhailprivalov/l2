@@ -172,6 +172,7 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
         if d.rmis_location.find("@L") > -1:
             key_time = "InternalTimeTableResource_begTime"
             result_internal_resource = get_available_hospital_resource_slot(research_pk, date_start, date_end, allow_cito=has_group(user_data, 'Цито-запись в расписании'))
+            print(result_internal_resource)
             doctor_internal_schedule_date = []
             for key_is_date, val_is_date_info in result_internal_resource['dates'].items():
                 for resource_info in val_is_date_info:
@@ -260,7 +261,7 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00', rese
     free_slots = req_result['data']
     if len(free_slots) > 0:
         slots = sorted(free_slots, key=lambda k: k[key_time])
-        free_slots_params = [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
+        free_slots_params = [{"pk": x[type_slot], "title": f"{datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M')}", "typeSlot": type_slot} for x in slots]
         if type_slot == "TimseTableGraf_id":
             for param in free_slots_params:
                 slot_type_id = get_time_table_graf_by_id(param["pk"], sess_id)

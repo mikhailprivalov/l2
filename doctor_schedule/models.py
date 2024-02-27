@@ -20,6 +20,8 @@ class ScheduleResource(models.Model):
     )
     speciality = models.ForeignKey(Speciality, null=True, blank=True, verbose_name='Специальность', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
+    prefix_on_slot = models.CharField(max_length=5, default="", help_text='Префикс на слотах времени')
+    comment = models.CharField(max_length=255, default="", help_text='Комментарий ресурса')
 
     def __str__(self):
         parts = [

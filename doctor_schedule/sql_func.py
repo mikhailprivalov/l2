@@ -72,7 +72,7 @@ def get_date_slots_for_many_resource(date_start, date_end, resource_tuple):
             to_char(datetime_end AT TIME ZONE %(tz)s, 'HH24:MI') AS end_slot,
             to_char(datetime AT TIME ZONE %(tz)s, 'YYYY-MM-DD') AS date_char
             FROM doctor_schedule_slotplan
-            WHERE datetime AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and resource_id in %(resource_tuple)s 
+            WHERE datetime AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s and resource_id in %(resource_tuple)s and disabled = false
             ORDER BY resource_id, datetime
         """,
             params={'d_start': date_start, 'd_end': date_end, 'tz': TIME_ZONE, 'resource_tuple': resource_tuple},
