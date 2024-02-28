@@ -98,6 +98,8 @@ class SlotPlan(models.Model):
                     is_not_empty_day = True
             if is_not_empty_day:
                 continue
+            else:
+                SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start_dt + timedelta(days=i + 1), datetime_end__lte=date_end_dt + timedelta(days=i + 1)).delete()
             for s in slot_plan:
 
                 SlotPlan.objects.create(
