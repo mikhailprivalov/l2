@@ -172,7 +172,6 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
         if d.rmis_location.find("@L") > -1:
             key_time = "InternalTimeTableResource_begTime"
             result_internal_resource = get_available_hospital_resource_slot(research_pk, date_start, date_end, allow_cito=has_group(user_data, 'Цито-запись в расписании'))
-            print(result_internal_resource)
             doctor_internal_schedule_date = []
             for key_is_date, val_is_date_info in result_internal_resource['dates'].items():
                 for resource_info in val_is_date_info:
