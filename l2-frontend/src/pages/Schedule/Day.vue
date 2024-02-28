@@ -193,7 +193,7 @@ $hour-height: 120px;
   top: 0;
   z-index: 3;
   background-color: #fff;
-  height: 51px;
+  height: 65px;
 }
 
 .hour {
