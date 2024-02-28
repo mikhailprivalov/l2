@@ -12,6 +12,26 @@
       >
         <i class="fas fa-paint-roller" />
       </a>
+      <a
+        v-if="isEditing"
+        v-tippy
+        href="#"
+        class="a-under"
+        title="Удалить слоты"
+        @click.prevent="deleteDaySlots()"
+      >
+        <i class="fa-solid fa-trash-can" />
+      </a>
+      <a
+        v-if="isEditing"
+        v-tippy
+        href="#"
+        class="a-under"
+        title="Скопировать слоты"
+        @click.prevent="copyDaySlots()"
+      >
+        <i class="fa-solid fa-copy"/>
+      </a>
     </div>
     <div class="week-day-name">
       {{ weekDayName }}
@@ -269,6 +289,32 @@ export default class Day extends Vue {
       return;
     }
     this.open = false;
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.$root.$emit('reload-slots');
+  }
+
+  async deleteDaySlots() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await this.$api('/schedule/delete-day-slots', this, ['resource'], {
+      date: this.day.date,
+    });
+    if (!ok) {
+      this.$root.$emit('msg', 'error', message);
+      return;
+    }
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.$root.$emit('reload-slots');
+  }
+
+  async copyDaySlots() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await this.$api('/schedule/copy-day-slots', this, ['resource'], {
+      date: this.day.date,
+    });
+    if (!ok) {
+      this.$root.$emit('msg', 'error', message);
+      return;
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
     this.$root.$emit('reload-slots');
   }

@@ -20,6 +20,8 @@ class ScheduleResource(models.Model):
     )
     speciality = models.ForeignKey(Speciality, null=True, blank=True, verbose_name='Специальность', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
+    prefix_on_slot = models.CharField(max_length=5, default="", help_text='Префикс на слотах времени')
+    comment = models.CharField(max_length=255, default="", help_text='Комментарий ресурса')
 
     def __str__(self):
         parts = [
@@ -70,6 +72,20 @@ class SlotPlan(models.Model):
         verbose_name = 'Слот'
         verbose_name_plural = 'Слоты'
         ordering = ['-id']
+
+    @staticmethod
+    def delete_slot_plan(resource_id, date_start, date_end):
+        slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start, datetime_end__lte=date_end, disabled=False)
+        slot_plan_ids = [i.pk for i in slot_plan]
+        slot_plan_id_has_slot_fact = SlotFact.objects.values_list('plan_id', flat=True).filter(plan_id__in=slot_plan_ids)
+        for s in slot_plan:
+            if s.id not in slot_plan_id_has_slot_fact:
+                s.delete()
+        return True
+
+    @staticmethod
+    def copy_day_slots_plan(resource_id, date_start, date_end):
+        return True
 
 
 class SlotFact(models.Model):
