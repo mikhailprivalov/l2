@@ -571,4 +571,5 @@ def copy_day_slots(request):
     date_start = f"{date} 00:00:00"
     date_end = f"{date} 23:59:59"
     result = SlotPlan.copy_day_slots_plan(resource, date_start, date_end)
+
     return status_response(result)
