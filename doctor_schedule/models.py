@@ -73,6 +73,16 @@ class SlotPlan(models.Model):
         verbose_name_plural = 'Слоты'
         ordering = ['-id']
 
+    @staticmethod
+    def delete_slot_plan(resource_id, date_start, date_end):
+        slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start, datetime_end__lte=date_end, disabled=False)
+        slot_plan_ids = [i.pk for i in slot_plan]
+        slot_plan_id_has_slot_fact = SlotFact.objects.values_list('plan_id', flat=True).filter(plan_id__in=slot_plan_ids)
+        for s in slot_plan:
+            if s.id not in slot_plan_id_has_slot_fact:
+                s.delete()
+        return True
+
 
 class SlotFact(models.Model):
     RESERVED = 0

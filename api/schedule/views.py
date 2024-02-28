@@ -550,3 +550,14 @@ def can_edit_resource(request, resource_pk):
     if has_group(request.user, *ADMIN_SCHEDULE_GROUPS):
         return True
     return can_access_user_to_modify_resource(request.user.doctorprofile, resource_pk=resource_pk)
+
+
+@login_required
+def delete_day_slots(request):
+    data = data_parse(request.body, {'date': str, 'resource': int})
+    date: str = data[0]
+    resource: int = data[1]
+    date_start = f"{date} 00:00:00"
+    date_end = f"{date} 23:59:59"
+    result = SlotPlan.delete_slot_plan(resource, date_start, date_end)
+    return status_response(result)
