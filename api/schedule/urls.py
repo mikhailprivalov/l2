@@ -17,4 +17,5 @@ urlpatterns = [
     path('available-slots-of-dates', views.available_slots_of_dates),
     path('schedule-access', views.schedule_access),
     path('delete-day-slots', views.delete_day_slots),
+    path('copy-day-slots', views.copy_day_slots),
 ]

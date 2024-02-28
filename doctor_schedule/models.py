@@ -83,6 +83,10 @@ class SlotPlan(models.Model):
                 s.delete()
         return True
 
+    @staticmethod
+    def copy_day_slots_plan(resource_id, date_start, date_end):
+        return True
+
 
 class SlotFact(models.Model):
     RESERVED = 0

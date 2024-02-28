@@ -561,3 +561,14 @@ def delete_day_slots(request):
     date_end = f"{date} 23:59:59"
     result = SlotPlan.delete_slot_plan(resource, date_start, date_end)
     return status_response(result)
+
+
+@login_required
+def copy_day_slots(request):
+    data = data_parse(request.body, {'date': str, 'resource': int})
+    date: str = data[0]
+    resource: int = data[1]
+    date_start = f"{date} 00:00:00"
+    date_end = f"{date} 23:59:59"
+    result = SlotPlan.copy_day_slots_plan(resource, date_start, date_end)
+    return status_response(result)
