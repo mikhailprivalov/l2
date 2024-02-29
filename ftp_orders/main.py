@@ -7,6 +7,7 @@ import tempfile
 from collections import defaultdict
 from collections.abc import Iterable
 from io import BytesIO
+from sys import stdout
 from urllib.parse import urlparse
 import time
 
@@ -72,7 +73,7 @@ class FTPConnection:
         if color:
             message += "\033[0m"
 
-        print(message)  # noqa: F201
+        stdout.write(message)
 
     def error(self, *msg):
         self.log(*msg, color='91', level='ERROR')
@@ -585,7 +586,7 @@ def process_pull_orders():
 
     hospitals = get_hospitals_pull_orders()
 
-    print('Getting ftp links')  # noqa: F201
+    stdout.write('Getting ftp links')
     ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -597,7 +598,7 @@ def process_pull_orders():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
+        stdout.write(f'Iterating over {len(ftp_links)} servers')
         for ftp_url, ftp_connection in ftp_connections.items():
             processed_files_new = set()
             try:
@@ -625,7 +626,7 @@ def process_pull_orders():
 
 
 def process_pull_start_orders():
-    print('Starting pull_orders process')  # noqa: F201
+    stdout.write('Starting pull_orders process')
     while True:
         process_pull_orders()
         time.sleep(1)
@@ -639,7 +640,7 @@ def get_hospitals_push_orders():
 def process_push_orders():
     hospitals = get_hospitals_push_orders()
 
-    print('Getting ftp links')  # noqa: F201
+    stdout.write('Getting ftp links')
     ftp_links = {x.orders_push_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -651,7 +652,7 @@ def process_push_orders():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
+        stdout.write(f'Iterating over {len(ftp_links)} servers')
         for ftp_url, ftp_connection in ftp_connections.items():
             directions_to_sync = []
             directions = []
@@ -704,14 +705,14 @@ def process_push_results():
 
 
 def process_push_orders_start():
-    print('Starting push_orders process')  # noqa: F201
+    stdout.write('Starting push_orders process')
     while True:
         process_push_orders()
         time.sleep(1)
 
 
 def process_push_results_start():
-    print('Starting push_orders process')  # noqa: F201
+    stdout.write('Starting push_orders process')
     while True:
         process_push_results()
         time.sleep(1)
