@@ -501,6 +501,9 @@ class FTPConnection:
                 },
             )
 
+    def push_result(self, direction: Napravleniya):
+        pass
+
     def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids, directions_to_sync):
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         directons_external_order_group = Napravleniya.objects.filter(external_order_id__in=registered_orders_ids)

@@ -3424,6 +3424,7 @@ def send_laboratory_order(request):
                 services=internal_research_code_by_tube_number[order_number_str],
                 patient_card=card,
                 file_name="",
+                hl7=order_data.get("hl7", "")
             )
             result = Napravleniya.gen_napravleniya_by_issledovaniya(
                 card.pk,
