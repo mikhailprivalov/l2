@@ -6,6 +6,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 from directions.models import Napravleniya
+from datetime import timedelta, datetime
 
 
 class ScheduleResource(models.Model):
@@ -84,7 +85,32 @@ class SlotPlan(models.Model):
         return True
 
     @staticmethod
-    def copy_day_slots_plan(resource_id, date_start, date_end):
+    def copy_day_slots_plan(resource_id, date_start, date_end, count_days_to_copy):
+        slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start, datetime_end__lte=date_end)
+
+        date_start_dt = datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S")
+        date_end_dt = datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
+        for i in range(count_days_to_copy):
+            target_slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start_dt + timedelta(days=i + 1), datetime_end__lte=date_end_dt + timedelta(days=i + 1))
+            is_not_empty_day = False
+            for tsp in target_slot_plan:
+                if SlotFact.objects.filter(plan=tsp).exists():
+                    is_not_empty_day = True
+            if is_not_empty_day:
+                continue
+            else:
+                SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start_dt + timedelta(days=i + 1), datetime_end__lte=date_end_dt + timedelta(days=i + 1)).delete()
+            for s in slot_plan:
+
+                SlotPlan.objects.create(
+                    resource_id=resource_id,
+                    datetime=s.datetime + timedelta(days=i + 1),
+                    datetime_end=s.datetime_end + timedelta(days=i + 1),
+                    duration_minutes=s.duration_minutes,
+                    available_systems=s.available_systems,
+                    disabled=s.disabled,
+                )
+
         return True
 
 
