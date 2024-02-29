@@ -700,66 +700,7 @@ def process_push_orders():
 
 
 def process_push_results():
-    hospitals = get_hospitals_push_orders()
-
-    print('Getting ftp links')  # noqa: F201
-    ftp_links = {x.orders_push_by_numbers: x for x in hospitals}
-
-    ftp_connections = {}
-
-    for ftp_url in ftp_links:
-        ftp_connection = FTPConnection(ftp_url, hospital=ftp_links[ftp_url])
-        ftp_connections[ftp_url] = ftp_connection
-
-    time_start = time.time()
-
-    while time.time() - time_start < MAX_LOOP_TIME:
-        print(f'Iterating over {len(ftp_links)} servers')  # noqa: F201
-        for ftp_url, ftp_connection in ftp_connections.items():
-            directions_to_sync = []
-            directions = []
-            directions_external_executor = []
-            if ftp_connection.hospital.is_auto_transfer_hl7_file:
-                directions = Napravleniya.objects.filter(hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
-            else:
-                directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
-            for dir_external in directions_external_executor:
-                if dir_external not in directions:
-                    directions.append(dir_external)
-
-            if NEED_RECIEVE_TUBE_TO_PUSH_ORDER:
-                for direction in directions:
-                    is_recieve = False
-                    for tube in TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).distinct():
-                        is_recieve = True
-                        if tube.time_recive is None:
-                            is_recieve = False
-                    if is_recieve:
-                        directions_to_sync.append(direction)
-            else:
-                directions_to_sync.extend(directions)
-
-            ftp_connection.log(f"Directions to sync: {[d.pk for d in directions_to_sync]}")
-
-            if directions_to_sync:
-                try:
-                    ftp_connection.connect()
-                    for direction in directions_to_sync:
-                        if direction.external_order and direction.need_order_redirection:
-                            registered_orders_ids = direction.external_order.get_registered_orders_by_file_name()
-                            ftp_connection.push_tranfer_file_order(direction, registered_orders_ids, directions_to_sync)
-                        else:
-                            ftp_connection.push_order(direction)
-
-                except ftplib.all_errors as e:
-                    ftp_connection.error(f"error: {e}")
-                    ftp_connection.log("Disconnecting...")
-                    ftp_connection.disconnect()
-
-        time.sleep(5)
-
-    for _, ftp_connection in ftp_connections.items():
-        ftp_connection.disconnect()
+    pass
 
 
 def process_push_orders_start():
