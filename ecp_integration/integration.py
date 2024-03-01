@@ -260,7 +260,7 @@ def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00', rese
     free_slots = req_result['data']
     if len(free_slots) > 0:
         slots = sorted(free_slots, key=lambda k: k[key_time])
-        free_slots_params = [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
+        free_slots_params = [{"pk": x[type_slot], "title": f"{datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M')}", "typeSlot": type_slot} for x in slots]
         if type_slot == "TimseTableGraf_id":
             for param in free_slots_params:
                 slot_type_id = get_time_table_graf_by_id(param["pk"], sess_id)

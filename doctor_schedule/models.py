@@ -6,6 +6,7 @@ from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile, Speciality
 from utils.models import ChoiceArrayField
 from directions.models import Napravleniya
+from datetime import timedelta, datetime
 
 
 class ScheduleResource(models.Model):
@@ -20,6 +21,8 @@ class ScheduleResource(models.Model):
     )
     speciality = models.ForeignKey(Speciality, null=True, blank=True, verbose_name='Специальность', db_index=True, on_delete=models.CASCADE)
     hide = models.BooleanField(default=False, blank=True, help_text='Скрытие ресурса', db_index=True)
+    prefix_on_slot = models.CharField(max_length=5, default="", help_text='Префикс на слотах времени')
+    comment = models.CharField(max_length=255, default="", help_text='Комментарий ресурса')
 
     def __str__(self):
         parts = [
@@ -70,6 +73,45 @@ class SlotPlan(models.Model):
         verbose_name = 'Слот'
         verbose_name_plural = 'Слоты'
         ordering = ['-id']
+
+    @staticmethod
+    def delete_slot_plan(resource_id, date_start, date_end):
+        slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start, datetime_end__lte=date_end, disabled=False)
+        slot_plan_ids = [i.pk for i in slot_plan]
+        slot_plan_id_has_slot_fact = SlotFact.objects.values_list('plan_id', flat=True).filter(plan_id__in=slot_plan_ids)
+        for s in slot_plan:
+            if s.id not in slot_plan_id_has_slot_fact:
+                s.delete()
+        return True
+
+    @staticmethod
+    def copy_day_slots_plan(resource_id, date_start, date_end, count_days_to_copy):
+        slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start, datetime_end__lte=date_end)
+
+        date_start_dt = datetime.strptime(date_start, "%Y-%m-%d %H:%M:%S")
+        date_end_dt = datetime.strptime(date_end, "%Y-%m-%d %H:%M:%S")
+        for i in range(count_days_to_copy):
+            target_slot_plan = SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start_dt + timedelta(days=i + 1), datetime_end__lte=date_end_dt + timedelta(days=i + 1))
+            is_not_empty_day = False
+            for tsp in target_slot_plan:
+                if SlotFact.objects.filter(plan=tsp).exists():
+                    is_not_empty_day = True
+            if is_not_empty_day:
+                continue
+            else:
+                SlotPlan.objects.filter(resource_id=resource_id, datetime__gte=date_start_dt + timedelta(days=i + 1), datetime_end__lte=date_end_dt + timedelta(days=i + 1)).delete()
+            for s in slot_plan:
+
+                SlotPlan.objects.create(
+                    resource_id=resource_id,
+                    datetime=s.datetime + timedelta(days=i + 1),
+                    datetime_end=s.datetime_end + timedelta(days=i + 1),
+                    duration_minutes=s.duration_minutes,
+                    available_systems=s.available_systems,
+                    disabled=s.disabled,
+                )
+
+        return True
 
 
 class SlotFact(models.Model):

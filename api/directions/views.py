@@ -3866,7 +3866,7 @@ def eds_documents(request):
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
     if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
-        direction.client.individual.sync_with_tfoms()
+        # direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
             return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "У пациента некорректный СНИЛС"})
@@ -3877,6 +3877,12 @@ def eds_documents(request):
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
 
+    documents = process_to_sign_direction(direction, pk, request.user, iss_obj)
+
+    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
+
+
+def process_to_sign_direction(direction, pk, user, iss_obj):
     required_signatures = direction.required_signatures(need_save=True)
 
     documents = []
@@ -3926,7 +3932,7 @@ def eds_documents(request):
                         "inline": '1',
                         "protocol_plain_text": '1',
                     },
-                    'user': request.user,
+                    'user': user,
                     'plain_response': True,
                 }
                 filename = f'{pk}-{last_time_confirm}.pdf'
@@ -3969,8 +3975,7 @@ def eds_documents(request):
         }
 
         documents.append(document)
-
-    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
+    return documents
 
 
 @login_required
@@ -4089,8 +4094,10 @@ def eds_to_sign(request):
             elif mode == 'my':
                 d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
         else:
-            # TODO: тут нужен фильтр, что получены все необходимые подписи, кроме Медицинская организация, если mode == 'mo'
-            # TODO: тут нужен фильтр, что не получена подпись Врач, если mode == 'my'
+            if mode == 'mo':
+                d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
+            elif mode == 'my':
+                d_qs = d_qs.exclude(directiondocument__documentsign__sign_type='Врач')
             d_qs = d_qs.filter(eds_total_signed=False)
 
     d: Napravleniya

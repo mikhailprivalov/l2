@@ -115,7 +115,8 @@ const filteredResearchTubes = computed(() => researchTubes.value.map(tubes => {
   const searchTerm = search.value.toLowerCase();
   const result = tubes.researches.filter(research => {
     const researchTitle = research.title.toLowerCase();
-    return researchTitle.includes(searchTerm);
+    const researchInternalCode = research.internalCode.toLowerCase();
+    return researchTitle.includes(searchTerm) || researchInternalCode.includes(searchTerm);
   });
   if (result) {
     return { researches: result, tubes: tubes.tubes };

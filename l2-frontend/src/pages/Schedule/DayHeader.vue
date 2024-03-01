@@ -2,6 +2,11 @@
   <div v-frag>
     <div class="date-display">
       {{ dateDisplay }}
+    </div>
+    <div class="week-day-name">
+      {{ weekDayName }}
+    </div>
+    <div>
       <a
         v-if="isEditing"
         v-tippy
@@ -12,9 +17,26 @@
       >
         <i class="fas fa-paint-roller" />
       </a>
-    </div>
-    <div class="week-day-name">
-      {{ weekDayName }}
+      <a
+        v-if="isEditing"
+        v-tippy
+        href="#"
+        class="a-under"
+        title="Удалить слоты"
+        @click.prevent="deleteDaySlots()"
+      >
+        <i class="fa-solid fa-trash-can" />
+      </a>
+      <a
+        v-if="isEditing"
+        v-tippy
+        href="#"
+        class="a-under"
+        title="Скопировать слоты"
+        @click.prevent="copyDaySlots()"
+      >
+        <i class="fa-solid fa-copy" />
+      </a>
     </div>
 
     <MountingPortal
@@ -111,6 +133,55 @@
             </div>
           </div>
         </modal>
+        <modal
+          v-if="isCopyDaySlots"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          margin-left-right="auto"
+          @close="isCopyDaySlots = false"
+        >
+          <span slot="header">Скопировать слоты для даты {{ day.date | formatDate }}</span>
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <div class="input-group">
+              <span class="input-group-addon">Количество (1 - {{ countMax }})</span>
+              <input
+                v-model.number="countDaysToCopy"
+                class="form-control"
+                type="number"
+                min="1"
+                :max="countMax"
+              >
+            </div>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-6">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  @click="isCopyDaySlots = false"
+                >
+                  Закрыть
+                </button>
+              </div>
+              <div class="col-xs-6 text-right">
+                <button
+                  class="btn btn-blue-nb"
+                  type="button"
+                  :disabled="!isValid"
+                  @click="copySchedule"
+                >
+                  Сохранить
+                </button>
+              </div>
+            </div>
+          </div>
+        </modal>
       </transition>
     </MountingPortal>
   </div>
@@ -160,9 +231,11 @@ const minutesToTime = (mins) => {
   data() {
     return {
       open: false,
+      isCopyDaySlots: false,
       timeStart: '08:00',
       duration: 15,
       count: 10,
+      countDaysToCopy: 1,
       sources: ['portal', 'local'],
     };
   },
@@ -190,12 +263,19 @@ const minutesToTime = (mins) => {
 
       this.open = true;
     });
+
+    this.$root.$on('schedule:copy-schedule', () => {
+      this.count = 1;
+      this.isCopyDaySlots = true;
+    });
   },
 })
 export default class Day extends Vue {
   day: any;
 
   open: boolean;
+
+  isCopyDaySlots: boolean;
 
   timeStart: string;
 
@@ -259,6 +339,10 @@ export default class Day extends Vue {
     this.open = true;
   }
 
+  copyDaySlots() {
+    this.isCopyDaySlots = true;
+  }
+
   async save() {
     await this.$store.dispatch(actions.INC_LOADING);
     const { ok, message } = await this.$api('/schedule/create-slots', this, ['slots', 'sources', 'duration', 'resource'], {
@@ -269,6 +353,32 @@ export default class Day extends Vue {
       return;
     }
     this.open = false;
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.$root.$emit('reload-slots');
+  }
+
+  async deleteDaySlots() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await this.$api('/schedule/delete-day-slots', this, ['resource'], {
+      date: this.day.date,
+    });
+    if (!ok) {
+      this.$root.$emit('msg', 'error', message);
+      return;
+    }
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.$root.$emit('reload-slots');
+  }
+
+  async copySchedule() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await this.$api('/schedule/copy-day-slots', this, ['resource', 'countDaysToCopy'], {
+      date: this.day.date,
+    });
+    if (!ok) {
+      this.$root.$emit('msg', 'error', message);
+      return;
+    }
     await this.$store.dispatch(actions.DEC_LOADING);
     this.$root.$emit('reload-slots');
   }

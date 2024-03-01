@@ -390,7 +390,7 @@ import usersPoint from '@/api/user-point';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
-import { convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
+import { convertSubjectNameToCertObject, convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
   { id: 'mo', label: 'Подписи медицинской организации' },
@@ -525,6 +525,10 @@ export default class EDS extends Vue {
     return !subjectNameHasOGRN(null, cert.subjectName);
   }
 
+  get snilsUser() {
+    return (this.$store.getters.user_data.snils);
+  }
+
   get accessToMO() {
     return (this.$store.getters.user_data.groups || []).includes('ЭЦП Медицинской организации');
   }
@@ -573,7 +577,20 @@ export default class EDS extends Vue {
   }
 
   get certificatesDisplay() {
-    return this.certificates.map(c => ({
+    const filteredCertificates = this.certificates.filter((cert) => {
+      const certObj = convertSubjectNameToCertObject(cert.subjectName);
+      const snilsCert = certObj['СНИЛС'] || certObj.SNILS;
+      if (this.filters.mode === 'my') {
+        return snilsCert === this.snilsUser;
+      }
+      return !!(certObj.ORGN || certObj['ОГРН']);
+    });
+    if (filteredCertificates.length === 0) {
+      this.selectedCertificate = null;
+    } else {
+      this.selectedCertificate = filteredCertificates[0]?.thumbprint;
+    }
+    return filteredCertificates.map(c => ({
       thumbprint: c.thumbprint,
       name: convertSubjectNameToTitle(null, c.subjectName),
     }));
@@ -581,7 +598,7 @@ export default class EDS extends Vue {
 
   get deps() {
     return [
-      ...this.users.map(d => ({ id: Number(d.id.split('-')[1]) || -1, label: d.label })),
+      ...this.users.map(d => ({ id: d.id, label: d.label })),
       { id: -1, label: 'Все отделения' },
     ];
   }
@@ -632,7 +649,6 @@ export default class EDS extends Vue {
       if (this.certificates.length > 0) {
         // eslint-disable-next-line no-console
         console.log('getCertificates', true, this.certificates);
-        this.selectedCertificate = this.certificates[0]?.thumbprint;
       } else {
         // eslint-disable-next-line no-console
         console.log('getCertificates', false);

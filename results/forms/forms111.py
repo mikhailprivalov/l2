@@ -95,7 +95,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(tbl)
 
-    title_fields = ["Дата начала", "Диагноз", "Группа здоровья", "Главный врач"]
+    title_fields = ["Дата начала", "Диагноз", "Группа здоровья", "Главный врач", "Дата осмотра"]
     result = fields_result_only_title_fields(iss, title_fields, False)
     data = {}
     for i in result:
@@ -197,7 +197,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     )
     objs.append(
         Paragraph(
-            f"10. Дата начала профилактического медицинского осмотра несовершеннолетнего (далее - профилактический осмотр): <u>{data.get('Дата осомтра', '')}</u>",
+            f"10. Дата начала профилактического медицинского осмотра несовершеннолетнего (далее - профилактический осмотр): <u>{data.get('Дата осмотра', '')}</u>",
             style,
         )
     )
@@ -413,15 +413,16 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         )
     )
     health_group_I, health_group_II, health_group_III, health_group_IV, health_group_V = "I", "II", "III", "IV", "V"
-    if data["Группа здоровья"] == "I":
+    val = json.loads(data["Группа здоровья"])
+    if val["title"] == "I группа":
         health_group_I = "<u>I</u>"
-    elif data["Группа здоровья"] == "II":
+    elif val["title"] == "II группа":
         health_group_II = "<u>II</u>"
-    elif data["Группа здоровья"] == "III":
+    elif val["title"] == "III группа":
         health_group_III = "<u>III</u>"
-    elif data["Группа здоровья"] == "IV":
+    elif val["title"] == "IV группа":
         health_group_IV = "<u>IV</u>"
-    elif data["Группа здоровья"] == "V":
+    elif val["title"] == "V группа":
         health_group_V = "<u>V</u>"
 
     objs.append(
@@ -837,7 +838,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     objs.append(Spacer(1, 1 * mm))
     objs.append(
         Paragraph(
-            f"Дата заполнения <u>{current_time(only_date=True).strftime('%d.%m.%Y')}</u>",
+            f"Дата заполнения <u>{data.get('Дата осмотра', current_time(only_date=True).strftime('%d.%m.%Y'))}</u>",
             style,
         )
     )

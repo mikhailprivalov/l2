@@ -1982,7 +1982,8 @@ def get_cda_data(pk):
     p_enp = bool(re.search(p_enp_re, card.get_data_individual()["oms"]["polis_num"]))
     insurer_full_code = card.get_data_individual()["insurer_full_code"]
     if not insurer_full_code:
-        card.individual.sync_with_tfoms()
+        pass
+        # card.individual.sync_with_tfoms()
     insurer_full_code = card.get_data_individual()["insurer_full_code"]
     smo_title = ""
     smo_id = ""
@@ -3423,6 +3424,7 @@ def send_laboratory_order(request):
                 services=internal_research_code_by_tube_number[order_number_str],
                 patient_card=card,
                 file_name="",
+                hl7=order_data.get("hl7", ""),
             )
             result = Napravleniya.gen_napravleniya_by_issledovaniya(
                 card.pk,

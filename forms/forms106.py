@@ -25,7 +25,7 @@ from utils.dates import normalize_date
 from .forms_func import primary_reception_get_data, hosp_extract_get_data, hosp_get_clinical_diagnos, hosp_get_transfers_data, hosp_get_operation_data, closed_bl
 
 
-def form_01(request_data):
+def form_02(request_data):
     """
     Форма 003/у - стационарная карта
     """
@@ -560,7 +560,7 @@ def form_01(request_data):
     return pdf
 
 
-def form_02(request_data):
+def form_01(request_data):
     """
     Форма 003/у - cтационарная карта 530Н
     """

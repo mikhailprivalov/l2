@@ -420,6 +420,7 @@ class RegisteredOrders(models.Model):
     totally_completed = models.BooleanField(default=False, db_index=True, help_text='Все исследования по заказу завершены')
     need_check_for_results_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление результатов')
     created_at = models.DateTimeField(auto_now_add=True)
+    hl7 = models.TextField(verbose_name="HL7 в base64", blank=True, null=True, default=None)
 
     def __str__(self):
         return f"{self.order_number} {self.patient_card}"

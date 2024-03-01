@@ -27,11 +27,16 @@ class ResAssignmentTemplates(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+class ResPosition(admin.ModelAdmin):
+    list_display = ('title', 'n3_id',)
+    list_display_links = ('title', 'n3_id',)
+
+
 admin.site.register(DoctorProfile, DocAdmin)
 admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
 admin.site.register(AssignmentResearches)
 admin.site.register(Speciality)
-admin.site.register(Position)
 admin.site.register(AvailableResearchByGroup)
 
 admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
+admin.site.register(Position, ResPosition)
