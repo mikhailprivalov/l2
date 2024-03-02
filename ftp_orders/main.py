@@ -21,10 +21,12 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
+from hl7apy.core import Message, Segment, Group
+from ftplib import FTP
 
 
 class ServiceNotFoundException(Exception):
@@ -502,9 +504,6 @@ class FTPConnection:
                 },
             )
 
-    def push_result(self, direction: Napravleniya):
-        pass
-
     def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids, directions_to_sync):
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         directons_external_order_group = Napravleniya.objects.filter(external_order_id__in=registered_orders_ids)
@@ -701,7 +700,9 @@ def process_push_orders():
 
 
 def process_push_results():
-    pass
+    stdout.write('Getting ftp links')
+    ftp_connections = {}
+    ftp_field = "ftp://user:password@host.example.com/path"
 
 
 def process_push_orders_start():
@@ -769,3 +770,69 @@ def process_pull_start_results():
     while True:
         process_pull_results()
         time.sleep(1)
+
+
+def push_result():
+        # hl7 = Message("ORU_R01")
+        hl7 = Message()
+        meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
+        """{
+            "msh": {
+                "app_sender": "",
+                "organization_sender": "",
+                "app_receiver": "",
+                "organization_receiver": ""},
+            "obr": {
+                "executer_code": ""
+            },
+            "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
+            "id_researches": [],
+        }
+        """
+        msh_meta = meta_data.get("msh")
+        app_sender = msh_meta.get("app_sender")
+        organization_sender = msh_meta.get("organization_sender")
+        app_receiver = msh_meta.get("app_receiver")
+        organization_receiver = msh_meta.get("organization_receiver")
+
+        obr_meta = meta_data.get("obr")
+        obr_executor = obr_meta.get("executer_code")
+
+        service = ""
+        confirm_data_service = "" # 20240301130859
+        tube_number = ""
+        # internal_id = research.internal_id
+        internal_id = "1212"
+
+        pid_data = "" # "PID||ЛЛ021137|||Тришина^Елена^Леонидовна||19721228|F|||||79029186531~~~ZWtvcHRpa0BtYWlsLnJ1||||||"
+        pv1_date = "20240301"
+        # fsli_data = ["OBX|1|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859"]
+        fsli_data = [
+            "OBX|1|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859",
+            "OBX|2|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859",
+            "OBX|3|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859",
+                     ]
+
+        hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_data_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
+        hl7.pid = "PID||ЛЛ021137|||Тришина^Елена^Леонидовна||19721228|F|||||79029186531~~~ZWtvcHRpa0BtYWlsLnJ1||||||"
+        hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
+        obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{1212}|||{confirm_data_service}|{confirm_data_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
+        hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
+
+        obs_name = 'ORU_R01_OBSERVATION'
+        for fsli in fsli_data:
+            obx_group = Group(obs_name)
+            obx = Segment('OBX')
+            obx.value = fsli
+            obx_group.add(obx)
+            hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.add(obx_group)
+
+        content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
+        created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        filename = f"form1c_orm_1_{created_at}.res"
+
+        ftp_settings = msh_meta.get("ftp_settings")
+
+        with FTP(ftp_settings["address"], ftp_settings["user"], ftp_settings["password"]) as ftp:
+            ftp.cwd(ftp_settings["path"])
+            ftp.storbinary(f"STOR {filename}", BytesIO(content.encode('cp1251')))
