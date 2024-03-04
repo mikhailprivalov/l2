@@ -430,6 +430,7 @@ class EmployeePosition(models.Model):
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
     short_title = models.CharField(max_length=25, verbose_name='Сокращенное наименование')
+    hide = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.title
@@ -442,7 +443,7 @@ class WorkDayStatus(models.Model):
 class TimeTrackingDocument(models.Model):
     create_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время создания")
     month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
-    department = models.ForeignKey(Department, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    department = models.ForeignKey(Department, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     doc_create = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
 
     class Meta:
@@ -463,9 +464,9 @@ class TimeTrackingDocument(models.Model):
         ).save()
 
 
-class StatusCheckTimeTrackingDocument(models.Model):
+class TypeCheckTimeTrackingDocument(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
-    short_title = models.CharField(max_length=25, verbose_name='Сокращенное наименование')
+    hide = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.title
@@ -476,16 +477,37 @@ class StatusCheckTimeTrackingDocument(models.Model):
 
 
 class TimeTrackingStatus(models.Model):
-    time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    """
+       raw_data = [
+           {
+               "snils": "121212121",
+               "personLastname": "sds",
+               "personFirstName": "sds",
+               "personPatronymic": "sds",
+               "employeeData": [
+                   {
+                       "postTitle": "postTitle",
+                       "typePost": "typePost",
+                       "departmentTitle": "departmentTitle",
+                       "tabelNumber": "tabelNumber",
+                       "dates": [{"data": "20240229", "startTime": "0800", "endTime": "1600", "statusId": "1", "statusTitle": "работал"}],
+                       "commonHours": {}
+                   },
+               ]
+           }
+       ]
+       """
+    time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     doc_confirm = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
     doc_confirm_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     is_actual = models.BooleanField(help_text="Акутальный", default=True)
     version = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
-    status = models.ForeignKey(StatusCheckTimeTrackingDocument, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    status = models.ForeignKey(TypeCheckTimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     doc_change_status = models.ForeignKey(DoctorProfile, related_name="doc_change_status", null=True, blank=True, db_index=True, help_text="Профиль проверяющего", on_delete=models.SET_NULL)
     doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время изменения статуса")
+    raw_data = models.TextField(blank=True, null=True, help_text="Данные документа")
 
     class Meta:
         verbose_name = "График-документ"
@@ -493,13 +515,17 @@ class TimeTrackingStatus(models.Model):
 
 
 class EmployeeWorkingHoursSchedule(models.Model):
-    time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, on_delete=models.SET_NULL)
-    employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, default=None, on_delete=models.SET_NULL)
-    start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
-    end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
-    work_time_status = models.ForeignKey(WorkDayStatus, default=None, on_delete=models.CASCADE, verbose_name='Тип')
-    doctor_profile_saved = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись')
+    time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, db_index=True, default=None, on_delete=models.SET_NULL)
+    start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='дата-время начала')
+    end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='дата-время окончания')
+    day = models.DateField(verbose_name='Дата учета времени', null=True, blank=True, default=None, db_index=True, help_text='дата')
+    work_day_status = models.ForeignKey(WorkDayStatus, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL, verbose_name='Тип')
+    user_saved = models.ForeignKey('users.DoctorProfile', on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись')
 
     def __str__(self):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
+    class Meta:
+        verbose_name = "Сотрудник - фактическое время за дату"
+        verbose_name_plural = "Сотрудники - фактическое время за дату"
