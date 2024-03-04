@@ -502,4 +502,3 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     def __str__(self):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
-
