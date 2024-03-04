@@ -4,7 +4,7 @@
       <div class="button">
         <button
           v-tippy
-          title="печать"
+          title="Печать"
           class="btn last btn-blue-nb"
           @click="printForm"
         >
@@ -37,6 +37,7 @@
     <ScheduleModal
       v-if="showSchedule"
       @hide="showSchedule = false"
+      :card-pk="props.cardPk"
     />
   </div>
 </template>
@@ -60,9 +61,16 @@ import ScheduleModal from '@/modals/ScheduleModal.vue';
 
 VeLocale.use(ruRu);
 
-const props = defineProps<{
-  direction: number;
-}>();
+const props = defineProps({
+  direction: {
+    type: Number,
+    required: true,
+  },
+  cardPk: {
+    type: Number,
+    required: true,
+  },
+});
 
 const showSchedule = ref(false);
 

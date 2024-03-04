@@ -17,7 +17,7 @@
       class="modal-body"
     >
       <ServiceScheduleEcp
-        :card-id="-1"
+        :card-id="props.cardPk"
         :service-pk="-1"
       />
     </div>
@@ -42,6 +42,17 @@
 
 import Modal from '@/ui-cards/Modal.vue';
 import ServiceScheduleEcp from '@/ui-cards/ServiceScheduleEcp.vue';
+
+const props = defineProps({
+  cardPk: {
+    type: Number,
+    required: true,
+  },
+  serviceNumber: {
+    type: Number,
+    required: true,
+  },
+});
 
 const emit = defineEmits(['hide']);
 
