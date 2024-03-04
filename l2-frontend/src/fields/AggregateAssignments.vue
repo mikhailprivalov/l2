@@ -8,14 +8,14 @@
           class="btn last btn-blue-nb"
           @click="printForm"
         >
-          печать
+          Печать
         </button>
       </div>
     </div>
     <div>
       <VeTable
         :columns="columns"
-        :table-data="assignments"
+        :table-data="assignmentPagination"
       />
       <div
         v-show="assignments.length === 0"
@@ -34,12 +34,16 @@
         />
       </div>
     </div>
+    <ScheduleModal
+      v-if="showSchedule"
+      @hide="showSchedule = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  onMounted, ref,
+  computed, onMounted, ref,
 } from 'vue';
 import {
   VeLocale,
@@ -52,12 +56,15 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
 import ruRu from '@/locales/ve';
+import ScheduleModal from '@/modals/ScheduleModal.vue';
 
 VeLocale.use(ruRu);
 
 const props = defineProps<{
   direction: number;
 }>();
+
+const showSchedule = ref(false);
 
 const columns = ref([
   {
@@ -68,6 +75,22 @@ const columns = ref([
   },
   {
     field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
+  },
+  {
+    field: 'schedule',
+    key: 'schedule',
+    title: 'Расписание',
+    align: 'center',
+    width: 120,
+    renderBodyCell: ({ row }, h) => (
+      h('div', { class: 'button' }, [
+        h(
+          'button',
+          { class: 'transparent-button', on: { click: () => { showSchedule.value = true; } } },
+          'Записать',
+        ),
+      ])
+    ),
   },
   {
     field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
@@ -97,6 +120,11 @@ const getAssignments = async () => {
   await store.dispatch(actions.DEC_LOADING);
   assignments.value = results.data;
 };
+
+const assignmentPagination = computed(() => assignments.value.slice(
+  (page.value - 1) * pageSize.value,
+  page.value * pageSize.value,
+));
 
 const printForm = () => {
   window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);
@@ -130,5 +158,24 @@ onMounted(getAssignments);
   align-self: stretch;
   flex: 1;
   padding: 6px 0;
+}
+</style>
+
+<style>
+.transparent-button {
+  background-color: transparent;
+  color: #434A54;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+.transparent-button:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+  border: none;
+}
+.transparent-button:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>
