@@ -1,13 +1,7 @@
-import calendar
-import datetime
-
-import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
-from employees.sql_func import get_work_time_by_document, get_employees_by_department
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
 from slog.models import Log
 from users.models import DoctorProfile
