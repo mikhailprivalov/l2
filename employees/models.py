@@ -670,7 +670,7 @@ class WorkTimeDocument(models.Model):
         ]
 
 
-class WorkTimeType(models.Model):
+class WorkTimeStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
 
     def __str__(self):
@@ -686,7 +686,7 @@ class EmployeeWorkTime(models.Model):
     employee_position = models.ForeignKey(EmployeePosition, on_delete=models.CASCADE, verbose_name='Должность сотрудника')
     start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
     end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
-    work_time_type = models.ForeignKey(WorkTimeType, default=None, on_delete=models.CASCADE, verbose_name='Тип')
+    work_time_status = models.ForeignKey(WorkTimeStatus, default=None, on_delete=models.CASCADE, verbose_name='Тип')
     doctor_profile_saved = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись'
     )
