@@ -315,12 +315,7 @@ class Department(models.Model):
 
     @staticmethod
     def get_active_labels(hospital_id: int = Hospitals.objects.get(is_default=True)):
-        departments = [
-            {
-                "id": department.pk,
-                "label": department.name
-            }
-            for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
         return departments
 
     class Meta:
@@ -687,9 +682,7 @@ class EmployeeWorkTime(models.Model):
     start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
     end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
     work_time_status = models.ForeignKey(WorkTimeStatus, default=None, on_delete=models.CASCADE, verbose_name='Тип')
-    doctor_profile_saved = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись'
-    )
+    doctor_profile_saved = models.ForeignKey('users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись')
 
     def __str__(self):
         return f'{self.employee_position.employee.__str__()}: {self.start} - {self.end}'
@@ -722,10 +715,7 @@ class EmployeeWorkTime(models.Model):
             work_time["startWorkTime"] = time.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
             work_time["endWorkTime"] = time.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
             employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')] = work_time
-        result = [
-            value
-            for _, value in employees_result.items()
-        ]
+        result = [value for _, value in employees_result.items()]
         return result
 
     class Meta:
