@@ -478,25 +478,26 @@ class TypeCheckTimeTrackingDocument(models.Model):
 
 class TimeTrackingStatus(models.Model):
     """
-       raw_data = [
-           {
-               "snils": "121212121",
-               "personLastname": "sds",
-               "personFirstName": "sds",
-               "personPatronymic": "sds",
-               "employeeData": [
-                   {
-                       "postTitle": "postTitle",
-                       "typePost": "typePost",
-                       "departmentTitle": "departmentTitle",
-                       "tabelNumber": "tabelNumber",
-                       "dates": [{"data": "20240229", "startTime": "0800", "endTime": "1600", "statusId": "1", "statusTitle": "работал"}],
-                       "commonHours": {}
-                   },
-               ]
-           }
-       ]
-       """
+    raw_data = [
+        {
+            "snils": "121212121",
+            "personLastname": "sds",
+            "personFirstName": "sds",
+            "personPatronymic": "sds",
+            "employeeData": [
+                {
+                    "postTitle": "postTitle",
+                    "typePost": "typePost",
+                    "departmentTitle": "departmentTitle",
+                    "tabelNumber": "tabelNumber",
+                    "dates": [{"data": "20240229", "startTime": "0800", "endTime": "1600", "statusId": "1", "statusTitle": "работал"}],
+                    "commonHours": {}
+                },
+            ]
+        }
+    ]
+    """
+
     time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     doc_confirm = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
     doc_confirm_string = models.CharField(max_length=64, null=True, blank=True, default=None)
