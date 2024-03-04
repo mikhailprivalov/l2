@@ -1,17 +1,5 @@
 <template>
   <div class="flex">
-    <p class="time-width">
-      {{ 'Работаааа' }}
-    </p>
-    <button
-      v-tippy
-      :disabled="props.isFirstDay"
-      class="transparentButton"
-      title="Скопировать предыдущий"
-      @click="copyPrevTime"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
     <button
       v-tippy="{
         html: '#temp',
@@ -24,12 +12,18 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      class="transparentButton"
+      class="transparentButton time-width"
     >
-      <i
-        class="fa fa-clock-o"
-        aria-hidden="true"
-      />
+      {{ titleVariant }}
+    </button>
+    <button
+      v-tippy
+      :disabled="props.isFirstDay"
+      class="transparentButton"
+      title="Скопировать предыдущий"
+      @click="copyPrevTime"
+    >
+      <i class="fa-solid fa-copy" />
     </button>
 
     <div
@@ -109,6 +103,11 @@ const props = defineProps({
 
 const root = getCurrentInstance().proxy.$root;
 
+const startWork = ref(null);
+const endWork = ref(null);
+
+const titleVariant = ref('');
+
 const activeVariant = ref(null);
 const workTimeVariants = ref([
   { id: 1, startWork: '08:00', endWork: '16:30' },
@@ -119,11 +118,14 @@ const workTimeVariants = ref([
 ]);
 
 const selectVariant = (variantId) => {
+  const currentVariant = workTimeVariants.value.find((item) => item.id === variantId);
+  if (currentVariant) {
+    startWork.value = currentVariant.startWork;
+    endWork.value = currentVariant.endWork;
+    titleVariant.value = `${startWork.value}-${endWork.value}`;
+  }
   activeVariant.value = variantId;
 };
-
-const startWork = ref(null);
-const endWork = ref(null);
 
 const appendCurrentTime = () => {
   startWork.value = props.workTime.startWorkTime;
