@@ -772,7 +772,7 @@ def process_pull_start_results():
         time.sleep(1)
 
 
-def push_result():
+def push_result(iss: Issledovaniya):
         # hl7 = Message("ORU_R01")
         hl7 = Message()
         meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
@@ -798,36 +798,37 @@ def push_result():
         obr_meta = meta_data.get("obr")
         obr_executor = obr_meta.get("executer_code")
 
-        service = ""
-        confirm_data_service = "" # 20240301130859
-        tube_number = ""
-        # internal_id = research.internal_id
-        internal_id = "1212"
+        service = iss.research.title
 
-        pid_data = "" # "PID||ЛЛ021137|||Тришина^Елена^Леонидовна||19721228|F|||||79029186531~~~ZWtvcHRpa0BtYWlsLnJ1||||||"
-        pv1_date = "20240301"
-        # fsli_data = ["OBX|1|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859"]
-        fsli_data = [
-            "OBX|1|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859",
-            "OBX|2|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859",
-            "OBX|3|NM|1015528^Витамин В12 (цианокобаламин, кобаламин, Cobalamin)||756|пг/мл|211-910|||||||20240301130859",
-                     ]
+        confirm_datetime_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%H%M%S")
+        confirm_date_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%")
+        tube = iss.tubes.all().first()
+        tube_number = tube.number
+        internal_id = iss.research.internal_code
 
-        hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_data_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
+        pv1_date = confirm_date_service
+
+        results = Result.objects.filter(issledovaniye=iss)
+        hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_datetime_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
         hl7.pid = "PID||ЛЛ021137|||Тришина^Елена^Леонидовна||19721228|F|||||79029186531~~~ZWtvcHRpa0BtYWlsLnJ1||||||"
         hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
-        obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{1212}|||{confirm_data_service}|{confirm_data_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
+        obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
         hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
 
         obs_name = 'ORU_R01_OBSERVATION'
-        for fsli in fsli_data:
+
+        step = 0
+        for result in results:
+            step += 1
             obx_group = Group(obs_name)
             obx = Segment('OBX')
-            obx.value = fsli
+            obx.value = f"OBX|{step}|NM|{result.fraction.fsli}^{result.fraction.title})||{result.value}|{result.fraction.unit.title}|-|||||||{confirm_date_service}"
             obx_group.add(obx)
             hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.add(obx_group)
 
         content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
+        print(content)
+
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         filename = f"form1c_orm_1_{created_at}.res"
 
