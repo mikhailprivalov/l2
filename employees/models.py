@@ -10,6 +10,9 @@ from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
 from slog.models import Log
+from users.models import DoctorProfile
+from utils.dates import try_strptime
+from django.utils import timezone
 
 
 class Employee(models.Model):
@@ -327,6 +330,17 @@ class Department(models.Model):
         ordering = ('hospital__short_title', 'hospital__title', 'name')
 
 
+class TypeWorkTimeEmployee(models.Model):
+    title = models.CharField(max_length=255, help_text='Занятость (осн | внутр.свом| внеш. совм)')
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = 'Тип занятости'
+        verbose_name_plural = 'Типы занятости'
+
+
 class EmployeePosition(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name='Сотрудник')
     position = models.ForeignKey(Position, on_delete=models.CASCADE, verbose_name='Должность')
@@ -341,6 +355,8 @@ class EmployeePosition(models.Model):
     doctorprofile_updated = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_position_updated'
     )
+    tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
+    type_work_time = models.ForeignKey(TypeWorkTimeEmployee, null=True, blank=True, default=None, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
@@ -427,99 +443,106 @@ class EmployeePosition(models.Model):
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
 
-class WorkTimeDocument(models.Model):
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Подразделение', help_text='Отдел АСУ, Травмпункт и т.д')
-    month = models.DateField(verbose_name='Месяц', help_text='Дата в месяце, (01.12.24)')
-
-    def __str__(self):
-        return f'{self.department} - {self.month}'
-
-    @staticmethod
-    def get_document(year: int, month: int, department: int):
-        month_date = datetime.date(year, month, 1)
-        document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
-        if document:
-            return document.pk
-        return document
-
-    @staticmethod
-    def create_document(year: int, month: int, department: int):
-        month_date = datetime.date(year, month, 1)
-        document = WorkTimeDocument.objects.filter(department_id=department, month=month_date).first()
-        if not document:
-            document = WorkTimeDocument(department_id=department, month=month_date)
-            document.save()
-        return True
-
-    class Meta:
-        verbose_name = 'График рабочего времени'
-        verbose_name_plural = 'Графики рабочего времени'
-        indexes = [
-            models.Index(fields=['department', 'month']),
-        ]
-
-
-class WorkTimeType(models.Model):
+class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
+    short_title = models.CharField(max_length=25, verbose_name='Сокращенное наименование')
+    hide = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Тип рабочего времени'
-        verbose_name_plural = 'Типы рабочего времени'
+        verbose_name = 'Статус времени для рабочей даты'
+        verbose_name_plural = 'Статусы времени для рабочих дат'
 
 
-class EmployeeWorkTime(models.Model):
-    document = models.ForeignKey(WorkTimeDocument, on_delete=models.CASCADE, verbose_name='График')
-    employee_position = models.ForeignKey(EmployeePosition, on_delete=models.CASCADE, verbose_name='Должность сотрудника')
-    start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='03.01.2024 08:00')
-    end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='03.01.2024 16:30')
-    work_time_type = models.ForeignKey(WorkTimeType, default=None, on_delete=models.CASCADE, verbose_name='Тип')
-    doctor_profile_saved = models.ForeignKey(
-        'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись'
-    )
-
-    def __str__(self):
-        return f'{self.employee_position.employee.__str__()}: {self.start} - {self.end}'
-
-    @staticmethod
-    def get_employees_template(document: WorkTimeDocument) -> dict:
-        year, month = document.month.year, document.month.month
-        _, end_month = calendar.monthrange(year, month)
-        template_days = {datetime.date(year, month, day).strftime('%d.%m.%Y'): {"startWorkTime": "", "endWorkTime": "", "type": ""} for day in range(1, end_month + 1)}
-        employees = get_employees_by_department(document.department_id)
-        employees_template = {}
-        for employee in employees:
-            employees_template[employee.employee_position_id] = template_days.copy()
-            employees_template[employee.employee_position_id]["fio"] = f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}'
-            employees_template[employee.employee_position_id]["position"] = employee.position_name
-            employees_template[employee.employee_position_id]["bidType"] = 'осн'
-            employees_template[employee.employee_position_id]["normMonth"] = '178'
-            employees_template[employee.employee_position_id]["normDay"] = "8"
-        return employees_template
-
-    @staticmethod
-    def get_work_time(document_id: int):
-        document = WorkTimeDocument.objects.get(pk=document_id)
-        employees_result = EmployeeWorkTime.get_employees_template(document)
-        if not employees_result:
-            return []
-        employees_work_time = get_work_time_by_document(document.pk)
-        for time in employees_work_time:
-            work_time = employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')].copy()
-            work_time["startWorkTime"] = time.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
-            work_time["endWorkTime"] = time.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
-            employees_result[time.employee_position_id][time.start.strftime('%d.%m.%Y')] = work_time
-        result = [
-            value
-            for _, value in employees_result.items()
-        ]
-        return result
+class TimeTrackingDocument(models.Model):
+    create_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время создания")
+    month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
+    department = models.ForeignKey(Department, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    doc_create = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
 
     class Meta:
-        verbose_name = 'Рабочее время сотрудника'
-        verbose_name_plural = 'Рабочее время сотрудников'
-        indexes = [
-            models.Index(fields=['document', 'employee_position']),
-        ]
+        verbose_name = "График-документ"
+        verbose_name_plural = "График-документы"
+
+    @staticmethod
+    def create_time_tracking_document(data, docprofile):
+        month = try_strptime(data["date"]).date()
+        department_pk = data["departmentPk"]
+
+        TimeTrackingDocument(
+            doc_confirmation=docprofile,
+            doc_confirmation_string=docprofile.get_full_fio(),
+            time_save=timezone.now(),
+            month_tabel=month,
+            department_id=department_pk,
+        ).save()
+
+
+class TypeCheckTimeTrackingDocument(models.Model):
+    title = models.CharField(max_length=255, verbose_name='Наименование')
+    hide = models.BooleanField(default=False, db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Статус проверки графика рабочего времени'
+        verbose_name_plural = 'Статусы проверки графика рабочего времени'
+
+
+class TimeTrackingStatus(models.Model):
+    """
+    raw_data = [
+        {
+            "snils": "121212121",
+            "personLastname": "sds",
+            "personFirstName": "sds",
+            "personPatronymic": "sds",
+            "employeeData": [
+                {
+                    "postTitle": "postTitle",
+                    "typePost": "typePost",
+                    "departmentTitle": "departmentTitle",
+                    "tabelNumber": "tabelNumber",
+                    "dates": [{"data": "20240229", "startTime": "0800", "endTime": "1600", "statusId": "1", "statusTitle": "работал"}],
+                    "commonHours": {}
+                },
+            ]
+        }
+    ]
+    """
+
+    time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    doc_confirm = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
+    doc_confirm_string = models.CharField(max_length=64, null=True, blank=True, default=None)
+    is_actual = models.BooleanField(help_text="Акутальный", default=True)
+    version = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
+    status = models.ForeignKey(TypeCheckTimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    doc_change_status = models.ForeignKey(DoctorProfile, related_name="doc_change_status", null=True, blank=True, db_index=True, help_text="Профиль проверяющего", on_delete=models.SET_NULL)
+    doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
+    time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время изменения статуса")
+    raw_data = models.TextField(blank=True, null=True, help_text="Данные документа")
+
+    class Meta:
+        verbose_name = "График-документ"
+        verbose_name_plural = "График-документы"
+
+
+class EmployeeWorkingHoursSchedule(models.Model):
+    time_tracking_document = models.ForeignKey(TimeTrackingDocument, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, db_index=True, default=None, on_delete=models.SET_NULL)
+    start = models.DateTimeField(verbose_name='Начало рабочего времени', help_text='дата-время начала')
+    end = models.DateTimeField(verbose_name='Конец рабочего времени', help_text='дата-время окончания')
+    day = models.DateField(verbose_name='Дата учета времени', null=True, blank=True, default=None, db_index=True, help_text='дата')
+    work_day_status = models.ForeignKey(WorkDayStatus, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL, verbose_name='Тип')
+    user_saved = models.ForeignKey('users.DoctorProfile', on_delete=models.SET_NULL, blank=True, null=True, verbose_name='Профиль пользователя сохранившего запись')
+
+    def __str__(self):
+        return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+
+    class Meta:
+        verbose_name = "Сотрудник - фактическое время за дату"
+        verbose_name_plural = "Сотрудники - фактическое время за дату"

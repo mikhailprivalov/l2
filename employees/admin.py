@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee, Position, Department, EmployeePosition, WorkTimeDocument, EmployeeWorkTime
+from .models import Employee, Position, Department, EmployeePosition, EmployeeWorkingHoursSchedule, WorkDayStatus, TimeTrackingDocument, TypeCheckTimeTrackingDocument, TimeTrackingStatus
 
 
 @admin.register(Employee)
@@ -38,11 +38,26 @@ class EmployeePositionAdmin(admin.ModelAdmin):
     autocomplete_fields = ('employee', 'department', 'doctorprofile_created', 'doctorprofile_updated')
 
 
-@admin.register(WorkTimeDocument)
-class WorkTimeDocumentAdmin(admin.ModelAdmin):
-    list_display = ('department', 'month')
+@admin.register(WorkDayStatus)
+class WorkDayStatusAdmin(admin.ModelAdmin):
+    list_display = ('title', 'short_title')
 
 
-@admin.register(EmployeeWorkTime)
-class EmployeesWorkTime(admin.ModelAdmin):
-    list_display = ('employee_position', 'start', 'end')
+@admin.register(TimeTrackingDocument)
+class TimeTrackingDocumentAdmin(admin.ModelAdmin):
+    list_display = ('create_at', 'month', 'department')
+
+
+@admin.register(TypeCheckTimeTrackingDocument)
+class TypeCheckTimeTrackingDocumentAdmin(admin.ModelAdmin):
+    list_display = ('title', 'hide')
+
+
+@admin.register(TimeTrackingStatus)
+class TimeTrackingStatusAdmin(admin.ModelAdmin):
+    list_display = ('time_tracking_document', 'status', 'time_change_status')
+
+
+@admin.register(EmployeeWorkingHoursSchedule)
+class EmployeeWorkingHoursScheduleAdmin(admin.ModelAdmin):
+    list_display = ('time_tracking_document', 'employee_position', 'day', 'work_day_status')
