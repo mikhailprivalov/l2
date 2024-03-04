@@ -1,6 +1,5 @@
 from django.db import connection
 
-from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
