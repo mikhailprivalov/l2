@@ -406,14 +406,8 @@ PROMETHEUS_ENABLED = False
 
 TYPE_NUMBER_SYSTEM = []
 FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES = {
-    "msh": {
-        "app_sender": "",
-        "organization_sender": "",
-        "app_receiver": "",
-        "organization_receiver": ""},
-    "obr": {
-        "executer_code": ""
-    },
+    "msh": {"app_sender": "", "organization_sender": "", "app_receiver": "", "organization_receiver": ""},
+    "obr": {"executer_code": ""},
     "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
     "id_researches": [],
 }
