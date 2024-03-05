@@ -699,23 +699,10 @@ def process_push_orders():
         ftp_connection.disconnect()
 
 
-def process_push_results():
-    stdout.write('Getting ftp links')
-    ftp_connections = {}
-    ftp_field = "ftp://user:password@host.example.com/path"
-
-
 def process_push_orders_start():
     stdout.write('Starting push_orders process')
     while True:
         process_push_orders()
-        time.sleep(1)
-
-
-def process_push_results_start():
-    stdout.write('Starting push_orders process')
-    while True:
-        process_push_results()
         time.sleep(1)
 
 
