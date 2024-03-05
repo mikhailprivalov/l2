@@ -762,19 +762,6 @@ def process_pull_start_results():
 def push_result(iss: Issledovaniya):
     hl7 = Message()
     meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
-    """{
-        "msh": {
-            "app_sender": "",
-            "organization_sender": "",
-            "app_receiver": "",
-            "organization_receiver": ""},
-        "obr": {
-            "executer_code": ""
-        },
-        "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
-        "id_researches": [],
-    }
-    """
     msh_meta = meta_data.get("msh")
     app_sender = msh_meta.get("app_sender")
     organization_sender = msh_meta.get("organization_sender")
