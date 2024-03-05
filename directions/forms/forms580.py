@@ -99,7 +99,7 @@ def form_01(request_data):
                 [
                     ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (0, 0), (-1, -1), -0.1 * mm),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 5 * mm),
                 ]
             )
         )
@@ -268,7 +268,7 @@ def form_01(request_data):
                     [
                         ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
                         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                        ('LEFTPADDING', (0, 0), (-1, -1), 1 * mm),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 10 * mm),
                     ]
                 )
             )
