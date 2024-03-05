@@ -773,77 +773,75 @@ def process_pull_start_results():
 
 
 def push_result(iss: Issledovaniya):
-        hl7 = Message()
-        meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
-        """{
-            "msh": {
-                "app_sender": "",
-                "organization_sender": "",
-                "app_receiver": "",
-                "organization_receiver": ""},
-            "obr": {
-                "executer_code": ""
-            },
-            "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
-            "id_researches": [],
-        }
-        """
-        msh_meta = meta_data.get("msh")
-        app_sender = msh_meta.get("app_sender")
-        organization_sender = msh_meta.get("organization_sender")
-        app_receiver = msh_meta.get("app_receiver")
-        organization_receiver = msh_meta.get("organization_receiver")
+    hl7 = Message()
+    meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
+    """{
+        "msh": {
+            "app_sender": "",
+            "organization_sender": "",
+            "app_receiver": "",
+            "organization_receiver": ""},
+        "obr": {
+            "executer_code": ""
+        },
+        "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
+        "id_researches": [],
+    }
+    """
+    msh_meta = meta_data.get("msh")
+    app_sender = msh_meta.get("app_sender")
+    organization_sender = msh_meta.get("organization_sender")
+    app_receiver = msh_meta.get("app_receiver")
+    organization_receiver = msh_meta.get("organization_receiver")
 
-        obr_meta = meta_data.get("obr")
-        obr_executor = obr_meta.get("executer_code")
+    obr_meta = meta_data.get("obr")
+    obr_executor = obr_meta.get("executer_code")
 
-        service = iss.research.title
-        if not iss.time_confirmation or not iss.napravleniye.external_order:
-            return False
+    service = iss.research.title
+    if not iss.time_confirmation or not iss.napravleniye.external_order:
+        return False
 
-        if not iss.napravleniye.external_order.hl7:
-            return False
+    if not iss.napravleniye.external_order.hl7:
+        return False
 
-        hl7_bs64 = iss.napravleniye.external_order.hl7
-        hl7_source = base64.b64decode(hl7_bs64, altchars=None, validate=False).decode('utf-8').split("\n")
+    hl7_bs64 = iss.napravleniye.external_order.hl7
+    hl7_source = base64.b64decode(hl7_bs64, altchars=None, validate=False).decode('utf-8').split("\n")
 
-        confirm_datetime_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%H%M%S")
-        confirm_date_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d")
-        tube = iss.tubes.all().first()
-        tube_number = tube.number
-        internal_id = iss.research.internal_code
-        pv1_date = confirm_date_service
+    confirm_datetime_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%H%M%S")
+    confirm_date_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d")
+    tube = iss.tubes.all().first()
+    tube_number = tube.number
+    internal_id = iss.research.internal_code
+    pv1_date = confirm_date_service
 
-        results = Result.objects.filter(issledovaniye=iss)
-        hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_datetime_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
-        hl7.pid = hl7_source[1]
-        hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
-        obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
-        hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
+    results = Result.objects.filter(issledovaniye=iss)
+    hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_datetime_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
+    hl7.pid = hl7_source[1]
+    hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
+    obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
+    hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
 
-        obs_name = 'ORU_R01_OBSERVATION'
+    obs_name = 'ORU_R01_OBSERVATION'
 
-        step = 0
-        for result in results:
-            step += 1
-            obx_group = Group(obs_name)
-            obx = Segment('OBX')
-            obx.value = f"OBX|{step}|NM|{result.fraction.fsli}^{result.fraction.title})||{result.value}|{result.fraction.unit.title}|-|||||||{confirm_date_service}"
-            obx_group.add(obx)
-            hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.add(obx_group)
+    step = 0
+    for result in results:
+        step += 1
+        obx_group = Group(obs_name)
+        obx = Segment('OBX')
+        obx.value = f"OBX|{step}|NM|{result.fraction.fsli}^{result.fraction.title})||{result.value}|{result.fraction.unit.title}|-|||||||{confirm_date_service}"
+        obx_group.add(obx)
+        hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.add(obx_group)
 
-        content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-        created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S-%f")
-        if iss.external_add_order:
-            external_add_order = iss.external_add_order.external_add_order
-        else:
-            external_add_order = "-ext-add-ord"
-        filename = f"ORU_ord-{external_add_order}_tube-{tube_number}_{created_at}.res"
+    content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
+    created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S-%f")
+    if iss.external_add_order:
+        external_add_order = iss.external_add_order.external_add_order
+    else:
+        external_add_order = "-ext-add-ord"
+    filename = f"ORU_ord-{external_add_order}_tube-{tube_number}_{created_at}.res"
 
-        print(filename)
+    ftp_settings = msh_meta.get("ftp_settings")
 
-        ftp_settings = msh_meta.get("ftp_settings")
-
-        with FTP(ftp_settings["address"], ftp_settings["user"], ftp_settings["password"]) as ftp:
-            ftp.cwd(ftp_settings["path"])
-            ftp.storbinary(f"STOR {filename}", BytesIO(content.encode('cp1251')))
+    with FTP(ftp_settings["address"], ftp_settings["user"], ftp_settings["password"]) as ftp:
+        ftp.cwd(ftp_settings["path"])
+        ftp.storbinary(f"STOR {filename}", BytesIO(content.encode('cp1251')))
