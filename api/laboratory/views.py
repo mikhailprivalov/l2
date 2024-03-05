@@ -592,9 +592,9 @@ def confirm(request):
         iss.save()
         if iss.napravleniye:
             iss.napravleniye.sync_confirmed_fields()
+        Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
         if iss.research_id in FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES.get("id_researches"):
             push_result(iss)
-        Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
     else:
         return JsonResponse(
             {
@@ -632,6 +632,9 @@ def confirm_list(request):
             if iss.napravleniye:
                 iss.napravleniye.sync_confirmed_fields()
             Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+
+            if iss.research_id in FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES.get("id_researches"):
+                push_result(iss)
     n.qr_check_token = None
     n.save(update_fields=['qr_check_token'])
     return JsonResponse(
