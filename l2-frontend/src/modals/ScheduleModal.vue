@@ -18,7 +18,7 @@
     >
       <ServiceScheduleEcp
         :card-id="props.cardPk"
-        :service-pk="-1"
+        :service-pk="props.serviceNumber"
       />
     </div>
     <div slot="footer">
