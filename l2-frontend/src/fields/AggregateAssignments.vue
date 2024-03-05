@@ -76,7 +76,7 @@ const props = defineProps({
 const showSchedule = ref(false);
 const currentResearchPk = ref(-1);
 const openSchedule = (researchIds) => {
-  const [data] = researchIds[0];
+  const data = researchIds[0];
   console.log(data);
   currentResearchPk.value = data;
   showSchedule.value = true;
