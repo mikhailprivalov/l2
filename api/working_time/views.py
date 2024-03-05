@@ -1,6 +1,5 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from employees.models import Department
 from laboratory.decorators import group_required
 from utils.response import status_response
 
