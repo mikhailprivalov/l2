@@ -818,7 +818,8 @@ def push_result(iss: Issledovaniya):
     hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_datetime_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
     hl7.pid = hl7_source[1]
     hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
-    obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
+    obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}" \
+              f"|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
     hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
 
     obs_name = 'ORU_R01_OBSERVATION'
