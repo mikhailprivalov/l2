@@ -304,11 +304,6 @@ class Department(models.Model):
         if departments.exists():
             raise ValueError('Отдел с таким названием уже существует')
 
-    @staticmethod
-    def get_active_labels(hospital_id: int = Hospitals.objects.get(is_default=True)):
-        departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
-        return departments
-
     class Meta:
         verbose_name = 'Отдел'
         verbose_name_plural = 'Отделы'

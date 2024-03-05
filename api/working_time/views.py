@@ -8,7 +8,7 @@ from utils.response import status_response
 @login_required()
 @group_required('График рабочего времени')
 def get_departments(request):
-    departments = Department.get_active_labels()
+    departments = []
     return JsonResponse({"result": departments})
 
 
