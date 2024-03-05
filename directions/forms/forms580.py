@@ -57,7 +57,7 @@ def form_01(request_data):
     styleBold.fontName = "PTAstraSerifBold"
 
     styleFL = deepcopy(style)
-    styleFL.firstLineIndent = 0
+    styleFL.firstLineIndent = 10
     styleFL.fontSize = 16
 
     styleCenter = deepcopy(style)
