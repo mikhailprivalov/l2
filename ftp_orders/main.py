@@ -773,7 +773,6 @@ def process_pull_start_results():
 
 
 def push_result(iss: Issledovaniya):
-        # hl7 = Message("ORU_R01")
         hl7 = Message()
         meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
         """{
@@ -799,18 +798,25 @@ def push_result(iss: Issledovaniya):
         obr_executor = obr_meta.get("executer_code")
 
         service = iss.research.title
+        if not iss.time_confirmation or not iss.napravleniye.external_order:
+            return False
+
+        if not iss.napravleniye.external_order.hl7:
+            return False
+
+        hl7_bs64 = iss.napravleniye.external_order.hl7
+        hl7_source = base64.b64decode(hl7_bs64, altchars=None, validate=False).decode('utf-8').split("\n")
 
         confirm_datetime_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%H%M%S")
-        confirm_date_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%")
+        confirm_date_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d")
         tube = iss.tubes.all().first()
         tube_number = tube.number
         internal_id = iss.research.internal_code
-
         pv1_date = confirm_date_service
 
         results = Result.objects.filter(issledovaniye=iss)
         hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_datetime_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
-        hl7.pid = "PID||ЛЛ021137|||Тришина^Елена^Леонидовна||19721228|F|||||79029186531~~~ZWtvcHRpa0BtYWlsLnJ1||||||"
+        hl7.pid = hl7_source[1]
         hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
         obr_val = f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
         hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
@@ -827,10 +833,14 @@ def push_result(iss: Issledovaniya):
             hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.add(obx_group)
 
         content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-        print(content)
+        created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S-%f")
+        if iss.external_add_order:
+            external_add_order = iss.external_add_order.external_add_order
+        else:
+            external_add_order = "-ext-add-ord"
+        filename = f"ORU_ord-{external_add_order}_tube-{tube_number}_{created_at}.res"
 
-        created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-        filename = f"form1c_orm_1_{created_at}.res"
+        print(filename)
 
         ftp_settings = msh_meta.get("ftp_settings")
 
