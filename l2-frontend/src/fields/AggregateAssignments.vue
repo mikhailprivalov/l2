@@ -36,8 +36,9 @@
     </div>
     <ScheduleModal
       v-if="showSchedule"
-      @hide="showSchedule = false"
       :card-pk="props.cardPk"
+      :service-number="currentResearchPk"
+      @hide="showSchedule = false"
     />
   </div>
 </template>
@@ -73,6 +74,13 @@ const props = defineProps({
 });
 
 const showSchedule = ref(false);
+const currentResearchPk = ref(-1);
+const openSchedule = (researchIds) => {
+  const [data] = researchIds[0];
+  console.log(data);
+  currentResearchPk.value = data;
+  showSchedule.value = true;
+};
 
 const columns = ref([
   {
@@ -85,20 +93,35 @@ const columns = ref([
     field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
   },
   {
-    field: 'schedule',
-    key: 'schedule',
+    field: 'schedule_date',
+    key: 'schedule_date',
     title: 'Расписание',
     align: 'center',
-    width: 120,
-    renderBodyCell: ({ row }, h) => (
-      h('div', { class: 'button' }, [
-        h(
-          'button',
-          { class: 'transparent-button', on: { click: () => { showSchedule.value = true; } } },
-          'Записать',
-        ),
-      ])
-    ),
+    width: 100,
+    renderBodyCell: ({ row }, h) => {
+      if (row.schedule_date) {
+        const date = new Date(row.schedule_date);
+        const stringDate = date.toLocaleString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          weekday: 'short',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+        const list = stringDate.split(', ');
+        return `${list[1]} ${list[0]} ${list[2]}`;
+      }
+      return h('div', { class: 'button' }, [
+        h('button', {
+          class: 'transparent-button',
+          on: {
+            click: () => {
+              openSchedule(row.research_id);
+            },
+          },
+        }, 'Записать'),
+      ]);
+    },
   },
   {
     field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,

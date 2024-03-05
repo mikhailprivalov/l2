@@ -2,8 +2,11 @@ from collections import OrderedDict
 from copy import deepcopy
 from typing import List
 
+import pytz
+
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
+from laboratory.settings import TIME_ZONE
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
 from utils.common import shorten_fio
@@ -582,7 +585,7 @@ def get_assignments(direction_id: int):
     assignments = get_assignments_by_history(issledovanie_id)
     for i in assignments:
         fio_assigned = shorten_fio(i.who_assigned)
-        schedule_date = i.schedule_date.strftime("%d.%m.%Y %H:%M") if i.schedule_date else None
+        schedule_date = i.schedule_date.astimezone(pytz.timezone(TIME_ZONE)) if i.schedule_date else None
         create_date = i.data_sozdaniya.strftime("%d.%m.%Y")
         research_title = f"{i.research_title}; "
         if assignment_dict.get(i.napravlenie_id):
@@ -594,14 +597,15 @@ def get_assignments(direction_id: int):
                 "research_id": [i.research_id],
                 "research_title": [research_title],
                 "create_date": create_date,
-                "schedule": schedule_date,
+                "schedule_date": schedule_date,
                 "who_assigned": fio_assigned,
                 "time_confirmation": "",
                 "who_confirm": "",
             }
             if i.total_confirmed:
                 fio_confirm = shorten_fio(i.who_confirm)
-                assignment_dict[i.napravlenie_id]["time_confirmation"] = i.time_confirmation.strftime("%d.%m.%Y %H:%M")
+                time_confirmation = i.time_confirmation.astimezone(pytz.timezone(TIME_ZONE))
+                assignment_dict[i.napravlenie_id]["time_confirmation"] = time_confirmation.strftime("%d.%m.%Y %H:%M")
                 assignment_dict[i.napravlenie_id]["who_confirm"] = fio_confirm
 
     result = [value for value in assignment_dict.values()]
