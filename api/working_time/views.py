@@ -1,5 +1,3 @@
-import json
-
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from employees.models import Department
