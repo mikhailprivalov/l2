@@ -17,8 +17,8 @@ class DirectionsGroup(models.Model):
     pass
 
     class Meta:
-        verbose_name = 'Группа направлений'
-        verbose_name_plural = 'Группы направлений'
+        verbose_name = "Группа направлений"
+        verbose_name_plural = "Группы направлений"
 
 
 class ReleationsFT(models.Model):
@@ -26,7 +26,7 @@ class ReleationsFT(models.Model):
     (многие-ко-многим) фракции к пробиркам
     """
 
-    tube = models.ForeignKey(Tubes, help_text='Ёмкость', db_index=True, on_delete=models.CASCADE)
+    tube = models.ForeignKey(Tubes, help_text="Ёмкость", db_index=True, on_delete=models.CASCADE)
     receive_in_lab = models.BooleanField(default=False, blank=True, help_text="Приём пробирки в лаборатории разрешён без подтверждения забора")
     max_researches_per_tube = models.IntegerField(default=None, blank=True, null=True, help_text="Максимальное количество исследований для пробирки")
     is_default_external_tube = models.BooleanField(default=False, blank=True, db_index=True)
@@ -44,8 +44,8 @@ class ReleationsFT(models.Model):
         return "%d %s" % (self.pk, self.tube.title)
 
     class Meta:
-        verbose_name = 'Физическая пробирка для фракций'
-        verbose_name_plural = 'Физические пробирки для фракций'
+        verbose_name = "Физическая пробирка для фракций"
+        verbose_name_plural = "Физические пробирки для фракций"
 
 
 class ResearchGroup(models.Model):
@@ -53,15 +53,15 @@ class ResearchGroup(models.Model):
     Группы исследований
     """
 
-    title = models.CharField(max_length=63, help_text='Название группы')
-    lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text='Лаборатория', db_index=True, on_delete=models.CASCADE)
+    title = models.CharField(max_length=63, help_text="Название группы")
+    lab = models.ForeignKey(Podrazdeleniya, null=True, blank=True, help_text="Лаборатория", db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Группа исследований'
-        verbose_name_plural = 'Группы исследований'
+        verbose_name = "Группа исследований"
+        verbose_name_plural = "Группы исследований"
 
 
 class ResearchSite(models.Model):
@@ -75,27 +75,27 @@ class ResearchSite(models.Model):
     """
 
     TYPES = (
-        (0, 'Консультация врача'),
-        (1, 'Лечение'),
-        (2, 'Стоматология'),
-        (3, 'Стационар'),
-        (4, 'Микробиология'),
-        (7, 'Формы'),
-        (10, 'Мониторинги'),
-        (12, 'Случаи'),
+        (0, "Консультация врача"),
+        (1, "Лечение"),
+        (2, "Стоматология"),
+        (3, "Стационар"),
+        (4, "Микробиология"),
+        (7, "Формы"),
+        (10, "Мониторинги"),
+        (12, "Случаи"),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
-    title = models.CharField(max_length=255, help_text='Подраздел')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие подраздела', db_index=True)
-    order = models.IntegerField(default=-999, help_text='Порядок')
+    title = models.CharField(max_length=255, help_text="Подраздел")
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие подраздела", db_index=True)
+    order = models.IntegerField(default=-999, help_text="Порядок")
 
     def __str__(self):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Подраздел'
-        verbose_name_plural = 'Подразделы'
+        verbose_name = "Подраздел"
+        verbose_name_plural = "Подразделы"
 
 
 class Localization(models.Model):
@@ -107,8 +107,8 @@ class Localization(models.Model):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Локализация'
-        verbose_name_plural = 'Локализации'
+        verbose_name = "Локализация"
+        verbose_name_plural = "Локализации"
 
 
 class ServiceLocation(models.Model):
@@ -119,8 +119,8 @@ class ServiceLocation(models.Model):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Место оказания услуги'
-        verbose_name_plural = 'Места оказания услуг'
+        verbose_name = "Место оказания услуги"
+        verbose_name_plural = "Места оказания услуг"
 
 
 class MethodLaboratoryAnalisis(models.Model):
@@ -130,8 +130,8 @@ class MethodLaboratoryAnalisis(models.Model):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Методика анализа'
-        verbose_name_plural = 'Методика анализа'
+        verbose_name = "Методика анализа"
+        verbose_name_plural = "Методика анализа"
 
 
 class LaboratoryMaterial(models.Model):
@@ -146,8 +146,8 @@ class LaboratoryMaterial(models.Model):
         return result
 
     class Meta:
-        verbose_name = 'Биоматериал'
-        verbose_name_plural = 'Биоматериалы'
+        verbose_name = "Биоматериал"
+        verbose_name_plural = "Биоматериалы"
 
 
 class SubGroupDirectory(models.Model):
@@ -157,12 +157,12 @@ class SubGroupDirectory(models.Model):
         return "%s" % self.title
 
     class Meta:
-        verbose_name = 'Погруппа услуги'
-        verbose_name_plural = 'Подгруппы услуг'
+        verbose_name = "Погруппа услуги"
+        verbose_name_plural = "Подгруппы услуг"
 
 
 class SubGroupPadrazdeleniye(models.Model):
-    subgroup = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.CASCADE)
+    subgroup = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
 
     @staticmethod
@@ -175,7 +175,7 @@ class SubGroupPadrazdeleniye(models.Model):
         podrazdeleniye = Podrazdeleniya.objects.filter(pk=department_pk).first()
         SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye).delete()
         for t_b in tb_data:
-            subgroup = SubGroupDirectory.objects.filter(pk=t_b['subgroupId']).first()
+            subgroup = SubGroupDirectory.objects.filter(pk=t_b["subgroupId"]).first()
             if subgroup:
                 if not SubGroupPadrazdeleniye.objects.filter(podrazdeleniye=podrazdeleniye, subgroup=subgroup).exists():
                     SubGroupPadrazdeleniye(podrazdeleniye=podrazdeleniye, subgroup=subgroup).save()
@@ -186,8 +186,8 @@ class SubGroupPadrazdeleniye(models.Model):
         return f"{self.subgroup.title} - {self.podrazdeleniye.title}"
 
     class Meta:
-        verbose_name = 'Свзяь погруппы и подздаления'
-        verbose_name_plural = 'Связи погрупп и подздалений'
+        verbose_name = "Свзяь погруппы и подздаления"
+        verbose_name_plural = "Связи погрупп и подздалений"
 
 
 class Researches(models.Model):
@@ -196,99 +196,99 @@ class Researches(models.Model):
     """
 
     DIRECTION_FORMS = (
-        (0, 'По умолчанию'),
-        (38001, '38001. ИО - Направление на ВИЧ'),
-        (38002, '38002. ИО - Направление на МСКТ'),
-        (38003, '38003. ИО - Направление на COVID-19'),
-        (38004, '38004. ИО - Направление на Микробиологию'),
-        (38005, '38005. ИО - Направление в др. организацию'),
-        (38006, '38006. ИО - Заявление на ВМП'),
-        (38007, '38007. ИО - С параметрами по умолчанию'),
-        (38008, '38008. ИО - Универсальное на бак.исследование'),
-        (48001, '48001. ИО - Направление на Гистологию'),
-        (38101, '38101. ИО - Направление в ИДЦ Ковид'),
-        (38102, '38102. ИО - Направление в ИДЦ обследование'),
-        (38103, '38103. ИО - Направление в СПИД-центр'),
-        (38104, '38104. ИО - Направление на химико-токсикологические исследования'),
+        (0, "По умолчанию"),
+        (38001, "38001. ИО - Направление на ВИЧ"),
+        (38002, "38002. ИО - Направление на МСКТ"),
+        (38003, "38003. ИО - Направление на COVID-19"),
+        (38004, "38004. ИО - Направление на Микробиологию"),
+        (38005, "38005. ИО - Направление в др. организацию"),
+        (38006, "38006. ИО - Заявление на ВМП"),
+        (38007, "38007. ИО - С параметрами по умолчанию"),
+        (38008, "38008. ИО - Универсальное на бак.исследование"),
+        (48001, "48001. ИО - Направление на Гистологию"),
+        (38101, "38101. ИО - Направление в ИДЦ Ковид"),
+        (38102, "38102. ИО - Направление в ИДЦ обследование"),
+        (38103, "38103. ИО - Направление в СПИД-центр"),
+        (38104, "38104. ИО - Направление на химико-токсикологические исследования"),
     )
 
     RESULT_FORMS = (
-        (0, 'По умолчанию'),
-        (10001, '100.01 - Наркозная карта - анестезия'),
-        (10002, '100.02 - Реанимационная карта - 1 день'),
-        (10101, '101.01 - Дневник в 3 колонки'),
-        (10201, '102.01 - Гистология'),
-        (10202, '102.02 - Гистология2'),
-        (10301, '103.01 - Справка-вождение'),
-        (10401, '104.01 - Заключение на ВМП'),
-        (10402, '104.02 - Направление на ВМП'),
-        (10403, '104.03 - Рапорт на ВМП'),
-        (10404, '104.04 - Заявление на возврат'),
-        (10405, '104.05 - Анкета для оформления ЭЛН'),
-        (10501, '105.01 - Свидетельство о смерти'),
-        (10601, '106.01 - Свидетельство о о перинатальной смерти'),
-        (10701, '107.01 - МСЭ'),
-        (10801, '108.01 - 83-МПР'),
-        (10901, '109.01 - 131/у'),
-        (11001, '110.01 - Антирабическая карта'),
-        (11002, '110.02 - Заключение ВК по психиатрическому освидетельствованию'),
-        (11101, '111.01 - Карта профосмотра несовершеннолетнего N 030-ПО/у-17'),
-        (11201, '112.01 - Извещение о НР ЛП'),
+        (0, "По умолчанию"),
+        (10001, "100.01 - Наркозная карта - анестезия"),
+        (10002, "100.02 - Реанимационная карта - 1 день"),
+        (10101, "101.01 - Дневник в 3 колонки"),
+        (10201, "102.01 - Гистология"),
+        (10202, "102.02 - Гистология2"),
+        (10301, "103.01 - Справка-вождение"),
+        (10401, "104.01 - Заключение на ВМП"),
+        (10402, "104.02 - Направление на ВМП"),
+        (10403, "104.03 - Рапорт на ВМП"),
+        (10404, "104.04 - Заявление на возврат"),
+        (10405, "104.05 - Анкета для оформления ЭЛН"),
+        (10501, "105.01 - Свидетельство о смерти"),
+        (10601, "106.01 - Свидетельство о о перинатальной смерти"),
+        (10701, "107.01 - МСЭ"),
+        (10801, "108.01 - 83-МПР"),
+        (10901, "109.01 - 131/у"),
+        (11001, "110.01 - Антирабическая карта"),
+        (11002, "110.02 - Заключение ВК по психиатрическому освидетельствованию"),
+        (11101, "111.01 - Карта профосмотра несовершеннолетнего N 030-ПО/у-17"),
+        (11201, "112.01 - Извещение о НР ЛП"),
     )
 
     RESULT_TITLE_FORMS = (
-        (0, 'По умолчанию'),
-        (10001, '100.01 - Выписка из амб карты'),
-        (10002, '100.02 - Клеше'),
+        (0, "По умолчанию"),
+        (10001, "100.01 - Выписка из амб карты"),
+        (10002, "100.02 - Клеше"),
     )
 
     CO_EXECUTOR_MODES = (
-        (0, 'Нет'),
-        (1, '1 со-исполнитель'),
-        (2, '2 со-исполнителя'),
+        (0, "Нет"),
+        (1, "1 со-исполнитель"),
+        (2, "2 со-исполнителя"),
     )
 
     TYPE_SIZE_FORM = (
-        (0, 'По умолчанию'),
-        (1, 'Альбомный А4'),
+        (0, "По умолчанию"),
+        (1, "Альбомный А4"),
     )
 
-    PERIOD_HOUR = 'PERIOD_HOUR'
-    PERIOD_DAY = 'PERIOD_DAY'
-    PERIOD_WEEK = 'PERIOD_WEEK'
-    PERIOD_MONTH = 'PERIOD_MONTH'
-    PERIOD_QURTER = 'PERIOD_QURTER'
-    PERIOD_HALFYEAR = 'PERIOD_HALFYEAR'
-    PERIOD_YEAR = 'PERIOD_YEAR'
+    PERIOD_HOUR = "PERIOD_HOUR"
+    PERIOD_DAY = "PERIOD_DAY"
+    PERIOD_WEEK = "PERIOD_WEEK"
+    PERIOD_MONTH = "PERIOD_MONTH"
+    PERIOD_QURTER = "PERIOD_QURTER"
+    PERIOD_HALFYEAR = "PERIOD_HALFYEAR"
+    PERIOD_YEAR = "PERIOD_YEAR"
 
     PERIOD_TYPES = (
-        (PERIOD_HOUR, 'Час'),
-        (PERIOD_DAY, 'День'),
-        (PERIOD_WEEK, 'Неделя'),
-        (PERIOD_MONTH, 'Месяц'),
-        (PERIOD_QURTER, 'Квартал'),
-        (PERIOD_HALFYEAR, 'Полгода'),
-        (PERIOD_YEAR, 'Год'),
+        (PERIOD_HOUR, "Час"),
+        (PERIOD_DAY, "День"),
+        (PERIOD_WEEK, "Неделя"),
+        (PERIOD_MONTH, "Месяц"),
+        (PERIOD_QURTER, "Квартал"),
+        (PERIOD_HALFYEAR, "Полгода"),
+        (PERIOD_YEAR, "Год"),
     )
 
-    direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text='Группа направления', on_delete=models.SET_NULL)
-    title = models.CharField(max_length=255, default="", help_text='Название исследования', db_index=True)
-    schedule_title = models.CharField(max_length=255, default="", help_text='Название для расписания', db_index=True)
-    short_title = models.CharField(max_length=255, default='', blank=True)
+    direction = models.ForeignKey(DirectionsGroup, null=True, blank=True, help_text="Группа направления", on_delete=models.SET_NULL)
+    title = models.CharField(max_length=255, default="", help_text="Название исследования", db_index=True)
+    schedule_title = models.CharField(max_length=255, default="", help_text="Название для расписания", db_index=True)
+    short_title = models.CharField(max_length=255, default="", blank=True)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, related_name="department", help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
-    quota_oms = models.IntegerField(default=-1, help_text='Квота по ОМС', blank=True)
-    preparation = models.CharField(max_length=2047, default="", help_text='Подготовка к исследованию', blank=True)
-    edit_mode = models.IntegerField(default=0, help_text='0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие исследования', db_index=True)
-    no_units_and_ref = models.BooleanField(default=False, blank=True, help_text='На бланке результата скрытие единиц измерения и референсов')
-    no_attach = models.IntegerField(default=0, null=True, blank=True, help_text='Группа исследований, которые не могут быть назначены вместе')
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text='Вес сортировки')
-    template = models.IntegerField(default=0, blank=True, help_text='Шаблон формы')
-    comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text='Варианты комментариев к материалу', on_delete=models.SET_NULL)
-    groups = models.ManyToManyField(ResearchGroup, blank=True, help_text='Группа исследований в лаборатории', db_index=True)
-    onlywith = models.ForeignKey('self', null=True, blank=True, help_text='Без выбранного анализа не может быть назначено', on_delete=models.SET_NULL)
-    can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text='Возможность оставить комментарий лабораторией')
-    code = models.TextField(default='', blank=True, help_text='Код исследования (несколько кодов разделяются точкой с запятой без пробелов)')
+    quota_oms = models.IntegerField(default=-1, help_text="Квота по ОМС", blank=True)
+    preparation = models.CharField(max_length=2047, default="", help_text="Подготовка к исследованию", blank=True)
+    edit_mode = models.IntegerField(default=0, help_text="0 - Лаборант может сохранять и подтверждать. 1 - Лаборант сохраняет, врач должен подтвердить")
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие исследования", db_index=True)
+    no_units_and_ref = models.BooleanField(default=False, blank=True, help_text="На бланке результата скрытие единиц измерения и референсов")
+    no_attach = models.IntegerField(default=0, null=True, blank=True, help_text="Группа исследований, которые не могут быть назначены вместе")
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, help_text="Вес сортировки")
+    template = models.IntegerField(default=0, blank=True, help_text="Шаблон формы")
+    comment_variants = models.ForeignKey("directory.MaterialVariants", default=None, null=True, blank=True, help_text="Варианты комментариев к материалу", on_delete=models.SET_NULL)
+    groups = models.ManyToManyField(ResearchGroup, blank=True, help_text="Группа исследований в лаборатории", db_index=True)
+    onlywith = models.ForeignKey("self", null=True, blank=True, help_text="Без выбранного анализа не может быть назначено", on_delete=models.SET_NULL)
+    can_lab_result_comment = models.BooleanField(default=False, blank=True, help_text="Возможность оставить комментарий лабораторией")
+    code = models.TextField(default="", blank=True, help_text="Код исследования (несколько кодов разделяются точкой с запятой без пробелов)")
     is_paraclinic = models.BooleanField(default=False, blank=True, help_text="Это параклиническое исследование?", db_index=True)
     is_doc_refferal = models.BooleanField(default=False, blank=True, help_text="Это исследование-направление к врачу", db_index=True)
     is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение", db_index=True)
@@ -307,7 +307,7 @@ class Researches(models.Model):
     is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
     is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
     is_complex = models.BooleanField(default=False, blank=True, help_text="Это комплексная услуга", db_index=True)
-    site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text='Место услуги', on_delete=models.SET_NULL, db_index=True)
+    site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text="Место услуги", on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
     instructions = models.TextField(blank=True, default="", help_text="Памятка для направления")
@@ -319,25 +319,25 @@ class Researches(models.Model):
     def_discount = models.SmallIntegerField(default=0, blank=True, help_text="Размер скидки")
     prior_discount = models.BooleanField(default=False, blank=True, help_text="Приоритет скидки")
     is_first_reception = models.BooleanField(default=False, blank=True, help_text="Эта услуга - первичный прием", db_index=True)
-    internal_code = models.CharField(max_length=255, default="", help_text='Внутренний код исследования', blank=True, db_index=True)
+    internal_code = models.CharField(max_length=255, default="", help_text="Внутренний код исследования", blank=True, db_index=True)
     co_executor_mode = models.SmallIntegerField(default=0, choices=CO_EXECUTOR_MODES, blank=True)
-    co_executor_2_title = models.CharField(max_length=40, default='Со-исполнитель', blank=True)
+    co_executor_2_title = models.CharField(max_length=40, default="Со-исполнитель", blank=True)
     microbiology_tube = models.ForeignKey(Tubes, blank=True, default=None, null=True, help_text="Пробирка для микробиологического исследования", on_delete=models.SET_NULL)
     localization = models.ManyToManyField(Localization, blank=True, default=None, help_text="Возможная локализация")
     service_location = models.ManyToManyField(ServiceLocation, blank=True, default=None, help_text="Возможные места оказаний")
     wide_headers = models.BooleanField(blank=True, default=False, help_text="Заголовки полей ввода на всю страницу")
     auto_add_hidden = models.ManyToManyField(
-        'directory.Researches', related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)"
+        "directory.Researches", related_name="res_auto_add_hidden", default=None, blank=True, help_text="Автоматически добавляемые назначения (не отображается в интерфейсе)"
     )
     vertical_result_display = models.BooleanField(blank=True, default=False, help_text="Отображение дат лабораторных тестов вертикально")
 
     bac_conclusion_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для заключения")
     bac_culture_comments_templates = models.TextField(blank=True, default="", help_text="Шаблоны ввода для комментария в культуре")
-    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальность услуги', on_delete=models.SET_NULL)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text="Профиль-специальность услуги", on_delete=models.SET_NULL)
     rmis_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     nsi_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
     has_own_form_result = models.BooleanField(blank=True, default=False, help_text="Собственная форма результатов")
-    direction_params = models.ForeignKey('self', related_name='direction_params_p', help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    direction_params = models.ForeignKey("self", related_name="direction_params_p", help_text="Параметры направления", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     show_more_services = models.BooleanField(blank=True, default=True, help_text="Показывать Дополнительные услуги")
     type_period = models.CharField(max_length=20, null=True, blank=True, default=None, db_index=True, choices=PERIOD_TYPES, help_text="Тип периода")
     paddings_size = models.CharField(max_length=10, null=True, blank=True, default=None, help_text="Отступы для бланка результатов (лево| вверх|право|низ)")
@@ -345,27 +345,27 @@ class Researches(models.Model):
         choices=Podrazdeleniya.ODII_TYPES, default=None, blank=True, null=True, help_text="Оказываемые виды инструментальных услуг (перезатирает из подразделения, если оно там указано)"
     )
     generator_name = models.CharField(max_length=60, null=True, blank=True, default=None, help_text="Название для xml-generator")
-    expertise_params = models.ForeignKey('self', related_name='expertise_params_p', help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    expertise_params = models.ForeignKey("self", related_name="expertise_params_p", help_text="Экспертиза ", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     file_name_contract = models.CharField(max_length=60, null=True, blank=True, default="default", help_text="Название ф-ла контракта")
-    method_lab_default = models.ForeignKey(MethodLaboratoryAnalisis, db_index=True, blank=True, default=None, null=True, help_text='Методика анализа по умолчанию', on_delete=models.SET_NULL)
+    method_lab_default = models.ForeignKey(MethodLaboratoryAnalisis, db_index=True, blank=True, default=None, null=True, help_text="Методика анализа по умолчанию", on_delete=models.SET_NULL)
     can_created_patient = models.BooleanField(blank=True, default=False, help_text="Может создаваться пациентом")
     enabled_add_files = models.BooleanField(blank=True, default=False, help_text="Можно добавить файлы")
     convert_to_doc_call = models.BooleanField(blank=True, default=False, help_text="Конвертировать форму в заявку DocCall")
     oid_kind = models.CharField(max_length=5, null=True, blank=True, default="", help_text="oid-документа 1.2.643.5.1.13.13.11.1520")
     oid_title = models.CharField(max_length=255, default="", db_index=True, help_text="oid-название документа 1.2.643.5.1.13.13.11.1520")
-    uet_refferal_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
-    uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
+    uet_refferal_doc = models.FloatField(default=0, verbose_name="УЕТы врача", blank=True)
+    uet_refferal_co_executor_1 = models.FloatField(default=0, verbose_name="УЕТы со-исполнителя 1", blank=True)
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления услуги")
     auto_register_on_rmis_location = models.CharField(max_length=128, db_index=True, blank=True, default="", null=True, help_text="Автозапись пациента на ближайший свободный слот")
-    plan_external_performing_organization = models.ForeignKey('hospitals.Hospitals', blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    plan_external_performing_organization = models.ForeignKey("hospitals.Hospitals", blank=True, null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     actual_period_result = models.SmallIntegerField(default=0, blank=True, help_text="Актуальность услуги в днях (для запрета)")
     cpp_template_files = models.TextField(max_length=500, default=None, null=True, blank=True, help_text="{1: 'название шаблона',2: 'название шаблона', 3: 'название шаблона'}")
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
-    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код услуги в ЕЦП')
-    laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text='Биоматериал', on_delete=models.SET_NULL)
-    sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text='Подгруппа', on_delete=models.SET_NULL)
-    laboratory_duration = models.CharField(max_length=3, default='', blank=True, verbose_name='Срок выполнения')
+    ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП")
+    laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text="Биоматериал", on_delete=models.SET_NULL)
+    sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
+    laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
 
     @staticmethod
@@ -376,9 +376,9 @@ class Researches(models.Model):
             r.save()
 
         for t_b in tb_data:
-            research = Researches.objects.filter(pk=t_b['researchId']).first()
+            research = Researches.objects.filter(pk=t_b["researchId"]).first()
             if research:
-                research.plan_external_performing_organization_id = t_b['planExternalPerformerId']
+                research.plan_external_performing_organization_id = t_b["planExternalPerformerId"]
                 research.save()
         return True
 
@@ -469,13 +469,13 @@ class Researches(models.Model):
     def can_transfer(self):
         if self.desc:
             return False
-        return 'перевод' in self.title.lower()
+        return "перевод" in self.title.lower()
 
     @property
     def is_extract(self):
         if self.desc:
             return False
-        return 'выписка' in self.title.lower() or 'выписной' in self.title.lower() or 'посмертный' in self.title.lower()
+        return "выписка" in self.title.lower() or "выписной" in self.title.lower() or "посмертный" in self.title.lower()
 
     @property
     def r_type(self):
@@ -491,7 +491,7 @@ class Researches(models.Model):
         hs = HospitalService.objects.filter(slave_research=self).first()
 
         if hs:
-            return HospitalService.TYPES_BY_KEYS_REVERSED.get(hs.site_type, 'None')
+            return HospitalService.TYPES_BY_KEYS_REVERSED.get(hs.site_type, "None")
 
         if self.podrazdeleniye and self.podrazdeleniye.p_type == Podrazdeleniya.LABORATORY:
             return "laboratory"
@@ -506,19 +506,19 @@ class Researches(models.Model):
 
     def get_podrazdeleniye_title(self):
         if self.is_microbiology:
-            return self.microbiology_tube.title if self.microbiology_tube else ''
+            return self.microbiology_tube.title if self.microbiology_tube else ""
         return self.podrazdeleniye.title if self.podrazdeleniye else ""
 
     def get_podrazdeleniye_short_title(self):
         if self.is_microbiology:
-            return self.microbiology_tube.title if self.microbiology_tube else ''
+            return self.microbiology_tube.title if self.microbiology_tube else ""
         return self.podrazdeleniye.get_title() if self.podrazdeleniye else ""
 
     def get_podrazdeleniye_title_recieve_recieve(self):
         if self.plan_external_performing_organization:
             result = self.plan_external_performing_organization.short_title
         elif self.is_microbiology:
-            result = self.microbiology_tube.title if self.microbiology_tube else ''
+            result = self.microbiology_tube.title if self.microbiology_tube else ""
         else:
             result = self.podrazdeleniye.title if self.podrazdeleniye else ""
         return result
@@ -532,11 +532,11 @@ class Researches(models.Model):
     def get_full_short_title_concat(self):
         if self.get_title() == self.title:
             return self.title
-        return f'{self.title} – {self.short_title}'
+        return f"{self.title} – {self.short_title}"
 
     class Meta:
-        verbose_name = 'Вид исследования'
-        verbose_name_plural = 'Виды исследований'
+        verbose_name = "Вид исследования"
+        verbose_name_plural = "Виды исследований"
 
     def get_site_type_id(self):
         if self.is_microbiology:
@@ -562,7 +562,7 @@ class Researches(models.Model):
 
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
-        fractions = Fractions.objects.filter(research_id=research_pk).select_related('relation__tube', 'unit', 'variants').order_by('relation_id', 'sort_weight')
+        fractions = Fractions.objects.filter(research_id=research_pk).select_related("relation__tube", "unit", "variants").order_by("relation_id", "sort_weight")
         research_tubes = {}
         for fraction in fractions:
             if research_tubes.get(fraction.relation_id) and need_fractions:
@@ -585,10 +585,10 @@ class Researches(models.Model):
     @staticmethod
     def get_laboratory_researches(podrazdelenie_id: int):
         if podrazdelenie_id == -1:
-            podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list('pk', flat=True)
-            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by('pk')
+            podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list("pk", flat=True)
+            researches = Researches.objects.filter(podrazdeleniye_id__in=podrazdeleniya).order_by("pk")
         else:
-            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by('pk')
+            researches = Researches.objects.filter(podrazdeleniye_id=podrazdelenie_id).order_by("pk")
         return researches
 
     @staticmethod
@@ -614,10 +614,10 @@ class Researches(models.Model):
     def update_order(research_pk: int, research_nearby_pk: int, action: str):
         research = Researches.objects.get(pk=research_pk)
         research_nearby = Researches.objects.get(pk=research_nearby_pk)
-        if action == 'inc_order':
+        if action == "inc_order":
             research.sort_weight += 1
             research_nearby.sort_weight -= 1
-        elif action == 'dec_order':
+        elif action == "dec_order":
             research.sort_weight -= 1
             research_nearby.sort_weight += 1
         research.save()
@@ -658,10 +658,10 @@ class Researches(models.Model):
     def update_lab_research(research_data):
         research_pk = None
         research_title = research_data["title"].strip() if research_data["title"] else None
-        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ''
-        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ''
-        research_code = research_data["code"].strip() if research_data["code"] else ''
-        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ''
+        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
+        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ""
+        research_code = research_data["code"].strip() if research_data["code"] else ""
+        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ""
         research = Researches.objects.filter(pk=research_data["pk"]).first()
         fractions = None
         if research and research_title:
@@ -703,8 +703,8 @@ class Researches(models.Model):
                 relation.save()
             for fraction in tube["fractions"]:
                 current_fractions = None
-                fraction_title = fraction["title"].strip() if fraction["title"] else ''
-                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ''
+                fraction_title = fraction["title"].strip() if fraction["title"] else ""
+                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ""
                 unit_id = fraction.get("unitId", None)
                 ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
                 if fractions:
@@ -750,44 +750,44 @@ class Researches(models.Model):
 
 class HospitalService(models.Model):
     TYPES = (
-        (0, 'Первичный прием'),
-        (1, 'Дневник'),
-        (2, 'ВК'),
-        (3, 'Операция'),
-        (4, 'Назначения'),
-        (5, 'Физиотерапия'),
-        (6, 'Эпикриз'),
-        (7, 'Выписка'),
-        (8, 'Больничный лист'),
-        (9, 't, ad, p – лист'),
-        (11, 'Формы'),
+        (0, "Первичный прием"),
+        (1, "Дневник"),
+        (2, "ВК"),
+        (3, "Операция"),
+        (4, "Назначения"),
+        (5, "Физиотерапия"),
+        (6, "Эпикриз"),
+        (7, "Выписка"),
+        (8, "Больничный лист"),
+        (9, "t, ad, p – лист"),
+        (11, "Формы"),
     )
 
     TYPES_BY_KEYS = {
-        'primary receptions': 0,
-        'diaries': 1,
-        'vc': 2,
-        'operation': 3,
-        'assignments': 4,
-        'physiotherapy': 5,
-        'epicrisis': 6,
-        'extracts': 7,
-        'bl': 8,
-        't, ad, p sheet': 9,
+        "primary receptions": 0,
+        "diaries": 1,
+        "vc": 2,
+        "operation": 3,
+        "assignments": 4,
+        "physiotherapy": 5,
+        "epicrisis": 6,
+        "extracts": 7,
+        "bl": 8,
+        "t, ad, p sheet": 9,
     }
 
     TYPES_BY_KEYS_REVERSED = {
-        0: 'primary receptions',
-        1: 'diaries',
-        2: 'vc',
-        3: 'operation',
-        4: 'assignments',
-        5: 'physiotherapy',
-        6: 'epicrisis',
-        7: 'extracts',
-        8: 'bl',
-        9: 't, ad, p sheet',
-        11: 'forms',
+        0: "primary receptions",
+        1: "diaries",
+        2: "vc",
+        3: "operation",
+        4: "assignments",
+        5: "physiotherapy",
+        6: "epicrisis",
+        7: "extracts",
+        8: "bl",
+        9: "t, ad, p sheet",
+        11: "forms",
     }
 
     TYPES_REVERSED = {
@@ -802,8 +802,8 @@ class HospitalService(models.Model):
 
     main_research = models.ForeignKey(Researches, help_text="Стационарная услуга", on_delete=models.CASCADE, db_index=True)
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип подраздела в стационарной карте", db_index=True)
-    slave_research = models.ForeignKey(Researches, related_name='research_protocol', help_text="Протокол для вида услуги", on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+    slave_research = models.ForeignKey(Researches, related_name="research_protocol", help_text="Протокол для вида услуги", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие услуги", db_index=True)
 
     def get_title(self):
         return f"{self.main_research.title} – {self.slave_research.get_full_short_title_concat()}"
@@ -812,18 +812,18 @@ class HospitalService(models.Model):
         return f"{self.main_research.title} - {self.site_type} - {self.slave_research.title} - {self.hide}"
 
     class Meta:
-        verbose_name = 'Стационарная услуга'
-        verbose_name_plural = 'Стационарные услуги'
+        verbose_name = "Стационарная услуга"
+        verbose_name_plural = "Стационарные услуги"
 
 
 class AuxService(models.Model):
     main_research = models.ForeignKey(Researches, help_text="Главная услуга", on_delete=models.CASCADE, db_index=True)
-    aux_research = models.ForeignKey(Researches, related_name='aux_protocol', help_text="Вспомогательная услуга", on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+    aux_research = models.ForeignKey(Researches, related_name="aux_protocol", help_text="Вспомогательная услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие услуги", db_index=True)
 
     class Meta:
-        verbose_name = 'Вспомогательная услуга'
-        verbose_name_plural = 'Вспомогательные услуги'
+        verbose_name = "Вспомогательная услуга"
+        verbose_name_plural = "Вспомогательные услуги"
 
     def __str__(self):
         return f"{self.main_research.title} - {self.aux_research.title} - {self.hide}"
@@ -831,47 +831,47 @@ class AuxService(models.Model):
 
 class ComplexService(models.Model):
     main_research = models.ForeignKey(Researches, help_text="Комплексная услуга", on_delete=models.CASCADE, db_index=True)
-    slave_research = models.ForeignKey(Researches, related_name='slave_service', help_text="Простая услуга", on_delete=models.CASCADE)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие услуги', db_index=True)
+    slave_research = models.ForeignKey(Researches, related_name="slave_service", help_text="Простая услуга", on_delete=models.CASCADE)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие услуги", db_index=True)
 
     class Meta:
-        verbose_name = 'Комплексная услуга'
-        verbose_name_plural = 'Комплексные услуги'
+        verbose_name = "Комплексная услуга"
+        verbose_name_plural = "Комплексные услуги"
 
     def __str__(self):
         return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
 
 
 class ParaclinicInputGroups(models.Model):
-    title = models.CharField(max_length=255, help_text='Название группы')
+    title = models.CharField(max_length=255, help_text="Название группы")
     show_title = models.BooleanField()
     research = models.ForeignKey(Researches, on_delete=models.CASCADE)
     order = models.IntegerField()
     hide = models.BooleanField()
-    visibility = models.TextField(default='', blank=True)
+    visibility = models.TextField(default="", blank=True)
     fields_inline = models.BooleanField(default=False, blank=True)
-    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
+    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text="CDA-поле для всей группы", on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.research.title} – {self.title}"
 
     class Meta:
-        verbose_name = 'Группы описательного протокола'
-        verbose_name_plural = 'Группы описательного протокола'
+        verbose_name = "Группы описательного протокола"
+        verbose_name_plural = "Группы описательного протокола"
 
 
 class PatientControlParam(models.Model):
-    title = models.CharField(max_length=400, unique=True, help_text='Название название контролируемого параметра')
-    code = models.CharField(max_length=400, help_text='Код параметра')
-    all_patient_contol = models.BooleanField(default=False, blank=True, help_text='Контролировать у всех по умолчанию', db_index=True)
+    title = models.CharField(max_length=400, unique=True, help_text="Название название контролируемого параметра")
+    code = models.CharField(max_length=400, help_text="Код параметра")
+    all_patient_contol = models.BooleanField(default=False, blank=True, help_text="Контролировать у всех по умолчанию", db_index=True)
     order = models.IntegerField(default=-1)
 
     def __str__(self):
         return f"{self.title} - {self.code}"
 
     class Meta:
-        verbose_name = 'Контролируемый параметр справочник'
-        verbose_name_plural = 'Контролируемые параметры справочник'
+        verbose_name = "Контролируемый параметр справочник"
+        verbose_name_plural = "Контролируемые параметры справочник"
 
     @staticmethod
     def get_patient_control_params():
@@ -898,55 +898,55 @@ class PatientControlParam(models.Model):
 
 class ParaclinicInputField(models.Model):
     TYPES = (
-        (0, 'Text'),
-        (1, 'Date'),
-        (2, 'MKB-10'),
-        (3, 'Calc'),
-        (4, 'purpose'),
-        (5, 'first_time'),
-        (6, 'result_reception'),
-        (7, 'outcome_illness'),
-        (8, 'maybe_onco'),
-        (9, 'List'),
-        (10, 'Dict'),
-        (11, 'Fraction'),
-        (12, 'Radio'),
-        (13, 'Protocol field'),
-        (14, 'Protocol raw field'),
-        (15, 'Rich text'),
-        (16, 'Agg lab'),
-        (17, 'Agg desc'),
-        (18, 'Number'),
-        (19, 'Number range'),
-        (20, 'Time HH:MM'),
-        (21, 'Anesthesia table'),
-        (22, 'Текст с автозаполнением'),
-        (23, 'Raw field without autoload'),
-        (24, 'Laboratory result test value units'),
-        (25, 'Diagnostic result'),
-        (26, 'Consultation result'),
-        (27, 'Table'),
-        (28, 'NSI directory'),
-        (29, 'FIAS address'),
-        (30, 'Генератор номера документа'),
-        (31, 'Прикрепление: МО-участок'),
-        (32, 'МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)'),
-        (33, 'МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)'),
-        (34, 'МКБ-обычный (1.2.643.5.1.13.13.11.1005)'),
-        (35, 'Врач'),
-        (36, 'МКБ-10(комбинация 1489, 692)'),
-        (37, 'Генератор номера перинатального МСС'),
-        (38, 'Procedure list result'),
-        (39, 'Динамический справочник'),
-        (40, 'Dynamic table'),
+        (0, "Text"),
+        (1, "Date"),
+        (2, "MKB-10"),
+        (3, "Calc"),
+        (4, "purpose"),
+        (5, "first_time"),
+        (6, "result_reception"),
+        (7, "outcome_illness"),
+        (8, "maybe_onco"),
+        (9, "List"),
+        (10, "Dict"),
+        (11, "Fraction"),
+        (12, "Radio"),
+        (13, "Protocol field"),
+        (14, "Protocol raw field"),
+        (15, "Rich text"),
+        (16, "Agg lab"),
+        (17, "Agg desc"),
+        (18, "Number"),
+        (19, "Number range"),
+        (20, "Time HH:MM"),
+        (21, "Anesthesia table"),
+        (22, "Текст с автозаполнением"),
+        (23, "Raw field without autoload"),
+        (24, "Laboratory result test value units"),
+        (25, "Diagnostic result"),
+        (26, "Consultation result"),
+        (27, "Table"),
+        (28, "NSI directory"),
+        (29, "FIAS address"),
+        (30, "Генератор номера документа"),
+        (31, "Прикрепление: МО-участок"),
+        (32, "МКБ-внешние причины заболеваемости и смертности(1.2.643.5.1.13.13.99.2.692)"),
+        (33, "МКБ-Алфавитный (1.2.643.5.1.13.13.11.1489)"),
+        (34, "МКБ-обычный (1.2.643.5.1.13.13.11.1005)"),
+        (35, "Врач"),
+        (36, "МКБ-10(комбинация 1489, 692)"),
+        (37, "Генератор номера перинатального МСС"),
+        (38, "Procedure list result"),
+        (39, "Динамический справочник"),
+        (40, "Dynamic table"),
     )
 
-    title = models.CharField(max_length=400, help_text='Название поля ввода')
-    short_title = models.CharField(max_length=400, default='', blank=True, help_text='Синоним-короткое название поля ввода')
+    title = models.CharField(max_length=400, help_text="Название поля ввода")
+    short_title = models.CharField(max_length=400, default="", blank=True, help_text="Синоним-короткое название поля ввода")
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
-    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
+    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text="Контролируемый параметр", on_delete=models.SET_NULL)
     order = models.IntegerField()
-    default_value = models.TextField(blank=True, default='')
+    default_value = models.TextField(blank=True, default="")
     input_templates = models.TextField()
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
@@ -954,21 +954,21 @@ class ParaclinicInputField(models.Model):
     required = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
     can_edit_computed = models.BooleanField(default=False, blank=True)
-    sign_organization = models.BooleanField(default=False, blank=True, help_text='Подпись от организации')
-    visibility = models.TextField(default='', blank=True)
-    helper = models.CharField(max_length=999, blank=True, default='')
-    for_extract_card = models.BooleanField(default=False, help_text='В выписку', blank=True)
-    for_med_certificate = models.BooleanField(default=False, help_text='В справку', blank=True)
-    attached = models.CharField(max_length=20, help_text='Скреплено с полем другой услуги', blank=True, default=None, null=True, db_index=True)
-    not_edit = models.BooleanField(default=False, help_text='Не редактируемое', blank=True)
-    control_param = models.TextField(default='', blank=True)
-    operator_enter_param = models.BooleanField(default=False, help_text='Поле ввода для оператора(лаборанта)', blank=True)
-    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text='CDA-поле для всей группы', on_delete=models.SET_NULL)
+    sign_organization = models.BooleanField(default=False, blank=True, help_text="Подпись от организации")
+    visibility = models.TextField(default="", blank=True)
+    helper = models.CharField(max_length=999, blank=True, default="")
+    for_extract_card = models.BooleanField(default=False, help_text="В выписку", blank=True)
+    for_med_certificate = models.BooleanField(default=False, help_text="В справку", blank=True)
+    attached = models.CharField(max_length=20, help_text="Скреплено с полем другой услуги", blank=True, default=None, null=True, db_index=True)
+    not_edit = models.BooleanField(default=False, help_text="Не редактируемое", blank=True)
+    control_param = models.TextField(default="", blank=True)
+    operator_enter_param = models.BooleanField(default=False, help_text="Поле ввода для оператора(лаборанта)", blank=True)
+    cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text="CDA-поле для всей группы", on_delete=models.SET_NULL)
     denied_group = models.ForeignKey(Group, default=None, null=True, blank=True, on_delete=models.SET_NULL)
 
     def get_title(self, force_type=None, recursive=False):
         field_type = force_type or self.field_type
-        titles = ['']
+        titles = [""]
         if self.title:
             titles.append(self.title)
         if field_type != 14 and self.default_value.isdigit():
@@ -976,31 +976,31 @@ class ParaclinicInputField(models.Model):
                 f = Fractions.objects.get(pk=self.default_value)
                 titles.append(f.research.title)
                 if f.title not in titles:
-                    titles[-1] = titles[-1] + ' – ' + f.title
+                    titles[-1] = titles[-1] + " – " + f.title
             if field_type == 13 and ParaclinicInputField.objects.filter(pk=self.default_value).exists():
                 f = ParaclinicInputField.objects.get(pk=self.default_value)
                 titles.append(f.group.research.title)
                 gt = f.group.title
                 if gt not in titles:
-                    titles[-1] = titles[-1] + ' – ' + gt
+                    titles[-1] = titles[-1] + " – " + gt
                 ft = f.get_title(recursive=True)
                 if ft not in titles and not recursive:
-                    titles[-1] = titles[-1] + ' – ' + ft
-        title = ', '.join([t for t in titles if t])
+                    titles[-1] = titles[-1] + " – " + ft
+        title = ", ".join([t for t in titles if t])
         return title
 
     def __str__(self):
         return f"{self.group.research.title} - {self.group.title} - {self.title}"
 
     class Meta:
-        verbose_name = 'Поля описательного протокола'
-        verbose_name_plural = 'Поля описательного протокола'
+        verbose_name = "Поля описательного протокола"
+        verbose_name_plural = "Поля описательного протокола"
 
 
 class ParaclinicTemplateName(models.Model):
-    DEFAULT_TEMPLATE_TITLE = 'По умолчанию'
+    DEFAULT_TEMPLATE_TITLE = "По умолчанию"
 
-    title = models.CharField(max_length=255, help_text='Название шаблона заполнения полей')
+    title = models.CharField(max_length=255, help_text="Название шаблона заполнения полей")
     research = models.ForeignKey(Researches, on_delete=models.CASCADE, db_index=True)
     hide = models.BooleanField(default=False, blank=True, help_text="Скрыть шаблон")
 
@@ -1008,7 +1008,7 @@ class ParaclinicTemplateName(models.Model):
         return "%s (Лаб. %s, Скрыт=%s)" % (self.title, self.research, self.hide)
 
     @staticmethod
-    def make_default(research: Researches) -> 'ParaclinicTemplateName':
+    def make_default(research: Researches) -> "ParaclinicTemplateName":
         if not ParaclinicTemplateName.objects.filter(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE).exists():
             with transaction.atomic():
                 p = ParaclinicTemplateName(research=research, title=ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE)
@@ -1021,7 +1021,7 @@ class ParaclinicTemplateName(models.Model):
 class ParaclinicTemplateField(models.Model):
     template_name = models.ForeignKey(ParaclinicTemplateName, on_delete=models.CASCADE, db_index=True)
     input_field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE)
-    value = models.TextField(help_text='Значение')
+    value = models.TextField(help_text="Значение")
 
     def __str__(self):
         return "%s (%s, %s)" % (self.template_name, self.input_field.title, self.value)
@@ -1030,8 +1030,8 @@ class ParaclinicTemplateField(models.Model):
 class ParaclinicUserInputTemplateField(models.Model):
     doc = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, db_index=True)
     field = models.ForeignKey(ParaclinicInputField, on_delete=models.CASCADE, db_index=True)
-    value = models.TextField(help_text='Значение')
-    value_lower = models.TextField(help_text='Значение (для индексации)', db_index=True, null=True, blank=True)
+    value = models.TextField(help_text="Значение")
+    value_lower = models.TextField(help_text="Значение (для индексации)", db_index=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.field}, {self.value}"
@@ -1049,8 +1049,8 @@ class AutoAdd(models.Model):
         return "%s -> %s" % (self.a.title, self.b.title)
 
     class Meta:
-        verbose_name = 'Автоматическое добавление назначений'
-        verbose_name_plural = 'Автоматическое добавления назначений'
+        verbose_name = "Автоматическое добавление назначений"
+        verbose_name_plural = "Автоматическое добавления назначений"
 
 
 class References(models.Model):
@@ -1058,25 +1058,25 @@ class References(models.Model):
     Справочник референсов
     """
 
-    title = models.CharField(max_length=255, help_text='Название')
-    about = models.TextField(help_text='Описание', blank=True)
-    ref_m = JSONField(help_text='М')
-    ref_f = JSONField(help_text='Ж')
-    fraction = models.ForeignKey("Fractions", db_index=True, help_text='Фракция, к которой относится референс', on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, help_text="Название")
+    about = models.TextField(help_text="Описание", blank=True)
+    ref_m = JSONField(help_text="М")
+    ref_f = JSONField(help_text="Ж")
+    fraction = models.ForeignKey("Fractions", db_index=True, help_text="Фракция, к которой относится референс", on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.fraction) + " | " + str(self.fraction) + " | " + self.title
 
     class Meta:
-        verbose_name = 'Референс'
-        verbose_name_plural = 'Референсы'
+        verbose_name = "Референс"
+        verbose_name_plural = "Референсы"
 
 
 class ResultVariants(models.Model):
     values = models.TextField(help_text='Варианты подсказок результатов, перечисленные через вертикальную черту без пробела "|"')
 
     def get_variants(self):
-        return self.values.split('|')
+        return self.values.split("|")
 
     @staticmethod
     def get_all():
@@ -1087,15 +1087,15 @@ class ResultVariants(models.Model):
         return str(self.get_variants())
 
     class Meta:
-        verbose_name = 'Вариант результата'
-        verbose_name_plural = 'Варианты результатов'
+        verbose_name = "Вариант результата"
+        verbose_name_plural = "Варианты результатов"
 
 
 class MaterialVariants(models.Model):
     values = models.TextField(help_text='Варианты комментариев для материала, перечисленные через вертикальную черту без пробела "|"')
 
     def get_variants(self):
-        return self.values.split('|')
+        return self.values.split("|")
 
     def __str__(self):
         return str(self.get_variants())
@@ -1106,8 +1106,8 @@ class MaterialVariants(models.Model):
         return result
 
     class Meta:
-        verbose_name = 'Вариант комментария'
-        verbose_name_plural = 'Варианты комментариев'
+        verbose_name = "Вариант комментария"
+        verbose_name_plural = "Варианты комментариев"
 
 
 # class Units(models.Model):
@@ -1120,18 +1120,18 @@ class MaterialVariants(models.Model):
 
 
 class Unit(models.Model):
-    title = models.CharField(max_length=255, verbose_name='Название единицы измерения')
-    short_title = models.CharField(max_length=255, db_index=True, verbose_name='Краткое название единицы измерения')
-    code = models.CharField(max_length=4, db_index=True, verbose_name='Код')
-    hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
-    ucum = models.CharField(max_length=55, default='', blank=True, verbose_name='UCUM')
+    title = models.CharField(max_length=255, verbose_name="Название единицы измерения")
+    short_title = models.CharField(max_length=255, db_index=True, verbose_name="Краткое название единицы измерения")
+    code = models.CharField(max_length=4, db_index=True, verbose_name="Код")
+    hide = models.BooleanField(default=False, blank=True, verbose_name="Скрытие")
+    ucum = models.CharField(max_length=55, default="", blank=True, verbose_name="UCUM")
 
     @staticmethod
     def get_units():
         result = [
             {
                 "id": unit.pk,
-                "label": f'{unit.short_title} — {unit.title} - {unit.code}',
+                "label": f"{unit.short_title} — {unit.title} - {unit.code}",
             }
             for unit in Unit.objects.filter(hide=False)
         ]
@@ -1146,32 +1146,32 @@ class Fractions(models.Model):
     Фракции для исследований
     """
 
-    title = models.CharField(max_length=255, verbose_name='Название фракции')
-    research = models.ForeignKey(Researches, db_index=True, verbose_name='Исследование, к которому относится фракция', on_delete=models.CASCADE)
-    units = models.CharField(max_length=255, verbose_name='Единицы измерения (DEPRECATED)', blank=True, default='')
-    unit = models.ForeignKey(Unit, verbose_name='Единицы измерения', blank=True, default=None, null=True, on_delete=models.SET_NULL)
-    default_ref = models.ForeignKey(References, verbose_name='Референс по-умолчанию', blank=True, null=True, default=None, on_delete=models.SET_NULL)
-    ref_m = JSONField(verbose_name='Референсы (М)', blank=True, default="{}")
-    ref_f = JSONField(verbose_name='Референсы (Ж)', blank=True, default="{}")
-    relation = models.ForeignKey(ReleationsFT, verbose_name='Пробирка (пробирки)', db_index=True, on_delete=models.CASCADE, null=True, default=None, blank=True)
-    uet_doc = models.FloatField(default=0, verbose_name='УЕТы врача', blank=True)
-    uet_co_executor_1 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 1', blank=True)
-    uet_co_executor_2 = models.FloatField(default=0, verbose_name='УЕТы со-исполнителя 2', blank=True)
-    max_iterations = models.IntegerField(default=1, verbose_name='Максимальное число итераций', blank=True)
-    variants = models.ForeignKey(ResultVariants, null=True, blank=True, verbose_name='Варианты подсказок результатов', on_delete=models.SET_NULL)
-    variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, verbose_name='Варианты подсказок результатов для Бак.лаб.', on_delete=models.SET_NULL)
-    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name='Вес сортировки')
-    hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие фракции', db_index=True)
-    render_type = models.IntegerField(default=0, blank=True, verbose_name='Тип рендеринга (базовый тип (0) или динамическое число полей (1)')
-    options = models.CharField(max_length=511, default="", blank=True, verbose_name='Варианты для динамического числа полей')
+    title = models.CharField(max_length=255, verbose_name="Название фракции")
+    research = models.ForeignKey(Researches, db_index=True, verbose_name="Исследование, к которому относится фракция", on_delete=models.CASCADE)
+    units = models.CharField(max_length=255, verbose_name="Единицы измерения (DEPRECATED)", blank=True, default="")
+    unit = models.ForeignKey(Unit, verbose_name="Единицы измерения", blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    default_ref = models.ForeignKey(References, verbose_name="Референс по-умолчанию", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    ref_m = JSONField(verbose_name="Референсы (М)", blank=True, default="{}")
+    ref_f = JSONField(verbose_name="Референсы (Ж)", blank=True, default="{}")
+    relation = models.ForeignKey(ReleationsFT, verbose_name="Пробирка (пробирки)", db_index=True, on_delete=models.CASCADE, null=True, default=None, blank=True)
+    uet_doc = models.FloatField(default=0, verbose_name="УЕТы врача", blank=True)
+    uet_co_executor_1 = models.FloatField(default=0, verbose_name="УЕТы со-исполнителя 1", blank=True)
+    uet_co_executor_2 = models.FloatField(default=0, verbose_name="УЕТы со-исполнителя 2", blank=True)
+    max_iterations = models.IntegerField(default=1, verbose_name="Максимальное число итераций", blank=True)
+    variants = models.ForeignKey(ResultVariants, null=True, blank=True, verbose_name="Варианты подсказок результатов", on_delete=models.SET_NULL)
+    variants2 = models.ForeignKey(ResultVariants, related_name="variants2", null=True, blank=True, verbose_name="Варианты подсказок результатов для Бак.лаб.", on_delete=models.SET_NULL)
+    sort_weight = models.IntegerField(default=0, null=True, blank=True, verbose_name="Вес сортировки")
+    hide = models.BooleanField(default=False, blank=True, verbose_name="Скрытие фракции", db_index=True)
+    render_type = models.IntegerField(default=0, blank=True, verbose_name="Тип рендеринга (базовый тип (0) или динамическое число полей (1)")
+    options = models.CharField(max_length=511, default="", blank=True, verbose_name="Варианты для динамического числа полей")
     formula = models.TextField(default="", blank=True, verbose_name="Формула для автоматического вычисления значения")
-    code = models.CharField(max_length=16, default='', blank=True, verbose_name='Код фракции')
-    print_title = models.BooleanField(default=False, blank=True, verbose_name='Печатать название(Группировка)', db_index=True)
-    readonly_title = models.BooleanField(default=False, blank=True, verbose_name='Только для чтения-суррогатная группа для фракций', db_index=True)
+    code = models.CharField(max_length=16, default="", blank=True, verbose_name="Код фракции")
+    print_title = models.BooleanField(default=False, blank=True, verbose_name="Печатать название(Группировка)", db_index=True)
+    readonly_title = models.BooleanField(default=False, blank=True, verbose_name="Только для чтения-суррогатная группа для фракций", db_index=True)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
-    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text='Контролируемый параметр', on_delete=models.SET_NULL)
+    patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text="Контролируемый параметр", on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
-    ecp_id = models.CharField(max_length=16, default='', blank=True, verbose_name='Код теста в ЕЦП')
+    ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
 
     def get_unit(self):
         if self.unit:
@@ -1180,7 +1180,7 @@ class Fractions(models.Model):
             u = Unit.objects.filter(short_title=self.units).first()
             if u:
                 self.unit = u
-                self.save(update_fields=['unit'])
+                self.save(update_fields=["unit"])
                 return u
         return None
 
@@ -1191,10 +1191,10 @@ class Fractions(models.Model):
         return self.units
 
     def get_fsli_code(self):
-        return (self.fsli or '').strip()
+        return (self.fsli or "").strip()
 
     def get_ecp_code(self):
-        return (self.ecp_id or '').strip()
+        return (self.ecp_id or "").strip()
 
     @staticmethod
     def as_json(fraction) -> dict:
@@ -1227,8 +1227,8 @@ class Fractions(models.Model):
         return self.research.title + " | " + self.title
 
     class Meta:
-        verbose_name = 'Фракция'
-        verbose_name_plural = 'Фракции'
+        verbose_name = "Фракция"
+        verbose_name_plural = "Фракции"
 
 
 class Absorption(models.Model):
@@ -1236,15 +1236,15 @@ class Absorption(models.Model):
     Поглощение
     """
 
-    fupper = models.ForeignKey(Fractions, related_name="fupper", help_text='Какая фракция главнее', db_index=True, on_delete=models.CASCADE)
-    flower = models.ForeignKey(Fractions, related_name="flower", help_text='Какая фракция поглощается главной', on_delete=models.CASCADE)
+    fupper = models.ForeignKey(Fractions, related_name="fupper", help_text="Какая фракция главнее", db_index=True, on_delete=models.CASCADE)
+    flower = models.ForeignKey(Fractions, related_name="flower", help_text="Какая фракция поглощается главной", on_delete=models.CASCADE)
 
     def __str__(self):
         return self.flower.__str__() + " -> " + self.fupper.__str__()
 
     class Meta:
-        verbose_name = 'Поглощение фракции'
-        verbose_name_plural = 'Поглощения фракций'
+        verbose_name = "Поглощение фракции"
+        verbose_name_plural = "Поглощения фракций"
 
 
 class NameRouteSheet(models.Model):
@@ -1252,8 +1252,8 @@ class NameRouteSheet(models.Model):
     Route list for research. Маршрутный лист для исследований
     """
 
-    title = models.CharField(max_length=255, unique=True, help_text='Название маршрутного листа')
-    static_text = models.TextField(default="", help_text='Текст перед списком')
+    title = models.CharField(max_length=255, unique=True, help_text="Название маршрутного листа")
+    static_text = models.TextField(default="", help_text="Текст перед списком")
 
     def __str__(self):
         return "{}".format(self.title)
@@ -1262,76 +1262,76 @@ class NameRouteSheet(models.Model):
         return self.title
 
     class Meta:
-        verbose_name = 'Cписки маршрутов'
-        verbose_name_plural = 'Списки маршрутов'
+        verbose_name = "Cписки маршрутов"
+        verbose_name_plural = "Списки маршрутов"
 
 
 class DispensaryRouteSheet(models.Model):
     SEX = (
-        ('м', 'м'),
-        ('ж', 'ж'),
+        ("м", "м"),
+        ("ж", "ж"),
     )
 
-    age_client = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст', null=False, blank=False)
+    age_client = models.PositiveSmallIntegerField(db_index=True, help_text="Возраст", null=False, blank=False)
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
-    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
-    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес сортировки')
+    research = models.ForeignKey(Researches, db_index=True, help_text="Исследование включенное в список", on_delete=models.CASCADE)
+    sort_weight = models.IntegerField(default=0, blank=True, help_text="Вес сортировки")
 
     def __str__(self):
         return "{} , - возраст, {} - пол, {}, {}-sort".format(self.age_client, self.sex_client, self.research, self.sort_weight)
 
     class Meta:
         unique_together = ("age_client", "sex_client", "research")
-        verbose_name = 'Диспансеризация Шаблон'
-        verbose_name_plural = 'Диспансеризация-Шаблоны'
+        verbose_name = "Диспансеризация Шаблон"
+        verbose_name_plural = "Диспансеризация-Шаблоны"
 
 
 class DispensaryPlan(models.Model):
-    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text='Исследование включенное в список', on_delete=models.CASCADE)
-    repeat = models.PositiveSmallIntegerField(db_index=True, help_text='Кол-во в год', null=False, blank=False)
-    diagnos = models.CharField(max_length=511, help_text='Диагноз Д-учета', default='', blank=True, db_index=True)
-    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text='Профиль-специальности консультации врача', on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, db_index=True, blank=True, default=None, null=True, help_text="Исследование включенное в список", on_delete=models.CASCADE)
+    repeat = models.PositiveSmallIntegerField(db_index=True, help_text="Кол-во в год", null=False, blank=False)
+    diagnos = models.CharField(max_length=511, help_text="Диагноз Д-учета", default="", blank=True, db_index=True)
+    speciality = models.ForeignKey(Speciality, db_index=True, blank=True, default=None, null=True, help_text="Профиль-специальности консультации врача", on_delete=models.CASCADE)
     is_visit = models.BooleanField(default=False, blank=True, db_index=True)
 
     class Meta:
-        verbose_name = 'Диспансерный учет план'
-        verbose_name_plural = 'Диспансерный учет'
+        verbose_name = "Диспансерный учет план"
+        verbose_name_plural = "Диспансерный учет"
 
 
 class ScreeningPlan(models.Model):
     SEX = (
-        ('в', 'все'),
-        ('м', 'м'),
-        ('ж', 'ж'),
+        ("в", "все"),
+        ("м", "м"),
+        ("ж", "ж"),
     )
 
-    age_start_control = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст начала', validators=[MaxValueValidator(130)])
-    age_end_control = models.PositiveSmallIntegerField(db_index=True, help_text='Возраст окончания (включительно)', validators=[MaxValueValidator(130)])
+    age_start_control = models.PositiveSmallIntegerField(db_index=True, help_text="Возраст начала", validators=[MaxValueValidator(130)])
+    age_end_control = models.PositiveSmallIntegerField(db_index=True, help_text="Возраст окончания (включительно)", validators=[MaxValueValidator(130)])
     sex_client = models.CharField(max_length=1, choices=SEX, help_text="Пол", db_index=True)
-    research = models.ForeignKey(Researches, db_index=True, help_text='Исследование, включенное в список', on_delete=models.CASCADE)
-    period = models.PositiveSmallIntegerField(db_index=True, help_text='Период (1 раз в лет/года)', validators=[MinValueValidator(1), MaxValueValidator(100)])
-    sort_weight = models.IntegerField(default=0, blank=True, help_text='Вес сортировки')
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие', db_index=True)
+    research = models.ForeignKey(Researches, db_index=True, help_text="Исследование, включенное в список", on_delete=models.CASCADE)
+    period = models.PositiveSmallIntegerField(db_index=True, help_text="Период (1 раз в лет/года)", validators=[MinValueValidator(1), MaxValueValidator(100)])
+    sort_weight = models.IntegerField(default=0, blank=True, help_text="Вес сортировки")
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
 
     def __str__(self):
         return f"{self.age_start_control} - {self.age_end_control} - {self.sex_client}, {self.research}"
 
     class Meta:
         unique_together = ("age_start_control", "age_end_control", "research", "sex_client")
-        verbose_name = 'Скрининг Шаблон'
-        verbose_name_plural = 'Скрининг-Шаблоны'
+        verbose_name = "Скрининг Шаблон"
+        verbose_name_plural = "Скрининг-Шаблоны"
 
 
 class GroupCulture(models.Model):
     title = models.CharField(max_length=255, help_text="Группа культур")
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие группы", db_index=True)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Группа для культуры'
-        verbose_name_plural = 'Культуры - группы'
+        verbose_name = "Группа для культуры"
+        verbose_name_plural = "Культуры - группы"
 
     def as_dict(self):
         return {
@@ -1362,31 +1362,31 @@ class GroupCulture(models.Model):
 
 class Culture(models.Model):
     title = models.CharField(max_length=255, help_text="Название культуры")
-    group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text='Группа для культуры', on_delete=models.SET_NULL)
+    group_culture = models.ForeignKey(GroupCulture, db_index=True, null=True, blank=True, help_text="Группа для культуры", on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     lis = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие культуры', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие культуры", db_index=True)
 
     def __str__(self):
         return self.title
 
     def get_full_title(self):
-        return f'{self.title}'.strip()
+        return f"{self.title}".strip()
 
     class Meta:
-        verbose_name = 'Культура'
-        verbose_name_plural = 'Культуры'
+        verbose_name = "Культура"
+        verbose_name_plural = "Культуры"
 
     @staticmethod
     def get_cultures(group):
-        if group == "Все" or group == '':
+        if group == "Все" or group == "":
             culture_obj = Culture.objects.all()
         elif group == "Без группы":
             culture_obj = Culture.objects.filter(group_culture=None)
         else:
             culture_obj = Culture.objects.filter(group_culture__title=group)
         elements = []
-        for i in culture_obj.order_by('title'):
+        for i in culture_obj.order_by("title"):
             title_group = ""
             if i.group_culture:
                 title_group = i.group_culture.title
@@ -1394,7 +1394,7 @@ class Culture(models.Model):
         return elements
 
     @staticmethod
-    def culture_save(pk, title='', fsli='', hide=False, lis=''):
+    def culture_save(pk, title="", fsli="", hide=False, lis=""):
         """
         Запись в базу сведений о культуре
         """
@@ -1430,29 +1430,29 @@ class Phenotype(models.Model):
     title = models.CharField(max_length=255, help_text="Название фенотипа")
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     lis = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие фенотипа', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие фенотипа", db_index=True)
 
     def __str__(self):
         return self.title
 
     def get_full_title(self):
-        return f'{self.lis} {self.title}'.strip()
+        return f"{self.lis} {self.title}".strip()
 
     class Meta:
-        verbose_name = 'Фенотип'
-        verbose_name_plural = 'Фенотипы'
+        verbose_name = "Фенотип"
+        verbose_name_plural = "Фенотипы"
 
 
 class GroupAntibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Группа антибиотиков")
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие группы', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие группы", db_index=True)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Группа для антибиотиков'
-        verbose_name_plural = 'Антибиотики - группы'
+        verbose_name = "Группа для антибиотиков"
+        verbose_name_plural = "Антибиотики - группы"
 
     def as_dict(self):
         return {
@@ -1483,17 +1483,17 @@ class GroupAntibiotic(models.Model):
 
 class Antibiotic(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
-    group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text='Группа антибиотиков', on_delete=models.SET_NULL)
+    group_antibiotic = models.ForeignKey(GroupAntibiotic, db_index=True, null=True, blank=True, help_text="Группа антибиотиков", on_delete=models.SET_NULL)
     fsli = models.CharField(max_length=32, default=None, null=True, blank=True)
     lis = models.CharField(max_length=32, default=None, null=True, blank=True)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие антибиотика', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие антибиотика", db_index=True)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Антибиотик'
-        verbose_name_plural = 'Антибиотики'
+        verbose_name = "Антибиотик"
+        verbose_name_plural = "Антибиотики"
 
     def as_dict(self):
         return {
@@ -1503,14 +1503,14 @@ class Antibiotic(models.Model):
 
     @staticmethod
     def get_antibiotics(group):
-        if group == "Все" or group == '':
+        if group == "Все" or group == "":
             antibiotic_obj = Antibiotic.objects.all()
         elif group == "Без группы":
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic=None)
         else:
             antibiotic_obj = Antibiotic.objects.filter(group_antibiotic__title=group)
         elements = []
-        for i in antibiotic_obj.order_by('title'):
+        for i in antibiotic_obj.order_by("title"):
             title_group = ""
             if i.group_antibiotic:
                 title_group = i.group_antibiotic.title
@@ -1518,7 +1518,7 @@ class Antibiotic(models.Model):
         return elements
 
     @staticmethod
-    def antibiotic_save(pk, title='', fsli='', hide=False, lis=''):
+    def antibiotic_save(pk, title="", fsli="", hide=False, lis=""):
         if pk > 0:
             antibiotic_obj = Antibiotic.objects.get(pk=pk)
             antibiotic_obj.title = title
@@ -1548,7 +1548,7 @@ class Antibiotic(models.Model):
 class AntibioticSets(models.Model):
     title = models.CharField(max_length=255, help_text="Название антибиотика")
     antibiotics = models.ManyToManyField(Antibiotic)
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрытие набора', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие набора", db_index=True)
 
     def __str__(self):
         return self.title
@@ -1560,8 +1560,8 @@ class AntibioticSets(models.Model):
         }
 
     class Meta:
-        verbose_name = 'Антибиотик - Наборы'
-        verbose_name_plural = 'Антибиотики - Наборы'
+        verbose_name = "Антибиотик - Наборы"
+        verbose_name_plural = "Антибиотики - Наборы"
 
     def get_not_hidden_antibiotics(self):
         return self.antibiotics.filter(hide=False)
@@ -1582,7 +1582,7 @@ class AntibioticSets(models.Model):
 
     @staticmethod
     def get_antibiotic_set():
-        antibiotic_set = AntibioticSets.objects.all().order_by('title')
+        antibiotic_set = AntibioticSets.objects.all().order_by("title")
         sets = [{"pk": i.pk, "title": i.title, "hide": i.hide} for i in antibiotic_set]
         return sets
 
@@ -1591,7 +1591,7 @@ class AntibioticSets(models.Model):
         elements = None
         if title:
             set_obj = AntibioticSets.objects.get(title=title)
-            antibiotic_obj = set_obj.antibiotics.all().order_by('title')
+            antibiotic_obj = set_obj.antibiotics.all().order_by("title")
             elements = [{"pk": i.pk, "title": i.title, "hide": i.hide} for i in antibiotic_obj]
 
         return elements
@@ -1611,21 +1611,21 @@ class AntibioticSets(models.Model):
 
 class SetResearch(models.Model):
     title = models.CharField(max_length=255, help_text="Название набора")
-    hide = models.BooleanField(default=False, blank=True, help_text='Скрыть', db_index=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрыть", db_index=True)
 
     def __str__(self):
         return self.title
 
     class Meta:
-        verbose_name = 'Набор исследований'
-        verbose_name_plural = 'Наборы исследований'
+        verbose_name = "Набор исследований"
+        verbose_name_plural = "Наборы исследований"
 
 
 class SetOrderResearch(models.Model):
-    set_research = models.ForeignKey(SetResearch, default=None, help_text='Набор', db_index=True, on_delete=models.CASCADE)
-    research = models.ForeignKey(Researches, default=None, help_text='Исследование', db_index=True, on_delete=models.CASCADE)
-    order = models.IntegerField(help_text='Порядок')
+    set_research = models.ForeignKey(SetResearch, default=None, help_text="Набор", db_index=True, on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, default=None, help_text="Исследование", db_index=True, on_delete=models.CASCADE)
+    order = models.IntegerField(help_text="Порядок")
 
     class Meta:
-        verbose_name = 'Исследование в наборе'
-        verbose_name_plural = 'Исследования в наборе'
+        verbose_name = "Исследование в наборе"
+        verbose_name_plural = "Исследования в наборе"
