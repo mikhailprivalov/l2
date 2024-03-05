@@ -16,7 +16,9 @@ from appconf.manager import SettingManager
 from barcodes.views import tubes
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
 from directory.models import Fractions, Researches, Unit
+from ftp_orders.main import push_result
 from laboratory.decorators import group_required
+from laboratory.settings import FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
 from laboratory.utils import strdate, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.client import Client
@@ -591,6 +593,8 @@ def confirm(request):
         if iss.napravleniye:
             iss.napravleniye.sync_confirmed_fields()
         Log.log(str(pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+        if iss.research_id in FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES.get("id_researches"):
+            push_result(iss)
     else:
         return JsonResponse(
             {
@@ -628,6 +632,9 @@ def confirm_list(request):
             if iss.napravleniye:
                 iss.napravleniye.sync_confirmed_fields()
             Log.log(str(iss.pk), 14, body={"dir": iss.napravleniye_id}, user=request.user.doctorprofile)
+
+            if iss.research_id in FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES.get("id_researches"):
+                push_result(iss)
     n.qr_check_token = None
     n.save(update_fields=['qr_check_token'])
     return JsonResponse(

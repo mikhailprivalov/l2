@@ -21,10 +21,12 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
+from hl7apy.core import Message, Segment, Group
+from ftplib import FTP
 
 
 class ServiceNotFoundException(Exception):
@@ -55,13 +57,13 @@ class FTPConnection:
 
         self.ftp = None
         self.connected = False
-        self.encoding = 'utf-8'
+        self.encoding = "utf-8"
 
     @property
     def name(self):
         return self.hospital.safe_short_title
 
-    def log(self, *msg, color=None, level='INFO '):
+    def log(self, *msg, color=None, level="INFO "):
         message = ""
         if color:
             message = f"\033[{color}m{message}"
@@ -76,9 +78,9 @@ class FTPConnection:
         stdout.write(message)
 
     def error(self, *msg):
-        self.log(*msg, color='91', level='ERROR')
+        self.log(*msg, color="91", level="ERROR")
 
-    def connect(self, forced=False, encoding='utf-8'):
+    def connect(self, forced=False, encoding="utf-8"):
         if forced:
             self.disconnect()
         if not self.connected:
@@ -103,7 +105,7 @@ class FTPConnection:
         try:
             file_list = self.ftp.nlst()
         except ftplib.error_perm as resp:
-            if str(resp).startswith('550'):
+            if str(resp).startswith("550"):
                 file_list = []
             else:
                 raise resp
@@ -111,7 +113,7 @@ class FTPConnection:
             self.error(f"UnicodeDecodeError: {e}")
             if not is_retry:
                 self.log("Retrying connection with encoding cp1251")
-                self.connect(forced=True, encoding='cp1251')
+                self.connect(forced=True, encoding="cp1251")
                 return self.get_file_list(is_retry=True)
             else:
                 raise e
@@ -132,20 +134,20 @@ class FTPConnection:
             f.seek(0)
             content = f.read()
             try:
-                return content.decode('utf-8-sig')
+                return content.decode("utf-8-sig")
             except UnicodeDecodeError as e:
                 self.error(f"UnicodeDecodeError: {e}")
-                self.log('Trying again with encoding cp1251')
-                return content.decode('cp1251')
+                self.log("Trying again with encoding cp1251")
+                return content.decode("cp1251")
 
     def write_file_as_text(self, file, content):
         self.log(f"Writing file {file}")
         self.connect()
-        self.ftp.storbinary(f"STOR {file}", BytesIO(content.encode('utf-8')))
+        self.ftp.storbinary(f"STOR {file}", BytesIO(content.encode("utf-8")))
         self.log(f"Wrote file {file}")
 
     def read_file_as_hl7(self, file):
-        content = self.read_file_as_text(file).strip('\x0b').strip('\x0c')
+        content = self.read_file_as_text(file).strip("\x0b").strip("\x0c")
         self.log(f"{file}\n{content}")
         content = content.replace("\n", "\r")
         try:
@@ -157,7 +159,7 @@ class FTPConnection:
             return None, None
 
     def pull_order(self, file: str):
-        if not file.endswith('.ord'):
+        if not file.endswith(".ord"):
             self.error(f"Skipping file {file} because it does not end with '.ord'")
             return
         if RegisteredOrders.objects.filter(file_name=file).exists():
@@ -193,13 +195,13 @@ class FTPConnection:
         fio = pid.PID_5
         family = fio.PID_5_1.value
         name = fio.PID_5_2.value
-        patronymic = fio.PID_5_3.value if hasattr(fio, 'PID_5_3') else ''
+        patronymic = fio.PID_5_3.value if hasattr(fio, "PID_5_3") else ""
 
         birthday = pid.PID_7.value
         if len(birthday) == 8:
             birthday = f"{birthday[:4]}-{birthday[4:6]}-{birthday[6:]}"
 
-        sex = {'m': 'м', 'f': 'ж'}.get(pid.PID_8.value.lower(), 'ж')
+        sex = {"m": "м", "f": "ж"}.get(pid.PID_8.value.lower(), "ж")
 
         snils = pid.PID_19.value
         snils = snils.replace("-", "").replace(" ", "")
@@ -209,9 +211,9 @@ class FTPConnection:
         phone = adds_data[0] if adds_data[0] else ""
         email_base64_str = adds_data[3] if adds_data[3] else ""
         if email_base64_str:
-            email_byte = email_base64_str.encode('utf-8')
+            email_byte = email_base64_str.encode("utf-8")
             email_base64 = base64.b64decode(email_byte)
-            email = email_base64.decode('utf-8')
+            email = email_base64.decode("utf-8")
         else:
             email = ""
 
@@ -240,7 +242,7 @@ class FTPConnection:
                 self.hospital,
                 patient_id_company,
                 email,
-                phone
+                phone,
             )
             self.log("Card", card)
 
@@ -265,12 +267,12 @@ class FTPConnection:
                     order_numbers.append(order_number_str)
 
                     if not order_number_str.isdigit():
-                        raise InvalidOrderNumberException(f'Number {order_number} is not digit')
+                        raise InvalidOrderNumberException(f"Number {order_number} is not digit")
                     order_number = int(order_number_str)
                     if order_number <= 0:
-                        raise InvalidOrderNumberException(f'Number {order_number} need to be greater than 0')
+                        raise InvalidOrderNumberException(f"Number {order_number} need to be greater than 0")
                     if not NumberGenerator.check_value_for_organization(self.hospital, order_number):
-                        raise InvalidOrderNumberException(f'Number {order_number} not valid. May be NumberGenerator is over or order number exists')
+                        raise InvalidOrderNumberException(f"Number {order_number} not valid. May be NumberGenerator is over or order number exists")
 
                     external_order = RegisteredOrders.objects.create(
                         order_number=order_number,
@@ -300,21 +302,21 @@ class FTPConnection:
                         price_name=price_name.pk,
                     )
 
-                    if not result['r']:
-                        raise FailedCreatingDirectionsException(result.get('message') or "Failed creating directions")
+                    if not result["r"]:
+                        raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
 
-                    self.log("Created local directions:", result['list_id'])
-                    for direction in result['list_id']:
+                    self.log("Created local directions:", result["list_id"])
+                    for direction in result["list_id"]:
                         directions[direction] = orders_by_numbers[order_number_str]
 
-                    for direction in Napravleniya.objects.filter(pk__in=result['list_id'], need_order_redirection=True):
+                    for direction in Napravleniya.objects.filter(pk__in=result["list_id"], need_order_redirection=True):
                         self.log("Direction", direction.pk, "marked as redirection to", direction.external_executor_hospital)
                         with tempfile.NamedTemporaryFile() as f:
                             self.connect()
                             self.ftp.retrbinary(f"RETR {file}", f.write)
                             f.seek(0)
                             path_file = NapravleniyaHL7LinkFiles.create_hl7_file_path(direction.pk, file)
-                            with open(path_file, 'wb') as fnew:
+                            with open(path_file, "wb") as fnew:
                                 fnew.write(f.read())
                         NapravleniyaHL7LinkFiles.objects.create(
                             napravleniye_id=direction.pk,
@@ -339,7 +341,7 @@ class FTPConnection:
             self.error(f"Exception: {e}")
 
     def pull_result(self, file: str):
-        if not file.endswith('.res'):
+        if not file.endswith(".res"):
             self.error(f"Skipping file {file} because it does not end with '.res'")
             return
 
@@ -396,7 +398,7 @@ class FTPConnection:
 
         if is_confirm:
             iss.lab_comment = ""
-            iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, '%Y%m%d%H%M%S')
+            iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
             iss.time_save = current_time()
             iss.doc_confirmation_string = doctor_fio
             iss.save()
@@ -409,7 +411,7 @@ class FTPConnection:
                 units = res["units"]
                 ref_str = res["refs"]
                 if ref_str:
-                    ref_str = ref_str.replace("\"", "'")
+                    ref_str = ref_str.replace('"', "'")
                     ref_str = f'{{"Все": "{ref_str}"}}'
                 Result(
                     issledovaniye=iss,
@@ -444,10 +446,10 @@ class FTPConnection:
         patient.pid.pid_5 = f"{individual.family}^{individual.name}^{individual.patronymic}"
         patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
         patient.pid.pid_8 = individual.sex.upper()
-        byte_email = direction.client.email.encode('utf-8')
+        byte_email = direction.client.email.encode("utf-8")
         field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
         patient.pid.pid_13.value = field_13
-        patient.pid.pid_19 = data_indivdual['snils']
+        patient.pid.pid_19 = data_indivdual["snils"]
 
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
@@ -468,7 +470,7 @@ class FTPConnection:
         with transaction.atomic():
             direction.need_order_redirection = False
             direction.time_send_hl7 = current_time()
-            direction.save(update_fields=['time_send_hl7', 'need_order_redirection'])
+            direction.save(update_fields=["time_send_hl7", "need_order_redirection"])
 
             n = 0
 
@@ -489,7 +491,7 @@ class FTPConnection:
             content = content.replace("R", "~").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
-            self.log('Writing file', filename, '\n', content)
+            self.log("Writing file", filename, "\n", content)
             self.write_file_as_text(filename, content)
 
             Log.log(
@@ -502,9 +504,6 @@ class FTPConnection:
                 },
             )
 
-    def push_result(self, direction: Napravleniya):
-        pass
-
     def push_tranfer_file_order(self, direction: Napravleniya, registered_orders_ids, directions_to_sync):
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         directons_external_order_group = Napravleniya.objects.filter(external_order_id__in=registered_orders_ids)
@@ -512,19 +511,19 @@ class FTPConnection:
             for i in directons_external_order_group:
                 i.need_order_redirection = False
                 i.time_send_hl7 = current_time()
-                i.save(update_fields=['time_send_hl7', 'need_order_redirection', 'need_order_redirection'])
+                i.save(update_fields=["time_send_hl7", "need_order_redirection", "need_order_redirection"])
             hl7_file = NapravleniyaHL7LinkFiles.objects.filter(napravleniye=direction).first()
 
-            hl7_rule_file = os.path.join(BASE_DIR, 'ftp_orders', 'hl7_rule', direction.hospital.hl7_rule_file)
+            hl7_rule_file = os.path.join(BASE_DIR, "ftp_orders", "hl7_rule", direction.hospital.hl7_rule_file)
             if hl7_rule_file:
                 with open(hl7_rule_file) as json_file:
                     data = json.load(json_file)
-                    data = data['order']
-                    need_replace_field = data['needReplaceField']
+                    data = data["order"]
+                    need_replace_field = data["needReplaceField"]
                 mod_lines = []
-                with open(f"{hl7_file.upload_file.name}", 'r') as fp:
+                with open(f"{hl7_file.upload_file.name}", "r") as fp:
                     for n, line in enumerate(fp, 1):
-                        line = line.rstrip('\n')
+                        line = line.rstrip("\n")
                         line_new = line.split("|")
                         if line_new[0] in need_replace_field.keys():
                             field_replace = need_replace_field[line_new[0]]
@@ -534,12 +533,12 @@ class FTPConnection:
 
             with open(path_file, "w") as file:
                 for line in mod_lines:
-                    file.write(line + '\n')
+                    file.write(line + "\n")
             file.close()
             with open(path_file, "r") as file:
                 content = file.read()
 
-            self.log('Writing file', path_file, '\n', content)
+            self.log("Writing file", path_file, "\n", content)
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
             for k in directons_external_order_group:
@@ -586,7 +585,7 @@ def process_pull_orders():
 
     hospitals = get_hospitals_pull_orders()
 
-    stdout.write('Getting ftp links')
+    stdout.write("Getting ftp links")
     ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -598,7 +597,7 @@ def process_pull_orders():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        stdout.write(f'Iterating over {len(ftp_links)} servers')
+        stdout.write(f"Iterating over {len(ftp_links)} servers")
         for ftp_url, ftp_connection in ftp_connections.items():
             processed_files_new = set()
             try:
@@ -626,7 +625,7 @@ def process_pull_orders():
 
 
 def process_pull_start_orders():
-    stdout.write('Starting pull_orders process')
+    stdout.write("Starting pull_orders process")
     while True:
         process_pull_orders()
         time.sleep(1)
@@ -640,7 +639,7 @@ def get_hospitals_push_orders():
 def process_push_orders():
     hospitals = get_hospitals_push_orders()
 
-    stdout.write('Getting ftp links')
+    stdout.write("Getting ftp links")
     ftp_links = {x.orders_push_by_numbers: x for x in hospitals}
 
     ftp_connections = {}
@@ -652,7 +651,7 @@ def process_push_orders():
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
-        stdout.write(f'Iterating over {len(ftp_links)} servers')
+        stdout.write(f"Iterating over {len(ftp_links)} servers")
         for ftp_url, ftp_connection in ftp_connections.items():
             directions_to_sync = []
             directions = []
@@ -700,21 +699,10 @@ def process_push_orders():
         ftp_connection.disconnect()
 
 
-def process_push_results():
-    pass
-
-
 def process_push_orders_start():
-    stdout.write('Starting push_orders process')
+    stdout.write("Starting push_orders process")
     while True:
         process_push_orders()
-        time.sleep(1)
-
-
-def process_push_results_start():
-    stdout.write('Starting push_orders process')
-    while True:
-        process_push_results()
         time.sleep(1)
 
 
@@ -769,3 +757,68 @@ def process_pull_start_results():
     while True:
         process_pull_results()
         time.sleep(1)
+
+
+def push_result(iss: Issledovaniya):
+    hl7 = Message()
+    meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
+    msh_meta = meta_data.get("msh")
+    app_sender = msh_meta.get("app_sender")
+    organization_sender = msh_meta.get("organization_sender")
+    app_receiver = msh_meta.get("app_receiver")
+    organization_receiver = msh_meta.get("organization_receiver")
+
+    obr_meta = meta_data.get("obr")
+    obr_executor = obr_meta.get("executer_code")
+
+    service = iss.research.title
+    if not iss.time_confirmation or not iss.napravleniye.external_order:
+        return False
+
+    if not iss.napravleniye.external_order.hl7:
+        return False
+
+    hl7_bs64 = iss.napravleniye.external_order.hl7
+    hl7_source = base64.b64decode(hl7_bs64, altchars=None, validate=False).decode("utf-8").split("\n")
+
+    confirm_datetime_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d%H%M%S")
+    confirm_date_service = datetime.datetime.strftime(iss.time_confirmation, "%Y%m%d")
+    tube = iss.tubes.all().first()
+    tube_number = tube.number
+    internal_id = iss.research.internal_code
+    pv1_date = confirm_date_service
+
+    results = Result.objects.filter(issledovaniye=iss)
+    hl7.msh = f"MSH|^~\&|{app_sender}|{organization_sender}|{app_receiver}|{organization_receiver}|{confirm_datetime_service}||ORU^R01|{tube_number}|P|2.3|||AL|NE|22.2.19"
+    hl7.pid = hl7_source[1]
+    hl7.PV1 = f"PV1||O||||||||||||||||||||||||||||||||||||||||||{pv1_date}|{pv1_date}|"
+    obr_val = (
+        f"OBR|1|{tube_number}^{app_receiver}|{tube_number}^{app_sender}|^^^{internal_id}^{service}|||{confirm_datetime_service}|{confirm_datetime_service}"
+        f"|||||^||||||||^^^||||F||^^^^^R|||||{obr_executor}||"
+    )
+    hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.OBR.value = obr_val
+
+    obs_name = "ORU_R01_OBSERVATION"
+
+    step = 0
+    for result in results:
+        step += 1
+        obx_group = Group(obs_name)
+        obx = Segment("OBX")
+        obx.value = f"OBX|{step}|NM|{result.fraction.fsli}^{result.fraction.title})||{result.value}|{result.fraction.unit.title}|-|||||||{confirm_date_service}"
+        obx_group.add(obx)
+        hl7.ORU_R01_PATIENT_RESULT.ORU_R01_ORDER_OBSERVATION.add(obx_group)
+
+    content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
+    created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S-%f")
+    if iss.external_add_order:
+        external_add_order = iss.external_add_order.external_add_order
+    else:
+        external_add_order = "-ext-add-ord"
+    filename = f"ORU_ord-{external_add_order}_tube-{tube_number}_{created_at}.res"
+
+    ftp_settings = msh_meta.get("ftp_settings")
+
+    with FTP(ftp_settings["address"], ftp_settings["user"], ftp_settings["password"]) as ftp:
+        ftp.cwd(ftp_settings["path"])
+        ftp.storbinary(f"STOR {filename}", BytesIO(content.encode("cp1251")))
