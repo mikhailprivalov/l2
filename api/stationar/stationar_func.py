@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import List
 
 import pytz
+from pytils import dt
 
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
@@ -585,7 +586,7 @@ def get_assignments(direction_id: int):
     assignments = get_assignments_by_history(issledovanie_id)
     for i in assignments:
         fio_assigned = shorten_fio(i.who_assigned)
-        schedule_date = i.schedule_date.astimezone(pytz.timezone(TIME_ZONE)) if i.schedule_date else None
+        schedule_date = dt.ru_strftime("%d.%m %a %H:%M", i.schedule_date.astimezone(pytz.timezone(TIME_ZONE))) if i.schedule_date else None
         create_date = i.data_sozdaniya.strftime("%d.%m.%Y")
         research_title = f"{i.research_title}; "
         if assignment_dict.get(i.napravlenie_id):

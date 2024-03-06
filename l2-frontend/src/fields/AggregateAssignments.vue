@@ -99,16 +99,7 @@ const columns = ref([
     width: 100,
     renderBodyCell: ({ row }, h) => {
       if (row.schedule_date) {
-        const date = new Date(row.schedule_date);
-        const stringDate = date.toLocaleString('ru-RU', {
-          day: '2-digit',
-          month: '2-digit',
-          weekday: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-        const list = stringDate.split(', ');
-        return `${list[1]} ${list[0]} ${list[2]}`;
+        return row.schedule_date;
       }
       return h('div', { class: 'button' }, [
         h('button', {
