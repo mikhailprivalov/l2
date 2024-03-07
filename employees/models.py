@@ -305,7 +305,9 @@ class Department(models.Model):
             raise ValueError('Отдел с таким названием уже существует')
 
     @staticmethod
-    def get_active(hospital_id: int = Hospitals.objects.get(is_default=True)):
+    def get_active(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
         departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
         return departments
 
