@@ -30,22 +30,9 @@
       </div>
     </div>
     <WorkingTimeTable
-      v-if="workTimeDocument"
-      :work-time-document-id="workTimeDocument"
       :year="selectedYear"
       :month="selectedMonth"
     />
-    <div
-      v-if="showCreateButton"
-      class="create-document"
-    >
-      <button
-        class="btn btn-blue-nb"
-        @click="createWorkTimeDocument"
-      >
-        Создать график
-      </button>
-    </div>
   </div>
 </template>
 
@@ -62,8 +49,6 @@ import api from '@/api';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import WorkingTimeTable from '@/pages/WorkingTime/WorkingTimeTable.vue';
-
-const root = getCurrentInstance().proxy.$root;
 
 const store = useStore();
 
@@ -108,49 +93,6 @@ const getDepartments = async () => {
   await store.dispatch(actions.DEC_LOADING);
   departments.value = result;
 };
-
-const filtersIsFilled = computed(() => !!(selectedDepartment.value && selectedMonth.value && selectedYear.value));
-
-const workTimeDocument = ref(null);
-
-const showCreateButton = ref(false);
-const getWorkTimeDocument = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-document', {
-    month: selectedMonth.value,
-    year: selectedYear.value,
-    department: selectedDepartment.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  workTimeDocument.value = result;
-  if (!result) {
-    showCreateButton.value = true;
-  } else {
-    showCreateButton.value = false;
-  }
-};
-
-const createWorkTimeDocument = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('/working-time/create-document', {
-    month: selectedMonth.value,
-    year: selectedYear.value,
-    department: selectedDepartment.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'График создан');
-    await getWorkTimeDocument();
-  } else {
-    root.$emit('msg', 'error', 'Ошибка');
-  }
-};
-
-watch([selectedMonth, selectedYear, selectedDepartment], () => {
-  if (filtersIsFilled.value) {
-    getWorkTimeDocument();
-  }
-});
 
 onMounted(() => {
   getDepartments();

@@ -35,23 +35,16 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  computed, getCurrentInstance, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 
-import api from '@/api';
-import { useStore } from '@/store';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
-import * as actions from '@/store/action-types';
 
 const props = defineProps({
-  workTimeDocumentId: {
-    type: Number,
-    required: true,
-  },
   year: {
     type: Number,
     required: true,
@@ -63,25 +56,9 @@ const props = defineProps({
 });
 const root = getCurrentInstance().proxy.$root;
 
-const store = useStore();
-
 const search = ref('');
 
 const employeesWorkTime = ref([]);
-const getEmployeesWorkTime = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-work-time', {
-    documentId: props.workTimeDocumentId,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  employeesWorkTime.value = result;
-};
-
-watch(() => props.workTimeDocumentId, () => {
-  if (props.workTimeDocumentId) {
-    getEmployeesWorkTime();
-  }
-});
 
 const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
   const employeesFio = employee.fio?.toLowerCase();
@@ -93,17 +70,8 @@ const changeWorkTime = async (workTime: object) => {
   const {
     start, end, rowIndex, columnKey,
   } = workTime;
-  // await store.dispatch(actions.INC_LOADING);
   filteredEmployees.value[rowIndex][columnKey] = { startWorkTime: start, endWorkTime: end };
   root.$emit('msg', 'ok', 'Обновлено');
-  // const { ok, message } = await api('/working-time/get-work-time', {
-  //   documentId: props.workTimeDocumentId,
-  // });
-  // await store.dispatch(actions.DEC_LOADING);
-  // if (ok) {
-  //   // getEmployeesWorkTime();
-  //   root.$emit('msg', 'ok', 'Обновлено');
-  // }
 };
 
 const columns = ref([]);
@@ -191,10 +159,6 @@ const cellStyleOption = {
 const rowStyleOption = {
   stripe: true,
 };
-
-onMounted(() => {
-  getEmployeesWorkTime();
-});
 </script>
 
 <style scoped lang="scss">
