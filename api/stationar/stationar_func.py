@@ -581,7 +581,7 @@ def force_to_number(val):
 def get_assignments(direction_id: int):
     if direction_id is None:
         return []
-    assignment_dict = {}
+    assignment_tmp = {}
     issledovanie_id = Issledovaniya.objects.get(napravleniye_id=direction_id).pk
     assignments = get_assignments_by_history(issledovanie_id)
     for i in assignments:
@@ -589,11 +589,11 @@ def get_assignments(direction_id: int):
         schedule_date = dt.ru_strftime("%d.%m %a %H:%M", i.schedule_date.astimezone(pytz.timezone(TIME_ZONE))) if i.schedule_date else None
         create_date = i.data_sozdaniya.strftime("%d.%m.%Y")
         research_title = f"{i.research_title}; "
-        if assignment_dict.get(i.napravlenie_id):
-            assignment_dict[i.napravlenie_id]["research_id"].append(i.research_id)
-            assignment_dict[i.napravlenie_id]["research_title"].append(research_title)
+        if assignment_tmp.get(i.napravlenie_id):
+            assignment_tmp[i.napravlenie_id]["research_id"].append(i.research_id)
+            assignment_tmp[i.napravlenie_id]["research_title"].append(research_title)
         else:
-            assignment_dict[i.napravlenie_id] = {
+            assignment_tmp[i.napravlenie_id] = {
                 "direction_id": i.napravlenie_id,
                 "research_id": [i.research_id],
                 "research_title": [research_title],
@@ -606,9 +606,9 @@ def get_assignments(direction_id: int):
             if i.total_confirmed:
                 fio_confirm = shorten_fio(i.who_confirm)
                 time_confirmation = i.time_confirmation.astimezone(pytz.timezone(TIME_ZONE))
-                assignment_dict[i.napravlenie_id]["time_confirmation"] = time_confirmation.strftime("%d.%m.%Y %H:%M")
-                assignment_dict[i.napravlenie_id]["who_confirm"] = fio_confirm
+                assignment_tmp[i.napravlenie_id]["time_confirmation"] = time_confirmation.strftime("%d.%m.%Y %H:%M")
+                assignment_tmp[i.napravlenie_id]["who_confirm"] = fio_confirm
 
-    result = [value for value in assignment_dict.values()]
+    result = [value for value in assignment_tmp.values()]
 
     return result
