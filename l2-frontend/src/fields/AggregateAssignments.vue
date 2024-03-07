@@ -157,7 +157,7 @@ onMounted(getAssignments);
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .empty-list {
   width: 85px;
   margin: 20px auto;
@@ -184,21 +184,22 @@ onMounted(getAssignments);
 }
 </style>
 
-<style>
+<style lang="scss">
 .transparent-button {
   background-color: transparent;
   color: #434A54;
   border: none;
   border-radius: 4px;
   padding: 6px 12px;
-}
-.transparent-button:hover {
-  background-color: #434a54;
-  color: #FFFFFF;
-  border: none;
-}
-.transparent-button:active {
-  background-color: #37BC9B;
-  color: #FFFFFF;
+
+  &:hover {
+    background-color: #434a54;
+    color: #FFF;
+  }
+  &:active {
+    background-color: #37BC9B;
+    color: #FFF;
+  }
+
 }
 </style>
