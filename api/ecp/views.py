@@ -64,7 +64,7 @@ def fill_slot(request):
 
     if doctor_pk.find("@L") > -1:
         s: SlotPlan = SlotPlan.objects.filter(pk=slot_id).first()
-        save_slot = save_slot_fact(s, card_pk, "reserved", research_pk, False, None , None, False, direction_id)
+        save_slot = save_slot_fact(s, card_pk, "reserved", research_pk, False, None, None, False, direction_id)
         if save_slot:
             r = {'register': True}
         else:
