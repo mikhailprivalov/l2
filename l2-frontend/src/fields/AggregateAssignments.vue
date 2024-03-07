@@ -38,6 +38,7 @@
       v-if="showSchedule"
       :card-pk="props.cardPk"
       :service-number="currentResearchPk"
+      :direction-id="currentDirectionPk"
       @hide="showSchedule = false"
     />
   </div>
@@ -75,9 +76,10 @@ const props = defineProps({
 
 const showSchedule = ref(false);
 const currentResearchPk = ref(null);
-const openSchedule = (researchIds) => {
-  const data = researchIds[0];
-  currentResearchPk.value = data;
+const currentDirectionPk = ref(null);
+const openSchedule = (researchId, directionId) => {
+  currentResearchPk.value = researchId;
+  currentDirectionPk.value = directionId;
   showSchedule.value = true;
 };
 
@@ -106,7 +108,7 @@ const columns = ref([
           class: 'transparent-button',
           on: {
             click: () => {
-              openSchedule(row.research_id);
+              openSchedule(row.research_id[0], row.direction_id);
             },
           },
         }, 'Записать'),

@@ -19,6 +19,7 @@
       <ServiceScheduleEcp
         :card-id="props.cardPk"
         :service-pk="props.serviceNumber"
+        :direction-id="props.directionId"
       />
     </div>
     <div slot="footer">
@@ -51,6 +52,10 @@ const props = defineProps({
   serviceNumber: {
     type: Number,
     required: true,
+  },
+  directionId: {
+    type: Number,
+    required: false,
   },
 });
 
