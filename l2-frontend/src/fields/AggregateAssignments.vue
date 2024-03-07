@@ -4,18 +4,18 @@
       <div class="button">
         <button
           v-tippy
-          title="печать"
+          title="Печать"
           class="btn last btn-blue-nb"
           @click="printForm"
         >
-          печать
+          Печать
         </button>
       </div>
     </div>
     <div>
       <VeTable
         :columns="columns"
-        :table-data="assignments"
+        :table-data="assignmentPagination"
       />
       <div
         v-show="assignments.length === 0"
@@ -34,12 +34,19 @@
         />
       </div>
     </div>
+    <ScheduleModal
+      v-if="showSchedule"
+      :card-pk="props.cardPk"
+      :service-number="currentResearchPk"
+      :direction-id="currentDirectionPk"
+      @hide="showSchedule = false"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  onMounted, ref,
+  computed, onMounted, ref,
 } from 'vue';
 import {
   VeLocale,
@@ -52,12 +59,29 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
 import ruRu from '@/locales/ve';
+import ScheduleModal from '@/modals/ScheduleModal.vue';
 
 VeLocale.use(ruRu);
 
-const props = defineProps<{
-  direction: number;
-}>();
+const props = defineProps({
+  direction: {
+    type: Number,
+    required: true,
+  },
+  cardPk: {
+    type: Number,
+    required: true,
+  },
+});
+
+const showSchedule = ref(false);
+const currentResearchPk = ref(null);
+const currentDirectionPk = ref(null);
+const openSchedule = (researchId, directionId) => {
+  currentResearchPk.value = researchId;
+  currentDirectionPk.value = directionId;
+  showSchedule.value = true;
+};
 
 const columns = ref([
   {
@@ -68,6 +92,28 @@ const columns = ref([
   },
   {
     field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
+  },
+  {
+    field: 'schedule_date',
+    key: 'schedule_date',
+    title: 'Расписание',
+    align: 'center',
+    width: 100,
+    renderBodyCell: ({ row }, h) => {
+      if (row.schedule_date) {
+        return row.schedule_date;
+      }
+      return h('div', { class: 'button' }, [
+        h('button', {
+          class: 'transparent-button',
+          on: {
+            click: () => {
+              openSchedule(row.research_id[0], row.direction_id);
+            },
+          },
+        }, 'Записать'),
+      ]);
+    },
   },
   {
     field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
@@ -98,6 +144,11 @@ const getAssignments = async () => {
   assignments.value = results.data;
 };
 
+const assignmentPagination = computed(() => assignments.value.slice(
+  (page.value - 1) * pageSize.value,
+  page.value * pageSize.value,
+));
+
 const printForm = () => {
   window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);
 };
@@ -106,7 +157,7 @@ onMounted(getAssignments);
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .empty-list {
   width: 85px;
   margin: 20px auto;
@@ -130,5 +181,24 @@ onMounted(getAssignments);
   align-self: stretch;
   flex: 1;
   padding: 6px 0;
+}
+</style>
+
+<style lang="scss">
+.transparent-button {
+  background-color: transparent;
+  color: #434A54;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+
+  &:hover {
+    background-color: #434a54;
+    color: #FFF;
+  }
+  &:active {
+    background-color: #37BC9B;
+    color: #FFF;
+  }
 }
 </style>

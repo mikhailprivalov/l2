@@ -771,6 +771,7 @@
           <AggregateAssignments
             v-if="opened_list_key === 'assignments'"
             :direction="direction"
+            :card-pk="patient.card_pk"
           />
         </div>
       </div>

@@ -87,3 +87,15 @@ def values_as_structure_data(data):
                     }
                 )
     return values
+
+
+def shorten_fio(fio):
+    fio_data = fio.split(" ")
+    family = fio_data[0]
+    name_short = fio_data[1][0]
+    patronymic_short = None
+    if len(fio_data) > 2 and len(fio_data[2]) > 0:
+        patronymic_short = fio_data[2][0]
+    if patronymic_short is None:
+        return f"{family} {name_short}."
+    return f"{family} {name_short}.{patronymic_short}."
