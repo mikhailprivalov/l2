@@ -213,7 +213,8 @@ def get_assignments_by_history(history_id: int):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-             SELECT public.directions_napravleniya.id as napravlenie_id, public.directions_napravleniya.data_sozdaniya,
+            SELECT public.directions_napravleniya.id as napravlenie_id, public.directions_napravleniya.data_sozdaniya,
+            public.doctor_schedule_slotplan.id as slot_plan_id, public.doctor_schedule_slotplan.datetime as schedule_date,
             public.users_doctorprofile.fio as who_assigned, doc_list.fio as who_confirm, public.directions_napravleniya.total_confirmed, 
             public.directions_issledovaniya.time_confirmation, public.directory_researches.id as research_id, public.directory_researches.title as research_title
 
@@ -226,6 +227,13 @@ def get_assignments_by_history(history_id: int):
               ON public.directions_napravleniya.doc_id = public.users_doctorprofile.id
             LEFT JOIN (SELECT id, fio FROM public.users_doctorprofile) as doc_list
               ON public.directions_issledovaniya.doc_confirmation_id = doc_list.id
+            
+            LEFT JOIN public.doctor_schedule_slotfactdirection
+              ON public.directions_napravleniya.id = doctor_schedule_slotfactdirection.direction_id
+            LEFT JOIN public.doctor_schedule_slotfact
+              ON public.doctor_schedule_slotfact.id = doctor_schedule_slotfactdirection.slot_fact_id
+            LEFT JOIN public.doctor_schedule_slotplan
+              ON public.doctor_schedule_slotfact.plan_id = public.doctor_schedule_slotplan.id
               
             WHERE public.directions_napravleniya.parent_id = %(history_id)s
             AND (is_paraclinic = true OR is_doc_refferal = true OR is_microbiology = true OR is_citology = true OR is_gistology = true OR 

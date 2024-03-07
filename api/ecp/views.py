@@ -49,6 +49,7 @@ def fill_slot(request):
     slot_title = request_data.get('slot_title')
     doctor_pk = request_data['doctor_pk']
     research_pk = request_data['research_pk']
+    direction_id = request_data.get('directionId')
     date = request_data['date']
     card = Card.objects.get(pk=card_pk)
     ecp_id = None
@@ -63,7 +64,7 @@ def fill_slot(request):
 
     if doctor_pk.find("@L") > -1:
         s: SlotPlan = SlotPlan.objects.filter(pk=slot_id).first()
-        save_slot = save_slot_fact(s, card_pk, "reserved", research_pk, False, None , None, False)
+        save_slot = save_slot_fact(s, card_pk, "reserved", research_pk, False, None, None, False, direction_id)
         if save_slot:
             r = {'register': True}
         else:

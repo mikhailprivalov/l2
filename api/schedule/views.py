@@ -11,7 +11,7 @@ import datetime
 from datetime import timedelta
 
 from directory.models import Researches
-from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan, SlotFactCancel
+from doctor_schedule.models import ScheduleResource, SlotFact, SlotPlan, SlotFactCancel, SlotFactDirection
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
@@ -326,7 +326,7 @@ def cancel(request):
     return status_response(False, 'Не получилось отменить')
 
 
-def save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id, disabled):
+def save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id, disabled, direction_id=None):
         if card_pk:
             status = {
                 'reserved': 0,
@@ -345,6 +345,9 @@ def save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id,
             slot_fact.is_cito = is_cito
             slot_fact.fin_source_id = fin_source
             slot_fact.save()
+            if direction_id:
+                slot_fact_direction: SlotFactDirection = SlotFactDirection(slot_fact_id=slot_fact.pk, direction_id=direction_id)
+                slot_fact_direction.save()
             if plan_id:
                 ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
                 ph.slot_fact = slot_fact

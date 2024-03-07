@@ -2,10 +2,15 @@ from collections import OrderedDict
 from copy import deepcopy
 from typing import List
 
+import pytz
+from pytils import dt
+
 from directions.models import Issledovaniya, Napravleniya
 from directory.models import Researches, HospitalService
+from laboratory.settings import TIME_ZONE
 from podrazdeleniya.models import Podrazdeleniya
 from utils import tree_directions
+from utils.common import shorten_fio
 from .sql_func import (
     get_research,
     get_iss,
@@ -576,39 +581,34 @@ def force_to_number(val):
 def get_assignments(direction_id: int):
     if direction_id is None:
         return []
-    results = []
+    assignment_tmp = {}
     issledovanie_id = Issledovaniya.objects.get(napravleniye_id=direction_id).pk
     assignments = get_assignments_by_history(issledovanie_id)
-    prev_directions_id = -1
     for i in assignments:
-        if prev_directions_id != i.napravlenie_id:
-            who_assigned = i.who_assigned.split(" ")
-            family_assigned = who_assigned[0]
-            name_assigned = who_assigned[1][0]
-            patronymic_assigned = ""
-            if len(who_assigned) > 2:
-                patronymic_assigned = who_assigned[2][0]
-            tmp_res = {
+        fio_assigned = shorten_fio(i.who_assigned)
+        schedule_date = dt.ru_strftime("%d.%m %a %H:%M", i.schedule_date.astimezone(pytz.timezone(TIME_ZONE))) if i.schedule_date else None
+        create_date = i.data_sozdaniya.strftime("%d.%m.%Y")
+        research_title = f"{i.research_title}; "
+        if assignment_tmp.get(i.napravlenie_id):
+            assignment_tmp[i.napravlenie_id]["research_id"].append(i.research_id)
+            assignment_tmp[i.napravlenie_id]["research_title"].append(research_title)
+        else:
+            assignment_tmp[i.napravlenie_id] = {
                 "direction_id": i.napravlenie_id,
                 "research_id": [i.research_id],
-                "research_title": [f"{i.research_title}; "],
-                "create_date": i.data_sozdaniya.strftime("%d.%m.%Y"),
-                "who_assigned": f"{family_assigned} {name_assigned}.{patronymic_assigned}.",
+                "research_title": [research_title],
+                "create_date": create_date,
+                "schedule_date": schedule_date,
+                "who_assigned": fio_assigned,
                 "time_confirmation": "",
                 "who_confirm": "",
             }
             if i.total_confirmed:
-                who_confirm = i.who_confirm.split(" ")
-                family_confirm = who_confirm[0]
-                name_confirm = who_confirm[1][0]
-                patronymic_confirm = ""
-                if len(who_confirm) > 2:
-                    patronymic_confirm = who_confirm[2][0]
-                tmp_res["time_confirmation"] = i.time_confirmation.strftime("%d.%m.%Y %H:%M")
-                tmp_res["who_confirm"] = f"{family_confirm} {name_confirm}.{patronymic_confirm}."
-            results.append(tmp_res)
-        else:
-            results[-1]["research_id"].append(i.research_id)
-            results[-1]["research_title"].append(f"{i.research_title}; ")
-        prev_directions_id = i.napravlenie_id
-    return results
+                fio_confirm = shorten_fio(i.who_confirm)
+                time_confirmation = i.time_confirmation.astimezone(pytz.timezone(TIME_ZONE))
+                assignment_tmp[i.napravlenie_id]["time_confirmation"] = time_confirmation.strftime("%d.%m.%Y %H:%M")
+                assignment_tmp[i.napravlenie_id]["who_confirm"] = fio_confirm
+
+    result = [value for value in assignment_tmp.values()]
+
+    return result

@@ -90,6 +90,10 @@ export default {
       type: Number,
       required: true,
     },
+    directionId: {
+      type: Number,
+      required: false,
+    },
   },
   data() {
     return {
@@ -285,6 +289,7 @@ export default {
         date: this.activeDate,
         slot_title: this.activeSlotTitle,
         research_pk: this.servicePk,
+        directionId: this.directionId,
       });
       if (register) {
         this.$root.$emit('msg', 'ok', 'Пациент записан на прием');
