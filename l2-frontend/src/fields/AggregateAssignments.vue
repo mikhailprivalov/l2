@@ -200,6 +200,5 @@ onMounted(getAssignments);
     background-color: #37BC9B;
     color: #FFF;
   }
-
 }
 </style>
