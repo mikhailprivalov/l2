@@ -3,9 +3,9 @@
     ref="modal"
     show-footer="true"
     white-bg="true"
-    max-width="600px"
+    max-width="800px"
     width="100%"
-    height="20%"
+    height="50%"
     margin-left-right="auto"
     margin-top
     class="an"
