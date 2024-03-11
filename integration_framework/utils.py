@@ -238,6 +238,8 @@ def add_absent_field(data, research_data):
             elif k == "вэ-Проведенное лечение":
                 res_treatment = json.loads(data[k])
                 data[k] = " ".join([f"{res_t['pharmaTitle']} - {res_t['mode']};" for res_t in res_treatment])
+        if not data.get("вэ-Время начала"):
+            data["вэ-Время начала"] = "1000"
 
     return {**data, **tmp_data}
 
