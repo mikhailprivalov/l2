@@ -16,6 +16,7 @@
       <VeTable
         :columns="columns"
         :table-data="assignmentPagination"
+        :cell-style-option="cellStyleOption"
       />
       <div
         v-show="assignments.length === 0"
@@ -136,6 +137,16 @@ const pageNumberChange = (number: number) => {
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
+
+const cellStyleOption = {
+  bodyCellClass: ({ row, column, rowIndex }) => {
+    if (row.schedule_date) {
+      return 'table-body-cell-green';
+    }
+    return '';
+  },
+};
+
 const assignments = ref([]);
 
 const getAssignments = async () => {
@@ -205,5 +216,8 @@ onMounted(getAssignments);
     background-color: #37BC9B;
     color: #FFF;
   }
+}
+.table-body-cell-green {
+  background: #a9cfbb !important;
 }
 </style>
