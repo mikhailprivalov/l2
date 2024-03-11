@@ -139,7 +139,7 @@ const pageSizeChange = (size: number) => {
 };
 
 const cellStyleOption = {
-  bodyCellClass: ({ row, column, rowIndex }) => {
+  bodyCellClass: ({ row }) => {
     if (row.schedule_date) {
       return 'table-body-cell-green';
     }
