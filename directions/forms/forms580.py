@@ -278,10 +278,10 @@ def form_01(request_data):
             objs.append(Spacer(1, 8 * cm))
         if not dir.imported_from_rmis:
             if dir.doc_who_create and dir.doc_who_create != dir.doc:
-                objs.append(Paragraph(f"Выписал:{Truncator(dir.doc_who_create.get_fio() (dir.doc_who_create.podrazdeleniye.title).chars(63))}", style))
+                objs.append(Paragraph(f"Выписал:{dir.doc_who_create.get_fio()} {dir.doc_who_create.podrazdeleniye.title}", style))
 
             if dir.doc:
-                objs.append(Paragraph(f"Отделение: {Truncator(dir.get_doc_podrazdeleniye_title()).chars(50)}", style))
+                objs.append(Paragraph(f"Отделение: {dir.get_doc_podrazdeleniye_title}", style))
                 objs.append(Paragraph(f"Л/врач: {dir.doc.get_fio()}", style))
         objs.append(PageBreak())
 
