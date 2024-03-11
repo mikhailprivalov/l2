@@ -40,6 +40,7 @@
       :service-number="currentResearchPk"
       :direction-id="currentDirectionPk"
       @hide="showSchedule = false"
+      @slotFilled="slotFilled"
     />
   </div>
 </template>
@@ -148,6 +149,10 @@ const assignmentPagination = computed(() => assignments.value.slice(
   (page.value - 1) * pageSize.value,
   page.value * pageSize.value,
 ));
+
+const slotFilled = () => {
+  getAssignments();
+};
 
 const printForm = () => {
   window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);

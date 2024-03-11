@@ -20,6 +20,7 @@
         :card-id="props.cardPk"
         :service-pk="props.serviceNumber"
         :direction-id="props.directionId"
+        @fill-slot-ok="slotFilled"
       />
     </div>
     <div slot="footer">
@@ -59,14 +60,13 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['hide']);
+const emit = defineEmits(['hide', 'slotFilled']);
 
 const hide = () => {
   emit('hide');
 };
 
+const slotFilled = () => {
+  emit('slotFilled');
+};
 </script>
-
-<style scoped lang="scss">
-
-</style>
