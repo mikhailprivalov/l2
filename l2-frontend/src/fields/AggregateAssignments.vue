@@ -16,6 +16,7 @@
       <VeTable
         :columns="columns"
         :table-data="assignmentPagination"
+        :cell-style-option="cellStyleOption"
       />
       <div
         v-show="assignments.length === 0"
@@ -40,6 +41,7 @@
       :service-number="currentResearchPk"
       :direction-id="currentDirectionPk"
       @hide="showSchedule = false"
+      @slotFilled="slotFilled"
     />
   </div>
 </template>
@@ -135,6 +137,16 @@ const pageNumberChange = (number: number) => {
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
+
+const cellStyleOption = {
+  bodyCellClass: ({ row }) => {
+    if (row.schedule_date) {
+      return 'table-body-cell-green';
+    }
+    return '';
+  },
+};
+
 const assignments = ref([]);
 
 const getAssignments = async () => {
@@ -148,6 +160,10 @@ const assignmentPagination = computed(() => assignments.value.slice(
   (page.value - 1) * pageSize.value,
   page.value * pageSize.value,
 ));
+
+const slotFilled = () => {
+  getAssignments();
+};
 
 const printForm = () => {
   window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);
@@ -200,5 +216,8 @@ onMounted(getAssignments);
     background-color: #37BC9B;
     color: #FFF;
   }
+}
+.table-body-cell-green {
+  background: #a9cfbb !important;
 }
 </style>
