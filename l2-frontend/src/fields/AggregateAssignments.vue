@@ -100,10 +100,13 @@ const columns = ref([
     key: 'schedule_date',
     title: 'Расписание',
     align: 'center',
-    width: 100,
+    width: 150,
     renderBodyCell: ({ row }, h) => {
       if (row.schedule_date) {
-        return row.schedule_date;
+        return h('div', {}, [
+          h('p', {}, row.schedule_date),
+          h('button', { class: 'transparent-button transparent-button-small' }, 'Отменить запись'),
+        ]);
       }
       return h('div', { class: 'button' }, [
         h('button', {
@@ -216,6 +219,9 @@ onMounted(getAssignments);
     background-color: #37BC9B;
     color: #FFF;
   }
+}
+.transparent-button-small {
+    padding: 0;
 }
 .table-body-cell-green {
   background: #a9cfbb !important;
