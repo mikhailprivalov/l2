@@ -305,7 +305,7 @@ def save(request):
 
 
 @login_required
-@group_required("Отмена записи")
+@group_required("Отмена записи посещения", "Врач стационара")
 def cancel(request):
     data = data_parse(
         request.body,
@@ -337,23 +337,24 @@ def save_slot_fact(s, card_pk, status, service_id, is_cito, fin_source, plan_id,
 
             if not slot_fact:
                 slot_fact = SlotFact.objects.create(plan=s, status=status)
-
-            s.disabled = False
-            slot_fact.patient_id = card_pk
-            slot_fact.status = status
-            slot_fact.service_id = service_id
-            slot_fact.is_cito = is_cito
-            slot_fact.fin_source_id = fin_source
-            slot_fact.save()
-            if direction_id:
-                slot_fact_direction: SlotFactDirection = SlotFactDirection(slot_fact_id=slot_fact.pk, direction_id=direction_id)
-                slot_fact_direction.save()
-            if plan_id:
-                ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
-                ph.slot_fact = slot_fact
-                ph.work_status = 3
-                ph.exec_at = s.datetime
-                ph.save()
+                s.disabled = False
+                slot_fact.patient_id = card_pk
+                slot_fact.status = status
+                slot_fact.service_id = service_id
+                slot_fact.is_cito = is_cito
+                slot_fact.fin_source_id = fin_source
+                slot_fact.save()
+                if direction_id:
+                    slot_fact_direction: SlotFactDirection = SlotFactDirection(slot_fact_id=slot_fact.pk, direction_id=direction_id)
+                    slot_fact_direction.save()
+                if plan_id:
+                    ph: PlanHospitalization = PlanHospitalization.objects.get(pk=plan_id)
+                    ph.slot_fact = slot_fact
+                    ph.work_status = 3
+                    ph.exec_at = s.datetime
+                    ph.save()
+            else:
+                return False
         else:
             s.disabled = disabled
             s.save(update_fields=['disabled'])
