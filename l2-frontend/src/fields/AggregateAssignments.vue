@@ -100,7 +100,10 @@ const pageSizeChange = (size: number) => {
 };
 
 const cellStyleOption = {
-  bodyCellClass: ({ row }) => {
+  bodyCellClass: ({ row, column }) => {
+    if (column.key === 'timeConfirmation' && (!row.timeConfirmation) && row.scheduleDate) {
+      return 'table-body-cell-yellow';
+    }
     if (row.scheduleDate) {
       return 'table-body-cell-green';
     }
@@ -254,5 +257,8 @@ onMounted(getAssignments);
 }
 .table-body-cell-green {
   background: #a9cfbb !important;
+}
+.table-body-cell-yellow {
+  background: #ffdb8b !important;
 }
 </style>
