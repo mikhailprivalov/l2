@@ -158,7 +158,7 @@ export default {
 
       await this.$store.dispatch(actions.GET_ALL_DEPARTMENTS);
     },
-    editDepartment(iDdepartment) {
+    editDepartment() {
       this.subgroups_department = true;
     },
   },
