@@ -599,6 +599,7 @@ def get_assignments(direction_id: int):
                 "researchTitle": [research_title],
                 "createDate": create_date,
                 "scheduleDate": schedule_date,
+                "slotPlanId": i.slot_plan_id,
                 "whoAssigned": fio_assigned,
                 "timeConfirmation": "",
                 "whoConfirm": "",

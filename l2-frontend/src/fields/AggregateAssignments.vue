@@ -126,11 +126,11 @@ const slotFilled = () => {
   getAssignments();
 };
 
-const cancelSlot = async (researchId) => {
+const cancelSlot = async (researchId, slotPlanId) => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/schedule/cancel', {
     cardId: props.cardPk,
-    id: '33',
+    id: slotPlanId,
     serviceId: researchId,
   });
   await store.dispatch(actions.DEC_LOADING);
@@ -168,7 +168,7 @@ const columns = ref([
             class: 'transparent-button transparent-button-small',
             on: {
               click: () => {
-                cancelSlot(row.researchId[0]);
+                cancelSlot(row.researchId[0], row.slotPlanId);
               },
             },
           }, 'Отменить запись'),
