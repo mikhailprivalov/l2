@@ -48,7 +48,7 @@
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref,
+  computed, getCurrentInstance, onMounted, ref,
 } from 'vue';
 import {
   VeLocale,
@@ -76,61 +76,19 @@ const props = defineProps({
   },
 });
 
+const root = getCurrentInstance().proxy.$root;
+const store = useStore();
+
 const showSchedule = ref(false);
 const currentResearchPk = ref(null);
 const currentDirectionPk = ref(null);
+
 const openSchedule = (researchId, directionId) => {
   currentResearchPk.value = researchId;
   currentDirectionPk.value = directionId;
   showSchedule.value = true;
 };
 
-const columns = ref([
-  {
-    field: 'direction_id', key: 'direction_id', title: '№ напр.', width: 100,
-  },
-  {
-    field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
-  },
-  {
-    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
-  },
-  {
-    field: 'schedule_date',
-    key: 'schedule_date',
-    title: 'Расписание',
-    align: 'center',
-    width: 150,
-    renderBodyCell: ({ row }, h) => {
-      if (row.schedule_date) {
-        return h('div', {}, [
-          h('p', {}, row.schedule_date),
-          h('button', { class: 'transparent-button transparent-button-small' }, 'Отменить запись'),
-        ]);
-      }
-      return h('div', { class: 'button' }, [
-        h('button', {
-          class: 'transparent-button',
-          on: {
-            click: () => {
-              openSchedule(row.research_id[0], row.direction_id);
-            },
-          },
-        }, 'Записать'),
-      ]);
-    },
-  },
-  {
-    field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
-  },
-  {
-    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
-  },
-  {
-    field: 'who_confirm', key: 'who_confirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
-  },
-]);
-const store = useStore();
 const pageSize = ref(30);
 const page = ref(1);
 const pageSizeOption = ref([30, 50, 100, 300]);
@@ -167,6 +125,77 @@ const assignmentPagination = computed(() => assignments.value.slice(
 const slotFilled = () => {
   getAssignments();
 };
+
+const cancelSlot = async (researchId) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/schedule/cancel', {
+    cardId: props.cardPk,
+    id: '33',
+    serviceId: researchId,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Отменено');
+    await getAssignments();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const columns = ref([
+  {
+    field: 'direction_id', key: 'direction_id', title: '№ напр.', width: 100,
+  },
+  {
+    field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
+  },
+  {
+    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
+  },
+  {
+    field: 'schedule_date',
+    key: 'schedule_date',
+    title: 'Расписание',
+    align: 'center',
+    width: 150,
+    renderBodyCell: ({ row }, h) => {
+      if (row.schedule_date) {
+        return h('div', {}, [
+          h('p', {}, row.schedule_date),
+          h('button', {
+            class: 'transparent-button transparent-button-small',
+            on: {
+              click: () => {
+                cancelSlot(row.research_id[0]);
+              },
+            },
+          }, 'Отменить запись'),
+        ]);
+      }
+      return h('div', { class: 'button' }, [
+        h('button', {
+          class: 'transparent-button',
+          on: {
+            click: () => {
+              openSchedule(row.research_id[0], row.direction_id);
+            },
+          },
+        }, 'Записать'),
+      ]);
+    },
+  },
+  {
+    field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
+  },
+  {
+    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
+  },
+  {
+    field: 'who_confirm', key: 'who_confirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
+  },
+]);
 
 const printForm = () => {
   window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);
