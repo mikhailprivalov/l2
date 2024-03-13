@@ -101,7 +101,7 @@ const pageSizeChange = (size: number) => {
 
 const cellStyleOption = {
   bodyCellClass: ({ row }) => {
-    if (row.schedule_date) {
+    if (row.scheduleDate) {
       return 'table-body-cell-green';
     }
     return '';
@@ -146,29 +146,29 @@ const cancelSlot = async (researchId) => {
 
 const columns = ref([
   {
-    field: 'direction_id', key: 'direction_id', title: '№ напр.', width: 100,
+    field: 'directionId', key: 'directionId', title: '№ напр.', width: 100,
   },
   {
-    field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
+    field: 'researchTitle', key: 'researchTitle', title: 'Медицинское вмешательство', align: 'left',
   },
   {
-    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
+    field: 'createDate', key: 'createDate', title: 'Дата назначения', align: 'center', width: 150,
   },
   {
-    field: 'schedule_date',
-    key: 'schedule_date',
+    field: 'scheduleDate',
+    key: 'scheduleDate',
     title: 'Расписание',
     align: 'center',
     width: 150,
     renderBodyCell: ({ row }, h) => {
-      if (row.schedule_date) {
+      if (row.scheduleDate) {
         return h('div', {}, [
-          h('p', {}, row.schedule_date),
+          h('p', {}, row.scheduleDate),
           h('button', {
             class: 'transparent-button transparent-button-small',
             on: {
               click: () => {
-                cancelSlot(row.research_id[0]);
+                cancelSlot(row.researchId[0]);
               },
             },
           }, 'Отменить запись'),
@@ -179,7 +179,7 @@ const columns = ref([
           class: 'transparent-button',
           on: {
             click: () => {
-              openSchedule(row.research_id[0], row.direction_id);
+              openSchedule(row.researchId[0], row.directionId);
             },
           },
         }, 'Записать'),
@@ -187,13 +187,13 @@ const columns = ref([
     },
   },
   {
-    field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
+    field: 'whoAssigned', key: 'whoAssigned', title: 'ФИО назначившего', align: 'center', width: 200,
   },
   {
-    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
+    field: 'timeConfirmation', key: 'timeConfirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
   },
   {
-    field: 'who_confirm', key: 'who_confirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
+    field: 'whoConfirm', key: 'whoConfirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
   },
 ]);
 
