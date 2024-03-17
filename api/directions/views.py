@@ -469,7 +469,7 @@ def directions_history(request):
     status_set = {-2}
     lab = set()
     lab_title = None
-    person_contract_dirs, planed_doctor, register_number = "", "", ""
+    person_contract_dirs, planed_doctor, register_number, rmis_number = "", "", "", ""
     created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
     user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
@@ -525,6 +525,7 @@ def directions_history(request):
                         'person_contract_dirs': person_contract_dirs,
                         'planed_doctor': planed_doctor,
                         'register_number': register_number,
+                        'rmis_number': rmis_number,
                     }
                 )
                 child_researches_titles = ""
@@ -532,6 +533,8 @@ def directions_history(request):
                 person_contract_dirs = ""
                 planed_doctor = ""
                 register_number = ""
+                rmis_number = ""
+
             dir = i[0]
             expertise_data = get_expertise(dir)
             is_expertise = False
@@ -616,6 +619,8 @@ def directions_history(request):
             register_number = i[29]
         if i[30]:
             planed_doctor = f"{i[30]} {i[31]} {i[32]}"
+        if i[37]:
+            rmis_number = i[37]
 
     status = min(status_set)
     if len(lab) > 0:
@@ -653,6 +658,7 @@ def directions_history(request):
                 'person_contract_dirs': person_contract_dirs,
                 'planed_doctor': planed_doctor,
                 'register_number': register_number,
+                'rmis_number': rmis_number,
             }
         )
     res['directions'] = final_result

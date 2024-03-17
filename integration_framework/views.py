@@ -1781,6 +1781,7 @@ def create_direction_by_param(body, request):
             return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
 
+
     try:
         with transaction.atomic():
             direction = Napravleniya.objects.create(
@@ -1792,6 +1793,7 @@ def create_direction_by_param(body, request):
                 hospital=hospital,
                 id_in_hospital=id_in_hospital,
                 price_category=price_category,
+                rmis_number=id_in_hospital if body.get("isRMIS") else None
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
