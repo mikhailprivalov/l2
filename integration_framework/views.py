@@ -1792,7 +1792,7 @@ def create_direction_by_param(body, request):
                 hospital=hospital,
                 id_in_hospital=id_in_hospital,
                 price_category=price_category,
-                rmis_number=id_in_hospital if body.get("isRMIS") else None
+                rmis_number=id_in_hospital if body.get("isRMIS") else None,
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
