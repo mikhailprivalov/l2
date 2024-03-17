@@ -37,7 +37,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directory_researches.is_expertise,
             person_contract.id as person_contract_id,
             person_contract.dir_list as contract_dirs,
-            directions_napravleniya.hospital_id as dir_hosp
+            directions_napravleniya.hospital_id as dir_hosp,
+            directions_napravleniya.rmis_number as rmis_number
         FROM directions_issledovaniya
         LEFT JOIN directory_researches
         ON directions_issledovaniya.research_id = directory_researches.Id
@@ -108,7 +109,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.visit_date,
             directions_napravleniya.time_microbiology_receive,
             directions_napravleniya.time_gistology_receive,
-            is_case
+            is_case,
+            directions_napravleniya.rmis_number
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
