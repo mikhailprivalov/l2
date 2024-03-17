@@ -1781,7 +1781,6 @@ def create_direction_by_param(body, request):
             return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
 
-
     try:
         with transaction.atomic():
             direction = Napravleniya.objects.create(
