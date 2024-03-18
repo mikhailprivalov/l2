@@ -8,8 +8,22 @@
       />
     </div>
     <div>
-      <h4>Таблица</h4>
-      <p>fdsfds</p>
+      <div class="flex-center">
+        <div class="arrow-button-container">
+          <button
+            class="btn btn-blue-nb arrow-button"
+            @click="getPrevDates"
+          >
+            <i class="fa fa-arrow-left" />
+          </button>
+          <button
+            class="btn btn-blue-nb arrow-button"
+            @click="getNextDates"
+          >
+            <i class="fa fa-arrow-right" />
+          </button>
+        </div>
+      </div>
       <VeTable
         :columns="columns"
         :table-data="tableData"
@@ -109,7 +123,22 @@ const getColumns = () => {
   columns.value = columnsTemplate;
 };
 
-watch(selectedMode, () => {
+const getNextDates = () => {
+  if (selectedMode.value === 0) {
+    currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, currentDate.value.getDate());
+  } else {
+    currentDate.value = new Date(currentDate.value.getFullYear() + 1, currentDate.value.getMonth(), currentDate.value.getDate());
+  }
+};
+const getPrevDates = () => {
+  if (selectedMode.value === 0) {
+    currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, currentDate.value.getDate());
+  } else {
+    currentDate.value = new Date(currentDate.value.getFullYear() - 1, currentDate.value.getMonth(), currentDate.value.getDate());
+  }
+};
+
+watch([selectedMode, currentDate], () => {
   getColumns();
 });
 
@@ -120,7 +149,17 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.flex {
+.flex-center {
   display: flex;
+  justify-content: center;
+}
+.arrow-button-container {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+  width: 150px;
+}
+.arrow-button {
+  width: 60px;
 }
 </style>
