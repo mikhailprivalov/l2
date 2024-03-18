@@ -101,9 +101,6 @@ const pageSizeChange = (size: number) => {
 
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
-    if (column.key === 'timeConfirmation' && (!row.timeConfirmation) && row.scheduleDate) {
-      return 'table-body-cell-yellow';
-    }
     if (row.scheduleDate) {
       return 'table-body-cell-green';
     }
@@ -193,7 +190,17 @@ const columns = ref([
     field: 'whoAssigned', key: 'whoAssigned', title: 'ФИО назначившего', align: 'center', width: 200,
   },
   {
-    field: 'timeConfirmation', key: 'timeConfirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
+    field: 'timeConfirmation',
+    key: 'timeConfirmation',
+    title: 'Дата и время подтверждения',
+    align: 'center',
+    width: 150,
+    renderBodyCell: ({ row }, h) => {
+      if (!row.timeConfirmation) {
+        return 'Не исполнено';
+      }
+      return row.timeConfirmation;
+    },
   },
   {
     field: 'whoConfirm', key: 'whoConfirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
@@ -257,8 +264,5 @@ onMounted(getAssignments);
 }
 .table-body-cell-green {
   background: #a9cfbb !important;
-}
-.table-body-cell-yellow {
-  background: #ffdb8b !important;
 }
 </style>
