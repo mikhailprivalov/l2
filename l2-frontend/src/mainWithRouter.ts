@@ -720,6 +720,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/sales',
+      name: 'Sales',
+      component: () => import('@/pages/Sales/Sales.vue'),
+      meta: {
+        title: 'Продажи',
+        groups: ['Продажи'],
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),
