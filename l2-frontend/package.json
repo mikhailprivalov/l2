@@ -34,7 +34,7 @@
     "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
     "inputmask": "^5.0.7",
     "jquery": "^3.7.1",
-    "js-base64": "^3.7.2",
+    "js-base64": "^3.7.7",
     "lodash": "^4.17.20",
     "mini-css-extract-plugin": "^2.6.1",
     "moment": "^2.29.4",
