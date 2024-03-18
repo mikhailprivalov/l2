@@ -190,7 +190,17 @@ const columns = ref([
     field: 'whoAssigned', key: 'whoAssigned', title: 'ФИО назначившего', align: 'center', width: 200,
   },
   {
-    field: 'timeConfirmation', key: 'timeConfirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
+    field: 'timeConfirmation',
+    key: 'timeConfirmation',
+    title: 'Дата и время подтверждения',
+    align: 'center',
+    width: 150,
+    renderBodyCell: ({ row }) => {
+      if (!row.timeConfirmation) {
+        return 'Не исполнено';
+      }
+      return row.timeConfirmation;
+    },
   },
   {
     field: 'whoConfirm', key: 'whoConfirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
