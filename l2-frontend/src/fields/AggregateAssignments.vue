@@ -100,7 +100,7 @@ const pageSizeChange = (size: number) => {
 };
 
 const cellStyleOption = {
-  bodyCellClass: ({ row, column }) => {
+  bodyCellClass: ({ row }) => {
     if (row.scheduleDate) {
       return 'table-body-cell-green';
     }
@@ -195,7 +195,7 @@ const columns = ref([
     title: 'Дата и время подтверждения',
     align: 'center',
     width: 150,
-    renderBodyCell: ({ row }, h) => {
+    renderBodyCell: ({ row }) => {
       if (!row.timeConfirmation) {
         return 'Не исполнено';
       }
