@@ -44,7 +44,7 @@ def cash_register(request):
             received_terminal=current_money.get("received_terminal", 0),
             received_cash=current_money.get("received_cash", 0),
             return_terminal=current_money.get("return_terminal", 0),
-            return_cash=current_money.get("return_cash", 0)
+            return_cash=current_money.get("return_cash", 0),
         )
     return Response({"ok": True})
 
