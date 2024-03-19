@@ -210,6 +210,12 @@ def menu(request):
                     "access": ["Отправка результатов в организации"],
                     "module": "l2_send_orgs_email_results",
                 },
+                {
+                    "url": '/ui/sales',
+                    "title": "Продажи",
+                    "nt": False,
+                    "access": ["Продажи"],
+                },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
             ]
 
