@@ -114,7 +114,6 @@ const getColumns = () => {
     });
     columnsTemplate.push(...dateCols);
   }
-  console.log('fdf');
   columns.value = columnsTemplate;
 };
 
