@@ -41,17 +41,12 @@ import 'vue-easytable/libs/theme-default/index.css';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import {
-  getCurrentInstance, onMounted, ref, watch,
+  onMounted, ref, watch,
 } from 'vue';
 
 import ruRu from '@/locales/ve';
-import * as actions from '@/store/action-types';
-import { useStore } from '@/store';
 
 VeLocale.use(ruRu);
-
-const root = getCurrentInstance().proxy.$root;
-const store = useStore();
 
 const currentDate = ref(new Date());
 
