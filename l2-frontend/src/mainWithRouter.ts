@@ -721,8 +721,8 @@ const router = new Router({
     },
     {
       path: '/ui/sales',
-      name: 'Sales',
-      component: () => import('@/pages/Sales/Sales.vue'),
+      name: 'Turnovers',
+      component: () => import('@/pages/Turnovers/Sales.vue'),
       meta: {
         title: 'Продажи',
         groups: ['Продажи'],
