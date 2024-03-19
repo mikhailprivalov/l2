@@ -78,7 +78,16 @@ class EmployeeWorkingHoursScheduleAdmin(admin.ModelAdmin):
 
 @admin.register(CashRegister)
 class CashRegisterAdmin(admin.ModelAdmin):
-    list_display = ('employee_position', 'day', 'department', 'received_terminal', 'received_terminal', 'received_cash', 'return_terminal', 'return_cash',)
+    list_display = (
+        'employee_position',
+        'day',
+        'department',
+        'received_terminal',
+        'received_terminal',
+        'received_cash',
+        'return_terminal',
+        'return_cash',
+    )
 
 
 @admin.register(PlanDepartment)
