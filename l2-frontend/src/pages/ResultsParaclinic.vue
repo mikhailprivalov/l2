@@ -929,7 +929,7 @@
             </div>
           </div>
           <div
-            v-if="row.research.is_doc_refferal"
+            v-if="row.research.is_doc_refferal && row.research.is_paraclinic"
             class="group"
           >
             <div class="group-title">
