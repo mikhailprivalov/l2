@@ -1,6 +1,18 @@
 from django.contrib import admin
-from .models import Employee, Position, Department, EmployeePosition, EmployeeWorkingHoursSchedule, WorkDayStatus, TimeTrackingDocument, TypeCheckTimeTrackingDocument, TimeTrackingStatus, \
-    CashRegister, PlanDepartment, EmployeePositionCountWorkDayPerMonth
+from .models import (
+    Employee,
+    Position,
+    Department,
+    EmployeePosition,
+    EmployeeWorkingHoursSchedule,
+    WorkDayStatus,
+    TimeTrackingDocument,
+    TypeCheckTimeTrackingDocument,
+    TimeTrackingStatus,
+    CashRegister,
+    PlanDepartment,
+    EmployeePositionCountWorkDayPerMonth,
+)
 
 
 @admin.register(Employee)
