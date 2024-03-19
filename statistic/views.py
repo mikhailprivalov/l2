@@ -846,11 +846,11 @@ def statistic_xls(request):
         researches = research.split(",")
         researches = tuple([int(i) for i in researches])
 
-        users_docprofile = [int(i) for i in json.loads(users_docprofile_id)]
+        users_docprofile = [int(json.loads(users_docprofile_id))]
         researches = tuple([int(i) for i in researches])
-        research_data = {i.pk: {"title": i.title, "count": 0} for i in Researches.objects.filter(pk__in=list(researches))}
+        research_data = {r.pk: {"title": r.title, "count": 0} for r in Researches.objects.filter(pk__in=list(researches))}
         research_data[-999] = {"title": ""}
-        users_final_data = {i: research_data.copy() for i in users_docprofile}
+        users_final_data = {k: research_data.copy() for k in users_docprofile}
         researches_sql = sql_func.statistics_research_create_directions(researches, start_date, end_date, tuple(users_docprofile))
         ws = appointed_research.appointed_base(ws, d_s, d_e, research_data)
         doctors_researches_count = appointed_research.parse_data(researches_sql, users_final_data, research_data)
