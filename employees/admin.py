@@ -83,7 +83,11 @@ class CashRegisterAdmin(admin.ModelAdmin):
 
 @admin.register(PlanDepartment)
 class PlanDepartmentAdmin(admin.ModelAdmin):
-    list_display = ('department', 'month', 'plan',)
+    list_display = (
+        'department',
+        'month',
+        'plan',
+    )
 
 
 @admin.register(EmployeePositionCountWorkDayPerMonth)
