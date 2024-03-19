@@ -1003,10 +1003,21 @@ def companies_find(request):
     return JsonResponse({"data": companies_data})
 
 
+@login_required
 def company_departments_find(request):
     request_data = json.loads(request.body)
     company_departments = CompanyDepartment.search_departments(request_data["company_db"])
     return JsonResponse({"data": company_departments})
+
+
+@login_required
+def load_room_locations(request):
+    if "Изменить хранение карты" in [str(x) for x in request.user.groups.all()]:
+        disable_place_card = False
+    else:
+        disable_place_card = True
+    load_room_locations = [{"id": r.pk, "label": r.title, "isDisabled": disable_place_card} for r in Room.objects.filter(type=0)]
+    return JsonResponse({"data": load_room_locations})
 
 
 @login_required
