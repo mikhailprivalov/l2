@@ -717,7 +717,7 @@ def patients_card_save(request):
                 messages.append("Номер карты ТФОМС занят")
                 return JsonResponse({"result": "false", "message": message, "messages": messages, "card_pk": card_pk, "individual_pk": individual_pk})
     c.number_poliklinika = number_poli
-    if request_data.get("room_location_db") and request_data.get("room_location_db") != "-1":
+    if request_data.get("room_location_db") and request_data.get("room_location_db") != -1:
         c.room_location_id = int(request_data.get("room_location_db"))
     else:
         c.room_location = None
