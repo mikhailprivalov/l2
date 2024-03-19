@@ -549,3 +549,30 @@ class CashRegister(models.Model):
     class Meta:
         verbose_name = "Сотрудник - учет финансов за день"
         verbose_name_plural = "Сотрудники - учет финансов за день"
+
+
+class PlanDepartment(models.Model):
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Отдел')
+    month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
+    plan = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.department.__str__()} {self.month}'
+
+    class Meta:
+        verbose_name = "Подразделение - план финансовый за месяц"
+        verbose_name_plural = "Подразделения - план финансовый за месяц"
+
+
+class EmployeePositionCountWorkDayPerMonth(models.Model):
+    employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, db_index=True, default=None, on_delete=models.SET_NULL)
+    count_work_day_per_month = models.PositiveSmallIntegerField(db_index=True, blank=True, null=True, default=None, help_text='Кол-во рабочих дней в месяц')
+    month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
+    plan_day_profit = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.employee_position.__str__()} {self.month} {self.count_work_day_per_month}'
+
+    class Meta:
+        verbose_name = "Сотрудник - план финансовый за день"
+        verbose_name_plural = "Сотрудники - план финансовый за день"
