@@ -80,9 +80,8 @@ class EmployeeWorkingHoursScheduleAdmin(admin.ModelAdmin):
 class CashRegisterAdmin(admin.ModelAdmin):
     list_display = (
         'employee_position',
-        'day',
+        'accounting_day',
         'department',
-        'received_terminal',
         'received_terminal',
         'received_cash',
         'return_terminal',
