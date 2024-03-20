@@ -27,26 +27,17 @@ def cash_register(request):
 
         if not employees.EmployeePosition.objects.filter(tabel_number=tabel_number).first():
             employee_person = employees.Employee(
-                family=current_employee.get("lastName"),
-                name=current_employee.get("firstName"),
-                patronymic=current_employee.get("patronymic"),
-                hospital=hospital
+                family=current_employee.get("lastName"), name=current_employee.get("firstName"), patronymic=current_employee.get("patronymic"), hospital=hospital
             )
             employee_person.save()
 
             position_id = current_employee.get("positionId")
             if employees.Position.objects.filter(hospital=hospital, external_id=position_id).first():
-                position = employees.Position.objects.filter(hospital=hospital,external_id=position_id).first()
+                position = employees.Position.objects.filter(hospital=hospital, external_id=position_id).first()
             else:
                 position = employees.Position(hospital=hospital, external_id=position_id, name=current_employee.get("positionTitle"))
                 position.save()
-            new_employee = employees.EmployeePosition(
-                position=position,
-                employee=employee_person,
-                department=department,
-                rate=1.0,
-                tabel_number=tabel_number
-            )
+            new_employee = employees.EmployeePosition(position=position, employee=employee_person, department=department, rate=1.0, tabel_number=tabel_number)
             new_employee.save()
         else:
             new_employee = employees.EmployeePosition.objects.filter(tabel_number=tabel_number).first()
@@ -55,9 +46,9 @@ def cash_register(request):
         cash_register = employees.CashRegister.objects.filter(employee_position=new_employee, accounting_day=register_date).first()
         if cash_register:
             cash_register.received_terminal = current_money.get("receivedTerminal", 0)
-            cash_register.received_cash=current_money.get("receivedСash", 0)
-            cash_register.return_terminal=current_money.get("returnTerminal", 0)
-            cash_register.return_cash=current_money.get("returnCash", 0)
+            cash_register.received_cash = current_money.get("receivedСash", 0)
+            cash_register.return_terminal = current_money.get("returnTerminal", 0)
+            cash_register.return_cash = current_money.get("returnCash", 0)
         else:
             cash_register = employees.CashRegister(
                 employee_position=new_employee,
@@ -66,7 +57,7 @@ def cash_register(request):
                 received_terminal=current_money.get("receivedTerminal", 0),
                 received_cash=current_money.get("receivedСash", 0),
                 return_terminal=current_money.get("returnTerminal", 0),
-                return_cash=current_money.get("returnCash", 0)
+                return_cash=current_money.get("returnCash", 0),
             )
         cash_register.save()
     return Response({"ok": True})
