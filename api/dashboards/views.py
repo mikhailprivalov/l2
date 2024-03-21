@@ -1,3 +1,4 @@
+import calendar
 import json
 import logging
 
@@ -6,8 +7,10 @@ from django.http import JsonResponse
 
 from dashboards.models import Dashboard
 from dashboards.views import exec_query, get_dashboard
+from integration_framework.employees.sql_func import get_cash_resister_by_depatment_period
 from laboratory.settings import DASH_REPORT_LIMIT_DURATION_DAYS
 from laboratory.utils import current_time, str_date
+from django.contrib.auth.decorators import login_required
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +73,56 @@ def dashboard_charts(request):
     return JsonResponse(
         {'rows': result["result"], "ok": True, "intervalReloadSeconds": dash.interval_reload_seconds, "showDatesParam": result["show_dates_param"], "datesParam": result["dates_param"]}
     )
+
+
+@login_required
+def cash_register(request):
+    body = json.loads(request.body)
+    mode = body.get("mode")
+    date_start = body.get("dateStart")
+    date_end = body.get("dateEnd")
+
+    date_start_year = date_start[:4]
+    date_start_month = date_start[4:6]
+    date_start_day = date_start[6:8]
+    _, num_days = calendar.monthrange(int(date_start_year), int(date_start_month))
+
+    date_per_month = []
+    for i in range(int(date_start_day), num_days + 1):
+        if i < 10:
+            i = f"0{i}"
+        date_per_month.append(i)
+
+    columns = [
+        {
+            "key": f"{i}.{date_start_month}.{date_start_year}",
+            "field": f"{i}.{date_start_month}.{date_start_year}",
+            "title": f"{i}.{date_start_month}.{date_start_year}",
+            "align": "center",
+            "width": "30",
+        }
+        for i in date_per_month
+    ]
+
+    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 200})
+    table_data = []
+
+    if mode == "department":
+        query_result = get_cash_resister_by_depatment_period(date_start, date_end)
+        data = {}
+        for qr in query_result:
+            if not data.get(qr.department_id):
+                data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+            tmp_office = data.get(qr.department_id)
+            tmp_office[qr.char_day] = (
+                f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n"
+                f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n"
+                f"Всего: {qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal}"
+            )
+            data[qr.department_id] = tmp_office.copy()
+        table_data = [v for v in data.values()]
+
+    return JsonResponse({"columns": columns, "tableData": table_data})
 
 
 def define_period(period_type, period_duration):
