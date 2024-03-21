@@ -38,10 +38,9 @@ import {
   VeTable,
 } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
-import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import {
-  onMounted, ref, watch,
+  ref,
 } from 'vue';
 
 import ruRu from '@/locales/ve';
@@ -50,28 +49,6 @@ import RadioField from '@/fields/RadioField.vue';
 VeLocale.use(ruRu);
 
 const currentDate = ref(new Date());
-
-const getMonthDays = () => {
-  const days = [];
-  const currentMonth = currentDate.value.getMonth();
-  const date = new Date(currentDate.value.getFullYear(), currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
-
-const getMonthsYear = () => {
-  const months = [];
-  const currentYear = currentDate.value.getFullYear();
-  const month = new Date(currentYear, 0);
-  while (month.getFullYear() === currentYear) {
-    months.push(new Date(month));
-    month.setMonth(month.getMonth() + 1);
-  }
-  return months;
-};
 
 const modes = ref(['Подразделение', 'Люди']);
 const modesEnglish = ref({
