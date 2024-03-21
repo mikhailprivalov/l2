@@ -114,7 +114,7 @@ def cash_register(request):
         for qr in query_result:
             if not data.get(qr.department_id):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-            tmp_office = data.get(qr.department_id)
+            tmp_office = data.get(qr.department_id, {})
             tmp_office[qr.char_day] = (
                 f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n"
                 f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n"
