@@ -68,16 +68,15 @@ const tableData = ref([]);
 const columns = ref([]);
 
 const getTurnoversData = async () => {
-  console.log('Текущая дата', currentDate.value);
-  console.log('Текущий мод', modesEnglish.value[selectedMode.value]);
-  // await store.dispatch(actions.INC_LOADING);
-  // const result = await api('stationar/get-assignments', {
-  //   currentDate: currentDate.value,
-  //   mode: modesEnglish.value[selectedMode.value],
-  // });
-  // await store.dispatch(actions.DEC_LOADING);
-  // columns.value = result.columns;
-  // tableData.value = result.data;
+  await store.dispatch(actions.INC_LOADING);
+  const result = await api('dashboards/cash-reister', {
+    dateStart: currentDate.value,
+    dateEnd: currentDate.value,
+    mode: modesEnglish.value[selectedMode.value],
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  columns.value = result.columns;
+  tableData.value = result.tableData;
 };
 
 const setPrevMonth = () => {
