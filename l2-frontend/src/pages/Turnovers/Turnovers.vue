@@ -1,10 +1,10 @@
 <template>
   <div>
     <div>
-      <h4>Фильтры</h4>
-      <Treeselect
+      <RadioField
         v-model="selectedMode"
-        :options="modes"
+        :variants="modes"
+        class="radio-button"
       />
     </div>
     <div>
@@ -45,6 +45,7 @@ import {
 } from 'vue';
 
 import ruRu from '@/locales/ve';
+import RadioField from '@/fields/RadioField.vue';
 
 VeLocale.use(ruRu);
 
@@ -72,11 +73,12 @@ const getMonthsYear = () => {
   return months;
 };
 
-const modes = ref([
-  { id: 0, label: 'По дням' },
-  { id: 1, label: 'По месяцам' },
-]);
-const selectedMode = ref(0);
+const modes = ref(['Подразделение', 'Люди']);
+const modesEnglish = ref({
+  Подразделение: 'department',
+  Люди: 'person',
+});
+const selectedMode = ref('Подразделение');
 
 const tableData = ref([]);
 
@@ -155,5 +157,9 @@ onMounted(() => {
 }
 .arrow-button {
   width: 60px;
+}
+.radio-button {
+  width: 300px;
+  margin: 5px auto;
 }
 </style>
