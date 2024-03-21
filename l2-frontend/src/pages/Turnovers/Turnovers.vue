@@ -12,13 +12,13 @@
         <div class="arrow-button-container">
           <button
             class="btn btn-blue-nb arrow-button"
-            @click="getPrevDates"
+            @click="getPrevMonth"
           >
             <i class="fa fa-arrow-left" />
           </button>
           <button
             class="btn btn-blue-nb arrow-button"
-            @click="getNextDates"
+            @click="getNewMonth"
           >
             <i class="fa fa-arrow-right" />
           </button>
@@ -40,13 +40,19 @@ import {
 import 'vue-easytable/libs/theme-default/index.css';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import {
-  ref,
+  onMounted,
+  ref, watch,
 } from 'vue';
 
 import ruRu from '@/locales/ve';
 import RadioField from '@/fields/RadioField.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
 
 VeLocale.use(ruRu);
+
+const store = useStore();
 
 const currentDate = ref(new Date());
 
@@ -60,6 +66,25 @@ const selectedMode = ref('Подразделение');
 const tableData = ref([]);
 
 const columns = ref([]);
+
+const getTurnoversData = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const result = await api('stationar/get-assignments', {
+    currentDate: currentDate.value,
+    mode: modesEnglish.value[selectedMode.value],
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  columns.value = result.columns;
+  tableData.value = result.data;
+};
+
+watch([selectedMode, currentDate], () => {
+  getTurnoversData();
+});
+
+onMounted(() => {
+  getTurnoversData();
+});
 
 </script>
 
