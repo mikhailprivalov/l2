@@ -84,29 +84,6 @@ const tableData = ref([]);
 
 const columns = ref([]);
 
-const getNextDates = () => {
-  if (selectedMode.value === 0) {
-    currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() + 1, currentDate.value.getDate());
-  } else {
-    currentDate.value = new Date(currentDate.value.getFullYear() + 1, currentDate.value.getMonth(), currentDate.value.getDate());
-  }
-};
-const getPrevDates = () => {
-  if (selectedMode.value === 0) {
-    currentDate.value = new Date(currentDate.value.getFullYear(), currentDate.value.getMonth() - 1, currentDate.value.getDate());
-  } else {
-    currentDate.value = new Date(currentDate.value.getFullYear() - 1, currentDate.value.getMonth(), currentDate.value.getDate());
-  }
-};
-
-watch([selectedMode, currentDate], () => {
-  getColumns();
-});
-
-onMounted(() => {
-  getColumns();
-});
-
 </script>
 
 <style scoped lang="scss">
