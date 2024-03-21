@@ -70,7 +70,6 @@ const columns = ref([]);
 
 const getTurnoversData = async () => {
   const dateString = moment(currentDate.value).format('YYYYMMDD');
-  console.log(dateString);
   await store.dispatch(actions.INC_LOADING);
   const result = await api('dashboards/cash-register', {
     dateStart: dateString,
