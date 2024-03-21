@@ -80,12 +80,13 @@ def cash_register(request):
     body = json.loads(request.body)
     mode = body.get("mode")
     date_start = body.get("dateStart")
-    date_end = body.get("dateEnd")
 
     date_start_year = date_start[:4]
     date_start_month = date_start[4:6]
-    date_start_day = date_start[6:8]
+    date_start_day = "01"
     _, num_days = calendar.monthrange(int(date_start_year), int(date_start_month))
+    date_start_query = f"{date_start_year}{date_start_month}{date_start_day}"
+    date_end_query = f"{date_start_year}{date_start_month}{num_days}"
 
     date_per_month = []
     for i in range(int(date_start_day), num_days + 1):
@@ -108,12 +109,12 @@ def cash_register(request):
     table_data = []
 
     if mode == "department":
-        query_result = get_cash_resister_by_depatment_period(date_start, date_end)
+        query_result = get_cash_resister_by_depatment_period(date_start_query, date_end_query)
         data = {}
         for qr in query_result:
             if not data.get(qr.department_id):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-            tmp_office = data.get(qr.department_id)
+            tmp_office = data.get(qr.department_id, {})
             tmp_office[qr.char_day] = (
                 f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n"
                 f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n"
