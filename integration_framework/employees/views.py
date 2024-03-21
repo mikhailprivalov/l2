@@ -92,11 +92,13 @@ def get_register_data(request):
             "key": f"{i}.{date_start_month}.{date_start_year}",
             "field": f"{i}.{date_start_month}.{date_start_year}",
             "title": f"{i}.{date_start_month}.{date_start_year}",
-            "align": 'center', "width": '30'}
+            "align": "center",
+            "width": "30",
+        }
         for i in date_per_month
     ]
 
-    columns.insert(0, {"key": 'office', "field": 'office', "title": 'Офисы', "align": 'left', "width": 200})
+    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 200})
     table_data = []
 
     if mode == "department":
@@ -104,11 +106,13 @@ def get_register_data(request):
         data = {}
         for qr in query_result:
             if not data.get(qr.department_id):
-                data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month }}
+                data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
             tmp_office = data.get(qr.department_id)
-            tmp_office[qr.char_day] = f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n" \
-                                      f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n" \
-                                      f"Всего: {qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal}"
+            tmp_office[qr.char_day] = (
+                f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n"
+                f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n"
+                f"Всего: {qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal}"
+            )
             data[qr.department_id] = tmp_office.copy()
         table_data = [v for v in data.values()]
 
