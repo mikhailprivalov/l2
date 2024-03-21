@@ -83,41 +83,6 @@ const selectedMode = ref('Подразделение');
 const tableData = ref([]);
 
 const columns = ref([]);
-const getColumns = () => {
-  const columnsTemplate = [
-    {
-      key: 'office', field: 'office', title: 'Офисы', align: 'left', width: 200,
-    },
-  ];
-  if (selectedMode.value === 1) {
-    const monthsYear = getMonthsYear();
-    const monthCols = monthsYear.map((col) => {
-      const month = col.toLocaleDateString('ru-RU', { month: '2-digit', year: '2-digit' });
-      return {
-        key: month,
-        field: month,
-        title: month,
-        align: 'center',
-        width: 100,
-      };
-    });
-    columnsTemplate.push(...monthCols);
-  } else {
-    const daysMonth = getMonthDays();
-    const dateCols = daysMonth.map((col) => {
-      const date = col.toLocaleDateString();
-      return {
-        key: date,
-        field: date,
-        title: date,
-        align: 'center',
-        width: 0,
-      };
-    });
-    columnsTemplate.push(...dateCols);
-  }
-  columns.value = columnsTemplate;
-};
 
 const getNextDates = () => {
   if (selectedMode.value === 0) {
