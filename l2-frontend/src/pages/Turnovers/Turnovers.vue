@@ -73,7 +73,6 @@ const getTurnoversData = async () => {
   await store.dispatch(actions.INC_LOADING);
   const result = await api('dashboards/cash-register', {
     dateStart: dateString,
-    dateEnd: dateString,
     mode: modesEnglish.value[selectedMode.value],
   });
   await store.dispatch(actions.DEC_LOADING);
