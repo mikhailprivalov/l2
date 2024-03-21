@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from hospitals.models import Hospitals
 from rest_framework.decorators import api_view
 from employees import models as employees
+from integration_framework.employees.sql_func import get_cash_resister_by_depatment_period
+import calendar
 
 
 @api_view(["GET", "POST"])
@@ -63,21 +65,51 @@ def cash_register(request):
     return Response({"ok": True})
 
 
-@api_view()
+@api_view(["GET", "POST"])
 def get_register_data(request):
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
-    type_period = body.get("typePeriod")
     mode = body.get("mode")
+    date_start = body.get("dateStart")
+    date_end = body.get("dateEnd")
+
+    date_start_year = date_start[:4]
+    date_start_month = date_start[4:6]
+    date_start_day = date_start[6:8]
+    _, num_days = calendar.monthrange(int(date_start_year), int(date_start_month))
+
+    data = {}
+    date_per_month = []
+    for i in range(int(date_start_day), num_days + 1):
+        if i < 10:
+            i = f"0{i}"
+        date_per_month.append(i)
+
+    columns = [
+        {
+            "key": f"{i}.{date_start_month}.{date_start_year}",
+            "field": f"{i}.{date_start_month}.{date_start_year}",
+            "title": f"{i}.{date_start_month}.{date_start_year}",
+            "align": 'center', "width": '30'}
+        for i in date_per_month
+    ]
+
+    columns.insert(0, {"key": 'office', "field": 'office', "title": 'Офисы', "align": 'left', "width": 200})
+    table_data = []
+
     if mode == "department":
-        if type_period == "month":
-            pass
-        elif type_period == "day":
-            pass
+        query_result = get_cash_resister_by_depatment_period(date_start, date_end)
+        data = {}
+        for qr in query_result:
+            if not data.get(qr.department_id):
+                data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month }}
+            tmp_office = data.get(qr.department_id)
+            tmp_office[qr.char_day] = f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n" \
+                                      f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n" \
+                                      f"Всего: {qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal}"
+            data[qr.department_id] = tmp_office.copy()
+        table_data = [v for v in data.values()]
 
-    elif mode == "person":
-        pass
-
-    return Response({"ok": True})
+    return Response({"columns": columns, "tableData": table_data})
