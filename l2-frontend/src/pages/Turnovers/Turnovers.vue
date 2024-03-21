@@ -12,13 +12,13 @@
         <div class="arrow-button-container">
           <button
             class="btn btn-blue-nb arrow-button"
-            @click="getPrevMonth"
+            @click="setPrevMonth"
           >
             <i class="fa fa-arrow-left" />
           </button>
           <button
             class="btn btn-blue-nb arrow-button"
-            @click="getNewMonth"
+            @click="setNextMonth"
           >
             <i class="fa fa-arrow-right" />
           </button>
@@ -68,14 +68,24 @@ const tableData = ref([]);
 const columns = ref([]);
 
 const getTurnoversData = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const result = await api('stationar/get-assignments', {
-    currentDate: currentDate.value,
-    mode: modesEnglish.value[selectedMode.value],
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  columns.value = result.columns;
-  tableData.value = result.data;
+  console.log('Текущая дата', currentDate.value);
+  console.log('Текущий мод', modesEnglish.value[selectedMode.value]);
+  // await store.dispatch(actions.INC_LOADING);
+  // const result = await api('stationar/get-assignments', {
+  //   currentDate: currentDate.value,
+  //   mode: modesEnglish.value[selectedMode.value],
+  // });
+  // await store.dispatch(actions.DEC_LOADING);
+  // columns.value = result.columns;
+  // tableData.value = result.data;
+};
+
+const setPrevMonth = () => {
+  currentDate.value = new Date(currentDate.value.setMonth(currentDate.value.getMonth() - 1));
+};
+
+const setNextMonth = () => {
+  currentDate.value = new Date(currentDate.value.setMonth(currentDate.value.getMonth() + 1));
 };
 
 watch([selectedMode, currentDate], () => {
