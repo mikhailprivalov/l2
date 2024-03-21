@@ -69,7 +69,7 @@ const columns = ref([]);
 
 const getTurnoversData = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const result = await api('dashboards/cash-reister', {
+  const result = await api('dashboards/cash-register', {
     dateStart: currentDate.value,
     dateEnd: currentDate.value,
     mode: modesEnglish.value[selectedMode.value],
