@@ -76,7 +76,7 @@ def dashboard_charts(request):
 
 
 @login_required
-def get_register_data(request):
+def cash_register(request):
     body = json.loads(request.body)
     mode = body.get("mode")
     date_start = body.get("dateStart")
