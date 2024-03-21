@@ -43,6 +43,7 @@ import {
   onMounted,
   ref, watch,
 } from 'vue';
+import moment from 'moment';
 
 import ruRu from '@/locales/ve';
 import RadioField from '@/fields/RadioField.vue';
@@ -68,10 +69,12 @@ const tableData = ref([]);
 const columns = ref([]);
 
 const getTurnoversData = async () => {
+  const dateString = moment(currentDate.value).format('YYYYMMDD');
+  console.log(dateString);
   await store.dispatch(actions.INC_LOADING);
   const result = await api('dashboards/cash-register', {
-    dateStart: currentDate.value,
-    dateEnd: currentDate.value,
+    dateStart: dateString,
+    dateEnd: dateString,
     mode: modesEnglish.value[selectedMode.value],
   });
   await store.dispatch(actions.DEC_LOADING);
