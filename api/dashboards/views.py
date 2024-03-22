@@ -98,9 +98,9 @@ def cash_register(request):
         {
             "key": f"{i}.{date_start_month}.{date_start_year}",
             "field": f"{i}.{date_start_month}.{date_start_year}",
-            "title": f"{i}.{date_start_month}.{date_start_year}",
-            "align": "center",
-            "width": "30",
+            "title": f"{i}.{date_start_month}",
+            "align": "right",
+            "width": 100,
         }
         for i in date_per_month
     ]
@@ -119,10 +119,10 @@ def cash_register(request):
                 data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
                 data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
                 data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-            data[f"Наличные {qr.department_id}"][qr.char_day] = qr.received_cash
-            data[f"Терминал {qr.department_id}"][qr.char_day] = qr.received_terminal
-            data[f"Возврат нал {qr.department_id}"][qr.char_day] = qr.return_cash
-            data[f"Возврат терм {qr.department_id}"][qr.char_day] = qr.return_terminal
+            data[f"Наличные {qr.department_id}"][qr.char_day] = f"{qr.received_cash:,.2f}"
+            data[f"Терминал {qr.department_id}"][qr.char_day] = f"{qr.received_terminal:,.2f}"
+            data[f"Возврат нал {qr.department_id}"][qr.char_day] = f"{qr.return_cash:,.2f}"
+            data[f"Возврат терм {qr.department_id}"][qr.char_day] = f"{qr.return_terminal:,.2f}"
             data[f"Итого {qr.department_id}"][qr.char_day] = qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal
         table_data = [v for v in data.values()]
 

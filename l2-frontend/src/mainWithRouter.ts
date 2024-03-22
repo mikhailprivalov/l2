@@ -720,12 +720,12 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/sales',
+      path: '/ui/turnovers',
       name: 'Turnovers',
-      component: () => import('@/pages/Turnovers/Sales.vue'),
+      component: () => import('@/pages/Turnovers/Turnovers.vue'),
       meta: {
-        title: 'Продажи',
-        groups: ['Продажи'],
+        title: 'Обороты',
+        groups: ['Обороты'],
       },
     },
     {
