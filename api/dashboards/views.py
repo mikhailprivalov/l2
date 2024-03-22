@@ -114,13 +114,16 @@ def cash_register(request):
         for qr in query_result:
             if not data.get(qr.department_id):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-            tmp_office = data.get(qr.department_id, {})
-            tmp_office[qr.char_day] = (
-                f"Наличные: {qr.received_cash} \n Терминал: {qr.received_terminal} \n"
-                f"Возврат нал: {qr.return_cash} \n Возврат терм: {qr.return_terminal} \n"
-                f"Всего: {qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal}"
-            )
-            data[qr.department_id] = tmp_office.copy()
+                data[f"Наличные {qr.department_id}"] = {"office": "Наличные", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Терминал {qr.department_id}"] = {"office": "Терминал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+            data[f"Наличные {qr.department_id}"][qr.char_day] = qr.received_cash
+            data[f"Терминал {qr.department_id}"][qr.char_day] = qr.received_terminal
+            data[f"Возврат нал {qr.department_id}"][qr.char_day] = qr.return_cash
+            data[f"Возврат терм {qr.department_id}"][qr.char_day] = qr.return_terminal
+            data[f"Итого {qr.department_id}"][qr.char_day] = qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal
         table_data = [v for v in data.values()]
 
     return JsonResponse({"columns": columns, "tableData": table_data})
