@@ -16,7 +16,7 @@
           >
             <i class="fa fa-arrow-left" />
           </button>
-          <div>{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
+          <div class="date">{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
           <button
             class="btn btn-blue-nb arrow-button"
             @click="setNextMonth"
@@ -135,6 +135,9 @@ onMounted(() => {
 .radio-button {
   width: 300px;
   margin: 5px auto;
+}
+.date {
+  padding: 6px 0;
 }
 </style>
 
