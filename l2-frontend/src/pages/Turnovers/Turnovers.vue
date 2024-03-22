@@ -25,10 +25,12 @@
         </div>
       </div>
       <VeTable
+        id="table"
         :columns="columns"
         :table-data="tableData"
         :scroll-width="0"
         :border-y="true"
+        :cell-style-option="cellStyleOption"
       />
     </div>
   </div>
@@ -69,6 +71,10 @@ const selectedMode = ref('Подразделение');
 const tableData = ref([]);
 
 const columns = ref([]);
+
+const cellStyleOption = {
+  bodyCellClass: () => 'table-body-cell-class',
+};
 
 const getTurnoversData = async () => {
   const dateString = moment(currentDate.value).format('YYYYMMDD');
@@ -117,5 +123,17 @@ onMounted(() => {
 .radio-button {
   width: 300px;
   margin: 5px auto;
+}
+</style>
+
+<style lang="scss">
+.table-body-cell-class {
+  padding: 0 0 0 10px !important;
+}
+#table tbody :first-child {
+  height: 0 !important;
+}
+#table tr {
+  height: 10px !important;
 }
 </style>
