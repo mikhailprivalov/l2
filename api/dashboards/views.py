@@ -100,7 +100,7 @@ def cash_register(request):
             "field": f"{i}.{date_start_month}.{date_start_year}",
             "title": f"{i}.{date_start_month}.{date_start_year}",
             "align": "center",
-            "width": "30",
+            "width": 200,
         }
         for i in date_per_month
     ]

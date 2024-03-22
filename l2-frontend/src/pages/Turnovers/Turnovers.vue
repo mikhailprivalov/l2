@@ -27,6 +27,7 @@
       <VeTable
         :columns="columns"
         :table-data="tableData"
+        :scroll-width="0"
       />
     </div>
   </div>
