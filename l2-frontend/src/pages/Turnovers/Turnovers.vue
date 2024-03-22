@@ -73,7 +73,18 @@ const tableData = ref([]);
 const columns = ref([]);
 
 const cellStyleOption = {
-  bodyCellClass: () => 'table-body-cell-class',
+  bodyCellClass: ({ row, column }) => {
+    if (row.only1stCol && column.field === 'office') {
+      return 'table-body-cell-class-type-cash';
+    }
+    if (row.totalRow) {
+      return 'table-body-cell-class-total';
+    }
+    if (row.officeRow) {
+      return 'table-body-cell-class-office';
+    }
+    return 'table-body-cell-class';
+  },
 };
 
 const getTurnoversData = async () => {
@@ -130,6 +141,19 @@ onMounted(() => {
 .table-body-cell-class {
   padding: 0 0 0 10px !important;
 }
+.table-body-cell-class-office {
+  background-color: #6d9eea !important;
+  padding: 0 0 0 10px !important;
+}
+.table-body-cell-class-type-cash {
+  background-color: #e9d1de !important;
+  padding: 0 0 0 10px !important;
+}
+.table-body-cell-class-total {
+  background-color: #41c0c6 !important;
+  padding: 0 0 0 10px !important;
+}
+
 #table tbody :first-child {
   height: 0 !important;
 }
