@@ -16,6 +16,7 @@
           >
             <i class="fa fa-arrow-left" />
           </button>
+          <div>{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
           <button
             class="btn btn-blue-nb arrow-button"
             @click="setNextMonth"
@@ -126,7 +127,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   margin: 5px 0;
-  width: 150px;
+  width: 235px;
 }
 .arrow-button {
   width: 60px;
