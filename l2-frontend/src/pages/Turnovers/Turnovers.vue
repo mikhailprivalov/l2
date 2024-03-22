@@ -28,6 +28,7 @@
         :columns="columns"
         :table-data="tableData"
         :scroll-width="0"
+        :border-y="true"
       />
     </div>
   </div>

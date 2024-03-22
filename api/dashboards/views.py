@@ -98,9 +98,9 @@ def cash_register(request):
         {
             "key": f"{i}.{date_start_month}.{date_start_year}",
             "field": f"{i}.{date_start_month}.{date_start_year}",
-            "title": f"{i}.{date_start_month}.{date_start_year}",
-            "align": "center",
-            "width": 200,
+            "title": f"{i}.{date_start_month}",
+            "align": "right",
+            "width": 100,
         }
         for i in date_per_month
     ]
