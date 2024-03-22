@@ -13,7 +13,6 @@ def cash_register(request):
 
     body = json.loads(request.body)
     register_date = body.get("cashRegisterDate")
-    print(register_date)
     data = body.get("data")
     hospital = Hospitals.get_default_hospital()
     for i in data:
