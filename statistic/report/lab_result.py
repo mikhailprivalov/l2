@@ -21,7 +21,8 @@ def custom_lab_research_field_fractions(query_sql):
                 "Дата рождения": i.patient_birthday,
                 "Возраст": i.patient_age,
                 "Адрес": i.patient_main_address,
-                "Леч врач": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}"
+                "Леч врач": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
+                "Подтверждено": i.confirm_time
             }
         tmp_result[i.field_title] = i.field_value
         if i.field_title not in custom_fields:
@@ -29,7 +30,7 @@ def custom_lab_research_field_fractions(query_sql):
         step += 1
         prev_direction = i.direction_number
     result.append(tmp_result.copy())
-    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Леч врач"]
+    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Леч врач", "Подтверждено"]
     fields.extend(custom_fields)
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
@@ -55,6 +56,7 @@ def lab_result_research_base(ws1, d1, d2, result_query, research_title):
         ('Возраст', 10),
         ('Адрес', 40),
         ("Леч врач", 40),
+        ("Подтверждено", 26),
     ]
 
     columns2 = [(i, 25) for i in result_query["custom_fields"]]
@@ -66,44 +68,3 @@ def lab_result_research_base(ws1, d1, d2, result_query, research_title):
         ws1.cell(row=row, column=idx).style = style_border
 
     return ws1
-
-
-def lab_result_research_fill_data(ws1, result_query, row=6):
-    style_border1 = NamedStyle(name="style_border1")
-    bd = Side(style='thin', color="000000")
-    style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border1.font = Font(bold=False, size=11)
-    style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
-
-    r = row
-    len_fields = len(result_query["fields"])
-    for i in result_query["result"]:
-        column = 0
-        table_data = {}
-        r += 1
-        for k in range(len_fields):
-            column += 1
-            title = result_query["fields"][k]
-            try:
-                data = i.get(title, '')
-            except:
-                continue
-            is_dict = False
-            if type(data) is str and "columns" in data:
-                try:
-                    table_data = json.loads(data)
-                    is_dict = True
-                except:
-                    is_dict = False
-            if not is_dict:
-                ws1.cell(row=r, column=column).value = i.get(title, '')
-                ws1.cell(row=r, column=column).style = style_border1
-            else:
-                for i in table_data.get("rows"):
-                    json_col = column
-                    for col in i:
-                        ws1.cell(row=r, column=json_col).value = col
-                        json_col += 1
-                    r += 1
-    return ws1
-

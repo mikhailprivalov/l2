@@ -819,7 +819,7 @@ def statistic_xls(request):
             researches_sql = sql_func.lab_result_statistics_research(research_id, start_date, end_date, hospital_id)
             result = lab_result.custom_lab_research_field_fractions(researches_sql)
             ws = lab_result.lab_result_research_base(ws, d1, d2, result, research_title[0])
-            ws = lab_result.lab_result_research_fill_data(ws, result)
+            ws = custom_research.custom_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             if Researches.objects.filter(pk=research_id).first().is_monitoring:
