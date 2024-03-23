@@ -106,4 +106,3 @@ def lab_result_research_fill_data(ws1, result_query, row=6):
                         json_col += 1
                     r += 1
     return ws1
-
