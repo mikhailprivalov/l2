@@ -21,7 +21,7 @@ def custom_lab_research_field_fractions(query_sql):
                 "Дата рождения": i.patient_birthday,
                 "Возраст": i.patient_age,
                 "Адрес": i.patient_main_address,
-                "Леч врач": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}"
+                "Леч врач": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
             }
         tmp_result[i.field_title] = i.field_value
         if i.field_title not in custom_fields:
