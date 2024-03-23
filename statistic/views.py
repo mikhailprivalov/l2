@@ -47,7 +47,7 @@ from .report import (
     base_data,
     expertise_report,
     registry_profit,
-    appointed_research,
+    appointed_research, lab_result,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -817,9 +817,9 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
         elif research.podrazdeleniye and research.podrazdeleniye.p_type == 2 and is_lab_result == "true":
             researches_sql = sql_func.lab_result_statistics_research(research_id, start_date, end_date, hospital_id)
-            result = custom_research.custom_research_data(researches_sql)
-            ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
-            ws = custom_research.custom_research_fill_data(ws, result)
+            result = lab_result.custom_lab_research_field_fractions(researches_sql)
+            ws = lab_result.lab_result_research_base(ws, d1, d2, result, research_title[0])
+            ws = lab_result.lab_result_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             if Researches.objects.filter(pk=research_id).first().is_monitoring:

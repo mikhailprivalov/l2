@@ -450,52 +450,41 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medica
     return rows
 
 
-def ab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
+def lab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT
-                directions_paraclinicresult.issledovaniye_id,
-                directions_paraclinicresult.field_id,
-                directions_paraclinicresult.value as field_value,
-                directions_paraclinicresult.field_type as field_type,
-                
-                directory_paraclinicinputfield.title as field_title,
-                directory_paraclinicinputfield.for_talon as field_for_talon,
-                
                 to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
                 directions_issledovaniya.napravleniye_id as direction_number,
-                users_doctorprofile.fio as doc_fio,
+                users_doctorprofile.family as doc_family,
+                users_doctorprofile.name as doc_name,
+                users_doctorprofile.patronymic as doc_patronymic,
                 directions_napravleniya.client_id,
-                concat(clients_individual.family, ' ', clients_individual.name, ' ', clients_individual.patronymic) as patient_fio,
+                clients_individual.family as client_family,
+                clients_individual.name as client_name,
+                clients_individual.patronymic as client_patronymic,
                 to_char(clients_individual.birthday, 'DD.MM.YYYY') as patient_birthday,
-                date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
+                date_part('year', age(directions_issledovaniya.time_confirmation, clients_individual.birthday))::int as patient_age,
                 clients_individual.sex as patient_sex,
                 clients_card.main_address as patient_main_address,
                 directions_napravleniya.parent_id as parent,
-                
-                directions_istochnikifinansirovaniya.title as fin_source
-                
-                FROM public.directions_result
-                LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_result.issledovaniye_id = directions_issledovaniya.id
+                directions_istochnikifinansirovaniya.title as fin_source,
+                df.title as field_title,
+                directions_result.value as field_value
+                FROM directions_result
+                LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_result.issledovaniye_id
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN clients_card ON clients_card.id=directions_napravleniya.client_id
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
-                LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
+                LEFT JOIN users_doctorprofile ON directions_napravleniya.doc_id=users_doctorprofile.id
                 LEFT JOIN directions_istochnikifinansirovaniya ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id
+                LEFT JOIN directory_fractions df on directions_result.fraction_id = df.id 
                 WHERE 
                   directions_issledovaniya.research_id=%(research_id)s
-                  and directions_issledovaniya.time_confirmation IS NOT NULL
-                AND
-                CASE WHEN %(filter_hospital_id)s > 0 THEN
-                  directions_napravleniya.hospital_id = %(filter_hospital_id)s
-                  WHEN %(filter_hospital_id)s = -1 THEN
-                    directions_issledovaniya.napravleniye_id IS NOT NULL
-                  END
                 AND                
                      directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
-                END                
                 order by directions_issledovaniya.napravleniye_id
             """,
             params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id},
