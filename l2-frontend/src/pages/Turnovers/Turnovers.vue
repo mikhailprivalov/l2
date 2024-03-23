@@ -16,6 +16,7 @@
           >
             <i class="fa fa-arrow-left" />
           </button>
+          <div class="date">{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
           <button
             class="btn btn-blue-nb arrow-button"
             @click="setNextMonth"
@@ -25,10 +26,12 @@
         </div>
       </div>
       <VeTable
+        id="table"
         :columns="columns"
         :table-data="tableData"
         :scroll-width="0"
         :border-y="true"
+        :cell-style-option="cellStyleOption"
       />
     </div>
   </div>
@@ -70,6 +73,21 @@ const tableData = ref([]);
 
 const columns = ref([]);
 
+const cellStyleOption = {
+  bodyCellClass: ({ row, column }) => {
+    if (row.only1stCol && column.field === 'office') {
+      return 'table-body-cell-class-type-cash';
+    }
+    if (row.totalRow) {
+      return 'table-body-cell-class-total';
+    }
+    if (row.officeRow) {
+      return 'table-body-cell-class-office';
+    }
+    return 'table-body-cell-class';
+  },
+};
+
 const getTurnoversData = async () => {
   const dateString = moment(currentDate.value).format('YYYYMMDD');
   await store.dispatch(actions.INC_LOADING);
@@ -109,7 +127,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   margin: 5px 0;
-  width: 150px;
+  width: 235px;
 }
 .arrow-button {
   width: 60px;
@@ -117,5 +135,33 @@ onMounted(() => {
 .radio-button {
   width: 300px;
   margin: 5px auto;
+}
+.date {
+  padding: 6px 0;
+}
+</style>
+
+<style lang="scss">
+.table-body-cell-class {
+  padding: 0 0 0 10px !important;
+}
+.table-body-cell-class-office {
+  background-color: #6d9eea !important;
+  padding: 0 0 0 10px !important;
+}
+.table-body-cell-class-type-cash {
+  background-color: #e9d1de !important;
+  padding: 0 0 0 10px !important;
+}
+.table-body-cell-class-total {
+  background-color: #41c0c6 !important;
+  padding: 0 0 0 10px !important;
+}
+
+#table tbody :first-child {
+  height: 0 !important;
+}
+#table tr {
+  height: 10px !important;
 }
 </style>
