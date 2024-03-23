@@ -47,7 +47,8 @@ from .report import (
     base_data,
     expertise_report,
     registry_profit,
-    appointed_research, lab_result,
+    appointed_research,
+    lab_result,
 )
 from .sql_func import (
     attached_female_on_month,
