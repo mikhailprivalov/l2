@@ -90,6 +90,15 @@
             > 003/у </a>
           </div>
           <div
+            class="inner-card"
+          >
+            <a
+              :href="`/forms/pdf?type=106.02&dir_pk=${direction}`"
+              class="a-under"
+              target="_blank"
+            > 530 </a>
+          </div>
+          <div
             v-if="!every"
             class="inner-card"
           >
