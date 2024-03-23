@@ -450,7 +450,7 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medica
     return rows
 
 
-def lab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
+def lab_result_statistics_research(research_id, d_s, d_e):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -487,7 +487,7 @@ def lab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                      directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                 order by directions_issledovaniya.napravleniye_id
             """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'filter_hospital_id': filter_hospital_id},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )
 
         rows = namedtuplefetchall(cursor)
