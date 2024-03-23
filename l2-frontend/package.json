@@ -20,7 +20,7 @@
     "@openfonts/open-sans_all": "^1.44.2",
     "@popperjs/core": "^2.11.6",
     "@riophae/vue-treeselect": "^0.4.0",
-    "@vueuse/core": "^10.0.2",
+    "@vueuse/core": "^10.9.0",
     "animate.css": "^4.1.1",
     "apexcharts": "^3.39.0",
     "autoprefixer": "^9.8.8",
