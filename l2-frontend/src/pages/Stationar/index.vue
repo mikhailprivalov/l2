@@ -96,7 +96,7 @@
               :href="`/forms/pdf?type=106.02&dir_pk=${direction}`"
               class="a-under"
               target="_blank"
-            > 530 </a>
+            > 530 (003/у) </a>
           </div>
           <div
             v-if="!every"
