@@ -716,6 +716,7 @@ def statistic_xls(request):
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
         special_fields = request_data.get("special-fields", "false")
+        is_lab_result = request_data.get("is-lab-result", "false")
         medical_exam = request_data.get("medical-exam", "false")
         by_create_directions = request_data.get("by-create-directions", "false")
         is_purpose = 0
@@ -740,7 +741,8 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Отчет")
-        research_title = Researches.objects.values_list('title').get(pk=research_id)
+        research = Researches.objects.get(pk=research_id)
+        research_title = research.title
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         hospital_id = request.user.doctorprofile.hospital_id
@@ -813,6 +815,11 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        elif research.podrazdeleniye and research.podrazdeleniye.p_type == 2 and is_lab_result == "true":
+            researches_sql = sql_func.lab_result_statistics_research(research_id, start_date, end_date, hospital_id)
+            result = custom_research.custom_research_data(researches_sql)
+            ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
+            ws = custom_research.custom_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             if Researches.objects.filter(pk=research_id).first().is_monitoring:

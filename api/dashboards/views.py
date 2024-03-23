@@ -116,8 +116,8 @@ def cash_register(request):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
                 data[f"Наличные {qr.department_id}"] = {"office": "Наличные", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
                 data[f"Терминал {qr.department_id}"] = {"office": "Терминал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
                 data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
             data[f"Наличные {qr.department_id}"][qr.char_day] = f"{qr.received_cash:,.2f}"
             data[f"Терминал {qr.department_id}"][qr.char_day] = f"{qr.received_terminal:,.2f}"
