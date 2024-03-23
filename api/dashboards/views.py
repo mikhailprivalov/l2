@@ -105,7 +105,7 @@ def cash_register(request):
         for i in date_per_month
     ]
 
-    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 200})
+    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 200, "fixed": 'left'})
     table_data = []
 
     if mode == "department":
@@ -113,12 +113,12 @@ def cash_register(request):
         data = {}
         for qr in query_result:
             if not data.get(qr.department_id):
-                data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Наличные {qr.department_id}"] = {"office": "Наличные", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Терминал {qr.department_id}"] = {"office": "Терминал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "officeRow": True}
+                data[f"Наличные {qr.department_id}"] = {"office": "Наличные", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "only1stCol": True}
+                data[f"Терминал {qr.department_id}"] = {"office": "Терминал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "only1stCol": True}
+                data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
+                data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "totalRow": True}
             data[f"Наличные {qr.department_id}"][qr.char_day] = f"{qr.received_cash:,.2f}"
             data[f"Терминал {qr.department_id}"][qr.char_day] = f"{qr.received_terminal:,.2f}"
             data[f"Возврат нал {qr.department_id}"][qr.char_day] = f"{qr.return_cash:,.2f}"
