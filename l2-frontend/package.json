@@ -38,7 +38,7 @@
     "lodash": "^4.17.20",
     "mini-css-extract-plugin": "^2.6.1",
     "moment": "^2.29.4",
-    "pdfobject": "^2.2.8",
+    "pdfobject": "^2.3.0",
     "plural-ru": "^2.0.2",
     "portal-vue": "^2.1.7",
     "promise.prototype.finally": "^3.1.4",
