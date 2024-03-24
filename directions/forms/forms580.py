@@ -19,11 +19,11 @@ from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
-from utils.xh import translation_number_from_decimal
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.barcode import createBarcodeDrawing
-from django.utils.text import Truncator
+
 from django.core.paginator import Paginator
+from reportlab.platypus.flowables import HRFlowable
 
 
 def form_01(request_data):
@@ -276,6 +276,7 @@ def form_01(request_data):
             objs.append(tbl)
         if is_laboratory:
             objs.append(Spacer(1, 8 * cm))
+        objs.append(Spacer(1, 7 * mm))
         if not dir.imported_from_rmis:
             if dir.doc_who_create and dir.doc_who_create != dir.doc:
                 objs.append(Paragraph(f"Выписал:{dir.doc_who_create.get_fio()} {dir.doc_who_create.podrazdeleniye.title}", style))
@@ -283,6 +284,10 @@ def form_01(request_data):
             if dir.doc:
                 objs.append(Paragraph(f"Отделение: {dir.get_doc_podrazdeleniye_title}", style))
                 objs.append(Paragraph(f"Л/врач: {dir.doc.get_fio()}", style))
+        objs.append(Spacer(1, 7 * mm))
+        objs.append(Paragraph("Всего назначено: " + str(len(issledovaniya)), style))
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(HRFlowable(width=80 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black))
         objs.append(PageBreak())
 
     doc.build(objs)

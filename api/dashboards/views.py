@@ -123,7 +123,7 @@ def cash_register(request):
             data[f"Терминал {qr.department_id}"][qr.char_day] = f"{qr.received_terminal:,.2f}"
             data[f"Возврат нал {qr.department_id}"][qr.char_day] = f"{qr.return_cash:,.2f}"
             data[f"Возврат терм {qr.department_id}"][qr.char_day] = f"{qr.return_terminal:,.2f}"
-            data[f"Итого {qr.department_id}"][qr.char_day] = qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal
+            data[f"Итого {qr.department_id}"][qr.char_day] = f"{(qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal):,.2f}"
         table_data = [v for v in data.values()]
 
     return JsonResponse({"columns": columns, "tableData": table_data})
