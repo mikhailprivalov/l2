@@ -52,7 +52,9 @@ import WorkingTimeTable from '@/pages/WorkingTime/WorkingTimeTable.vue';
 
 const store = useStore();
 
-const selectedMonth = ref(null);
+const currentDate = ref(new Date());
+
+const selectedMonth = ref(currentDate.value.getMonth() + 1);
 const months = ref([
   { id: 1, label: 'Январь' },
   { id: 2, label: 'Февраль' },
@@ -68,10 +70,9 @@ const months = ref([
   { id: 12, label: 'Декабрь' },
 ]);
 
-const selectedYear = ref(2023);
+const selectedYear = ref(currentDate.value.getFullYear());
 const years = ref([]);
 
-const currentDate = ref(new Date());
 const getYears = (yearStart = 2023) => {
   let start = yearStart;
   currentDate.value.getFullYear();
@@ -79,10 +80,6 @@ const getYears = (yearStart = 2023) => {
     years.value.push({ id: start, label: String(start) });
     start++;
   }
-};
-const setCurrentDate = () => {
-  selectedMonth.value = currentDate.value.getMonth() + 1;
-  selectedYear.value = currentDate.value.getFullYear();
 };
 
 const selectedDepartment = ref(null);
@@ -97,7 +94,6 @@ const getDepartments = async () => {
 onMounted(() => {
   getDepartments();
   getYears();
-  setCurrentDate();
 });
 
 </script>
