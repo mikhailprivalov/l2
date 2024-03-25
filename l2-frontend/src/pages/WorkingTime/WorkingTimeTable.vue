@@ -37,7 +37,6 @@
 import {
   computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
-
 import { VeTable } from 'vue-easytable';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
