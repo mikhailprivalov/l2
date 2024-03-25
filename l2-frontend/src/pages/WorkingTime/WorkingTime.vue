@@ -54,10 +54,6 @@ const store = useStore();
 
 const currentDate = ref(new Date());
 
-// watch([selectedYear, selectedMonth], () => {
-//   currentDate.value = new Date(selectedYear)
-// });
-
 const selectedMonth = ref(currentDate.value.getMonth());
 const months = ref([
   { id: 0, label: 'Январь' },

@@ -37,10 +37,11 @@
 import {
   computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
-import { VeTable } from 'vue-easytable';
 
+import { VeTable } from 'vue-easytable';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
+import moment from 'moment';
 
 import api from '@/api';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
@@ -61,8 +62,6 @@ const props = defineProps({
 });
 const root = getCurrentInstance().proxy.$root;
 
-const date = ref(null);
-
 const search = ref('');
 
 const employeesWorkTime = ref([]);
@@ -70,10 +69,11 @@ const employeesWorkTime = ref([]);
 const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/get-work-time', {
-    date,
+    year: props.year,
+    month: props.month,
   });
   await store.dispatch(actions.DEC_LOADING);
-  employeesWorkTime.value = result;
+  employeesWorkTime.value = [];
 };
 
 const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
@@ -91,13 +91,13 @@ const changeWorkTime = async (workTime: object) => {
 };
 
 const columns = ref([]);
-const getMonthDays = (firstDateMonth: Date) => {
+const getMonthDays = (year: number, month: number) => {
   const days = [];
-  const currentMonth = firstDateMonth.getMonth();
-  const currentDay = firstDateMonth;
-  while (currentDay.getMonth() === currentMonth) {
-    days.push(new Date(currentDay));
-    currentDay.setDate(currentDay.getDate() + 1);
+  const currentMonth = month;
+  const date = new Date(year, currentMonth);
+  while (date.getMonth() === currentMonth) {
+    days.push(new Date(date));
+    date.setDate(date.getDate() + 1);
   }
   return days;
 };
@@ -119,9 +119,9 @@ const getColumns = () => {
       field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
     },
   ];
-  const daysMonth = getMonthDays(date.value);
+  const daysMonth = getMonthDays(props.year, props.month);
   const data = daysMonth.map((col) => {
-    const dateString = col.toISOString().split('T')[0];
+    const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
     const isFirstDay = col.getDate() === 1;
@@ -152,7 +152,6 @@ const getColumns = () => {
 
 watch(() => [props.year, props.month], () => {
   if (props.year && props.month) {
-    date.value = new Date(props.year, props.month);
     getColumns();
   }
 }, { immediate: true });
