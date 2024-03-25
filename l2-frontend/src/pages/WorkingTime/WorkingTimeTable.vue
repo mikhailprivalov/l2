@@ -15,7 +15,7 @@
       class="white-background"
     >
       <VeTable
-        v-show="filteredEmployees.length"
+        v-show="filteredEmployees.length > 0"
         :columns="columns"
         :table-data="filteredEmployees"
         :row-style-option="rowStyleOption"
@@ -24,7 +24,7 @@
         :scroll-width="0"
       />
       <div
-        v-show="!filteredEmployees.length"
+        v-show="filteredEmployees.length === 0"
         class="empty-list"
       >
         Нет записей
