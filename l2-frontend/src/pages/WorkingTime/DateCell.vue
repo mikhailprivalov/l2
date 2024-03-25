@@ -101,10 +101,6 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  prevWorkTime: {
-    type: [Object, String],
-    required: false,
-  },
 });
 
 const root = getCurrentInstance().proxy.$root;

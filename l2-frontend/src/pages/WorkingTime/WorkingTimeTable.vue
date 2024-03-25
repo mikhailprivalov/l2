@@ -105,14 +105,13 @@ const getColumns = () => {
   ];
   const daysMonth = getMonthDays(props.year, props.month);
   const data = daysMonth.map((col) => {
-    const date = col.toLocaleDateString();
+    const dateString = col.toISOString().split('T')[0];
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
     const isFirstDay = col.getDate() === 1;
-    const prevDay = new Date(col.getFullYear(), col.getMonth(), col.getDate() - 1).toLocaleDateString();
     return {
-      key: date,
-      field: date,
+      key: dateString,
+      field: dateString,
       title: dateTitle,
       align: 'center',
       width: 211,
@@ -125,7 +124,6 @@ const getColumns = () => {
             rowIndex,
             columnKey: column.key,
             isFirstDay,
-            prevWorkTime: employeesWorkTime.value[rowIndex][prevDay],
           },
           on: { changeWorkTime },
         },
