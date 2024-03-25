@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import {
-  onMounted, ref,
+  onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -53,6 +53,10 @@ import WorkingTimeTable from '@/pages/WorkingTime/WorkingTimeTable.vue';
 const store = useStore();
 
 const currentDate = ref(new Date());
+
+// watch([selectedYear, selectedMonth], () => {
+//   currentDate.value = new Date(selectedYear)
+// });
 
 const selectedMonth = ref(currentDate.value.getMonth());
 const months = ref([

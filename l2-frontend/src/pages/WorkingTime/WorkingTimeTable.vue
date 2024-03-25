@@ -61,6 +61,8 @@ const props = defineProps({
 });
 const root = getCurrentInstance().proxy.$root;
 
+const date = ref(null);
+
 const search = ref('');
 
 const employeesWorkTime = ref([]);
@@ -68,8 +70,7 @@ const employeesWorkTime = ref([]);
 const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/get-work-time', {
-    year: props.year,
-    month: props.month,
+    date,
   });
   await store.dispatch(actions.DEC_LOADING);
   employeesWorkTime.value = result;
@@ -90,13 +91,13 @@ const changeWorkTime = async (workTime: object) => {
 };
 
 const columns = ref([]);
-const getMonthDays = (year: number, month: number) => {
+const getMonthDays = (firstDateMonth: Date) => {
   const days = [];
-  const currentMonth = month;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
+  const currentMonth = firstDateMonth.getMonth();
+  const currentDay = firstDateMonth;
+  while (currentDay.getMonth() === currentMonth) {
+    days.push(new Date(currentDay));
+    currentDay.setDate(currentDay.getDate() + 1);
   }
   return days;
 };
@@ -118,7 +119,7 @@ const getColumns = () => {
       field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
     },
   ];
-  const daysMonth = getMonthDays(props.year, props.month);
+  const daysMonth = getMonthDays(date.value);
   const data = daysMonth.map((col) => {
     const dateString = col.toISOString().split('T')[0];
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
@@ -151,6 +152,7 @@ const getColumns = () => {
 
 watch(() => [props.year, props.month], () => {
   if (props.year && props.month) {
+    date.value = new Date(props.year, props.month);
     getColumns();
   }
 }, { immediate: true });

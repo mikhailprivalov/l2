@@ -537,6 +537,12 @@ class EmployeeWorkingHoursSchedule(models.Model):
     def __str__(self):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
+    @staticmethod
+    def get_work_time(date):
+        document = TimeTrackingDocument.objects.filter(month=date)
+        print(document)
+        return []
+
     class Meta:
         verbose_name = "Сотрудник - фактическое время за дату"
         verbose_name_plural = "Сотрудники - фактическое время за дату"
