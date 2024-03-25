@@ -417,6 +417,14 @@
                 > По дате осмотра
               </label>
             </span>
+            <span class="mediacl-exam-padding">
+              <label>
+                <input
+                  v-model="values.isLabResult"
+                  type="checkbox"
+                > Результаты лаборатории
+              </label>
+            </span>
           </div>
           <a
             v-if="reportUrl && !checkReportParam(PARAMS_TYPES.LOAD_FILE)"
@@ -534,7 +542,8 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.RESEARCH, PARAMS_TYPES.SPECIAL_FIELDS, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-research&date_type=<date-type>&date_values=<date-values>&research=<research>&'
           + 'purposes=<purposes>&special-fields=<special-fields>&medical-exam=<medical-exam>'
-          + '&date-start=<date-start>&date-end=<date-end>',
+          + '&date-start=<date-start>&date-end=<date-end>'
+          + '&is-lab-result=<is-lab-result>',
       },
       researchCreate: {
         groups: ['Статистика-по услуге', 'Свидетельство о смерти-доступ'],
@@ -694,6 +703,7 @@ const getVaues = () => ({
   resultTreatment: [],
   specialFields: false,
   medicalExam: false,
+  isLabResult: false,
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -730,6 +740,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       purposes: [],
       specialFields: false,
       medicalExam: false,
+      isLabResult: false,
       resultTreatment: [],
       titleReportStattalonFields: [],
       titleReportAllFinSourceNeed: [],
@@ -787,6 +798,8 @@ export default class Statistics extends Vue {
   specialFields: boolean;
 
   medicalExam: boolean;
+
+  isLabResult: boolean;
 
   resultTreatment: any[];
 
@@ -1008,6 +1021,7 @@ export default class Statistics extends Vue {
         url = url.replace('<research>', this.values.research);
         url = url.replace('<special-fields>', this.values.specialFields);
         url = url.replace('<medical-exam>', this.values.medicalExam);
+        url = url.replace('<is-lab-result>', this.values.isLabResult);
         if (this.values.purposes.length > 0) {
           url = url.replace('<purposes>', this.values.purposes);
         } else {
@@ -1023,6 +1037,7 @@ export default class Statistics extends Vue {
         url = url.replace('<research>', this.values.research);
         url = url.replace('<special-fields>', this.values.specialFields);
         url = url.replace('<medical-exam>', this.values.medicalExam);
+        url = url.replace('<is-lab-result>', this.values.isLabResult);
         if (this.values.purposes.length > 0) {
           url = url.replace('<purposes>', this.values.purposes);
         } else {

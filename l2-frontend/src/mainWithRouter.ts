@@ -720,6 +720,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/turnovers',
+      name: 'Turnovers',
+      component: () => import('@/pages/Turnovers/Turnovers.vue'),
+      meta: {
+        title: 'Обороты',
+        groups: ['Обороты'],
+      },
+    },
+    {
       path: '/ui/working-time',
       name: 'WorkingTime',
       component: () => import('@/pages/WorkingTime/WorkingTime.vue'),

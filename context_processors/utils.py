@@ -218,6 +218,12 @@ def menu(request):
                     "access": ["Отправка результатов в организации"],
                     "module": "l2_send_orgs_email_results",
                 },
+                {
+                    "url": '/ui/turnovers',
+                    "title": "Обороты",
+                    "nt": False,
+                    "access": ["Обороты"],
+                },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
             ]
 

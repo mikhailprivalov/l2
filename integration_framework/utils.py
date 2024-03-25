@@ -228,8 +228,8 @@ def add_absent_field(data, research_data):
                     if val.lower() == data[k].lower():
                         tmp_data[k] = {"code": key, "title": val}
             elif k == "вэ-Время окончания":
-                data[k] = data[k].replace(":", "")
-            elif k == "вэ-Время начала":
+                data[k] = data[k].replace(":", "").replace(".", "")
+            elif k == "увэ-Время начала":
                 data[k] = data[k].replace(":", "")
             elif k == "вэ-Дата начала госпитализации":
                 data[k] = normalize_dots_date(data[k]).replace("-", "")
@@ -238,6 +238,8 @@ def add_absent_field(data, research_data):
             elif k == "вэ-Проведенное лечение":
                 res_treatment = json.loads(data[k])
                 data[k] = " ".join([f"{res_t['pharmaTitle']} - {res_t['mode']};" for res_t in res_treatment])
+        if not data.get("вэ-Время начала"):
+            data["вэ-Время начала"] = "1000"
 
     return {**data, **tmp_data}
 

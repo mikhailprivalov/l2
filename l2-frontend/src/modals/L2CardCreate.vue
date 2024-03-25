@@ -750,6 +750,26 @@
           <div class="col-xs-12 col-form mid">
             <div class="form-row sm-f">
               <div class="row-t">
+                Место хранения карты
+              </div>
+              <Treeselect
+                v-model="card.room_location_db"
+                :multiple="false"
+                class="treeselect-wide treeselect-26px treeselect-nbr"
+                :z-index="5002"
+                placeholder="Место хранения"
+                :options="roomLocations"
+              />
+            </div>
+          </div>
+        </div>
+        <div
+          class="row"
+          style="margin-bottom: 10px"
+        >
+          <div class="col-xs-12 col-form mid">
+            <div class="form-row sm-f">
+              <div class="row-t">
                 Фактор вредности
               </div>
               <TypeAhead
@@ -1295,6 +1315,7 @@ export default {
         ecp_id: null,
         work_place_db: null,
         work_department_db: null,
+        room_location_db: null,
         work_place_db_title: '',
         doc_types: [],
         main_docs: {},
@@ -1346,6 +1367,7 @@ export default {
       loaded: false,
       new_card_num: '',
       companyDepartments: [],
+      roomLocations: [],
     };
   },
   computed: {
@@ -1477,6 +1499,7 @@ export default {
   },
   created() {
     this.load_data();
+    this.loadRoomLocations();
     this.get_disabled_forms();
     this.$root.$on('reload_editor', () => {
       this.load_data();
@@ -1503,6 +1526,12 @@ export default {
       });
       this.companyDepartments = data;
     },
+
+    async loadRoomLocations() {
+      const { data } = await this.$api('load-room-locations');
+      this.roomLocations = data;
+    },
+
     async loadCompanies({ action, searchQuery, callback }) {
       if (action === ASYNC_SEARCH) {
         const { data } = await this.$api(`/companies-find?query=${searchQuery}`);
@@ -1597,6 +1626,7 @@ export default {
           'work_department',
           'work_place_db',
           'work_department_db',
+          'room_location_db',
           'custom_workplace',
           'district',
           'phone',

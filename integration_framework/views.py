@@ -1578,13 +1578,35 @@ def external_direction_create(request):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
+    result = create_direction_by_param(body, request)
+    return Response(result)
 
+
+@api_view(["POST"])
+def external_list_direction_create(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+    body_directions = json.loads(request.body)
+    for body in body_directions:
+        result = create_direction_by_param(body, request)
+        if not result.get("ok"):
+            try:
+                Log.log(
+                    str(body.get("internalId")),
+                    122002,
+                    body={"data": body},
+                )
+            except Exception as e:
+                logger.exception(e)
+
+
+def create_direction_by_param(body, request):
     org = body.get("org", {})
     code_tfoms = org.get("codeTFOMS")
     oid_org = org.get("oid")
 
     if not code_tfoms and not oid_org:
-        return Response({"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"})
+        return {"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"}
 
     if code_tfoms:
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
@@ -1592,10 +1614,10 @@ def external_direction_create(request):
         hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
-        return Response({"ok": False, "message": "Организация не найдена"})
+        return {"ok": False, "message": "Организация не найдена"}
 
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
-        return Response({"ok": False, "message": "Нет доступа в переданную организацию"})
+        return {"ok": False, "message": "Нет доступа в переданную организацию"}
 
     is_exclude_contorl_documnets = False
     if hospital.pk in HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION:
@@ -1606,15 +1628,15 @@ def external_direction_create(request):
     enp = (patient.get("enp") or "").replace(" ", "")
 
     if enp and (len(enp) != 16 or not enp.isdigit()):
-        return Response({"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"})
+        return {"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"}
 
     snils = (patient.get("snils") or "").replace(" ", "").replace("-", "")
 
     if not enp and not snils and not is_exclude_contorl_documnets:
-        return Response({"ok": False, "message": "При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber"})
+        return {"ok": False, "message": "При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber"}
 
     if snils and not petrovna.validate_snils(snils):
-        return Response({"ok": False, "message": "patient.snils: не прошёл валидацию"})
+        return {"ok": False, "message": "patient.snils: не прошёл валидацию"}
 
     lastname = str(patient.get("lastName") or "")
     firstname = str(patient.get("firstName") or "")
@@ -1627,22 +1649,22 @@ def external_direction_create(request):
         sex = "ж"
 
     if not enp and not (lastname and firstname and birthdate and birthdate):
-        return Response({"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"})
+        return {"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"}
 
     if lastname and not firstname:
-        return Response({"ok": False, "message": "При передаче lastname должен быть передан и firstname"})
+        return {"ok": False, "message": "При передаче lastname должен быть передан и firstname"}
 
     if firstname and not lastname:
-        return Response({"ok": False, "message": "При передаче firstname должен быть передан и lastname"})
+        return {"ok": False, "message": "При передаче firstname должен быть передан и lastname"}
 
     if firstname and lastname and not birthdate:
-        return Response({"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"})
+        return {"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"}
 
     if birthdate and (not re.fullmatch(r"\d{4}-\d\d-\d\d", birthdate) or birthdate[0] not in ["1", "2"]):
-        return Response({"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"})
+        return {"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"}
 
     if birthdate and sex not in ["м", "ж"]:
-        return Response({"ok": False, "message": 'individual.sex должно быть "м" или "ж"'})
+        return {"ok": False, "message": 'individual.sex должно быть "м" или "ж"'}
 
     individual = None
     if enp:
@@ -1681,25 +1703,25 @@ def external_direction_create(request):
         )
 
     if not individual:
-        return Response({"ok": False, "message": "Физлицо не найдено"})
+        return {"ok": False, "message": "Физлицо не найдено"}
 
     card = Card.objects.filter(individual=individual, base__internal_type=True).first()
     if not card:
         card = Card.add_l2_card(individual)
 
     if not card:
-        return Response({"ok": False, "message": "Карта не найдена"})
+        return {"ok": False, "message": "Карта не найдена"}
 
     financing_source_title = body.get("financingSource", "")
     if financing_source_title.lower() not in ["омс", "бюджет", "платно"]:
-        return Response({"ok": False, "message": "Некорректный источник финансирования"})
+        return {"ok": False, "message": "Некорректный источник финансирования"}
 
     financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
     financing_category_code = body.get("financingCategory", "")
     price_category = PriceCategory.objects.filter(title__startswith=financing_category_code).first()
 
     if not financing_source:
-        return Response({"ok": False, "message": "Некорректный источник финансирования"})
+        return {"ok": False, "message": "Некорректный источник финансирования"}
 
     message = None
 
@@ -1713,11 +1735,11 @@ def external_direction_create(request):
 
     diag_text = body.get("diagText", "")  # обязательно
     if not diag_text:
-        return Response({"ok": False, "message": "Диагноз описание не заполнено"})
+        return {"ok": False, "message": "Диагноз описание не заполнено"}
 
     diag_mkb10 = body.get("diagMKB10", "")  # обязательно
     if not diag_mkb10:
-        return Response({"ok": False, "message": "Диагноз по МКБ10 не заполнен (не верно)"})
+        return {"ok": False, "message": "Диагноз по МКБ10 не заполнен (не верно)"}
     open_skob = "{"
     close_skob = "}"
 
@@ -1734,11 +1756,11 @@ def external_direction_create(request):
     }
     method_obtain_material = body.get("methodObtainMaterial", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
     if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
-        return Response({"ok": False, "message": "Способо забора не верно заполнено"})
+        return {"ok": False, "message": "Способо забора не верно заполнено"}
 
     resident_code = patient.get("residentCode", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
     if not resident_code or resident_code not in [1, 2]:
-        return Response({"ok": False, "message": "Не указан вид жительства"})
+        return {"ok": False, "message": "Не указан вид жительства"}
     if resident_code == 1:
         resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
     else:
@@ -1746,20 +1768,18 @@ def external_direction_create(request):
 
     solution10 = body.get("solution10", "")  # обязательно
     if not solution10 or solution10 not in ["true", "false"]:
-        return Response({"ok": False, "message": "Не указано помещен в 10% раствор"})
+        return {"ok": False, "message": "Не указано помещен в 10% раствор"}
 
     doctor_fio = body.get("doctorFio", "")  # обязательно
     if not doctor_fio:
-        return Response({"ok": False, "message": "Не указан врач производивший забор материала"})
+        return {"ok": False, "message": "Не указан врач производивший забор материала"}
     material_mark = body.get("materialMark", "")
     numbers_vial = []
     for k in material_mark:
         result_check = check_valid_material_mark(k, numbers_vial)
         if not result_check:
-            return Response({"ok": False, "message": "Не верная маркировка материала"})
+            return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
-    if len(numbers_vial) != sorted(numbers_vial)[-1]:
-        return Response({"ok": False, "message": "Не верная маркировка флаконов (порядок 1,2,3,4...)"})
 
     try:
         with transaction.atomic():
@@ -1772,6 +1792,7 @@ def external_direction_create(request):
                 hospital=hospital,
                 id_in_hospital=id_in_hospital,
                 price_category=price_category,
+                rmis_number=id_in_hospital if body.get("isRMIS") else None,
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
@@ -1795,7 +1816,7 @@ def external_direction_create(request):
             pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
             for m_m in material_mark:
                 result_table_field.append(
-                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")]
+                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m.get("pathologicalProcess", 7)], str(m_m["objectValue"]), m_m.get("description", "")]
                 )
             data_marked["rows"] = result_table_field
             match_keys = {
@@ -1826,7 +1847,7 @@ def external_direction_create(request):
                 )
             except Exception as e:
                 logger.exception(e)
-            return Response({"ok": True, "id": str(direction.pk)})
+            return {"ok": True, "id": str(direction.pk)}
 
     except InvalidData as e:
         logger.exception(e)
@@ -1835,7 +1856,7 @@ def external_direction_create(request):
         logger.exception(e)
         message = "Серверная ошибка"
 
-    return Response({"ok": False, "message": message})
+    return {"ok": False, "message": message}
 
 
 @api_view(["POST"])
@@ -1923,11 +1944,11 @@ def external_get_pdf_result(request):
     return JsonResponse({"result": pdf_data})
 
 
-def check_valid_material_mark(current_material_data, current_numbers_vial):
+def check_valid_material_mark(current_material_data, current_numbers_vial, isCheckpathologicalProcess=False):
     for k, v in current_material_data.items():
         if k == "numberVial" and not isinstance(v, int):  # обязательно число
             return False
-        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
+        if isCheckpathologicalProcess and k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
             return False
         if k == "objectValue" and not isinstance(v, int):  # обязательно число
             return False

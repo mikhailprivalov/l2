@@ -127,6 +127,7 @@ class Position(models.Model):
     doctorprofile_updated = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_position_updated'
     )
+    external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
 
     def __str__(self):
         return self.name
@@ -217,6 +218,7 @@ class Department(models.Model):
     doctorprofile_updated = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_department_updated'
     )
+    external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
 
     def __str__(self):
         return self.name
@@ -348,6 +350,7 @@ class EmployeePosition(models.Model):
     )
     tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
     type_work_time = models.ForeignKey(TypeWorkTimeEmployee, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
@@ -537,3 +540,51 @@ class EmployeeWorkingHoursSchedule(models.Model):
     class Meta:
         verbose_name = "Сотрудник - фактическое время за дату"
         verbose_name_plural = "Сотрудники - фактическое время за дату"
+
+
+class CashRegister(models.Model):
+    employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, db_index=True, default=None, on_delete=models.SET_NULL)
+    accounting_day = models.DateField(verbose_name='Дата учета', null=True, blank=True, default=None, db_index=True, help_text='дата')
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Отдел')
+    received_terminal = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+    received_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+    return_terminal = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+    return_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.employee_position.employee.__str__()} {self.accounting_day}'
+
+    class Meta:
+        verbose_name = "Сотрудник - учет финансов за день"
+        verbose_name_plural = "Сотрудники - учет финансов за день"
+
+    @staticmethod
+    def get_cash_register_by_period(date_start, date_end):
+        pass
+
+
+class PlanDepartment(models.Model):
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, verbose_name='Отдел')
+    month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
+    plan = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.department.__str__()} {self.month}'
+
+    class Meta:
+        verbose_name = "Подразделение - план финансовый за месяц"
+        verbose_name_plural = "Подразделения - план финансовый за месяц"
+
+
+class EmployeePositionCountWorkDayPerMonth(models.Model):
+    employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, db_index=True, default=None, on_delete=models.SET_NULL)
+    count_work_day_per_month = models.PositiveSmallIntegerField(db_index=True, blank=True, null=True, default=None, help_text='Кол-во рабочих дней в месяц')
+    month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
+    plan_day_profit = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.employee_position.__str__()} {self.month} {self.count_work_day_per_month}'
+
+    class Meta:
+        verbose_name = "Сотрудник - план финансовый за день"
+        verbose_name_plural = "Сотрудники - план финансовый за день"

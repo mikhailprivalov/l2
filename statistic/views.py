@@ -48,6 +48,7 @@ from .report import (
     expertise_report,
     registry_profit,
     appointed_research,
+    lab_result,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -716,6 +717,7 @@ def statistic_xls(request):
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
         special_fields = request_data.get("special-fields", "false")
+        is_lab_result = request_data.get("is-lab-result", "false")
         medical_exam = request_data.get("medical-exam", "false")
         by_create_directions = request_data.get("by-create-directions", "false")
         is_purpose = 0
@@ -740,7 +742,8 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Отчет")
-        research_title = Researches.objects.values_list('title').get(pk=research_id)
+        research = Researches.objects.get(pk=research_id)
+        research_title = research.title
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         hospital_id = request.user.doctorprofile.hospital_id
@@ -813,6 +816,11 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        elif research.podrazdeleniye and research.podrazdeleniye.p_type == 2 and is_lab_result == "true":
+            researches_sql = sql_func.lab_result_statistics_research(research_id, start_date, end_date, hospital_id)
+            result = lab_result.custom_lab_research_field_fractions(researches_sql)
+            ws = lab_result.lab_result_research_base(ws, d1, d2, result, research_title[0])
+            ws = custom_research.custom_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             if Researches.objects.filter(pk=research_id).first().is_monitoring:
@@ -846,11 +854,11 @@ def statistic_xls(request):
         researches = research.split(",")
         researches = tuple([int(i) for i in researches])
 
-        users_docprofile = [int(i) for i in json.loads(users_docprofile_id)]
+        users_docprofile = [int(json.loads(users_docprofile_id))]
         researches = tuple([int(i) for i in researches])
-        research_data = {i.pk: {"title": i.title, "count": 0} for i in Researches.objects.filter(pk__in=list(researches))}
+        research_data = {r.pk: {"title": r.title, "count": 0} for r in Researches.objects.filter(pk__in=list(researches))}
         research_data[-999] = {"title": ""}
-        users_final_data = {i: research_data.copy() for i in users_docprofile}
+        users_final_data = {k: research_data.copy() for k in users_docprofile}
         researches_sql = sql_func.statistics_research_create_directions(researches, start_date, end_date, tuple(users_docprofile))
         ws = appointed_research.appointed_base(ws, d_s, d_e, research_data)
         doctors_researches_count = appointed_research.parse_data(researches_sql, users_final_data, research_data)

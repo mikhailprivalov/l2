@@ -531,6 +531,7 @@ def patients_get_card_data(request, card_id):
             "has_rmis_card": rc.exists(),
             "custom_workplace": card.work_place != "",
             "work_place_db": card.work_place_db_id or -1,
+            "room_location_db": card.room_location_id if card.room_location_id else -1,
             "work_place_db_title": card.work_place_db.title if card.work_place_db else "",
             "work_department_db": card.work_department_db.pk if card.work_department_db else -1,
             "district": card.district_id or -1,
@@ -716,6 +717,10 @@ def patients_card_save(request):
                 messages.append("Номер карты ТФОМС занят")
                 return JsonResponse({"result": "false", "message": message, "messages": messages, "card_pk": card_pk, "individual_pk": individual_pk})
     c.number_poliklinika = number_poli
+    if request_data.get("room_location_db") and request_data.get("room_location_db") != -1:
+        c.room_location_id = int(request_data.get("room_location_db"))
+    else:
+        c.room_location = None
     c.save()
     if c.individual.primary_for_rmis:
         try:

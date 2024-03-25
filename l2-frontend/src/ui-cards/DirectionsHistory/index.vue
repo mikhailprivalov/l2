@@ -215,6 +215,7 @@
               :class="['status-' + row.status]"
             >
               <strong>
+                <span v-if="row.rmis_number">e</span>
                 {{ row.status }}
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
