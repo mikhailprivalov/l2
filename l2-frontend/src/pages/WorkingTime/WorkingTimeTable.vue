@@ -77,7 +77,7 @@ const changeWorkTime = async (workTime: object) => {
 const columns = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
-  const currentMonth = month - 1;
+  const currentMonth = month;
   const date = new Date(year, currentMonth);
   while (date.getMonth() === currentMonth) {
     days.push(new Date(date));
