@@ -35,14 +35,19 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 
+import api from '@/api';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
+import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
+
+const store = useStore();
 
 const props = defineProps({
   year: {
@@ -59,6 +64,16 @@ const root = getCurrentInstance().proxy.$root;
 const search = ref('');
 
 const employeesWorkTime = ref([]);
+
+const getEmployeesWorkTime = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-work-time', {
+    year: props.year,
+    month: props.month,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  employeesWorkTime.value = result;
+};
 
 const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
   const employeesFio = employee.fio?.toLowerCase();
@@ -157,6 +172,11 @@ const cellStyleOption = {
 const rowStyleOption = {
   stripe: true,
 };
+
+onMounted(() => {
+  getEmployeesWorkTime();
+});
+
 </script>
 
 <style scoped lang="scss">
