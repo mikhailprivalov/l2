@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  onMounted, ref,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
