@@ -105,7 +105,7 @@ def cash_register(request):
         for i in date_per_month
     ]
 
-    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 200, "fixed": 'left'})
+    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 150, "fixed": 'left'})
     table_data = []
 
     if mode == "department":
