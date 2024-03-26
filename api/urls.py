@@ -104,6 +104,7 @@ urlpatterns = [
     path('hospitals/', include('api.hospitals.urls')),
     path('cases/', include('api.cases.urls')),
     path('construct/', include('api.construct.urls')),
+    path('working-time/', include('api.working_time.urls')),
     path('get-prices', views.get_prices),
     path('get-price-data', views.get_price_data),
     path('update-price', views.update_price),

@@ -306,6 +306,13 @@ class Department(models.Model):
         if departments.exists():
             raise ValueError('Отдел с таким названием уже существует')
 
+    @staticmethod
+    def get_active(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        return departments
+
     class Meta:
         verbose_name = 'Отдел'
         verbose_name_plural = 'Отделы'
@@ -529,6 +536,12 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     def __str__(self):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+
+    @staticmethod
+    def get_work_time(date):
+        document = TimeTrackingDocument.objects.filter(month=date)
+        print(document)
+        return []
 
     class Meta:
         verbose_name = "Сотрудник - фактическое время за дату"
