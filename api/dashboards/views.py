@@ -113,6 +113,7 @@ def cash_register(request):
         query_result = get_cash_resister_by_depatment_period(date_start_query, date_end_query)
         data = {}
         all_cash = []
+        current_qr = -1
         for qr in query_result:
             if not data.get(qr.department_id):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "officeRow": True}
@@ -126,14 +127,18 @@ def cash_register(request):
             data[f"Возврат нал {qr.department_id}"][qr.char_day] = f"{qr.return_cash:,.2f}"
             data[f"Возврат терм {qr.department_id}"][qr.char_day] = f"{qr.return_terminal:,.2f}"
             data[f"Итого {qr.department_id}"][qr.char_day] = f"{(qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal):,.2f}"
-            data[f"Итого {qr.department_id}"]["total"] = f'{data[f"Итого {qr.department_id}"]["total"] + (qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal):,.2f}'
+            tmp_total_row = data[f"Итого {qr.department_id}"]["total"]
+            tmp_total_row_one = qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal
+            data[f"Итого {qr.department_id}"]["total"] = f"{(tmp_total_row + tmp_total_row_one):,.2f}"
 
         if len(data) > 0:
             data["Всего"] = {"office": "Всего", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "total": 0, "totalDay": True}
             all_cash = get_total_cash_register_by_dates(date_start_query, date_end_query)
         for cash in all_cash:
             data["Всего"][cash.char_day] = f"{(cash.received_cash + cash.received_terminal - cash.return_cash - cash.return_terminal):,.2f}"
-            data["Всего"]["total"] = f'{data["Всего"]["total"] + (cash.received_cash + cash.received_terminal - cash.return_cash - cash.return_terminal):,.2f}'
+            data["Всего"]["total"] += cash.received_cash + cash.received_terminal - cash.return_cash - cash.return_terminal
+        if len(data) > 0:
+            data["Всего"]["total"] = f'{data["Всего"]["total"]:,.2f}'
         table_data = [v for v in data.values()]
 
     return JsonResponse({"columns": columns, "tableData": table_data})

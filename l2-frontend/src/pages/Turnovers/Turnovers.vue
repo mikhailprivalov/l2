@@ -28,6 +28,7 @@
       <VeTable
         id="table"
         :columns="columns"
+        :max-height="500"
         :table-data="tableData"
         :scroll-width="0"
         :border-y="true"
@@ -89,6 +90,9 @@ const cellStyleOption = {
     }
     return 'table-body-cell-class';
   },
+};
+const virtualScrollOption = {
+  enable: true,
 };
 
 const getTurnoversData = async () => {
