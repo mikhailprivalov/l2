@@ -113,7 +113,6 @@ def cash_register(request):
         query_result = get_cash_resister_by_depatment_period(date_start_query, date_end_query)
         data = {}
         all_cash = []
-        current_qr = -1
         for qr in query_result:
             if not data.get(qr.department_id):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "officeRow": True}
