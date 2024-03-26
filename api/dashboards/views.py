@@ -128,7 +128,7 @@ def cash_register(request):
             data[f"Итого {qr.department_id}"]["total"] += qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal
 
         data["Всего"] = {"office": "Всего", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "total": 0, "totalDay": True}
-        all_cash = get_all_cash_register_by_period(date_start_query, date_end_query)
+        all_cash = get_total_cash_register_by_day(date_start_query, date_end_query)
         for cash in all_cash:
             data["Всего"][cash.char_day] = cash.received_cash + cash.received_terminal - cash.return_cash - cash.return_terminal
             data["Всего"]["total"] += data["Всего"][cash.char_day]
