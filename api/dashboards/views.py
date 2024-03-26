@@ -7,7 +7,7 @@ from django.http import JsonResponse
 
 from dashboards.models import Dashboard
 from dashboards.views import exec_query, get_dashboard
-from integration_framework.employees.sql_func import get_cash_resister_by_depatment_period, get_all_cash_register_by_period
+from integration_framework.employees.sql_func import get_cash_resister_by_depatment_period, get_total_cash_register_by_day
 from laboratory.settings import DASH_REPORT_LIMIT_DURATION_DAYS
 from laboratory.utils import current_time, str_date
 from django.contrib.auth.decorators import login_required
