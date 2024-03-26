@@ -180,6 +180,12 @@ def menu(request):
                     "module": "l2_eds",
                 },
                 {
+                    "url": '/ui/journal-eds-ecp',
+                    "title": "Журнал подписания",
+                    "nt": False,
+                    "access": ["Врач параклиники", "Врач консультаций", "Врач стациоанара"],
+                },
+                {
                     "url": '/ui/plan-hospitalization',
                     "title": "План госпитализации",
                     "nt": False,

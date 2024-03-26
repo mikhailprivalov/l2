@@ -337,7 +337,7 @@ const router = new Router({
         module: 'l2_eds',
       },
     },
-     {
+    {
       path: '/ui/journal-eds-ecp',
       name: 'journal_eds_ecp',
       component: () => import('@/pages/JournalEdsEcp.vue'),
