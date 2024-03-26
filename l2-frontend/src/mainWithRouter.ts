@@ -337,6 +337,19 @@ const router = new Router({
         module: 'l2_eds',
       },
     },
+     {
+      path: '/ui/journal-eds-ecp',
+      name: 'journal_eds_ecp',
+      component: () => import('@/pages/JournalEdsEcp.vue'),
+      meta: {
+        title: 'Журнал подписания',
+        groups: [
+          'Врач параклиники',
+          'Врач консультаций',
+          'Врач стационара',
+        ],
+      },
+    },
     {
       path: '/ui/plan-hospitalization',
       name: 'plan_hospitalization',
