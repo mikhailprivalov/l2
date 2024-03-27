@@ -16,7 +16,9 @@
           >
             <i class="fa fa-arrow-left" />
           </button>
-          <div class="date">{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
+          <div class="date">
+            {{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}
+          </div>
           <button
             class="btn btn-blue-nb arrow-button"
             @click="setNextMonth"
@@ -90,9 +92,6 @@ const cellStyleOption = {
     }
     return 'table-body-cell-class';
   },
-};
-const virtualScrollOption = {
-  enable: true,
 };
 
 const getTurnoversData = async () => {
