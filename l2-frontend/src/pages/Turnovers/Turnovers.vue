@@ -16,7 +16,9 @@
           >
             <i class="fa fa-arrow-left" />
           </button>
-          <div class="date">{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
+          <div class="date">
+            {{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}
+          </div>
           <button
             class="btn btn-blue-nb arrow-button"
             @click="setNextMonth"
@@ -28,6 +30,7 @@
       <VeTable
         id="table"
         :columns="columns"
+        :max-height="500"
         :table-data="tableData"
         :scroll-width="0"
         :border-y="true"

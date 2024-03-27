@@ -60,7 +60,7 @@ def get_cash_resister_by_depatment_period(date_start, date_end):
     return rows
 
 
-def get_total_cash_register_by_day(date_start, date_end):
+def get_total_cash_register_by_dates(date_start, date_end):
     with connection.cursor() as cursor:
         cursor.execute(
             """
