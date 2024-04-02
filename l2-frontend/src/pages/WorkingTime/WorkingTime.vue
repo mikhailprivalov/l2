@@ -32,6 +32,7 @@
     <WorkingTimeTable
       :year="selectedYear"
       :month="selectedMonth"
+      :department="selectedDepartment"
     />
   </div>
 </template>

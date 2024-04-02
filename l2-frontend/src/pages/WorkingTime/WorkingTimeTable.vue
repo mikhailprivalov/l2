@@ -58,6 +58,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  department: {
+    type: Number,
+    required: true,
+  },
 });
 const root = getCurrentInstance().proxy.$root;
 
@@ -69,11 +73,18 @@ const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/get-work-time', {
     year: props.year,
-    month: props.month,
+    month: props.month + 1,
+    departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
   employeesWorkTime.value = [];
 };
+
+watch(() => [props.year, props.month, props.department], () => {
+  if (props.year && props.month && props.department) {
+    getEmployeesWorkTime();
+  }
+}, { immediate: true });
 
 const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
   const employeesFio = employee.fio?.toLowerCase();
@@ -172,10 +183,6 @@ const cellStyleOption = {
 const rowStyleOption = {
   stripe: true,
 };
-
-onMounted(() => {
-  getEmployeesWorkTime();
-});
 
 </script>
 
