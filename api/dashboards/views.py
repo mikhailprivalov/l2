@@ -1,13 +1,14 @@
 import calendar
 import json
 import logging
+from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.http import JsonResponse
 
 from dashboards.models import Dashboard
 from dashboards.views import exec_query, get_dashboard
-from integration_framework.employees.sql_func import get_cash_resister_by_depatment_period
+from integration_framework.employees.sql_func import get_cash_resister_by_depatment_period, get_total_cash_register_by_dates
 from laboratory.settings import DASH_REPORT_LIMIT_DURATION_DAYS
 from laboratory.utils import current_time, str_date
 from django.contrib.auth.decorators import login_required
@@ -105,12 +106,14 @@ def cash_register(request):
         for i in date_per_month
     ]
 
-    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 200, "fixed": 'left'})
+    columns.insert(0, {"key": "office", "field": "office", "title": "Офисы", "align": "left", "width": 150, "fixed": 'left'})
+    columns.append({"key": "total", "field": "total", "title": "Итого", "align": "right", "width": 100})
     table_data = []
 
     if mode == "department":
         query_result = get_cash_resister_by_depatment_period(date_start_query, date_end_query)
         data = {}
+        all_cash = []
         for qr in query_result:
             if not data.get(qr.department_id):
                 data[qr.department_id] = {"office": qr.depart_name, **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "officeRow": True}
@@ -118,12 +121,22 @@ def cash_register(request):
                 data[f"Терминал {qr.department_id}"] = {"office": "Терминал", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "only1stCol": True}
                 data[f"Возврат нал {qr.department_id}"] = {"office": "Возврат нал ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
                 data[f"Возврат терм {qr.department_id}"] = {"office": "Возврат терм ", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}}
-                data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "totalRow": True}
+                data[f"Итого {qr.department_id}"] = {"office": "Итого", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "total": "0", "totalDepartment": True}
             data[f"Наличные {qr.department_id}"][qr.char_day] = f"{qr.received_cash:,.2f}"
             data[f"Терминал {qr.department_id}"][qr.char_day] = f"{qr.received_terminal:,.2f}"
             data[f"Возврат нал {qr.department_id}"][qr.char_day] = f"{qr.return_cash:,.2f}"
             data[f"Возврат терм {qr.department_id}"][qr.char_day] = f"{qr.return_terminal:,.2f}"
             data[f"Итого {qr.department_id}"][qr.char_day] = f"{(qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal):,.2f}"
+            tmp_total_depart = qr.received_cash + qr.received_terminal - qr.return_cash - qr.return_terminal
+            data[f"Итого {qr.department_id}"]["total"] = f'{(Decimal(data[f"Итого {qr.department_id}"]["total"].replace(",", "")) + tmp_total_depart):,.2f}'
+
+        if len(data) > 0:
+            data["Всего"] = {"office": "Всего", **{f"{i}.{date_start_month}.{date_start_year}": "" for i in date_per_month}, "total": "0", "totalDay": True}
+            all_cash = get_total_cash_register_by_dates(date_start_query, date_end_query)
+        for cash in all_cash:
+            data["Всего"][cash.char_day] = f"{(cash.received_cash + cash.received_terminal - cash.return_cash - cash.return_terminal):,.2f}"
+            tmp_total_total = cash.received_cash + cash.received_terminal - cash.return_cash - cash.return_terminal
+            data["Всего"]["total"] = f'{(Decimal(data["Всего"]["total"].replace(",", "")) + tmp_total_total):,.2f}'
         table_data = [v for v in data.values()]
 
     return JsonResponse({"columns": columns, "tableData": table_data})

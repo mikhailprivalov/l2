@@ -21,7 +21,7 @@ from appconf.manager import SettingManager
 from clients.models import Card
 from directions.models import Napravleniya, Issledovaniya
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER, BASE_DIR
+from laboratory.settings import FONTS_FOLDER, BASE_DIR, ROUTE_LIST_ROW_HEIGHTS
 from utils.xh import save_tmp_file, correspondence_get_file_hash
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
@@ -462,7 +462,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             )
             step += 1
 
-    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=25 * mm, hAlign='LEFT')
+    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=ROUTE_LIST_ROW_HEIGHTS * mm, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [

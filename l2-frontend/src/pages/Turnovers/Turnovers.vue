@@ -16,7 +16,9 @@
           >
             <i class="fa fa-arrow-left" />
           </button>
-          <div class="date">{{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}</div>
+          <div class="date">
+            {{ currentDate.toLocaleDateString('ru-RU', { month: "long", year: "numeric" }) }}
+          </div>
           <button
             class="btn btn-blue-nb arrow-button"
             @click="setNextMonth"
@@ -28,6 +30,7 @@
       <VeTable
         id="table"
         :columns="columns"
+        :max-height="500"
         :table-data="tableData"
         :scroll-width="0"
         :border-y="true"
@@ -78,11 +81,14 @@ const cellStyleOption = {
     if (row.only1stCol && column.field === 'office') {
       return 'table-body-cell-class-type-cash';
     }
-    if (row.totalRow) {
+    if (row.totalDepartment) {
       return 'table-body-cell-class-total';
     }
     if (row.officeRow) {
       return 'table-body-cell-class-office';
+    }
+    if (row.totalDay) {
+      return 'table-body-cell-class-total-day';
     }
     return 'table-body-cell-class';
   },
@@ -155,6 +161,10 @@ onMounted(() => {
 }
 .table-body-cell-class-total {
   background-color: #41c0c6 !important;
+  padding: 0 0 0 10px !important;
+}
+.table-body-cell-class-total-day {
+  background-color: #c07a9f !important;
   padding: 0 0 0 10px !important;
 }
 
