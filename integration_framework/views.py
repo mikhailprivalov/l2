@@ -370,9 +370,17 @@ def format_time_if_is_not_none(t):
 def issledovaniye_data(request):
     pk = request.GET.get("pk")
     ignore_sample = request.GET.get("ignoreSample") == "true"
+    ignore_fsli = request.GET.get("ignoreFsli") == "true"
+    need_ecp_code = request.GET.get("needEcpCode") == "true"
     i = directions.Issledovaniya.objects.get(pk=pk)
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
-    results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli="").exclude(fraction__not_send_odli=True)
+    if ignore_fsli:
+        results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__not_send_odli=True)
+    else:
+        results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli="").exclude(fraction__not_send_odli=True)
+    print(need_ecp_code)
+    if need_ecp_code:
+        results = results.exclude(fraction__ecp_id__isnull=True).exclude(fraction__ecp_id="")
     if (
         (not ignore_sample and not sample)
         or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic and not i.research.is_slave_hospital)
