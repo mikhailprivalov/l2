@@ -9,7 +9,7 @@ def get_work_time_by_document(document_id: int):
         cursor.execute(
             """
         SELECT employees_employee.family, employees_employee.name, employees_employee.patronymic, employees_position.name as position_name, 
-        employees_employeeworkinghoursschedule.id as worktime_id, start, "end", day, employee_position_id FROM employees_employeeWorkingHoursSchedule
+        employees_employeeworkinghoursschedule.id as worktime_id, start, "end", day, work_day_status, employee_position_id FROM employees_employeeWorkingHoursSchedule
           INNER JOIN employees_employeeposition ON employees_employeeWorkingHoursSchedule.employee_position_id = employees_employeeposition.id    
           INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
           INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id

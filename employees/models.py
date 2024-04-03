@@ -1,11 +1,13 @@
 import calendar
 import datetime
 
+import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
 from employees.sql_func import get_employees_by_department, get_work_time_by_document
 from hospitals.models import Hospitals
+from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
 from slog.models import Log
 from users.models import DoctorProfile
@@ -559,15 +561,18 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def get_work_time(year: int, month: int, department_id: int):
-        first_date = datetime.date(year, month, 1)
-        last_day_month = calendar.monthrange(year, month)[1]
-        last_date_month = datetime.date(year, month, last_day_month)
-        template_employee = EmployeeWorkingHoursSchedule.get_employees_template(year, month, last_day_month, department_id)
-        document = TimeTrackingDocument.objects.filter(month__gte=first_date, month__lte=last_date_month, department_id=department_id).last()
+        first_date_month = datetime.date(year, month, 1)
+        length_month = calendar.monthrange(year, month)[1]
+        last_date_month = datetime.date(year, month, length_month)
+        template_employee = EmployeeWorkingHoursSchedule.get_employees_template(year, month, length_month, department_id)
+        document = TimeTrackingDocument.objects.filter(month__gte=first_date_month, month__lte=last_date_month, department_id=department_id).last()
         if document:
             employees_work_time = get_work_time_by_document(document.pk)
-            for time in employees_work_time:
-                print('ура')
+            for work_day in employees_work_time:
+                work_time = template_employee[work_day.employee_position_id][work_day.start.strftime('%Y.%m.%d')].copy()
+                work_time["startWorkTime"] = work_day.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+                work_time["endWorkTime"] = work_day.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+                template_employee[work_day.employee_position_id][work_day.start.strftime('%Y.%m.%d')] = work_time
         result = [value for value in template_employee.values()]
         return result
 

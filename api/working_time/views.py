@@ -18,5 +18,4 @@ def get_departments(request):
 def get_work_time(request):
     request_data = json.loads(request.body)
     result = EmployeeWorkingHoursSchedule.get_work_time(request_data["year"], request_data["month"], request_data["departmentId"])
-    print(result)
     return JsonResponse({"result": result})
