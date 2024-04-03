@@ -356,6 +356,7 @@ def direction_data(request):
             "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
             "author": author_doctor(iss[iss_index].doc_confirmation) if iss[iss_index].doc_confirmation else None,
             "legalAuthenticator": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
+            "doctorAdditionalInfo": direction.doc.
         }
     )
 
@@ -437,6 +438,9 @@ def issledovaniye_data(request):
 
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
+
+    doc_create = i.napravleniye.doc.
+
     return Response(
         {
             "ok": True,
