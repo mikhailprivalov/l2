@@ -81,6 +81,8 @@ def get_json_protocol_data(pk, is_paraclinic=False):
                 data["Начало патологии"] = start_pathological_process(f"{date_death} {time_death}", int(period_befor_death), type_period_befor_death)
         data["Номер"] = f"{data['Префикс номера']}{data['Номер']}"
     doctor_confirm_obj = iss.doc_confirmation
+    if doctor_confirm_obj.replace_doctor_cda:
+        doctor_confirm_obj = doctor_confirm_obj.replace_doctor_cda
     if iss.doc_confirmation.hospital.legal_auth_doc_id and SettingManager.get("use_def_hospital_legal_auth", default='false', default_type='b'):
         doctor_legal_confirm_obj = DoctorProfile.objects.get(pk=int(iss.doc_confirmation.hospital.legal_auth_doc_id))
     author_data = author_doctor(doctor_confirm_obj)
@@ -226,8 +228,8 @@ def add_absent_field(data, research_data):
                     if val.lower() == data[k].lower():
                         tmp_data[k] = {"code": key, "title": val}
             elif k == "вэ-Время окончания":
-                data[k] = data[k].replace(":", "")
-            elif k == "вэ-Время начала":
+                data[k] = data[k].replace(":", "").replace(".", "")
+            elif k == "увэ-Время начала":
                 data[k] = data[k].replace(":", "")
             elif k == "вэ-Дата начала госпитализации":
                 data[k] = normalize_dots_date(data[k]).replace("-", "")
@@ -236,6 +238,8 @@ def add_absent_field(data, research_data):
             elif k == "вэ-Проведенное лечение":
                 res_treatment = json.loads(data[k])
                 data[k] = " ".join([f"{res_t['pharmaTitle']} - {res_t['mode']};" for res_t in res_treatment])
+        if not data.get("вэ-Время начала"):
+            data["вэ-Время начала"] = "1000"
 
     return {**data, **tmp_data}
 
@@ -344,6 +348,23 @@ def author_doctor(doctor_confirm_obj, is_recursion=False):
     author["name"]["family"] = doctor_confirm_obj.family
     author["name"]["name"] = doctor_confirm_obj.name
     author["name"]["patronymic"] = doctor_confirm_obj.patronymic
+    author["rmis_login"] = doctor_confirm_obj.rmis_login
+    author["rmis_password"] = doctor_confirm_obj.rmis_password
+    author["rmis_employee_id"] = doctor_confirm_obj.rmis_employee_id
+    author["rmis_resource_id"] = doctor_confirm_obj.rmis_resource_id
+    author["rmis_department_id"] = doctor_confirm_obj.podrazdeleniye.ecp_code
+    additional_data = None
+    if doctor_confirm_obj.additional_info:
+        if "{" in doctor_confirm_obj.additional_info and "}" in doctor_confirm_obj.additional_info:
+            try:
+                additional_data = json.loads(doctor_confirm_obj.additional_info)
+                if not additional_data or not isinstance(additional_data, dict):
+                    additional_data = {}
+            except Exception:
+                additional_data = None
+
+    author["additional_data"] = additional_data
+
     return author
 
 

@@ -37,7 +37,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directory_researches.is_expertise,
             person_contract.id as person_contract_id,
             person_contract.dir_list as contract_dirs,
-            directions_napravleniya.hospital_id as dir_hosp
+            directions_napravleniya.hospital_id as dir_hosp,
+            directions_napravleniya.rmis_number as rmis_number
         FROM directions_issledovaniya
         LEFT JOIN directory_researches
         ON directions_issledovaniya.research_id = directory_researches.Id
@@ -108,7 +109,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.visit_date,
             directions_napravleniya.time_microbiology_receive,
             directions_napravleniya.time_gistology_receive,
-            is_case
+            is_case,
+            directions_napravleniya.rmis_number
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive
@@ -233,10 +235,10 @@ def get_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False,
         WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
           is_paraclinic = TRUE
         WHEN %(is_lab)s = FALSE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-          is_doc_refferal = TRUE
+          is_doc_refferal = TRUE or is_form = TRUE
         
         WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE  THEN 
-          is_paraclinic = TRUE or is_doc_refferal = TRUE
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE
              
         WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = FALSE THEN
             podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
@@ -245,10 +247,10 @@ def get_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False,
           is_paraclinic = TRUE and is_doc_refferal = FALSE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
         
         WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-          is_paraclinic = FALSE and is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+          is_paraclinic = FALSE and is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
         
         WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE THEN
-          is_paraclinic = TRUE or is_doc_refferal = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
         END
         )
         

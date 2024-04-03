@@ -68,7 +68,7 @@ cl_bold_tag = '</font>'
 space_symbol = '&nbsp;'
 
 
-def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     # Мед. св-во о смерти 106/у
     data_individual = direction.client.get_data_individual()
     data = {}

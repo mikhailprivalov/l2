@@ -21,7 +21,7 @@ from appconf.manager import SettingManager
 from clients.models import Card
 from directions.models import Napravleniya, Issledovaniya
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER, BASE_DIR
+from laboratory.settings import FONTS_FOLDER, BASE_DIR, ROUTE_LIST_ROW_HEIGHTS
 from utils.xh import save_tmp_file, correspondence_get_file_hash
 from directions.views import gen_pdf_dir as f_print_direction
 from django.http import HttpRequest
@@ -39,7 +39,7 @@ def form_01(request_data):
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
     napr = Napravleniya.objects.filter(pk__in=work_dir)
-    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title and n.client == ind_card]
+    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title.lower() and n.client == ind_card]
     if not dir_temp:
         return False
 
@@ -198,7 +198,7 @@ def form_02(request_data):
     fin_title = request_data["fin_title"]
     type_additional_pdf = request_data["type_additional_pdf"]
     napr = Napravleniya.objects.filter(pk__in=work_dir)
-    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title and n.client == ind_card]
+    dir_temp = [n.pk for n in napr if n.istochnik_f.title.lower() == fin_title.lower() and n.client == ind_card]
     if not dir_temp:
         return False
 
@@ -311,6 +311,7 @@ def form_02(request_data):
 
     doc.build(objs)
     pdf = buffer.getvalue()
+    result_join_pdf = None
 
     direction_data = []
     if additional_data_from_file and appendix_direction_list:
@@ -335,7 +336,8 @@ def form_02(request_data):
         if len(direction_data) > 0:
             http_params = {"napr_id": direction_data, "from_additional_pages": True, "from_appendix_pages": True}
             result_join_pdf = join_two_pdf_data(f_print_direction, http_params, request_data['user'], buffer, ind_card)
-
+        if not result_join_pdf:
+            result_join_pdf = pdf
         return result_join_pdf
 
     buffer.close()
@@ -460,7 +462,7 @@ def add_route_list(objs, appendix_route_list, patient_data, styles_obj, addition
             )
             step += 1
 
-    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=25 * mm, hAlign='LEFT')
+    tbl = Table(route_list, colWidths=(25 * mm, 28 * mm, 47 * mm, 45 * mm, 45 * mm), rowHeights=ROUTE_LIST_ROW_HEIGHTS * mm, hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [

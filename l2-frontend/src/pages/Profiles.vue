@@ -273,7 +273,7 @@
             </div>
           </div>
           <div
-            v-if="l2_user_data.rmis_enabled && modules.l2_rmis_queue"
+            v-if="modules.l2_rmis_queue || modules.l2_schedule"
             class="row"
           >
             <div
@@ -553,13 +553,13 @@
             </div>
           </div>
           <div
-            v-if="modules.l2_rmis_queue && user.rmis_location !== ''"
+            v-if="(modules.l2_rmis_queue || modules.l2_schedule) && (user.rmis_location !== '')"
             class="more-title"
           >
             Услуги, оказываемые пользователем:
           </div>
           <div
-            v-if="modules.l2_rmis_queue && user.rmis_location !== ''"
+            v-if="(modules.l2_rmis_queue || modules.l2_schedule) && user.rmis_location !== ''"
             class="row"
             style="margin-right: 0"
           >
@@ -808,7 +808,7 @@
             class="row left-padding-10"
           >
             <div
-              class="col-xs-6 left-padding"
+              class="col-xs-6 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -855,6 +855,47 @@
                   class="form-control"
                   type="date"
                 >
+              </div>
+            </div>
+            <div
+              class="col-xs-4 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Исполнитель в протколе</span>
+                <Treeselect
+                  v-model="user.replace_doctor_cda"
+                  class="treeselect-nbr treeselect-wide treeselect-34px"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :options="user.department_doctors"
+                  placeholder="Врач для CDA"
+                  :append-to-body="true"
+                  :clearable="false"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <span class="input-group-addon">Доп. инфо</span>
+                <textarea
+                  v-model="user.additionalInfo"
+                  v-tippy
+                  title="Дополнительная информация описывать словарем { key: value }"
+                  class="form-control border-top-none"
+                  rows="3"
+                />
               </div>
             </div>
           </div>
@@ -966,6 +1007,7 @@ export default {
       specialities: [],
       positions: [],
       districts: [],
+      doctor_profiles: [],
       resource_researches: [],
       setup_analyzer: false,
       setup_forbidden: false,
@@ -993,6 +1035,9 @@ export default {
         notControlAnketa: false,
         date_extract_employee: '',
         date_stop_certificate: '',
+        replace_doctor_cda: -1,
+        department_doctors: [],
+        additionalInfo: '{}',
       },
       selected_hospital: -1,
       open_pk: -2,
@@ -1194,12 +1239,13 @@ export default {
         this.departments = [];
       }
       const {
-        departments, specialities, positions, districts,
+        departments, specialities, positions, districts, doctorProfiles,
       } = await usersPoint.loadUsers(this, 'selected_hospital');
       this.departments = departments;
       this.specialities = specialities;
       this.positions = positions;
       this.districts = districts;
+      this.doctor_profiles = doctorProfiles;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
     async open(pk, dep = null) {
@@ -1311,7 +1357,7 @@ export default {
 }
 
 .left-wrapper {
-  height: calc(100% - 73px);
+  height: calc(100% - 75px);
   padding-top: 5px;
   overflow-y: auto;
 }
@@ -1529,5 +1575,8 @@ li.selected {
 }
 .left-padding-10 {
   padding-left: 10px
+}
+.border-top-none {
+  border-top: 0;
 }
 </style>

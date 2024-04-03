@@ -6,8 +6,10 @@ from dateutil.relativedelta import relativedelta
 from appconf.manager import SettingManager
 import simplejson as json
 
+from doctor_schedule.views import get_available_hospital_resource_slot
 from ecp_integration.sql_func import get_doctors_rmis_location_by_research
 from laboratory.utils import current_time, TZ, strdatetimeru
+from utils.auth import has_group
 from utils.dates import normalize_dash_date, normalize_dots_date
 from django.core.cache import cache
 from laboratory.settings import RMIS_PROXY, ECP_SEARCH_PATIENT
@@ -161,32 +163,43 @@ def search_patient_ecp_by_fio(patient, return_first_element=True):
         return [i['Person_id'] for i in result['data']]
 
 
-def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id):
+def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, hospital_id, user_data):
     doctors = get_doctors_rmis_location_by_research(research_pk, hospital_id)
     doctors_has_free_date = {}
     unique_date = []
+    req_result = {'data': []}
     for d in doctors:
-        sess_id = request_get_sess_id()
-        if "@R" in d.rmis_location:
-            key_time = "TimeTableResource_begTime"
-            rmis_location_resource = d.rmis_location[:-2]
-            date_start_r = f"{date_start} 08:00:00"
-            date_end_r = f"{date_end} 23:00:00"
-            req_result = make_request_get(
-                "TimeTableResource/TimeTableResourceFreeDateTime",
-                query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start_r}&TimeTableResource_end={date_end_r}",
-                sess_id=sess_id,
-            )
+        if d.rmis_location.find("@L") > -1:
+            key_time = "InternalTimeTableResource_begTime"
+            result_internal_resource = get_available_hospital_resource_slot(research_pk, date_start, date_end, allow_cito=has_group(user_data, 'Цито-запись в расписании'))
+            doctor_internal_schedule_date = []
+            for key_is_date, val_is_date_info in result_internal_resource['dates'].items():
+                for resource_info in val_is_date_info:
+                    if resource_info.get("rmis_location") == d.rmis_location:
+                        doctor_internal_schedule_date.append(key_is_date)
+            doctor_internal_schedule_date = sorted(set(doctor_internal_schedule_date))
+            req_result['data'] = [{key_time: i} for i in doctor_internal_schedule_date]
+            if len(req_result.get('data')) == 0:
+                continue
         else:
-            key_time = "TimeTableGraf_begTime"
-            req_result = make_request_get(
-                "TimeTableGraf/TimeTableGrafFreeDate",
-                query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}",
-                sess_id=sess_id,
-            )
-
-        if req_result.get('data') is None:
-            return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
+            sess_id = request_get_sess_id()
+            if d.rmis_location.find("@R") > -1:
+                key_time = "TimeTableResource_begTime"
+                rmis_location_resource = d.rmis_location[:-2]
+                date_start_r = f"{date_start} 08:00:00"
+                date_end_r = f"{date_end} 23:00:00"
+                req_result = make_request_get(
+                    "TimeTableResource/TimeTableResourceFreeDateTime",
+                    query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date_start_r}&TimeTableResource_end={date_end_r}",
+                    sess_id=sess_id,
+                )
+            else:
+                key_time = "TimeTableGraf_begTime"
+                req_result = make_request_get(
+                    "TimeTableGraf/TimeTableGrafFreeDate",
+                    query=f"Sess_id={sess_id}&MedStaffFact_id={d.rmis_location}&TimeTableGraf_beg={date_start}&TimeTableGraf_end={date_end}",
+                    sess_id=sess_id,
+                )
         schedule_data = req_result['data']
         if len(schedule_data) > 0:
             message = ""
@@ -214,27 +227,41 @@ def get_doctors_ecp_free_dates_by_research(research_pk, date_start, date_end, ho
     return {"doctors_has_free_date": doctors_has_free_date, "unique_date": sorted(set(unique_date))}
 
 
-def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00'):
-    sess_id = request_get_sess_id()
-    if not sess_id:
-        return []
-    if "@R" in rmis_location:
-        key_time = "TimeTableResource_begTime"
-        type_slot = "TimeTableResource_id"
-        rmis_location_resource = rmis_location[:-2]
-        date = f"{date} {time}"
-        req_result = make_request_get(
-            "TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}", sess_id=sess_id
-        )
+def get_doctor_ecp_free_slots_by_date(rmis_location, date, time='08:00:00', research_pk=None, user_data=None):
+    req_result = {'data': []}
+    sess_id = None
+    if rmis_location.find("@L") > -1:
+        key_time = "InternalTimeTableResource_begTime"
+        type_slot = "InternalTimeTableResource_id"
+        result = get_available_hospital_resource_slot(research_pk, date, date, allow_cito=has_group(user_data, 'Цито-запись в расписании'))
+        for key_is_date, values_date in result['dates'].items():
+            for resource_data in values_date:
+                if resource_data.get("rmis_location") == rmis_location:
+                    for slot_data in resource_data.get("slots"):
+                        data_time = slot_data["title"].split("-")
+                        data_time = f"{data_time[0].strip()}:00"
+                        req_result["data"].append({type_slot: slot_data["pk"], key_time: f"{date} {data_time}"})
     else:
-        key_time = "TimeTableGraf_begTime"
-        type_slot = "TimeTableGraf_id"
-        req_result = make_request_get("TimeTableGraf/TimeTableGrafFreeTime", query=f"Sess_id={sess_id}&MedStaffFact_id={rmis_location}&TimeTableGraf_begTime={date}", sess_id=sess_id)
+        sess_id = request_get_sess_id()
+        if not sess_id:
+            return []
+        if rmis_location.find("@R") > -1:
+            key_time = "TimeTableResource_begTime"
+            type_slot = "TimeTableResource_id"
+            rmis_location_resource = rmis_location[:-2]
+            date = f"{date} {time}"
+            req_result = make_request_get(
+                "TimeTableResource/TimeTableResourceFreeDateTime", query=f"Sess_id={sess_id}&Resource_id={rmis_location_resource}&TimeTableResource_beg={date}", sess_id=sess_id
+            )
+        else:
+            key_time = "TimeTableGraf_begTime"
+            type_slot = "TimeTableGraf_id"
+            req_result = make_request_get("TimeTableGraf/TimeTableGrafFreeTime", query=f"Sess_id={sess_id}&MedStaffFact_id={rmis_location}&TimeTableGraf_begTime={date}", sess_id=sess_id)
     free_slots = req_result['data']
     if len(free_slots) > 0:
         slots = sorted(free_slots, key=lambda k: k[key_time])
-        free_slots_params = [{"pk": x[type_slot], "title": datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M'), "typeSlot": type_slot} for x in slots]
-        if type_slot == "TimeTableGraf_id":
+        free_slots_params = [{"pk": x[type_slot], "title": f"{datetime.datetime.strptime(x[key_time], '%Y-%m-%d %H:%M:%S').strftime('%H:%M')}", "typeSlot": type_slot} for x in slots]
+        if type_slot == "TimseTableGraf_id":
             for param in free_slots_params:
                 slot_type_id = get_time_table_graf_by_id(param["pk"], sess_id)
                 param["slotTypeId"] = slot_type_id

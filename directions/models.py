@@ -420,6 +420,7 @@ class RegisteredOrders(models.Model):
     totally_completed = models.BooleanField(default=False, db_index=True, help_text='Все исследования по заказу завершены')
     need_check_for_results_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление результатов')
     created_at = models.DateTimeField(auto_now_add=True)
+    hl7 = models.TextField(verbose_name="HL7 в base64", blank=True, null=True, default=None)
 
     def __str__(self):
         return f"{self.order_number} {self.patient_card}"
@@ -519,6 +520,7 @@ class Napravleniya(models.Model):
     amd_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')
     amd_excluded = models.BooleanField(default=False, blank=True, help_text='Исключить из выгрузки в АМД?')
+    amd_message = models.TextField(blank=True, null=True, default=None, help_text="Сообщение об ошибке АМД")
     purpose = models.CharField(max_length=64, null=True, blank=True, default=None, db_index=True, choices=PURPOSES, help_text="Цель направления")
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация', on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
@@ -1063,6 +1065,7 @@ class Napravleniya(models.Model):
         external_order=None,
         price_name_id=None,
         slot_fact_id=None,
+        id_in_hospital=None,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1106,6 +1109,7 @@ class Napravleniya(models.Model):
             hospital=doc.hospital or Hospitals.get_default_hospital(),
             external_order=external_order,
             price_name_id=price_name_id,
+            id_in_hospital=id_in_hospital,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1303,6 +1307,7 @@ class Napravleniya(models.Model):
         case_by_direction=False,
         plan_start_date=None,
         slot_fact_id=None,
+        id_in_hospital=None,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
         if case_id > -1 and case_by_direction:
@@ -1568,6 +1573,7 @@ class Napravleniya(models.Model):
                                 external_order=external_order,
                                 price_name_id=price_name,
                                 slot_fact_id=slot_fact_id,
+                                id_in_hospital=id_in_hospital,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
                             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
@@ -1600,6 +1606,7 @@ class Napravleniya(models.Model):
                             external_order=external_order,
                             price_name_id=price_name,
                             slot_fact_id=slot_fact_id,
+                            id_in_hospital=id_in_hospital,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1632,6 +1639,7 @@ class Napravleniya(models.Model):
                             external_order=external_order,
                             price_name_id=price_name,
                             slot_fact_id=slot_fact_id,
+                            id_in_hospital=id_in_hospital,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1853,6 +1861,7 @@ class Napravleniya(models.Model):
                     price_category=price_category,
                     hospital=hospital_override,
                     slot_fact_id=slot_fact_id,
+                    id_in_hospital=id_in_hospital,
                 )
                 result["list_id"].append(new_direction.pk)
                 Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()

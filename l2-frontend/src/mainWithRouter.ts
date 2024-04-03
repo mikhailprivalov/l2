@@ -95,6 +95,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/laboratory',
+      name: 'construct_laboratory',
+      component: () => import('@/construct/ConstructLaboratory.vue'),
+      meta: {
+        title: 'Лабораторные исследования',
+        fullPageLayout: true,
+        groups: ['Конструктор: Лабораторные исследования'],
+      },
+    },
+    {
       path: '/ui/construct/screening',
       name: 'construct_screening',
       component: () => import('@/construct/ConstructScreening.vue'),
@@ -707,6 +717,15 @@ const router = new Router({
         narrowLayout: true,
         title: 'Управление анализаторами',
         groups: ['Управление анализаторами'],
+      },
+    },
+    {
+      path: '/ui/turnovers',
+      name: 'Turnovers',
+      component: () => import('@/pages/Turnovers/Turnovers.vue'),
+      meta: {
+        title: 'Обороты',
+        groups: ['Обороты'],
       },
     },
     {

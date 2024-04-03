@@ -469,7 +469,7 @@ def directions_history(request):
     status_set = {-2}
     lab = set()
     lab_title = None
-    person_contract_dirs, planed_doctor, register_number = "", "", ""
+    person_contract_dirs, planed_doctor, register_number, rmis_number = "", "", "", ""
     created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
     user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
@@ -525,6 +525,7 @@ def directions_history(request):
                         'person_contract_dirs': person_contract_dirs,
                         'planed_doctor': planed_doctor,
                         'register_number': register_number,
+                        'rmis_number': rmis_number,
                     }
                 )
                 child_researches_titles = ""
@@ -532,6 +533,8 @@ def directions_history(request):
                 person_contract_dirs = ""
                 planed_doctor = ""
                 register_number = ""
+                rmis_number = ""
+
             dir = i[0]
             expertise_data = get_expertise(dir)
             is_expertise = False
@@ -616,6 +619,8 @@ def directions_history(request):
             register_number = i[29]
         if i[30]:
             planed_doctor = f"{i[30]} {i[31]} {i[32]}"
+        if i[37]:
+            rmis_number = i[37]
 
     status = min(status_set)
     if len(lab) > 0:
@@ -653,6 +658,7 @@ def directions_history(request):
                 'person_contract_dirs': person_contract_dirs,
                 'planed_doctor': planed_doctor,
                 'register_number': register_number,
+                'rmis_number': rmis_number,
             }
         )
     res['directions'] = final_result
@@ -1623,6 +1629,9 @@ def directions_paraclinic_form(request):
 
                 iss = {
                     "pk": i.pk,
+                    "amd": d.amd_status,
+                    "amd_number": d.amd_number,
+                    "direction_pk": d.pk,
                     "research": {
                         "pk": i.research_id,
                         "title": i.research.title,
@@ -1645,6 +1654,7 @@ def directions_paraclinic_form(request):
                         "r_type": i.research.r_type,
                         "show_more_services": i.research.show_more_services and not i.research.is_form and not i.research.is_microbiology,
                         "enabled_add_files": i.research.enabled_add_files,
+                        "is_need_send_egisz": i.research.is_need_send_egisz,
                     },
                     "pacs": None if not i.research.podrazdeleniye or not i.research.podrazdeleniye.can_has_pacs else search_dicom_study(d.pk),
                     "examination_date": i.get_medical_examination(),
@@ -2596,14 +2606,17 @@ def directions_paraclinic_history(request):
             "all_saved": True,
             "amd": direction.amd_status,
             "amd_number": direction.amd_number,
+            "is_need_send_egisz": True,
         }
         for i in Issledovaniya.objects.filter(napravleniye=direction).order_by("pk"):
-            iss = {"title": i.research.get_title(), "saved": i.time_save is not None, "confirmed": i.time_confirmation is not None}
+            iss = {"title": i.research.get_title(), "saved": i.time_save is not None, "confirmed": i.time_confirmation is not None, "is_need_send_egisz": i.research.is_need_send_egisz}
             d["iss"].append(iss)
             if not iss["saved"]:
                 d["all_saved"] = False
             if not iss["confirmed"]:
                 d["all_confirmed"] = False
+            if not iss["is_need_send_egisz"]:
+                d["is_need_send_egisz"] = False
         response["directions"].append(d)
     return JsonResponse(response)
 
@@ -2700,6 +2713,12 @@ def last_field_result(request):
         else:
             work_place = ""
         result = {"value": work_place}
+    elif request_data["fieldPk"].find('%district') != -1:
+        if c.district:
+            district = c.district.title
+        else:
+            district = ""
+        result = {"value": district}
     elif request_data["fieldPk"].find('%hospital') != -1:
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
@@ -2834,6 +2853,11 @@ def last_field_result(request):
         if len(work_data) >= 2:
             work_department = work_data[1]
         result = {"value": work_department.strip()}
+    elif request_data["fieldPk"].find('%db_department') != -1:
+        work_data = ""
+        if c.work_department_db:
+            work_data = c.work_department_db.title
+        result = {"value": work_data.strip()}
     elif request_data["fieldPk"].find('%harmful_factor') != -1:
         result = {"value": c.harmful_factor}
     elif request_data["fieldPk"].find('%proto_operation') != -1:
@@ -3613,6 +3637,13 @@ def tubes_register_get(request):
 
     for pk in pks:
         val = TubesRegistration.objects.get(number=pk)
+        issledovanie_in_tube = Issledovaniya.objects.filter(tubes__id=val.pk).first()
+        if issledovanie_in_tube:
+            all_issledovania = Issledovaniya.objects.filter(napravleniye_id=issledovanie_in_tube.napravleniye_id)
+            for issledovanie in all_issledovania:
+                if len(issledovanie.tubes.all()) == 0:
+                    issledovanie.tubes.add(val.pk)
+                    issledovanie.save()
         if not val.doc_get and not val.time_get:
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()
@@ -3841,7 +3872,7 @@ def eds_documents(request):
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
     if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
-        direction.client.individual.sync_with_tfoms()
+        # direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
             return JsonResponse({"documents": "", "edsTitle": "", "executors": "", "error": True, "message": "У пациента некорректный СНИЛС"})
@@ -3852,6 +3883,12 @@ def eds_documents(request):
     if not direction.is_all_confirm():
         return status_response(False, 'Направление должно быть подтверждено!')
 
+    documents = process_to_sign_direction(direction, pk, request.user, iss_obj)
+
+    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
+
+
+def process_to_sign_direction(direction, pk, user, iss_obj):
     required_signatures = direction.required_signatures(need_save=True)
 
     documents = []
@@ -3901,7 +3938,7 @@ def eds_documents(request):
                         "inline": '1',
                         "protocol_plain_text": '1',
                     },
-                    'user': request.user,
+                    'user': user,
                     'plain_response': True,
                 }
                 filename = f'{pk}-{last_time_confirm}.pdf'
@@ -3944,8 +3981,7 @@ def eds_documents(request):
         }
 
         documents.append(document)
-
-    return JsonResponse({"documents": documents, "edsTitle": direction.get_eds_title(), "executors": direction.get_executors()})
+    return documents
 
 
 @login_required
@@ -4064,8 +4100,10 @@ def eds_to_sign(request):
             elif mode == 'my':
                 d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
         else:
-            # TODO: тут нужен фильтр, что получены все необходимые подписи, кроме Медицинская организация, если mode == 'mo'
-            # TODO: тут нужен фильтр, что не получена подпись Врач, если mode == 'my'
+            if mode == 'mo':
+                d_qs = d_qs.filter(directiondocument__documentsign__sign_type='Врач', directiondocument__is_archive=False)
+            elif mode == 'my':
+                d_qs = d_qs.exclude(directiondocument__documentsign__sign_type='Врач')
             d_qs = d_qs.filter(eds_total_signed=False)
 
     d: Napravleniya

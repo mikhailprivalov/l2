@@ -79,7 +79,7 @@ def string_check(text: str, value: str = "да") -> bool:
     return text.lower() == value.lower()
 
 
-def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None):
+def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
     """
     112.01 - Извещение о НР ЛП
     """

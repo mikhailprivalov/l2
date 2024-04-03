@@ -658,6 +658,7 @@ def current_user_info(request):
             )
 
             ret["fio"] = doctorprofile.get_full_fio()
+            ret["snils"] = doctorprofile.snils
             ret["shortFio"] = doctorprofile.get_fio(with_space=False)
             ret["hasTOTP"] = doctorprofile.totp_secret is not None
             ret["email"] = doctorprofile.email or ""
@@ -1002,10 +1003,21 @@ def companies_find(request):
     return JsonResponse({"data": companies_data})
 
 
+@login_required
 def company_departments_find(request):
     request_data = json.loads(request.body)
     company_departments = CompanyDepartment.search_departments(request_data["company_db"])
     return JsonResponse({"data": company_departments})
+
+
+@login_required
+def load_room_locations(request):
+    if "Изменить хранение карты" in [str(x) for x in request.user.groups.all()]:
+        disable_place_card = False
+    else:
+        disable_place_card = True
+    load_room_locations = [{"id": r.pk, "label": r.title, "isDisabled": disable_place_card} for r in Room.objects.filter(type=0)]
+    return JsonResponse({"data": load_room_locations})
 
 
 @login_required
@@ -1446,6 +1458,7 @@ def user_view(request):
             "date_stop_certificate": None,
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
+            "additionalInfo": "{}",
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1464,6 +1477,7 @@ def user_view(request):
                     temp_result.append(i.researches_id)
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
         resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
+        department_doctors = users.DoctorProfile.objects.filter(podrazdeleniye_id=doc.podrazdeleniye_id)
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1500,6 +1514,9 @@ def user_view(request):
             "date_extract_employee": doc.date_extract_employee,
             "resource_schedule": resource_researches,
             "notControlAnketa": doc.not_control_anketa,
+            "replace_doctor_cda": doc.replace_doctor_cda_id if doc.replace_doctor_cda_id else -1,
+            "department_doctors": [{"id": x.pk, "label": f"{x.get_fio()}"} for x in department_doctors],
+            "additionalInfo": doc.additional_info,
         }
 
     return JsonResponse({"user": data})
@@ -1533,6 +1550,7 @@ def user_save_view(request):
     external_access = ud.get("external_access", False)
     not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
+    additional_info = ud.get("additionalInfo", "{}")
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1540,6 +1558,9 @@ def user_save_view(request):
     if date_extract_employee == "":
         date_extract_employee = None
     date_stop_certificate = ud.get("date_stop_certificate")
+    replace_doctor_cda = ud.get("replace_doctor_cda")
+    if replace_doctor_cda == -1:
+        replace_doctor_cda = None
     if date_stop_certificate == "":
         date_stop_certificate = None
 
@@ -1645,6 +1666,8 @@ def user_save_view(request):
             doc.date_stop_external_access = date_stop_external_access
             doc.date_extract_employee = date_extract_employee
             doc.date_stop_certificate = date_stop_certificate
+            doc.replace_doctor_cda_id = replace_doctor_cda
+            doc.additional_info = additional_info
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
@@ -2086,6 +2109,7 @@ def construct_menu_data(request):
     pages = [
         {"url": "/construct/tubes", "title": "Ёмкости для биоматериала", "access": ["Конструктор: Ёмкости для биоматериала"], "module": None},
         {"url": "/construct/researches", "title": "Лабораторные исследования", "access": ["Конструктор: Лабораторные исследования"], "module": None},
+        {"url": "/ui/construct/laboratory", "title": "Лабораторные исследования(н)", "access": ["Конструктор: Лабораторные исследования"], "module": None},
         {
             "url": "/ui/construct/descriptive",
             "title": "Описательные протоколы и консультации",
@@ -3347,7 +3371,6 @@ def print_medical_examination_data(request):
             files_data.append(saved_file_pdf)
 
     buffer = simple_join_two_pdf_files(files_data)
-
     id_file = simple_save_pdf_file(buffer)
     hash_file = correspondence_set_file_hash(id_file)
     return JsonResponse({"id": hash_file})

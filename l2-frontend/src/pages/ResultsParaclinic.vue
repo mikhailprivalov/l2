@@ -119,30 +119,30 @@
               </div>
             </div>
             <hr>
-            <template v-if="direction.amd !== 'not_need'">
+            <template v-if="direction.amd !== 'not_need' && direction.is_need_send_egisz">
               <div
                 v-if="direction.amd === 'need'"
                 class="amd amd-need"
               >
-                АМД: не отправлено
+                ЕГИСЗ: не отправлено
               </div>
               <div
                 v-else-if="direction.amd === 'ok'"
                 class="amd amd-ok"
               >
-                АМД: отправлено ({{ direction.amd_number }})
+                ЕГИСЗ: отправлено ({{ direction.amd_number }})
               </div>
               <div
                 v-else-if="direction.amd === 'error'"
                 class="amd amd-error"
               >
-                АМД: ошибка
+                ЕГИСЗ: ошибка
               </div>
               <div
                 v-else-if="direction.amd === 'planned'"
                 class="amd amd-planned"
               >
-                АМД: запланировано
+                ЕГИСЗ: запланировано
               </div>
               <hr>
             </template>
@@ -255,7 +255,7 @@
           </div>
         </div>
         <div
-          v-else-if="schedule_in_protocol"
+          v-else-if="schedule_in_protocol && location.resources.length > 0"
           class="location-internal"
         >
           <div class="title">
@@ -327,7 +327,7 @@
             href="#"
             target="_blank"
             @click.prevent="send_amd"
-          >отправить в амд</a>
+          >отправить в ЕГИСЗ</a>
         </div>
       </div>
     </div>
@@ -703,7 +703,7 @@
                 :iss_pk="row.pk"
                 :count_files="row.countFiles"
               />
-              <template v-if="data.direction.all_confirmed && !data.has_monitoring && !data.has_expertise">
+              <template v-if="data.direction.all_confirmed && !data.has_monitoring">
                 <a
                   v-if="stat_btn"
                   :href="`/forms/pdf?type=105.02&napr_id=[${data.direction.pk}]`"
@@ -929,7 +929,7 @@
             </div>
           </div>
           <div
-            v-if="row.research.is_doc_refferal"
+            v-if="row.research.is_doc_refferal || row.research.is_paraclinic"
             class="group"
           >
             <div class="group-title">
@@ -1394,39 +1394,39 @@
                 v-if="data.direction.amd === 'planned'"
                 class="amd amd-planned"
               >
-                АМД: запланировано
+                ЕГИСЗ: очередь
               </div>
               <div
                 v-if="data.direction.amd === 'error' && row.confirmed"
                 class="amd amd-error"
               >
-                АМД: ошибка
+                ЕГИСЗ: ошибка
               </div>
               <div
                 v-if="data.direction.amd === 'need' && row.confirmed"
                 class="amd amd-need"
               >
-                АМД: не отправлено
+                ЕГИСЗ: не отправлено
               </div>
               <div
                 v-if="data.direction.amd === 'ok'"
                 class="amd amd-ok"
               >
-                АМД: отправлено ({{ data.direction.amd_number }})
+                ЕГИСЗ: отправлено ({{ data.direction.amd_number }})
               </div>
               <button
                 v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
                 class="btn btn-blue-nb"
                 @click="reset_amd([data.direction.pk])"
               >
-                Сброс статуса АМД
+                Сброс статуса ЕГИЗ
               </button>
               <button
                 v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
                 class="btn btn-blue-nb"
                 @click="send_to_amd([data.direction.pk])"
               >
-                Отправить в АМД
+                Отправить в ЕГИСЗ
               </button>
             </template>
             <EDSDirection
@@ -1470,39 +1470,39 @@
               v-if="data.direction.amd === 'planned'"
               class="amd amd-planned"
             >
-              АМД: запланировано
+              ЕГИСЗ: запланировано
             </div>
             <div
               v-if="data.direction.amd === 'error' && row.confirmed"
               class="amd amd-error"
             >
-              АМД: ошибка
+              ЕГИСЗ: ошибка
             </div>
             <div
               v-if="data.direction.amd === 'need' && row.confirmed"
               class="amd amd-need"
             >
-              АМД: не отправлено
+              ЕГИСЗ: не отправлено
             </div>
             <div
               v-if="data.direction.amd === 'ok'"
               class="amd amd-ok"
             >
-              АМД: отправлено ({{ data.direction.amd_number }})
+              ЕГИСЗ: отправлено ({{ data.direction.amd_number }})
             </div>
             <button
               v-if="can_reset_amd && data.direction.amd !== 'not_need' && data.direction.amd !== 'need'"
               class="btn btn-blue-nb"
               @click="reset_amd([data.direction.pk])"
             >
-              Сброс статуса АМД
+              Сброс статуса ЕГИСЗ
             </button>
             <button
               v-if="data.direction.amd === 'need' || data.direction.amd === 'error'"
               class="btn btn-blue-nb"
               @click="send_to_amd([data.direction.pk])"
             >
-              Отправить в АМД
+              Отправить в ЕГИСЗ
             </button>
           </template>
           <EDSDirection
@@ -2161,7 +2161,7 @@ export default {
     },
     can_reset_amd() {
       for (const g of this.$store.getters.user_data.groups || []) {
-        if (g === 'Управление отправкой в АМД') {
+        if (g === 'Управление отправкой в ЕГИСЗ') {
           return true;
         }
       }
@@ -3161,7 +3161,7 @@ export default {
     },
     async reset_amd(pks) {
       try {
-        await this.$dialog.confirm('Подтвердите сброс статуса отправки в АМД');
+        await this.$dialog.confirm('Подтвердите сброс статуса отправки в ЕГИСЗ');
         await this.$store.dispatch(actions.INC_LOADING);
         await directionsPoint.resetAMD({ pks });
         this.load_pk(this.data.direction.pk);

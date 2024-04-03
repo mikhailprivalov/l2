@@ -47,6 +47,8 @@ from .report import (
     base_data,
     expertise_report,
     registry_profit,
+    appointed_research,
+    lab_result,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -75,6 +77,7 @@ from laboratory.settings import (
     RESEARCH_SPECIAL_REPORT,
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
+    UNLIMIT_PERIOD_STATISTIC_GROUP,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
@@ -121,11 +124,13 @@ def statistic_xls(request):
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
 
     if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
-        pk_research = request_data.get("research")
-        delta = date_end - date_start
-        if abs(delta.days) > 60 and tp == "statistics-research" and int(pk_research) not in UNLIMIT_PERIOD_STATISTIC_RESEARCH:
-            slog.Log(key=tp, type=101, body=json.dumps({"pk": pk_research, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
-            return JsonResponse({"error": "period max - 60 days"})
+        for i in UNLIMIT_PERIOD_STATISTIC_GROUP:
+            if i not in [str(x) for x in request.user.groups.all()]:
+                pk_research = request_data.get("research")
+                delta = date_end - date_start
+                if abs(delta.days) > 60 and tp == "statistics-research" and int(pk_research) not in UNLIMIT_PERIOD_STATISTIC_RESEARCH:
+                    slog.Log(key=tp, type=101, body=json.dumps({"pk": pk_research, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
+                    return JsonResponse({"error": "period max - 60 days"})
 
     if date_start_o != "" and date_end_o != "":
         slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
@@ -707,12 +712,12 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         pk = request_data.get("research")
         user_groups = request.user.groups.values_list('name', flat=True)
-
         research_id = int(pk)
         data_date = request_data.get("date_values")
         data_date = json.loads(data_date)
         purposes = request_data.get("purposes", "")
         special_fields = request_data.get("special-fields", "false")
+        is_lab_result = request_data.get("is-lab-result", "false")
         medical_exam = request_data.get("medical-exam", "false")
         by_create_directions = request_data.get("by-create-directions", "false")
         is_purpose = 0
@@ -737,7 +742,8 @@ def statistic_xls(request):
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Отчет")
-        research_title = Researches.objects.values_list('title').get(pk=research_id)
+        research = Researches.objects.get(pk=research_id)
+        research_title = research.title
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
         hospital_id = request.user.doctorprofile.hospital_id
@@ -810,6 +816,11 @@ def statistic_xls(request):
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
+        elif research.podrazdeleniye and research.podrazdeleniye.p_type == 2 and is_lab_result == "true":
+            researches_sql = sql_func.lab_result_statistics_research(research_id, start_date, end_date, hospital_id)
+            result = lab_result.custom_lab_research_field_fractions(researches_sql)
+            ws = lab_result.lab_result_research_base(ws, d1, d2, result, research_title[0])
+            ws = custom_research.custom_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
             if Researches.objects.filter(pk=research_id).first().is_monitoring:
@@ -826,6 +837,32 @@ def statistic_xls(request):
             else:
                 researches_sql = sql_func.statistics_research_create_directions(research_id, start_date, end_date, hospital_id)
             ws = structure_sheet.statistic_research_data(ws, researches_sql)
+
+    elif tp == "statistics-create-research":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
+        research = request_data.get("research")
+        users_docprofile_id = request_data.get("users")
+        d_s = request_data.get("date-start")
+        d_e = request_data.get("date-end")
+        d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Отчет")
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        researches = research.split(",")
+        researches = tuple([int(i) for i in researches])
+
+        users_docprofile = [int(json.loads(users_docprofile_id))]
+        researches = tuple([int(i) for i in researches])
+        research_data = {r.pk: {"title": r.title, "count": 0} for r in Researches.objects.filter(pk__in=list(researches))}
+        research_data[-999] = {"title": ""}
+        users_final_data = {k: research_data.copy() for k in users_docprofile}
+        researches_sql = sql_func.statistics_research_create_directions(researches, start_date, end_date, tuple(users_docprofile))
+        ws = appointed_research.appointed_base(ws, d_s, d_e, research_data)
+        doctors_researches_count = appointed_research.parse_data(researches_sql, users_final_data, research_data)
+        ws = appointed_research.fill_appointed_research_by_doctors(ws, doctors_researches_count)
 
     elif tp == "journal-get-material":
         access_to_all = 'Просмотр статистики' in request.user.groups.values_list('name', flat=True) or request.user.is_superuser

@@ -90,6 +90,15 @@
             > 003/у </a>
           </div>
           <div
+            class="inner-card"
+          >
+            <a
+              :href="`/forms/pdf?type=106.02&dir_pk=${direction}`"
+              class="a-under"
+              target="_blank"
+            > 530 (003/у) </a>
+          </div>
+          <div
             v-if="!every"
             class="inner-card"
           >
@@ -679,6 +688,41 @@
             >
               Сброс подтверждения
             </button>
+
+            <template v-if="amd && row.research.is_need_send_egisz">
+              <div
+                v-if="row.amd === 'planned'"
+                class="amd amd-planned"
+              >
+                ЕГИСЗ
+              </div>
+              <div
+                v-if="row.amd === 'error' && row.confirmed"
+                class="amd amd-error"
+              >
+                ЕГИСЗ
+              </div>
+              <div
+                v-if="row.amd === 'need' && row.confirmed"
+                class="amd amd-need"
+              >
+                ЕГИСЗ
+              </div>
+              <div
+                v-if="row.amd === 'ok'"
+                class="amd amd-ok"
+              >
+                ЕГИСЗ
+              </div>
+              <button
+                v-if="row.amd === 'need' || row.amd === 'error'"
+                class="btn btn-blue-nb"
+                @click="send_to_amd([row.direction_pk])"
+              >
+                Отправить в ЕГИСЗ
+              </button>
+            </template>
+
             <button
               class="btn btn-blue-nb"
               @click="close_form"
@@ -736,6 +780,7 @@
           <AggregateAssignments
             v-if="opened_list_key === 'assignments'"
             :direction="direction"
+            :card-pk="patient.card_pk"
           />
         </div>
       </div>
@@ -1168,6 +1213,9 @@ export default {
       }
       return false;
     },
+    amd() {
+      return this.$store.getters.modules.l2_amd;
+    },
   },
   watch: {
     pk() {
@@ -1221,6 +1269,13 @@ export default {
     });
   },
   methods: {
+    async send_to_amd(pks) {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await directionsPoint.sendAMD({ pks });
+      this.$root.$emit('msg', 'ok', 'Отправка запланирована');
+      this.reload_if_need();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
     getDepartmentTitle(pk) {
       return this.departments.find((d) => d.id === pk)?.label || '';
     },
@@ -2296,5 +2351,25 @@ export default {
 
 .service-top-padding {
   padding-top: 10px;
+}
+
+.amd {
+  font-weight: bold;
+
+  &-need {
+    color: #0c698b;
+  }
+
+  &-error {
+    color: #cf3a24;
+  }
+
+  &-planned {
+    color: #d9be00;
+  }
+
+  &-ok {
+    color: #049372;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ScheduleResource, SlotPlan, SlotFact, UserResourceModifyRights
+from .models import ScheduleResource, SlotPlan, SlotFact, UserResourceModifyRights, ReasonCancelSlot, SlotFactCancel, SlotFactDirection
 
 
 class ScheduleResourceAdmin(admin.ModelAdmin):
@@ -33,7 +33,15 @@ class UserResourceModifyRightsAdmin(admin.ModelAdmin):
     filter_horizontal = ('resources', 'departments', 'services')
 
 
+class SlotFactCancelAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'plan', 'patient')
+    search_fields = ('plan',)
+
+
 admin.site.register(ScheduleResource, ScheduleResourceAdmin)
 admin.site.register(SlotPlan, SlotPlanAdmin)
 admin.site.register(SlotFact, SlotFactAdmin)
 admin.site.register(UserResourceModifyRights, UserResourceModifyRightsAdmin)
+admin.site.register(ReasonCancelSlot)
+admin.site.register(SlotFactDirection)
+admin.site.register(SlotFactCancel, SlotFactCancelAdmin)

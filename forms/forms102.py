@@ -1372,10 +1372,10 @@ def form_02(request_data):
         # Добавдяем потребителя услуги (пациента)
         if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
             p_doc_serial, p_doc_num, p_doc_start = patient_data['bc_serial'], patient_data['bc_num'], patient_data['bc_date_start']
-            p_doc_issued = patient_data['passport_issued']
+            p_doc_issued = patient_data['bc_issued']
         else:
             p_doc_serial, p_doc_num, p_doc_start = patient_data['passport_serial'], patient_data['passport_num'], patient_data['passport_date_start']
-            p_doc_issued = patient_data['bc_issued']
+            p_doc_issued = patient_data['passport_issued']
 
         # Пациент==Заказчик
         if p_payer is None and p_agent is None:

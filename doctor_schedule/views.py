@@ -157,7 +157,11 @@ def get_available_hospital_resource_slot(research_pk, date_start, date_end, allo
     for k, v in temp_data_slot_resource.items():
         for date, slots in v.items():
             temp_data = data.get(date)
-            temp_data.append({"resourcePk": k, "resourceTitle": structure_resource.get(k, ""), "slots": slots})
+            schedule_resource_obj = ScheduleResource.objects.filter(pk=k).first()
+            rmis_location = None
+            if schedule_resource_obj:
+                rmis_location = schedule_resource_obj.executor.rmis_location
+            temp_data.append({"resourcePk": k, "rmis_location": rmis_location, "resourceTitle": structure_resource.get(k, ""), "slots": slots})
             data[date] = temp_data.copy()
 
     if allow_cito:

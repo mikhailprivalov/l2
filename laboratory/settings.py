@@ -399,9 +399,20 @@ TYPE_COMPANY_SET_DIRECTION_PDF = ""
 CPP_SEND_PROTOCOL_ID = -1
 CPP_TEMPLATE_XML_DIRECTORY = ""
 CDA_TEMPLATE_XML_DIRECTORY = ""
+IDGTL_KEY = ""
+ROUTE_LIST_ROW_HEIGHTS = 25
+
 
 FCM_CERT_PATH = ""
 PROMETHEUS_ENABLED = False
+
+TYPE_NUMBER_SYSTEM = []
+FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES = {
+    "msh": {"app_sender": "", "organization_sender": "", "app_receiver": "", "organization_receiver": ""},
+    "obr": {"executer_code": ""},
+    "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
+    "id_researches": [],
+}
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

@@ -20,6 +20,7 @@ class MedicalCertificates(models.Model):
         (38010, '38010. 086/у'),
         (38011, '38011. Справка профпатолога'),
         (38012, '38012. Заключение 27Н'),
+        (38013, '38013. Заключение 27Н-v2'),
     )
 
     title = models.CharField(max_length=63, help_text='Название справки')

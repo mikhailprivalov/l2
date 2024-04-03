@@ -4,18 +4,19 @@
       <div class="button">
         <button
           v-tippy
-          title="печать"
+          title="Печать"
           class="btn last btn-blue-nb"
           @click="printForm"
         >
-          печать
+          Печать
         </button>
       </div>
     </div>
     <div>
       <VeTable
         :columns="columns"
-        :table-data="assignments"
+        :table-data="assignmentPagination"
+        :cell-style-option="cellStyleOption"
       />
       <div
         v-show="assignments.length === 0"
@@ -34,12 +35,20 @@
         />
       </div>
     </div>
+    <ScheduleModal
+      v-if="showSchedule"
+      :card-pk="props.cardPk"
+      :service-number="currentResearchPk"
+      :direction-id="currentDirectionPk"
+      @hide="showSchedule = false"
+      @slotFilled="slotFilled"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  onMounted, ref,
+  computed, getCurrentInstance, onMounted, ref,
 } from 'vue';
 import {
   VeLocale,
@@ -52,34 +61,34 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
 import ruRu from '@/locales/ve';
+import ScheduleModal from '@/modals/ScheduleModal.vue';
 
 VeLocale.use(ruRu);
 
-const props = defineProps<{
-  direction: number;
-}>();
+const props = defineProps({
+  direction: {
+    type: Number,
+    required: true,
+  },
+  cardPk: {
+    type: Number,
+    required: true,
+  },
+});
 
-const columns = ref([
-  {
-    field: 'direction_id', key: 'direction_id', title: '№ напр.', width: 100,
-  },
-  {
-    field: 'research_title', key: 'research_title', title: 'Медицинское вмешательство', align: 'left',
-  },
-  {
-    field: 'create_date', key: 'create_date', title: 'Дата назначения', align: 'center', width: 150,
-  },
-  {
-    field: 'who_assigned', key: 'who_assigned', title: 'ФИО назначившего', align: 'center', width: 200,
-  },
-  {
-    field: 'time_confirmation', key: 'time_confirmation', title: 'Дата и время подтверждения', align: 'center', width: 150,
-  },
-  {
-    field: 'who_confirm', key: 'who_confirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
-  },
-]);
+const root = getCurrentInstance().proxy.$root;
 const store = useStore();
+
+const showSchedule = ref(false);
+const currentResearchPk = ref(null);
+const currentDirectionPk = ref(null);
+
+const openSchedule = (researchId, directionId) => {
+  currentResearchPk.value = researchId;
+  currentDirectionPk.value = directionId;
+  showSchedule.value = true;
+};
+
 const pageSize = ref(30);
 const page = ref(1);
 const pageSizeOption = ref([30, 50, 100, 300]);
@@ -89,6 +98,16 @@ const pageNumberChange = (number: number) => {
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
+
+const cellStyleOption = {
+  bodyCellClass: ({ row }) => {
+    if (row.scheduleDate) {
+      return 'table-body-cell-green';
+    }
+    return '';
+  },
+};
+
 const assignments = ref([]);
 
 const getAssignments = async () => {
@@ -98,6 +117,96 @@ const getAssignments = async () => {
   assignments.value = results.data;
 };
 
+const assignmentPagination = computed(() => assignments.value.slice(
+  (page.value - 1) * pageSize.value,
+  page.value * pageSize.value,
+));
+
+const slotFilled = () => {
+  getAssignments();
+};
+
+const cancelSlot = async (researchId, slotPlanId) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/schedule/cancel', {
+    cardId: props.cardPk,
+    id: slotPlanId,
+    serviceId: researchId,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Отменено');
+    await getAssignments();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const columns = ref([
+  {
+    field: 'directionId', key: 'directionId', title: '№ напр.', width: 100,
+  },
+  {
+    field: 'researchTitle', key: 'researchTitle', title: 'Медицинское вмешательство', align: 'left',
+  },
+  {
+    field: 'createDate', key: 'createDate', title: 'Дата назначения', align: 'center', width: 150,
+  },
+  {
+    field: 'scheduleDate',
+    key: 'scheduleDate',
+    title: 'Расписание',
+    align: 'center',
+    width: 150,
+    renderBodyCell: ({ row }, h) => {
+      if (row.scheduleDate) {
+        return h('div', {}, [
+          h('p', {}, row.scheduleDate),
+          h('button', {
+            class: 'transparent-button transparent-button-small',
+            on: {
+              click: () => {
+                cancelSlot(row.researchId[0], row.slotPlanId);
+              },
+            },
+          }, 'Отменить запись'),
+        ]);
+      }
+      return h('div', { class: 'button' }, [
+        h('button', {
+          class: 'transparent-button',
+          on: {
+            click: () => {
+              openSchedule(row.researchId[0], row.directionId);
+            },
+          },
+        }, 'Записать'),
+      ]);
+    },
+  },
+  {
+    field: 'whoAssigned', key: 'whoAssigned', title: 'ФИО назначившего', align: 'center', width: 200,
+  },
+  {
+    field: 'timeConfirmation',
+    key: 'timeConfirmation',
+    title: 'Дата и время подтверждения',
+    align: 'center',
+    width: 150,
+    renderBodyCell: ({ row }) => {
+      if (!row.timeConfirmation) {
+        return 'Не исполнено';
+      }
+      return row.timeConfirmation;
+    },
+  },
+  {
+    field: 'whoConfirm', key: 'whoConfirm', title: 'ФИО подтвердившего', align: 'center', width: 200,
+  },
+]);
+
 const printForm = () => {
   window.open(`/forms/pdf?type=107.03&&hosp_pk=${props.direction}`);
 };
@@ -106,7 +215,7 @@ onMounted(getAssignments);
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .empty-list {
   width: 85px;
   margin: 20px auto;
@@ -130,5 +239,30 @@ onMounted(getAssignments);
   align-self: stretch;
   flex: 1;
   padding: 6px 0;
+}
+</style>
+
+<style lang="scss">
+.transparent-button {
+  background-color: transparent;
+  color: #434A54;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+
+  &:hover {
+    background-color: #434a54;
+    color: #FFF;
+  }
+  &:active {
+    background-color: #37BC9B;
+    color: #FFF;
+  }
+}
+.transparent-button-small {
+    padding: 0;
+}
+.table-body-cell-green {
+  background: #a9cfbb !important;
 }
 </style>

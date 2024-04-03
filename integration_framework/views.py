@@ -18,7 +18,7 @@ from api.dicom import check_dicom_study
 from api.directions.sql_func import direction_by_card, get_lab_podr, get_confirm_direction_patient_year, get_type_confirm_direction, get_confirm_direction_patient_year_is_extract
 from api.models import Application
 from api.patients.views import patients_search_card
-from api.stationar.stationar_func import desc_to_data
+from api.stationar.stationar_func import desc_to_data, hosp_get_data_direction
 from api.views import mkb10_dict
 from clients.utils import find_patient
 from contracts.models import PriceCategory, PriceCoast, PriceName
@@ -95,8 +95,9 @@ from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
 from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
-from .models import CrieOrder, ExternalService, IndividualAuth
+from .models import CrieOrder, ExternalService, IndividualAuth, IPLimitter
 from laboratory.settings import COVID_RESEARCHES_PK
+from .tasks import send_code_cascade, stop_code_cascade
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
 from directory.sql_func import get_lab_research_reference_books
@@ -1589,13 +1590,35 @@ def external_direction_create(request):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
+    result = create_direction_by_param(body, request)
+    return Response(result)
 
+
+@api_view(["POST"])
+def external_list_direction_create(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+    body_directions = json.loads(request.body)
+    for body in body_directions:
+        result = create_direction_by_param(body, request)
+        if not result.get("ok"):
+            try:
+                Log.log(
+                    str(body.get("internalId")),
+                    122002,
+                    body={"data": body},
+                )
+            except Exception as e:
+                logger.exception(e)
+
+
+def create_direction_by_param(body, request):
     org = body.get("org", {})
     code_tfoms = org.get("codeTFOMS")
     oid_org = org.get("oid")
 
     if not code_tfoms and not oid_org:
-        return Response({"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"})
+        return {"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"}
 
     if code_tfoms:
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
@@ -1603,10 +1626,10 @@ def external_direction_create(request):
         hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
-        return Response({"ok": False, "message": "Организация не найдена"})
+        return {"ok": False, "message": "Организация не найдена"}
 
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
-        return Response({"ok": False, "message": "Нет доступа в переданную организацию"})
+        return {"ok": False, "message": "Нет доступа в переданную организацию"}
 
     is_exclude_contorl_documnets = False
     if hospital.pk in HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION:
@@ -1617,15 +1640,15 @@ def external_direction_create(request):
     enp = (patient.get("enp") or "").replace(" ", "")
 
     if enp and (len(enp) != 16 or not enp.isdigit()):
-        return Response({"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"})
+        return {"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"}
 
     snils = (patient.get("snils") or "").replace(" ", "").replace("-", "")
 
     if not enp and not snils and not is_exclude_contorl_documnets:
-        return Response({"ok": False, "message": "При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber"})
+        return {"ok": False, "message": "При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber"}
 
     if snils and not petrovna.validate_snils(snils):
-        return Response({"ok": False, "message": "patient.snils: не прошёл валидацию"})
+        return {"ok": False, "message": "patient.snils: не прошёл валидацию"}
 
     lastname = str(patient.get("lastName") or "")
     firstname = str(patient.get("firstName") or "")
@@ -1638,22 +1661,22 @@ def external_direction_create(request):
         sex = "ж"
 
     if not enp and not (lastname and firstname and birthdate and birthdate):
-        return Response({"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"})
+        return {"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"}
 
     if lastname and not firstname:
-        return Response({"ok": False, "message": "При передаче lastname должен быть передан и firstname"})
+        return {"ok": False, "message": "При передаче lastname должен быть передан и firstname"}
 
     if firstname and not lastname:
-        return Response({"ok": False, "message": "При передаче firstname должен быть передан и lastname"})
+        return {"ok": False, "message": "При передаче firstname должен быть передан и lastname"}
 
     if firstname and lastname and not birthdate:
-        return Response({"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"})
+        return {"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"}
 
     if birthdate and (not re.fullmatch(r"\d{4}-\d\d-\d\d", birthdate) or birthdate[0] not in ["1", "2"]):
-        return Response({"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"})
+        return {"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"}
 
     if birthdate and sex not in ["м", "ж"]:
-        return Response({"ok": False, "message": 'individual.sex должно быть "м" или "ж"'})
+        return {"ok": False, "message": 'individual.sex должно быть "м" или "ж"'}
 
     individual = None
     if enp:
@@ -1692,25 +1715,25 @@ def external_direction_create(request):
         )
 
     if not individual:
-        return Response({"ok": False, "message": "Физлицо не найдено"})
+        return {"ok": False, "message": "Физлицо не найдено"}
 
     card = Card.objects.filter(individual=individual, base__internal_type=True).first()
     if not card:
         card = Card.add_l2_card(individual)
 
     if not card:
-        return Response({"ok": False, "message": "Карта не найдена"})
+        return {"ok": False, "message": "Карта не найдена"}
 
     financing_source_title = body.get("financingSource", "")
     if financing_source_title.lower() not in ["омс", "бюджет", "платно"]:
-        return Response({"ok": False, "message": "Некорректный источник финансирования"})
+        return {"ok": False, "message": "Некорректный источник финансирования"}
 
     financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
     financing_category_code = body.get("financingCategory", "")
     price_category = PriceCategory.objects.filter(title__startswith=financing_category_code).first()
 
     if not financing_source:
-        return Response({"ok": False, "message": "Некорректный источник финансирования"})
+        return {"ok": False, "message": "Некорректный источник финансирования"}
 
     message = None
 
@@ -1724,11 +1747,11 @@ def external_direction_create(request):
 
     diag_text = body.get("diagText", "")  # обязательно
     if not diag_text:
-        return Response({"ok": False, "message": "Диагноз описание не заполнено"})
+        return {"ok": False, "message": "Диагноз описание не заполнено"}
 
     diag_mkb10 = body.get("diagMKB10", "")  # обязательно
     if not diag_mkb10:
-        return Response({"ok": False, "message": "Диагноз по МКБ10 не заполнен (не верно)"})
+        return {"ok": False, "message": "Диагноз по МКБ10 не заполнен (не верно)"}
     open_skob = "{"
     close_skob = "}"
 
@@ -1745,11 +1768,11 @@ def external_direction_create(request):
     }
     method_obtain_material = body.get("methodObtainMaterial", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
     if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
-        return Response({"ok": False, "message": "Способо забора не верно заполнено"})
+        return {"ok": False, "message": "Способо забора не верно заполнено"}
 
     resident_code = patient.get("residentCode", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
     if not resident_code or resident_code not in [1, 2]:
-        return Response({"ok": False, "message": "Не указан вид жительства"})
+        return {"ok": False, "message": "Не указан вид жительства"}
     if resident_code == 1:
         resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
     else:
@@ -1757,20 +1780,18 @@ def external_direction_create(request):
 
     solution10 = body.get("solution10", "")  # обязательно
     if not solution10 or solution10 not in ["true", "false"]:
-        return Response({"ok": False, "message": "Не указано помещен в 10% раствор"})
+        return {"ok": False, "message": "Не указано помещен в 10% раствор"}
 
     doctor_fio = body.get("doctorFio", "")  # обязательно
     if not doctor_fio:
-        return Response({"ok": False, "message": "Не указан врач производивший забор материала"})
+        return {"ok": False, "message": "Не указан врач производивший забор материала"}
     material_mark = body.get("materialMark", "")
     numbers_vial = []
     for k in material_mark:
         result_check = check_valid_material_mark(k, numbers_vial)
         if not result_check:
-            return Response({"ok": False, "message": "Не верная маркировка материала"})
+            return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
-    if len(numbers_vial) != sorted(numbers_vial)[-1]:
-        return Response({"ok": False, "message": "Не верная маркировка флаконов (порядок 1,2,3,4...)"})
 
     try:
         with transaction.atomic():
@@ -1783,6 +1804,7 @@ def external_direction_create(request):
                 hospital=hospital,
                 id_in_hospital=id_in_hospital,
                 price_category=price_category,
+                rmis_number=id_in_hospital if body.get("isRMIS") else None,
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
@@ -1806,7 +1828,7 @@ def external_direction_create(request):
             pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
             for m_m in material_mark:
                 result_table_field.append(
-                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m["pathologicalProcess"]], str(m_m["objectValue"]), m_m.get("description", "")]
+                    [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m.get("pathologicalProcess", 7)], str(m_m["objectValue"]), m_m.get("description", "")]
                 )
             data_marked["rows"] = result_table_field
             match_keys = {
@@ -1837,7 +1859,7 @@ def external_direction_create(request):
                 )
             except Exception as e:
                 logger.exception(e)
-            return Response({"ok": True, "id": str(direction.pk)})
+            return {"ok": True, "id": str(direction.pk)}
 
     except InvalidData as e:
         logger.exception(e)
@@ -1846,7 +1868,7 @@ def external_direction_create(request):
         logger.exception(e)
         message = "Серверная ошибка"
 
-    return Response({"ok": False, "message": message})
+    return {"ok": False, "message": message}
 
 
 @api_view(["POST"])
@@ -1934,11 +1956,11 @@ def external_get_pdf_result(request):
     return JsonResponse({"result": pdf_data})
 
 
-def check_valid_material_mark(current_material_data, current_numbers_vial):
+def check_valid_material_mark(current_material_data, current_numbers_vial, isCheckpathologicalProcess=False):
     for k, v in current_material_data.items():
         if k == "numberVial" and not isinstance(v, int):  # обязательно число
             return False
-        if k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
+        if isCheckpathologicalProcess and k == "pathologicalProcess" and v not in [1, 2, 3, 4, 5, 6, 7]:  # "code из НСИ 1.2.643.5.1.13.13.99.2.34" обязательно
             return False
         if k == "objectValue" and not isinstance(v, int):  # обязательно число
             return False
@@ -1993,7 +2015,8 @@ def get_cda_data(pk):
     p_enp = bool(re.search(p_enp_re, card.get_data_individual()["oms"]["polis_num"]))
     insurer_full_code = card.get_data_individual()["insurer_full_code"]
     if not insurer_full_code:
-        card.individual.sync_with_tfoms()
+        pass
+        # card.individual.sync_with_tfoms()
     insurer_full_code = card.get_data_individual()["insurer_full_code"]
     smo_title = ""
     smo_id = ""
@@ -2021,6 +2044,7 @@ def get_cda_data(pk):
                     "gender_code": 2 if ind.sex.lower() == "ж" else 1,
                     "gender_title": "Женский" if ind.sex.lower() == "ж" else "Мужской",
                     "birthdate": ind.birthday.strftime("%Y%m%d"),
+                    "birthdate_dots": ind.birthday.strftime("%d.%m.%Y"),
                     "oms": {"number": card.get_data_individual()["oms"]["polis_num"], "issueOrgName": smo_title, "issueOrgCode": insurer_full_code, "smoId": smo_id},
                     "address": data_individual["main_address"],
                 },
@@ -2033,15 +2057,18 @@ def get_cda_data(pk):
 @authentication_classes([])
 @permission_classes([])
 def eds_get_cda_data(request):
-    token = request.META.get("HTTP_AUTHORIZATION")
-    token = token.replace("Bearer ", "")
-
-    if not token or not DoctorProfile.objects.filter(eds_token=token).exists():
-        return Response({"ok": False})
+    token = request.headers.get("Authorization").split(" ")[1]
+    token_obj = Application.objects.filter(key=token).first()
+    if not token_obj.unlimited_access:
+        return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
     pk = body.get("pk")
-
+    is_extract = body.get("isExtract") == "1"
+    if is_extract:
+        result = hosp_get_data_direction(pk, site_type=7, type_service='None', level=2)
+        if len(result) > 0:
+            pk = result[0].get("direction")
     return Response(get_cda_data(pk))
 
 
@@ -3145,7 +3172,7 @@ def get_price_data(request):
     if price:
         data_price = PriceCoast.objects.filter(price_name=price)
         result = [
-            {"title": i.research.title, "shortTtile": i.research.short_title, "coast": i.coast, "internalCode": i.research.internal_code, "researchCodeNMU": i.research.code}
+            {"title": i.research.title, "shortTitle": i.research.short_title, "coast": i.coast, "internalCode": i.research.internal_code, "researchCodeNMU": i.research.code}
             for i in data_price
         ]
     return Response({"data": result})
@@ -3248,14 +3275,7 @@ def get_research_fields(request):
     paraclinic_input_groups = ParaclinicInputGroups.objects.values_list("pk", flat=True).filter(research_id=research_id, hide=False).order_by("order")
     paraclinic_input_fields = ParaclinicInputField.objects.filter(group_id__in=paraclinic_input_groups, hide=False).order_by("order")
     data_fields = [
-        {
-            "title": i.title,
-            "id": i.pk,
-            "typeId": i.field_type,
-            "typeTitle": i.get_field_type_display(),
-            "inputTemplates": json.loads(i.input_templates)
-        }
-        for i in paraclinic_input_fields
+        {"title": i.title, "id": i.pk, "typeId": i.field_type, "typeTitle": i.get_field_type_display(), "inputTemplates": json.loads(i.input_templates)} for i in paraclinic_input_fields
     ]
     research = Researches.objects.get(pk=research_id)
 
@@ -3347,11 +3367,11 @@ def send_laboratory_order(request):
     if not individual and lastname:
         card = Individual.import_from_simple_data(
             {
-                "family": patient["family"],
-                "name": patient["name"],
+                "family": patient["lastname"],
+                "name": patient["firstname"],
                 "patronymic": patient["patronymic"],
                 "sex": patient["sex"],
-                "birthday": patient["birthday"],
+                "birthday": patient["birthdate"],
                 "snils": patient["snils"],
             },
             hospital,
@@ -3379,14 +3399,29 @@ def send_laboratory_order(request):
 
     if order_internal_id is None:
         return Response({"ok": False, "message": "Некорректный номер заказа orderData.internalId"})
+    else:
+        id_in_hospital = limit_str(order_internal_id, 15)
+        if Napravleniya.objects.filter(id_in_hospital=id_in_hospital, hospital=hospital).first():
+            return Response({"ok": False, "message": f"Уже существует номер заказа {id_in_hospital} в orderData.internalId для текуще организации"})
 
     tubes = order_data.get("tubes")
     internal_research_code_by_tube_number = {}
     additional_order_number_by_service = {}
     for tube in tubes:
         tube_number = tube.get("tubeNumber")
+        if not tube_number:
+            return Response({"ok": False, "message": "не указан tubeNumber "})
+
+        if not directions.NumberGenerator.check_value_for_organization(hospital, int(tube_number)):
+            return Response({"ok": False, "message": f"Номер {tube_number} not valid. May be NumberGenerator is over or order number exists"})
+
+        if directions.TubesRegistration.objects.filter(number=int(tube_number)).first():
+            return Response({"ok": False, "message": f"Номер {tube_number} уже существует"})
+
         internal_research_code_by_tube_number[tube_number] = []
         for data_research in tube.get("researches"):
+            if not Researches.objects.filter(hide=False, internal_code=data_research.get("internalCode")).first():
+                return Response({"ok": False, "message": "Некорректный номер услуги internalCode"})
             internal_research_code_by_tube_number[tube_number].append(data_research.get("internalCode"))
             additional_order_number_by_service[data_research.get("internalCode")] = data_research.get("additionalNumber")
     order_numbers = []
@@ -3422,6 +3457,7 @@ def send_laboratory_order(request):
                 services=internal_research_code_by_tube_number[order_number_str],
                 patient_card=card,
                 file_name="",
+                hl7=order_data.get("hl7", ""),
             )
             result = Napravleniya.gen_napravleniya_by_issledovaniya(
                 card.pk,
@@ -3442,6 +3478,7 @@ def send_laboratory_order(request):
                 hospital_override=hospital.pk,
                 services_by_additional_order_num=services_by_additional_order_num,
                 price_name=price_id,
+                id_in_hospital=id_in_hospital,
             )
 
             if not result["r"]:
@@ -3460,7 +3497,7 @@ def send_laboratory_order(request):
                 },
             )
 
-    return Response({"ok": False, "message": ""})
+    return Response({"ok": True, "message": "", "directions": result["list_id"]})
 
 
 @api_view(["POST"])
@@ -3471,10 +3508,13 @@ def client_register(request):
     phone = str(body.get("phone"))
     os = str(body.get("os"))
 
+    ip = Log.get_client_ip(request)
+
+    if IPLimitter.check_limit(ip):
+        return Response({"ok": False, "message": "Too many requests"})
+
     if len(phone) != 10 or not phone.isdigit() or phone[0] != "9":
         return Response({"ok": False, "message": "Неверный формат телефона"})
-
-    normalized_phones = Phones.normalize_to_search(phone)
 
     code = body.get("code")
 
@@ -3486,13 +3526,6 @@ def client_register(request):
     if token is not None and not isinstance(token, str):
         return Response({"ok": False, "message": "Неверный формат токена"})
 
-    individual = Individual.objects.filter(
-        Q(card__phones__normalized_number__in=normalized_phones)
-        | Q(card__phones__number__in=normalized_phones)
-        | Q(card__phone__in=normalized_phones)
-        | Q(card__doctorcall__phone__in=normalized_phones)
-    ).first()
-
     ok = False
     need_code = False
     api_token = None
@@ -3500,23 +3533,23 @@ def client_register(request):
     message = None
 
     if token is None or code is None:
-        if not individual:
-            api_token = uuid.uuid4().hex
-        else:
-            IndividualAuth.objects.filter(individual=individual).delete()
-
-            code_n = random.randint(0, 9)
-            code_x = random.randint(0, 9)
-            code_y = random.randint(0, 9)
-            code = f"{code_n}{code_x}{code_n}{code_y}"
-            auth = IndividualAuth.objects.create(
-                individual=individual,
-                device_os=os,
-                confirmation_code=code,
-                used_phone=Phones.format_as_plus_7(phone),
-            )
-            api_token = auth.token
-            print({"code": code})  # noqa: T001,T201
+        code_n = random.randint(0, 9)
+        code_x = random.randint(0, 9)
+        code_y = random.randint(0, 9)
+        code = f"{code_n}{code_x}{code_n}{code_y}"
+        auth = IndividualAuth.objects.create(
+            device_os=os,
+            confirmation_code=code,
+            used_phone=Phones.format_as_plus_7(phone),
+        )
+        api_token = auth.token
+        send_code_cascade.apply_async(
+            kwargs={
+                "phone": phone,
+                "auth_id": auth.pk,
+            },
+            countdown=1,
+        )
 
         need_code = True
     else:
@@ -3524,7 +3557,7 @@ def client_register(request):
             token=token,
             is_confirmed=False,
             device_os=os,
-            individual=individual,
+            used_phone=Phones.format_as_plus_7(phone),
         ).first()
 
         if auth:
@@ -3542,6 +3575,12 @@ def client_register(request):
             auth.save(update_fields=["is_confirmed"])
             ok = True
             api_token = token
+            stop_code_cascade.apply_async(
+                kwargs={
+                    'auth_id': auth.pk,
+                },
+                countdown=1,
+            )
 
     return Response(
         {
@@ -3574,13 +3613,28 @@ def client_logout(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_info(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
+
+    individuals = list(individual_auth.individuals)
 
     return Response(
         {
-            "id": individual.individual.pk,
-            "fullName": f"{individual.individual.fio(dots=True, short=True)} {individual.individual.age_s()}",
-            "phone": individual.used_phone or "--",
+            "rows": [
+                {
+                    "id": individual.pk,
+                    "fullName": f"{individual.fio(dots=True, short=True)} {individual.age_s()}",
+                    "phone": individual_auth.used_phone or "--",
+                }
+                for individual in individuals
+            ]
+            if individuals
+            else [
+                {
+                    "id": -1,
+                    "fullName": "Нет данных",
+                    "phone": individual_auth.used_phone or "--",
+                }
+            ]
         }
     )
 
@@ -3617,16 +3671,18 @@ def client_categories(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_results_list(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
     body = json.loads(request.body)
     category = body.get("category")
+    user_id = body.get("userId")
     page = max(min(body.get("page", 1), 1000), 1)
     page_size = max(min(body.get("pageSize", 20), 20), 10)
 
     if category not in ["all", *[x[0] for x in ResultFeed.CATEGORIES]]:
         return Response({"rows": [], "total": 0, "pages": 0, "page": page, "pageSize": page_size})
 
-    rows = ResultFeed.objects.filter(individual=individual.individual)
+    individual = individual_auth.individuals.get(pk=user_id)
+    rows = ResultFeed.objects.filter(individual=individual)
     if category != "all":
         rows = rows.filter(category=category)
     rows = rows.order_by("-result_confirmed_at")
@@ -3649,11 +3705,13 @@ def client_results_list(request):
 @authentication_classes([IndividualAuthentication])
 @permission_classes([])
 def client_results_pdf(request):
-    individual: IndividualAuth = request.user
+    individual_auth: IndividualAuth = request.user
     body = json.loads(request.body)
     unique_id = body.get("id")
+    user_id = body.get("userId")
 
-    result: ResultFeed = ResultFeed.objects.filter(individual=individual.individual, unique_id=unique_id).first()
+    individual = individual_auth.individuals.get(pk=user_id)
+    result: ResultFeed = ResultFeed.objects.filter(individual=individual, unique_id=unique_id).first()
 
     if not result:
         return Response({"data": ""})
