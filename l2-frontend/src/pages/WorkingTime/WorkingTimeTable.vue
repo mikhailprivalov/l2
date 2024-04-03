@@ -77,7 +77,7 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  employeesWorkTime.value = [];
+  employeesWorkTime.value = result;
 };
 
 watch(() => [props.year, props.month, props.department], () => {

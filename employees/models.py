@@ -542,19 +542,19 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
     @staticmethod
-    def get_employees_template(year: int, month: int, last_date_month: int, department_id: int):
+    def get_employees_template(year: int, month: int, last_date_month: int, department_id: int) -> dict:
         template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type": ""} for day in range(1, last_date_month + 1)}
         employees = get_employees_by_department(department_id)
         employees_template = {}
         for employee in employees:
             employees_template[employee.employee_position_id] = template_days.copy()
-            employees_template[employee.employee_position_id] = {
+            employees_template[employee.employee_position_id].update({
                 "fio": f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}',
                 "position": employee.position_name,
                 "bidType": 'осн',
                 "normMonth": '178',
                 "normDay": "8",
-            }
+            })
         return employees_template
 
     @staticmethod
@@ -564,12 +564,11 @@ class EmployeeWorkingHoursSchedule(models.Model):
         last_date_month = datetime.date(year, month, last_day_month)
         template_employee = EmployeeWorkingHoursSchedule.get_employees_template(year, month, last_day_month, department_id)
         document = TimeTrackingDocument.objects.filter(month__gte=first_date, month__lte=last_date_month, department_id=department_id).last()
-        result = []
         if document:
             employees_work_time = get_work_time_by_document(document.pk)
             for time in employees_work_time:
                 print('ура')
-            result = [value for value in template_employee.values()]
+        result = [value for value in template_employee.values()]
         return result
 
     class Meta:
