@@ -134,13 +134,12 @@ const getColumns = () => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
-    const isFirstDay = col.getDate() === 1;
     return {
       key: dateString,
       field: dateString,
       title: dateTitle,
       align: 'center',
-      width: 211,
+      width: 130,
       isWeekend: weekend,
       renderBodyCell: ({ row, column, rowIndex }, h) => h(
         DateCell,
@@ -149,7 +148,6 @@ const getColumns = () => {
             workTime: row[column.field] ? row[column.field] : '',
             rowIndex,
             columnKey: column.key,
-            isFirstDay,
           },
           on: { changeWorkTime },
         },

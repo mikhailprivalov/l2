@@ -1,17 +1,5 @@
 <template>
-  <div class="flex">
-    <p class="time-width">
-      {{ 'Работаааа' }}
-    </p>
-    <button
-      v-tippy
-      :disabled="props.isFirstDay"
-      class="transparentButton"
-      title="Скопировать предыдущий"
-      @click="copyPrevTime"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
+  <div class="root">
     <button
       v-tippy="{
         html: '#temp',
@@ -26,10 +14,15 @@
       }"
       class="transparentButton"
     >
-      <i
-        class="fa fa-clock-o"
-        aria-hidden="true"
-      />
+      {{ сurrentTime }}
+    </button>
+    <button
+      v-tippy
+      class="transparentButton"
+      title="Скопировать предыдущий"
+      @click="copyPrevTime"
+    >
+      <i class="fa-solid fa-copy" />
     </button>
 
     <div
@@ -42,7 +35,8 @@
           :key="variant.id"
           class="variant"
           :class="activeVariant === variant.id && 'active'"
-          @click="selectVariant(variant.id)">
+          @click="selectVariant(variant.id)"
+        >
           {{ `${variant.startWork}-${variant.endWork}` }}
         </div>
       </div>
@@ -78,8 +72,8 @@
 
 <script setup lang="ts">
 import {
-  getCurrentInstance,
-  ref, watch,
+  computed,
+  getCurrentInstance, ref, watch,
 } from 'vue';
 
 const emit = defineEmits(['changeWorkTime']);
@@ -95,10 +89,6 @@ const props = defineProps({
   },
   columnKey: {
     type: String,
-    required: true,
-  },
-  isFirstDay: {
-    type: Boolean,
     required: true,
   },
 });
@@ -121,6 +111,12 @@ const selectVariant = (variantId) => {
 const startWork = ref(null);
 const endWork = ref(null);
 
+const currentTime = computed(() => {
+  if (startWork.value && endWork.value) {
+    return `${startWork.value} - ${endWork.value}`;
+  }
+  return '--:-- - --:--';
+});
 const appendCurrentTime = () => {
   startWork.value = props.workTime.startWorkTime;
   endWork.value = props.workTime.endWorkTime;
@@ -139,8 +135,7 @@ const changeExact = () => {
 
 const copyPrevTime = () => {
   if (props.prevWorkTime) {
-    startWork.value = props.prevWorkTime.startWorkTime;
-    endWork.value = props.prevWorkTime.endWorkTime;
+    root.$emit('msg', 'ok', 'Скопировано');
   }
 };
 
@@ -150,12 +145,11 @@ watch(() => props.workTime, () => {
 </script>
 
 <style scoped lang="scss">
-.flex {
+.root {
   display: flex;
   flex-wrap: nowrap;
 }
 .time-width {
-  width: 160px;
   margin: 0;
 }
 .transparentButton {
