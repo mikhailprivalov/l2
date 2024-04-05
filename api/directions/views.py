@@ -3318,11 +3318,18 @@ def directions_result_year(request):
     directions = {}
 
     for d in confirmed_directions:
+        pacs_link = None
+        if is_paraclinic and len(DICOM_SERVERS) > 1:
+            pacs_link = check_dicom_study_instance_uid(DICOM_SERVERS, d.study_instance_uid_tag)
+        elif is_paraclinic and len(DICOM_SERVERS) <= 1:
+            pacs_link = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={d.study_instance_uid_tag}'
+
         if d.direction not in directions:
             directions[d.direction] = {
                 'dir': d.direction,
                 'date': d.ch_time_confirmation,
                 'researches': [],
+                'pacsLink': pacs_link
             }
 
         directions[d.direction]['researches'].append(d.research_title)

@@ -110,6 +110,12 @@
               </td>
               <td class="right-buttons">
                 <a
+                  v-if="row.pacsLink"
+                  v-tippy="{ placement: 'bottom' }"
+                  :href="row.pacsLink"
+                  title="Снимок"
+                ><i class="fa fa-camera" /></a>
+                <a
                   v-tippy="{ placement: 'bottom' }"
                   href="#"
                   title="Печать результата"
