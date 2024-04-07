@@ -44,4 +44,4 @@ class Command(BaseCommand):
                 else:
                     result_ws.append([cells[nmy_cod], cells[title], '-'])
         dir_tmp = SettingManager.get("dir_param")
-        result_ws.save(f"{dir_tmp}/result_update_nmy.xlsx")
+        result_wb.save(f"{dir_tmp}/result_update_nmy.xlsx")
