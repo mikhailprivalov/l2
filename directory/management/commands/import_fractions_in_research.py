@@ -38,20 +38,23 @@ class Command(BaseCommand):
                     fraction_fsli_code = cells[fsli].split(' ')[0]
                     current_research = Researches.objects.filter(code=research_nmy_code).first()
                     if current_research:
-                        current_fractions = Fractions.objects.filter(research_id=current_research.pk)
+                        current_fractions = Fractions.objects.filter(research_id=current_research.pk).order_by('sort_weight')
                         need_add_fractions = True
                         relation_id = None
+                        sort_weight = None
                         for fraction in current_fractions:
                             if fraction.fsli == fraction_fsli_code:
                                 need_add_fractions = False
                             relation_id = fraction.relation_id
+                            sort_weight = fraction.sort_weight
                         if need_add_fractions:
                             unit_id = None
                             unit_db = Unit.objects.filter(short_title=cells[unit].strip()).first()
                             if unit_db:
                                 unit_id = unit_db.pk
                             if relation_id is not None:
-                                new_fraction = Fractions(research_id=current_research.pk, relation_id=relation_id, title=cells[title], unit_id=unit_id, fsli=fraction_fsli_code)
+                                new_fraction = Fractions(research_id=current_research.pk, relation_id=relation_id, title=cells[title], unit_id=unit_id, fsli=fraction_fsli_code,
+                                                         sort_weight=sort_weight+1)
                                 new_fraction.save()
                                 self.stdout.write(f'Услуге: {current_research.title} добавлена фракция: {new_fraction.title}')
                                 result_ws.append([cells[title], cells[research], cells[fsli], '+'])
