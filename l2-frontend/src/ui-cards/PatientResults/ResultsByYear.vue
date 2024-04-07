@@ -112,7 +112,7 @@
                 <a
                   v-if="row.pacsLink"
                   v-tippy="{ placement: 'bottom' }"
-                  :href="row.pacsLink"
+                  :href=row.pacsLink
                   title="Снимок"
                 ><i class="fa fa-camera" /></a>
                 <a
