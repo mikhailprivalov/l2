@@ -1172,6 +1172,7 @@ class Fractions(models.Model):
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text="Контролируемый параметр", on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
+    external_code = models.CharField(max_length=255, default="", help_text="Внешний код теста", blank=True, db_index=True)
 
     def get_unit(self):
         if self.unit:
