@@ -12,6 +12,7 @@ class Command(BaseCommand):
                 continue
             for fraction in fractions:
                 if fraction.fsli is None and len(fractions) > 1:
+                    self.stdout.write(f'Фракция удалена {fraction.title}')
                     fraction.delete()
 
 
