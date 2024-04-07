@@ -22,7 +22,7 @@ class Command(BaseCommand):
         result_ws.append(['Название', 'Список услуг', 'Код ФСЛИ', 'статус'])
 
         starts = False
-        title, unit, research, fsli = '', '', '', ''
+        title, unit, research, fsli, code = '', '', '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -31,6 +31,7 @@ class Command(BaseCommand):
                     unit = cells.index("Ед.Изм.")
                     research = cells.index("Список услуг")
                     fsli = cells.index("Код ФСЛИ")
+                    code = cells.index("Код")
                     starts = True
             else:
                 research_nmy_code = cells[research].split(' - ')[0]
@@ -54,7 +55,13 @@ class Command(BaseCommand):
                                 unit_id = unit_db.pk
                             if relation_id is not None:
                                 new_fraction = Fractions(
-                                    research_id=current_research.pk, relation_id=relation_id, title=cells[title], unit_id=unit_id, fsli=fraction_fsli_code, sort_weight=sort_weight + 1
+                                    research_id=current_research.pk,
+                                    relation_id=relation_id,
+                                    title=cells[title],
+                                    unit_id=unit_id,
+                                    fsli=fraction_fsli_code,
+                                    sort_weight=sort_weight + 1,
+                                    external_code=cells[code],
                                 )
                                 new_fraction.save()
                                 self.stdout.write(f'Услуге: {current_research.title} добавлена фракция: {new_fraction.title}')
