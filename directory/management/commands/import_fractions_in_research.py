@@ -53,8 +53,9 @@ class Command(BaseCommand):
                             if unit_db:
                                 unit_id = unit_db.pk
                             if relation_id is not None:
-                                new_fraction = Fractions(research_id=current_research.pk, relation_id=relation_id, title=cells[title], unit_id=unit_id, fsli=fraction_fsli_code,
-                                                         sort_weight=sort_weight + 1)
+                                new_fraction = Fractions(
+                                    research_id=current_research.pk, relation_id=relation_id, title=cells[title], unit_id=unit_id, fsli=fraction_fsli_code, sort_weight=sort_weight + 1
+                                )
                                 new_fraction.save()
                                 self.stdout.write(f'Услуге: {current_research.title} добавлена фракция: {new_fraction.title}')
                                 result_ws.append([cells[title], cells[research], cells[fsli], '+'])
