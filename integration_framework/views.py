@@ -302,6 +302,17 @@ def direction_data(request):
 
             signed_documents.append(document)
 
+    doctor_direction_create = direction.doc.additional_info
+    additional_data_create_direction = None
+    if direction.doc.additional_info:
+        if "{" in doctor_direction_create and "}" in doctor_direction_create:
+            try:
+                additional_data_create_direction = json.loads(doctor_direction_create)
+                if not additional_data_create_direction or not isinstance(additional_data_create_direction, dict):
+                    additional_data_create_direction = {}
+            except Exception:
+                additional_data_create_direction = None
+
     return Response(
         {
             "ok": True,
@@ -357,7 +368,7 @@ def direction_data(request):
             "legalAuth": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
             "author": author_doctor(iss[iss_index].doc_confirmation) if iss[iss_index].doc_confirmation else None,
             "legalAuthenticator": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
-            "doctorAdditionalInfo": direction.doc.
+            "doctorCreateDirectionAdditionalData": additional_data_create_direction,
         }
     )
 
@@ -380,7 +391,6 @@ def issledovaniye_data(request):
         results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__not_send_odli=True)
     else:
         results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli="").exclude(fraction__not_send_odli=True)
-    print(need_ecp_code)
     if need_ecp_code:
         results = results.exclude(fraction__ecp_id__isnull=True).exclude(fraction__ecp_id="")
     if (
@@ -440,7 +450,15 @@ def issledovaniye_data(request):
     if i.doc_confirmation:
         doctor_data = i.doc_confirmation.uploading_data
 
-    doc_create = i.napravleniye.doc.
+    additional_data_confirm_data = None
+    if i.doc_confirmation.additional_info:
+        if "{" in i.doc_confirmation.additional_info and "}" in i.doc_confirmation.additional_info:
+            try:
+                additional_data_confirm_data = json.loads(i.doc_confirmation.additional_info)
+                if not additional_data_confirm_data or not isinstance(additional_data_confirm_data, dict):
+                    additional_data_confirm_data = {}
+            except Exception:
+                additional_data_confirm_data = None
 
     return Response(
         {
@@ -452,6 +470,7 @@ def issledovaniye_data(request):
             "dateTimeReceive": format_time_if_is_not_none(sample.time_recive_local) if sample else None,
             "dateTimeConfirm": format_time_if_is_not_none(time_confirmation),
             "docConfirm": i.doc_confirmation_fio,
+            "docConfirmAdditionalInfo": additional_data_confirm_data,
             "doctorData": doctor_data,
             "results": results_data,
             "code": i.research.code.upper().replace("А", "A").replace("В", "B").replace("С", "C").strip(),
