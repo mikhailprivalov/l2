@@ -183,86 +183,17 @@
         Найдено записей: <strong>{{ total }}</strong>
       </div>
     </div>
-    <transition name="fade">
-      <div
-        v-if="signingProcess.active"
-        class="signing-root"
-      >
-        <div class="signing-inner">
-          <div class="signing-header">
-            Создание подписей как {{ selectedSignatureMode }}
-            <i
-              v-if="signingProcess.progress"
-              class="fa fa-spinner"
-            />
-            <i
-              v-else
-              class="fa fa-check"
-            />
-          </div>
-
-          <ProgressBar
-            size="large"
-            :val="signP"
-            :text="
-              `${signP}% – ${signingProcess.currentDocument}/${signingProcess.totalDocuments} ${signingProcess.currentOperation}`
-            "
-            bar-transition="all 0.1s linear"
-            text-position="bottom"
-            text-align="left"
-            :font-size="14"
-            text-fg-color="#fff"
-            bar-color="#049372"
-          />
-
-          <button
-            type="button"
-            class="btn btn-default btn-primary-nb"
-            :disabled="signingProcess.progress"
-            @click="load(page)"
-          >
-            Закрыть и перезагрузить список
-          </button>
-
-          <table class="table table-condensed table-bordered">
-            <thead>
-              <tr>
-                <th>Направление</th>
-                <th>Документ</th>
-                <th>Статус</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="p in signingProcess.log"
-                :key="`${p.direction}_${p.type}`"
-                :class="p.status ? 'tr-ok' : 'tr-error'"
-              >
-                <td>{{ p.direction }}</td>
-                <td>{{ p.type }}</td>
-                <td :class="p.status ? 'm-ok' : 'm-error'">
-                  {{ p.status ? 'ОК' : 'ОШИБКА' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </transition>
   </div>
 </template>
 
 <script lang="ts">
-import {
-  createDetachedSignature, createHash, getCertificate, getSystemInfo, getUserCertificates,
-} from 'crypto-pro';
+
 import moment from 'moment';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import Paginate from 'vuejs-paginate';
-import ProgressBar from 'vue-simple-progress';
 
 import * as actions from '@/store/action-types';
 import usersPoint from '@/api/user-point';
@@ -288,15 +219,10 @@ const STATUSES = [
     DateFieldNav2,
     Paginate,
     EDSDirection,
-    ProgressBar,
   },
   data() {
     return {
-      systemInfo: null,
-      certificates: [],
-      selectedCertificate: null,
       checked: false,
-      hasCP: false,
       filters: {
         mode: null,
         department: null,
@@ -314,15 +240,6 @@ const STATUSES = [
       error: false,
       message: '',
       rows: [],
-      selectedSignatureMode: null,
-      signingProcess: {
-        active: false,
-        progress: false,
-        totalDocuments: 0,
-        currentDocument: 0,
-        log: [],
-        currentOperation: '',
-      },
     };
   },
   mounted() {
@@ -340,21 +257,11 @@ const STATUSES = [
   },
 })
 export default class EDS extends Vue {
-  systemInfo: any;
-
-  certificates: any[];
-
-  selectedCertificate: string | null;
-
   checked: boolean;
-
-  hasCP: boolean;
 
   filters: any;
 
   MODES: any[];
-
-  STATUSES: any[];
 
   users: any[];
 
@@ -372,24 +279,6 @@ export default class EDS extends Vue {
 
   rows: any[];
 
-  selectedSignatureMode: any;
-
-  signingProcess: any;
-
-  get noOGRN() {
-    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
-
-    if (!cert) {
-      return false;
-    }
-
-    return !subjectNameHasOGRN(null, cert.subjectName);
-  }
-
-  get snilsUser() {
-    return (this.$store.getters.user_data.snils);
-  }
-
   get accessToMO() {
     return (this.$store.getters.user_data.groups || []).includes('ЭЦП Медицинской организации');
   }
@@ -398,49 +287,8 @@ export default class EDS extends Vue {
     return this.MODES.filter(m => m.id !== 'mo' || this.accessToMO);
   }
 
-  get edsAllowedSign() {
-    return this.$store.getters.user_data.eds_allowed_sign;
-  }
-
   get disabledByNumber() {
     return Boolean(this.filters.number);
-  }
-
-  get selectedCertificateObject() {
-    if (!this.selectedCertificate) {
-      return {};
-    }
-
-    const cert = this.certificates.find(c => c.thumbprint === this.selectedCertificate);
-    if (!cert) {
-      return {};
-    }
-
-    return {
-      thumbprint: cert.thumbprint,
-      validFrom: moment(cert.validFrom).format('DD.MM.YYYY HH:mm'),
-      validTo: moment(cert.validTo).format('DD.MM.YYYY HH:mm'),
-    };
-  }
-
-  get certificatesDisplay() {
-    const filteredCertificates = this.certificates.filter((cert) => {
-      const certObj = convertSubjectNameToCertObject(cert.subjectName);
-      const snilsCert = certObj['СНИЛС'] || certObj.SNILS;
-      if (this.filters.mode === 'my') {
-        return snilsCert === this.snilsUser;
-      }
-      return !!(certObj.ORGN || certObj['ОГРН']);
-    });
-    if (filteredCertificates.length === 0) {
-      this.selectedCertificate = null;
-    } else {
-      this.selectedCertificate = filteredCertificates[0]?.thumbprint;
-    }
-    return filteredCertificates.map(c => ({
-      thumbprint: c.thumbprint,
-      name: convertSubjectNameToTitle(null, c.subjectName),
-    }));
   }
 
   get deps() {
@@ -448,10 +296,6 @@ export default class EDS extends Vue {
       ...this.users.map(d => ({ id: d.id, label: d.label })),
       { id: -1, label: 'Все отделения' },
     ];
-  }
-
-  get signP() {
-    return Math.ceil((this.signingProcess.currentDocument / this.signingProcess.totalDocuments) * 1000) / 10;
   }
 
   get globalCheckStatus() {
@@ -466,46 +310,7 @@ export default class EDS extends Vue {
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
-  async getEDSStatus() {
-    try {
-      this.systemInfo = await getSystemInfo();
-      // eslint-disable-next-line no-console
-      console.log('getStatus', true, this.systemInfo);
-      this.hasCP = true;
-      try {
-        this.certificates = await getUserCertificates();
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log('getCertificates error');
-        // eslint-disable-next-line no-console
-        console.error(e);
-        this.checked = false;
-      }
-      if (this.certificates.length > 0) {
-        // eslint-disable-next-line no-console
-        console.log('getCertificates', true, this.certificates);
-      } else {
-        // eslint-disable-next-line no-console
-        console.log('getCertificates', false);
-      }
-      this.checked = true;
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error(e);
-      // eslint-disable-next-line no-console
-      console.log('getStatus', false);
-      this.hasCP = false;
-      this.checked = true;
-    }
-  }
-
   async load(pageToLoad) {
-    if (this.signingProcess.active) {
-      this.rows = [];
-    }
-    const prevSelectedSignatureMode = this.selectedSignatureMode;
-    this.signingProcess.progress = false;
-    this.signingProcess.active = false;
     if (pageToLoad !== null) {
       this.page = pageToLoad;
     } else {
