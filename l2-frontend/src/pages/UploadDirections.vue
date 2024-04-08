@@ -10,7 +10,7 @@
           />
         </div>
         <treeselect
-          v-if="filters.mode === 'mo'"
+          v-if="filters.mode === 'department'"
           v-model="filters.department"
           class="treeselect-wide treeselect-34px"
           :multiple="false"
@@ -341,7 +341,7 @@ import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import { convertSubjectNameToCertObject, convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
-  { id: 'mo', label: 'Подразделение' },
+  { id: 'department', label: 'Подразделение' },
   { id: 'my', label: 'Мои документы' },
 ];
 
