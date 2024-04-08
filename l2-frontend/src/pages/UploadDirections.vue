@@ -71,41 +71,11 @@
       class="data"
     >
       <div>
-        <div
-          v-if="hasAnyChecked"
-          class="float-right input-group"
-          style="width: 450px;"
-        >
-          <span class="input-group-addon">Роль подписи</span>
-          <select
-            v-model="selectedSignatureMode"
-            class="form-control"
-          >
-            <option
-              v-for="s in commonSignModes"
-              :key="s"
-              :value="s"
-            >
-              {{ s }}
-            </option>
-          </select>
-          <span class="input-group-btn">
-            <button
-              type="button"
-              class="btn btn-default btn-primary-nb"
-              :disabled="!selectedSignatureMode"
-              @click="listSign()"
-            >
-              Подписать списком
-            </button>
-          </span>
-        </div>
         <button
-          v-else
           class="btn btn-blue-nb float-right"
           @click="load(page)"
         >
-          <i class="fa fa-refresh" />
+          Отправить в ЕЦП
         </button>
         <paginate
           v-model="page"
@@ -138,14 +108,13 @@
               Услуги
             </th>
             <th>
-              Подписи
+              Статус
             </th>
             <td
               :key="`check_${globalCheckStatus}`"
               class="x-cell"
             >
               <label
-                v-if="hasToCheck"
                 @click.prevent="toggleGlobalCheck"
               >
                 <input
@@ -173,13 +142,12 @@
               {{ r.services.join('; ') }}
             </td>
             <td class="eds-td cl-td">
-              <div></div>
+              <div />
               <div
-                class='m-ok uploading-status'
+                class="m-error uploading-status"
               >
-                {{ 'не выгружено в ИЭМК' }}
-              </div
-             >
+                Не отправлено
+              </div>
             </td>
             <td class="x-cell">
               <label>
@@ -193,38 +161,12 @@
         </tbody>
       </table>
       <div>
-        <div
-          class="float-right input-group"
-          style="width: 450px;"
-        >
-          <span class="input-group-addon">Роль подписи</span>
-          <select
-            v-model="selectedSignatureMode"
-            class="form-control"
-          >
-            <option
-              v-for="s in commonSignModes"
-              :key="s"
-              :value="s"
-            >
-              {{ s }}
-            </option>
-          </select>
-          <span class="input-group-btn">
-            <button
-              type="button"
-              class="btn btn-default btn-primary-nb"
-              :disabled="!selectedSignatureMode"
-            >
-              Подписать списком
-            </button>
-          </span>
-        </div>
         <button
           class="btn btn-blue-nb float-right"
+          style="padding-left: 10px"
           @click="load(page)"
         >
-          <i class="fa fa-refresh" />
+          Отправить в ЕЦП
         </button>
         <paginate
           v-model="page"
@@ -395,22 +337,6 @@ const STATUSES = [
         }
       },
     },
-    commonSignModes: {
-      immediate: true,
-      handler() {
-        if (this.commonSignModes.length === 0) {
-          this.selectedSignatureMode = null;
-          return;
-        }
-
-        if (this.commonSignModes.includes(this.selectedSignatureMode)) {
-          return;
-        }
-
-        // eslint-disable-next-line prefer-destructuring
-        this.selectedSignatureMode = this.commonSignModes[0];
-      },
-    },
   },
 })
 export default class EDS extends Vue {
@@ -476,20 +402,6 @@ export default class EDS extends Vue {
     return this.$store.getters.user_data.eds_allowed_sign;
   }
 
-  get commonSignModes() {
-    const m = [];
-    for (const r of this.rows.filter(v => v.checked)) {
-      for (const d of r.documents) {
-        for (const e of d.empty) {
-          if (!m.includes(e) && this.edsAllowedSign.includes(e)) {
-            m.push(e);
-          }
-        }
-      }
-    }
-    return m;
-  }
-
   get disabledByNumber() {
     return Boolean(this.filters.number);
   }
@@ -540,6 +452,10 @@ export default class EDS extends Vue {
 
   get signP() {
     return Math.ceil((this.signingProcess.currentDocument / this.signingProcess.totalDocuments) * 1000) / 10;
+  }
+
+  get globalCheckStatus() {
+    return this.rows.every(r => r.checked);
   }
 
   async loadUsers() {
@@ -607,11 +523,12 @@ export default class EDS extends Vue {
     this.message = message;
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
-    if (this.commonSignModes.includes(prevSelectedSignatureMode)) {
-      this.selectedSignatureMode = prevSelectedSignatureMode;
-    }
   }
 
+  toggleGlobalCheck() {
+    const newStatus = !this.globalCheckStatus;
+    this.rows = this.rows.map(r => ({ ...r, checked: newStatus }));
+  }
 }
 </script>
 
