@@ -4168,7 +4168,7 @@ def need_send_ecp(request):
         if not available:
             return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "Cервер отправки в ЕЦП не доступен"})
 
-    d_qs = Napravleniya.objects.filter(total_confirmed=True)
+    d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None)
     if number:
         d_qs = d_qs.filter(pk=number if number.isdigit() else -1)
     else:
