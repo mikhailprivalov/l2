@@ -395,7 +395,6 @@ const STATUSES = [
     };
   },
   mounted() {
-    this.getEDSStatus();
     this.loadUsers();
   },
   watch: {
