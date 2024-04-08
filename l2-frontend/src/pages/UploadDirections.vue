@@ -9,6 +9,17 @@
             :disabled="disabledByNumber"
           />
         </div>
+        <treeselect
+          v-if="filters.mode === 'mo'"
+          v-model="filters.department"
+          class="treeselect-wide treeselect-34px"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          :options="deps"
+          :clearable="false"
+          placeholder="Подразделение не выбано"
+          :disabled="disabledByNumber"
+        />
       </div>
       <div class="col-xs-6">
         <div class="radio-wrapper">
@@ -335,9 +346,8 @@ const MODES = [
 ];
 
 const STATUSES = [
-  { id: 'need', label: 'Требуют подписи' },
-  { id: 'ok-role', label: 'Подписаны выбранной ролью' },
-  { id: 'ok-full', label: 'Подписаны полностью' },
+  { id: 'need', label: 'Требуют отправки' },
+  { id: 'ok-role', label: 'Отправлены' },
 ];
 
 @Component({
