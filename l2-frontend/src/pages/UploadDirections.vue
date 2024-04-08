@@ -341,7 +341,7 @@ import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import { convertSubjectNameToCertObject, convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
-  { id: 'mo', label: 'Подписи медицинской организации' },
+  { id: 'mo', label: 'Подразделение' },
   { id: 'my', label: 'Мои документы' },
 ];
 
@@ -626,7 +626,7 @@ export default class EDS extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const {
       rows, page, pages, total, error, message,
-    } = await this.$api('/directions/eds/to-sign', this, ['filters', 'page']);
+    } = await this.$api('/directions/results/need-send-ecp', this, ['filters', 'page']);
     this.rows = rows.map(r => ({ ...r, checked: false }));
     this.page = page;
     this.pages = pages;
