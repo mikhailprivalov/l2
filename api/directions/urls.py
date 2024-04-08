@@ -54,6 +54,7 @@ urlpatterns = [
     path('eds/documents', views.eds_documents),
     path('eds/add-sign', views.eds_add_sign),
     path('eds/to-sign', views.eds_to_sign),
+    path('results/need-send-ecp', views.need_send_ecp),
     path('send-to-l2vi', views.send_to_l2vi),
     path('add-file', views.add_file),
     path('file-log', views.file_log),
