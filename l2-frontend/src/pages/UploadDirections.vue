@@ -160,7 +160,6 @@
           <tr
             v-for="r in rows"
             :key="r.pk"
-            :class="totallySigned(r) && 'tr-ok'"
           >
             <td>
               {{ r.pk }}
@@ -174,23 +173,16 @@
               {{ r.services.join('; ') }}
             </td>
             <td class="eds-td cl-td">
-              <div>
-                <EDSDirection
-                  :direction-pk="r.pk"
-                  :all_confirmed="true"
-                  :documents-prefetched="r.documents"
-                />
-              </div>
+              <div></div>
               <div
-                v-if="totallySigned(r)"
-                class="uploading-status"
-                :class="r.n3number ? 'm-ok' : 'm-error'"
+                class='m-ok uploading-status'
               >
-                {{ r.n3number ? 'выгружено в ИЭМК' : 'не выгружено в ИЭМК' }}
-              </div>
+                {{ 'не выгружено в ИЭМК' }}
+              </div
+             >
             </td>
             <td class="x-cell">
-              <label v-if="!totallySigned(r) && r.hasSnils">
+              <label>
                 <input
                   v-model="r.checked"
                   type="checkbox"
@@ -202,7 +194,6 @@
       </table>
       <div>
         <div
-          v-if="hasAnyChecked"
           class="float-right input-group"
           style="width: 450px;"
         >
@@ -224,14 +215,12 @@
               type="button"
               class="btn btn-default btn-primary-nb"
               :disabled="!selectedSignatureMode"
-              @click="listSign()"
             >
               Подписать списком
             </button>
           </span>
         </div>
         <button
-          v-else
           class="btn btn-blue-nb float-right"
           @click="load(page)"
         >
@@ -549,22 +538,6 @@ export default class EDS extends Vue {
     ];
   }
 
-  get globalCheckStatus() {
-    return this.rows.every(r => r.checked && this.totallySigned(r));
-  }
-
-  get hasAnyChecked() {
-    return this.rows.some(r => r.checked && !this.totallySigned(r));
-  }
-
-  get rowsChecked() {
-    return this.rows.filter(r => r.checked && !this.totallySigned(r));
-  }
-
-  get hasToCheck() {
-    return this.hasCP && this.checked && this.selectedCertificate && this.rows.some(r => !this.totallySigned(r));
-  }
-
   get signP() {
     return Math.ceil((this.signingProcess.currentDocument / this.signingProcess.totalDocuments) * 1000) / 10;
   }
@@ -639,116 +612,6 @@ export default class EDS extends Vue {
     }
   }
 
-  toggleGlobalCheck() {
-    const newStatus = !this.globalCheckStatus;
-    this.rows = this.rows.map(r => ({ ...r, checked: newStatus && !this.totallySigned(r) && r.hasSnils }));
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  totallySigned(r) {
-    if (r.totallySigned) {
-      return true;
-    }
-
-    return r.documents.every(x => x.empty.length === 0);
-  }
-
-  async listSign() {
-    if (this.noOGRN && this.selectedSignatureMode === 'Медицинская организация') {
-      this.$error('Отсутствует ОГРН в сертификате');
-      return;
-    }
-
-    if (this.signingProcess.active) {
-      return;
-    }
-    try {
-      await this.$dialog.confirm(`Подтвердите подпись всех выбранных документов как "${this.selectedSignatureMode}"`);
-    } catch (_) {
-      return;
-    }
-    this.signingProcess.active = true;
-    this.signingProcess.progress = true;
-    this.signingProcess.log = [];
-    this.signingProcess.currentOperation = '';
-    this.signingProcess.totalDocuments = this.rowsChecked.reduce((a, b) => a + b.documents.length, 0);
-    this.signingProcess.currentDocument = 0;
-
-    const cert = await getCertificate(this.selectedCertificate);
-
-    for (const r of this.rowsChecked) {
-      try {
-        this.signingProcess.currentOperation = `${r.pk} получение документов`;
-        const { documents } = await this.$api('/directions/eds/documents', {
-          pk: r.pk,
-        });
-        for (const d of documents) {
-          if (d.signatures[this.selectedSignatureMode]) {
-            this.signingProcess.currentDocument++;
-            continue;
-          }
-          const docTitle = `${r.pk} ${d.type}`;
-          const docToLog = {
-            direction: r.pk,
-            type: d.type,
-            status: false,
-          };
-          try {
-            let body = d.fileContent;
-            if (d.type === 'PDF') {
-              body = Uint8Array.from(atob(body), c => c.charCodeAt(0));
-            }
-            const isString = typeof body === typeof '';
-
-            const bodyEncoded = isString ? body : new Uint8Array(body);
-
-            this.signingProcess.currentOperation = `${docTitle} создание подписи`;
-            const m = await createHash(bodyEncoded);
-            const sign = await createDetachedSignature(this.selectedCertificate, m);
-
-            this.signingProcess.currentOperation = `${docTitle} отправка подписи`;
-            const { ok, message } = await this.$api('/directions/eds/add-sign', {
-              pk: d.pk,
-              sign,
-              mode: this.selectedSignatureMode,
-              certThumbprint: this.selectedCertificate,
-              certDetails: cert ? {
-                subjectName: cert.subjectName,
-                validFrom: cert.validFrom,
-                validTo: cert.validTo,
-              } : null,
-            });
-
-            if (ok) {
-              const msg = `Подпись успешно добавлена: ${r.pk}, ${d.type}, ${this.selectedSignatureMode}`;
-              this.$root.$emit('msg', 'ok', msg, 1500);
-              docToLog.status = true;
-            } else {
-              this.$root.$emit('msg', 'error', message);
-            }
-          } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error(e);
-            this.$root.$emit('msg', 'error', 'Ошибка создания подписи!');
-          }
-          this.signingProcess.log.push(docToLog);
-          this.signingProcess.currentDocument++;
-        }
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error(e);
-        this.$root.$emit('msg', 'error', `Ошибка подписи ${r.pk}`);
-        const docToLog = {
-          direction: r.pk,
-          type: '???',
-          status: false,
-        };
-        this.signingProcess.log.push(docToLog);
-      }
-    }
-    this.signingProcess.progress = false;
-    this.signingProcess.currentOperation = '';
-  }
 }
 </script>
 

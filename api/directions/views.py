@@ -4198,6 +4198,7 @@ def need_send_ecp(request):
         rows.append(
             {
                 'pk': d.pk,
+                "totallySigned": False,
                 'confirmedAt': strfdatetime(ltc),
                 'docConfirmation': ldc,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
