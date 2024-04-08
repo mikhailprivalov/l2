@@ -76,6 +76,10 @@ class SettingManager:
         return SettingManager.get("cda_base_url", default='empty', default_type='s')
 
     @staticmethod
+    def get_ecp_base_url(self):
+        return SettingManager.get("ecp_base_url", default='empty', default_type='s')
+
+    @staticmethod
     def get_l2vi_base_url():
         return SettingManager.get("l2vi_base_url", default='empty', default_type='s')
 

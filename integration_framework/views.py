@@ -2562,6 +2562,20 @@ def direction_records(request):
 
 
 @api_view(["POST"])
+def direction_ecp_status(request):
+    data = data_parse(
+        request.body,
+        {"directionNum": "str_strip", "evnDirection": "str_strip"},
+    )
+    direction_num: str = data[0]
+    evn_direction: str = data[1]
+    direction = Napravleniya.objects.filter(pk=direction_num).first()
+    direction.ecp_direction_number = evn_direction
+    direction.save()
+    return Response({"ok": True})
+
+
+@api_view(["POST"])
 def directions_by_category_result_year(request):
     request_data = json.loads(request.body)
     mode = request_data.get("mode")
