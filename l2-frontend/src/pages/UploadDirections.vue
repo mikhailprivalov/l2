@@ -336,8 +336,7 @@ export default class EDS extends Vue {
 
   async sendDirection() {
     const dataSend = this.rows.filter(d => d.checked).map(d => d.pk);
-    console.log(dataSend);
-    const result = await this.$api('/directions/results/send-ecp', { directions: dataSend });
+    await this.$api('/directions/results/send-ecp', { directions: dataSend });
   }
 }
 </script>
