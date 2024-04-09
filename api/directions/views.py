@@ -4199,6 +4199,10 @@ def need_send_ecp(request):
         ltc = d.last_time_confirm()
         ldc = d.last_doc_confirm()
 
+        result_send = "Не отправлены"
+        if d.rmis_resend_services:
+            result_send = "отправлены"
+
         rows.append(
             {
                 'pk': f"{d.pk}-{d.client.individual.fio(short=True)} ",
@@ -4206,7 +4210,7 @@ def need_send_ecp(request):
                 'confirmedAt': strfdatetime(ltc),
                 'docConfirmation': ldc,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
-                'ecpDirectionNumber': d.ecp_direction_number if d.ecp_direction_number else "Не отправлено",
+                'ecpDirectionNumber': d.ecp_direction_number if d.ecp_direction_number else result_send,
             }
         )
 
