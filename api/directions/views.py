@@ -4162,8 +4162,6 @@ def need_send_ecp(request):
     number = filters['number']
     page = max(int(data["page"]), 1)
 
-    print(status)
-
     rows = []
     base = SettingManager.get_api_ecp_base_url()
     if base != 'empty':
