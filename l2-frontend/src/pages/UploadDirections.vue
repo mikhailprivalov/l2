@@ -73,7 +73,7 @@
       <div>
         <button
           class="btn btn-blue-nb float-right"
-          @click="load(page)"
+          @click="sendDirection"
         >
           Отправить в ЕЦП
         </button>
@@ -90,7 +90,7 @@
       </div>
       <table class="table table-bordered table-condensed">
         <colgroup>
-          <col style="width: 130px">
+          <col style="width: 190px">
           <col>
           <col>
           <col style="width: 160px">
@@ -146,7 +146,7 @@
               <div
                 class="m-error uploading-status"
               >
-                Не отправлено
+                {{ r.ecpDirectionNumber}}
               </div>
             </td>
             <td class="x-cell">
@@ -164,7 +164,7 @@
         <button
           class="btn btn-blue-nb float-right"
           style="padding-left: 10px"
-          @click="load(page)"
+          @click="sendDirection"
         >
           Отправить в ЕЦП
         </button>
@@ -200,7 +200,6 @@ import usersPoint from '@/api/user-point';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
-import { convertSubjectNameToCertObject, convertSubjectNameToTitle, subjectNameHasOGRN } from '@/utils';
 
 const MODES = [
   { id: 'department', label: 'Подразделение' },
@@ -333,6 +332,12 @@ export default class EDS extends Vue {
   toggleGlobalCheck() {
     const newStatus = !this.globalCheckStatus;
     this.rows = this.rows.map(r => ({ ...r, checked: newStatus }));
+  }
+
+  async sendDirection() {
+    const dataSend = this.rows.filter(d => d.checked).map(d => d.pk);
+    console.log(dataSend);
+    const result = await this.$api('/directions/results/send-ecp', { directions: dataSend });
   }
 }
 </script>
