@@ -10,7 +10,7 @@ from contracts.models import PriceCategory, PriceCoast, PriceName, Company
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook
 from integration_framework.common_func import directions_pdf_result
-from l2vi.integration import gen_cda_xml, send_cda_xml
+from l2vi.integration import gen_cda_xml, send_cda_xml, send_lab_direction_to_ecp
 import collections
 
 from integration_framework.views import get_cda_data
@@ -4157,18 +4157,22 @@ def need_send_ecp(request):
     data = json.loads(request.body)
     filters = data['filters']
     mode = filters['mode']
+    status = filters['status']
     department = filters['department']
     number = filters['number']
     page = max(int(data["page"]), 1)
 
     rows = []
-    base = SettingManager.get_ecp_base_url()
+    base = SettingManager.get_api_ecp_base_url()
     if base != 'empty':
         available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
         if not available:
             return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "Cервер отправки в ЕЦП не доступен"})
 
-    d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None)
+    if status == "need":
+        d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False)
+    else:
+        d_qs = Napravleniya.objects.filter(total_confirmed=True, rmis_resend_services=True)
     if number:
         d_qs = d_qs.filter(pk=number if number.isdigit() else -1)
     else:
@@ -4187,7 +4191,7 @@ def need_send_ecp(request):
         elif mode == 'my':
             if not request.user.doctorprofile.additional_info:
                 return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "Сведения по доктору не заполнены"})
-            d_qs = d_qs.filter(eds_required_signature_types__contains=['Врач'], issledovaniya__doc_confirmation=request.user.doctorprofile)
+            d_qs = d_qs.filter(issledovaniya__doc_confirmation=request.user.doctorprofile)
 
     d: Napravleniya
     p = Paginator(d_qs.order_by('pk', 'last_confirmed_at').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
@@ -4197,15 +4201,35 @@ def need_send_ecp(request):
 
         rows.append(
             {
-                'pk': d.pk,
+                'pk': f"{d.pk}-{d.client.individual.fio(short=True)} ",
                 "totallySigned": False,
                 'confirmedAt': strfdatetime(ltc),
                 'docConfirmation': ldc,
                 'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
+                'ecpDirectionNumber': d.ecp_direction_number if d.ecp_direction_number else "Не отправлено",
             }
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count, "error": False, "message": ''})
+
+
+@login_required
+def send_ecp(request):
+    data = json.loads(request.body)
+    directions = data['directions']
+
+    base = SettingManager.get_api_ecp_base_url()
+    if base != 'empty':
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
+    res = send_lab_direction_to_ecp(directions)
+
+    num_dir = Napravleniya.objects.filter(pk__in=directions)
+    for n in num_dir:
+        n.rmis_resend_services = True
+        n.save()
+    return JsonResponse({"ok": True, "data": res})
 
 
 @login_required
