@@ -61,7 +61,9 @@ class Command(BaseCommand):
                             else:
                                 fsli_test = FsliRefbookTest.objects.filter(code_fsli=fraction_fsli_code).first()
                                 if fsli_test and fsli_test.unit:
-                                    unit_db = Unit.objects.filter(Q(short_title__iexact=fsli_test.unit) | Q(short_title__icontains=fsli_test.unit) | Q(title__icontains=fsli_test.unit)).first()
+                                    unit_db = Unit.objects.filter(
+                                        Q(short_title__iexact=fsli_test.unit) | Q(short_title__icontains=fsli_test.unit) | Q(title__icontains=fsli_test.unit)
+                                    ).first()
                             if unit_db:
                                 unit_id = unit_db.pk
                             if relation_id is not None:
