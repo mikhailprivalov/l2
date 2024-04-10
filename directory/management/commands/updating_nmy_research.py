@@ -33,9 +33,9 @@ class Command(BaseCommand):
                     starts = True
             else:
                 if cells[internal_code] != "None" and cells[nmy_cod] != "None":
-                    current_research = Researches.objects.filter(internal_code=cells[internal_code]).first()
+                    current_research = Researches.objects.filter(internal_code=cells[internal_code].strip()).first()
                     if current_research:
-                        current_research.code = cells[nmy_cod]
+                        current_research.code = cells[nmy_cod].strip()
                         current_research.save()
                         self.stdout.write(f"Услуге: {current_research.title} присвоен код НМУ: {current_research.code}")
                         result_ws.append([current_research.code, current_research.title, '+'])
