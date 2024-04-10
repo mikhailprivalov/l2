@@ -4209,7 +4209,7 @@ def need_send_ecp(request):
                 "totallySigned": False,
                 'confirmedAt': strfdatetime(ltc),
                 'docConfirmation': ldc,
-                'services': f"{d.client.individual.fio(short=True)} {[x.research.get_title() for x in d.issledovaniya_set.all()]}",
+                'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
                 'ecpDirectionNumber': d.ecp_direction_number if d.ecp_direction_number else result_send,
             }
         )
