@@ -338,6 +338,19 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/upload-directions',
+      name: 'upload_directions',
+      component: () => import('@/pages/UploadDirections.vue'),
+      meta: {
+        title: 'Выгрузка',
+        groups: [
+          'Врач параклиники',
+          'Врач консультаций',
+          'Врач-лаборант',
+        ],
+      },
+    },
+    {
       path: '/ui/plan-hospitalization',
       name: 'plan_hospitalization',
       component: () => import('@/pages/PlanHospitalization/index.vue'),
