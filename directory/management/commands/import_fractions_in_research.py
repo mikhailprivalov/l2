@@ -26,7 +26,6 @@ class Command(BaseCommand):
 
         starts = False
         title, unit, research, fsli, code = '', '', '', '', ''
-        count = 0
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
