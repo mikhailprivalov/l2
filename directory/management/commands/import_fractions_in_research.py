@@ -69,7 +69,7 @@ class Command(BaseCommand):
                                 new_fraction = Fractions(
                                     research_id=current_research.pk,
                                     relation_id=relation_id,
-                                    title=cells[title],
+                                    title=cells[title].strip(),
                                     unit_id=unit_id,
                                     units=unit_string,
                                     fsli=fraction_fsli_code,
