@@ -180,6 +180,12 @@ def menu(request):
                     "module": "l2_eds",
                 },
                 {
+                    "url": '/ui/upload-directions',
+                    "title": "Выгрузка",
+                    "nt": False,
+                    "access": ["Врач параклиники", "Врач консультаций", "Врач-лаборант"],
+                },
+                {
                     "url": '/ui/plan-hospitalization',
                     "title": "План госпитализации",
                     "nt": False,
