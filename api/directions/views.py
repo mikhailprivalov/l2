@@ -4205,11 +4205,11 @@ def need_send_ecp(request):
 
         rows.append(
             {
-                'pk': f"{d.pk}-{d.client.individual.fio(short=True)} ",
+                'pk': d.pk,
                 "totallySigned": False,
                 'confirmedAt': strfdatetime(ltc),
                 'docConfirmation': ldc,
-                'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
+                'services': f"{d.client.individual.fio(short=True)} {[x.research.get_title() for x in d.issledovaniya_set.all()]}",
                 'ecpDirectionNumber': d.ecp_direction_number if d.ecp_direction_number else result_send,
             }
         )
