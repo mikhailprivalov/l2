@@ -74,7 +74,7 @@ class Command(BaseCommand):
                                     units=unit_string,
                                     fsli=fraction_fsli_code,
                                     sort_weight=sort_weight + 1,
-                                    external_code=cells[code],
+                                    external_code=cells[code].strip(),
                                 )
                                 new_fraction.save()
                                 self.stdout.write(f'Услуге: {current_research.title} добавлена фракция: {new_fraction.title}')
