@@ -53,7 +53,7 @@ class Command(BaseCommand):
                             relation_id = fraction.relation_id
                             sort_weight = fraction.sort_weight
                         if need_add_fractions:
-                            unit_string = cells[unit].strip() if cells[unit] != "None" else None
+                            unit_string = cells[unit].strip() if cells[unit] != "None" else ""
                             unit_id = None
                             unit_db = None
                             if unit_string:
