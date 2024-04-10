@@ -38,7 +38,7 @@ class Command(BaseCommand):
                     code = cells.index("Код")
                     starts = True
             else:
-                research_nmy_code = cells[research].split(' - ')[0]
+                research_nmy_code = cells[research].split(' - ')[0].strip()
                 if research_nmy_code != "None":
                     fraction_fsli_code = cells[fsli].split(' ')[0]
                     current_research = Researches.objects.filter(code=research_nmy_code).first()
