@@ -1,9 +1,12 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from openpyxl.workbook import Workbook
 
 from appconf.manager import SettingManager
 from directory.models import Researches, Fractions, Unit
 from openpyxl import load_workbook
+
+from external_system.models import FsliRefbookTest
 
 
 class Command(BaseCommand):
@@ -23,6 +26,7 @@ class Command(BaseCommand):
 
         starts = False
         title, unit, research, fsli, code = '', '', '', '', ''
+        count = 0
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -49,8 +53,15 @@ class Command(BaseCommand):
                             relation_id = fraction.relation_id
                             sort_weight = fraction.sort_weight
                         if need_add_fractions:
+                            unit_string = cells[unit].strip() if cells[unit] != "None" else None
                             unit_id = None
-                            unit_db = Unit.objects.filter(short_title=cells[unit].strip()).first()
+                            unit_db = None
+                            if unit_string:
+                                unit_db = Unit.objects.filter(Q(short_title__iexact=unit_string) | Q(short_title__icontains=unit_string) | Q(title__icontains=unit_string)).first()
+                            else:
+                                fsli_test = FsliRefbookTest.objects.filter(code_fsli=fraction_fsli_code).first()
+                                if fsli_test and fsli_test.unit:
+                                    unit_db = Unit.objects.filter(Q(short_title__iexact=fsli_test.unit) | Q(short_title__icontains=fsli_test.unit) | Q(title__icontains=fsli_test.unit)).first()
                             if unit_db:
                                 unit_id = unit_db.pk
                             if relation_id is not None:
@@ -59,6 +70,7 @@ class Command(BaseCommand):
                                     relation_id=relation_id,
                                     title=cells[title],
                                     unit_id=unit_id,
+                                    units=unit_string,
                                     fsli=fraction_fsli_code,
                                     sort_weight=sort_weight + 1,
                                     external_code=cells[code],
