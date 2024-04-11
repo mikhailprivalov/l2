@@ -126,6 +126,11 @@ class FTPConnection:
         except Exception as e:
             self.error(f"Error deleting file {file}: {e}")
 
+    def copy_file(self, path, file):
+        self.ftp.cwd(path)
+        self.ftp.storelines(f"STOR {file}", open(file, 'r'))
+        self.log(f"File {file} copied")
+
     def read_file_as_text(self, file):
         self.log(f"Reading file {file}")
         with tempfile.NamedTemporaryFile() as f:
