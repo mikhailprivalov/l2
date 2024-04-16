@@ -43,7 +43,7 @@ class Command(BaseCommand):
                     if cards_document_snils:
                         for card_doc in cards_document_snils:
                             card = card_doc.card
-                            card.number_poliklinika = number_poliklinika
+                            card.number_poliklinika = number_poliklinika.strip()
                             card.save()
                             count += 1
                             logger.error(f'{number_poliklinika};загружен')  # noqa: T001
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                         if cards_document_polis:
                             for card_doc in cards_document_polis:
                                 card = card_doc.card
-                                card.number_poliklinika = number_poliklinika
+                                card.number_poliklinika = number_poliklinika.strip()
                                 card.save()
                                 count += 1
                                 logger.error(f'{number_poliklinika};загружен')  # noqa: T001
