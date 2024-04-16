@@ -1508,7 +1508,6 @@ class Napravleniya(models.Model):
                     period_param_week_date_start, period_param_week_day_start, week_date_start_end = None, None, None
                     if research.is_monitoring:
                         for i in research_data_params['groups'][0]['fields']:
-                            print(i)
                             if i['title'] == "Час":
                                 period_param_hour = i['value']
                             if i['title'] == "День":
@@ -1529,9 +1528,6 @@ class Napravleniya(models.Model):
                             if i['title'] == "Год":
                                 period_param_year = i['value']
                         type_period = research.type_period
-                        print(type_period)
-                        print(research.type_period)
-                        print(research)
 
                         if type_period == "PERIOD_WEEK":
                             week_date_start_end = Napravleniya.monitoring_week_correct(period_param_week_day_start, period_param_week_date_start)
