@@ -27,7 +27,7 @@ class Command(BaseCommand):
             r += 1
             cells = [str(x.value) for x in row]
             if not starts:
-                if "участок" in cells:
+                if "номер" in cells:
                     starts = True
                     number_card = cells.index("номер")
                     snils = cells.index("снилс")
