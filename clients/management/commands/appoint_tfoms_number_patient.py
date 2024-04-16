@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
-from clients.models import District, Document, CardDocUsage
+from clients.models import Document, CardDocUsage
 import logging
 
 logger = logging.getLogger(__name__)
