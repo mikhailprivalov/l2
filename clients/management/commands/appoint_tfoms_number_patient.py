@@ -60,4 +60,4 @@ class Command(BaseCommand):
 
                 else:
                     logger.error(f'{snils_number};Не загружен')  # noqa: T001
-        logger.error(f'{count}; кол-во')  # noqa: T001
+            logger.error(f'{count}; кол-во')  # noqa: T001
