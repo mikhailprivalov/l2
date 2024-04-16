@@ -126,10 +126,12 @@ class FTPConnection:
         except Exception as e:
             self.error(f"Error deleting file {file}: {e}")
 
-    def copy_file(self, path, file):
-        self.ftp.cwd(path)
-        self.ftp.storelines(f"STOR {file}", open(file, 'r'))
-        self.log(f"File {file} copied")
+    def copy_file(self, file_name: str, path: str):
+        with tempfile.NamedTemporaryFile() as file:
+            self.ftp.retrbinary(f"RETR {file_name}", file.write)
+            file.seek(0)
+            self.ftp.storbinary(f"STOR {path}{file_name}", file)
+            self.log(f"File {file_name} copied")
 
     def read_file_as_text(self, file):
         self.log(f"Reading file {file}")
@@ -589,7 +591,6 @@ def process_pull_orders():
     processed_files_by_url = defaultdict(set)
 
     hospitals = get_hospitals_pull_orders()
-
     stdout.write("Getting ftp links")
     ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
 
@@ -605,6 +606,10 @@ def process_pull_orders():
         stdout.write(f"Iterating over {len(ftp_links)} servers")
         for ftp_url, ftp_connection in ftp_connections.items():
             processed_files_new = set()
+            path_to_copy = None
+            path_to_push = ftp_connection.hospital.orders_push_by_numbers
+            if len(path_to_push) > 0:
+                path_to_copy = urlparse(path_to_push).path
             try:
                 ftp_connection.connect()
                 file_list = ftp_connection.get_file_list()
@@ -613,6 +618,8 @@ def process_pull_orders():
                     processed_files_new.add(file)
 
                     if file not in processed_files_by_url[ftp_url]:
+                        if path_to_copy:
+                            ftp_connection.copy_file(file, path_to_copy)
                         ftp_connection.pull_order(file)
 
             except ftplib.all_errors as e:
