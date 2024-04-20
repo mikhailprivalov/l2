@@ -10,15 +10,14 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """
-        :param path - xlsx файл с микроорганизмами со столбцами:
-        Название, Группа, LIS(код)
+        :param path - xlsx файл со столбцами:
+        Название, Короткое название, ИНН (опционально)
         """
         fp = kwargs["path"]
-        self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        title, short_title = '', ''
+        title, short_title, inn = '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -26,8 +25,20 @@ class Command(BaseCommand):
                     title = cells.index("Название")
                     short_title = cells.index("Короткое название")
                     starts = True
+                if "ИНН" in cells:
+                    inn = cells.index("ИНН")
             else:
-                company = Company.objects.filter(Q(title=cells[title]) | Q(short_title=cells[short_title]))
+                title_string = cells[title].strip()
+                short_title_string = cells[short_title].strip()
+                inn_string = None
+                if inn:
+                    inn_string = cells[inn].strip()
+                    company = Company.objects.filter(inn=inn_string)
+                else:
+                    company = Company.objects.filter(Q(title__iexact=title_string) | Q(short_title__iexact=short_title_string))
                 if not company.exists():
-                    Company(title=cells[title], short_title=cells[short_title]).save()
-                    print('компания создана', cells[title])  # noqa: T001
+                    new_company = Company(title=title_string, short_title=short_title_string)
+                    if inn:
+                        new_company.inn = inn_string
+                    new_company.save()
+                    self.stdout.write('компания создана', cells[title])
