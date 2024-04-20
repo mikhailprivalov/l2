@@ -41,4 +41,4 @@ class Command(BaseCommand):
                     if inn:
                         new_company.inn = inn_string
                     new_company.save()
-                    self.stdout.write('компания создана', cells[title])
+                    self.stdout.write('компания создана ' + title_string)
