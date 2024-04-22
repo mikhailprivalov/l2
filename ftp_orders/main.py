@@ -359,7 +359,10 @@ class FTPConnection:
             return
 
         self.log("HL7 parsed")
-        obr = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR
+        obr = []
+        for item in hl7_result.ORU_R01_RESPONSE:
+            if item.ORU_R01_ORDER_OBSERVATION:
+                obr = item.ORU_R01_ORDER_OBSERVATION.OBR
         external_add_order, iss_id = None, None
         is_confirm = False
         if "L2" not in obr.OBR_2.OBR_2_1.value:
@@ -375,8 +378,10 @@ class FTPConnection:
             is_confirm = True
         elif obr.OBR_25.value == "D":
             is_confirm = False
-
-        obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
+        obxes = []
+        for item in hl7_result.ORU_R01_RESPONSE:
+            if item.ORU_R01_ORDER_OBSERVATION:
+                obxes = item.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
         fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
         result = []
         for obx in obxes:
