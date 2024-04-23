@@ -37,11 +37,8 @@ class Command(BaseCommand):
                 if price_title:
                     current_price = PriceName.objects.filter(title__iexact=price_title)
                 if not current_price.exists():
-                    if company:
-                        new_price = PriceName(title=price_title, date_start=price_start, company_id=company.pk)
-                        new_price.save()
-                        self.stdout.write(f"Прайс {price_title} создан")
-                    else:
-                        self.stdout.write(f"Такого контрагента нет - {company_string}")
+                    new_price = PriceName(title=price_title, date_start=price_start, company_id=company.pk)
+                    new_price.save()
+                    self.stdout.write(f"Прайс {price_title} создан")
                 else:
                     self.stdout.write(f"Такой прайс уже есть - {price_title}")
