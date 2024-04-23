@@ -17,13 +17,12 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        company_idx, price_name_idx, price_start_idx, code_idx, price_name_plan_idx = '', '', '', '', ''
+        company_idx, price_name_idx, price_start_idx, code_idx = '', '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
                 if "Тарифный план" in cells:
                     company_idx = cells.index("Плательщик/Контрагент")
-                    price_name_plan_idx = cells.index("Тарифный план")
                     price_name_idx = cells.index("Тариф")
                     price_start_idx = cells.index("Действует С")
                     code_idx = cells.index("Код")
