@@ -17,12 +17,13 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        company_idx, price_name_idx, price_start_idx, code_idx = '', '', '', ''
+        company_idx, price_name_idx, price_start_idx, code_idx, price_name_plan_idx = '', '', '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
                 if "Тарифный план" in cells:
                     company_idx = cells.index("Плательщик/Контрагент")
+                    price_name_plan_idx = cells.index("Тарифный план")
                     price_name_idx = cells.index("Тариф")
                     price_start_idx = cells.index("Действует С")
                     code_idx = cells.index("Код")
@@ -34,11 +35,11 @@ class Command(BaseCommand):
                     company_string = cells[company_idx].strip()
                     company = Company.objects.filter(Q(title__iexact=company_string) | Q(short_title__iexact=company_string)).first()
                     if company:
-                        price_title = f"{cells[price_name_idx].strip()}-{company.short_title}"
+                        price_title = f"{company.short_title}-{cells[price_name_idx].strip()}-{price_code}"
                     else:
                         self.stdout.write(f"Компании {company_string} нет")
                         continue
-                    current_price = PriceName.objects.filter(Q(title__iexact=price_title) | Q(symbol_code=price_code))
+                    current_price = PriceName.objects.filter(symbol_code=price_code)
                     if not current_price.exists():
                         new_price = PriceName(title=price_title, date_start=price_start, company_id=company.pk, symbol_code=price_code)
                         new_price.save()
