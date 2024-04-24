@@ -47,6 +47,8 @@ class Command(BaseCommand):
                     if idx in not_price_col:
                         continue
                     service_coast = cell.strip()
+                    if service_coast == "None":
+                        continue
                     price_code = columns[idx]
                     price: PriceName = PriceName.objects.filter(symbol_code=price_code).first()
                     if not price:
@@ -54,10 +56,13 @@ class Command(BaseCommand):
                         continue
                     current_price_coasts: PriceCoast = PriceCoast.objects.filter(price_name_id=price.pk, research_id=service.pk).first()
                     if current_price_coasts:
-                        current_price_coasts.coast = service_coast
-                        self.stdout.write(f'Цена услуги {service.title} в прайсе {price.title} обновлена')
-                        # current_price_coasts.save()
+                        if current_price_coasts.coast != service_coast:
+                            current_price_coasts.coast = service_coast
+                            current_price_coasts.save()
+                            self.stdout.write(f'Цена услуги {service.title} в прайсе {price.title} обновлена')
+                        else:
+                            self.stdout.write(f'Цена услуги {service.title} в прайсе {price.title} совпадает')
                     else:
                         new_price_coasts: PriceCoast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=service_coast)
                         self.stdout.write(f'Добавлена услуга {service.title} в прайс {price.title}')
-                        # new_price_coasts.save()
+                        new_price_coasts.save()
