@@ -20,7 +20,7 @@ class Command(BaseCommand):
         starts = False
         internal_code_idx, service_name_idx, nmy_code_idx = '', '', ''
         not_price_col = []
-        columns = {}
+        price_columns = {}
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -30,7 +30,11 @@ class Command(BaseCommand):
                     nmy_code_idx = cells.index("Код ОКМУ")
                     not_price_col = [internal_code_idx, service_name_idx, nmy_code_idx]
                     for idx, column in enumerate(cells):
-                        columns[idx] = column.strip()
+                        if idx in not_price_col:
+                            continue
+                        price = PriceName.objects.filter(symbol_code=column.strip()).first()
+                        if price:
+                            price_columns[idx] = price.pk
                     starts = True
             else:
                 internal_code = cells[internal_code_idx].strip()
@@ -47,20 +51,16 @@ class Command(BaseCommand):
                     service_coast = cell.strip()
                     if service_coast == "None":
                         continue
-                    price_code = columns[idx]
-                    price: PriceName = PriceName.objects.filter(symbol_code=price_code).first()
-                    if not price:
+                    price_id = price_columns.get(idx)
+                    if not price_id:
                         self.stdout.write('Нет такого прайса')
                         continue
-                    current_price_coasts: PriceCoast = PriceCoast.objects.filter(price_name_id=price.pk, research_id=service.pk).first()
-                    if current_price_coasts:
-                        if current_price_coasts.coast != service_coast:
-                            current_price_coasts.coast = service_coast
-                            current_price_coasts.save()
-                            self.stdout.write(f'Цена услуги {service.title} в прайсе {price.title} обновлена')
-                        else:
-                            self.stdout.write(f'Цена услуги {service.title} в прайсе {price.title} совпадает')
+                    current_price_coasts: PriceCoast = PriceCoast.objects.filter(price_name_id=price_id, research_id=service.pk).first()
+                    if current_price_coasts and current_price_coasts.coast != service_coast:
+                        current_price_coasts.coast = service_coast
+                        current_price_coasts.save()
+                        self.stdout.write(f'Цена услуги {service.title} в прайсе {price_id} обновлена')
                     else:
-                        new_price_coasts: PriceCoast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=service_coast, number_services_by_contract=1)
-                        self.stdout.write(f'Добавлена услуга {service.title} в прайс {price.title}')
+                        new_price_coasts: PriceCoast = PriceCoast(price_name_id=price_id, research_id=service.pk, coast=service_coast, number_services_by_contract=1)
+                        self.stdout.write(f'Добавлена услуга {service.title} в прайс {price_id}')
                         new_price_coasts.save()
