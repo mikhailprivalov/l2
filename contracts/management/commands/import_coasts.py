@@ -63,6 +63,6 @@ class Command(BaseCommand):
                         else:
                             self.stdout.write(f'Цена услуги {service.title} в прайсе {price.title} совпадает')
                     else:
-                        new_price_coasts: PriceCoast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=service_coast)
+                        new_price_coasts: PriceCoast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=service_coast, number_services_by_contract=1)
                         self.stdout.write(f'Добавлена услуга {service.title} в прайс {price.title}')
                         new_price_coasts.save()
