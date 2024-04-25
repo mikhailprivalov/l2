@@ -4,13 +4,11 @@ import time
 from django.db.models import Q
 from openpyxl import Workbook
 
-from contracts.models import PriceCoast, PriceName
-from directory.models import Researches
+from contracts.models import PriceName
 from forms.sql_func import get_researches, get_coasts
 
 
 def form_01(request_data) -> Workbook:
-    start_time = time.time()
     work_book = Workbook()
     work_sheet = work_book[work_book.sheetnames[0]]
 
@@ -34,5 +32,4 @@ def form_01(request_data) -> Workbook:
     for value in research_dict.values():
         work_sheet.append(list(value.values()))
 
-    print("--- %s seconds ---" % (time.time() - start_time))
     return work_book
