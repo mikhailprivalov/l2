@@ -113,7 +113,6 @@ def xlsx(request):
     return response
 
 
-
 def extra_nofication(request):
     # Результат Экстренные извещения
     response = HttpResponse(content_type='application/pdf')
