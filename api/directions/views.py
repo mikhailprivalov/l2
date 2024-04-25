@@ -3920,7 +3920,6 @@ def process_to_sign_direction(direction, pk, user, iss_obj):
 
         for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
             signatures[s] = None
-
         if not d.file:
             file = None
             filename = None
