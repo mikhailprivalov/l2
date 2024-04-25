@@ -102,12 +102,12 @@ def xlsx(request):
 
     function = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
     xlsx_workbook: Workbook = function(
-            request_data={
-                **dict(request.GET.items()),
-                "user": request.user,
-                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
-            }
-        )
+        request_data={
+            **dict(request.GET.items()),
+            "user": request.user,
+            "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+        }
+    )
 
     xlsx_workbook.save(response)
     return response
