@@ -1,5 +1,4 @@
 import datetime
-import time
 
 from django.db.models import Q
 from openpyxl import Workbook
