@@ -249,7 +249,7 @@ def get_coasts(date_end):
             WHERE date_end >= %(date_end)s OR date_end is null
             ORDER BY contracts_pricename.id
         """,
-            params={"date_end": date_end}
+            params={"date_end": date_end},
         )
         rows = namedtuplefetchall(cursor)
     return rows
