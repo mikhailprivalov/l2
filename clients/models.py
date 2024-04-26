@@ -1122,7 +1122,7 @@ class Card(models.Model):
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
-    work_position_nsi_code = models.CharField(max_length=24, blank=True, default='', help_text="Код Должность НСИ")
+    work_position_nsi_code = models.CharField(max_length=24, blank=True, null=True, default='', help_text="Код Должность НСИ")
     work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")  # DEPRECATED
     work_department_db = models.ForeignKey('contracts.CompanyDepartment', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место отдела из базы")
     mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)
