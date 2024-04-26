@@ -253,6 +253,7 @@ def get_coasts(prices_ids):
         rows = namedtuplefetchall(cursor)
     return rows
 
+
 def get_prices(date_end):
     with connection.cursor() as cursor:
         cursor.execute(
