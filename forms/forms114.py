@@ -1,16 +1,21 @@
 import datetime
 from openpyxl import Workbook
 
+from contracts.models import PriceName
 from forms.sql_func import get_researches, get_coasts, get_prices
 
 
 def form_01(request_data) -> Workbook:
+    price_id = request_data.get("priceId")
     work_book = Workbook()
     work_sheet = work_book[work_book.sheetnames[0]]
 
     current_day = datetime.datetime.now()
     researches = get_researches()
-    prices = get_prices(current_day)
+    if price_id:
+        prices = PriceName.objects.filter(pk=price_id)
+    else:
+        prices = get_prices(current_day)
     price_template = {price.id: 0 for price in prices}
     price_ids = tuple(price_template.keys())
     price_titles = [f"{price.title}-{price.symbol_code}" for price in prices]
