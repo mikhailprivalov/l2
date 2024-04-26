@@ -240,14 +240,26 @@ def get_researches():
     return rows
 
 
-def get_coasts(date_end):
+def get_coasts(prices_ids):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT coast, price_name_id, research_id, title FROM contracts_pricecoast
-              LEFT JOIN contracts_pricename on contracts_pricecoast.price_name_id = contracts_pricename.id
+            SELECT coast, price_name_id, research_id FROM contracts_pricecoast
+            WHERE price_name_id in %(prices_ids)s
+            ORDER BY price_name_id
+        """,
+            params={"prices_ids": prices_ids},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+def get_prices(date_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT id, title, symbol_code FROM contracts_pricename
             WHERE date_end >= %(date_end)s OR date_end is null
-            ORDER BY contracts_pricename.id
+            ORDER BY title
         """,
             params={"date_end": date_end},
         )
