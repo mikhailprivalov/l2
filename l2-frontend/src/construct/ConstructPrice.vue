@@ -14,6 +14,15 @@
       placeholder="Выберите прайс"
       class="select-price"
     />
+    <span>
+       <a
+        class="a-under a-align margin-top  margin-bottom"
+        href="#"
+        @click.prevent="downloadAllSpecificationTOXlsx"
+      >
+        XLSX
+      </a>
+    </span>
     <div class="edit-price">
       <table class="table">
         <colgroup>
@@ -452,6 +461,9 @@ export default {
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
+    downloadAllSpecificationTOXlsx() {
+      window.open('/forms/xlsx?type=114.01', '_blank');
+    },
     async copyPrice() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('copy-price', {
@@ -629,6 +641,9 @@ export default {
 }
 .margin-bottom {
   margin-bottom: 10px;
+}
+.margin-top {
+  margin-top: 10px;
 }
 .border {
   border: 1px solid #ddd;

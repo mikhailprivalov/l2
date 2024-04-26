@@ -2,6 +2,7 @@
 import json
 import os
 
+from openpyxl import Workbook
 from django.http import HttpResponse
 from django.utils.module_loading import import_string
 import datetime
@@ -89,6 +90,26 @@ def docx(request):
     response['Content-Disposition'] = 'attachment; filename="form-' + t + '.docx"'
     doc.save(response)
 
+    return response
+
+
+def xlsx(request):
+    """Генерация XLSX"""
+
+    response = HttpResponse(content_type='application/ms-excel')
+    type_form = request.GET.get("type")
+    response['Content-Disposition'] = 'attachment; filename="form-' + type_form + '.xlsx"'
+
+    function = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
+    xlsx_workbook: Workbook = function(
+        request_data={
+            **dict(request.GET.items()),
+            "user": request.user,
+            "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+        }
+    )
+
+    xlsx_workbook.save(response)
     return response
 
 
