@@ -1,10 +1,6 @@
 import datetime
-import time
-
-from django.db.models import Q
 from openpyxl import Workbook
 
-from contracts.models import PriceName
 from forms.sql_func import get_researches, get_coasts, get_prices
 
 
