@@ -18,7 +18,7 @@
        <a
         class="a-under a-align margin-top  margin-bottom"
         href="#"
-        @click.prevent="downloadAllSpecificationTOXlsx"
+        @click.prevent="downloadCoastTOXlsx"
       >
         XLSX
       </a>
@@ -163,6 +163,13 @@
         @click.prevent="downloadSpecification"
       >
         Cпецификация
+      </a>
+      <a
+        class="a-under a-align r-padding"
+        href="#"
+        @click.prevent="downloadCoastTOXlsx(selectedPrice)"
+      >
+        XLSX
       </a>
       <a
         class="a-under a-align r-padding"
@@ -461,8 +468,8 @@ export default {
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
-    downloadAllSpecificationTOXlsx() {
-      window.open('/forms/xlsx?type=114.01', '_blank');
+    downloadCoastTOXlsx(priceId = null) {
+      window.open(`/forms/xlsx?type=114.01&priceId=${priceId}`, '_blank');
     },
     async copyPrice() {
       await this.$store.dispatch(actions.INC_LOADING);
