@@ -9,7 +9,6 @@ from forms.sql_func import get_researches, get_coasts, get_prices
 
 
 def form_01(request_data) -> Workbook:
-    start_time = time.time()
     work_book = Workbook()
     work_sheet = work_book[work_book.sheetnames[0]]
 
