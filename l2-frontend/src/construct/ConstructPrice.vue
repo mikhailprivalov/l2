@@ -18,7 +18,7 @@
        <a
         class="a-under a-align margin-top  margin-bottom"
         href="#"
-        @click.prevent="downloadCoastTOXlsx"
+        @click.prevent="downloadCoastTOXlsx()"
       >
         XLSX
       </a>

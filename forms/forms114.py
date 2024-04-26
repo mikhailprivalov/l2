@@ -12,7 +12,7 @@ def form_01(request_data) -> Workbook:
 
     current_day = datetime.datetime.now()
     researches = get_researches()
-    if price_id:
+    if price_id and price_id != 'null':
         prices = PriceName.objects.filter(pk=price_id)
     else:
         prices = get_prices(current_day)
