@@ -22,7 +22,6 @@ def form_01(request_data) -> Workbook:
         if research_dict.get(coast.research_id):
             research_dict[coast.research_id][coast.price_name_id] = str(coast.coast)
 
-
     headers = ["Код по прайсу", "Услуга", "Код ОКМУ"]
     headers.extend(price_titles)
     work_sheet.append(headers)
