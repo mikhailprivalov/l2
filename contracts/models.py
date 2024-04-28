@@ -10,7 +10,7 @@ from contracts.sql_func import search_companies, get_examination_data
 from clients.models import Card, HarmfulFactor
 from laboratory.settings import CONTROL_AGE_MEDEXAM
 from laboratory.utils import current_year
-from users.models import AssignmentResearches
+from users.models import AssignmentResearches, DoctorProfile
 
 
 class PriceCategory(models.Model):
@@ -348,3 +348,18 @@ class MedicalExamination(models.Model):
     class Meta:
         verbose_name = "Медицинский осмотр"
         verbose_name_plural = "Медицинские осмотры"
+
+
+class AccountRegister(models.Model):
+    company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
+    create_at = models.DateField(help_text="Дата создания", db_index=True)
+    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель направления', on_delete=models.SET_NULL)
+    date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True)
+    date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.company} - {self.date_start} - {self.date_end}"
+
+    class Meta:
+        verbose_name = "Счет-реестр"
+        verbose_name_plural = "Счета-реестры"

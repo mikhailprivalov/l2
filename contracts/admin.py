@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment, MedicalExamination
+from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment, MedicalExamination, AccountRegister
 
 
 class ResPriceCoast(admin.ModelAdmin):
@@ -94,6 +94,12 @@ class ResMedicalExamination(admin.ModelAdmin):
     autocomplete_fields = ('card',)
 
 
+class ResAccountRegister(admin.ModelAdmin):
+    list_display = ('company',)
+    list_display_links = ('company',)
+    list_filter = ('company', 'create_at',)
+
+
 admin.site.register(PriceCategory)
 admin.site.register(PriceName)
 admin.site.register(Contract, ResContract)
@@ -101,3 +107,4 @@ admin.site.register(Company, ResCompany)
 admin.site.register(CompanyDepartment, ResCompanyDepartment)
 admin.site.register(PriceCoast, ResPriceCoast)
 admin.site.register(MedicalExamination, ResMedicalExamination)
+admin.site.register(AccountRegister, ResAccountRegister)
