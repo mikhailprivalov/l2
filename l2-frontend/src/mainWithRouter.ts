@@ -193,6 +193,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/complex-services',
+      name: 'construct_complex',
+      component: () => import('@/construct/ConstructComplex.vue'),
+      meta: {
+        title: 'Комплексные услуги',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
