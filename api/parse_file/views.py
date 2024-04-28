@@ -682,7 +682,8 @@ def load_price_coasts(price_id: int, file):
                     if idx in service_cols:
                         continue
                     coast_idx = idx
-                if price.title != cells[coast_idx]:
+                price_title = f"{price.title}-{price.symbol_code}"
+                if price_title != cells[coast_idx].strip():
                     return False
                 starts = True
         else:
