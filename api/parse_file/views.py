@@ -5,6 +5,7 @@ import logging
 import re
 import tempfile
 from copy import deepcopy
+from sys import stdout
 
 from django.http import HttpRequest, JsonResponse
 
@@ -19,7 +20,7 @@ from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast, Company, MedicalExamination, CompanyDepartment
+from contracts.models import PriceCoast, Company, MedicalExamination, CompanyDepartment, PriceName
 import directions.models as directions
 from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups, ParaclinicInputField
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
@@ -660,9 +661,64 @@ def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_fam
     return patient_card
 
 
+def load_price_coasts(price_id: int, file):
+    price = PriceName.objects.filter(pk=price_id).first()
+    if not price:
+        return False
+    wb = load_workbook(filename=file)
+    ws = wb[wb.sheetnames[0]]
+    internal_code_idx, title_idx, code_idx, coast_idx = '', '', '', ''
+    starts = False
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "Код по прайсу" in cells:
+                internal_code_idx = cells.index("Код по прайсу")
+                title_idx = cells.index("Услуга")
+                code_idx = cells.index("Код ОКМУ")
+                service_cols = [internal_code_idx, title_idx, code_idx]
+                coast_idx = None
+                for idx, cell in enumerate(cells):
+                    if idx in service_cols:
+                        continue
+                    coast_idx = idx
+                price_title = f"{price.title}-{price.symbol_code}"
+                if price_title != cells[coast_idx].strip():
+                    return False
+                starts = True
+        else:
+            internal_code = cells[internal_code_idx].strip()
+            coast = cells[coast_idx].strip()
+            if internal_code == "None" or coast == "None" or coast == "0":
+                continue
+            service = Researches.objects.filter(internal_code=internal_code).first()
+            if not service:
+                continue
+            current_coast = PriceCoast.objects.filter(price_name_id=price.pk, research_id=service.pk).first()
+            if current_coast:
+                if current_coast.coast != coast:
+                    current_coast.coast = coast
+                    current_coast.save()
+            else:
+                new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
+                new_coast.save()
+    return True
+
+
 @login_required
 def load_csv(request):
     file_data = request.FILES["file"]
+    selected_price = request.POST.get('selectedPrice')
+    if selected_price:
+        result = False
+        try:
+            result = load_price_coasts(selected_price, file_data)
+        except:
+            stdout.write('Файл не загружен')
+        if result:
+            return JsonResponse({"ok": True, "results": [], "methods": []})
+        else:
+            return JsonResponse({"ok": False, "results": [], "methods": []})
     file_data = file_data.read().decode("utf-8")
     io_string = io.StringIO(file_data)
 
