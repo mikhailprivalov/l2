@@ -688,7 +688,7 @@ def load_price_coasts(price_id: int, file):
         else:
             internal_code = cells[internal_code_idx].strip()
             coast = cells[coast_idx].strip()
-            if internal_code == "None" or coast == "None":
+            if internal_code == "None" or coast == "None" or coast == "0":
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
             if not service:
