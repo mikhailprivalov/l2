@@ -1,7 +1,8 @@
 <template>
-  <div>
+  <div class="pointer">
     <a
-      @click.prevent="openModal">{{ titleLocal }}
+      @click.prevent="openModal"
+    >{{ titleLocal }}
     </a>
     <Modal
       v-if="open"
@@ -23,7 +24,6 @@
             <button
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
-              :disabled="loading"
               @click="open = false"
             >
               Закрыть
@@ -34,30 +34,30 @@
     </Modal>
   </div>
 </template>
-<script setup lang="ts">
-import { ref, computed } from 'vue'
 
-import Modal from "@/ui-cards/Modal.vue";
-import UploadFile from "@/components/UploadFile.vue";
-import Component from "vue-class-component";
+<script setup lang="ts">
+import { computed, ref } from 'vue';
+
+import Modal from '@/ui-cards/Modal.vue';
+import UploadFile from '@/components/UploadFile.vue';
 
 const props = defineProps({
   title: {
     type: String,
     required: false,
-  }
-})
+  },
+});
 
-const titleLocal = computed(() => {
-  return props.title ? props.title : 'Загрузка файла'
-})
+const titleLocal = computed(() => (props.title ? props.title : 'Загрузка файла'));
 
 const open = ref(false);
 const openModal = () => {
   open.value = true;
-}
+};
 </script>
 
 <style scoped lang="scss">
-
+.pointer {
+  cursor: pointer;
+}
 </style>

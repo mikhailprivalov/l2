@@ -15,7 +15,7 @@
       class="select-price"
     />
     <span>
-       <a
+      <a
         class="a-under a-align margin-top  margin-bottom"
         href="#"
         @click.prevent="downloadCoastTOXlsx()"
@@ -178,6 +178,7 @@
       >
         Скопировать
       </a>
+      <UploadFileModal title="Загрузить цены" />
       <a>
         <LoadFile
           :is-gen-commercial-offer="true"
@@ -362,11 +363,16 @@ import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import RadioField from '@/fields/RadioField.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'ConstructPrice',
   components: {
-    RadioField, VueTippyTd, Treeselect, LoadFile,
+    UploadFileModal,
+    RadioField,
+    VueTippyTd,
+    Treeselect,
+    LoadFile,
   },
   data() {
     return {
