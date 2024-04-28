@@ -503,7 +503,7 @@ class Napravleniya(models.Model):
     )
     parent_case = models.ForeignKey('Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL)
     parent_complex_research = models.ForeignKey(
-    "Issledovaniya", related_name="parent_complex_research", help_text="Комлексная услуга оснвоание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
+    "Issledovaniya", related_name="parent_complex_research", help_text="Комлексная услуга основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
