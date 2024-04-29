@@ -12,15 +12,20 @@
     />
     <div v-if="selectedForm">
       <input
-        ref="file"
+        ref="fileInput"
         style="margin-top: 15px"
         type="file"
         class="form-control-file"
+        :readonly="loading"
         :accept="fileFilter"
         @change="handleFileUpload"
       >
       <div v-if="fileIsSelected">
-        <button class="btn btn-blue-nb">
+        <button
+          class="btn btn-blue-nb"
+          :disabled="loading"
+          @click="submitFileUpload()"
+        >
           Загрузить файл
         </button>
       </div>
@@ -34,6 +39,8 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 import typesAndForms from './types-and-forms-file';
 
@@ -56,6 +63,7 @@ const props = defineProps({
 });
 
 const fileFilter = ref('');
+const loading = ref(false);
 
 const currentFileTypes = ref([]);
 const selectedType = ref(null);
@@ -94,23 +102,39 @@ const changeType = () => {
   appendCurrentForms();
 };
 
+const fileInput = ref(null);
 const file = ref(null);
 const fileIsSelected = ref(false);
 
 const handleFileUpload = () => {
-  const input = file.value as HTMLInputElement;
+  const input = fileInput.value as HTMLInputElement;
   const re = /(?:\.([^.]+))?$/;
   const fileExtension = re.exec(input.value)[1];
-  console.log(fileExtension);
   if (fileExtension.toLowerCase() !== String(selectedType.value).toLowerCase()) {
     input.value = '';
     fileIsSelected.value = false;
     root.$emit('msg', 'error', `Файл не ${selectedType.value}`);
   } else {
+    [file.value] = input.files;
     fileIsSelected.value = true;
   }
 };
 
+const submitFileUpload = async () => {
+  loading.value = true;
+  try {
+    const formData = new FormData();
+    formData.append('file', file.value);
+    formData.append('selectedForm', selectedForm.value);
+    const { data } = await api('parse-file/upload-file', null, null, null, formData);
+    console.log(data);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+    root.$emit('msg', 'error', 'Ошибка загрузки');
+  }
+  loading.value = false;
+};
 </script>
 
 <style scoped lang="scss">

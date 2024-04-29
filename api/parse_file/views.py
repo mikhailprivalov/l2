@@ -8,6 +8,7 @@ from copy import deepcopy
 from sys import stdout
 
 from django.http import HttpRequest, JsonResponse
+from django.utils.module_loading import import_string
 
 from api.directions.views import eds_documents
 from api.models import Application
@@ -25,6 +26,7 @@ import directions.models as directions
 from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups, ParaclinicInputField
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
+from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
@@ -641,10 +643,10 @@ def find_and_replace(text, symbol1, symbol2):
     result = []
     for i in range(len(text)):
         if text[i] == symbol1:
-            current_text = text[0:i] + symbol2 + text[i + 1 :]
+            current_text = text[0:i] + symbol2 + text[i + 1:]
             result.append(current_text)
         elif text[i] == symbol2:
-            current_text = text[0:i] + symbol1 + text[i + 1 :]
+            current_text = text[0:i] + symbol1 + text[i + 1:]
             result.append(current_text)
     return result
 
@@ -781,13 +783,13 @@ def load_equipment(request):
             result = re.findall(search_result, data_from_cell)
             if len(result) > 0:
                 num_row = cell.row
-                result_data = ws[f"A{num_row + 1}:M{num_row+10}"]
+                result_data = ws[f"A{num_row + 1}:M{num_row + 10}"]
                 result_list = [[j.value for j in k] for k in result_data]
 
             result = re.findall(search_tubes_number, data_from_cell)
             if len(result) > 0:
                 num_row = cell.row
-                tube_data = ws[f"A{num_row + 1}:M{num_row+10}"]
+                tube_data = ws[f"A{num_row + 1}:M{num_row + 10}"]
                 tube_list = [[j.value for j in k] for k in tube_data]
 
             if cell.value == "Тест:":
@@ -953,3 +955,23 @@ def get_parts_fio(fio_data):
     if len(fio_data) > 2:
         patronymic_data = fio_data[2]
     return family_data, name_data, patronymic_data
+
+
+def upload_file(request):
+    result = []
+    try:
+        file = request.FILES["file"]
+        request_data = request.POST
+        selected_form = request_data.get('selectedForm')
+        function = import_string('api.parse_file.forms' + selected_form[0:3] + '.form_' + selected_form[4:6])
+        result = function(
+            request_data={
+                "file": file,
+                **request_data,
+                "user": request.user,
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            }
+        )
+    except Exception as e:
+        print(e)
+    return JsonResponse({"data": result})
