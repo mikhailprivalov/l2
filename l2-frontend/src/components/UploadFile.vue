@@ -39,7 +39,6 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
-import * as actions from '@/store/action-types';
 import api from '@/api';
 
 import typesAndForms from './types-and-forms-file';
