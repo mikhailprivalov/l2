@@ -6,10 +6,11 @@
       @modified="changeType"
     />
     <Treeselect
+      v-if="selectedType"
       v-model="selectedForm"
       :options="currentFileForms"
     />
-    <div>
+    <div v-if="selectedForm">
       <input
         ref="file"
         style="margin-top: 15px"
@@ -18,12 +19,17 @@
         :accept="fileFilter"
         @change="handleFileUpload"
       >
+      <div v-if="fileIsSelected">
+        <button class="btn btn-blue-nb">
+          Загрузить файл
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { getCurrentInstance, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -33,6 +39,7 @@ import typesAndForms from './types-and-forms-file';
 
 const { fileTypes, fileForms } = typesAndForms();
 
+const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   typesFile: {
     type: Array,
@@ -56,8 +63,8 @@ const selectedType = ref(null);
 const appendCurrentTypes = () => {
   currentFileTypes.value = [];
   if (props.typesFile) {
-    for (const type of props.typesFile) {
-      currentFileTypes.value.push(fileTypes.value[type]);
+    for (const typeFile of props.typesFile) {
+      currentFileTypes.value.push(fileTypes.value[typeFile]);
     }
   } else {
     currentFileTypes.value = Object.values(fileTypes.value);
@@ -88,11 +95,20 @@ const changeType = () => {
 };
 
 const file = ref(null);
+const fileIsSelected = ref(false);
 
 const handleFileUpload = () => {
-  const inputValue = file.value as HTMLInputElement;
-  const currentFiles = inputValue.files;
-  console.log(currentFiles);
+  const input = file.value as HTMLInputElement;
+  const re = /(?:\.([^.]+))?$/;
+  const fileExtension = re.exec(input.value)[1];
+  console.log(fileExtension);
+  if (fileExtension.toLowerCase() !== String(selectedType.value).toLowerCase()) {
+    input.value = '';
+    fileIsSelected.value = false;
+    root.$emit('msg', 'error', `Файл не ${selectedType.value}`);
+  } else {
+    fileIsSelected.value = true;
+  }
 };
 
 </script>
