@@ -16,10 +16,12 @@
     >
       <span slot="header">{{ titleLocal }}</span>
       <div slot="body">
-        <UploadFile
-          :types-file="props.typesFile"
-          :forms-file="props.formsFile"
-        />
+        <div class="body">
+          <UploadFile
+            :types-file="props.typesFile"
+            :forms-file="props.formsFile"
+          />
+        </div>
       </div>
       <div slot="footer">
         <div class="row">
@@ -74,5 +76,8 @@ const openModal = () => {
 <style scoped lang="scss">
 .pointer {
   cursor: pointer;
+}
+.body {
+  height: 300px;
 }
 </style>
