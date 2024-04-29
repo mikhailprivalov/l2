@@ -20,6 +20,9 @@
           <UploadFile
             :types-file="props.typesFile"
             :forms-file="props.formsFile"
+            :upload-result="props.uploadResult"
+            :entity-id="props.entityId"
+            :other-need-data="props.otherNeedData"
           />
         </div>
       </div>
@@ -61,6 +64,14 @@ const props = defineProps({
   },
   uploadResult: {
     type: Boolean,
+    required: false,
+  },
+  entityId: {
+    type: Number,
+    required: false,
+  },
+  otherNeedData: {
+    type: Object || Array || String || Number,
     required: false,
   },
 });
