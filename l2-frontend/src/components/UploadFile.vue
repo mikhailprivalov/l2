@@ -2,12 +2,12 @@
   <div>
     <RadioFieldById
       v-model="selectedType"
-      :variants="fileTypes"
+      :variants="currentFileTypes"
       @modified="changeType"
     />
     <Treeselect
       v-model="selectedForm"
-      :options="fileForms"
+      :options="currentFileForms"
     />
     <div>
       <input
@@ -31,36 +31,26 @@ import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 import typesAndForms from './types-and-forms-file';
 
-const { typesFile, formsFile } = typesAndForms();
+const { fileTypes, fileForms } = typesAndForms();
 
 const fileFilter = ref('');
 
-const fileTypes = ref([
-  { id: 1, label: 'XLSX' },
-  { id: 2, label: 'PDF' },
-  { id: 3, label: 'CSV' },
-]);
-const selectedType = ref(-1);
-
-const selectedTypeLabel = computed(() => fileTypes.value.find((type) => type.id === selectedType.value).label);
+const currentFileTypes = ref([]);
+const selectedType = ref(null);
 
 const changeType = () => {
-  fileFilter.value = `.${selectedTypeLabel.value}`;
+  fileFilter.value = `.${selectedType.value}`;
 };
 
-const fileForms = ref([
-  { id: 1, label: 'Загрузка цен по прайсу' },
-]);
-const selectedForm = ref(-1);
+const currentFileForms = ref([]);
+const selectedForm = ref(null);
 
 const file = ref(null);
 
 const handleFileUpload = () => {
-  console.log(typesFile);
   const inputValue = file.value as HTMLInputElement;
   const currentFiles = inputValue.files;
   console.log(currentFiles);
-  file.value = null;
 };
 
 </script>
