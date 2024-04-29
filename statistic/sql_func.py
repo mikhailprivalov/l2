@@ -885,6 +885,7 @@ def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, f
             """
                 SELECT 
                     directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.id as iss_id,
                     directions_issledovaniya.research_id,
                     directory_researches.title as research_title,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,

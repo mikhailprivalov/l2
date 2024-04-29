@@ -4,7 +4,7 @@ import simplejson as json
 
 from clients.models import CardBase
 from contracts.models import BillingRegister
-from directions.models import IstochnikiFinansirovaniya
+from directions.models import IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
@@ -30,7 +30,9 @@ def get_research_for_billing(request):
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
         sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk)
     result = {}
+    iss_data = set()
     for i in sql_result:
+        iss_data.add(i.iss_id)
         current_data = {
                     "research_id": i.research_id,
                     "research_title": i.research_title,
@@ -44,7 +46,7 @@ def get_research_for_billing(request):
         else:
             result[i.patient_card_num].append(current_data.copy())
 
-    return JsonResponse({"result": result})
+    return JsonResponse({"result": result, 'iss_ids': list(iss_data)})
 
 
 @login_required
@@ -66,7 +68,9 @@ def create_new_billing(request):
 def confirm_billing(request):
     body = json.loads(request.body)
     billing_id = body.get("billingId")
-    is_confirm_billing = BillingRegister.confirm_billing(billing_id, [])
+    iss_ids = body.get("iss_ids")
+    is_confirm_billing = BillingRegister.confirm_billing(billing_id)
+    set_billing_id_for_iss = Issledovaniya.save_billing(billing_id, iss_ids)
     return JsonResponse({"ok": is_confirm_billing})
 
 

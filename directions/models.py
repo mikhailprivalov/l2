@@ -2318,6 +2318,15 @@ class Issledovaniya(models.Model):
     plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
     billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
 
+    @staticmethod
+    def save_billing(iss_ids, billing_id):
+        iss = Issledovaniya.objects.filter(id_in=iss_ids)
+        for i in iss:
+            i.billing_id = billing_id
+            i.save()
+        return True
+
+
 
     @property
     def time_save_local(self):

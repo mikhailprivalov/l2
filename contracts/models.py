@@ -8,7 +8,6 @@ from django.db import models
 import directory.models as directory
 from contracts.sql_func import search_companies, get_examination_data
 from clients.models import Card, HarmfulFactor
-from directions.models import Issledovaniya
 from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM
 from laboratory.utils import current_year
@@ -359,8 +358,8 @@ class BillingRegister(models.Model):
     who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель счета', on_delete=models.SET_NULL)
     date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True, db_index=True)
     date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
-    info = models.CharField(max_length=128, help_text="Информация по счет", db_index=True)
-    is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет", )
+    info = models.CharField(max_length=128, help_text="Информация по счет",  default=None, blank=True, null=True)
+    is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
 
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end}"
@@ -383,16 +382,22 @@ class BillingRegister(models.Model):
 
 
     @staticmethod
-    def confirm_billing(billing_id, issledovaniya_ids):
+    def confirm_billing(billing_id):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         current_billing.is_confirmed = True
         current_billing.save()
-        iss = Issledovaniya.objects.filter(id_in=issledovaniya_ids)
-        for i in iss:
-            i.billing=current_billing
-            i.save()
         return True
 
     class Meta:
         verbose_name = "Счет-реестр"
         verbose_name_plural = "Счета-реестры"
+
+
+class RawDocumentBillingRegister(models.Model):
+    billing = models.ForeignKey(BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Cчету", on_delete=models.SET_NULL)
+    raw_data = models.TextField(default=None, blank=True, null=True, help_text="Данные документа")
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+
+    class Meta:
+        verbose_name = "Счет-реестр документ"
+        verbose_name_plural = "Счета-реестры документы исторические версии"
