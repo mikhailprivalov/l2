@@ -16,7 +16,10 @@
     >
       <span slot="header">{{ titleLocal }}</span>
       <div slot="body">
-        <UploadFile />
+        <UploadFile
+          :types-file="props.typesFile"
+          :forms-file="props.formsFile"
+        />
       </div>
       <div slot="footer">
         <div class="row">
@@ -44,6 +47,18 @@ import UploadFile from '@/components/UploadFile.vue';
 const props = defineProps({
   title: {
     type: String,
+    required: false,
+  },
+  typesFile: {
+    type: Array,
+    required: false,
+  },
+  formsFile: {
+    type: Array,
+    required: false,
+  },
+  uploadResult: {
+    type: Boolean,
     required: false,
   },
 });
