@@ -222,6 +222,12 @@ def menu(request):
                     "nt": False,
                     "access": ["Обороты"],
                 },
+                {
+                    "url": '/ui/billing',
+                    "title": "Счета на оплату",
+                    "nt": True,
+                    "access": ["Счет: проект, Счет: закрытие"],
+                },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
             ]
 

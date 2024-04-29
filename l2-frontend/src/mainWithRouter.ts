@@ -742,6 +742,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/billing',
+      name: 'Billing',
+      component: () => import('@/pages/Billing/Billing.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Счет на оплату',
+        groups: ['Счет: проект'],
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),

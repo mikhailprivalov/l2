@@ -8,6 +8,8 @@ from django.db import models
 import directory.models as directory
 from contracts.sql_func import search_companies, get_examination_data
 from clients.models import Card, HarmfulFactor
+from directions.models import Issledovaniya
+from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM
 from laboratory.utils import current_year
 from users.models import AssignmentResearches, DoctorProfile
@@ -350,15 +352,46 @@ class MedicalExamination(models.Model):
         verbose_name_plural = "Медицинские осмотры"
 
 
-class AccountRegister(models.Model):
-    company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
-    create_at = models.DateField(help_text="Дата создания", db_index=True)
-    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель направления', on_delete=models.SET_NULL)
-    date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True)
-    date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True)
+class BillingRegister(models.Model):
+    company = models.ForeignKey(Company, db_index=True, default=None, blank=True, null=True, help_text='Работодатель', on_delete=models.SET_NULL)
+    hospital = models.ForeignKey(Hospitals, db_index=True, default=None, blank=True, null=True, help_text='Заказачик больница', on_delete=models.SET_NULL)
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель счета', on_delete=models.SET_NULL)
+    date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True, db_index=True)
+    date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
+    info = models.CharField(max_length=128, help_text="Информация по счет", db_index=True)
+    is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет", )
 
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end}"
+
+    @staticmethod
+    def save_billing(company_id, hospital_id, billing_id, date_start, date_end, info):
+        current_billing = BillingRegister.objects.filter(id=billing_id).first()
+        if current_billing:
+            current_billing.company_id = company_id
+            current_billing.hospital_id = hospital_id
+            current_billing.date_start = date_start
+            current_billing.date_end = date_end
+            current_billing.info = info
+            current_billing.save()
+        else:
+            current_billing= BillingRegister(hospital=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end).save()
+        if not current_billing.info:
+            info = current_billing.pk
+        return info
+
+
+    @staticmethod
+    def confirm_billing(billing_id, issledovaniya_ids):
+        current_billing = BillingRegister.objects.filter(id=billing_id).first()
+        current_billing.is_confirmed = True
+        current_billing.save()
+        iss = Issledovaniya.objects.filter(id_in=issledovaniya_ids)
+        for i in iss:
+            i.billing=current_billing
+            i.save()
+        return True
 
     class Meta:
         verbose_name = "Счет-реестр"

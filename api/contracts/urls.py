@@ -3,5 +3,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('get-subgroups-all', views.get_subgroups_all),
+    path('create-new-billing', views.create_new_billing),
+    path('get-research-for-billing', views.get_research_for_billing),
 ]

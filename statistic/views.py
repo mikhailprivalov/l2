@@ -2194,3 +2194,8 @@ def open_xls(request):
 
 def get_price_company(company_id, start_date, end_date):
     return PriceName.get_company_price_by_date(company_id, start_date.date(), end_date.date())
+
+
+def get_price_hospital(hospital_id, start_date, end_date):
+    print("get_price_hospital", hospital_id, start_date, end_date)
+    return PriceName.get_hospital_price_by_date(hospital_id, start_date, end_date, is_subcontract=True)
