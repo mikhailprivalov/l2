@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -33,17 +33,59 @@ import typesAndForms from './types-and-forms-file';
 
 const { fileTypes, fileForms } = typesAndForms();
 
+const props = defineProps({
+  typesFile: {
+    type: Array,
+    required: false,
+  },
+  formsFile: {
+    type: Array,
+    required: false,
+  },
+  uploadResult: {
+    type: Boolean,
+    required: false,
+  },
+});
+
 const fileFilter = ref('');
 
 const currentFileTypes = ref([]);
 const selectedType = ref(null);
 
-const changeType = () => {
-  fileFilter.value = `.${selectedType.value}`;
+const appendCurrentTypes = () => {
+  currentFileTypes.value = [];
+  if (props.typesFile) {
+    for (const type of props.typesFile) {
+      currentFileTypes.value.push(fileTypes.value[type]);
+    }
+  } else {
+    currentFileTypes.value = Object.values(fileTypes.value);
+  }
 };
+
+onMounted(() => {
+  appendCurrentTypes();
+});
 
 const currentFileForms = ref([]);
 const selectedForm = ref(null);
+const appendCurrentForms = () => {
+  currentFileForms.value = [];
+  if (props.formsFile) {
+    for (const form of props.formsFile) {
+      currentFileForms.value.push(fileForms.value[selectedType.value][form]);
+    }
+  } else {
+    currentFileForms.value = Object.values(fileForms.value[selectedType.value]);
+  }
+};
+
+const changeType = () => {
+  fileFilter.value = `.${selectedType.value}`;
+  selectedForm.value = null;
+  appendCurrentForms();
+};
 
 const file = ref(null);
 
