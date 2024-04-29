@@ -29,6 +29,10 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
+import typesAndForms from './types-and-forms-file';
+
+const { typesFile, formsFile } = typesAndForms();
+
 const fileFilter = ref('');
 
 const fileTypes = ref([
@@ -52,6 +56,7 @@ const selectedForm = ref(-1);
 const file = ref(null);
 
 const handleFileUpload = () => {
+  console.log(typesFile);
   const inputValue = file.value as HTMLInputElement;
   const currentFiles = inputValue.files;
   console.log(currentFiles);
