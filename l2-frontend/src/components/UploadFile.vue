@@ -45,6 +45,7 @@ import typesAndForms from './types-and-forms-file';
 
 const { fileTypes, fileForms } = typesAndForms();
 
+
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   typesFile: {
@@ -57,6 +58,14 @@ const props = defineProps({
   },
   uploadResult: {
     type: Boolean,
+    required: false,
+  },
+  entityId: {
+    type: Number,
+    required: false,
+  },
+  otherNeedData: {
+    type: Object || Array || String || Number,
     required: false,
   },
 });
