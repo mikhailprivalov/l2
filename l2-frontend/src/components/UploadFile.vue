@@ -10,13 +10,19 @@
       v-else
       class="text-center"
     >
-      Такие форматы данных не поддерживаются
+      Такие расширения файлов не поддерживаются
     </h5>
     <Treeselect
-      v-if="selectedType"
+      v-if="selectedType && currentFileForms.length > 0"
       v-model="selectedForm"
       :options="currentFileForms"
     />
+    <h5
+      v-else
+      class="text-center"
+    >
+      Такие структуры файла не поддерживаются
+    </h5>
     <div v-if="selectedForm">
       <input
         ref="fileInput"
@@ -80,7 +86,6 @@ const props = defineProps({
 });
 
 const fileFilter = ref('');
-const loading = ref(false);
 
 const currentFileTypes = ref<typesFile[]>([]);
 const selectedType = ref(null);

@@ -46,7 +46,9 @@ export default function typesAndForms() {
     let result: formsFile[] = [];
     if (forms && forms.length > 0) {
       for (const form of forms) {
-        result.push(fileForms.value[type][form]);
+        if (fileForms.value[type][form]) {
+          result.push(fileForms.value[type][form]);
+        }
       }
     } else {
       result = Object.values(fileForms.value[type]);
