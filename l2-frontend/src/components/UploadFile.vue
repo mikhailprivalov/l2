@@ -1,29 +1,40 @@
 <template>
   <div>
-    <RadioFieldById
-      v-if="currentFileTypes.length > 0"
-      v-model="selectedType"
-      :variants="currentFileTypes"
-      @modified="changeType"
-    />
-    <h5
-      v-else
-      class="text-center"
+    <div class="margin-first-item">
+      <RadioFieldById
+        v-if="currentFileTypes.length > 0"
+        v-model="selectedType"
+        :variants="currentFileTypes"
+        @modified="changeType"
+      />
+      <h5
+        v-else
+        class="text-center"
+      >
+        Такие расширения файлов не поддерживаются
+      </h5>
+    </div>
+    <div
+      v-if="selectedType"
+      class="margin-item"
     >
-      Такие расширения файлов не поддерживаются
-    </h5>
-    <Treeselect
-      v-if="selectedType && currentFileForms.length > 0"
-      v-model="selectedForm"
-      :options="currentFileForms"
-    />
-    <h5
-      v-else
-      class="text-center"
+      <Treeselect
+        v-if="currentFileForms.length > 0"
+        v-model="selectedForm"
+        :options="currentFileForms"
+        placeholder="Выберите структуру файла"
+      />
+      <h5
+        v-else
+        class="text-center"
+      >
+        Такие структуры файла не поддерживаются
+      </h5>
+    </div>
+    <div
+      v-if="selectedForm"
+      class="margin-item"
     >
-      Такие структуры файла не поддерживаются
-    </h5>
-    <div v-if="selectedForm">
       <input
         ref="fileInput"
         style="margin-top: 15px"
@@ -141,5 +152,10 @@ const submitFileUpload = async () => {
 </script>
 
 <style scoped lang="scss">
-
+.margin-first-item {
+  margin-bottom: 10px
+}
+.margin-item {
+  margin: 10px 0;
+}
 </style>
