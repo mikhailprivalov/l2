@@ -2,7 +2,8 @@
 def form_01(request_data):
     """
     На входе:
-    Файл XLSX с ценами прайса, структура:
+    Файл XLSX с ценами прайса
+    Cтруктура:
     Код по прайсу (internal_code Researches, Услуга (title_researches), следующее поле - любое текстовое название прайса
     """
     file = request_data.get("file")
@@ -11,6 +12,5 @@ def form_01(request_data):
     other_need_data = request_data.get("otherNeedData")
     user = request_data.get('user')
     hospital = request_data.get('hospital')
-    print(selected_form)
 
     return []

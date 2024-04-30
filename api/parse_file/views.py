@@ -962,12 +962,14 @@ def upload_file(request):
     try:
         file = request.FILES["file"]
         request_data = request.POST
-        selected_form = request_data.get('selectedForm')
+        selected_form = request_data.get("selectedForm")
+        entity_id = request_data.get("entityId")
+        other_need_data = request_data.get("otherNeedData")
+        data = {"file": file, "selectedForm": selected_form, "entity_id": entity_id, "other_need_data": other_need_data}
         function = import_string('api.parse_file.forms' + selected_form[0:3] + '.form_' + selected_form[4:6])
         result = function(
             request_data={
-                "file": file,
-                **request_data,
+                **data,
                 "user": request.user,
                 "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
             }
