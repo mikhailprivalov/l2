@@ -14,6 +14,7 @@ export default function typesAndForms() {
     PDF: { id: 'PDF', label: 'PDF' },
     CSV: { id: 'CSV', label: 'CSV' },
   });
+  // todo - сделать соотношение - расширение файла - и все виды accept фильтров {xlsx: '.xlx, .xlsx, ws-excel'}
   const getTypes = (types: string[]): typesFile[] => {
     let result: typesFile[] = [];
     if (types && types.length > 0) {
@@ -42,6 +43,8 @@ export default function typesAndForms() {
       101.05: { id: '101.05', label: '101.05' },
     },
   });
+  // todo - режим UploadResult - получать по расширению файла - только функции связанные с сохранением результата (анализаторы)
+  // todo - UploadResult + forms - получать isResult и только выбранные
   const getForms = (type: string, forms: string[] = []): formsFile[] => {
     let result: formsFile[] = [];
     if (forms && forms.length > 0) {
