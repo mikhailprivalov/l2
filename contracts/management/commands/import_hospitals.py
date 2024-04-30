@@ -36,4 +36,4 @@ class Command(BaseCommand):
                 else:
                     new_hospital = Hospitals(title=title, short_title=short_title)
                     new_hospital.save()
-                    self.stdout.write('компания создана ')
+                    self.stdout.write(f'Больница {new_hospital.short_title} создана')
