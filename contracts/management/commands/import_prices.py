@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-from contracts.models import Company, PriceName
+from contracts.models import PriceName
 from django.db.models import Q
 
 from hospitals.models import Hospitals
