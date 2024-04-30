@@ -44,7 +44,7 @@ export default function typesAndForms() {
     },
   });
   // todo - режим UploadResult - получать по расширению файла - только функции связанные с сохранением результата (анализаторы)
-  // todo - UploadResult + forms - получать isResult и только выбранные
+  // todo - UploadResult + forms - получать только выбранные isResult функции
   const getForms = (type: string, forms: string[] = []): formsFile[] => {
     let result: formsFile[] = [];
     if (forms && forms.length > 0) {
