@@ -17,7 +17,7 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        short_title_idx, title_idx, inn_idx = '', '', ''
+        short_title_idx, title_idx = '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
