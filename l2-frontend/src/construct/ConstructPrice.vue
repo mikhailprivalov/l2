@@ -180,7 +180,7 @@
       </a>
       <UploadFileModal
         title="Загрузить цены"
-        :types-file="['XLSX', 'PDF3']"
+        :types-file="['XLSX3']"
       />
       <a>
         <LoadFile

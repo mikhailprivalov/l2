@@ -1,10 +1,17 @@
 <template>
   <div>
     <RadioFieldById
+      v-if="currentFileTypes.length > 0"
       v-model="selectedType"
       :variants="currentFileTypes"
       @modified="changeType"
     />
+    <h5
+      v-else
+      class="text-center"
+    >
+      Такие форматы данных не поддерживаются
+    </h5>
     <Treeselect
       v-if="selectedType"
       v-model="selectedForm"
