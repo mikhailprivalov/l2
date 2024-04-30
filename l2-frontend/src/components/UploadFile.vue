@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+// todo - simpleMode - режим без модалки (без выбора)
 import {
   getCurrentInstance, onMounted, PropType, ref,
 } from 'vue';
