@@ -43,14 +43,17 @@
         :accept="fileFilter"
         @change="handleFileUpload"
       >
-      <div v-if="fileIsSelected">
-        <button
-          class="btn btn-blue-nb"
-          @click="submitFileUpload()"
-        >
-          Загрузить файл
-        </button>
-      </div>
+    </div>
+    <div
+      v-if="fileIsSelected"
+      class="margin-item"
+    >
+      <button
+        class="btn btn-blue-nb"
+        @click="submitFileUpload()"
+      >
+        Загрузить файл
+      </button>
     </div>
   </div>
 </template>
