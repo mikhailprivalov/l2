@@ -178,11 +178,6 @@
       >
         Скопировать
       </a>
-      <UploadFileModal
-        title="Загрузить цены"
-        :types-file="['XLSX']"
-        :forms-file="['101.01']"
-      />
       <a>
         <LoadFile
           :is-gen-commercial-offer="true"
