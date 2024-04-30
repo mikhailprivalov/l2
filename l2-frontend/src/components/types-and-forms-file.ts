@@ -6,14 +6,14 @@ export default function typesAndForms() {
     PDF: { id: 'PDF', label: 'PDF' },
     CSV: { id: 'CSV', label: 'CSV' },
   });
-  const appendCurrentTypes = (types: string[]): object[] => {
-    const result = [];
-    if (types.length > 0) {
+  const getTypes = (types: string[]): object[] => {
+    let result: object[] = [];
+    if (types && types.length > 0) {
       for (const type of types) {
         result.push(fileTypes.value[type]);
       }
     } else {
-      result.push(Object.values(fileTypes.value));
+      result = Object.values(fileTypes.value);
     }
     return result;
   };
@@ -32,16 +32,16 @@ export default function typesAndForms() {
       101.05: { id: 101.05, label: '101.05' },
     },
   });
-  const appendCurrentForms = (type: string, forms: string[] = []): object[] => {
-    const result = [];
-    if (forms.length > 0) {
+  const getForms = (type: string, forms: string[] = []): object[] => {
+    let result: object[] = [];
+    if (forms && forms.length > 0) {
       for (const form of forms) {
         result.push(fileForms.value[type][form]);
       }
     } else {
-      result.push(Object.values(fileForms.value[type]));
+      result = Object.values(fileForms.value[type]);
     }
     return result;
   };
-  return { appendCurrentTypes, appendCurrentForms };
+  return { getTypes, getForms };
 }

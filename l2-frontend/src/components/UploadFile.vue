@@ -34,7 +34,9 @@
 </template>
 
 <script setup lang="ts">
-import {getCurrentInstance, onMounted, PropType, ref} from 'vue';
+import {
+  getCurrentInstance, onMounted, PropType, ref,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -43,7 +45,7 @@ import api from '@/api';
 
 import typesAndForms from './types-and-forms-file';
 
-const { appendCurrentTypes, appendCurrentForms } = typesAndForms();
+const { getTypes, getForms } = typesAndForms();
 
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
@@ -76,7 +78,7 @@ const currentFileTypes = ref([]);
 const selectedType = ref(null);
 
 onMounted(() => {
-  currentFileTypes.value = appendCurrentTypes(props.typesFile);
+  currentFileTypes.value = getTypes(props.typesFile);
 });
 
 const currentFileForms = ref([]);
@@ -85,7 +87,7 @@ const selectedForm = ref(null);
 const changeType = () => {
   fileFilter.value = `.${selectedType.value}`;
   selectedForm.value = null;
-  currentFileForms.value = appendCurrentForms(String(selectedType.value), props.formsFile);
+  currentFileForms.value = getForms(String(selectedType.value), props.formsFile);
 };
 
 const fileInput = ref(null);
