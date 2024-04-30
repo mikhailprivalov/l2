@@ -15,7 +15,7 @@
       class="select-price"
     />
     <span>
-       <a
+      <a
         class="a-under a-align margin-top  margin-bottom"
         href="#"
         @click.prevent="downloadCoastTOXlsx()"
@@ -366,7 +366,10 @@ import RadioField from '@/fields/RadioField.vue';
 export default {
   name: 'ConstructPrice',
   components: {
-    RadioField, VueTippyTd, Treeselect, LoadFile,
+    RadioField,
+    VueTippyTd,
+    Treeselect,
+    LoadFile,
   },
   data() {
     return {
