@@ -16,14 +16,12 @@
         style="margin-top: 15px"
         type="file"
         class="form-control-file"
-        :readonly="loading"
         :accept="fileFilter"
         @change="handleFileUpload"
       >
       <div v-if="fileIsSelected">
         <button
           class="btn btn-blue-nb"
-          :disabled="loading"
           @click="submitFileUpload()"
         >
           Загрузить файл
@@ -41,12 +39,15 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
+import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
 import api from '@/api';
 
 import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 
 const { getTypes, getForms } = typesAndForms();
 
+const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   typesFile: {
@@ -111,19 +112,19 @@ const handleFileUpload = () => {
 };
 
 const submitFileUpload = async () => {
-  loading.value = true;
   try {
     const formData = new FormData();
     formData.append('file', file.value);
     formData.append('selectedForm', selectedForm.value);
+    await store.dispatch(actions.INC_LOADING);
     const { data } = await api('parse-file/upload-file', null, null, null, formData);
+    await store.dispatch(actions.DEC_LOADING);
     console.log(data);
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
     root.$emit('msg', 'error', 'Ошибка загрузки');
   }
-  loading.value = false;
 };
 </script>
 
