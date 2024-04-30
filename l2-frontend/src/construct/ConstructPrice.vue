@@ -178,7 +178,10 @@
       >
         Скопировать
       </a>
-      <UploadFileModal title="Загрузить цены" />
+      <UploadFileModal
+        title="Загрузить цены"
+        :types-file="['XLSX', 'PDF3']"
+      />
       <a>
         <LoadFile
           :is-gen-commercial-offer="true"

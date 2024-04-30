@@ -18,7 +18,9 @@ export default function typesAndForms() {
     let result: typesFile[] = [];
     if (types && types.length > 0) {
       for (const type of types) {
-        result.push(fileTypes.value[type]);
+        if (fileTypes.value[type]) {
+          result.push(fileTypes.value[type]);
+        }
       }
     } else {
       result = Object.values(fileTypes.value);

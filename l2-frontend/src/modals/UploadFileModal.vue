@@ -44,7 +44,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import {
+  onMounted, PropType, ref,
+} from 'vue';
 
 import Modal from '@/ui-cards/Modal.vue';
 import UploadFile from '@/components/UploadFile.vue';
@@ -55,11 +57,11 @@ const props = defineProps({
     required: false,
   },
   typesFile: {
-    type: Array,
+    type: Array as PropType<string[]>,
     required: false,
   },
   formsFile: {
-    type: Array,
+    type: Array as PropType<string[]>,
     required: false,
   },
   uploadResult: {
@@ -75,9 +77,10 @@ const props = defineProps({
     required: false,
   },
 });
-
-const titleLocal = computed(() => (props.title ? props.title : 'Загрузка файла'));
-
+const titleLocal = ref('');
+onMounted(() => {
+  titleLocal.value = props.title ? props.title : 'Загрузка файла';
+});
 const open = ref(false);
 const openModal = () => {
   open.value = true;
