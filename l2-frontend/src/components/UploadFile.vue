@@ -43,7 +43,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 import api from '@/api';
 
-import typesAndForms from './types-and-forms-file';
+import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 
 const { getTypes, getForms } = typesAndForms();
 
@@ -74,20 +74,22 @@ const props = defineProps({
 const fileFilter = ref('');
 const loading = ref(false);
 
-const currentFileTypes = ref([]);
+const currentFileTypes = ref<typesFile[]>([]);
 const selectedType = ref(null);
 
 onMounted(() => {
   currentFileTypes.value = getTypes(props.typesFile);
 });
 
-const currentFileForms = ref([]);
+const currentFileForms = ref<formsFile[]>([]);
 const selectedForm = ref(null);
 
 const changeType = () => {
   fileFilter.value = `.${selectedType.value}`;
-  selectedForm.value = null;
   currentFileForms.value = getForms(String(selectedType.value), props.formsFile);
+  if (currentFileForms.value.length > 0) {
+    selectedForm.value = currentFileForms.value[0].id;
+  }
 };
 
 const fileInput = ref(null);

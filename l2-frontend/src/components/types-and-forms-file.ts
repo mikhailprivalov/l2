@@ -1,13 +1,21 @@
 import { ref } from 'vue';
 
+export interface typesFile {
+  id: string,
+  label: string,
+}
+export interface formsFile {
+  id: string,
+  label: string,
+}
 export default function typesAndForms() {
   const fileTypes = ref({
     XLSX: { id: 'XLSX', label: 'XLSX' },
     PDF: { id: 'PDF', label: 'PDF' },
     CSV: { id: 'CSV', label: 'CSV' },
   });
-  const getTypes = (types: string[]): object[] => {
-    let result: object[] = [];
+  const getTypes = (types: string[]): typesFile[] => {
+    let result: typesFile[] = [];
     if (types && types.length > 0) {
       for (const type of types) {
         result.push(fileTypes.value[type]);
@@ -32,8 +40,8 @@ export default function typesAndForms() {
       101.05: { id: 101.05, label: '101.05' },
     },
   });
-  const getForms = (type: string, forms: string[] = []): object[] => {
-    let result: object[] = [];
+  const getForms = (type: string, forms: string[] = []): formsFile[] => {
+    let result: formsFile[] = [];
     if (forms && forms.length > 0) {
       for (const form of forms) {
         result.push(fileForms.value[type][form]);
