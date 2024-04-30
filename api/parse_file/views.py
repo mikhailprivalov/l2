@@ -975,5 +975,5 @@ def upload_file(request):
             }
         )
     except Exception as e:
-        print(e)
+        stdout.write(f"{e}")
     return JsonResponse({"data": result})
