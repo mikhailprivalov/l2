@@ -1,6 +1,9 @@
 <template>
-  <div class="pointer">
-    <div @click.prevent="openModal">
+  <div>
+    <div
+      class="pointer"
+      @click.prevent="openModal"
+    >
       <slot>
         <a
           @click.prevent="openModal"
