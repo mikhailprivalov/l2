@@ -7,10 +7,9 @@ from contracts.models import BillingRegister
 from directions.models import IstochnikiFinansirovaniya, Issledovaniya
 from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory
 from laboratory.decorators import group_required
-from podrazdeleniya.models import Podrazdeleniya
-from researches.models import Tubes
+
 from statistic.sql_func import statistics_research_by_hospital_for_external_orders
-from statistic.views import get_price_company, get_price_hospital
+from statistic.views import get_price_hospital
 from utils.response import status_response
 
 
