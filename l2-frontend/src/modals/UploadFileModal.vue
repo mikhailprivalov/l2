@@ -1,10 +1,13 @@
 <template>
   <div class="pointer">
-    <slot @click.prevent="openModal">
-      <a
-      >{{ titleLocal }}
-      </a>
-    </slot>
+    <div @click.prevent="openModal">
+      <slot>
+        <a
+          @click.prevent="openModal"
+        >{{ titleLocal }}
+        </a>
+      </slot>
+    </div>
     <Modal
       v-if="open"
       show-footer="true"
