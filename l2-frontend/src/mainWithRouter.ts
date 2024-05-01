@@ -744,9 +744,8 @@ const router = new Router({
     {
       path: '/ui/billing',
       name: 'Billing',
-      component: () => import('@/pages/Billing/Billing.vue'),
+      component: () => import('@/pages/Billing/index.vue'),
       meta: {
-        narrowLayout: true,
         title: 'Счет на оплату',
         groups: ['Счет: проект'],
       },
