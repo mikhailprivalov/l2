@@ -55,12 +55,43 @@
           </button>
         </div>
       </div>
+      <div>
+        <VeTable
+          :columns="columns"
+          :table-data="servicePagination"
+          row-key-field-name="card_id"
+        />
+        <div
+          v-show="servicePagination.length === 0"
+          class="empty-list"
+        >
+          Нет записей
+        </div>
+        <div class="flex flex-space-between">
+          <VePagination
+            :total="services.length"
+            :page-index="page"
+            :page-size="pageSize"
+            :page-size-option="pageSizeOptions"
+            @on-page-number-change="pageNumberChange"
+            @on-page-size-change="pageSizeChange"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref, watch } from 'vue';
+import {
+  computed, getCurrentInstance, ref, watch,
+} from 'vue';
+import {
+  VeLocale,
+  VePagination,
+  VeTable,
+} from 'vue-easytable';
+import 'vue-easytable/libs/theme-default/index.css';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -68,6 +99,9 @@ import RadioField from '@/fields/RadioField.vue';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
+import ruRu from '@/locales/ve';
+
+VeLocale.use(ruRu);
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -175,6 +209,48 @@ const updateBilling = async () => {
     root.$emit('msg', 'error', 'Ошибка');
   }
 };
+
+const page = ref(1);
+const pageSize = ref(25);
+const pageSizeOptions = ref([25, 50, 100]);
+const pageNumberChange = (number: number) => {
+  page.value = number;
+};
+const pageSizeChange = (size: number) => {
+  pageSize.value = size;
+};
+
+const columns = ref([
+  {
+    field: 'research_title',
+    key: 'research_title',
+    title: 'Услуга',
+  },
+  {
+    field: 'patient_fio',
+    key: 'patient_fio',
+    title: 'ФИО пациента',
+  },
+  {
+    field: 'patient_born',
+    key: 'patient_born',
+    title: 'Д.Р. Пациента',
+  },
+  {
+    field: 'tube_number',
+    key: 'tube_number',
+    title: '№ пробирки',
+  },
+  {
+    field: 'coast',
+    key: 'coast',
+    title: 'Цена',
+  },
+]);
+
+const services = ref([]);
+const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+
 </script>
 
 <style scoped lang="scss">
@@ -197,5 +273,9 @@ const updateBilling = async () => {
   gap: 10px;
   position: relative;
   width: 70%;
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
 }
 </style>
