@@ -9,7 +9,7 @@ from statistic.views import get_price_hospital
 def researches_for_billing(type_price, company_id, date_start, date_end):
     sql_result = None
     research_coast = {}
-    price= None
+    price = None
     if type_price == "Заказчик":
         hospital_id = company_id
         price = get_price_hospital(hospital_id, date_start, date_end)
@@ -20,21 +20,22 @@ def researches_for_billing(type_price, company_id, date_start, date_end):
         research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
     iss_data = set()
-    for i in sql_result:
-        iss_data.add(i.iss_id)
-        current_data = {
-            "research_id": i.research_id,
-            "research_title": i.research_title,
-            "date_confirm": i.date_confirm,
-            "patient_fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
-            "patient_born": i.ru_date_born,
-            "tube_number": i.tube_number,
-            "coast": research_coast.get(i.research_id, 0)
-        }
-        if not result.get(i.patient_card_num):
-            result[i.patient_card_num] = [current_data.copy()]
-        else:
-            result[i.patient_card_num].append(current_data.copy())
+    if sql_result:
+        for i in sql_result:
+            iss_data.add(i.iss_id)
+            current_data = {
+                "research_id": i.research_id,
+                "research_title": i.research_title,
+                "date_confirm": i.date_confirm,
+                "patient_fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
+                "patient_born": i.ru_date_born,
+                "tube_number": i.tube_number,
+                "coast": research_coast.get(i.research_id, 0)
+            }
+            if not result.get(i.patient_card_num):
+                result[i.patient_card_num] = [current_data.copy()]
+            else:
+                result[i.patient_card_num].append(current_data.copy())
     return {"result": result, "issIds": list(iss_data), "priceIk": price.pk}
 
 

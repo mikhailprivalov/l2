@@ -30,24 +30,52 @@
           />
         </div>
         <div
-          v-if="!selectedBilling && selectedCompany"
-          class="margin-item date-block"
+          v-if="selectedCompany"
+          class="margin-item flex"
         >
-          <label>c</label>
-          <input
-            v-model="dateStart"
-            class="form-control"
-            type="date"
+          <div class="date-block">
+            <label>c</label>
+            <input
+              v-model="currentBillingData.dateStart"
+              class="form-control"
+              type="date"
+            >
+            <label>по</label>
+            <input
+              v-model="currentBillingData.dateEnd"
+              class="form-control"
+              type="date"
+            >
+          </div>
+          <button
+            class="btn btn-blue-nb"
+            @click="updateBilling"
           >
-          <label>по</label>
-          <input
-            v-model="dateEnd"
-            class="form-control"
-            type="date"
-          >
-          <button class="btn btn-blue-nb">
-            Создать
+            {{ selectedBilling ? 'Сохранить' : 'Создать' }}
           </button>
+        </div>
+      </div>
+      <div>
+        <VeTable
+          :columns="columns"
+          :table-data="servicePagination"
+          row-key-field-name="card_id"
+        />
+        <div
+          v-show="servicePagination.length === 0"
+          class="empty-list"
+        >
+          Нет записей
+        </div>
+        <div class="flex flex-space-between">
+          <VePagination
+            :total="services.length"
+            :page-index="page"
+            :page-size="pageSize"
+            :page-size-option="pageSizeOptions"
+            @on-page-number-change="pageNumberChange"
+            @on-page-size-change="pageSizeChange"
+          />
         </div>
       </div>
     </div>
@@ -55,7 +83,15 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref, watch } from 'vue';
+import {
+  computed, getCurrentInstance, ref, watch,
+} from 'vue';
+import {
+  VeLocale,
+  VePagination,
+  VeTable,
+} from 'vue-easytable';
+import 'vue-easytable/libs/theme-default/index.css';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -63,6 +99,9 @@ import RadioField from '@/fields/RadioField.vue';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
+import ruRu from '@/locales/ve';
+
+VeLocale.use(ruRu);
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -101,12 +140,116 @@ const getBillings = async () => {
 
 watch(selectedCompany, () => {
   if (selectedCompany.value) {
+    selectedBilling.value = null;
     getBillings();
+  } else {
+    selectedBilling.value = null;
   }
 });
 
-const dateStart = ref('');
-const dateEnd = ref('');
+const billingTemplate = ref({
+  id: -1,
+  hospitalId: null,
+  companyId: null,
+  createAt: '',
+  whoCreat: '',
+  dateStart: '',
+  dateEnd: '',
+  info: '',
+  isConfirmed: '',
+});
+
+const currentBillingData = ref({
+  id: -1,
+  hospitalId: null,
+  companyId: null,
+  createAt: '',
+  whoCreat: '',
+  dateStart: '',
+  dateEnd: '',
+  info: '',
+  isConfirmed: '',
+});
+
+const getBilling = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value });
+  await store.dispatch(actions.DEC_LOADING);
+  currentBillingData.value = result;
+};
+const clearBilling = () => {
+  currentBillingData.value = { ...billingTemplate.value };
+};
+
+watch(selectedBilling, () => {
+  if (selectedBilling.value) {
+    getBilling();
+  } else {
+    clearBilling();
+  }
+});
+
+const updateBilling = async () => {
+  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+  let billingData = {};
+  if (selectedBilling.value) {
+    billingData = { ...currentBillingData.value };
+  } else {
+    billingData = { ...currentBillingData.value, hospitalId, companyId };
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, billingId } = await api('contracts/update-billing', { ...billingData });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getBillings();
+    selectedBilling.value = billingId;
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
+const page = ref(1);
+const pageSize = ref(25);
+const pageSizeOptions = ref([25, 50, 100]);
+const pageNumberChange = (number: number) => {
+  page.value = number;
+};
+const pageSizeChange = (size: number) => {
+  pageSize.value = size;
+};
+
+const columns = ref([
+  {
+    field: 'research_title',
+    key: 'research_title',
+    title: 'Услуга',
+  },
+  {
+    field: 'patient_fio',
+    key: 'patient_fio',
+    title: 'ФИО пациента',
+  },
+  {
+    field: 'patient_born',
+    key: 'patient_born',
+    title: 'Д.Р. Пациента',
+  },
+  {
+    field: 'tube_number',
+    key: 'tube_number',
+    title: '№ пробирки',
+  },
+  {
+    field: 'coast',
+    key: 'coast',
+    title: 'Цена',
+  },
+]);
+
+const services = ref([]);
+const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
 
 </script>
 
@@ -121,10 +264,18 @@ const dateEnd = ref('');
 .margin-item {
   margin: 10px 0;
 }
+.flex {
+  display: flex;
+  gap: 10px;
+}
 .date-block {
   display: flex;
   gap: 10px;
   position: relative;
   width: 70%;
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
 }
 </style>
