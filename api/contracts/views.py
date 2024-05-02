@@ -62,8 +62,8 @@ def update_billing(request):
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
     info = body.get("info")
-    billing_info = BillingRegister.save_billing(company_id, hospital_id, billing_id, date_start, date_end, info)
-    return JsonResponse({"ok": True, "billingInfo": billing_info})
+    billing_pk = BillingRegister.save_billing(company_id, hospital_id, billing_id, date_start, date_end, info)
+    return JsonResponse({"ok": True, "billingId": billing_pk})
 
 
 @login_required

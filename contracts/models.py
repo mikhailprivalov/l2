@@ -376,9 +376,7 @@ class BillingRegister(models.Model):
             current_billing.save()
         else:
             current_billing = BillingRegister(hospital=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end).save()
-        if not current_billing.info:
-            info = current_billing.pk
-        return info
+        return current_billing.pk
 
     @staticmethod
     def confirm_billing(billing_id):
