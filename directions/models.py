@@ -2327,7 +2327,6 @@ class Issledovaniya(models.Model):
         return True
 
 
-
     @property
     def time_save_local(self):
         return localtime(self.time_save)

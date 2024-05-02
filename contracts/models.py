@@ -403,6 +403,13 @@ class RawDocumentBillingRegister(models.Model):
     raw_data = models.TextField(default=None, blank=True, null=True, help_text="Данные документа")
     create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
 
+    @staticmethod
+    def create_raw_billing_data(billing_id, raw_data):
+        raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data).save()
+        return raw_data_billing.pk
+
     class Meta:
         verbose_name = "Счет-реестр документ"
         verbose_name_plural = "Счета-реестры документы исторические версии"
+
+

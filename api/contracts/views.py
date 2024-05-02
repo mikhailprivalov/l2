@@ -1,16 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
+from django.db import transaction
 
-from clients.models import CardBase
-from contracts.models import BillingRegister
-from contracts.sql_func import get_research_coast_by_prce
-from directions.models import IstochnikiFinansirovaniya, Issledovaniya
-from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory
+from api.contracts.func import researches_for_billing, get_confirm_data_for_billing
+from contracts.models import BillingRegister, RawDocumentBillingRegister
+from directions.models import Issledovaniya
+from directory.models import Researches
 from laboratory.decorators import group_required
-
 from statistic.sql_func import statistics_research_by_hospital_for_external_orders
-from statistic.views import get_price_hospital
 from utils.response import status_response
 
 
@@ -21,35 +19,9 @@ def get_research_for_billing(request):
     company_id = body.get("company")
     date_start = "2024-04-01"
     date_end = "2024-04-30"
-    hospital_id, sql_result = None, None
-    research_coast = {}
-    if body.get("typePrice") == "Заказчик":
-        hospital_id = company_id
-        price = get_price_hospital(hospital_id, date_start, date_end)
-        base = CardBase.objects.filter(internal_type=True).first()
-        finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
-        sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk)
-        coast_research_price = get_research_coast_by_prce((price.pk,))
-        research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
-    result = {}
-    iss_data = set()
-    for i in sql_result:
-        iss_data.add(i.iss_id)
-        current_data = {
-                    "research_id": i.research_id,
-                    "research_title": i.research_title,
-                    "date_confirm": i.date_confirm,
-                    "patient_fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
-                    "patient_born": i.ru_date_born,
-                    "tube_number": i.tube_number,
-                    "coast": research_coast.get(i.research_id, 0)
-                }
-        if not result.get(i.patient_card_num):
-            result[i.patient_card_num] = [current_data.copy()]
-        else:
-            result[i.patient_card_num].append(current_data.copy())
-
-    return JsonResponse({"result": result, 'iss_ids': list(iss_data)})
+    type_price = body.get("typePrice")
+    data = researches_for_billing(type_price, company_id, date_start, date_end)
+    return JsonResponse(data)
 
 
 @login_required
@@ -62,7 +34,9 @@ def create_billing(request):
     date_end = body.get("dateEnd")
     info = body.get("info")
     billing_info = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
-    return JsonResponse({"ok": True, "billing_info": billing_info})
+    type_price = body.get("typePrice")
+    data = researches_for_billing(type_price, company_id, date_start, date_end)
+    return JsonResponse({"ok": True, "billing_info": billing_info, **data })
 
 
 @login_required
@@ -75,7 +49,9 @@ def update_billing(request):
     date_end = body.get("dateEnd")
     info = body.get("info")
     billing_info = BillingRegister.update_billing(company_id, hospital_id, date_start, date_end, info)
-    return JsonResponse({"ok": True, "billing_info": billing_info})
+    type_price = body.get("typePrice")
+    data = researches_for_billing(type_price, company_id, date_start, date_end)
+    return JsonResponse({"ok": True, "billing_info": billing_info, **data})
 
 
 @login_required
@@ -83,10 +59,23 @@ def update_billing(request):
 def confirm_billing(request):
     body = json.loads(request.body)
     billing_id = body.get("billingId")
-    iss_ids = body.get("iss_ids")
-    is_confirm_billing = BillingRegister.confirm_billing(billing_id)
-    set_billing_id_for_iss = Issledovaniya.save_billing(billing_id, iss_ids)
-    return JsonResponse({"ok": is_confirm_billing and set_billing_id_for_iss})
+    iss_ids = body.get("issIds")
+    price_id = body.get("priceId")
+    with transaction.atomic():
+        is_confirm_billing = BillingRegister.confirm_billing(billing_id)
+        set_billing_id_for_iss = Issledovaniya.save_billing(billing_id, iss_ids)
+        data_confirm_billing = get_confirm_data_for_billing(price_id, billing_id)
+        raw_document_pk = RawDocumentBillingRegister.create_raw_billing_data(billing_id, data_confirm_billing)
+
+    return JsonResponse({"ok": is_confirm_billing and set_billing_id_for_iss and raw_document_pk})
+
+
+@login_required
+@group_required("Счет: проект")
+def get_data_for_confirm_billing(request):
+    body = json.loads(request.body)
+    billing_id = body.get("billingId")
+
 
 
 @login_required
