@@ -30,23 +30,25 @@
           />
         </div>
         <div
-          v-if="!selectedBilling && selectedCompany"
-          class="margin-item date-block"
+          v-if="selectedCompany"
+          class="margin-item flex"
         >
-          <label>c</label>
-          <input
-            v-model="dateStart"
-            class="form-control"
-            type="date"
-          >
-          <label>по</label>
-          <input
-            v-model="dateEnd"
-            class="form-control"
-            type="date"
-          >
+          <div class="date-block">
+            <label>c</label>
+            <input
+              v-model="currentBilling.dateStart"
+              class="form-control"
+              type="date"
+            >
+            <label>по</label>
+            <input
+              v-model="currentBilling.dateEnd"
+              class="form-control"
+              type="date"
+            >
+          </div>
           <button class="btn btn-blue-nb">
-            Создать
+            {{ selectedBilling ? 'Сохранить' : 'Создать' }}
           </button>
         </div>
       </div>
@@ -101,13 +103,52 @@ const getBillings = async () => {
 
 watch(selectedCompany, () => {
   if (selectedCompany.value) {
+    selectedBilling.value = null;
     getBillings();
   }
 });
 
-const dateStart = ref('');
-const dateEnd = ref('');
+const billingTemplate = ref({
+  id: -1,
+  hospitalId: -1,
+  companyId: -1,
+  createAt: '',
+  whoCreat: '',
+  dateStart: '',
+  dateEnd: '',
+  info: '',
+  isConfirmed: '',
+});
 
+const currentBilling = ref({
+  id: -1,
+  hospitalId: -1,
+  companyId: -1,
+  createAt: '',
+  whoCreat: '',
+  dateStart: '',
+  dateEnd: '',
+  info: '',
+  isConfirmed: '',
+});
+
+const getBilling = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value });
+  await store.dispatch(actions.DEC_LOADING);
+  currentBilling.value = result;
+};
+const clearBilling = () => {
+  currentBilling.value = { ...billingTemplate.value };
+};
+
+watch(selectedBilling, () => {
+  if (selectedBilling.value) {
+    getBilling();
+  } else {
+    clearBilling();
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -120,6 +161,10 @@ const dateEnd = ref('');
 }
 .margin-item {
   margin: 10px 0;
+}
+.flex {
+  display: flex;
+  gap: 10px;
 }
 .date-block {
   display: flex;

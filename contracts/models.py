@@ -358,7 +358,7 @@ class BillingRegister(models.Model):
     who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель счета', on_delete=models.SET_NULL)
     date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True, db_index=True)
     date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
-    info = models.CharField(max_length=128, help_text="Информация по счет",  default=None, blank=True, null=True)
+    info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
     is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
 
     def __str__(self):
@@ -375,11 +375,10 @@ class BillingRegister(models.Model):
             current_billing.info = info
             current_billing.save()
         else:
-            current_billing= BillingRegister(hospital=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end).save()
+            current_billing = BillingRegister(hospital=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end).save()
         if not current_billing.info:
             info = current_billing.pk
         return info
-
 
     @staticmethod
     def confirm_billing(billing_id):
@@ -392,11 +391,34 @@ class BillingRegister(models.Model):
     def get_billings(hospital_id=None, company_id=None):
         if hospital_id:
             billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related('hospital')
-            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings]
+            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for
+                      billing in billings]
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related('company')
-            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings]
+            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for
+                      billing in billings]
         return result
+
+    def as_json(self):
+        result = {
+            "id": self.pk,
+            "hospitalId": self.hospital_id,
+            "companyId": self.company_id,
+            "createAt": self.create_at,
+            "whoCreat": self.who_create_id,
+            "dateStart": self.date_start,
+            "dateEnd": self.date_end,
+            "info": self.info,
+            "isConfirmed": self.is_confirmed,
+        }
+        return result
+
+    @staticmethod
+    def get_billing(billing_id: int):
+        billing: BillingRegister = BillingRegister.objects.filter(id=billing_id).first()
+        if billing:
+            return billing.as_json()
+        return None
 
     class Meta:
         verbose_name = "Счет-реестр"
