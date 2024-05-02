@@ -47,7 +47,10 @@
               type="date"
             >
           </div>
-          <button class="btn btn-blue-nb">
+          <button
+            class="btn btn-blue-nb"
+            @click="updateBilling"
+          >
             {{ selectedBilling ? 'Сохранить' : 'Создать' }}
           </button>
         </div>
@@ -109,7 +112,7 @@ watch(selectedCompany, () => {
 });
 
 const billingTemplate = ref({
-  id: -1,
+  billingId: -1,
   hospitalId: -1,
   companyId: -1,
   createAt: '',
@@ -120,8 +123,8 @@ const billingTemplate = ref({
   isConfirmed: '',
 });
 
-const currentBilling = ref({
-  id: -1,
+const currentBillingData = ref({
+  billingId: -1,
   hospitalId: -1,
   companyId: -1,
   createAt: '',
@@ -136,10 +139,10 @@ const getBilling = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value });
   await store.dispatch(actions.DEC_LOADING);
-  currentBilling.value = result;
+  currentBillingData.value = result;
 };
 const clearBilling = () => {
-  currentBilling.value = { ...billingTemplate.value };
+  currentBillingData.value = { ...billingTemplate.value };
 };
 
 watch(selectedBilling, () => {
@@ -149,6 +152,25 @@ watch(selectedBilling, () => {
     clearBilling();
   }
 });
+
+const updateBilling = async () => {
+  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : -1;
+  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : -1;
+  let billingData = {};
+  if (currentBillingData.value) {
+    billingData = { ...currentBillingData.value };
+  } else {
+    billingData = { ...currentBillingData.value, hospitalId, companyId };
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('contracts/update-billing', { ...billingData });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
 </script>
 
 <style scoped lang="scss">

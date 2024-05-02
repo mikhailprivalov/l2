@@ -54,7 +54,7 @@ def get_research_for_billing(request):
 
 @login_required
 @group_required("Счет: проект")
-def create_new_billing(request):
+def update_billing(request):
     body = json.loads(request.body)
     company_id = body.get("companyId")
     hospital_id = body.get("hospitalId")
