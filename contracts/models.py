@@ -364,8 +364,9 @@ class BillingRegister(models.Model):
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end}"
 
+
     @staticmethod
-    def save_billing(company_id, hospital_id, billing_id, date_start, date_end, info):
+    def update_billing(company_id, hospital_id, billing_id, date_start, date_end, info):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         if current_billing:
             current_billing.company_id = company_id
@@ -374,11 +375,15 @@ class BillingRegister(models.Model):
             current_billing.date_end = date_end
             current_billing.info = info
             current_billing.save()
+            return info
         else:
-            current_billing= BillingRegister(hospital=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end).save()
-        if not current_billing.info:
-            info = current_billing.pk
-        return info
+            return False
+
+
+    @staticmethod
+    def create_billing(company_id, hospital_id, date_start, date_end, info):
+        current_billing= BillingRegister(hospital=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info).save()
+        return current_billing.pk
 
 
     @staticmethod

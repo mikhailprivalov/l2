@@ -54,15 +54,27 @@ def get_research_for_billing(request):
 
 @login_required
 @group_required("Счет: проект")
-def create_new_billing(request):
+def create_billing(request):
     body = json.loads(request.body)
     company_id = body.get("companyId")
     hospital_id = body.get("hospitalId")
-    billing_id = body.get("billingId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
     info = body.get("info")
-    billing_info = BillingRegister.save_billing(company_id, hospital_id, billing_id, date_start, date_end, info)
+    billing_info = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
+    return JsonResponse({"ok": True, "billing_info": billing_info})
+
+
+@login_required
+@group_required("Счет: проект")
+def update_billing(request):
+    body = json.loads(request.body)
+    company_id = body.get("companyId")
+    hospital_id = body.get("hospitalId")
+    date_start = body.get("dateStart")
+    date_end = body.get("dateEnd")
+    info = body.get("info")
+    billing_info = BillingRegister.update_billing(company_id, hospital_id, date_start, date_end, info)
     return JsonResponse({"ok": True, "billing_info": billing_info})
 
 
