@@ -392,10 +392,10 @@ class BillingRegister(models.Model):
     def get_billings(hospital_id=None, company_id=None):
         if hospital_id:
             billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related('hospital')
-            result = [{"id": billing.pk, "label": f"{billing.hospital.title}-{billing.date_start}-{billing.date_end}"} for billing in billings]
+            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings]
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related('company')
-            result = [{"id": billing.pk, "label": f"{billing.company.title}-{billing.date_start}-{billing.date_end}"} for billing in billings]
+            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings]
         return result
 
     class Meta:
