@@ -10,12 +10,44 @@
           />
         </div>
         <div class="margin-item">
+          <label>Компании</label>
           <Treeselect
             v-model="selectedCompany"
             :options="companies"
             :normalizer="normalizer"
-            :clearable="false"
+            placeholder="Выберите компанию..."
           />
+        </div>
+        <div
+          v-if="selectedCompany"
+          class="margin-item"
+        >
+          <label>Счета</label>
+          <Treeselect
+            v-model="selectedBilling"
+            :options="billings"
+            placeholder="Выберите счёт..."
+          />
+        </div>
+        <div
+          v-if="!selectedBilling && selectedCompany"
+          class="margin-item date-block"
+        >
+          <label>c</label>
+          <input
+            v-model="dateStart"
+            class="form-control"
+            type="date"
+          >
+          <label>по</label>
+          <input
+            v-model="dateEnd"
+            class="form-control"
+            type="date"
+          >
+          <button class="btn btn-blue-nb">
+            Создать
+          </button>
         </div>
       </div>
     </div>
@@ -23,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref } from 'vue';
+import { getCurrentInstance, ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -57,6 +89,25 @@ const changeType = () => {
   getCompanies();
 };
 
+const billings = ref([]);
+const selectedBilling = ref(null);
+const getBillings = async () => {
+  const id = selectedType.value === 'Работодатель' ? { companyId: selectedCompany.value } : { hospitalId: selectedCompany.value };
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('contracts/get-billings', id);
+  await store.dispatch(actions.DEC_LOADING);
+  billings.value = result;
+};
+
+watch(selectedCompany, () => {
+  if (selectedCompany.value) {
+    getBillings();
+  }
+});
+
+const dateStart = ref('');
+const dateEnd = ref('');
+
 </script>
 
 <style scoped lang="scss">
@@ -69,5 +120,11 @@ const changeType = () => {
 }
 .margin-item {
   margin: 10px 0;
+}
+.date-block {
+  display: flex;
+  gap: 10px;
+  position: relative;
+  width: 70%;
 }
 </style>
