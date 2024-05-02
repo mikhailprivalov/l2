@@ -163,12 +163,13 @@ const updateBilling = async () => {
     billingData = { ...currentBillingData.value, hospitalId, companyId };
   }
   await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('contracts/update-billing', { ...billingData });
+  const { ok, billingInfo } = await api('contracts/update-billing', { ...billingData });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Сохранено');
+    console.log(billingInfo);
   } else {
-    root.$emit('msg', 'error', message);
+    root.$emit('msg', 'error', 'Ошибка');
   }
 };
 </script>
