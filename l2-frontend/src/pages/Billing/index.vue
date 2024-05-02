@@ -36,13 +36,13 @@
           <div class="date-block">
             <label>c</label>
             <input
-              v-model="currentBilling.dateStart"
+              v-model="currentBillingData.dateStart"
               class="form-control"
               type="date"
             >
             <label>по</label>
             <input
-              v-model="currentBilling.dateEnd"
+              v-model="currentBillingData.dateEnd"
               class="form-control"
               type="date"
             >
@@ -115,8 +115,8 @@ watch(selectedCompany, () => {
 
 const billingTemplate = ref({
   id: -1,
-  hospitalId: -1,
-  companyId: -1,
+  hospitalId: null,
+  companyId: null,
   createAt: '',
   whoCreat: '',
   dateStart: '',
@@ -127,8 +127,8 @@ const billingTemplate = ref({
 
 const currentBillingData = ref({
   id: -1,
-  hospitalId: -1,
-  companyId: -1,
+  hospitalId: null,
+  companyId: null,
   createAt: '',
   whoCreat: '',
   dateStart: '',
@@ -156,10 +156,10 @@ watch(selectedBilling, () => {
 });
 
 const updateBilling = async () => {
-  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : -1;
-  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : -1;
+  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
   let billingData = {};
-  if (currentBillingData.value) {
+  if (selectedBilling.value) {
     billingData = { ...currentBillingData.value };
   } else {
     billingData = { ...currentBillingData.value, hospitalId, companyId };
@@ -169,7 +169,7 @@ const updateBilling = async () => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Сохранено');
-    await getBilling();
+    await getBillings();
     selectedBilling.value = billingId;
   } else {
     root.$emit('msg', 'error', 'Ошибка');

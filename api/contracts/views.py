@@ -99,7 +99,7 @@ def get_billings(request):
     request_data = json.loads(request.body)
     hospital_id = request_data.get('hospitalId')
     company_id = request_data.get('companyId')
-    result = BillingRegister.get_billings(hospital_id, company_id=company_id)
+    result = BillingRegister.get_billings(hospital_id, company_id)
     return JsonResponse({"result": result})
 
 
