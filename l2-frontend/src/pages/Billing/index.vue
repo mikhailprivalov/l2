@@ -108,11 +108,13 @@ watch(selectedCompany, () => {
   if (selectedCompany.value) {
     selectedBilling.value = null;
     getBillings();
+  } else {
+    selectedBilling.value = null;
   }
 });
 
 const billingTemplate = ref({
-  billingId: -1,
+  id: -1,
   hospitalId: -1,
   companyId: -1,
   createAt: '',
@@ -124,7 +126,7 @@ const billingTemplate = ref({
 });
 
 const currentBillingData = ref({
-  billingId: -1,
+  id: -1,
   hospitalId: -1,
   companyId: -1,
   createAt: '',

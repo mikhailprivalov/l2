@@ -58,7 +58,7 @@ def update_billing(request):
     body = json.loads(request.body)
     company_id = body.get("companyId")
     hospital_id = body.get("hospitalId")
-    billing_id = body.get("billingId")
+    billing_id = body.get("id")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
     info = body.get("info")
