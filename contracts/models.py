@@ -388,6 +388,16 @@ class BillingRegister(models.Model):
         current_billing.save()
         return True
 
+    @staticmethod
+    def get_billings(hospital_id=None, company_id=None):
+        if hospital_id:
+            billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related('hospital')
+            result = [{"id": billing.pk, "label": f"{billing.hospital.title}-{billing.date_start}-{billing.date_end}"} for billing in billings]
+        else:
+            billings = BillingRegister.objects.filter(company_id=company_id).select_related('company')
+            result = [{"id": billing.pk, "label": f"{billing.company.title}-{billing.date_start}-{billing.date_end}"} for billing in billings]
+        return result
+
     class Meta:
         verbose_name = "Счет-реестр"
         verbose_name_plural = "Счета-реестры"

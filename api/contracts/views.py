@@ -97,6 +97,7 @@ def get_researches_execute_for_company(d_s, d_e, hospital_id, fin_source_pk):
 @group_required("Счет: проект")
 def get_billings(request):
     request_data = json.loads(request.body)
-    result = []
-    print(request_data)
+    hospital_id = request_data.get('hospitalId')
+    company_id = request_data.get('companyId')
+    result = BillingRegister.get_billings(hospital_id, company_id=company_id)
     return JsonResponse({"result": result})
