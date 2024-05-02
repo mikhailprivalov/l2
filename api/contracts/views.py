@@ -47,8 +47,9 @@ def update_billing(request):
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
+    billing_id = body.get("billingId")
     info = body.get("info")
-    billing_info = BillingRegister.update_billing(company_id, hospital_id, date_start, date_end, info)
+    billing_info = BillingRegister.update_billing(company_id, hospital_id, billing_id, date_start, date_end, info)
     type_price = body.get("typePrice")
     data = researches_for_billing(type_price, company_id, date_start, date_end)
     return JsonResponse({"ok": True, "billing_info": billing_info, **data})
@@ -72,10 +73,10 @@ def confirm_billing(request):
 
 @login_required
 @group_required("Счет: проект")
-def get_data_for_confirm_billing(request):
+def get_data_for_confirmed_billing(request):
     body = json.loads(request.body)
     billing_id = body.get("billingId")
-
+    return JsonResponse({"ok": True})
 
 
 @login_required
