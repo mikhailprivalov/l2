@@ -49,7 +49,7 @@
           </div>
           <button
             class="btn btn-blue-nb"
-            @click="selectedBilling ? updateBilling : createBilling"
+            @click="updateBilling"
           >
             {{ selectedBilling ? 'Сохранить' : 'Создать' }}
           </button>
@@ -190,43 +190,24 @@ watch(selectedBilling, () => {
 });
 
 const updateBilling = async () => {
-  const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, billingId, result, iss, priceIk } = await api('contracts/update-billing', { ...billingData });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Сохранено');
-    await getBillings();
-    console.log(billingId);
-    console.log(result);
-    console.log(iss);
-    console.log(priceIk);
+  let billingData = {};
+  let apiPoint = '';
+  if (selectedBilling.value) {
+    billingData = { ...currentBillingData, typeCompany: selectedType.value };
+    apiPoint = 'contracts/update-billing';
   } else {
-    root.$emit('msg', 'error', 'Ошибка');
+    const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+    const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+    billingData = {
+      ...currentBillingData, hospitalId, companyId, typeCompany: selectedType.value,
+    };
+    apiPoint = 'contracts/create-billing';
   }
-};
-
-const createBilling = async () => {
-  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
-  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
-  const billingData = {
-    ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
-  };
   await store.dispatch(actions.INC_LOADING);
   const {
     ok, billingInfo, result, iss, priceIk,
-  } = await api('contracts/create-billing', { ...billingData });
+  } = await api(apiPoint, { ...billingData });
   await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Сохранено');
-    await getBillings();
-    selectedBilling.value = billingInfo;
-    console.log(result);
-    console.log(iss);
-    console.log(priceIk);
-  } else {
-    root.$emit('msg', 'error', 'Ошибка');
-  }
 };
 
 const page = ref(1);
