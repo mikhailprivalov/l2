@@ -194,9 +194,11 @@ const updateBilling = async () => {
   const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
   let billingData = {};
   if (selectedBilling.value) {
-    billingData = { ...currentBillingData.value };
+    billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
   } else {
-    billingData = { ...currentBillingData.value, hospitalId, companyId };
+    billingData = {
+      ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
+    };
   }
   await store.dispatch(actions.INC_LOADING);
   const { ok, billingId } = await api('contracts/update-billing', { ...billingData });
