@@ -8,7 +8,6 @@ from contracts.models import BillingRegister, RawDocumentBillingRegister
 from directions.models import Issledovaniya
 from directory.models import Researches
 from laboratory.decorators import group_required
-from statistic.sql_func import statistics_research_by_hospital_for_external_orders
 from utils.response import status_response
 
 
@@ -59,14 +58,6 @@ def confirm_billing(request):
 
 @login_required
 @group_required("Счет: проект")
-def get_data_for_confirmed_billing(request):
-    body = json.loads(request.body)
-    billing_id = body.get("billingId")
-    return JsonResponse({"ok": True})
-
-
-@login_required
-@group_required("Счет: проект")
 def change_visibility_research(request):
     request_data = json.loads(request.body)
     result = Researches.change_visibility(request_data["researchPk"])
@@ -77,8 +68,8 @@ def change_visibility_research(request):
 @group_required("Счет: проект")
 def get_billings(request):
     request_data = json.loads(request.body)
-    hospital_id = request_data.get('hospitalId')
-    company_id = request_data.get('companyId')
+    hospital_id = request_data.get("hospitalId")
+    company_id = request_data.get("companyId")
     result = BillingRegister.get_billings(hospital_id, company_id)
     return JsonResponse({"result": result})
 
@@ -87,9 +78,9 @@ def get_billings(request):
 @group_required("Счет: проект")
 def get_billing(request):
     request_data = json.loads(request.body)
-    billing_id = request_data.get('billingId')
+    billing_id = request_data.get("billingId")
     result = BillingRegister.get_billing(billing_id)
     type_price = request_data.get("typeCompany")
-    data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"],  result["dateEnd"])
+    data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"], result["dateEnd"])
     structure_data = structure_table(data)
     return JsonResponse({"result": result, **structure_data})
