@@ -73,14 +73,6 @@ def change_visibility_research(request):
     return status_response(result)
 
 
-def get_researches_execute_for_company(d_s, d_e, hospital_id, fin_source_pk):
-    results = statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, fin_source_pk)
-    unique_researches = set([i.research_id for i in results])
-
-    head_data = {i.research_id: i.research.title for i in unique_researches}
-    def_value_data = {k: 0 for k in head_data.keys()}
-
-
 @login_required
 @group_required("Счет: проект")
 def get_billings(request):

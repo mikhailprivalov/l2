@@ -163,7 +163,7 @@ class Company(models.Model):
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     email = models.CharField(max_length=128, blank=True, default="", help_text="email")
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
-    cpp_send = models.BooleanField(default=False, help_text='отправлять в ЦПП', db_index=True)
+    cpp_send = models.BooleanField(default=False, help_text="отправлять в ЦПП", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -352,18 +352,17 @@ class MedicalExamination(models.Model):
 
 
 class BillingRegister(models.Model):
-    company = models.ForeignKey(Company, db_index=True, default=None, blank=True, null=True, help_text='Работодатель', on_delete=models.SET_NULL)
-    hospital = models.ForeignKey(Hospitals, db_index=True, default=None, blank=True, null=True, help_text='Заказачик больница', on_delete=models.SET_NULL)
+    company = models.ForeignKey(Company, db_index=True, default=None, blank=True, null=True, help_text="Работодатель", on_delete=models.SET_NULL)
+    hospital = models.ForeignKey(Hospitals, db_index=True, default=None, blank=True, null=True, help_text="Заказачик больница", on_delete=models.SET_NULL)
     create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
-    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель счета', on_delete=models.SET_NULL)
+    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text="Создатель счета", on_delete=models.SET_NULL)
     date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True, db_index=True)
     date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
-    info = models.CharField(max_length=128, help_text="Информация по счет",  default=None, blank=True, null=True)
+    info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
     is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
 
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end}"
-
 
     @staticmethod
     def update_billing(billing_id, date_start, date_end, info):
@@ -376,7 +375,6 @@ class BillingRegister(models.Model):
             return info
         else:
             return False
-
 
     @staticmethod
     def create_billing(company_id, hospital_id, date_start, date_end, info):
@@ -394,13 +392,16 @@ class BillingRegister(models.Model):
     @staticmethod
     def get_billings(hospital_id=None, company_id=None):
         if hospital_id:
-            billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related('hospital')
-            result = [{"id": billing.pk, "label": f"{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for
-                      billing in billings]
+            billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related("hospital")
+            result = [
+                {"id": billing.pk, "label": f"{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
+            ]
         else:
-            billings = BillingRegister.objects.filter(company_id=company_id).select_related('company')
-            result = [{"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for
-                      billing in billings]
+            billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
+            result = [
+                {"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"}
+                for billing in billings
+            ]
         return result
 
     def as_json(self):

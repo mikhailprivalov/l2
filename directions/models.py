@@ -1094,9 +1094,6 @@ class Napravleniya(models.Model):
         if issledovaniya is None:
             pass
         client = Clients.Card.objects.get(pk=client_id)
-        print(price_name_id)
-        print(istochnik_f)
-        print('hospital', hospital )
         if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
             current_hospital = doc.hospital_id
             if hospital:

@@ -2927,7 +2927,6 @@ def delete_research_in_price(request):
 @group_required("Конструктор: Настройка организации")
 def get_companies(request):
     request_data = json.loads(request.body)
-    result = []
     if request_data.get('selectedType') == 'Работодатель' or not request_data.get('selectedType'):
         companies = Company.objects.filter(active_status=True).order_by("title")
     else:
