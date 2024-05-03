@@ -193,13 +193,13 @@ const updateBilling = async () => {
   let billingData = {};
   let apiPoint = '';
   if (selectedBilling.value) {
-    billingData = { ...currentBillingData, typeCompany: selectedType.value };
+    billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
     apiPoint = 'contracts/update-billing';
   } else {
     const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
     const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
     billingData = {
-      ...currentBillingData, hospitalId, companyId, typeCompany: selectedType.value,
+      ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
     };
     apiPoint = 'contracts/create-billing';
   }
