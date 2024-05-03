@@ -380,7 +380,6 @@ class BillingRegister(models.Model):
 
     @staticmethod
     def create_billing(company_id, hospital_id, date_start, date_end, info):
-        print(date_start, date_end)
         current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info)
         current_billing.save()
         return current_billing.pk
