@@ -55,9 +55,12 @@
           </button>
         </div>
       </div>
-      <div>
+      <div
+        v-if="selectedBilling"
+        class="white_bg"
+      >
         <VeTable
-          :columns="columns"
+          :columns="colTable"
           :table-data="servicePagination"
           row-key-field-name="card_id"
         />
@@ -263,5 +266,8 @@ const updateBilling = async () => {
 .empty-list {
   width: 85px;
   margin: 20px auto;
+}
+.white_bg {
+  background: #FFF;
 }
 </style>
