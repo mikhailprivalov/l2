@@ -879,6 +879,60 @@ def statistics_by_research_sets_company(d_s, d_e, fin_source_pk, researches, com
     return rows
 
 
+def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, fin_source_pk):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.id as iss_id,
+                    directions_issledovaniya.research_id,
+                    directory_researches.title as research_title,
+                    directory_researches.internal_code as internal_code,
+                    directory_researches.code as code_nmu,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    directions_issledovaniya.time_confirmation,
+                    directions_napravleniya.client_id,
+                    cc.number as patient_card_num,
+                    ci.family as patient_family,
+                    ci.name as patient_name,
+                    ci.patronymic as patient_patronymic,
+                    to_char(ci.birthday,'DD.MM.YYYY') as ru_date_born,
+                    date_part('year', age(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, ci.birthday))::int as patient_age,
+                    dtr.number as tube_number
+                FROM directions_issledovaniya
+                LEFT JOIN directions_issledovaniya_tubes dit
+                ON directions_issledovaniya.id = dit.issledovaniya_id
+                
+                LEFT JOIN directions_tubesregistration dtr
+                ON dit.tubesregistration_id = dtr.id
+                
+                LEFT JOIN directory_researches 
+                ON directory_researches.id=directions_issledovaniya.research_id
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card cc
+                ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN clients_individual ci 
+                ON ci.id = cc.individual_id
+                
+                WHERE time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                        AND (
+                            directions_issledovaniya.fin_source_id=%(fin_source_pk)s or 
+                            directions_napravleniya.istochnik_f_id=%(fin_source_pk)s
+                        ) 
+                        AND
+                        directions_napravleniya.hospital_id = %(hospital_id)s
+                ORDER BY 
+                    directions_napravleniya.client_id, 
+                    directions_issledovaniya.time_confirmation
+                            """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'hospital_id': hospital_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def statistics_registry_profit(d_s, d_e, fin_source_pk):
     with connection.cursor() as cursor:
         cursor.execute(
