@@ -212,32 +212,44 @@ const updateBilling = async () => {
   if (selectedBilling.value) {
     billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
     apiPoint = 'contracts/update-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo, columns, tableData,
+    } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBillings();
+      colTable.value = columns;
+      services.value = tableData;
+      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
   } else {
     const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
     const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
     billingData = {
       ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
     };
+    const {
+      ok, billingInfo, columns, tableData,
+    } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
     apiPoint = 'contracts/create-billing';
   }
-  await store.dispatch(actions.INC_LOADING);
-  const {
-    ok, billingInfo, columns, tableData,
-  } = await api(apiPoint, { ...billingData });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    await getBillings();
-    colTable.value = columns;
-    services.value = tableData;
-    if (selectedBilling.value) {
-      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
-    } else {
-      root.$emit('msg', 'ok', 'Создано');
-      selectedBilling.value = billingInfo;
-    }
-  } else {
-    root.$emit('msg', 'ok', 'ошибка');
-  }
+  // if (ok) {
+  //   await getBillings();
+  //   colTable.value = columns;
+  //   services.value = tableData;
+  //   if (selectedBilling.value) {
+  //     root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+  //   } else {
+  //     root.$emit('msg', 'ok', 'Создано');
+  //     selectedBilling.value = billingInfo;
+  //   }
+  // } else {
+  //   root.$emit('msg', 'ok', 'ошибка');
+  // }
 };
 
 </script>
