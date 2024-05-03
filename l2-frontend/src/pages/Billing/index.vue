@@ -192,11 +192,15 @@ watch(selectedBilling, () => {
 const updateBilling = async () => {
   const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
   await store.dispatch(actions.INC_LOADING);
-  const { ok } = await api('contracts/update-billing', { ...billingData });
+  const { ok, billingId, result, iss, priceIk } = await api('contracts/update-billing', { ...billingData });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Сохранено');
     await getBillings();
+    console.log(billingId);
+    console.log(result);
+    console.log(iss);
+    console.log(priceIk);
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
