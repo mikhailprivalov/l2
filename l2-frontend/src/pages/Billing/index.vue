@@ -231,25 +231,17 @@ const updateBilling = async () => {
     billingData = {
       ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
     };
-    const {
-      ok, billingInfo, columns, tableData,
-    } = await api(apiPoint, { ...billingData });
-    await store.dispatch(actions.DEC_LOADING);
     apiPoint = 'contracts/create-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, billingInfo } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Создано');
+      selectedBilling.value = billingInfo
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
   }
-  // if (ok) {
-  //   await getBillings();
-  //   colTable.value = columns;
-  //   services.value = tableData;
-  //   if (selectedBilling.value) {
-  //     root.$emit('msg', 'ok', `${billingInfo} сохранен`);
-  //   } else {
-  //     root.$emit('msg', 'ok', 'Создано');
-  //     selectedBilling.value = billingInfo;
-  //   }
-  // } else {
-  //   root.$emit('msg', 'ok', 'ошибка');
-  // }
 };
 
 </script>
