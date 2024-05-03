@@ -14,19 +14,6 @@ from utils.response import status_response
 
 @login_required
 @group_required("Счет: проект")
-def get_research_for_billing(request):
-    body = json.loads(request.body)
-    company_id = body.get("company")
-    date_start = "2024-04-01"
-    date_end = "2024-04-30"
-    type_price = body.get("typePrice")
-    data = researches_for_billing(type_price, company_id, date_start, date_end)
-    structure_data = structure_table(data)
-    return JsonResponse(data)
-
-
-@login_required
-@group_required("Счет: проект")
 def create_billing(request):
     body = json.loads(request.body)
     company_id = body.get("companyId")
@@ -35,10 +22,7 @@ def create_billing(request):
     date_end = body.get("dateEnd")
     info = body.get("info")
     billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
-    type_price = body.get("typeCompany")
-    data = researches_for_billing(type_price, hospital_id, date_start, date_end)
-    structure_data = structure_table(data)
-    return JsonResponse({"ok": True, "billingInfo": billing_id, **structure_data})
+    return JsonResponse({"ok": True, "billingInfo": billing_id})
 
 
 @login_required
@@ -113,4 +97,7 @@ def get_billing(request):
     request_data = json.loads(request.body)
     billing_id = request_data.get('billingId')
     result = BillingRegister.get_billing(billing_id)
-    return JsonResponse({"result": result})
+    type_price = request_data.get("typeCompany")
+    data = researches_for_billing(type_price, result["hospital_id"], result["date_start"],  result["date_end"])
+    structure_data = structure_table(data)
+    return JsonResponse({"result": result, **structure_data})
