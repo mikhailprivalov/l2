@@ -384,7 +384,6 @@ class BillingRegister(models.Model):
         current_billing.save()
         return current_billing.pk
 
-
     @staticmethod
     def confirm_billing(billing_id):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
