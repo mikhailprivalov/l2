@@ -115,3 +115,12 @@ def get_subgroups_all(request):
         for subgroup in SubGroupDirectory.objects.all().order_by("title")
     ]
     return JsonResponse(rows, safe=False)
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def get_complex_services(request):
+    complex_services = Researches.objects.filter(is_complex=True)
+    result = [{"id": service.pk, "label": service.title} for service in complex_services]
+    return JsonResponse({"result": result})
+
