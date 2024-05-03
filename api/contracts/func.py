@@ -95,6 +95,7 @@ def structure_table(data_researches):
     step = 0
     patient_data = {}
     prev_card_id_patient = -1
+    total = 0
     for card_id, research_data in data_researches.get("result").items():
         step += 1
         sum_coast = 0
@@ -137,7 +138,19 @@ def structure_table(data_researches):
                     "summ": "",
                 }
                 sum_coast += i.get("coast")
+            total += i.get("coast")
             prev_card_id_patient = card_id
+    patient_data["total"] = {
+        "serialNumber": "",
+        "patientFio": "Итого",
+        "patientBirthDay": "",
+        "tubeNumber": "",
+        "coast": "",
+        "researchTitle": "",
+        "internalId": "",
+        "codeNMU": "",
+        "summ": total,
+    }
 
     table_data = [v for v in patient_data.values()]
     return {"columns": columns, "table_data": table_data}
