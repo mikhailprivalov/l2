@@ -43,15 +43,14 @@ def create_billing(request):
 @group_required("Счет: проект")
 def update_billing(request):
     body = json.loads(request.body)
-    company_id = body.get("companyId")
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
     billing_id = body.get("billingId")
     info = body.get("info")
-    billing_info = BillingRegister.update_billing(company_id, hospital_id, billing_id, date_start, date_end, info)
-    type_price = body.get("typePrice")
-    data = researches_for_billing(type_price, company_id, date_start, date_end)
+    billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info)
+    type_price = body.get("typeCompany")
+    data = researches_for_billing(type_price, hospital_id, date_start, date_end)
     return JsonResponse({"ok": True, "billingId": billing_info, **data})
 
 

@@ -366,11 +366,9 @@ class BillingRegister(models.Model):
 
 
     @staticmethod
-    def update_billing(company_id, hospital_id, billing_id, date_start, date_end, info):
+    def update_billing(billing_id, date_start, date_end, info):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         if current_billing:
-            current_billing.company_id = company_id
-            current_billing.hospital_id = hospital_id
             current_billing.date_start = date_start
             current_billing.date_end = date_end
             current_billing.info = info
