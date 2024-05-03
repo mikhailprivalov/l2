@@ -131,6 +131,20 @@ const changeType = () => {
   getCompanies();
 };
 
+const page = ref(1);
+const pageSize = ref(25);
+const pageSizeOptions = ref([25, 50, 100]);
+const pageNumberChange = (number: number) => {
+  page.value = number;
+};
+const pageSizeChange = (size: number) => {
+  pageSize.value = size;
+};
+
+const colTable = ref([]);
+const services = ref([]);
+const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+
 const billings = ref([]);
 const selectedBilling = ref(null);
 const getBillings = async () => {
@@ -176,9 +190,14 @@ const currentBillingData = ref({
 
 const getBilling = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value, typeCompany: selectedType.value });
+  const { result, columns, tableData } = await api('contracts/get-billing', {
+    billingId: selectedBilling.value,
+    typeCompany: selectedType.value,
+  });
   await store.dispatch(actions.DEC_LOADING);
   currentBillingData.value = result;
+  colTable.value = columns;
+  services.value = tableData;
 };
 const clearBilling = () => {
   currentBillingData.value = { ...billingTemplate.value };
@@ -191,20 +210,6 @@ watch(selectedBilling, () => {
     clearBilling();
   }
 });
-
-const page = ref(1);
-const pageSize = ref(25);
-const pageSizeOptions = ref([25, 50, 100]);
-const pageNumberChange = (number: number) => {
-  page.value = number;
-};
-const pageSizeChange = (size: number) => {
-  pageSize.value = size;
-};
-
-const colTable = ref([]);
-const services = ref([]);
-const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
 
 const updateBilling = async () => {
   let billingData = {};
