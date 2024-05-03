@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import simplejson as json
 from django.db import transaction
 
-from api.contracts.func import researches_for_billing, get_confirm_data_for_billing
+from api.contracts.func import researches_for_billing, get_confirm_data_for_billing, structure_table
 from contracts.models import BillingRegister, RawDocumentBillingRegister
 from directions.models import Issledovaniya
 from directory.models import Researches
@@ -21,6 +21,7 @@ def get_research_for_billing(request):
     date_end = "2024-04-30"
     type_price = body.get("typePrice")
     data = researches_for_billing(type_price, company_id, date_start, date_end)
+    structure_data = structure_table(data)
     return JsonResponse(data)
 
 
@@ -34,9 +35,10 @@ def create_billing(request):
     date_end = body.get("dateEnd")
     info = body.get("info")
     billing_info = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
-    type_price = body.get("typePrice")
-    data = researches_for_billing(type_price, company_id, date_start, date_end)
-    return JsonResponse({"ok": True, "billing_info": billing_info, **data })
+    type_price = body.get("typeCompany")
+    data = researches_for_billing(type_price, hospital_id, date_start, date_end)
+    structure_data = structure_table(data)
+    return JsonResponse({"ok": True, "billing_info": billing_info, **structure_data })
 
 
 @login_required
@@ -46,12 +48,13 @@ def update_billing(request):
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
-    billing_id = body.get("billingId")
+    billing_id = body.get("id")
     info = body.get("info")
     billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info)
     type_price = body.get("typeCompany")
     data = researches_for_billing(type_price, hospital_id, date_start, date_end)
-    return JsonResponse({"ok": True, "billingId": billing_info, **data})
+    structure_data = structure_table(data)
+    return JsonResponse({"ok": True, "billingId": billing_info, **structure_data})
 
 
 @login_required

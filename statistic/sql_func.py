@@ -888,6 +888,8 @@ def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, f
                     directions_issledovaniya.id as iss_id,
                     directions_issledovaniya.research_id,
                     directory_researches.title as research_title,
+                    directory_researches.internal_code as internal_code,
+                    directory_researches.code as code_nmu,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
                     directions_issledovaniya.time_confirmation,
                     directions_napravleniya.client_id,
