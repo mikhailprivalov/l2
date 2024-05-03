@@ -2,16 +2,31 @@
   <div>
     <Treeselect
       v-model="selectedComplex"
+      class="block"
       :options="complexs"
       placeholder="Выберите комплексную услугу"
     />
     <div class="block shadow">
-      <h4>Редактирование комплекса</h4>
+      <div class="edit-complex">
+        <div>
+          <label>Название</label>
+          <input class="form-control">
+        </div>
+        <button class="btn btn-blue-nb button-row">
+          {{ selectedComplex ? 'Сохранить' : 'Создать' }}
+        </button>
+      </div>
     </div>
-    <div class="block shadow">
+    <div
+      v-if="selectedComplex"
+      class="block shadow"
+    >
       <h4>Список услуг в комплексе</h4>
     </div>
-    <div class="block shadow">
+    <div
+      v-if="selectedComplex"
+      class="block shadow"
+    >
       <h4>Добавление услуги в комплекс</h4>
     </div>
   </div>
@@ -51,5 +66,14 @@ onMounted(() => {
   background-color: #fff;
   border-radius: 5px;
   margin-bottom: 20px;
+  padding: 2px;
+}
+.edit-complex {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.button-row {
+  margin-top: 25px;
 }
 </style>
