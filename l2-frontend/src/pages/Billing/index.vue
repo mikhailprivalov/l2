@@ -55,9 +55,12 @@
           </button>
         </div>
       </div>
-      <div>
+      <div
+        v-if="selectedBilling"
+        class="white_bg"
+      >
         <VeTable
-          :columns="columns"
+          :columns="colTable"
           :table-data="servicePagination"
           row-key-field-name="card_id"
         />
@@ -189,29 +192,6 @@ watch(selectedBilling, () => {
   }
 });
 
-const updateBilling = async () => {
-  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
-  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
-  let billingData = {};
-  if (selectedBilling.value) {
-    billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
-  } else {
-    billingData = {
-      ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
-    };
-  }
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, billingId } = await api('contracts/update-billing', { ...billingData });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Сохранено');
-    await getBillings();
-    selectedBilling.value = billingId;
-  } else {
-    root.$emit('msg', 'error', 'Ошибка');
-  }
-};
-
 const page = ref(1);
 const pageSize = ref(25);
 const pageSizeOptions = ref([25, 50, 100]);
@@ -222,36 +202,43 @@ const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
 
-const columns = ref([
-  {
-    field: 'research_title',
-    key: 'research_title',
-    title: 'Услуга',
-  },
-  {
-    field: 'patient_fio',
-    key: 'patient_fio',
-    title: 'ФИО пациента',
-  },
-  {
-    field: 'patient_born',
-    key: 'patient_born',
-    title: 'Д.Р. Пациента',
-  },
-  {
-    field: 'tube_number',
-    key: 'tube_number',
-    title: '№ пробирки',
-  },
-  {
-    field: 'coast',
-    key: 'coast',
-    title: 'Цена',
-  },
-]);
-
+const colTable = ref([]);
 const services = ref([]);
 const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+
+const updateBilling = async () => {
+  let billingData = {};
+  let apiPoint = '';
+  if (selectedBilling.value) {
+    billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
+    apiPoint = 'contracts/update-billing';
+  } else {
+    const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+    const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+    billingData = {
+      ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
+    };
+    apiPoint = 'contracts/create-billing';
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const {
+    ok, billingInfo, columns, tableData,
+  } = await api(apiPoint, { ...billingData });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getBillings();
+    colTable.value = columns;
+    services.value = tableData;
+    if (selectedBilling.value) {
+      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+    } else {
+      root.$emit('msg', 'ok', 'Создано');
+      selectedBilling.value = billingInfo;
+    }
+  } else {
+    root.$emit('msg', 'ok', 'ошибка');
+  }
+};
 
 </script>
 
@@ -279,5 +266,8 @@ const servicePagination = computed(() => services.value.slice((page.value - 1) *
 .empty-list {
   width: 85px;
   margin: 20px auto;
+}
+.white_bg {
+  background: #FFF;
 }
 </style>

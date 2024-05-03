@@ -34,11 +34,11 @@ def create_billing(request):
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
     info = body.get("info")
-    billing_info = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
+    billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
     type_price = body.get("typeCompany")
     data = researches_for_billing(type_price, hospital_id, date_start, date_end)
     structure_data = structure_table(data)
-    return JsonResponse({"ok": True, "billing_info": billing_info, **structure_data })
+    return JsonResponse({"ok": True, "billingInfo": billing_id, **structure_data})
 
 
 @login_required
@@ -54,7 +54,7 @@ def update_billing(request):
     type_price = body.get("typeCompany")
     data = researches_for_billing(type_price, hospital_id, date_start, date_end)
     structure_data = structure_table(data)
-    return JsonResponse({"ok": True, "billingId": billing_info, **structure_data})
+    return JsonResponse({"ok": True, "billingInfo": billing_info, **structure_data})
 
 
 @login_required
