@@ -21,6 +21,7 @@ def get_research_for_billing(request):
     date_end = "2024-04-30"
     type_price = body.get("typePrice")
     data = researches_for_billing(type_price, company_id, date_start, date_end)
+    structure_data = structure_table(data)
     return JsonResponse(data)
 
 
@@ -34,8 +35,8 @@ def create_billing(request):
     date_end = body.get("dateEnd")
     info = body.get("info")
     billing_info = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
-    type_price = body.get("typePrice")
-    data = researches_for_billing(type_price, company_id, date_start, date_end)
+    type_price = body.get("typeCompany")
+    data = researches_for_billing(type_price, hospital_id, date_start, date_end)
     structure_data = structure_table(data)
     return JsonResponse({"ok": True, "billing_info": billing_info, **structure_data })
 
