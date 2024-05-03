@@ -208,6 +208,13 @@ const updateBilling = async () => {
     ok, billingInfo, result, iss, priceIk,
   } = await api(apiPoint, { ...billingData });
   await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    console.log(billingInfo);
+    console.log(result);
+    console.log(iss);
+    console.log(priceIk);
+    await getBillings();
+  }
 };
 
 const page = ref(1);
