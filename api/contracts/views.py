@@ -48,7 +48,7 @@ def update_billing(request):
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
-    billing_id = body.get("billingId")
+    billing_id = body.get("id")
     info = body.get("info")
     billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info)
     type_price = body.get("typeCompany")
