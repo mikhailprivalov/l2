@@ -10,24 +10,34 @@
           />
         </div>
         <div class="margin-item">
-          <label>Контрагент</label>
-          <Treeselect
-            v-model="selectedCompany"
-            :options="companies"
-            :normalizer="normalizer"
-            placeholder="Выберите компанию..."
-          />
+          <div class="input-group">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >Контрагент</span>
+            <Treeselect
+              v-model="selectedCompany"
+              :options="companies"
+              :normalizer="normalizer"
+              placeholder="Выберите компанию..."
+            />
+          </div>
         </div>
         <div
           v-if="selectedCompany"
           class="margin-item"
         >
-          <label>Счета</label>
-          <Treeselect
-            v-model="selectedBilling"
-            :options="billings"
-            placeholder="Выберите счёт..."
-          />
+          <div class="input-group">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >Счета</span>
+            <Treeselect
+              v-model="selectedBilling"
+              :options="billings"
+              placeholder="Выберите счёт..."
+            />
+          </div>
         </div>
         <div
           v-if="selectedCompany"
