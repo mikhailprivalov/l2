@@ -80,17 +80,17 @@ def get_confirm_data_for_billing(price_id, billing_id):
 
 def structure_table(data_researches):
     columns = [
-        {"key": "serialNumber", "field": "serialNumber", "title": "№", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "patientFio", "field": "patientFio", "title": "Пациент", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "patientBirthDay", "field": "patientBirthDay", "title": "Дата рожд.", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "executeDate", "field": "executeDate", "title": "Дата вып.", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "internalId", "field": "internalId", "title": "Код", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "codeNMU", "field": "codeNMU", "title": "Код НМУ", "align": "left", "width": 150, "fixed": "left"},
+        {"key": "serialNumber", "field": "serialNumber", "title": "№", "align": "left", "width": 30, "fixed": "left"},
+        {"key": "patientFio", "field": "patientFio", "title": "Пациент", "align": "left", "width": 200, "fixed": "left"},
+        {"key": "patientBirthDay", "field": "patientBirthDay", "title": "Дата рожд.", "align": "left", "width": 50, "fixed": "left"},
+        {"key": "executeDate", "field": "executeDate", "title": "Дата вып.", "align": "left", "width": 50, "fixed": "left"},
+        {"key": "internalId", "field": "internalId", "title": "Код", "align": "left", "width": 100, "fixed": "left"},
+        {"key": "codeNMU", "field": "codeNMU", "title": "Код НМУ", "align": "left", "width": 120, "fixed": "left"},
         {"key": "researchTitle", "field": "researchTitle", "title": "Наименование услуги", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "tubeNumber", "field": "tubeNumber", "title": "Лаб. номер", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "count", "field": "count", "title": "Кол.", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "coast", "field": "coast", "title": "Цена", "align": "left", "width": 150, "fixed": "left"},
-        {"key": "summ", "field": "coast", "title": "Стоимость, руб", "align": "left", "width": 150, "fixed": "left"},
+        {"key": "tubeNumber", "field": "tubeNumber", "title": "Лаб. номер", "align": "left", "width": 100, "fixed": "left"},
+        {"key": "count", "field": "count", "title": "Кол.", "align": "left", "width": 50, "fixed": "left"},
+        {"key": "coast", "field": "coast", "title": "Цена", "align": "left", "width": 50, "fixed": "left"},
+        {"key": "summ", "field": "summ", "title": "Стоимость, руб", "align": "left", "width": 50, "fixed": "left"},
     ]
     step = 0
     patient_data = {}
@@ -98,10 +98,10 @@ def structure_table(data_researches):
     total = 0
     for card_id, research_data in data_researches.get("result").items():
         step += 1
-        sum_coast = 0
+        sum_patient = 0
         for i in research_data:
-            if prev_card_id_patient != -1 and card_id != prev_card_id_patient:
-                patient_data[f"{card_id} summ"] = {
+            if (prev_card_id_patient != -1) and (card_id != prev_card_id_patient):
+                patient_data[f"{prev_card_id_patient} summ"] = {
                     "serialNumber": "",
                     "patientFio": "Сумма по пациенту:",
                     "patientBirthDay": "",
@@ -110,7 +110,7 @@ def structure_table(data_researches):
                     "researchTitle": "",
                     "internalId": "",
                     "codeNMU": "",
-                    "summ": sum_coast,
+                    "summ": sum_patient,
                 }
             if not patient_data.get(card_id):
                 patient_data[card_id] = {
@@ -124,7 +124,6 @@ def structure_table(data_researches):
                     "codeNMU": i.get("code_nmu"),
                     "summ": "",
                 }
-                sum_coast += i.get("coast")
             else:
                 patient_data[f"{card_id} {i.get('research_id')}"] = {
                     "serialNumber": "",
@@ -137,7 +136,7 @@ def structure_table(data_researches):
                     "codeNMU": i.get("code_nmu"),
                     "summ": "",
                 }
-                sum_coast += i.get("coast")
+            sum_patient += i.get("coast")
             total += i.get("coast")
             prev_card_id_patient = card_id
     patient_data["total"] = {
