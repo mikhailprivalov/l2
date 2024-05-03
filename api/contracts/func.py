@@ -100,18 +100,6 @@ def structure_table(data_researches):
         step += 1
         sum_patient = 0
         for i in research_data:
-            if (prev_card_id_patient != -1) and (card_id != prev_card_id_patient):
-                patient_data[f"{prev_card_id_patient} summ"] = {
-                    "serialNumber": "",
-                    "patientFio": "Сумма по пациенту:",
-                    "patientBirthDay": "",
-                    "tubeNumber": "",
-                    "coast": "",
-                    "researchTitle": "",
-                    "internalId": "",
-                    "codeNMU": "",
-                    "summ": sum_patient,
-                }
             if not patient_data.get(card_id):
                 patient_data[card_id] = {
                     "serialNumber": step,
@@ -139,6 +127,17 @@ def structure_table(data_researches):
             sum_patient += i.get("coast")
             total += i.get("coast")
             prev_card_id_patient = card_id
+        patient_data[f"{prev_card_id_patient} summ"] = {
+            "serialNumber": "",
+            "patientFio": "Сумма по пациенту:",
+            "patientBirthDay": "",
+            "tubeNumber": "",
+            "coast": "",
+            "researchTitle": "",
+            "internalId": "",
+            "codeNMU": "",
+            "summ": sum_patient,
+        }
     patient_data["total"] = {
         "serialNumber": "",
         "patientFio": "Итого",
