@@ -153,4 +153,4 @@ def structure_table(data_researches):
     }
 
     table_data = [v for v in patient_data.values()]
-    return {"columns": columns, "table_data": table_data}
+    return {"columns": columns, "tableData": table_data}
