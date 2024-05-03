@@ -34,6 +34,7 @@ const getComplexs = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/complex/get-complexs');
   await store.dispatch(actions.DEC_LOADING);
+  complexs.value = result;
 };
 
 onMounted(() => {
