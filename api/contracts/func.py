@@ -33,6 +33,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end):
                 "coast": research_coast.get(i.research_id, 0),
                 "code_nmu": i.code_nmu,
                 "internal_code": i.internal_code,
+                "execute_date": i.date_confirm,
             }
             if not result.get(i.patient_card_num):
                 result[i.patient_card_num] = [current_data.copy()]
@@ -57,6 +58,7 @@ def get_confirm_data_for_billing(price_id, billing_id):
             "patient_born": i.ru_date_born,
             "tube_number": i.tube_number,
             "coast": research_coast.get(i.research_id, 0),
+            "execute_date": i.date_confirm,
         }
         if not result.get(i.patient_card_num):
             result[i.patient_card_num] = [current_data.copy()]
@@ -111,6 +113,7 @@ def structure_table(data_researches):
                     "internalId": i.get("internal_code"),
                     "codeNMU": i.get("code_nmu"),
                     "summ": "",
+                    "executeDate": i.get("execute_date"),
                 }
             else:
                 patient_data[f"{card_id} {i.get('research_id')}"] = {
@@ -123,6 +126,7 @@ def structure_table(data_researches):
                     "internalId": i.get("internal_code"),
                     "codeNMU": i.get("code_nmu"),
                     "summ": "",
+                    "executeDate": i.get("execute_date"),
                 }
             sum_patient += i.get("coast")
             total += i.get("coast")
@@ -136,6 +140,7 @@ def structure_table(data_researches):
             "researchTitle": "",
             "internalId": "",
             "codeNMU": "",
+            "executeDate": "",
             "summ": sum_patient,
         }
     patient_data["total"] = {
@@ -147,6 +152,7 @@ def structure_table(data_researches):
         "researchTitle": "",
         "internalId": "",
         "codeNMU": "",
+        "executeDate": "",
         "summ": total,
     }
 

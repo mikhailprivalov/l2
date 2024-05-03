@@ -58,12 +58,27 @@
             />
           </div>
         </div>
-        <button
-          class="btn btn-blue-nb"
-          @click="updateBilling"
-        >
-          {{ selectedBilling ? 'Сохранить' : 'Создать' }}
-        </button>
+        <div class="margin-item">
+          <button
+            class="btn btn-blue-nb"
+            @click="updateBilling"
+          >
+            {{ selectedBilling ? 'Сохранить проект' : 'Новый счет' }}
+          </button>
+          <button
+            class="btn btn-blue-nb"
+            @click="updateBilling"
+          >
+            Записать счет
+          </button>
+          <button
+            class="btn btn-blue-nb"
+            @click="updateBilling"
+          >
+            <i class="fa-solid fa-download" />
+            Excel
+          </button>
+        </div>
       </div>
       <div
         v-if="selectedBilling"
@@ -282,7 +297,7 @@ watch(() => currentBillingData.value.dateStart, (newValue, oldValue) => {
   margin: 0 20px;
 }
 .company {
-  width: 700px;
+  width: 900px;
   margin: 0 auto;
 }
 .margin-item {
