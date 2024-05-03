@@ -20,7 +20,7 @@
         href="#"
         @click.prevent="downloadCoastTOXlsx()"
       >
-        XLSX
+        Все цены - XLSX
       </a>
     </span>
     <div class="edit-price">
@@ -169,7 +169,7 @@
         href="#"
         @click.prevent="downloadCoastTOXlsx(selectedPrice)"
       >
-        XLSX
+        Текущий прайс - XLSX
       </a>
       <a
         class="a-under a-align r-padding"
