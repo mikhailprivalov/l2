@@ -49,7 +49,7 @@
           </div>
           <button
             class="btn btn-blue-nb"
-            @click="updateBilling"
+            @click="selectedBilling ? updateBilling : createBilling"
           >
             {{ selectedBilling ? 'Сохранить' : 'Создать' }}
           </button>
@@ -190,23 +190,36 @@ watch(selectedBilling, () => {
 });
 
 const updateBilling = async () => {
-  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
-  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
-  let billingData = {};
-  if (selectedBilling.value) {
-    billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
-  } else {
-    billingData = {
-      ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
-    };
-  }
+  const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
   await store.dispatch(actions.INC_LOADING);
-  const { ok, billingId } = await api('contracts/update-billing', { ...billingData });
+  const { ok } = await api('contracts/update-billing', { ...billingData });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Сохранено');
     await getBillings();
-    selectedBilling.value = billingId;
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
+const createBilling = async () => {
+  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+  const billingData = {
+    ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
+  };
+  await store.dispatch(actions.INC_LOADING);
+  const {
+    ok, billingInfo, result, iss, priceIk,
+  } = await api('contracts/create-billing', { ...billingData });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getBillings();
+    selectedBilling.value = billingInfo;
+    console.log(result);
+    console.log(iss);
+    console.log(priceIk);
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }

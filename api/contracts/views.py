@@ -34,9 +34,9 @@ def create_billing(request):
     date_end = body.get("dateEnd")
     info = body.get("info")
     billing_info = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
-    type_price = body.get("typePrice")
+    type_price = body.get("typeCompany")
     data = researches_for_billing(type_price, company_id, date_start, date_end)
-    return JsonResponse({"ok": True, "billing_info": billing_info, **data })
+    return JsonResponse({"ok": True, "billingInfo": billing_info, **data })
 
 
 @login_required
