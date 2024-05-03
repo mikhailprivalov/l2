@@ -131,6 +131,20 @@ const changeType = () => {
   getCompanies();
 };
 
+const page = ref(1);
+const pageSize = ref(25);
+const pageSizeOptions = ref([25, 50, 100]);
+const pageNumberChange = (number: number) => {
+  page.value = number;
+};
+const pageSizeChange = (size: number) => {
+  pageSize.value = size;
+};
+
+const colTable = ref([]);
+const services = ref([]);
+const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
+
 const billings = ref([]);
 const selectedBilling = ref(null);
 const getBillings = async () => {
@@ -176,9 +190,14 @@ const currentBillingData = ref({
 
 const getBilling = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value });
+  const { result, columns, tableData } = await api('contracts/get-billing', {
+    billingId: selectedBilling.value,
+    typeCompany: selectedType.value,
+  });
   await store.dispatch(actions.DEC_LOADING);
   currentBillingData.value = result;
+  colTable.value = columns;
+  services.value = tableData;
 };
 const clearBilling = () => {
   currentBillingData.value = { ...billingTemplate.value };
@@ -192,26 +211,25 @@ watch(selectedBilling, () => {
   }
 });
 
-const page = ref(1);
-const pageSize = ref(25);
-const pageSizeOptions = ref([25, 50, 100]);
-const pageNumberChange = (number: number) => {
-  page.value = number;
-};
-const pageSizeChange = (size: number) => {
-  pageSize.value = size;
-};
-
-const colTable = ref([]);
-const services = ref([]);
-const servicePagination = computed(() => services.value.slice((page.value - 1) * pageSize.value, page.value * pageSize.value));
-
 const updateBilling = async () => {
   let billingData = {};
   let apiPoint = '';
   if (selectedBilling.value) {
     billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
     apiPoint = 'contracts/update-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo, columns, tableData,
+    } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBillings();
+      colTable.value = columns;
+      services.value = tableData;
+      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
   } else {
     const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
     const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
@@ -219,24 +237,15 @@ const updateBilling = async () => {
       ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
     };
     apiPoint = 'contracts/create-billing';
-  }
-  await store.dispatch(actions.INC_LOADING);
-  const {
-    ok, billingInfo, columns, tableData,
-  } = await api(apiPoint, { ...billingData });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    await getBillings();
-    colTable.value = columns;
-    services.value = tableData;
-    if (selectedBilling.value) {
-      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
-    } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, billingInfo } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
       root.$emit('msg', 'ok', 'Создано');
       selectedBilling.value = billingInfo;
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
     }
-  } else {
-    root.$emit('msg', 'ok', 'ошибка');
   }
 };
 
