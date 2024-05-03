@@ -176,7 +176,7 @@ const currentBillingData = ref({
 
 const getBilling = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value });
+  const { result } = await api('contracts/get-billing', { billingId: selectedBilling.value, typeCompany: selectedType.value });
   await store.dispatch(actions.DEC_LOADING);
   currentBillingData.value = result;
 };
@@ -237,7 +237,7 @@ const updateBilling = async () => {
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Создано');
-      selectedBilling.value = billingInfo
+      selectedBilling.value = billingInfo;
     } else {
       root.$emit('msg', 'ok', 'ошибка');
     }
