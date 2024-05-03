@@ -10,7 +10,7 @@
           />
         </div>
         <div class="margin-item">
-          <label>Компании</label>
+          <label>Контрагент</label>
           <Treeselect
             v-model="selectedCompany"
             :options="companies"
@@ -34,26 +34,36 @@
           class="margin-item flex"
         >
           <div class="date-block">
-            <label>c</label>
             <input
               v-model="currentBillingData.dateStart"
               class="form-control"
               type="date"
             >
-            <label>по</label>
+            <div style="padding-top: 5px;">
+              -
+            </div>
             <input
               v-model="currentBillingData.dateEnd"
               class="form-control"
               type="date"
             >
           </div>
-          <button
-            class="btn btn-blue-nb"
-            @click="updateBilling"
+          <div
+            v-if="selectedCompany"
           >
-            {{ selectedBilling ? 'Сохранить' : 'Создать' }}
-          </button>
+            <Treeselect
+              v-model="selectedPrice"
+              :options="prices"
+              placeholder="Выберите прайс..."
+            />
+          </div>
         </div>
+        <button
+          class="btn btn-blue-nb"
+          @click="updateBilling"
+        >
+          {{ selectedBilling ? 'Сохранить' : 'Создать' }}
+        </button>
       </div>
       <div
         v-if="selectedBilling"
@@ -248,6 +258,22 @@ const updateBilling = async () => {
     }
   }
 };
+
+const prices = ref([]);
+const selectedPrice = ref(null);
+const getPrices = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const billingData = { ...currentBillingData.value, typeCompany: selectedType.value, hospitalId: selectedCompany.value };
+  const { data } = await api('contracts/get-hospital-prices', { ...billingData });
+  await store.dispatch(actions.DEC_LOADING);
+  prices.value = data;
+};
+
+watch(() => currentBillingData.value.dateStart, (newValue, oldValue) => {
+  if ((newValue !== oldValue) && currentBillingData.value.dateEnd) {
+    getPrices();
+  }
+});
 
 </script>
 

@@ -54,6 +54,10 @@ class PriceName(models.Model):
     def get_hospital_price_by_date(hospital_id, date_start, date_end, is_subcontract=False):
         return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract).first()
 
+    @staticmethod
+    def get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=False):
+        return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract)
+
     class Meta:
         verbose_name = "Название прайса"
         verbose_name_plural = "Названия прайса"
@@ -360,6 +364,7 @@ class BillingRegister(models.Model):
     date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
     info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
     is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
+    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, default=None, blank=True, null=True, db_index=True)
 
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end}"
