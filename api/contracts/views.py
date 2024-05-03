@@ -98,6 +98,6 @@ def get_billing(request):
     billing_id = request_data.get('billingId')
     result = BillingRegister.get_billing(billing_id)
     type_price = request_data.get("typeCompany")
-    data = researches_for_billing(type_price, result["hospital_id"], result["date_start"],  result["date_end"])
+    data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"],  result["dateEnd"])
     structure_data = structure_table(data)
     return JsonResponse({"result": result, **structure_data})
