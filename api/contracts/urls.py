@@ -8,4 +8,5 @@ urlpatterns = [
     path('confirm-billing', views.confirm_billing),
     path('get-billings', views.get_billings),
     path('get-billing', views.get_billing),
+    path('get-hospital-prices', views.get_hospital_prices),
 ]

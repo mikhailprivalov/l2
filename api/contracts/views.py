@@ -4,7 +4,7 @@ import simplejson as json
 from django.db import transaction
 
 from api.contracts.func import researches_for_billing, get_confirm_data_for_billing, structure_table
-from contracts.models import BillingRegister, RawDocumentBillingRegister
+from contracts.models import BillingRegister, RawDocumentBillingRegister, PriceName
 from directions.models import Issledovaniya
 from directory.models import Researches
 from laboratory.decorators import group_required
@@ -54,6 +54,19 @@ def confirm_billing(request):
         raw_document_pk = RawDocumentBillingRegister.create_raw_billing_data(billing_id, data_confirm_billing)
 
     return JsonResponse({"ok": is_confirm_billing and set_billing_id_for_iss and raw_document_pk})
+
+
+@login_required
+@group_required("Счет: проект")
+def get_hospital_prices(request):
+    body = json.loads(request.body)
+    hospital_id = body.get("hospitalId")
+    date_start = body.get("dateStart")
+    date_end = body.get("dateEnd")
+    prices = PriceName.get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=True)
+    prices_data = [{"id": i.pk, "label": i.title} for i in prices]
+    return JsonResponse({"data": prices_data})
+
 
 
 @login_required

@@ -33,6 +33,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end):
                 "coast": research_coast.get(i.research_id, 0),
                 "code_nmu": i.code_nmu,
                 "internal_code": i.internal_code,
+                "execute_date": i.date_confirm,
             }
             if not result.get(i.patient_card_num):
                 result[i.patient_card_num] = [current_data.copy()]
@@ -57,6 +58,7 @@ def get_confirm_data_for_billing(price_id, billing_id):
             "patient_born": i.ru_date_born,
             "tube_number": i.tube_number,
             "coast": research_coast.get(i.research_id, 0),
+            "execute_date": i.date_confirm,
         }
         if not result.get(i.patient_card_num):
             result[i.patient_card_num] = [current_data.copy()]
@@ -100,18 +102,6 @@ def structure_table(data_researches):
         step += 1
         sum_patient = 0
         for i in research_data:
-            if (prev_card_id_patient != -1) and (card_id != prev_card_id_patient):
-                patient_data[f"{prev_card_id_patient} summ"] = {
-                    "serialNumber": "",
-                    "patientFio": "Сумма по пациенту:",
-                    "patientBirthDay": "",
-                    "tubeNumber": "",
-                    "coast": "",
-                    "researchTitle": "",
-                    "internalId": "",
-                    "codeNMU": "",
-                    "summ": sum_patient,
-                }
             if not patient_data.get(card_id):
                 patient_data[card_id] = {
                     "serialNumber": step,
@@ -123,6 +113,7 @@ def structure_table(data_researches):
                     "internalId": i.get("internal_code"),
                     "codeNMU": i.get("code_nmu"),
                     "summ": "",
+                    "executeDate": i.get("execute_date"),
                 }
             else:
                 patient_data[f"{card_id} {i.get('research_id')}"] = {
@@ -135,10 +126,23 @@ def structure_table(data_researches):
                     "internalId": i.get("internal_code"),
                     "codeNMU": i.get("code_nmu"),
                     "summ": "",
+                    "executeDate": i.get("execute_date"),
                 }
             sum_patient += i.get("coast")
             total += i.get("coast")
             prev_card_id_patient = card_id
+        patient_data[f"{prev_card_id_patient} summ"] = {
+            "serialNumber": "",
+            "patientFio": "Сумма по пациенту:",
+            "patientBirthDay": "",
+            "tubeNumber": "",
+            "coast": "",
+            "researchTitle": "",
+            "internalId": "",
+            "codeNMU": "",
+            "executeDate": "",
+            "summ": sum_patient,
+        }
     patient_data["total"] = {
         "serialNumber": "",
         "patientFio": "Итого",
@@ -148,6 +152,7 @@ def structure_table(data_researches):
         "researchTitle": "",
         "internalId": "",
         "codeNMU": "",
+        "executeDate": "",
         "summ": total,
     }
 

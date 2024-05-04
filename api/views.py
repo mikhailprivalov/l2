@@ -2707,9 +2707,9 @@ def update_price(request):
         current_price.symbol_code = request_data["code"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
+        if request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
-        else:
+        elif request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price.hospital = hospital
         current_price.save()
