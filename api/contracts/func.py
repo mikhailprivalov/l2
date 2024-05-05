@@ -6,17 +6,15 @@ from statistic.sql_func import statistics_research_by_hospital_for_external_orde
 from statistic.views import get_price_hospital
 
 
-def researches_for_billing(type_price, company_id, date_start, date_end):
+def researches_for_billing(type_price, company_id, date_start, date_end, price_id):
     sql_result = None
     research_coast = {}
-    price = None
     if type_price == "Заказчик":
         hospital_id = company_id
-        price = get_price_hospital(hospital_id, date_start, date_end)
         base = CardBase.objects.filter(internal_type=True).first()
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
-        sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk)
-        coast_research_price = get_research_coast_by_prce((price.pk,))
+        sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
+        coast_research_price = get_research_coast_by_prce((price_id,))
         research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
     iss_data = set()
@@ -39,7 +37,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end):
                 result[i.patient_card_num] = [current_data.copy()]
             else:
                 result[i.patient_card_num].append(current_data.copy())
-    return {"result": result, "issIds": list(iss_data), "priceId": price.pk}
+    return {"result": result, "issIds": list(iss_data), "priceId": price_id}
 
 
 def get_confirm_data_for_billing(price_id, billing_id):

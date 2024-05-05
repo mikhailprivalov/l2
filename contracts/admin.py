@@ -95,7 +95,7 @@ class ResMedicalExamination(admin.ModelAdmin):
 
 
 class ResBillingRegister(admin.ModelAdmin):
-    list_display = ('company', 'hospital',)
+    list_display = ('company', 'hospital', 'date_start', 'date_end', 'price',)
     list_display_links = ('company', 'hospital',)
     list_filter = ('hospital', 'create_at',)
 

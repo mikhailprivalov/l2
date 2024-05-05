@@ -19,8 +19,9 @@ def create_billing(request):
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
+    price_id = body.get("priceId")
     info = body.get("info")
-    billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info)
+    billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info, price_id)
     return JsonResponse({"ok": True, "billingInfo": billing_id})
 
 
@@ -33,9 +34,10 @@ def update_billing(request):
     date_end = body.get("dateEnd")
     billing_id = body.get("id")
     info = body.get("info")
-    billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info)
+    price_id = body.get("priceId")
+    billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info, price_id)
     type_price = body.get("typeCompany")
-    data = researches_for_billing(type_price, hospital_id, date_start, date_end)
+    data = researches_for_billing(type_price, hospital_id, date_start, date_end, price_id)
     structure_data = structure_table(data)
     return JsonResponse({"ok": True, "billingInfo": billing_info, **structure_data})
 
@@ -63,8 +65,11 @@ def get_hospital_prices(request):
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
-    prices = PriceName.get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=True)
-    prices_data = [{"id": i.pk, "label": i.title} for i in prices]
+    if not(date_start) or not(date_end):
+        prices_data = []
+    else:
+        prices = PriceName.get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=True)
+        prices_data = [{"id": i.pk, "label": i.title} for i in prices]
     return JsonResponse({"data": prices_data})
 
 
@@ -94,6 +99,6 @@ def get_billing(request):
     billing_id = request_data.get("billingId")
     result = BillingRegister.get_billing(billing_id)
     type_price = request_data.get("typeCompany")
-    data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"], result["dateEnd"])
+    data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"], result["dateEnd"], result["priceId"])
     structure_data = structure_table(data)
     return JsonResponse({"result": result, **structure_data})
