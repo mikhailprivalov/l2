@@ -20,6 +20,7 @@ def create_billing(request):
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
     price_id = body.get("priceId")
+    print(price_id)
     info = body.get("info")
     billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info, price_id)
     return JsonResponse({"ok": True, "billingInfo": billing_id})

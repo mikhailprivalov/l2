@@ -384,8 +384,7 @@ class BillingRegister(models.Model):
 
     @staticmethod
     def create_billing(company_id, hospital_id, date_start, date_end, info, price_id):
-        current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info,
-                                          price_name_id=price_id)
+        current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id)
         current_billing.save()
         return current_billing.pk
 
@@ -401,7 +400,12 @@ class BillingRegister(models.Model):
         if hospital_id:
             billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related("hospital")
             result = [
-                {"id": billing.pk, "label": f"{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
+                {
+                    "id": billing.pk,
+                    "label": f"{billing.date_start.strftime('%d.%m.%Y')}"
+                             f"-{billing.date_end.strftime('%d.%m.%Y')} - {'Закрыт' if billing.is_confirmed else 'Проект'}"
+                }
+                for billing in billings
             ]
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
