@@ -224,28 +224,9 @@ const currentBillingData = ref({
   isConfirmed: '',
 });
 
-const getBilling = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result, columns, tableData } = await api('contracts/get-billing', {
-    billingId: selectedBilling.value,
-    typeCompany: selectedType.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  currentBillingData.value = result;
-  colTable.value = columns;
-  services.value = tableData;
-};
 const clearBilling = () => {
   currentBillingData.value = { ...billingTemplate.value };
 };
-
-watch(selectedBilling, () => {
-  if (selectedBilling.value) {
-    getBilling();
-  } else {
-    clearBilling();
-  }
-});
 
 const prices = ref([]);
 const selectedPrice = ref(null);
@@ -256,6 +237,29 @@ const getPrices = async () => {
   await store.dispatch(actions.DEC_LOADING);
   prices.value = data;
 };
+
+const getBilling = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result, columns, tableData } = await api('contracts/get-billing', {
+    billingId: selectedBilling.value,
+    typeCompany: selectedType.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  currentBillingData.value = result;
+  colTable.value = columns;
+  services.value = tableData;
+  const { data } = await api('contracts/get-hospital-prices', { ...currentBillingData });
+  prices.value = data;
+  selectedPrice.value = result.priceId;
+};
+
+watch(selectedBilling, () => {
+  if (selectedBilling.value) {
+    getBilling();
+  } else {
+    clearBilling();
+  }
+});
 
 const updateBilling = async () => {
   if (selectedBilling.value) {
