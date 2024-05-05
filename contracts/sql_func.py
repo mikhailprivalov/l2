@@ -64,7 +64,7 @@ def get_research_coast_by_prce(price_id):
     return rows
 
 
-def get_data_for_conform_billing(billing_id):
+def get_data_for_confirm_billing(billing_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """

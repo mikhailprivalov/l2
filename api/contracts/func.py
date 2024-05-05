@@ -1,9 +1,8 @@
 from clients.models import CardBase
 from contracts.models import BillingRegister
-from contracts.sql_func import get_research_coast_by_prce, get_data_for_conform_billing
+from contracts.sql_func import get_research_coast_by_prce, get_data_for_confirm_billing
 from directions.models import IstochnikiFinansirovaniya
 from statistic.sql_func import statistics_research_by_hospital_for_external_orders
-from statistic.views import get_price_hospital
 
 
 def researches_for_billing(type_price, company_id, date_start, date_end, price_id):
@@ -41,7 +40,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
 
 
 def get_confirm_data_for_billing(price_id, billing_id):
-    sql_result = get_data_for_conform_billing(billing_id)
+    sql_result = get_data_for_confirm_billing(billing_id)
     coast_research_price = get_research_coast_by_prce((price_id,))
     research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
