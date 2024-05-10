@@ -52,6 +52,7 @@
               maxWidth: '50%',
             }"
             :title="fraction.title"
+            maxlength="255"
             :disabled="fraction.hide"
             :class="fraction.hide ? 'hide-background form-control fraction-input' : 'form-control fraction-input'"
             placeholder="Введите название"
