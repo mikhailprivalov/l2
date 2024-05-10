@@ -100,7 +100,7 @@ def xlsx(request):
     type_form = request.GET.get("type")
     response['Content-Disposition'] = 'attachment; filename="form-' + type_form + '.xlsx"'
 
-    function = import_string('forms.forms' + type_form[0:3] + '.form_' + type_form[4:6])
+    function = import_string('forms.xlsx.forms' + type_form[0:3] + '.form_' + type_form[4:6])
     xlsx_workbook: Workbook = function(
         request_data={
             **dict(request.GET.items()),

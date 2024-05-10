@@ -20,7 +20,7 @@
         href="#"
         @click.prevent="downloadCoastTOXlsx()"
       >
-        XLSX
+        Все цены - XLSX
       </a>
     </span>
     <div class="edit-price">
@@ -169,7 +169,7 @@
         href="#"
         @click.prevent="downloadCoastTOXlsx(selectedPrice)"
       >
-        XLSX
+        Текущий прайс - XLSX
       </a>
       <a
         class="a-under a-align r-padding"
@@ -472,7 +472,7 @@ export default {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
     downloadCoastTOXlsx(priceId = null) {
-      window.open(`/forms/xlsx?type=114.01&priceId=${priceId}`, '_blank');
+      window.open(`/forms/xlsx?type=100.01&priceId=${priceId}`, '_blank');
     },
     async copyPrice() {
       await this.$store.dispatch(actions.INC_LOADING);
