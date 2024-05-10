@@ -4,7 +4,6 @@
       <div class="flex">
         <h4
           class="header"
-          @click="showAdditionalModal"
         >
           Редактирование анализа - {{ researchShortTitle }}
         </h4>
@@ -314,11 +313,6 @@
         </button>
       </div>
     </div>
-    <LabResearchAdditional
-      v-if="showAdditional"
-      :research-id="research.pk"
-      @hideAdditionalModal="hideAdditionalModal"
-    />
   </div>
 </template>
 
@@ -404,9 +398,6 @@ const showAdditional = ref(false);
 
 const hideAdditionalModal = () => {
   showAdditional.value = false;
-};
-const showAdditionalModal = () => {
-  showAdditional.value = true;
 };
 
 const selectedTubes = ref({
