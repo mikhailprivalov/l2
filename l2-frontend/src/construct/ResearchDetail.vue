@@ -402,10 +402,6 @@ interface researchData {
 
 const showAdditional = ref(false);
 
-const hideAdditionalModal = () => {
-  showAdditional.value = false;
-};
-
 const selectedTubes = ref({
   id: -1,
   label: 'Выберите ёмкость',
