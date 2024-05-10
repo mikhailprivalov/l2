@@ -77,6 +77,7 @@
 <script setup lang="ts">
 // todo - slot на вывод результата, для удобного вывода каждому)
 // todo - дефолтный вывод результата - таблица, строчка
+// todo - уведомление о успешной загрузке файла
 import {
   getCurrentInstance, onMounted, PropType, ref, watch,
 } from 'vue';
