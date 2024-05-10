@@ -209,7 +209,6 @@ const handleFileUpload = () => {
   margin: 10px 0;
 }
 .simple {
-  float: left;
   margin-bottom: 2px;
 }
 .simple-label {
