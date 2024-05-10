@@ -1,69 +1,85 @@
 <template>
   <div>
-    <div class="margin-first-item">
-      <RadioFieldById
-        v-if="currentFileTypes.length > 0"
-        v-model="selectedType"
-        :variants="currentFileTypes"
-        @modified="changeType"
-      />
-      <h5
-        v-else
-        class="text-center"
+    <template v-if="!props.simpleMode">
+      <div class="margin-first-item">
+        <RadioFieldById
+          v-if="currentFileTypes.length > 0"
+          v-model="selectedType"
+          :variants="currentFileTypes"
+          @modified="changeType"
+        />
+        <h5
+          v-else
+          class="text-center"
+        >
+          Такие расширения файлов не поддерживаются
+        </h5>
+      </div>
+      <div
+        v-if="selectedType"
+        class="margin-item"
       >
-        Такие расширения файлов не поддерживаются
-      </h5>
-    </div>
-    <div
-      v-if="selectedType"
-      class="margin-item"
-    >
-      <Treeselect
-        v-if="currentFileForms.length > 0"
-        v-model="selectedForm"
-        :options="currentFileForms"
-        placeholder="Выберите структуру файла"
-      />
-      <h5
-        v-else
-        class="text-center"
+        <Treeselect
+          v-if="currentFileForms.length > 0"
+          v-model="selectedForm"
+          :options="currentFileForms"
+          placeholder="Выберите структуру файла"
+        />
+        <h5
+          v-else
+          class="text-center"
+        >
+          Такие структуры файла не поддерживаются
+        </h5>
+      </div>
+      <div
+        v-if="selectedForm"
+        class="margin-item"
       >
-        Такие структуры файла не поддерживаются
-      </h5>
-    </div>
-    <div
-      v-if="selectedForm"
-      class="margin-item"
-    >
-      <input
-        ref="fileInput"
-        style="margin-top: 15px"
-        type="file"
-        class="form-control-file"
-        :accept="fileFilter"
-        @change="handleFileUpload"
+        <input
+          ref="fileInput"
+          style="margin-top: 15px"
+          type="file"
+          class="form-control-file"
+          :accept="fileFilter"
+          @change="handleFileUpload"
+        >
+      </div>
+      <div
+        v-if="fileIsSelected"
+        class="margin-item"
       >
-    </div>
-    <div
-      v-if="fileIsSelected"
-      class="margin-item"
-    >
-      <button
-        class="btn btn-blue-nb"
-        @click="submitFileUpload()"
-      >
-        Загрузить файл
-      </button>
-    </div>
+        <button
+          class="btn btn-blue-nb"
+          @click="submitFileUpload()"
+        >
+          Загрузить файл
+        </button>
+      </div>
+    </template>
+    <template v-if="props.simpleMode">
+      <div class="simple">
+        <slot name="simple-label">
+          <label class="simple-label">Загрузка файла</label>
+        </slot>
+        <input
+          ref="fileInput"
+          type="file"
+          class="form-control-file"
+          :accept="fileFilter"
+          @change="handleFileUpload"
+        >
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-// todo - simpleMode - режим без модалки (без выбора)
 // todo - slot на вывод результата, для удобного вывода каждому)
 // todo - дефолтный вывод результата - таблица, строчка
+// todo - уведомление о успешной загрузке файла
 import {
-  getCurrentInstance, onMounted, PropType, ref,
+  getCurrentInstance, onMounted, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -100,6 +116,10 @@ const props = defineProps({
     type: Object || Array || String || Number,
     required: false,
   },
+  simpleMode: {
+    type: Boolean,
+    required: false,
+  },
 });
 
 const fileFilter = ref('');
@@ -109,6 +129,9 @@ const selectedType = ref(null);
 
 onMounted(() => {
   currentFileTypes.value = getTypes(props.typesFile);
+  if (props.simpleMode && currentFileTypes.value.length > 0) {
+    selectedType.value = currentFileTypes.value[0].id;
+  }
 });
 
 const currentFileForms = ref<formsFile[]>([]);
@@ -122,9 +145,45 @@ const changeType = () => {
   }
 };
 
+watch(selectedType, () => {
+  if (props.simpleMode) {
+    changeType();
+  }
+});
+
 const fileInput = ref(null);
 const file = ref(null);
+const clearFile = () => {
+  file.value = null;
+  const input = fileInput.value as HTMLInputElement;
+  input.value = '';
+};
 const fileIsSelected = ref(false);
+
+const submitFileUpload = async () => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file.value);
+    formData.append('selectedForm', selectedForm.value);
+    formData.append('entityId', props.entityId ? String(props.entityId) : null);
+    formData.append('otherNeedData', props.otherNeedData ? props.otherNeedData : null);
+    await store.dispatch(actions.INC_LOADING);
+    const { data } = await api('parse-file/upload-file', null, null, null, formData);
+    await store.dispatch(actions.DEC_LOADING);
+    console.log(data);
+    clearFile();
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error(e);
+    root.$emit('msg', 'error', 'Ошибка загрузки');
+  }
+};
+
+watch(file, () => {
+  if (props.simpleMode && file.value) {
+    submitFileUpload();
+  }
+});
 
 const handleFileUpload = () => {
   const input = fileInput.value as HTMLInputElement;
@@ -140,23 +199,6 @@ const handleFileUpload = () => {
   }
 };
 
-const submitFileUpload = async () => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file.value);
-    formData.append('selectedForm', selectedForm.value);
-    formData.append('entityId', props.entityId ? props.entityId : null);
-    formData.append('otherNeedData', props.otherNeedData ? props.otherNeedData : null);
-    await store.dispatch(actions.INC_LOADING);
-    const { data } = await api('parse-file/upload-file', null, null, null, formData);
-    await store.dispatch(actions.DEC_LOADING);
-    console.log(data);
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(e);
-    root.$emit('msg', 'error', 'Ошибка загрузки');
-  }
-};
 </script>
 
 <style scoped lang="scss">
@@ -165,5 +207,11 @@ const submitFileUpload = async () => {
 }
 .margin-item {
   margin: 10px 0;
+}
+.simple {
+  margin-bottom: 2px;
+}
+.simple-label {
+  margin-bottom: 0;
 }
 </style>
