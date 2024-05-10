@@ -635,7 +635,7 @@ class Researches(models.Model):
         return True
 
     @staticmethod
-    def get_research(research_pk: int):
+    def get_lab_research(research_pk: int):
         research = Researches.objects.get(pk=research_pk)
         research_tubes = Researches.get_tube_data(research_pk, True)
         result = {

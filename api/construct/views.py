@@ -43,7 +43,7 @@ def change_visibility_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def get_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.get_research(request_data["researchPk"])
+    result = Researches.get_lab_research(request_data["researchPk"])
     return JsonResponse({"result": result})
 
 
