@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment, MedicalExamination, BillingRegister
+from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment, MedicalExamination, BillingRegister, RawDocumentBillingRegister
 
 
 class ResPriceCoast(admin.ModelAdmin):
@@ -108,3 +108,4 @@ admin.site.register(CompanyDepartment, ResCompanyDepartment)
 admin.site.register(PriceCoast, ResPriceCoast)
 admin.site.register(MedicalExamination, ResMedicalExamination)
 admin.site.register(BillingRegister, ResBillingRegister)
+admin.site.register(RawDocumentBillingRegister)

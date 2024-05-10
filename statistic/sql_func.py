@@ -925,6 +925,8 @@ def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, f
                         directions_napravleniya.hospital_id = %(hospital_id)s
                         AND
                         directions_napravleniya.price_name_id = %(price_id)s
+                        AND
+                        directions_issledovaniya.billing_id isNull
                 ORDER BY 
                     directions_napravleniya.client_id, 
                     directions_issledovaniya.time_confirmation

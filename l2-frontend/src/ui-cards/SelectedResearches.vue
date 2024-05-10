@@ -194,6 +194,23 @@
               />
             </td>
           </tr>
+          <tr v-if="external_organizations_enabled && canChangeHospitalDirection">
+            <th :class="needSelectHospital && 'has-error-message'">
+              Прайс (выбрать):
+            </th>
+            <td class="cl-td">
+              <Treeselect
+                v-model="currentHospitalPrice"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                class="treeselect-noborder treeselect-wide"
+                :options="hospital_prices"
+                :append-to-body="true"
+                placeholder="По умолчанию"
+                :clearable="false"
+              />
+            </td>
+          </tr>
           <tr v-if="(!has_only_stationar && !hide_params) && !hide_show_count_param">
             <th>Кол-во повторений:</th>
             <td class="cl-td">
@@ -592,6 +609,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 // @ts-ignore
 import TypeAhead from 'vue2-typeahead';
+import moment from 'moment';
 
 import { vField, vGroup } from '@/components/visibility-triggers';
 import directionsPoint from '@/api/directions-point';
@@ -717,6 +735,8 @@ export default {
       hospital_department_overrides: [{ id: -1, label: 'По умолчанию' }],
       hospital_department_override: -1,
       hospital_overrides: [{ id: -1, label: 'По умолчанию' }],
+      hospital_prices: [{ id: -1, label: 'По умолчанию' }],
+      currentHospitalPrice: -1,
       hospital_override: -1,
       research_case: -2,
       service_locations: {},
@@ -1179,6 +1199,15 @@ export default {
         this.global_current_direction_param = -1;
       }
     },
+    hospital_override: {
+      immediate: true,
+      handler() {
+        if (this.external_organizations_enabled) {
+          this.load_external_organizations();
+          this.getPrices();
+        }
+      },
+    },
   },
   mounted() {
     this.$root.$on(`researches-picker:clear_all${this.kk}`, this.clear_all);
@@ -1197,6 +1226,17 @@ export default {
     });
   },
   methods: {
+    async getPrices() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const currentDate = moment().format('YYYY-MM-DD');
+      const { data } = await this.$api('contracts/get-hospital-prices', {
+        hospitalId: this.hospital_override,
+        dateStart: currentDate,
+        dateEnd: currentDate,
+      });
+      this.hospital_prices = data;
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
     async loadUserGroups() {
       this.userGroups = this.$store.getters.user_data.groups || [];
     },

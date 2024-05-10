@@ -2316,8 +2316,8 @@ class Issledovaniya(models.Model):
     billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
 
     @staticmethod
-    def save_billing(iss_ids, billing_id):
-        iss = Issledovaniya.objects.filter(id_in=iss_ids)
+    def save_billing(billing_id, iss_ids):
+        iss = Issledovaniya.objects.filter(pk__in=iss_ids)
         for i in iss:
             i.billing_id = billing_id
             i.save()

@@ -70,7 +70,7 @@
         </div>
         <div class="margin-item">
           <button
-            v-if="selectedBilling && selectedPrice"
+            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
             class="btn btn-blue-nb"
             @click="updateBilling"
           >
@@ -84,9 +84,9 @@
             Новый счет
           </button>
           <button
-            v-if="selectedBilling && selectedPrice"
+            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
             class="btn btn-blue-nb"
-            @click="updateBilling"
+            @click="confirmBilling"
           >
             Записать счет
           </button>
@@ -282,6 +282,25 @@ const updateBilling = async () => {
   }
 };
 
+const confirmBilling = async () => {
+  if (selectedBilling.value) {
+    const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
+    const apiPoint = 'contracts/confirm-billing';
+    const priceId = selectedPrice.value;
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo,
+    } = await api(apiPoint, { ...billingData, priceId });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBilling();
+      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
+  }
+};
+
 const createBilling = async () => {
   const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
   const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
@@ -356,5 +375,9 @@ watch(selectedCompany, () => {
 }
 .white_bg {
   background: #FFF;
+}
+.disable_color {
+  border-color: #E6E9ED;
+  background-color: #E6E9ED;
 }
 </style>

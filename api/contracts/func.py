@@ -5,14 +5,18 @@ from directions.models import IstochnikiFinansirovaniya
 from statistic.sql_func import statistics_research_by_hospital_for_external_orders
 
 
-def researches_for_billing(type_price, company_id, date_start, date_end, price_id):
+def researches_for_billing(type_price, company_id, date_start, date_end, price_id, is_confirmed, billing_id):
     sql_result = None
     research_coast = {}
     if type_price == "Заказчик":
         hospital_id = company_id
         base = CardBase.objects.filter(internal_type=True).first()
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
-        sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
+        if not is_confirmed:
+            sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
+        else:
+            sql_result = get_data_for_confirm_billing(billing_id)
+            print("isConfirmed")
         coast_research_price = get_research_coast_by_prce((price_id,))
         research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}

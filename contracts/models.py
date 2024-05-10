@@ -389,9 +389,10 @@ class BillingRegister(models.Model):
         return current_billing.pk
 
     @staticmethod
-    def confirm_billing(billing_id):
+    def confirm_billing(billing_id, user_who_create):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         current_billing.is_confirmed = True
+        current_billing.who_create = user_who_create
         current_billing.save()
         return True
 
@@ -403,14 +404,14 @@ class BillingRegister(models.Model):
                 {
                     "id": billing.pk,
                     "label": f"{billing.date_start.strftime('%d.%m.%Y')} "
-                             f" - {billing.date_end.strftime('%d.%m.%Y')} - {'Закрыт' if billing.is_confirmed else 'Проект'}"
+                             f" - {billing.date_end.strftime('%d.%m.%Y')}____Прайс {billing.price.title if billing.price else ''}_____{'Закрыт' if billing.is_confirmed else 'Проект'}"
                 }
                 for billing in billings
             ]
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
             result = [
-                {"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"}
+                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"}
                 for billing in billings
             ]
         return result
@@ -449,7 +450,11 @@ class RawDocumentBillingRegister(models.Model):
 
     @staticmethod
     def create_raw_billing_data(billing_id, raw_data):
-        raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data).save()
+        print(raw_data)
+        print(billing_id, "billing_id")
+        raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data)
+        raw_data_billing.save()
+        print(raw_data_billing)
         return raw_data_billing.pk
 
     class Meta:
