@@ -21,6 +21,7 @@
               v-tippy="{
                 maxWidth: '50%'
               }"
+              maxlength="255"
               :title="research.title"
               class="form-control"
               placeholder="Введите полное наименование"
@@ -34,6 +35,7 @@
             <input
               id="shortTitle"
               v-model="research.shortTitle"
+              maxlength="255"
               class="form-control"
               placeholder="Введите краткое наименование"
             >
@@ -74,6 +76,7 @@
               <input
                 id="ecpId"
                 v-model="research.ecpId"
+                maxlength="16"
                 class="form-control"
                 placeholder="Введите код"
               >
@@ -86,6 +89,7 @@
               <input
                 id="internalCode"
                 v-model="research.internalCode"
+                maxlength="255"
                 class="form-control"
                 placeholder="Введите код"
               >
@@ -114,6 +118,7 @@
               id="preparation"
               v-model="research.preparation"
               class="form-control"
+              maxlength="2047"
               style="height: 90px"
               rows="4"
               placeholder="Введите подготовку (напр. 'Не требуется')"
@@ -128,6 +133,7 @@
               <input
                 id="laboratoryDuration"
                 v-model="research.laboratoryDuration"
+                maxlength="3"
                 class="form-control"
                 type="number"
               >
