@@ -404,15 +404,14 @@ class BillingRegister(models.Model):
                 {
                     "id": billing.pk,
                     "label": f"{billing.date_start.strftime('%d.%m.%Y')} "
-                             f" - {billing.date_end.strftime('%d.%m.%Y')}____Прайс {billing.price.title if billing.price else ''}_____{'Закрыт' if billing.is_confirmed else 'Проект'}"
+                    f" - {billing.date_end.strftime('%d.%m.%Y')}____Прайс {billing.price.title if billing.price else ''}_____{'Закрыт' if billing.is_confirmed else 'Проект'}",
                 }
                 for billing in billings
             ]
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
             result = [
-                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"}
-                for billing in billings
+                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
             ]
         return result
 
