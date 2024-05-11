@@ -91,9 +91,16 @@
             Записать счет
           </button>
           <button
-            v-if="selectedBilling && selectedPrice"
+            v-if="currentBillingData.isConfirmed"
             class="btn btn-blue-nb"
-            @click="updateBilling"
+            @click="cancelBilling"
+          >
+            Сбросить счет
+          </button>
+          <button
+            v-if="selectedBilling && selectedPrice && currentBillingData.isConfirmed"
+            class="btn btn-blue-nb"
+            @click="downloadBillingExcel"
           >
             <i class="fa-solid fa-download" />
             Excel
@@ -301,6 +308,23 @@ const confirmBilling = async () => {
   }
 };
 
+const cancelBilling = async () => {
+  if (selectedBilling.value) {
+    const apiPoint = 'contracts/cancel-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo,
+    } = await api(apiPoint, { id: selectedBilling.value });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBilling();
+      root.$emit('msg', 'ok', `${billingInfo} Отменен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
+  }
+};
+
 const createBilling = async () => {
   const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
   const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
@@ -345,6 +369,9 @@ watch(selectedCompany, () => {
     selectedBilling.value = null;
   }
 });
+const downloadBillingExcel = async () => {
+  window.open(`/forms/xlsx?type=101.01&billingId=${selectedBilling.value}`, '_blank');
+};
 
 </script>
 

@@ -2323,6 +2323,14 @@ class Issledovaniya(models.Model):
             i.save()
         return True
 
+    @staticmethod
+    def cancel_billing(billing_id):
+        iss = Issledovaniya.objects.filter(billing_id=billing_id)
+        for i in iss:
+            i.billing_id = None
+            i.save()
+        return True
+
 
     @property
     def time_save_local(self):

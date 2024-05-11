@@ -16,7 +16,6 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
             sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
         else:
             sql_result = get_data_for_confirm_billing(billing_id)
-            print("isConfirmed")
         coast_research_price = get_research_coast_by_prce((price_id,))
         research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
@@ -60,6 +59,8 @@ def get_confirm_data_for_billing(price_id, billing_id):
             "tube_number": i.tube_number,
             "coast": research_coast.get(i.research_id, 0),
             "execute_date": i.date_confirm,
+            "internal_code": i.internal_code,
+            "code_nmu": i.code_nmu,
         }
         if not result.get(i.patient_card_num):
             result[i.patient_card_num] = [current_data.copy()]

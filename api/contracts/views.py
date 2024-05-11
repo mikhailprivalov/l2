@@ -57,7 +57,7 @@ def confirm_billing(request):
         date_end = billing_data.date_end
         price_id = billing_data.price_id
 
-        data = researches_for_billing(type_price, hospital_id, date_start, date_end, price_id)
+        data = researches_for_billing(type_price, hospital_id, date_start, date_end, price_id, billing_data.is_confirmed, billing_id)
         iss_ids = data["issIds"]
         user_who_create = request.user.doctorprofile
 
@@ -68,6 +68,21 @@ def confirm_billing(request):
             raw_document_pk = RawDocumentBillingRegister.create_raw_billing_data(billing_id, data_confirm_billing)
         structure_data = structure_table(data)
         return JsonResponse({"ok": is_confirm_billing and set_billing_id_for_iss and raw_document_pk, **structure_data})
+
+
+@login_required
+@group_required("Счет: проект")
+def cancel_billing(request):
+    body = json.loads(request.body)
+    billing_id = body.get("id")
+    billing_data = BillingRegister.objects.filter(pk=billing_id).first()
+    if billing_data.is_confirmed:
+        user_who_create = request.user.doctorprofile
+        with transaction.atomic():
+            billing_data.is_confirmed = False
+            billing_data.save()
+            Issledovaniya.cancel_billing(billing_id)
+            return JsonResponse({"ok": True})
 
 
 @login_required
