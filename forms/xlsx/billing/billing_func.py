@@ -5,12 +5,12 @@ from openpyxl.drawing.image import Image
 from laboratory.settings import BASE_DIR
 
 
-def billing_base(ws1, columns_headers):
+def billing_base(ws1):
     style_border = NamedStyle(name="style_border_ca")
-    bd = Side(style='thin', color="000000")
+    bd = Side(style="thin", color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=8)
-    style_border.alignment = Alignment(wrap_text=True, horizontal='left', vertical='center')
+    style_border.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
 
     columns = [
         ("№", 5),
@@ -41,20 +41,18 @@ def fill_billing(ws1, data, row=14):
     style_border1.font = Font(bold=False, size=8)
     style_border1.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
 
-
     style_border2 = NamedStyle(name="style_border2")
     bd = Side(style="thin", color="000000")
     style_border2.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border2.font = Font(bold=False, size=10)
     style_border2.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
 
-
-    logo = Image(os.path.join(BASE_DIR, 'forms', 'xlsx', 'media', 'logo.png'))
+    logo = Image(os.path.join(BASE_DIR, "forms", "xlsx", "media", "logo.png"))
     logo.height = 130
     logo.width = 920
     ws1.add_image(logo, "A1")
-    ws1.merge_cells('A9:L11')
-    megre_cell = ws1['A9']
+    ws1.merge_cells("A9:L11")
+    megre_cell = ws1["A9"]
     megre_cell.value = "Реестр № 119/РО2024 от 31 марта 2024 года \n оказанных медицинских услуг по договору №24 - 11/01/2024 с ЛДЦ \n с 01.03.24 по 31.03.24"
     megre_cell.style = style_border2
     r = row

@@ -450,11 +450,8 @@ class RawDocumentBillingRegister(models.Model):
 
     @staticmethod
     def create_raw_billing_data(billing_id, raw_data):
-        print(raw_data)
-        print(billing_id, "billing_id")
         raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data)
         raw_data_billing.save()
-        print(raw_data_billing)
         return raw_data_billing.pk
 
     class Meta:

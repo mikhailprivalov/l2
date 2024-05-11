@@ -92,7 +92,7 @@ def get_hospital_prices(request):
     hospital_id = body.get("hospitalId")
     date_start = body.get("dateStart")
     date_end = body.get("dateEnd")
-    if not(date_start) or not(date_end):
+    if not (date_start) or not (date_end):
         prices_data = []
     else:
         prices = PriceName.get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=True)
