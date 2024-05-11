@@ -80,6 +80,7 @@ def cancel_billing(request):
         user_who_create = request.user.doctorprofile
         with transaction.atomic():
             billing_data.is_confirmed = False
+            billing_data.who_create = user_who_create
             billing_data.save()
             Issledovaniya.cancel_billing(billing_id)
             return JsonResponse({"ok": True})
