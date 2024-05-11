@@ -411,8 +411,7 @@ class BillingRegister(models.Model):
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
             result = [
-                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"}
-                for billing in billings
+                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
             ]
         return result
 
