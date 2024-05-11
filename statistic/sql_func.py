@@ -879,7 +879,7 @@ def statistics_by_research_sets_company(d_s, d_e, fin_source_pk, researches, com
     return rows
 
 
-def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, fin_source_pk):
+def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, fin_source_pk, price_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -923,11 +923,15 @@ def statistics_research_by_hospital_for_external_orders(d_s, d_e, hospital_id, f
                         ) 
                         AND
                         directions_napravleniya.hospital_id = %(hospital_id)s
+                        AND
+                        directions_napravleniya.price_name_id = %(price_id)s
+                        AND
+                        directions_issledovaniya.billing_id isNull
                 ORDER BY 
                     directions_napravleniya.client_id, 
                     directions_issledovaniya.time_confirmation
                             """,
-            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'hospital_id': hospital_id},
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'fin_source_pk': fin_source_pk, 'hospital_id': hospital_id, 'price_id': price_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows

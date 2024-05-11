@@ -1,22 +1,22 @@
 from clients.models import CardBase
 from contracts.models import BillingRegister
-from contracts.sql_func import get_research_coast_by_prce, get_data_for_conform_billing
+from contracts.sql_func import get_research_coast_by_prce, get_data_for_confirm_billing
 from directions.models import IstochnikiFinansirovaniya
 from statistic.sql_func import statistics_research_by_hospital_for_external_orders
-from statistic.views import get_price_hospital
 
 
-def researches_for_billing(type_price, company_id, date_start, date_end):
+def researches_for_billing(type_price, company_id, date_start, date_end, price_id, is_confirmed, billing_id):
     sql_result = None
     research_coast = {}
-    price = None
     if type_price == "Заказчик":
         hospital_id = company_id
-        price = get_price_hospital(hospital_id, date_start, date_end)
         base = CardBase.objects.filter(internal_type=True).first()
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
-        sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk)
-        coast_research_price = get_research_coast_by_prce((price.pk,))
+        if not is_confirmed:
+            sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
+        else:
+            sql_result = get_data_for_confirm_billing(billing_id)
+        coast_research_price = get_research_coast_by_prce((price_id,))
         research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
     iss_data = set()
@@ -39,11 +39,11 @@ def researches_for_billing(type_price, company_id, date_start, date_end):
                 result[i.patient_card_num] = [current_data.copy()]
             else:
                 result[i.patient_card_num].append(current_data.copy())
-    return {"result": result, "issIds": list(iss_data), "priceId": price.pk}
+    return {"result": result, "issIds": list(iss_data), "priceId": price_id}
 
 
 def get_confirm_data_for_billing(price_id, billing_id):
-    sql_result = get_data_for_conform_billing(billing_id)
+    sql_result = get_data_for_confirm_billing(billing_id)
     coast_research_price = get_research_coast_by_prce((price_id,))
     research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
@@ -59,6 +59,8 @@ def get_confirm_data_for_billing(price_id, billing_id):
             "tube_number": i.tube_number,
             "coast": research_coast.get(i.research_id, 0),
             "execute_date": i.date_confirm,
+            "internal_code": i.internal_code,
+            "code_nmu": i.code_nmu,
         }
         if not result.get(i.patient_card_num):
             result[i.patient_card_num] = [current_data.copy()]

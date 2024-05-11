@@ -1,5 +1,7 @@
 import datetime
 from django.db import connection
+
+from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
@@ -64,7 +66,7 @@ def get_research_coast_by_prce(price_id):
     return rows
 
 
-def get_data_for_conform_billing(billing_id):
+def get_data_for_confirm_billing(billing_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -73,6 +75,8 @@ def get_data_for_conform_billing(billing_id):
                     directions_issledovaniya.id as iss_id,
                     directions_issledovaniya.research_id,
                     directory_researches.title as research_title,
+                    directory_researches.internal_code as internal_code,
+                    directory_researches.code as code_nmu,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
                     directions_issledovaniya.time_confirmation,
                     directions_napravleniya.client_id,
@@ -100,13 +104,12 @@ def get_data_for_conform_billing(billing_id):
                 ON ci.id = cc.individual_id
 
                 WHERE 
-                    directions_issledovaniya.billing_id = %(billing)s and 
-                    directions_issledovaniya.id in %(iss_ids)s
+                    directions_issledovaniya.billing_id = %(billing_id)s
                 ORDER BY 
                     directions_napravleniya.client_id, 
                     directions_issledovaniya.time_confirmation
                             """,
-            params={'billing_id': billing_id},
+            params={'billing_id': billing_id, 'tz': TIME_ZONE},
         )
         rows = namedtuplefetchall(cursor)
     return rows

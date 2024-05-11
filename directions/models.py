@@ -2316,13 +2316,20 @@ class Issledovaniya(models.Model):
     billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
 
     @staticmethod
-    def save_billing(iss_ids, billing_id):
-        iss = Issledovaniya.objects.filter(id_in=iss_ids)
+    def save_billing(billing_id, iss_ids):
+        iss = Issledovaniya.objects.filter(pk__in=iss_ids)
         for i in iss:
             i.billing_id = billing_id
             i.save()
         return True
 
+    @staticmethod
+    def cancel_billing(billing_id):
+        iss = Issledovaniya.objects.filter(billing_id=billing_id)
+        for i in iss:
+            i.billing_id = None
+            i.save()
+        return True
 
     @property
     def time_save_local(self):
@@ -2385,7 +2392,7 @@ class Issledovaniya(models.Model):
         )
 
     def __str__(self):
-        return f"{self.pk} - {self.napravleniye.pk}-{self.napravleniye.client.get_fio_w_card()}"
+        return f"{self.pk} - {self.napravleniye}"
 
     def is_get_material(self):
         """

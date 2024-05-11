@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment, MedicalExamination, BillingRegister
+from .models import PriceName, PriceCoast, Contract, Company, PriceCategory, CompanyDepartment, MedicalExamination, BillingRegister, RawDocumentBillingRegister
 
 
 class ResPriceCoast(admin.ModelAdmin):
@@ -95,9 +95,21 @@ class ResMedicalExamination(admin.ModelAdmin):
 
 
 class ResBillingRegister(admin.ModelAdmin):
-    list_display = ('company', 'hospital',)
-    list_display_links = ('company', 'hospital',)
-    list_filter = ('hospital', 'create_at',)
+    list_display = (
+        'company',
+        'hospital',
+        'date_start',
+        'date_end',
+        'price',
+    )
+    list_display_links = (
+        'company',
+        'hospital',
+    )
+    list_filter = (
+        'hospital',
+        'create_at',
+    )
 
 
 admin.site.register(PriceCategory)
@@ -108,3 +120,4 @@ admin.site.register(CompanyDepartment, ResCompanyDepartment)
 admin.site.register(PriceCoast, ResPriceCoast)
 admin.site.register(MedicalExamination, ResMedicalExamination)
 admin.site.register(BillingRegister, ResBillingRegister)
+admin.site.register(RawDocumentBillingRegister)

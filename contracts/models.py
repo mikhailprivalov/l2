@@ -364,33 +364,35 @@ class BillingRegister(models.Model):
     date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
     info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
     is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
-    price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, default=None, blank=True, null=True, db_index=True)
+    price = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, default=None, blank=True, null=True, db_index=True)
 
     def __str__(self):
-        return f"{self.company} - {self.date_start} - {self.date_end}"
+        return f"{self.company} - {self.date_start} - {self.date_end} - {self.price}"
 
     @staticmethod
-    def update_billing(billing_id, date_start, date_end, info):
+    def update_billing(billing_id, date_start, date_end, info, price_id):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         if current_billing:
             current_billing.date_start = date_start
             current_billing.date_end = date_end
             current_billing.info = info
+            current_billing.price_id = price_id
             current_billing.save()
             return info
         else:
             return False
 
     @staticmethod
-    def create_billing(company_id, hospital_id, date_start, date_end, info):
-        current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info)
+    def create_billing(company_id, hospital_id, date_start, date_end, info, price_id):
+        current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id)
         current_billing.save()
         return current_billing.pk
 
     @staticmethod
-    def confirm_billing(billing_id):
+    def confirm_billing(billing_id, user_who_create):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         current_billing.is_confirmed = True
+        current_billing.who_create = user_who_create
         current_billing.save()
         return True
 
@@ -399,13 +401,17 @@ class BillingRegister(models.Model):
         if hospital_id:
             billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related("hospital")
             result = [
-                {"id": billing.pk, "label": f"{billing.hospital.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
+                {
+                    "id": billing.pk,
+                    "label": f"{billing.date_start.strftime('%d.%m.%Y')} "
+                    f" - {billing.date_end.strftime('%d.%m.%Y')}____Прайс {billing.price.title if billing.price else ''}_____{'Закрыт' if billing.is_confirmed else 'Проект'}",
+                }
+                for billing in billings
             ]
         else:
             billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
             result = [
-                {"id": billing.pk, "label": f"{billing.info}-{billing.company.short_title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"}
-                for billing in billings
+                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
             ]
         return result
 
@@ -420,6 +426,7 @@ class BillingRegister(models.Model):
             "dateEnd": self.date_end,
             "info": self.info,
             "isConfirmed": self.is_confirmed,
+            "priceId": self.price_id,
         }
         return result
 
@@ -442,7 +449,8 @@ class RawDocumentBillingRegister(models.Model):
 
     @staticmethod
     def create_raw_billing_data(billing_id, raw_data):
-        raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data).save()
+        raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data)
+        raw_data_billing.save()
         return raw_data_billing.pk
 
     class Meta:

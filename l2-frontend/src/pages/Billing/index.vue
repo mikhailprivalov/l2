@@ -70,20 +70,37 @@
         </div>
         <div class="margin-item">
           <button
+            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
             class="btn btn-blue-nb"
             @click="updateBilling"
           >
-            {{ selectedBilling ? 'Сохранить проект' : 'Новый счет' }}
+            Сохранить проект
           </button>
           <button
+            v-if="selectedPrice && !selectedBilling"
             class="btn btn-blue-nb"
-            @click="updateBilling"
+            @click="createBilling"
+          >
+            Новый счет
+          </button>
+          <button
+            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
+            class="btn btn-blue-nb"
+            @click="confirmBilling"
           >
             Записать счет
           </button>
           <button
+            v-if="currentBillingData.isConfirmed"
             class="btn btn-blue-nb"
-            @click="updateBilling"
+            @click="cancelBilling"
+          >
+            Сбросить счет
+          </button>
+          <button
+            v-if="selectedBilling && selectedPrice && currentBillingData.isConfirmed"
+            class="btn btn-blue-nb"
+            @click="downloadBillingExcel"
           >
             <i class="fa-solid fa-download" />
             Excel
@@ -190,15 +207,6 @@ const getBillings = async () => {
   billings.value = result;
 };
 
-watch(selectedCompany, () => {
-  if (selectedCompany.value) {
-    selectedBilling.value = null;
-    getBillings();
-  } else {
-    selectedBilling.value = null;
-  }
-});
-
 const billingTemplate = ref({
   id: -1,
   hospitalId: null,
@@ -223,65 +231,8 @@ const currentBillingData = ref({
   isConfirmed: '',
 });
 
-const getBilling = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result, columns, tableData } = await api('contracts/get-billing', {
-    billingId: selectedBilling.value,
-    typeCompany: selectedType.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  currentBillingData.value = result;
-  colTable.value = columns;
-  services.value = tableData;
-};
 const clearBilling = () => {
   currentBillingData.value = { ...billingTemplate.value };
-};
-
-watch(selectedBilling, () => {
-  if (selectedBilling.value) {
-    getBilling();
-  } else {
-    clearBilling();
-  }
-});
-
-const updateBilling = async () => {
-  let billingData = {};
-  let apiPoint = '';
-  if (selectedBilling.value) {
-    billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
-    apiPoint = 'contracts/update-billing';
-    await store.dispatch(actions.INC_LOADING);
-    const {
-      ok, billingInfo, columns, tableData,
-    } = await api(apiPoint, { ...billingData });
-    await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      await getBillings();
-      colTable.value = columns;
-      services.value = tableData;
-      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
-    } else {
-      root.$emit('msg', 'ok', 'ошибка');
-    }
-  } else {
-    const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
-    const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
-    billingData = {
-      ...currentBillingData.value, hospitalId, companyId, typeCompany: selectedType.value,
-    };
-    apiPoint = 'contracts/create-billing';
-    await store.dispatch(actions.INC_LOADING);
-    const { ok, billingInfo } = await api(apiPoint, { ...billingData });
-    await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      root.$emit('msg', 'ok', 'Создано');
-      selectedBilling.value = billingInfo;
-    } else {
-      root.$emit('msg', 'ok', 'ошибка');
-    }
-  }
 };
 
 const prices = ref([]);
@@ -294,11 +245,133 @@ const getPrices = async () => {
   prices.value = data;
 };
 
+const getBilling = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result, columns, tableData } = await api('contracts/get-billing', {
+    billingId: selectedBilling.value,
+    typeCompany: selectedType.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  currentBillingData.value = result;
+  colTable.value = columns;
+  services.value = tableData;
+  const { data } = await api('contracts/get-hospital-prices', { ...currentBillingData });
+  prices.value = data;
+  selectedPrice.value = result.priceId;
+};
+
+watch(selectedBilling, () => {
+  if (selectedBilling.value) {
+    getBilling();
+  } else {
+    clearBilling();
+  }
+});
+
+const updateBilling = async () => {
+  if (selectedBilling.value) {
+    const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
+    const apiPoint = 'contracts/update-billing';
+    const priceId = selectedPrice.value;
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo, columns, tableData,
+    } = await api(apiPoint, { ...billingData, priceId });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBillings();
+      colTable.value = columns;
+      services.value = tableData;
+      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
+  }
+};
+
+const confirmBilling = async () => {
+  if (selectedBilling.value) {
+    const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
+    const apiPoint = 'contracts/confirm-billing';
+    const priceId = selectedPrice.value;
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo,
+    } = await api(apiPoint, { ...billingData, priceId });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBilling();
+      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
+  }
+};
+
+const cancelBilling = async () => {
+  if (selectedBilling.value) {
+    const apiPoint = 'contracts/cancel-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const {
+      ok, billingInfo,
+    } = await api(apiPoint, { id: selectedBilling.value });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getBilling();
+      root.$emit('msg', 'ok', `${billingInfo} Отменен`);
+    } else {
+      root.$emit('msg', 'ok', 'ошибка');
+    }
+  }
+};
+
+const createBilling = async () => {
+  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+  const priceId = selectedPrice.value;
+  const billingData = {
+    ...currentBillingData.value,
+    hospitalId,
+    companyId,
+    priceId,
+    typeCompany: selectedType.value,
+  };
+  const apiPoint = 'contracts/create-billing';
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, billingInfo } = await api(apiPoint, { ...billingData });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Создано');
+    selectedBilling.value = billingInfo;
+  } else {
+    root.$emit('msg', 'ok', 'ошибка');
+  }
+};
+
 watch(() => currentBillingData.value.dateStart, (newValue, oldValue) => {
   if ((newValue !== oldValue) && currentBillingData.value.dateEnd) {
     getPrices();
   }
 });
+
+watch(() => currentBillingData.value.dateEnd, (newValue, oldValue) => {
+  if ((newValue !== oldValue) && currentBillingData.value.dateStart) {
+    getPrices();
+  }
+});
+
+watch(selectedCompany, () => {
+  if (selectedCompany.value) {
+    selectedBilling.value = null;
+    getBillings();
+    getPrices();
+  } else {
+    selectedBilling.value = null;
+  }
+});
+const downloadBillingExcel = async () => {
+  window.open(`/forms/xlsx?type=101.01&billingId=${selectedBilling.value}`, '_blank');
+};
 
 </script>
 
@@ -329,5 +402,9 @@ watch(() => currentBillingData.value.dateStart, (newValue, oldValue) => {
 }
 .white_bg {
   background: #FFF;
+}
+.disable_color {
+  border-color: #E6E9ED;
+  background-color: #E6E9ED;
 }
 </style>
