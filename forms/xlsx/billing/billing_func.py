@@ -52,7 +52,7 @@ def fill_billing(ws1, data, row=14):
     ws1.add_image(logo, "A1")
     ws1.merge_cells("A9:L11")
     megre_cell = ws1["A9"]
-    megre_cell.value = "Реестр № 119/РО2024 от 31 марта 2024 года \n оказанных медицинских услуг по договору №24 - 11/01/2024 \n с 01.03.24 по 31.03.24"
+    megre_cell.value = "Реестр № 1YYYY от 00 марта 2024 года \n оказанных медицинских услуг по договору №00 - 00/00/2024 \n с 00.00.00 по 00.00.00"
     megre_cell.style = style_border2
     r = row
     for val in data:
