@@ -5,6 +5,7 @@ from contracts.models import BillingRegister
 from forms.xlsx.billing import billing_func
 
 
+
 def form_01(request_data) -> Workbook:
     billing_id = request_data.get("billingId")
     wb = openpyxl.Workbook()
