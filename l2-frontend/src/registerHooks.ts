@@ -154,6 +154,7 @@ export default (instance: Vue): void => {
       caseByDirection = false,
       slotFactId = null,
       cbWithIds,
+      price = -1,
     }) => {
       if (cardPk === -1 && !monitoring) {
         instance.$root.$emit('msg', 'error', 'Не выбрана карта');
@@ -203,6 +204,7 @@ export default (instance: Vue): void => {
           caseByDirection,
           type,
           slotFactId,
+          price,
         })
         .then(data => {
           instance.$store.dispatch(actions.DEC_LOADING);

@@ -176,6 +176,7 @@ def directions_generate(request):
             case_by_direction=p.get("caseByDirection", False),
             plan_start_date=p.get("planStartDate", None),
             slot_fact_id=p.get("slotFactId", None),
+            price_name=p.get("price", None)
         )
         if type_generate == "calculate-cost":
             fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()

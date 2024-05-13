@@ -1424,6 +1424,8 @@ export default {
         monitoring: this.monitoring,
         caseId: this.parentCase || this.research_case,
         caseByDirection: !!this.parentCase && this.caseByDirection,
+        price: this.currentHospitalPrice,
+
       });
     },
     clear_all() {
