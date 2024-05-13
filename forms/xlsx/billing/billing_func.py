@@ -66,7 +66,7 @@ def fill_billing(ws1, data, row=14):
         ws1.cell(row=r, column=8).value = val.get("tubeNumber")
         ws1.cell(row=r, column=9).value = val.get("coast")
         ws1.cell(row=r, column=10).value = 1
-        ws1.cell(row=r, column=11).value = val.get("summ")
+        ws1.cell(row=r, column=11).value = val.get("summ") if val.get("summ") else val.get("coast")
         for i in range(1, 12):
             ws1.cell(row=r, column=i).style = style_border1
         r += 1
