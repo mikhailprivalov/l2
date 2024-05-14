@@ -2,109 +2,114 @@
   <div>
     <div class="main">
       <div class="company">
-        <div class="margin-item">
-          <RadioField
-            v-model="selectedType"
-            :variants="typesCompany"
-            @modified="changeType"
-          />
-        </div>
-        <div class="margin-item">
-          <div class="input-group">
-            <span
-              class="input-group-addon nbr"
-              style="width: 150px"
-            >Контрагент</span>
-            <Treeselect
-              v-model="selectedCompany"
-              :options="companies"
-              :normalizer="normalizer"
-              placeholder="Выберите компанию..."
+        <div class="company-item">
+          <div class="margin-item">
+            <RadioField
+              v-model="selectedType"
+              :variants="typesCompany"
+              @modified="changeType"
             />
           </div>
-        </div>
-        <div
-          v-if="selectedCompany"
-          class="margin-item"
-        >
-          <div class="input-group">
-            <span
-              class="input-group-addon nbr"
-              style="width: 150px"
-            >Счета</span>
-            <Treeselect
-              v-model="selectedBilling"
-              :options="billings"
-              placeholder="Выберите счёт..."
-            />
-          </div>
-        </div>
-        <div
-          v-if="selectedCompany"
-          class="margin-item flex"
-        >
-          <div class="date-block">
-            <input
-              v-model="currentBillingData.dateStart"
-              class="form-control"
-              type="date"
-            >
-            <div style="padding-top: 5px;">
-              -
+          <div class="margin-item">
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 150px"
+              >Контрагент</span>
+              <Treeselect
+                v-model="selectedCompany"
+                :options="companies"
+                :normalizer="normalizer"
+                placeholder="Выберите компанию..."
+              />
             </div>
-            <input
-              v-model="currentBillingData.dateEnd"
-              class="form-control"
-              type="date"
-            >
           </div>
           <div
             v-if="selectedCompany"
+            class="margin-item"
           >
-            <Treeselect
-              v-model="selectedPrice"
-              :options="prices"
-              placeholder="Выберите прайс..."
-            />
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 150px"
+              >Счета</span>
+              <Treeselect
+                v-model="selectedBilling"
+                :options="billings"
+                placeholder="Выберите счёт..."
+              />
+            </div>
+          </div>
+          <div
+            v-if="selectedCompany"
+            class="margin-item flex"
+          >
+            <div class="date-block">
+              <input
+                v-model="currentBillingData.dateStart"
+                class="form-control"
+                type="date"
+              >
+              <div style="padding-top: 5px;">
+                -
+              </div>
+              <input
+                v-model="currentBillingData.dateEnd"
+                class="form-control"
+                type="date"
+              >
+            </div>
+            <div
+              v-if="selectedCompany"
+            >
+              <Treeselect
+                v-model="selectedPrice"
+                :options="prices"
+                placeholder="Выберите прайс..."
+              />
+            </div>
+          </div>
+          <div class="margin-item">
+            <button
+              v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="updateBilling"
+            >
+              Сохранить проект
+            </button>
+            <button
+              v-if="selectedPrice && !selectedBilling"
+              class="btn btn-blue-nb"
+              @click="createBilling"
+            >
+              Новый счет
+            </button>
+            <button
+              v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="confirmBilling"
+            >
+              Записать счет
+            </button>
+            <button
+              v-if="currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="cancelBilling"
+            >
+              Сбросить счет
+            </button>
+            <button
+              v-if="selectedBilling && selectedPrice && currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="downloadBillingExcel"
+            >
+              <i class="fa-solid fa-download" />
+              Excel
+            </button>
           </div>
         </div>
-        <div class="margin-item">
-          <button
-            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="updateBilling"
-          >
-            Сохранить проект
-          </button>
-          <button
-            v-if="selectedPrice && !selectedBilling"
-            class="btn btn-blue-nb"
-            @click="createBilling"
-          >
-            Новый счет
-          </button>
-          <button
-            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="confirmBilling"
-          >
-            Записать счет
-          </button>
-          <button
-            v-if="currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="cancelBilling"
-          >
-            Сбросить счет
-          </button>
-          <button
-            v-if="selectedBilling && selectedPrice && currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="downloadBillingExcel"
-          >
-            <i class="fa-solid fa-download" />
-            Excel
-          </button>
+        <div class="company-item">
+          <textarea />
         </div>
       </div>
       <div
@@ -380,9 +385,13 @@ const downloadBillingExcel = async () => {
   margin: 0 20px;
 }
 .company {
-  width: 900px;
-  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(200px, 0.5fr) minmax(400px, 1fr) minmax(200px, 0.5fr);
+  grid-column-gap: 5px;
+  justify-items: center;
 }
+.company-item:nth-child(1) { grid-column-start: 2 }
+
 .margin-item {
   margin: 10px 0;
 }
