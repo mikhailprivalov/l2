@@ -41,14 +41,50 @@ admin.site.register(IstochnikiFinansirovaniya)
 
 @admin.register(Napravleniya)
 class NapravleniyaAdmin(admin.ModelAdmin):
-    autocomplete_fields = (
+
+    def client_fio(self, obj):
+        return obj.client.individual.fio()
+
+    client_fio.short_description = 'patient fio'
+
+    def doc_fio(self, obj):
+        return obj.doc.get_fio()
+
+    doc_fio.short_description = 'doctor'
+
+    def doc_create_fio(self, obj):
+        return obj.doc_who_create.get_fio() if obj.doc_who_create else ""
+
+    doc_create_fio.short_description = 'doctor who create'
+
+    list_display = ['pk', 'client_fio', 'doc_fio', 'doc_create_fio', 'rmis_number', 'rmis_case_id', 'rmis_hosp_id']
+
+    list_select_related = ['client__individual', 'doc', 'doc_who_create']
+
+    raw_id_fields = [
+        'visit_who_mark',
         'client',
+        'doc',
+        'istochnik_f',
+        'price_category',
+        'doc_who_create',
+        'imported_org',
+        'forcer_rmis_send',
         'case',
         'parent',
         'parent_auto_gen',
         'parent_slave_hosp',
         'parent_case',
-    )
+        'parent_complex_research',
+        'doc_microbiology_receive',
+        'doc_gistology_receive',
+        'hospital',
+        'co_executor',
+        'external_order',
+        'external_executor_hospital',
+        'price_name',
+    ]
+
     search_fields = (
         'pk',
         'client',
