@@ -63,7 +63,7 @@ class NapravleniyaAdmin(admin.ModelAdmin):
 
     fields = ['visit_date', 'visit_who_mark', 'diagnos', 'vich_code', 'client', 'doc', 'istochnik_f', 'price_category', 'history_num', 'additional_num',
               'microbiology_num', 'rmis_case_id', 'rmis_visit_id', 'rmis_hosp_id', 'rmis_resend_services', 'doc_who_create', 'cancel', 'rmis_number', 'result_rmis_send',
-              'imported_from_rmis', 'imported_org', 'imported_dicrections_rmis_send', 'force_rmis_send', 'forcer_rmis_send', 'case', 'num_contract', 'protect_code'
+              'imported_from_rmis', 'imported_org', 'imported_directions_rmis_send', 'force_rmis_send', 'forcer_rmis_send', 'case', 'num_contract', 'protect_code',
               'polis_who_give', 'polis_n', 'parent', 'parent_auto_gen', 'parent_slave_hosp', 'parent_case', 'parent_complex_research', 'rmis_slot_id', 'microbiology_n',
               'time_microbiology_receive', 'doc_microbiology_receive', 'time_gistology_receive', 'doc_gistology_receive', 'need_resend_amd', 'need_resend_n3', 'need_resend_l2',
               'need_resend_crie', 'core_id', 'amd_number', 'error_amd', 'amd_excluded', 'amd_message', 'purpose', 'external_organization', 'harmful_factor', 'workplace', 'hospital',
@@ -71,6 +71,10 @@ class NapravleniyaAdmin(admin.ModelAdmin):
               'n3_iemk_ok', 'ecp_ok', 'vi_id', 'eds_required_documents', 'eds_required_signature_types', 'eds_total_signed', 'eds_total_signed_at', 'co_executor', 'register_number',
               'register_number_year', 'planed_doctor_executor', 'total_confirmed', 'last_confirmed_at', 'emdr_id', 'email_with_results_sent', 'celery_send_task_ids', 'external_order',
               'need_order_redirection', 'order_redirection_number', 'external_executor_hospital', 'time_send_hl7', 'price_name', 'cpp_upload_id', 'need_resend_cpp', 'ecp_direction_number']
+
+    def get_queryset(self, request):
+        return super(NapravleniyaAdmin, self).get_queryset(request).select_related('visit_who_mark', 'client', 'doc', 'price_category', 'doc_who_create',
+                'forcer_rmis_send', 'case', 'parent', 'parent_auto_gen', 'parent_slave_hosp', 'parent_case', 'parent_complex_research')
 
     autocomplete_fields = (
         'client',
