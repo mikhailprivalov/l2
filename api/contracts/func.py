@@ -34,6 +34,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
                 "code_nmu": i.code_nmu,
                 "internal_code": i.internal_code,
                 "execute_date": i.date_confirm,
+                "dir_id": i.dir_id,
             }
             if not result.get(i.patient_card_num):
                 result[i.patient_card_num] = [current_data.copy()]
@@ -61,6 +62,7 @@ def get_confirm_data_for_billing(price_id, billing_id):
             "execute_date": i.date_confirm,
             "internal_code": i.internal_code,
             "code_nmu": i.code_nmu,
+            "dir_id": i.dir_id,
         }
         if not result.get(i.patient_card_num):
             result[i.patient_card_num] = [current_data.copy()]
@@ -118,7 +120,7 @@ def structure_table(data_researches):
                     "executeDate": i.get("execute_date"),
                 }
             else:
-                patient_data[f"{card_id} {i.get('research_id')}"] = {
+                patient_data[f"{card_id} {i.get('research_id')} {i.get('dir_id')}"] = {
                     "serialNumber": "",
                     "patientFio": "",
                     "patientBirthDay": "",
