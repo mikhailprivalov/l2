@@ -392,7 +392,7 @@ const downloadBillingExcel = async () => {
 }
 .company {
   display: grid;
-  grid-template-columns: minmax(200px, 0.5fr) minmax(400px, 1fr) minmax(200px, 0.5fr);
+  grid-template-columns: minmax(0, 0.5fr) minmax(400px, 1fr) minmax(100px, 0.5fr);
   grid-column-gap: 5px;
   justify-items: center;
 }
