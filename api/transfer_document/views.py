@@ -51,7 +51,7 @@ def get_cards_to_send(request):
 def get_card_by_number(request):
     request_data = json.loads(request.body)
     number_poliklinika = request_data.get('value')
-    card_data = Card.objects.filter(number_poliklinika=number_poliklinika).first()
+    card_data = Card.objects.filter(number_poliklinika=number_poliklinika, base__internal_type=True).first()
     data = {}
     if card_data:
         data = {"id": card_data.id, "number_p": card_data.number_poliklinika, "fio": card_data.get_fio_w_card(), "room": card_data.room_location.title, "checked": True}

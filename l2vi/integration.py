@@ -18,12 +18,17 @@ def get_url(path, query=None):
     return urljoin(base, path) + ('?{}'.format(urlencode(query)) if query else '')
 
 
-def make_request(path, query=None, as_json=True, **kwargs):
+def make_request(path, query=None, as_json=True, gen_url=True, auth_token=None, **kwargs):
     if query is None:
         query = {}
     try:
-        url = get_url(path, query=query)
+        if gen_url:
+            url = get_url(path, query=query)
+        else:
+            url = path
         headers = {"Content-Type": "application/json"}
+        if auth_token:
+            headers["Authorization"] = f"Bearer {auth_token}"
         data = requests.post(url, headers=headers, **kwargs)
         if as_json:
             return data.json()
@@ -39,3 +44,8 @@ def gen_cda_xml(pk: int) -> dict:
 
 def send_cda_xml(pk: int, xml: str) -> dict:
     return make_request('/perform', data=json.dumps({"pk": pk, "mode": "sendXml", "xml": xml}))
+
+
+def send_lab_direction_to_ecp(directions) -> dict:
+    url = SettingManager.get_api_ecp_base_url()
+    return make_request(f"{url}/send-lab-result-ecp", data=json.dumps({"directions": directions}), gen_url=False, auth_token="a-super-secret-key")

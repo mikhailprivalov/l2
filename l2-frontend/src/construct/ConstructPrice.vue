@@ -14,6 +14,15 @@
       placeholder="Выберите прайс"
       class="select-price"
     />
+    <span>
+      <a
+        class="a-under a-align margin-top  margin-bottom"
+        href="#"
+        @click.prevent="downloadCoastTOXlsx()"
+      >
+        Все цены - XLSX
+      </a>
+    </span>
     <div class="edit-price">
       <table class="table">
         <colgroup>
@@ -154,6 +163,13 @@
         @click.prevent="downloadSpecification"
       >
         Cпецификация
+      </a>
+      <a
+        class="a-under a-align r-padding"
+        href="#"
+        @click.prevent="downloadCoastTOXlsx(selectedPrice)"
+      >
+        Текущий прайс - XLSX
       </a>
       <a
         class="a-under a-align r-padding"
@@ -350,7 +366,10 @@ import RadioField from '@/fields/RadioField.vue';
 export default {
   name: 'ConstructPrice',
   components: {
-    RadioField, VueTippyTd, Treeselect, LoadFile,
+    RadioField,
+    VueTippyTd,
+    Treeselect,
+    LoadFile,
   },
   data() {
     return {
@@ -451,6 +470,9 @@ export default {
     },
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
+    },
+    downloadCoastTOXlsx(priceId = null) {
+      window.open(`/forms/xlsx?type=100.01&priceId=${priceId}`, '_blank');
     },
     async copyPrice() {
       await this.$store.dispatch(actions.INC_LOADING);
@@ -629,6 +651,9 @@ export default {
 }
 .margin-bottom {
   margin-bottom: 10px;
+}
+.margin-top {
+  margin-top: 10px;
 }
 .border {
   border: 1px solid #ddd;

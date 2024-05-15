@@ -180,6 +180,12 @@ def menu(request):
                     "module": "l2_eds",
                 },
                 {
+                    "url": '/ui/upload-directions',
+                    "title": "Выгрузка",
+                    "nt": False,
+                    "access": ["Врач параклиники", "Врач консультаций", "Врач-лаборант"],
+                },
+                {
                     "url": '/ui/plan-hospitalization',
                     "title": "План госпитализации",
                     "nt": False,
@@ -215,6 +221,12 @@ def menu(request):
                     "title": "Обороты",
                     "nt": False,
                     "access": ["Обороты"],
+                },
+                {
+                    "url": '/ui/billing',
+                    "title": "Счета на оплату",
+                    "nt": True,
+                    "access": ["Счет: проект, Счет: закрытие"],
                 },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
             ]

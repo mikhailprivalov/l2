@@ -1,5 +1,7 @@
 import datetime
 from django.db import connection
+
+from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
@@ -62,3 +64,55 @@ def get_research_coast_by_prce(price_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_data_for_confirm_billing(billing_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.napravleniye_id as dir_id,
+                    directions_issledovaniya.id as iss_id,
+                    directions_issledovaniya.research_id,
+                    directory_researches.title as research_title,
+                    directory_researches.internal_code as internal_code,
+                    directory_researches.code as code_nmu,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    directions_issledovaniya.time_confirmation,
+                    directions_napravleniya.client_id,
+                    cc.number as patient_card_num,
+                    ci.family as patient_family,
+                    ci.name as patient_name,
+                    ci.patronymic as patient_patronymic,
+                    to_char(ci.birthday,'DD.MM.YYYY') as ru_date_born,
+                    date_part('year', age(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, ci.birthday))::int as patient_age,
+                    dtr.number as tube_number
+                FROM directions_issledovaniya
+                LEFT JOIN directions_issledovaniya_tubes dit
+                ON directions_issledovaniya.id = dit.issledovaniya_id
+
+                LEFT JOIN directions_tubesregistration dtr
+                ON dit.tubesregistration_id = dtr.id
+
+                LEFT JOIN directory_researches 
+                ON directory_researches.id=directions_issledovaniya.research_id
+                LEFT JOIN directions_napravleniya
+                ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN clients_card cc
+                ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN clients_individual ci 
+                ON ci.id = cc.individual_id
+
+                WHERE 
+                    directions_issledovaniya.billing_id = %(billing_id)s
+                ORDER BY 
+                    directions_napravleniya.client_id, 
+                    directions_issledovaniya.time_confirmation
+                            """,
+            params={'billing_id': billing_id, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+

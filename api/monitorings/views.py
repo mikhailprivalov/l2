@@ -51,6 +51,9 @@ def search(request):
     if type_period == "PERIOD_MONTH":
         param_month = prepare_date[1]
 
+    if type_period == "PERIOD_HALFYEAR":
+        param_halfyear = prepare_date[1]
+
     param_year = prepare_date[0]
     result_monitoring = monitoring_sql_by_all_hospital(
         monitoring_research=research_pk,
