@@ -50,14 +50,14 @@ class NapravleniyaAdmin(admin.ModelAdmin):
     def doc_fio(self, obj):
         return obj.doc.get_fio()
 
-    doc_fio.short_description = 'doctor fio'
+    doc_fio.short_description = 'doctor'
 
     def doc_create_fio(self, obj):
-        return obj.doc_who_create.get_fio()
+        return obj.doc_who_create.get_fio() if obj.doc_who_create else ""
 
-    doc_create_fio.short_description = 'doctor who create fio'
+    doc_create_fio.short_description = 'doctor who create'
 
-    list_display = ['pk', 'client_fio', 'doc_fio', 'doc_who_create', 'rmis_number', 'rmis_case_id', 'rmis_hosp_id']
+    list_display = ['pk', 'client_fio', 'doc_fio', 'doc_create_fio', 'rmis_number', 'rmis_case_id', 'rmis_hosp_id']
 
     list_select_related = ['client__individual', 'doc', 'doc_who_create',]
 
