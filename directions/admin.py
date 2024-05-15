@@ -61,9 +61,29 @@ class NapravleniyaAdmin(admin.ModelAdmin):
 
     list_select_related = ['client__individual', 'doc', 'doc_who_create']
 
-    raw_id_fields = ['visit_who_mark', 'client', 'doc', 'istochnik_f', 'price_category', 'doc_who_create', 'imported_org', 'forcer_rmis_send', 'case', 'parent',
-                     'parent_auto_gen', 'parent_slave_hosp', 'parent_case', 'parent_complex_research', 'doc_microbiology_receive', 'doc_gistology_receive', 'hospital',
-                     'co_executor', 'external_order', 'external_executor_hospital', 'price_name']
+    raw_id_fields = [
+        'visit_who_mark',
+        'client',
+        'doc',
+        'istochnik_f',
+        'price_category',
+        'doc_who_create',
+        'imported_org',
+        'forcer_rmis_send',
+        'case',
+        'parent',
+        'parent_auto_gen',
+        'parent_slave_hosp',
+        'parent_case',
+        'parent_complex_research',
+        'doc_microbiology_receive',
+        'doc_gistology_receive',
+        'hospital',
+        'co_executor',
+        'external_order',
+        'external_executor_hospital',
+        'price_name',
+    ]
 
     search_fields = (
         'pk',
