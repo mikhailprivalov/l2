@@ -108,8 +108,14 @@
             </button>
           </div>
         </div>
-        <div class="company-item">
-          <textarea />
+        <div
+          v-if="selectedBilling"
+          class="company-item"
+        >
+          <textarea
+            v-model="currentBillingData.info"
+            class="form-control billing-info"
+          />
         </div>
       </div>
       <div
@@ -391,9 +397,14 @@ const downloadBillingExcel = async () => {
   justify-items: center;
 }
 .company-item:nth-child(1) { grid-column-start: 2 }
-
+.company-item:nth-child(2) {
+  width: 100%;
+}
 .margin-item {
   margin: 10px 0;
+}
+.margin-item:nth-child(1) {
+  margin: 0 0 10px 0
 }
 .flex {
   display: flex;
@@ -415,5 +426,8 @@ const downloadBillingExcel = async () => {
 .disable_color {
   border-color: #E6E9ED;
   background-color: #E6E9ED;
+}
+.billing-info {
+  height: 80px;
 }
 </style>
