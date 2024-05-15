@@ -41,6 +41,26 @@ admin.site.register(IstochnikiFinansirovaniya)
 
 @admin.register(Napravleniya)
 class NapravleniyaAdmin(admin.ModelAdmin):
+
+    def client_fio(self, obj):
+        return obj.client.individual.fio()
+
+    client_fio.short_description = 'patient fio'
+
+    def doc_fio(self, obj):
+        return obj.doc.get_fio()
+
+    doc_fio.short_description = 'doctor fio'
+
+    def doc_create_fio(self, obj):
+        return obj.doc_who_create.get_fio()
+
+    doc_create_fio.short_description = 'doctor who create fio'
+
+    list_display = ['pk', 'client_fio', 'doc_fio', 'doc_who_create', 'rmis_number', 'rmis_case_id', 'rmis_hosp_id']
+
+    list_select_related = ['client__individual', 'doc', 'doc_who_create',]
+
     autocomplete_fields = (
         'client',
         'case',
