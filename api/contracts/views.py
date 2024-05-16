@@ -101,7 +101,7 @@ def get_hospital_prices(request):
         prices_data = []
     else:
         prices = PriceName.get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=True)
-        prices_data = [{"id": i.pk, "label": i.title} for i in prices]
+        prices_data = [{"id": i.pk, "label": i.title, "contractNumber": i.contract_number} for i in prices]
     return JsonResponse({"data": prices_data})
 
 
