@@ -1,15 +1,15 @@
 <template>
   <div>
     <div class="main">
+      <div class="type-company">
+        <RadioField
+          v-model="selectedType"
+          :variants="typesCompany"
+          @modified="changeType"
+        />
+      </div>
       <div class="billing-info">
         <div class="billing-info-col">
-          <div class="billing-info-row">
-            <RadioField
-              v-model="selectedType"
-              :variants="typesCompany"
-              @modified="changeType"
-            />
-          </div>
           <div class="billing-info-row">
             <div class="input-group">
               <span
@@ -118,7 +118,7 @@
               style="width: 150px"
             >От</span>
             <input
-              class="form-control"
+              class="form-control input-36"
               type="date"
             >
           </div>
@@ -414,6 +414,11 @@ const downloadBillingExcel = async () => {
 <style scoped lang="scss">
 .main {
   margin: 0 20px;
+}
+.type-company {
+  position: relative;
+  margin: 10px auto;
+  width: 50%
 }
 .billing-info {
   display: grid;
