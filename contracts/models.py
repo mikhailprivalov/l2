@@ -365,6 +365,8 @@ class BillingRegister(models.Model):
     info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
     is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
     price = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, default=None, blank=True, null=True, db_index=True)
+    date_from = models.DateField(verbose_name="От", help_text="2024-05-16", default=None, blank=True, null=True, db_index=True)
+    registry_number = models.CharField(max_length=64, verbose_name="Реестр №", help_text="1YYYY", default=None, blank=True, null=True)
 
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end} - {self.price}"
