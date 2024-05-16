@@ -1,110 +1,150 @@
 <template>
   <div>
     <div class="main">
-      <div class="company">
-        <div class="margin-item">
+      <div class="billing-info">
+        <div class="billing-info-col billing-info-row">
           <RadioField
             v-model="selectedType"
             :variants="typesCompany"
             @modified="changeType"
           />
         </div>
-        <div class="margin-item">
-          <div class="input-group">
-            <span
-              class="input-group-addon nbr"
-              style="width: 150px"
-            >Контрагент</span>
-            <Treeselect
-              v-model="selectedCompany"
-              :options="companies"
-              :normalizer="normalizer"
-              placeholder="Выберите компанию..."
-            />
-          </div>
-        </div>
-        <div
-          v-if="selectedCompany"
-          class="margin-item"
-        >
-          <div class="input-group">
-            <span
-              class="input-group-addon nbr"
-              style="width: 150px"
-            >Счета</span>
-            <Treeselect
-              v-model="selectedBilling"
-              :options="billings"
-              placeholder="Выберите счёт..."
-            />
-          </div>
-        </div>
-        <div
-          v-if="selectedCompany"
-          class="margin-item flex"
-        >
-          <div class="date-block">
-            <input
-              v-model="currentBillingData.dateStart"
-              class="form-control"
-              type="date"
-            >
-            <div style="padding-top: 5px;">
-              -
+      </div>
+      <div class="billing-info">
+        <div class="billing-info-col">
+          <div class="billing-info-row">
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 150px"
+              >Контрагент</span>
+              <Treeselect
+                v-model="selectedCompany"
+                :options="companies"
+                :normalizer="normalizer"
+                placeholder="Выберите компанию..."
+              />
             </div>
-            <input
-              v-model="currentBillingData.dateEnd"
-              class="form-control"
-              type="date"
-            >
           </div>
           <div
             v-if="selectedCompany"
+            class="billing-info-row"
           >
-            <Treeselect
-              v-model="selectedPrice"
-              :options="prices"
-              placeholder="Выберите прайс..."
-            />
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 150px"
+              >Счета</span>
+              <Treeselect
+                v-model="selectedBilling"
+                :options="billings"
+                placeholder="Выберите счёт..."
+              />
+            </div>
+          </div>
+          <div
+            v-if="selectedCompany"
+            class="billing-info-row flex"
+          >
+            <div class="date-block">
+              <input
+                v-model="currentBillingData.dateStart"
+                class="form-control"
+                type="date"
+              >
+              <div style="padding-top: 5px;">
+                -
+              </div>
+              <input
+                v-model="currentBillingData.dateEnd"
+                class="form-control"
+                type="date"
+              >
+            </div>
+            <div
+              v-if="selectedCompany"
+            >
+              <Treeselect
+                v-model="selectedPrice"
+                :options="prices"
+                placeholder="Выберите прайс..."
+              />
+            </div>
+          </div>
+          <div class="billing-info-row">
+            <button
+              v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="updateBilling"
+            >
+              Сохранить проект
+            </button>
+            <button
+              v-if="selectedPrice && !selectedBilling"
+              class="btn btn-blue-nb"
+              @click="createBilling"
+            >
+              Новый счет
+            </button>
+            <button
+              v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="confirmBilling"
+            >
+              Записать счет
+            </button>
+            <button
+              v-if="currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="cancelBilling"
+            >
+              Сбросить счет
+            </button>
+            <button
+              v-if="selectedBilling && selectedPrice && currentBillingData.isConfirmed"
+              class="btn btn-blue-nb"
+              @click="downloadBillingExcel"
+            >
+              <i class="fa-solid fa-download" />
+              Excel
+            </button>
           </div>
         </div>
-        <div class="margin-item">
-          <button
-            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="updateBilling"
-          >
-            Сохранить проект
-          </button>
-          <button
-            v-if="selectedPrice && !selectedBilling"
-            class="btn btn-blue-nb"
-            @click="createBilling"
-          >
-            Новый счет
-          </button>
-          <button
-            v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="confirmBilling"
-          >
-            Записать счет
-          </button>
-          <button
-            v-if="currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="cancelBilling"
-          >
-            Сбросить счет
-          </button>
-          <button
-            v-if="selectedBilling && selectedPrice && currentBillingData.isConfirmed"
-            class="btn btn-blue-nb"
-            @click="downloadBillingExcel"
-          >
-            <i class="fa-solid fa-download" />
-            Excel
-          </button>
+        <div
+          v-if="selectedCompany"
+          class="billing-info-col"
+        >
+          <div class="input-group billing-info-row">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >От</span>
+            <input
+              v-model="currentBillingData.dateFrom"
+              class="form-control input-36"
+              type="date"
+            >
+          </div>
+          <div class="input-group billing-info-row">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >Реестр №</span>
+            <input
+              v-model="currentBillingData.registryNumber"
+              class="form-control input-36"
+            >
+          </div>
+          <div class="input-group billing-info-row">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >Договор №</span>
+            <input
+              :disabled="true"
+              class="form-control input-36"
+            >
+          </div>
         </div>
       </div>
       <div
@@ -217,6 +257,8 @@ const billingTemplate = ref({
   dateEnd: '',
   info: '',
   isConfirmed: '',
+  dateFrom: '',
+  registryNumber: '',
 });
 
 const currentBillingData = ref({
@@ -229,6 +271,8 @@ const currentBillingData = ref({
   dateEnd: '',
   info: '',
   isConfirmed: '',
+  dateFrom: '',
+  registryNumber: '',
 });
 
 const clearBilling = () => {
@@ -269,7 +313,7 @@ watch(selectedBilling, () => {
 });
 
 const updateBilling = async () => {
-  if (selectedBilling.value) {
+  if (selectedBilling.value && (currentBillingData.value.registryNumber && currentBillingData.value.dateFrom)) {
     const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
     const apiPoint = 'contracts/update-billing';
     const priceId = selectedPrice.value;
@@ -284,8 +328,10 @@ const updateBilling = async () => {
       services.value = tableData;
       root.$emit('msg', 'ok', `${billingInfo} сохранен`);
     } else {
-      root.$emit('msg', 'ok', 'ошибка');
+      root.$emit('msg', 'error', 'ошибка');
     }
+  } else {
+    root.$emit('msg', 'error', 'От или реестр № не заполнены');
   }
 };
 
@@ -303,7 +349,7 @@ const confirmBilling = async () => {
       await getBilling();
       root.$emit('msg', 'ok', `${billingInfo} сохранен`);
     } else {
-      root.$emit('msg', 'ok', 'ошибка');
+      root.$emit('msg', 'error', 'ошибка');
     }
   }
 };
@@ -320,31 +366,35 @@ const cancelBilling = async () => {
       await getBilling();
       root.$emit('msg', 'ok', `${billingInfo} Отменен`);
     } else {
-      root.$emit('msg', 'ok', 'ошибка');
+      root.$emit('msg', 'error', 'ошибка');
     }
   }
 };
 
 const createBilling = async () => {
-  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
-  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
-  const priceId = selectedPrice.value;
-  const billingData = {
-    ...currentBillingData.value,
-    hospitalId,
-    companyId,
-    priceId,
-    typeCompany: selectedType.value,
-  };
-  const apiPoint = 'contracts/create-billing';
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, billingInfo } = await api(apiPoint, { ...billingData });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Создано');
-    selectedBilling.value = billingInfo;
+  if (!currentBillingData.value.registryNumber || !currentBillingData.value.dateFrom) {
+    root.$emit('msg', 'error', 'От или реестр № не заполнены');
   } else {
-    root.$emit('msg', 'ok', 'ошибка');
+    const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+    const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+    const priceId = selectedPrice.value;
+    const billingData = {
+      ...currentBillingData.value,
+      hospitalId,
+      companyId,
+      priceId,
+      typeCompany: selectedType.value,
+    };
+    const apiPoint = 'contracts/create-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, billingInfo } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Создано');
+      selectedBilling.value = billingInfo;
+    } else {
+      root.$emit('msg', 'error', 'ошибка');
+    }
   }
 };
 
@@ -379,12 +429,21 @@ const downloadBillingExcel = async () => {
 .main {
   margin: 0 20px;
 }
-.company {
-  width: 900px;
-  margin: 0 auto;
+.billing-info {
+  display: grid;
+  grid-template-columns: minmax(400px, 1fr) minmax(100px, 0.5fr) minmax(0, 0.5fr);
+  grid-column-gap: 5px;
+  justify-items: center;
 }
-.margin-item {
+.billing-info-col {
+  width: 100%;
+}
+.billing-info-row {
+  width: 100%;
   margin: 10px 0;
+}
+.billing-info-row:nth-child(1) {
+  margin: 0 0 10px 0
 }
 .flex {
   display: flex;
@@ -403,8 +462,7 @@ const downloadBillingExcel = async () => {
 .white_bg {
   background: #FFF;
 }
-.disable_color {
-  border-color: #E6E9ED;
-  background-color: #E6E9ED;
+.input-36 {
+  height: 36px;
 }
 </style>
