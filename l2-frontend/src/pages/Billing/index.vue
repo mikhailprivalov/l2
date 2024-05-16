@@ -142,6 +142,7 @@
             >Договор №</span>
             <input
               :disabled="true"
+              :value="currentContractNumber"
               class="form-control input-36"
             >
           </div>
@@ -419,6 +420,21 @@ watch(selectedCompany, () => {
     selectedBilling.value = null;
   }
 });
+
+const currentContractNumber = ref('');
+watch(selectedPrice, () => {
+  if (selectedPrice.value) {
+    const currentPrice = prices.value.find((price) => price.id === selectedPrice.value);
+    if (currentPrice) {
+      currentContractNumber.value = currentPrice.contractNumber;
+    } else {
+      currentContractNumber.value = '';
+    }
+  } else {
+    currentContractNumber.value = '';
+  }
+});
+
 const downloadBillingExcel = async () => {
   window.open(`/forms/xlsx?type=101.01&billingId=${selectedBilling.value}`, '_blank');
 };
