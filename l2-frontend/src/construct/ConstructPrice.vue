@@ -30,6 +30,7 @@
           <col width="120">
           <col width="120">
           <col width="120">
+          <col width="120">
           <col>
           <col
             v-if="priceIsActive"
@@ -50,7 +51,10 @@
             <th class="text-center">
               <strong>Дата конца</strong>
             </th>
-            <th class="text-center">
+            <th
+              class="text-center"
+              colspan="2"
+            >
               <strong>Компания</strong>
             </th>
             <th v-if="priceIsActive" />
@@ -79,7 +83,9 @@
               :disabled="!priceIsActive"
             >
           </td>
-          <td class="border">
+          <td
+            class="border"
+          >
             <input
               v-model="priceData.end"
               type="date"
@@ -87,7 +93,10 @@
               :disabled="!priceIsActive"
             >
           </td>
-          <td class="border">
+          <td
+            class="border"
+            colspan="2"
+          >
             <Treeselect
               v-model="priceData.company"
               :multiple="false"
@@ -149,9 +158,18 @@
           </td>
           <td
             class="padding-left"
-            :colspan="priceIsActive ? 3 : 2"
           >
             {{ priceData.uuid }}
+          </td>
+          <td class="border text-center">
+            <strong>Договор</strong>
+          </td>
+          <td class="padding-left">
+            <input
+              v-model="priceData.contract"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
           </td>
         </tr>
       </table>
