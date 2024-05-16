@@ -255,8 +255,8 @@ const billingTemplate = ref({
   dateEnd: '',
   info: '',
   isConfirmed: '',
-   "date_from": self.date_from,
-            "registry_number": self.registry_number,
+  dateFrom: '',
+  registryNumber: '',
 });
 
 const currentBillingData = ref({
@@ -269,6 +269,8 @@ const currentBillingData = ref({
   dateEnd: '',
   info: '',
   isConfirmed: '',
+  dateFrom: '',
+  registryNumber: '',
 });
 
 const clearBilling = () => {
