@@ -171,7 +171,7 @@
             :colspan="priceIsActive ? 2 : 1"
           >
             <input
-              v-model="priceData.contract"
+              v-model="priceData.contractNumber"
               class="form-control"
               :disabled="!priceIsActive"
             >
@@ -525,6 +525,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
+          contractNumber: this.priceData.contractNumber,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -543,6 +544,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
+          contractNumber: this.priceData.contractNumber,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -556,6 +558,7 @@ export default {
             end: '',
             company: null,
             uuid: '',
+            contractNumber: '',
           };
         } else {
           this.$root.$emit('msg', 'error', message);
