@@ -30,6 +30,7 @@
           <col width="120">
           <col width="120">
           <col width="120">
+          <col width="150">
           <col width="120">
           <col>
           <col
@@ -53,7 +54,7 @@
             </th>
             <th
               class="text-center"
-              colspan="2"
+              colspan="3"
             >
               <strong>Компания</strong>
             </th>
@@ -95,7 +96,7 @@
           </td>
           <td
             class="border"
-            colspan="2"
+            colspan="3"
           >
             <Treeselect
               v-model="priceData.company"
@@ -158,13 +159,17 @@
           </td>
           <td
             class="padding-left"
+            colspan="2"
           >
             {{ priceData.uuid }}
           </td>
           <td class="border text-center">
             <strong>Договор</strong>
           </td>
-          <td class="padding-left">
+          <td
+            class="padding-left"
+            :colspan="priceIsActive ? 2 : 1"
+          >
             <input
               v-model="priceData.contract"
               class="form-control"
