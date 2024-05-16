@@ -111,7 +111,7 @@
           </div>
         </div>
         <div
-          v-if="selectedBilling"
+          v-if="selectedCompany"
           class="billing-info-col"
         >
           <div class="input-group billing-info-row">
@@ -313,7 +313,7 @@ watch(selectedBilling, () => {
 });
 
 const updateBilling = async () => {
-  if (selectedBilling.value) {
+  if (selectedBilling.value && (currentBillingData.value.registryNumber && currentBillingData.value.dateFrom)) {
     const billingData = { ...currentBillingData.value, typeCompany: selectedType.value };
     const apiPoint = 'contracts/update-billing';
     const priceId = selectedPrice.value;
@@ -328,8 +328,10 @@ const updateBilling = async () => {
       services.value = tableData;
       root.$emit('msg', 'ok', `${billingInfo} сохранен`);
     } else {
-      root.$emit('msg', 'ok', 'ошибка');
+      root.$emit('msg', 'error', 'ошибка');
     }
+  } else {
+    root.$emit('msg', 'error', 'От или реестр № не заполнены');
   }
 };
 
@@ -347,7 +349,7 @@ const confirmBilling = async () => {
       await getBilling();
       root.$emit('msg', 'ok', `${billingInfo} сохранен`);
     } else {
-      root.$emit('msg', 'ok', 'ошибка');
+      root.$emit('msg', 'error', 'ошибка');
     }
   }
 };
@@ -364,31 +366,35 @@ const cancelBilling = async () => {
       await getBilling();
       root.$emit('msg', 'ok', `${billingInfo} Отменен`);
     } else {
-      root.$emit('msg', 'ok', 'ошибка');
+      root.$emit('msg', 'error', 'ошибка');
     }
   }
 };
 
 const createBilling = async () => {
-  const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
-  const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
-  const priceId = selectedPrice.value;
-  const billingData = {
-    ...currentBillingData.value,
-    hospitalId,
-    companyId,
-    priceId,
-    typeCompany: selectedType.value,
-  };
-  const apiPoint = 'contracts/create-billing';
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, billingInfo } = await api(apiPoint, { ...billingData });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Создано');
-    selectedBilling.value = billingInfo;
+  if (!currentBillingData.value.registryNumber || !currentBillingData.value.dateFrom) {
+    root.$emit('msg', 'error', 'От или реестр № не заполнены');
   } else {
-    root.$emit('msg', 'ok', 'ошибка');
+    const hospitalId = selectedType.value !== 'Работодатель' ? selectedCompany.value : null;
+    const companyId = selectedType.value === 'Работодатель' ? selectedCompany.value : null;
+    const priceId = selectedPrice.value;
+    const billingData = {
+      ...currentBillingData.value,
+      hospitalId,
+      companyId,
+      priceId,
+      typeCompany: selectedType.value,
+    };
+    const apiPoint = 'contracts/create-billing';
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, billingInfo } = await api(apiPoint, { ...billingData });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Создано');
+      selectedBilling.value = billingInfo;
+    } else {
+      root.$emit('msg', 'error', 'ошибка');
+    }
   }
 };
 
