@@ -429,8 +429,8 @@ class BillingRegister(models.Model):
             "info": self.info,
             "isConfirmed": self.is_confirmed,
             "priceId": self.price_id,
-            "date_from": self.date_from,
-            "registry_number": self.registry_number,
+            "dateFrom": self.date_from,
+            "registryNumber": self.registry_number,
         }
         return result
 
