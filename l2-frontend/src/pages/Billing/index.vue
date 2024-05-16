@@ -1,16 +1,16 @@
 <template>
   <div>
     <div class="main">
-      <div class="company">
-        <div class="company-item">
-          <div class="margin-item">
+      <div class="billing-info">
+        <div class="billing-info-col">
+          <div class="billing-info-row">
             <RadioField
               v-model="selectedType"
               :variants="typesCompany"
               @modified="changeType"
             />
           </div>
-          <div class="margin-item">
+          <div class="billing-info-row">
             <div class="input-group">
               <span
                 class="input-group-addon nbr"
@@ -26,7 +26,7 @@
           </div>
           <div
             v-if="selectedCompany"
-            class="margin-item"
+            class="billing-info-row"
           >
             <div class="input-group">
               <span
@@ -42,7 +42,7 @@
           </div>
           <div
             v-if="selectedCompany"
-            class="margin-item flex"
+            class="billing-info-row flex"
           >
             <div class="date-block">
               <input
@@ -69,7 +69,7 @@
               />
             </div>
           </div>
-          <div class="margin-item">
+          <div class="billing-info-row">
             <button
               v-if="selectedBilling && selectedPrice && !currentBillingData.isConfirmed"
               class="btn btn-blue-nb"
@@ -110,12 +110,37 @@
         </div>
         <div
           v-if="selectedBilling"
-          class="company-item"
+          class="billing-info-col"
         >
-          <textarea
-            v-model="currentBillingData.info"
-            class="form-control billing-info"
-          />
+          <div class="input-group billing-info-row">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >От</span>
+            <input
+              class="form-control"
+              type="date"
+            >
+          </div>
+          <div class="input-group billing-info-row">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >Реестр №</span>
+            <input
+              class="form-control input-36"
+            >
+          </div>
+          <div class="input-group billing-info-row">
+            <span
+              class="input-group-addon nbr"
+              style="width: 150px"
+            >Договор №</span>
+            <input
+              :disabled="true"
+              class="form-control input-36"
+            >
+          </div>
         </div>
       </div>
       <div
@@ -390,20 +415,20 @@ const downloadBillingExcel = async () => {
 .main {
   margin: 0 20px;
 }
-.company {
+.billing-info {
   display: grid;
-  grid-template-columns: minmax(0, 0.5fr) minmax(400px, 1fr) minmax(100px, 0.5fr);
+  grid-template-columns: minmax(400px, 1fr) minmax(100px, 0.5fr) minmax(0, 0.5fr);
   grid-column-gap: 5px;
   justify-items: center;
 }
-.company-item:nth-child(1) { grid-column-start: 2 }
-.company-item:nth-child(2) {
+.billing-info-col {
   width: 100%;
 }
-.margin-item {
+.billing-info-row {
+  width: 100%;
   margin: 10px 0;
 }
-.margin-item:nth-child(1) {
+.billing-info-row:nth-child(1) {
   margin: 0 0 10px 0
 }
 .flex {
@@ -423,11 +448,7 @@ const downloadBillingExcel = async () => {
 .white_bg {
   background: #FFF;
 }
-.disable_color {
-  border-color: #E6E9ED;
-  background-color: #E6E9ED;
-}
-.billing-info {
-  height: 80px;
+.input-36 {
+  height: 36px;
 }
 </style>
