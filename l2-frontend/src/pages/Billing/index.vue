@@ -1,12 +1,14 @@
 <template>
   <div>
     <div class="main">
-      <div class="type-company">
-        <RadioField
-          v-model="selectedType"
-          :variants="typesCompany"
-          @modified="changeType"
-        />
+      <div class="billing-info">
+        <div class="billing-info-col billing-info-row">
+          <RadioField
+            v-model="selectedType"
+            :variants="typesCompany"
+            @modified="changeType"
+          />
+        </div>
       </div>
       <div class="billing-info">
         <div class="billing-info-col">
@@ -414,11 +416,6 @@ const downloadBillingExcel = async () => {
 <style scoped lang="scss">
 .main {
   margin: 0 20px;
-}
-.type-company {
-  position: relative;
-  margin: 10px auto;
-  width: 50%
 }
 .billing-info {
   display: grid;
