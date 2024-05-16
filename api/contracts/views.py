@@ -23,7 +23,7 @@ def create_billing(request):
     info = body.get("info")
     date_from = body.get("dateFrom")
     registry_number = body.get("registryNumber")
-    billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info, price_id)
+    billing_id = BillingRegister.create_billing(company_id, hospital_id, date_start, date_end, info, price_id, date_from, registry_number)
     return JsonResponse({"ok": True, "billingInfo": billing_id})
 
 
@@ -41,7 +41,7 @@ def update_billing(request):
     registry_number = body.get("registryNumber")
     billing_data = BillingRegister.objects.filter(pk=billing_id).first()
     if not billing_data.is_confirmed:
-        billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info, price_id)
+        billing_info = BillingRegister.update_billing(billing_id, date_start, date_end, info, price_id, date_from, registry_number)
         type_price = body.get("typeCompany")
         data = researches_for_billing(type_price, hospital_id, date_start, date_end, price_id, billing_data.is_confirmed, billing_id)
         structure_data = structure_table(data)

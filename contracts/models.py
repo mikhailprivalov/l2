@@ -372,21 +372,25 @@ class BillingRegister(models.Model):
         return f"{self.company} - {self.date_start} - {self.date_end} - {self.price}"
 
     @staticmethod
-    def update_billing(billing_id, date_start, date_end, info, price_id):
+    def update_billing(billing_id, date_start, date_end, info, price_id, date_from, registry_number):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         if current_billing:
             current_billing.date_start = date_start
             current_billing.date_end = date_end
             current_billing.info = info
             current_billing.price_id = price_id
+            current_billing.date_from = date_from
+            current_billing.registry_number = registry_number
             current_billing.save()
             return info
         else:
             return False
 
     @staticmethod
-    def create_billing(company_id, hospital_id, date_start, date_end, info, price_id):
-        current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id)
+    def create_billing(company_id, hospital_id, date_start, date_end, info, price_id, date_from, registry_number):
+        current_billing = BillingRegister(
+            hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id, date_from=date_from, registry_number=registry_number
+        )
         current_billing.save()
         return current_billing.pk
 

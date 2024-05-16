@@ -120,6 +120,7 @@
               style="width: 150px"
             >От</span>
             <input
+              v-model="currentBillingData.dateFrom"
               class="form-control input-36"
               type="date"
             >
@@ -130,6 +131,7 @@
               style="width: 150px"
             >Реестр №</span>
             <input
+              v-model="currentBillingData.registryNumber"
               class="form-control input-36"
             >
           </div>
