@@ -4014,10 +4014,10 @@ es-abstract@^1.20.4, es-abstract@^1.22.1:
     unbox-primitive "^1.0.2"
     which-typed-array "^1.1.13"
 
-es-cookie@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/es-cookie/-/es-cookie-1.4.0.tgz#6765b645d4e2fe9b0612bef6f6d18f49f8f016da"
-  integrity sha512-V4bHxyGBmwwiV+CKTLUPLmwhcutTxGEC5n4HWaUDSnTvkNvfIjkMw8qIVTVgPeNCWojgR5IUzFnGenNvCoKQ5A==
+es-cookie@^1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/es-cookie/-/es-cookie-1.5.0.tgz#2847fa618b69662d498e4c70b648224f602556ad"
+  integrity sha512-fRv8TjgwY4/RmrP3kqQzfOwrQIMnAbQCHxSxqGVO1+3oWFsGYdIBOD8aqyALc/S4UY2wOIH894uvTDNP81tiyw==
 
 es-get-iterator@^1.1.2:
   version "1.1.3"
