@@ -36,7 +36,7 @@
     "jquery": "^3.7.1",
     "js-base64": "^3.7.2",
     "lodash": "^4.17.20",
-    "mini-css-extract-plugin": "^2.6.1",
+    "mini-css-extract-plugin": "^2.9.0",
     "moment": "^2.29.4",
     "pdfobject": "^2.2.8",
     "plural-ru": "^2.0.2",
