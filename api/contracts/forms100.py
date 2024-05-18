@@ -25,8 +25,6 @@ def form_01(request_data):
         if not starts:
             if "Код по прайсу" in cells:
                 internal_code_idx = cells.index("Код по прайсу")
-                title_idx = cells.index("Услуга")
-                code_idx = cells.index("Код ОКМУ")
                 try:
                     coast_idx = cells.index(price.title)
                 except ValueError:
