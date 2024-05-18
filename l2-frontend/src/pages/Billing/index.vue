@@ -348,7 +348,7 @@ const confirmBilling = async () => {
     const priceId = selectedPrice.value;
     await store.dispatch(actions.INC_LOADING);
     const {
-      ok, billingInfo,
+      ok,
     } = await api(apiPoint, { ...billingData, priceId });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
