@@ -51,6 +51,7 @@
       >
         <button
           class="btn btn-blue-nb"
+          :disabled="fileIsSelected"
           @click="submitFileUpload()"
         >
           Загрузить файл
@@ -161,6 +162,9 @@ const clearFile = () => {
 const fileIsSelected = ref(false);
 
 const submitFileUpload = async () => {
+  if (!fileIsSelected.value) {
+    root.$emit('msg', 'error', 'Файл не выбран');
+  }
   try {
     const formData = new FormData();
     formData.append('file', file.value);
