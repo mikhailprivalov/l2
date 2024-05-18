@@ -173,7 +173,7 @@ const submitFileUpload = async () => {
     if (ok) {
       root.$emit('msg', 'ok', 'Файл загружен');
     } else {
-      root.$emit('msg', 'error', 'Ошибка обработки файла');
+      root.$emit('msg', 'error', message);
     }
     clearFile();
   } catch (e) {
