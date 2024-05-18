@@ -959,7 +959,6 @@ def get_parts_fio(fio_data):
 
 def upload_file(request):
     # todo - Логирование загрузки файлов
-    result = []
     try:
         file = request.FILES["file"]
         request_data = request.POST
