@@ -300,8 +300,6 @@ const getBilling = async () => {
   currentBillingData.value = result;
   colTable.value = columns;
   services.value = tableData;
-  const { data } = await api('contracts/get-hospital-prices', { ...currentBillingData });
-  prices.value = data;
   selectedPrice.value = result.priceId;
 };
 
