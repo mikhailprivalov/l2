@@ -710,17 +710,6 @@ def load_price_coasts(price_id: int, file):
 @login_required
 def load_csv(request):
     file_data = request.FILES["file"]
-    selected_price = request.POST.get('selectedPrice')
-    if selected_price:
-        result = False
-        try:
-            result = load_price_coasts(selected_price, file_data)
-        except:
-            stdout.write('Файл не загружен')
-        if result:
-            return JsonResponse({"ok": True, "results": [], "methods": []})
-        else:
-            return JsonResponse({"ok": False, "results": [], "methods": []})
     file_data = file_data.read().decode("utf-8")
     io_string = io.StringIO(file_data)
 
