@@ -353,7 +353,7 @@ const confirmBilling = async () => {
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       await getBilling();
-      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+      root.$emit('msg', 'ok', 'Счёт подтверждён');
     } else {
       root.$emit('msg', 'error', 'ошибка');
     }
