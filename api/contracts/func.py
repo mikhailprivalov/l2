@@ -13,7 +13,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
         base = CardBase.objects.filter(internal_type=True).first()
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
         if not finsource:
-            return {"result": [], "issIds": [], "priceId": "", "message": "Нет источника финансирования 'Договор'"}
+            return {"ok": False, "result": [], "issIds": [], "priceId": "", "message": "Нет источника финансирования 'Договор'"}
         if not is_confirmed:
             sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
         else:
@@ -41,7 +41,7 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
             result[i.patient_card_num] = [current_data.copy()]
         else:
             result[i.patient_card_num].append(current_data.copy())
-    return {"result": result, "issIds": list(iss_data), "priceId": price_id}
+    return {"ok": True, "result": result, "issIds": list(iss_data), "priceId": price_id}
 
 
 def get_confirm_data_for_billing(price_id, billing_id):

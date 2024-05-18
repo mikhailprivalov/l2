@@ -131,7 +131,7 @@ def get_billing(request):
     result = BillingRegister.get_billing(billing_id)
     type_price = request_data.get("typeCompany")
     data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"], result["dateEnd"], result["priceId"], result["isConfirmed"], billing_id)
-    if not data["result"]:
-        return JsonResponse({"ok": False, "result": [],"message": data["message"],})
+    if not data["ok"]:
+        return JsonResponse({"ok": data["ok"], "result": [], "message": data["message"]})
     structure_data = structure_table(data)
     return JsonResponse({"ok": True, "result": result, "message": "", **structure_data})
