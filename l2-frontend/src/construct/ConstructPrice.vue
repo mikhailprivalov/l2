@@ -213,7 +213,7 @@
         :types-file="['XLSX']"
         :forms-file="['api.contracts.forms100.form_01']"
         :entity-id="selectedPrice"
-        @upload-success="getCoastsResearchesInPrice"
+        @uploadSuccess="getCoastsResearchesInPrice"
       />
     </span>
     <div

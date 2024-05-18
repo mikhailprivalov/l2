@@ -26,7 +26,7 @@
             :upload-result="props.uploadResult"
             :entity-id="props.entityId"
             :other-need-data="props.otherNeedData"
-            @upload-success="uploadSuccess"
+            @uploadSuccess="uploadSuccess"
           />
         </div>
       </div>
