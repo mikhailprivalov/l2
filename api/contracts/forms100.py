@@ -15,7 +15,7 @@ def form_01(request_data):
     file = request_data.get("file")
     price = PriceName.objects.filter(pk=price_id).first()
     if not price:
-        return False
+        return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
     internal_code_idx, title_idx, code_idx, coast_idx = '', '', '', ''
