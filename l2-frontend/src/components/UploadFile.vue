@@ -168,9 +168,13 @@ const submitFileUpload = async () => {
     formData.append('entityId', props.entityId ? String(props.entityId) : null);
     formData.append('otherNeedData', props.otherNeedData ? props.otherNeedData : null);
     await store.dispatch(actions.INC_LOADING);
-    const { data } = await api('parse-file/upload-file', null, null, null, formData);
+    const { ok, result, message } = await api('parse-file/upload-file', null, null, null, formData);
     await store.dispatch(actions.DEC_LOADING);
-    console.log(data);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Файл загружен');
+    } else {
+      root.$emit('msg', 'error', 'Ошибка обработки файла');
+    }
     clearFile();
   } catch (e) {
     // eslint-disable-next-line no-console
