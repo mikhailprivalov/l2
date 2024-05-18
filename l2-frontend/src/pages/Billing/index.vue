@@ -276,6 +276,7 @@ const currentBillingData = ref({
   registryNumber: '',
 });
 
+const datesFilled = computed(() => !!(currentBillingData.value.dateStart && currentBillingData.value.dateEnd));
 const clearBilling = () => {
   currentBillingData.value = { ...billingTemplate.value };
 };
@@ -397,14 +398,8 @@ const createBilling = async () => {
   }
 };
 
-watch(() => currentBillingData.value.dateStart, (newValue, oldValue) => {
-  if ((newValue !== oldValue) && currentBillingData.value.dateEnd) {
-    getPrices();
-  }
-});
-
-watch(() => currentBillingData.value.dateEnd, (newValue, oldValue) => {
-  if ((newValue !== oldValue) && currentBillingData.value.dateStart) {
+watch(() => [currentBillingData.value.dateStart, currentBillingData.value.dateEnd], () => {
+  if (datesFilled.value) {
     getPrices();
   }
 });
