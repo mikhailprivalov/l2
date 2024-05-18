@@ -11,7 +11,7 @@ def form_01(request_data):
     Cтруктура:
     Код по прайсу (internal_code Researches), Услуга (title_researches), следующее поле - любое текстовое название прайса (priceCoasts.coast)
     """
-    price_id = request_data.get("entityId")
+    price_id = request_data.get("entity_id")
     file = request_data.get("file")
     price = PriceName.objects.filter(pk=price_id).first()
     if not price:
