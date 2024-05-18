@@ -18,7 +18,7 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, title_idx, code_idx, coast_idx = '', '', '', ''
+    internal_code_idx, coast_idx = '', '',
     starts = False
     for row in ws.rows:
         cells = [str(x.value) for x in row]
