@@ -980,4 +980,4 @@ def upload_file(request):
         exception_string = f"{e}"
         stdout.write(exception_string)
         return JsonResponse({"ok": False, "result": [], "message": exception_string})
-    return JsonResponse({"ok": True, "result": result, "message": ""})
+    return JsonResponse({"ok": result["ok"], "result": result["result"], "message": result["message"]})
