@@ -147,18 +147,19 @@ def structure_table(data_researches):
             "executeDate": "",
             "summ": sum_patient,
         }
-    patient_data["total"] = {
-        "serialNumber": "",
-        "patientFio": "Итого",
-        "patientBirthDay": "",
-        "tubeNumber": "",
-        "coast": "",
-        "researchTitle": "",
-        "internalId": "",
-        "codeNMU": "",
-        "executeDate": "",
-        "summ": total,
-    }
+    if patient_data:
+        patient_data["total"] = {
+            "serialNumber": "",
+            "patientFio": "Итого",
+            "patientBirthDay": "",
+            "tubeNumber": "",
+            "coast": "",
+            "researchTitle": "",
+            "internalId": "",
+            "codeNMU": "",
+            "executeDate": "",
+            "summ": total,
+        }
 
     table_data = [v for v in patient_data.values()]
     return {"columns": columns, "tableData": table_data}
