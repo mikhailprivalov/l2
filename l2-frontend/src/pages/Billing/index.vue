@@ -365,12 +365,12 @@ const cancelBilling = async () => {
     const apiPoint = 'contracts/cancel-billing';
     await store.dispatch(actions.INC_LOADING);
     const {
-      ok, billingInfo,
+      ok,
     } = await api(apiPoint, { id: selectedBilling.value });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       await getBilling();
-      root.$emit('msg', 'ok', `${billingInfo} Отменен`);
+      root.$emit('msg', 'ok', 'Счёт сброшен');
     } else {
       root.$emit('msg', 'error', 'ошибка');
     }
