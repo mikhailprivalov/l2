@@ -187,6 +187,12 @@
       >
         Cпецификация
       </a>
+      <UploadFileModal
+        title="Загрузить цены"
+        :types-file="['XLSX']"
+        :forms-file="['api.contracts.forms100.form_01']"
+        :entity-id="selectedPrice"
+      />
       <a
         class="a-under a-align r-padding"
         href="#"
@@ -385,10 +391,12 @@ import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import RadioField from '@/fields/RadioField.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'ConstructPrice',
   components: {
+    UploadFileModal,
     RadioField,
     VueTippyTd,
     Treeselect,

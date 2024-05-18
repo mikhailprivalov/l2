@@ -30,7 +30,7 @@ export default function typesAndForms() {
   /* (101.01) - 101 номер файла, 01 - номер функции в файле для обработки загруженного файла (см. parseFile) */
   const fileForms = ref({
     XLSX: {
-      101.01: { id: '101.01', label: '101.01' },
+      'api.contracts.forms100.form_01': { id: 'api.contracts.forms100.form_01', label: 'Загрузка цен по прайсу' },
     },
   });
   // todo - режим UploadResult - получать по расширению файла - только функции связанные с сохранением результата (анализаторы)

@@ -967,7 +967,7 @@ def upload_file(request):
         entity_id = request_data.get("entityId")
         other_need_data = request_data.get("otherNeedData")
         data = {"file": file, "selectedForm": selected_form, "entity_id": entity_id, "other_need_data": other_need_data}
-        function = import_string('api.parse_file.forms' + selected_form[0:3] + '.form_' + selected_form[4:6])
+        function = import_string(selected_form)
         result = function(
             request_data={
                 **data,
