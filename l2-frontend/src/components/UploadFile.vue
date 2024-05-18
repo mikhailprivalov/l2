@@ -122,6 +122,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['uploadSuccess']);
+
 const fileFilter = ref('');
 
 const currentFileTypes = ref<typesFile[]>([]);
@@ -173,6 +175,7 @@ const submitFileUpload = async () => {
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Файл загружен');
+      emit('uploadSuccess');
     } else {
       root.$emit('msg', 'error', message);
     }

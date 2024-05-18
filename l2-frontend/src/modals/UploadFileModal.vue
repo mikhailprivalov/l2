@@ -26,6 +26,7 @@
             :upload-result="props.uploadResult"
             :entity-id="props.entityId"
             :other-need-data="props.otherNeedData"
+            @upload-success="uploadSuccess"
           />
         </div>
       </div>
@@ -80,6 +81,9 @@ const props = defineProps({
     required: false,
   },
 });
+
+const emit = defineEmits(['uploadSuccess']);
+
 const titleLocal = ref('');
 onMounted(() => {
   titleLocal.value = props.title ? props.title : 'Загрузка файла';
@@ -88,6 +92,10 @@ const open = ref(false);
 const openModal = () => {
   open.value = true;
 };
+const uploadSuccess = () => {
+  emit('uploadSuccess');
+};
+
 </script>
 
 <style scoped lang="scss">
