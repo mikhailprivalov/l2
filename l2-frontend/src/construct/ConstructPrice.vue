@@ -187,12 +187,6 @@
       >
         Cпецификация
       </a>
-      <UploadFileModal
-        title="Загрузить цены"
-        :types-file="['XLSX']"
-        :forms-file="['api.contracts.forms100.form_01']"
-        :entity-id="selectedPrice"
-      />
       <a
         class="a-under a-align r-padding"
         href="#"
@@ -207,12 +201,19 @@
       >
         Скопировать
       </a>
-      <a>
+      <a class="float-left">
         <LoadFile
           :is-gen-commercial-offer="true"
           :selected-price="selectedPrice"
         />
       </a>
+      <UploadFileModal
+        class="float-left l-padding"
+        title="Загрузить цены"
+        :types-file="['XLSX']"
+        :forms-file="['api.contracts.forms100.form_01']"
+        :entity-id="selectedPrice"
+      />
     </span>
     <div
       v-if="priceIsSelected"
@@ -759,10 +760,16 @@ export default {
 .r-padding {
   padding-right: 10px;
 }
+.l-padding {
+  padding-left: 10px
+}
 .negative-margin-top {
   margin-top: -20px;
 }
 .height-row {
   height: 37px;
+}
+.float-left {
+  float: left;
 }
 </style>
