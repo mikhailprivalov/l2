@@ -415,7 +415,6 @@ watch(selectedCompany, () => {
   if (selectedCompany.value) {
     selectedBilling.value = null;
     getBillings();
-    getPrices();
   } else {
     selectedBilling.value = null;
   }
