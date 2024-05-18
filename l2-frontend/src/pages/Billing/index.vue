@@ -293,15 +293,21 @@ const getPrices = async () => {
 
 const getBilling = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result, columns, tableData } = await api('contracts/get-billing', {
+  const {
+    ok, result, message, columns, tableData,
+  } = await api('contracts/get-billing', {
     billingId: selectedBilling.value,
     typeCompany: selectedType.value,
   });
   await store.dispatch(actions.DEC_LOADING);
-  currentBillingData.value = result;
-  colTable.value = columns;
-  services.value = tableData;
-  selectedPrice.value = result.priceId;
+  if (ok) {
+    currentBillingData.value = result;
+    colTable.value = columns;
+    services.value = tableData;
+    selectedPrice.value = result.priceId;
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 
 watch(selectedBilling, () => {
@@ -391,6 +397,7 @@ const createBilling = async () => {
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Создано');
+      await getBillings();
       selectedBilling.value = billingInfo;
     } else {
       root.$emit('msg', 'error', 'ошибка');

@@ -12,6 +12,8 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
         hospital_id = company_id
         base = CardBase.objects.filter(internal_type=True).first()
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
+        if not finsource:
+            return {"result": [], "issIds": [], "priceId": "", "message": "Нет источника финансирования 'Договор'"}
         if not is_confirmed:
             sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
         else:
