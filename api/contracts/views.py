@@ -104,8 +104,8 @@ def cancel_billing(request):
                 request.user.doctorprofile,
                 {
                     "billing": {"pk": billing_data.pk, "date_from": str(billing_data.date_from), "registry_number": billing_data.registry_number},
-                    "who_cancel": {"pk": user_who_create.pk, "family": user_who_create.family, "name": user_who_create.name, "patronymic": user_who_create.patronymic}
-                 },
+                    "who_cancel": {"pk": user_who_create.pk, "family": user_who_create.family, "name": user_who_create.name, "patronymic": user_who_create.patronymic},
+                },
             )
             return JsonResponse({"ok": True})
 
