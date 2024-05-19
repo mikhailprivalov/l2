@@ -78,8 +78,8 @@ def confirm_billing(request):
                 request.user.doctorprofile,
                 {
                     "billing": {"pk": billing_data.pk, "date_from": str(billing_data.date_from), "registry_number": billing_data.registry_number},
-                    "who_confirm": {"pk": user_who_create.pk, "family": user_who_create.family, "name": user_who_create.name, "patronymic": user_who_create.patronymic}
-                 }
+                    "who_confirm": {"pk": user_who_create.pk, "family": user_who_create.family, "name": user_who_create.name, "patronymic": user_who_create.patronymic},
+                },
             )
         structure_data = structure_table(data)
         return JsonResponse({"ok": is_confirm_billing and set_billing_id_for_iss and raw_document_pk, **structure_data})
