@@ -9,7 +9,6 @@ from directions.models import Issledovaniya
 from directory.models import Researches
 from laboratory.decorators import group_required
 from slog.models import Log
-from users.models import DoctorProfile
 from utils.response import status_response
 
 
