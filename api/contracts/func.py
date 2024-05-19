@@ -12,6 +12,8 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
         hospital_id = company_id
         base = CardBase.objects.filter(internal_type=True).first()
         finsource = IstochnikiFinansirovaniya.objects.filter(base=base, title__in=["Договор"], hide=False).first()
+        if not finsource:
+            return {"ok": False, "result": [], "issIds": [], "priceId": "", "message": "Нет источника финансирования 'Договор'"}
         if not is_confirmed:
             sql_result = statistics_research_by_hospital_for_external_orders(date_start, date_end, hospital_id, finsource.pk, price_id)
         else:
@@ -20,27 +22,26 @@ def researches_for_billing(type_price, company_id, date_start, date_end, price_i
         research_coast = {coast.research_id: float(coast.coast) for coast in coast_research_price}
     result = {}
     iss_data = set()
-    if sql_result:
-        for i in sql_result:
-            iss_data.add(i.iss_id)
-            current_data = {
-                "research_id": i.research_id,
-                "research_title": i.research_title,
-                "date_confirm": i.date_confirm,
-                "patient_fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
-                "patient_born": i.ru_date_born,
-                "tube_number": i.tube_number,
-                "coast": research_coast.get(i.research_id, 0),
-                "code_nmu": i.code_nmu,
-                "internal_code": i.internal_code,
-                "execute_date": i.date_confirm,
-                "dir_id": i.dir_id,
-            }
-            if not result.get(i.patient_card_num):
-                result[i.patient_card_num] = [current_data.copy()]
-            else:
-                result[i.patient_card_num].append(current_data.copy())
-    return {"result": result, "issIds": list(iss_data), "priceId": price_id}
+    for i in sql_result:
+        iss_data.add(i.iss_id)
+        current_data = {
+            "research_id": i.research_id,
+            "research_title": i.research_title,
+            "date_confirm": i.date_confirm,
+            "patient_fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
+            "patient_born": i.ru_date_born,
+            "tube_number": i.tube_number,
+            "coast": research_coast.get(i.research_id, 0),
+            "code_nmu": i.code_nmu,
+            "internal_code": i.internal_code,
+            "execute_date": i.date_confirm,
+            "dir_id": i.dir_id,
+        }
+        if not result.get(i.patient_card_num):
+            result[i.patient_card_num] = [current_data.copy()]
+        else:
+            result[i.patient_card_num].append(current_data.copy())
+    return {"ok": True, "result": result, "issIds": list(iss_data), "priceId": price_id}
 
 
 def get_confirm_data_for_billing(price_id, billing_id):
@@ -147,18 +148,19 @@ def structure_table(data_researches):
             "executeDate": "",
             "summ": sum_patient,
         }
-    patient_data["total"] = {
-        "serialNumber": "",
-        "patientFio": "Итого",
-        "patientBirthDay": "",
-        "tubeNumber": "",
-        "coast": "",
-        "researchTitle": "",
-        "internalId": "",
-        "codeNMU": "",
-        "executeDate": "",
-        "summ": total,
-    }
+    if patient_data:
+        patient_data["total"] = {
+            "serialNumber": "",
+            "patientFio": "Итого",
+            "patientBirthDay": "",
+            "tubeNumber": "",
+            "coast": "",
+            "researchTitle": "",
+            "internalId": "",
+            "codeNMU": "",
+            "executeDate": "",
+            "summ": total,
+        }
 
     table_data = [v for v in patient_data.values()]
     return {"columns": columns, "tableData": table_data}
