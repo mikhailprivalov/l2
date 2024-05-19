@@ -92,7 +92,7 @@ def cancel_billing(request):
     billing_id = body.get("id")
     billing_data = BillingRegister.objects.filter(pk=billing_id).first()
     if billing_data.is_confirmed:
-        user_who_create: DoctorProfile = request.user.doctorprofile
+        user_who_create = request.user.doctorprofile
         with transaction.atomic():
             billing_data.is_confirmed = False
             billing_data.who_create = user_who_create
