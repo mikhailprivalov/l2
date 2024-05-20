@@ -3319,10 +3319,10 @@ def directions_result_year(request):
 
     for d in confirmed_directions:
         pacs_link = None
-        if d.study_instance_uid_tag and len(DICOM_SERVERS) > 1:
-            pacs_link = check_dicom_study_instance_uid(DICOM_SERVERS, d.study_instance_uid_tag)
-        elif d.study_instance_uid_tag and len(DICOM_SERVERS) <= 1:
-            pacs_link = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={d.study_instance_uid_tag}'
+        if d.study_instance_uid and len(DICOM_SERVERS) > 1:
+            pacs_link = check_dicom_study_instance_uid(DICOM_SERVERS, d.study_instance_uid)
+        elif d.study_instance_uid and len(DICOM_SERVERS) <= 1:
+            pacs_link = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={d.study_instance_uid}'
 
         if d.direction not in directions:
             directions[d.direction] = {
