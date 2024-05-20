@@ -336,7 +336,6 @@ import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
 import { refBook } from '@/construct/ConstructLaboratory.vue';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
-import LabResearchAdditional from '@/modals/LabResearchAdditional.vue';
 
 const store = useStore();
 
@@ -399,8 +398,6 @@ interface researchData {
   laboratoryDuration: string,
   tubes: tubeData[]
 }
-
-const showAdditional = ref(false);
 
 const selectedTubes = ref({
   id: -1,

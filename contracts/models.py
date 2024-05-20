@@ -39,6 +39,7 @@ class PriceName(models.Model):
     subcontract = models.BooleanField(default=False, blank=True, help_text="Прайс субподряд", db_index=True)
     symbol_code = models.CharField(max_length=55, unique=True, blank=True, null=True, default=None, help_text="Код прайса", db_index=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
+    contract_number = models.CharField(max_length=55, blank=True, null=True, default=None, verbose_name="Номер договора", help_text="№00-00/00/2024", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -83,6 +84,7 @@ class PriceName(models.Model):
             "companyTitle": company_title,
             "symbolCode": price.symbol_code,
             "uuid": str(price.uuid),
+            "contractNumber": price.contract_number
         }
         return json_data
 
@@ -365,26 +367,32 @@ class BillingRegister(models.Model):
     info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
     is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
     price = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, default=None, blank=True, null=True, db_index=True)
+    date_from = models.DateField(verbose_name="От", help_text="2024-05-16", default=None, blank=True, null=True, db_index=True)
+    registry_number = models.CharField(max_length=64, verbose_name="Реестр №", help_text="1YYYY", default=None, blank=True, null=True)
 
     def __str__(self):
         return f"{self.company} - {self.date_start} - {self.date_end} - {self.price}"
 
     @staticmethod
-    def update_billing(billing_id, date_start, date_end, info, price_id):
+    def update_billing(billing_id, date_start, date_end, info, price_id, date_from, registry_number):
         current_billing = BillingRegister.objects.filter(id=billing_id).first()
         if current_billing:
             current_billing.date_start = date_start
             current_billing.date_end = date_end
             current_billing.info = info
             current_billing.price_id = price_id
+            current_billing.date_from = date_from
+            current_billing.registry_number = registry_number
             current_billing.save()
             return info
         else:
             return False
 
     @staticmethod
-    def create_billing(company_id, hospital_id, date_start, date_end, info, price_id):
-        current_billing = BillingRegister(hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id)
+    def create_billing(company_id, hospital_id, date_start, date_end, info, price_id, date_from, registry_number):
+        current_billing = BillingRegister(
+            hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id, date_from=date_from, registry_number=registry_number
+        )
         current_billing.save()
         return current_billing.pk
 
@@ -427,6 +435,8 @@ class BillingRegister(models.Model):
             "info": self.info,
             "isConfirmed": self.is_confirmed,
             "priceId": self.price_id,
+            "dateFrom": self.date_from,
+            "registryNumber": self.registry_number,
         }
         return result
 

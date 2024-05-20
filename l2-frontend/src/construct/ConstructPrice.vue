@@ -30,6 +30,8 @@
           <col width="120">
           <col width="120">
           <col width="120">
+          <col width="150">
+          <col width="120">
           <col>
           <col
             v-if="priceIsActive"
@@ -50,7 +52,10 @@
             <th class="text-center">
               <strong>Дата конца</strong>
             </th>
-            <th class="text-center">
+            <th
+              class="text-center"
+              colspan="3"
+            >
               <strong>Компания</strong>
             </th>
             <th v-if="priceIsActive" />
@@ -79,7 +84,9 @@
               :disabled="!priceIsActive"
             >
           </td>
-          <td class="border">
+          <td
+            class="border"
+          >
             <input
               v-model="priceData.end"
               type="date"
@@ -87,7 +94,10 @@
               :disabled="!priceIsActive"
             >
           </td>
-          <td class="border">
+          <td
+            class="border"
+            colspan="3"
+          >
             <Treeselect
               v-model="priceData.company"
               :multiple="false"
@@ -149,9 +159,22 @@
           </td>
           <td
             class="padding-left"
-            :colspan="priceIsActive ? 3 : 2"
+            colspan="2"
           >
             {{ priceData.uuid }}
+          </td>
+          <td class="border text-center">
+            <strong>Договор</strong>
+          </td>
+          <td
+            class="padding-left"
+            :colspan="priceIsActive ? 2 : 1"
+          >
+            <input
+              v-model="priceData.contractNumber"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
           </td>
         </tr>
       </table>
@@ -178,12 +201,20 @@
       >
         Скопировать
       </a>
-      <a>
+      <a class="float-left">
         <LoadFile
           :is-gen-commercial-offer="true"
           :selected-price="selectedPrice"
         />
       </a>
+      <UploadFileModal
+        class="float-left l-padding"
+        title="Загрузить цены"
+        :types-file="['XLSX']"
+        :forms-file="['api.contracts.forms100.form_01']"
+        :entity-id="selectedPrice"
+        @uploadSuccess="getCoastsResearchesInPrice"
+      />
     </span>
     <div
       v-if="priceIsSelected"
@@ -362,10 +393,12 @@ import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import RadioField from '@/fields/RadioField.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'ConstructPrice',
   components: {
+    UploadFileModal,
     RadioField,
     VueTippyTd,
     Treeselect,
@@ -502,6 +535,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
+          contractNumber: this.priceData.contractNumber,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -520,6 +554,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
+          contractNumber: this.priceData.contractNumber,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -533,6 +568,7 @@ export default {
             end: '',
             company: null,
             uuid: '',
+            contractNumber: '',
           };
         } else {
           this.$root.$emit('msg', 'error', message);
@@ -725,10 +761,16 @@ export default {
 .r-padding {
   padding-right: 10px;
 }
+.l-padding {
+  padding-left: 10px
+}
 .negative-margin-top {
   margin-top: -20px;
 }
 .height-row {
   height: 37px;
+}
+.float-left {
+  float: left;
 }
 </style>
