@@ -3325,12 +3325,7 @@ def directions_result_year(request):
             pacs_link = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={d.study_instance_uid}'
 
         if d.direction not in directions:
-            directions[d.direction] = {
-                'dir': d.direction,
-                'date': d.ch_time_confirmation,
-                'researches': [],
-                'pacsLink': pacs_link
-            }
+            directions[d.direction] = {'dir': d.direction, 'date': d.ch_time_confirmation, 'researches': [], 'pacsLink': pacs_link}
 
         directions[d.direction]['researches'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
