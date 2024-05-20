@@ -5,7 +5,7 @@
         <h4
           class="header"
         >
-          Редактирование анализа - {{ researchShortTitle }}
+          Редактирование анализа ({{ research.pk }}) - {{ researchShortTitle }}
         </h4>
       </div>
       <div class="research-detail">
