@@ -174,7 +174,7 @@
             v-if="currentFractionData.title"
             class="fraction-detail"
           >
-            <h6>Фракция - {{ currentFractionData.title }}</h6>
+            <h6>Фракция ({{ currentFractionData.id }}) - {{ currentFractionData.title }}</h6>
             <div class="flex">
               <label for="fractionHide">Скрыто</label>
               <input
