@@ -193,7 +193,11 @@
               :clearable="false"
               :append-to-body="true"
             />
-            <label>Формула</label>
+            <label>Формула <a><i
+              v-tippy
+              class="fa fa-question-circle-o"
+              title="{id анализа | id фракции} +/-/*/ и т.д {id анализа | id фракции}"
+            /></a></label>
             <input
               v-model="currentFractionData.formula"
               class="form-control"
