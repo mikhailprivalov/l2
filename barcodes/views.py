@@ -147,7 +147,11 @@ def tubes(request, direction_implict_id=None):
                         if not ntube:
                             with transaction.atomic():
                                 try:
-                                    generator_pk = TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                                    if tmp2.external_executor_hospital:
+                                        hospital_for_generator_tube = tmp2.external_executor_hospital
+                                    else:
+                                        hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
+                                    generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                                     generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                                     number = generator.get_next_value()
                                 except NoGenerator as e:
@@ -182,7 +186,9 @@ def tubes(request, direction_implict_id=None):
             else:
                 st = "вн.орг"
 
-            if has_microbiology:
+            if tmp2.external_executor_hospital:
+                st = tmp2.external_executor_hospital.acronym_title
+            elif has_microbiology:
                 st = f"{st}=>м.био"
             else:
                 st = f"{st}=>{','.join(set([x.research.get_podrazdeleniye().get_title()[:3] for x in Issledovaniya.objects.filter(tubes__number=tube)]))}".lower()
@@ -219,6 +225,8 @@ def tubes(request, direction_implict_id=None):
                 m = 0.0212
             if tube >= 1000000:
                 m = 0.016
+            if tube >= 10000000000:
+                m = 0.013
             barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
             barcode.drawOn(c, -3 * mm, 4 * mm)
 
