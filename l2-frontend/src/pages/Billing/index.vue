@@ -142,6 +142,7 @@
             >Договор №</span>
             <input
               :disabled="true"
+              :value="currentContractNumber"
               class="form-control input-36"
             >
           </div>
@@ -275,6 +276,7 @@ const currentBillingData = ref({
   registryNumber: '',
 });
 
+const datesFilled = computed(() => !!(currentBillingData.value.dateStart && currentBillingData.value.dateEnd));
 const clearBilling = () => {
   currentBillingData.value = { ...billingTemplate.value };
 };
@@ -291,17 +293,21 @@ const getPrices = async () => {
 
 const getBilling = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result, columns, tableData } = await api('contracts/get-billing', {
+  const {
+    ok, result, message, columns, tableData,
+  } = await api('contracts/get-billing', {
     billingId: selectedBilling.value,
     typeCompany: selectedType.value,
   });
   await store.dispatch(actions.DEC_LOADING);
-  currentBillingData.value = result;
-  colTable.value = columns;
-  services.value = tableData;
-  const { data } = await api('contracts/get-hospital-prices', { ...currentBillingData });
-  prices.value = data;
-  selectedPrice.value = result.priceId;
+  if (ok) {
+    currentBillingData.value = result;
+    colTable.value = columns;
+    services.value = tableData;
+    selectedPrice.value = result.priceId;
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 
 watch(selectedBilling, () => {
@@ -342,12 +348,12 @@ const confirmBilling = async () => {
     const priceId = selectedPrice.value;
     await store.dispatch(actions.INC_LOADING);
     const {
-      ok, billingInfo,
+      ok,
     } = await api(apiPoint, { ...billingData, priceId });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       await getBilling();
-      root.$emit('msg', 'ok', `${billingInfo} сохранен`);
+      root.$emit('msg', 'ok', 'Счёт подтверждён');
     } else {
       root.$emit('msg', 'error', 'ошибка');
     }
@@ -359,12 +365,12 @@ const cancelBilling = async () => {
     const apiPoint = 'contracts/cancel-billing';
     await store.dispatch(actions.INC_LOADING);
     const {
-      ok, billingInfo,
+      ok,
     } = await api(apiPoint, { id: selectedBilling.value });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       await getBilling();
-      root.$emit('msg', 'ok', `${billingInfo} Отменен`);
+      root.$emit('msg', 'ok', 'Счёт сброшен');
     } else {
       root.$emit('msg', 'error', 'ошибка');
     }
@@ -391,6 +397,7 @@ const createBilling = async () => {
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Создано');
+      await getBillings();
       selectedBilling.value = billingInfo;
     } else {
       root.$emit('msg', 'error', 'ошибка');
@@ -398,14 +405,8 @@ const createBilling = async () => {
   }
 };
 
-watch(() => currentBillingData.value.dateStart, (newValue, oldValue) => {
-  if ((newValue !== oldValue) && currentBillingData.value.dateEnd) {
-    getPrices();
-  }
-});
-
-watch(() => currentBillingData.value.dateEnd, (newValue, oldValue) => {
-  if ((newValue !== oldValue) && currentBillingData.value.dateStart) {
+watch(() => [currentBillingData.value.dateStart, currentBillingData.value.dateEnd], () => {
+  if (datesFilled.value) {
     getPrices();
   }
 });
@@ -414,11 +415,25 @@ watch(selectedCompany, () => {
   if (selectedCompany.value) {
     selectedBilling.value = null;
     getBillings();
-    getPrices();
   } else {
     selectedBilling.value = null;
   }
 });
+
+const currentContractNumber = ref('');
+watch(selectedPrice, () => {
+  if (selectedPrice.value) {
+    const currentPrice = prices.value.find((price) => price.id === selectedPrice.value);
+    if (currentPrice) {
+      currentContractNumber.value = currentPrice.contractNumber;
+    } else {
+      currentContractNumber.value = '';
+    }
+  } else {
+    currentContractNumber.value = '';
+  }
+});
+
 const downloadBillingExcel = async () => {
   window.open(`/forms/xlsx?type=101.01&billingId=${selectedBilling.value}`, '_blank');
 };

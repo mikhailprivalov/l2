@@ -1,16 +1,12 @@
 <template>
   <div>
-    <div
-      class="pointer"
-      @click.prevent="openModal"
-    >
-      <slot>
-        <a
-          @click.prevent="openModal"
-        >{{ titleLocal }}
-        </a>
-      </slot>
-    </div>
+    <slot>
+      <a
+        class="pointer"
+        @click.prevent="openModal"
+      >{{ titleLocal }}
+      </a>
+    </slot>
     <Modal
       v-if="open"
       show-footer="true"
@@ -30,6 +26,7 @@
             :upload-result="props.uploadResult"
             :entity-id="props.entityId"
             :other-need-data="props.otherNeedData"
+            @uploadSuccess="uploadSuccess"
           />
         </div>
       </div>
@@ -84,6 +81,9 @@ const props = defineProps({
     required: false,
   },
 });
+
+const emit = defineEmits(['uploadSuccess']);
+
 const titleLocal = ref('');
 onMounted(() => {
   titleLocal.value = props.title ? props.title : 'Загрузка файла';
@@ -92,6 +92,10 @@ const open = ref(false);
 const openModal = () => {
   open.value = true;
 };
+const uploadSuccess = () => {
+  emit('uploadSuccess');
+};
+
 </script>
 
 <style scoped lang="scss">

@@ -122,6 +122,8 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['uploadSuccess']);
+
 const fileFilter = ref('');
 
 const currentFileTypes = ref<typesFile[]>([]);
@@ -153,12 +155,13 @@ watch(selectedType, () => {
 
 const fileInput = ref(null);
 const file = ref(null);
+const fileIsSelected = ref(false);
 const clearFile = () => {
   file.value = null;
   const input = fileInput.value as HTMLInputElement;
   input.value = '';
+  fileIsSelected.value = false;
 };
-const fileIsSelected = ref(false);
 
 const submitFileUpload = async () => {
   try {
@@ -168,9 +171,14 @@ const submitFileUpload = async () => {
     formData.append('entityId', props.entityId ? String(props.entityId) : null);
     formData.append('otherNeedData', props.otherNeedData ? props.otherNeedData : null);
     await store.dispatch(actions.INC_LOADING);
-    const { data } = await api('parse-file/upload-file', null, null, null, formData);
+    const { ok, result, message } = await api('parse-file/upload-file', null, null, null, formData);
     await store.dispatch(actions.DEC_LOADING);
-    console.log(data);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Файл загружен');
+      emit('uploadSuccess');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
     clearFile();
   } catch (e) {
     // eslint-disable-next-line no-console

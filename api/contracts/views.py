@@ -8,6 +8,7 @@ from contracts.models import BillingRegister, RawDocumentBillingRegister, PriceN
 from directions.models import Issledovaniya
 from directory.models import Researches
 from laboratory.decorators import group_required
+from slog.models import Log
 from utils.response import status_response
 
 
@@ -70,6 +71,15 @@ def confirm_billing(request):
             set_billing_id_for_iss = Issledovaniya.save_billing(billing_id, iss_ids)
             data_confirm_billing = get_confirm_data_for_billing(price_id, billing_id)
             raw_document_pk = RawDocumentBillingRegister.create_raw_billing_data(billing_id, data_confirm_billing)
+            Log.log(
+                billing_data.pk,
+                200000,
+                request.user.doctorprofile,
+                {
+                    "billing": {"pk": billing_data.pk, "date_from": str(billing_data.date_from), "registry_number": billing_data.registry_number},
+                    "who_confirm": {"pk": user_who_create.pk, "family": user_who_create.family, "name": user_who_create.name, "patronymic": user_who_create.patronymic},
+                },
+            )
         structure_data = structure_table(data)
         return JsonResponse({"ok": is_confirm_billing and set_billing_id_for_iss and raw_document_pk, **structure_data})
 
@@ -87,6 +97,15 @@ def cancel_billing(request):
             billing_data.who_create = user_who_create
             billing_data.save()
             Issledovaniya.cancel_billing(billing_id)
+            Log.log(
+                billing_data.pk,
+                200001,
+                request.user.doctorprofile,
+                {
+                    "billing": {"pk": billing_data.pk, "date_from": str(billing_data.date_from), "registry_number": billing_data.registry_number},
+                    "who_cancel": {"pk": user_who_create.pk, "family": user_who_create.family, "name": user_who_create.name, "patronymic": user_who_create.patronymic},
+                },
+            )
             return JsonResponse({"ok": True})
 
 
@@ -101,7 +120,7 @@ def get_hospital_prices(request):
         prices_data = []
     else:
         prices = PriceName.get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=True)
-        prices_data = [{"id": i.pk, "label": i.title} for i in prices]
+        prices_data = [{"id": i.pk, "label": i.title, "contractNumber": i.contract_number} for i in prices]
     return JsonResponse({"data": prices_data})
 
 
@@ -131,5 +150,7 @@ def get_billing(request):
     result = BillingRegister.get_billing(billing_id)
     type_price = request_data.get("typeCompany")
     data = researches_for_billing(type_price, result["hospitalId"], result["dateStart"], result["dateEnd"], result["priceId"], result["isConfirmed"], billing_id)
+    if not data["ok"]:
+        return JsonResponse({"ok": data["ok"], "result": [], "message": data["message"]})
     structure_data = structure_table(data)
-    return JsonResponse({"result": result, **structure_data})
+    return JsonResponse({"ok": True, "result": result, "message": "", **structure_data})
