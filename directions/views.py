@@ -511,8 +511,11 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn, "(%s. %s)" % (dir.hospital_address, dir.hospital_phones))
 
     c.setFont('OpenSans', 14)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС") +
-                                                                                            f' в {dir.external_executor_hospital.acronym_title}' if dir.external_executor_hospital else "")
+    c.drawCentredString(
+        w / 2 - w / 4 + (w / 2 * xn),
+        (h / 2 - height - 30) + (h / 2) * yn,
+        "Направление" + ("" if not dir.imported_from_rmis else " из РМИС") + f' в {dir.external_executor_hospital.acronym_title}' if dir.external_executor_hospital else "",
+    )
 
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
