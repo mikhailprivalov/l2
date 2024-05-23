@@ -54,7 +54,7 @@
             <col width="50">
             <col width="80">
             <col width="300">
-            <col width="80">
+            <col width="85">
           </colgroup>
           <tbody>
             <tr>
@@ -112,7 +112,7 @@
                 <a
                   v-if="row.pacsLink"
                   v-tippy="{ placement: 'bottom' }"
-                  :href="`http://${row.pacsLink}`"
+                  :href="row.pacsLink"
                   target="_blank"
                   title="Снимок"
                 ><i class="fa fa-camera" /></a>
