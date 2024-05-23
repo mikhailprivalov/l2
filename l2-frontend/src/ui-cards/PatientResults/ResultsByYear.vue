@@ -53,7 +53,7 @@
           <colgroup>
             <col width="50">
             <col width="80">
-            <col width="300">
+            <col width="295">
             <col width="85">
           </colgroup>
           <tbody>
