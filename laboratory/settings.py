@@ -401,6 +401,7 @@ CPP_TEMPLATE_XML_DIRECTORY = ""
 CDA_TEMPLATE_XML_DIRECTORY = ""
 IDGTL_KEY = ""
 ROUTE_LIST_ROW_HEIGHTS = 25
+OWN_SETUP_TO_SEND_FTP_EXECUTOR = False
 
 
 FCM_CERT_PATH = ""
@@ -474,6 +475,7 @@ if ENV_SECRET_KEY:
 
 if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
+
 
 
 # db = DATABASES.get('default', {})
