@@ -653,6 +653,8 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                 "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                 "info": v.research.paraclinic_info,
                 "hospital_department_replaced_title": v.hospital_department_replaced_title,
+                "nmu_code": v.research.code if v.research.code else "",
+                "internal_code": v.research.internal_code if v.research.internal_code else "",
             }
         )
 
@@ -720,6 +722,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                         + '">'
                         + ("" if one_sl else "№{}: ".format(n))
                         + obj["title"]
+                        + ("" if not dir.external_executor_hospital else f' - {obj["internal_code"]}<br/>НМУ {obj["nmu_code"]}')
                         + ("" if not obj["count"] or obj["count"] == 1 else " ({}шт.)".format(str(obj["count"])))
                         + ("" if not obj["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(obj["comment"]))
                         + "</font>",
