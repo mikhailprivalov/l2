@@ -3658,7 +3658,6 @@ def tubes_register_get(request):
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()
 
-
     return status_response(True, data={'details': get_details})
 
 
