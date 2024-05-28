@@ -83,6 +83,7 @@ class ResearchSite(models.Model):
         (7, "Формы"),
         (10, "Мониторинги"),
         (12, "Случаи"),
+        (14, "Комплексные услуги")
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -404,6 +405,7 @@ class Researches(models.Model):
             15: dict(is_monitoring=True),
             16: dict(is_expertise=True),
             17: dict(is_case=True),
+            18: dict(is_complex=True)
         }
         return ts.get(t + 1, {})
 
@@ -433,6 +435,8 @@ class Researches(models.Model):
             return 2 - Podrazdeleniya.MORFOLOGY
         if self.is_case:
             return -14
+        if self.is_complex:
+            return -18
         return self.podrazdeleniye_id or -2
 
     @property
@@ -445,6 +449,7 @@ class Researches(models.Model):
             or self.is_microbiology
             or self.is_hospital
             or self.is_case
+            or self.is_complex
             or self.is_citology
             or self.is_gistology
             or self.is_form

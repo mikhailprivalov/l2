@@ -17,7 +17,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     APPLICATIONS = 13
     MONITORINGS = 14
     CASE = 16
-    COMPLEX = 17
+    COMPLEX = 18
 
     TYPES = (
         (HIDDEN, "Скрыто"),
