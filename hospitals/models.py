@@ -118,7 +118,6 @@ class Hospitals(models.Model):
         if not query:
             return []
         hospital_query = search_hospitals(hospital_title=query)
-        print(hospital_query)
         return [{"id": d.id, "title": d.title} for d in hospital_query]
 
     @staticmethod
