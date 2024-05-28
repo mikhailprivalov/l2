@@ -177,7 +177,9 @@
               />
             </td>
           </tr>
-          <tr v-if="external_organizations_enabled && canChangeHospitalDirection">
+          <tr
+            v-if="external_organizations_enabled && canChangeHospitalDirection"
+          >
             <th :class="needSelectHospital && 'has-error-message'">
               Внешняя организация:
             </th>
@@ -194,7 +196,7 @@
               />
             </td>
           </tr>
-          <tr v-if="external_organizations_enabled && canChangeHospitalDirection">
+          <tr v-if="external_organizations_enabled && canChangeHospitalDirection && contract_source">
             <th :class="needSelectHospital && 'has-error-message'">
               Прайс (выбрать):
             </th>
@@ -823,8 +825,11 @@ export default {
     pay_source() {
       return this.current_fin.title.toLowerCase().includes('пл');
     },
+    contract_source() {
+      return this.current_fin.title.toLowerCase().includes('дог');
+    },
     needShowPriceCategory() {
-      return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 0 && this.show_additions;
+      return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 1 && this.show_additions;
     },
     needChangeCase() {
       return this.$store.getters.modules.l2_case && this.kk !== 'stationar' && this.kk !== 'cd';

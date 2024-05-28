@@ -3556,7 +3556,11 @@ def tubes_for_get(request):
                 if vrpk not in has_rels:
                     with transaction.atomic():
                         try:
-                            generator_pk = TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                            if direction.external_executor_hospital:
+                                hospital_for_generator_tube = direction.external_executor_hospital
+                            else:
+                                hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
+                            generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                             generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                             number = generator.get_next_value()
                         except NoGenerator as e:
@@ -3641,11 +3645,15 @@ def tubes_register_get(request):
         val = TubesRegistration.objects.get(number=pk)
         issledovanie_in_tube = Issledovaniya.objects.filter(tubes__id=val.pk).first()
         if issledovanie_in_tube:
-            all_issledovania = Issledovaniya.objects.filter(napravleniye_id=issledovanie_in_tube.napravleniye_id)
+            napravleniye_id = issledovanie_in_tube.napravleniye_id
+            all_issledovania = Issledovaniya.objects.filter(napravleniye_id=napravleniye_id)
             for issledovanie in all_issledovania:
                 if len(issledovanie.tubes.all()) == 0:
                     issledovanie.tubes.add(val.pk)
                     issledovanie.save()
+            napravleniye = Napravleniya.objects.filter(pk=napravleniye_id).first()
+            if napravleniye.external_executor_hospital and napravleniye.external_executor_hospital.is_external_performing_organization:
+                napravleniye.need_order_redirection = True
         if not val.doc_get and not val.time_get:
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()

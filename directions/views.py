@@ -511,7 +511,11 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
     c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 15) + (h / 2) * yn, "(%s. %s)" % (dir.hospital_address, dir.hospital_phones))
 
     c.setFont('OpenSans', 14)
-    c.drawCentredString(w / 2 - w / 4 + (w / 2 * xn), (h / 2 - height - 30) + (h / 2) * yn, "Направление" + ("" if not dir.imported_from_rmis else " из РМИС"))
+    c.drawCentredString(
+        w / 2 - w / 4 + (w / 2 * xn),
+        (h / 2 - height - 30) + (h / 2) * yn,
+        "Направление" + ("" if not dir.imported_from_rmis else " из РМИС") + f' в {dir.external_executor_hospital.acronym_title}' if dir.external_executor_hospital else "",
+    )
 
     renderPDF.draw(d, c, w / 2 - width + (w / 2 * xn) - paddingx / 3 - 5 * mm, (h / 2 - height - 57) + (h / 2) * yn)
 
@@ -649,6 +653,8 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                 "g": -1 if not v.research.fractions_set.exists() else v.research.fractions_set.first().relation_id,
                 "info": v.research.paraclinic_info,
                 "hospital_department_replaced_title": v.hospital_department_replaced_title,
+                "nmu_code": v.research.code if v.research.code else "",
+                "internal_code": v.research.internal_code if v.research.internal_code else "",
             }
         )
 
@@ -716,6 +722,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
                         + '">'
                         + ("" if one_sl else "№{}: ".format(n))
                         + obj["title"]
+                        + ("" if not dir.external_executor_hospital else f' - {obj["internal_code"]}<br/>НМУ {obj["nmu_code"]}')
                         + ("" if not obj["count"] or obj["count"] == 1 else " ({}шт.)".format(str(obj["count"])))
                         + ("" if not obj["comment"] else " <font face=\"OpenSans\" size=\"" + str(font_size * 0.8) + "\">[{}]</font>".format(obj["comment"]))
                         + "</font>",
