@@ -21,7 +21,7 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -461,10 +461,18 @@ class FTPConnection:
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
 
-        if direction.istochnik_f.title.lower() in ["договор"]:
-            pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
+        if OWN_SETUP_TO_SEND_FTP_EXECUTOR:
+            prices = PriceName.get_hospital_extrenal_price_by_date(direction.external_executor_hospital, direction.data_sozdaniya, direction.data_sozdaniya)
+            for price in prices:
+                if direction.istochnik_f.title.lower() == "омс" and "омс" in price.title.lower():
+                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
+                if direction.istochnik_f.title.lower() == "договор" and "договор" in price.title.lower():
+                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
         else:
-            pv.PV1.PV1_20.value = "Наличные"
+            if direction.istochnik_f.title.lower() == "договор":
+                pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
+            else:
+                pv.PV1.PV1_20.value = "Наличные"
         pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
         pv.PV1.PV1_46.value = ""
 
@@ -478,9 +486,7 @@ class FTPConnection:
             direction.need_order_redirection = False
             direction.time_send_hl7 = current_time()
             direction.save(update_fields=["time_send_hl7", "need_order_redirection"])
-
             n = 0
-
             for iss in direction.issledovaniya_set.all():
                 n += 1
                 obr = ordd.add_segment("OBR")
