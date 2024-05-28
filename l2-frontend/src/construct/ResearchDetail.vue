@@ -5,7 +5,7 @@
         <h4
           class="header"
         >
-          Редактирование анализа - {{ researchShortTitle }}
+          Редактирование анализа ({{ research.pk }}) - {{ researchShortTitle }}
         </h4>
       </div>
       <div class="research-detail">
@@ -174,7 +174,7 @@
             v-if="currentFractionData.title"
             class="fraction-detail"
           >
-            <h6>Фракция - {{ currentFractionData.title }}</h6>
+            <h6>Фракция ({{ currentFractionData.id }}) - {{ currentFractionData.title }}</h6>
             <div class="flex">
               <label for="fractionHide">Скрыто</label>
               <input
@@ -193,7 +193,11 @@
               :clearable="false"
               :append-to-body="true"
             />
-            <label>Формула</label>
+            <label>Формула <a><i
+              v-tippy
+              class="fa fa-question-circle-o"
+              title="{id анализа | id фракции} +/-/*/ и т.д {id анализа | id фракции}"
+            /></a></label>
             <input
               v-model="currentFractionData.formula"
               class="form-control"
