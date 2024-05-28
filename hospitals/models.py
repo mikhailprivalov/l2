@@ -57,6 +57,7 @@ class Hospitals(models.Model):
     is_auto_transfer_hl7_file = models.BooleanField(default=False, blank=True, help_text='Автоматическая отправка файла в каталог', db_index=True)
     title_stamp_executor = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Исполнителя - клеше")
     title_stamp_customer = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Закачика - клеше")
+    acronym_title = models.CharField(max_length=128, blank=True, default='', help_text="Акроним (Аббревиатура) наименование", db_index=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
