@@ -436,8 +436,9 @@ class Researches(models.Model):
         if self.is_case:
             return -14
         if self.is_complex:
-            # -16 потому что на фронт отдаётся тип 18, 2 - 18 = -16
-            # смотреть researched.filter_type() - выше, и SettingManager.en()
+            # -16 потому что на фронт отдаётся тип подразделения 18, на фронте 2 - 18 = -16
+            # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
+            # тип подразделения Podrazdeleniye.TYPES = 18,
             return -16
         return self.podrazdeleniye_id or -2
 
