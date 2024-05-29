@@ -457,6 +457,7 @@ class FTPConnection:
         field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
         patient.pid.pid_13.value = field_13
         patient.pid.pid_19 = data_indivdual["snils"]
+        patient.pid.pid_18 = f"^^Полис^^{data_indivdual['enp']}"
 
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
