@@ -456,8 +456,8 @@ class FTPConnection:
         byte_email = direction.client.email.encode("utf-8")
         field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
         patient.pid.pid_13.value = field_13
-        patient.pid.pid_19 = data_indivdual["snils"]
         patient.pid.pid_18 = f"^^Полис^^{data_indivdual['enp']}"
+        patient.pid.pid_19 = data_indivdual["snils"]
 
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
@@ -502,7 +502,8 @@ class FTPConnection:
                 obr.obr_34.value = ""
 
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-            content = content.replace("R", "~").replace("\\", "")
+            if not OWN_SETUP_TO_SEND_FTP_EXECUTOR:
+                content = content.replace("R", "~").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
             self.log("Writing file", filename, "\n", content)
