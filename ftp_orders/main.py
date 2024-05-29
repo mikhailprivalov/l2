@@ -680,7 +680,11 @@ def process_push_orders():
                 directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
             for dir_external in directions_external_executor:
                 if dir_external not in directions:
-                    directions.append(dir_external)
+                    tube_data = []
+                    for iss in dir_external.issledovaniya_set.all():
+                        tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
+                    if len(tube_data) > 0:
+                        directions.append(dir_external)
 
             if NEED_RECIEVE_TUBE_TO_PUSH_ORDER:
                 for direction in directions:
