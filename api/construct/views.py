@@ -119,7 +119,7 @@ def get_subgroups_all(request):
 
 @login_required
 @group_required("Конструктор: Настройка организации")
-def get_complex_services(request):
+def get_complexs(request):
     complex_services = Researches.objects.filter(is_complex=True)
     result = [{"id": service.pk, "label": service.title} for service in complex_services]
     return JsonResponse({"result": result})
