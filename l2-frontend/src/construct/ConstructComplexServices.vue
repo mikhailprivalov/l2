@@ -2,8 +2,8 @@
   <div>
     <Treeselect
       v-model="selectedComplex"
-      class="block"
       :options="complexs"
+      class="margin-bottom"
       placeholder="Выберите комплексную услугу"
     />
     <div class="block shadow">
@@ -75,5 +75,8 @@ onMounted(() => {
 }
 .button-row {
   margin-top: 25px;
+}
+.margin-bottom {
+  margin-bottom: 20px;
 }
 </style>
