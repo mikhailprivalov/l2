@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
-from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory
+from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory, ComplexService
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -120,7 +120,24 @@ def get_subgroups_all(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_complexs(request):
-    complex_services = Researches.objects.filter(is_complex=True)
-    result = [{"id": service.pk, "label": service.title} for service in complex_services]
-    return JsonResponse({"result": result})
+    services = Researches.get_complex_services()
+    return JsonResponse({"result": services})
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def check_complex_hidden(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    service = Researches.objects.get(pk=complex_id)
+    return JsonResponse({"result": service.hide})
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def get_service_in_complex(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    services = ComplexService.get_services_in_complex(complex_id)
+    return JsonResponse({"result": services})
 

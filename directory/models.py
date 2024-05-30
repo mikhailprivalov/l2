@@ -755,6 +755,15 @@ class Researches(models.Model):
         result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
         return result
 
+    @staticmethod
+    def get_complex_services(append_hide=True):
+        if append_hide:
+            complexs = Researches.objects.filter(is_complex=True).values_list("pk", "title")
+        else:
+            complexs = Researches.objects.filter(is_complex=True, hide=False).values_list("pk", "title")
+        result = [{"id": complex[0], "label": complex[1]} for complex in complexs]
+        return result
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -848,6 +857,12 @@ class ComplexService(models.Model):
 
     def __str__(self):
         return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
+
+    @staticmethod
+    def get_services_in_complex(complex_id: int):
+        services = ComplexService.objects.filter(main_research_id=complex_id).select_related("slave_research")
+        result = [{"id": service.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
+        return result
 
 
 class ParaclinicInputGroups(models.Model):
