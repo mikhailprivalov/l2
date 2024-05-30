@@ -4,13 +4,12 @@
       v-model="selectedComplex"
       :options="complexs"
       class="margin-bottom"
+      value-format="object"
       placeholder="Выберите комплексную услугу"
     />
-    <div class="block shadow">
+    <div class="block no-padding-block">
       <div class="edit-complex">
-        <div class="edit-complex-title">
-          <input class="form-control nbr">
-        </div>
+        <input class="form-control nbr edit-complex-title left-radius">
         <button
           v-tippy
           class="btn last btn-blue-nb nbr"
@@ -18,7 +17,7 @@
         >
           <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
         </button>
-        <button class="btn btn-blue-nb nbr">
+        <button class="btn btn-blue-nb nbr btn-border-left right-radius">
           {{ selectedComplex ? 'Сохранить' : 'Создать' }}
         </button>
       </div>
@@ -43,7 +42,7 @@
             />
             <td>
               <div class="button">
-                <button class="btn btn-blue-nb btn-flex">
+                <button class="btn btn-blue-nb btn-flex btn-border-left">
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
                 </button>
               </div>
@@ -83,9 +82,10 @@ import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
 
-const selectedComplex = ref(null);
+const selectedComplex = ref({ id: -1, label: 'Комплекс не выбран' });
 const complexs = ref([]);
 const hiddenStatus = ref(false);
+const complexTitle = ref('');
 
 const complexIsHidden = computed(() => hiddenStatus.value);
 
@@ -104,14 +104,14 @@ const servicesInComplex = ref([]);
 
 const getServicesInComplex = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/complex/check-hidden', { complexId: selectedComplex.value });
+  const { result } = await api('construct/complex/check-hidden', { complexId: selectedComplex.value.id });
   await store.dispatch(actions.DEC_LOADING);
   servicesInComplex.value = result;
 };
 
 const checkHidden = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/complex/check-hidden', { complexId: selectedComplex.value });
+  const { result } = await api('construct/complex/check-hidden', { complexId: selectedComplex.value.id });
   await store.dispatch(actions.DEC_LOADING);
   hiddenStatus.value = result;
 };
@@ -120,8 +120,10 @@ watch(selectedComplex, () => {
   if (selectedComplex.value) {
     checkHidden();
     getServicesInComplex();
+    complexTitle.value = selectedComplex.value.label;
   } else {
     servicesInComplex.value = [];
+    complexTitle.value = '';
     hiddenStatus.value = false;
   }
 });
@@ -138,11 +140,15 @@ watch(selectedComplex, () => {
   margin-bottom: 20px;
   padding: 2px;
 }
+.no-padding-block {
+  padding: 0;
+}
 .edit-complex {
   display: flex;
 }
 .edit-complex-title {
   flex-grow: 1;
+  border: 1px solid #ddd;
 }
 .margin-bottom {
   margin-bottom: 20px;
@@ -168,5 +174,15 @@ watch(selectedComplex, () => {
     flex: 1;
     padding: 7px 0;
   }
-
+.btn-border-left {
+  border-left: 1px solid #ddd !important;
+}
+.right-radius {
+  border-bottom-right-radius: 5px !important;
+  border-top-right-radius: 5px !important;
+}
+.left-radius {
+  border-bottom-left-radius: 5px !important;
+  border-top-left-radius: 5px !important;
+}
 </style>
