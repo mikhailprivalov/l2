@@ -502,8 +502,7 @@ class FTPConnection:
                 obr.obr_34.value = ""
 
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-            if not OWN_SETUP_TO_SEND_FTP_EXECUTOR:
-                content = content.replace("R", "~").replace("\\", "")
+            content = content.replace("\R", "").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
             self.log("Writing file", filename, "\n", content)
