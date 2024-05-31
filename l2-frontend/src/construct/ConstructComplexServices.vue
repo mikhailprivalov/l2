@@ -111,7 +111,7 @@
               v-model="selectedService"
               :options="services"
               :disable-branch-nodes="true"
-              :append-to-body="true"
+              class="left-radius"
               placeholder="Выберите услугу..."
             />
           </td>
