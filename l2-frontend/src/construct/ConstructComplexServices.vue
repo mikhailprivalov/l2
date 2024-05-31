@@ -19,7 +19,7 @@
         </colgroup>
         <tr>
           <td>
-            <input class="form-control nbr left-radius complex-title">
+            <input v-model="complexTitle" class="form-control nbr left-radius complex-title">
           </td>
           <td v-if="complexIsSelected">
             <div class="button">
@@ -48,7 +48,7 @@
     </div>
     <div
       v-if="complexIsSelected"
-      class="block shadow"
+      class="block shadow nbr"
     >
       <div class="scroll">
         <table class="table">
@@ -72,7 +72,7 @@
               v-if="!complexIsHidden"
             >
               <div class="button">
-                <button class="btn btn-blue-nb nbr btn-flex">
+                <button class="btn btn-blue-nb nbr btn-flex" v-tippy :title="service.hide ? 'Показать' : 'Скрыть'">
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
                 </button>
               </div>
@@ -283,7 +283,6 @@ onMounted(() => {
 .tr-border {
   border: 1px solid #ddd;
 }
-
 .padding-left {
   padding-left: 12px;
 }
