@@ -439,7 +439,7 @@ class FTPConnection:
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
 
         hl7.msh.msh_3 = direction.hospital.hl7_sender_application if direction.hospital.hl7_sender_application else "L2"
-        hl7.msh.msh_4 = direction.hospital.acronym_title if direction.hospital.acronym_title else "ORDER"
+        hl7.msh.msh_4 = direction.hospital.hl7_sender_org if direction.hospital.hl7_sender_org else "ORDER"
         hl7.msh.msh_5 = "qLIS"
         hl7.msh.msh_6 = "LukaLab"
         hl7.msh.msh_9 = "ORM^O01"
