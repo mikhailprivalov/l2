@@ -7,7 +7,7 @@
       value-format="object"
       placeholder="Выберите комплексную услугу"
     />
-    <div class="block no-padding-block">
+    <div class="block">
       <table class="table left-radius right-radius">
         <colgroup>
           <col>
@@ -62,14 +62,17 @@
           <tr
             v-for="service in servicesInComplex"
             :key="service.id"
+            class="tr-border"
           >
             <VueTippyTd
-              class="research border padding-left"
+              class="padding-left"
               :text="service.label"
             />
-            <td v-if="!complexIsHidden">
+            <td
+              v-if="!complexIsHidden"
+            >
               <div class="button">
-                <button class="btn btn-blue-nb btn-flex btn-border-left">
+                <button class="btn btn-blue-nb nbr btn-flex">
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
                 </button>
               </div>
@@ -88,7 +91,7 @@
     </div>
     <div
       v-if="complexIsSelected && !complexIsHidden"
-      class="block no-padding-block"
+      class="block "
     >
       <table class="table left-radius right-radius">
         <colgroup>
@@ -109,7 +112,7 @@
             <div class="button">
               <button
                 v-tippy
-                class="btn btn-blue-nb nbr btn-flex right-radius bnt-flex-7"
+                class="btn btn-blue-nb nbr btn-flex right-radius"
                 title="Добавить услугу"
                 @click="addService"
               >
@@ -230,10 +233,6 @@ onMounted(() => {
   background-color: #fff;
   border-radius: 5px;
   margin-bottom: 20px;
-  padding: 2px;
-}
-.no-padding-block {
-  padding: 0;
 }
 .edit-complex {
   display: flex;
@@ -280,5 +279,12 @@ onMounted(() => {
 .left-radius {
   border-bottom-left-radius: 5px !important;
   border-top-left-radius: 5px !important;
+}
+.tr-border {
+  border: 1px solid #ddd;
+}
+
+.padding-left {
+  padding-left: 12px;
 }
 </style>
