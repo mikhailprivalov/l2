@@ -294,4 +294,11 @@ onMounted(() => {
 .padding-left {
   padding-left: 12px;
 }
+::v-deep .vue-treeselect__control {
+  border-radius: 5px 0 0 5px !important;
+  border-collapse: unset !important;
+}
+::v-deep .table.table .vue-treeselect__control.table {
+  border-collapse: unset !important;
+}
 </style>
