@@ -211,7 +211,11 @@ class FTPConnection:
 
         snils = pid.PID_19.value
         snils = snils.replace("-", "").replace(" ", "")
-
+        enp = ""
+        if len(pid.PID_18.value) > 1:
+            document_data = pid.PID_18.value.split("^")
+            if document_data[2] == "Полис":
+                enp = document_data[4]
         adds_data = pid.to_er7().split("|")[13].split("~")
 
         phone = adds_data[0] if adds_data[0] else ""
@@ -244,6 +248,7 @@ class FTPConnection:
                     "sex": sex,
                     "birthday": birthday,
                     "snils": snils,
+                    "enp": enp,
                 },
                 self.hospital,
                 patient_id_company,

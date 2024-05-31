@@ -778,6 +778,7 @@ class Individual(models.Model):
         sex = data.get('sex', '').lower().strip()
         birthday = data.get('birthday', '').split(' ')[0]
         snils = data.get('snils', '').split(' ')[0]
+        enp = data.get('enp', '').split(' ')[0]
 
         i = None
         card = None
@@ -835,7 +836,9 @@ class Individual(models.Model):
         if i:
             snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
             document_snils = i.add_or_update_doc(snils_type, '', snils)
-            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils)
+            enp_type = DocumentType.objects.filter(title__startswith="полис омс").first()
+            document_enp = i.add_or_update_doc(enp_type, '', enp)
+            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils, polis=document_enp)
 
         return card
 
