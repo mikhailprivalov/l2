@@ -135,7 +135,7 @@ def check_complex_hidden(request):
 
 @login_required
 @group_required("Конструктор: Настройка организации")
-def get_service_in_complex(request):
+def get_services_in_complex(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
     services = ComplexService.get_services_in_complex(complex_id)

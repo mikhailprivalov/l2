@@ -8,22 +8,43 @@
       placeholder="Выберите комплексную услугу"
     />
     <div class="block no-padding-block">
-      <div class="edit-complex">
-        <input class="form-control nbr edit-complex-title left-radius">
-        <button
-          v-if="!complexIsSelected"
-          v-tippy
-          class="btn last btn-blue-nb nbr"
-          :title="complexIsHidden ? 'Показать': 'Скрыть'"
-        >
-          <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
-        </button>
-        <button
-          class="btn btn-blue-nb nbr btn-border-left right-radius"
-        >
-          {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
-        </button>
-      </div>
+      <table class="table left-radius right-radius">
+        <colgroup>
+          <col>
+          <col
+            v-if="complexIsSelected"
+            width="35"
+          >
+          <col width="100">
+        </colgroup>
+        <tr>
+          <td>
+            <input class="form-control nbr left-radius complex-title">
+          </td>
+          <td v-if="complexIsSelected">
+            <div class="button">
+              <button
+                v-if="complexIsSelected"
+                v-tippy
+                class="btn last btn-blue-nb nbr btn-flex"
+                :title="complexIsHidden ? 'Показать': 'Скрыть'"
+              >
+                <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
+              </button>
+            </div>
+          </td>
+          <td>
+            <div class="button">
+              <button
+                class="btn btn-blue-nb nbr btn-flex right-radius"
+                :class="complexIsSelected ? 'btn-border-left' : '' "
+              >
+                {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
     </div>
     <div
       v-if="complexIsSelected"
@@ -66,10 +87,10 @@
       </div>
     </div>
     <div
-      v-if="selectedComplex"
-      class="block shadow"
+      v-if="complexIsSelected && !complexIsHidden"
+      class="block no-padding-block"
     >
-      <table>
+      <table class="table left-radius right-radius">
         <colgroup>
           <col>
           <col width="100">
@@ -88,7 +109,7 @@
             <div class="button">
               <button
                 v-tippy
-                class="btn last btn-blue-nb nbr"
+                class="btn btn-blue-nb nbr btn-flex right-radius bnt-flex-7"
                 title="Добавить услугу"
               >
                 Добавить
@@ -115,13 +136,13 @@ import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
 
-const selectedComplex = ref({ id: -1, label: 'Комплекс не выбран' });
+const selectedComplex = ref(null);
 const complexs = ref([]);
 const hiddenStatus = ref(false);
 const complexTitle = ref('');
 
 const complexIsHidden = computed(() => hiddenStatus.value);
-const complexIsSelected = computed(() => selectedComplex.value.id !== -1);
+const complexIsSelected = computed(() => selectedComplex.value);
 
 const getComplexs = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -138,7 +159,7 @@ const servicesInComplex = ref([]);
 
 const getServicesInComplex = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/complex/check-hidden', { complexId: selectedComplex.value.id });
+  const { result } = await api('construct/complex/get-services-in-complex', { complexId: selectedComplex.value.id });
   await store.dispatch(actions.DEC_LOADING);
   servicesInComplex.value = result;
 };
@@ -151,7 +172,7 @@ const checkHidden = async () => {
 };
 
 watch(selectedComplex, () => {
-  if (selectedComplex.value) {
+  if (complexIsSelected.value) {
     checkHidden();
     getServicesInComplex();
     complexTitle.value = selectedComplex.value.label;
@@ -159,7 +180,7 @@ watch(selectedComplex, () => {
     servicesInComplex.value = [];
     complexTitle.value = '';
     hiddenStatus.value = false;
-    selectedComplex.value = { id: -1, label: 'Не выбрано' };
+    selectedComplex.value = null;
   }
 });
 
@@ -167,9 +188,9 @@ const services = ref([]);
 const selectedService = ref(null);
 const getServices = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('get-research-list', { complexId: selectedComplex.value.id });
+  const { data } = await api('get-research-list');
   await store.dispatch(actions.DEC_LOADING);
-  services.value = result;
+  services.value = data;
 };
 
 onMounted(() => {
@@ -194,9 +215,12 @@ onMounted(() => {
 .edit-complex {
   display: flex;
 }
-.edit-complex-title {
-  flex-grow: 1;
+.complex-title {
+  padding: 17px 12px;
   border: 1px solid #ddd;
+}
+.complex-title:focus {
+  border: 1px solid #3bafda;
 }
 .margin-bottom {
   margin-bottom: 20px;
@@ -217,11 +241,12 @@ onMounted(() => {
   flex-direction: row;
   justify-content: stretch;
 }
-  .btn-flex {
+.btn-flex {
     align-self: stretch;
     flex: 1;
     padding: 7px 0;
-  }
+}
+
 .btn-border-left {
   border-left: 1px solid #ddd !important;
 }
