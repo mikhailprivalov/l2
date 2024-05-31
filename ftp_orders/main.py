@@ -11,7 +11,6 @@ from sys import stdout
 from urllib.parse import urlparse
 import time
 
-import hl7apy
 from django.db import transaction
 from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
