@@ -172,7 +172,6 @@ class FTPConnection:
         if RegisteredOrders.objects.filter(file_name=file).exists():
             self.error(f"Skipping file {file} because it already exists")
             return
-
         hl7_result, hl7_content = self.read_file_as_hl7(file)
 
         if not hl7_content or not hl7_result:
@@ -212,7 +211,11 @@ class FTPConnection:
 
         snils = pid.PID_19.value
         snils = snils.replace("-", "").replace(" ", "")
-
+        enp = ""
+        if len(pid.PID_18.value) > 1:
+            document_data = pid.PID_18.value.split("^")
+            if document_data[2] == "Полис":
+                enp = document_data[4]
         adds_data = pid.to_er7().split("|")[13].split("~")
 
         phone = adds_data[0] if adds_data[0] else ""
@@ -245,6 +248,7 @@ class FTPConnection:
                     "sex": sex,
                     "birthday": birthday,
                     "snils": snils,
+                    "enp": enp,
                 },
                 self.hospital,
                 patient_id_company,
@@ -438,8 +442,8 @@ class FTPConnection:
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
 
-        hl7.msh.msh_3 = "L2"
-        hl7.msh.msh_4 = "ORDER"
+        hl7.msh.msh_3 = direction.hospital.hl7_sender_application if direction.hospital.hl7_sender_application else "L2"
+        hl7.msh.msh_4 = direction.hospital.hl7_sender_org if direction.hospital.hl7_sender_org else "ORDER"
         hl7.msh.msh_5 = "qLIS"
         hl7.msh.msh_6 = "LukaLab"
         hl7.msh.msh_9 = "ORM^O01"
@@ -454,7 +458,7 @@ class FTPConnection:
         patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
         patient.pid.pid_8 = individual.sex.upper()
         byte_email = direction.client.email.encode("utf-8")
-        field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
+        field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}@@@{base64.b64encode(byte_email).decode('UTF-8')}"
         patient.pid.pid_13.value = field_13
         patient.pid.pid_18 = f"^^Полис^^{data_indivdual['enp']}"
         patient.pid.pid_19 = data_indivdual["snils"]
@@ -502,7 +506,7 @@ class FTPConnection:
                 obr.obr_34.value = ""
 
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-            content = content.replace("\R", "").replace("\\", "")
+            content = content.replace("R", "~").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
             self.log("Writing file", filename, "\n", content)
