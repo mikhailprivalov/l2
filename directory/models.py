@@ -864,6 +864,17 @@ class ComplexService(models.Model):
         result = [{"id": service.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
         return result
 
+    @staticmethod
+    def add_service(complex_id: int, service_id: int):
+        if not complex_id or not service_id:
+            return {"ok": False, "message": "Комплекс или услуга не переданы"}
+        service_exists = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).exists()
+        if service_exists:
+            return {"ok": False, "message": "Услуга уже есть"}
+        complex_service = ComplexService(main_research_id=complex_id, slave_research_id=service_id)
+        complex_service.save()
+        return {"ok": True, "message": ""}
+
 
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")

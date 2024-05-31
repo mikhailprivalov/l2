@@ -111,6 +111,7 @@
                 v-tippy
                 class="btn btn-blue-nb nbr btn-flex right-radius bnt-flex-7"
                 title="Добавить услугу"
+                @click="addService"
               >
                 Добавить
               </button>
@@ -124,7 +125,7 @@
 
 <script setup lang="ts">
 import {
-  computed, onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -135,6 +136,7 @@ import api from '@/api';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
 const selectedComplex = ref(null);
 const complexs = ref([]);
@@ -159,7 +161,7 @@ const servicesInComplex = ref([]);
 
 const getServicesInComplex = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/complex/get-services-in-complex', { complexId: selectedComplex.value.id });
+  const { result } = await api('construct/complex/get-services', { complexId: selectedComplex.value.id });
   await store.dispatch(actions.DEC_LOADING);
   servicesInComplex.value = result;
 };
@@ -191,6 +193,27 @@ const getServices = async () => {
   const { data } = await api('get-research-list');
   await store.dispatch(actions.DEC_LOADING);
   services.value = data;
+};
+
+const addService = async () => {
+  const serviceExists = servicesInComplex.value.find((service) => service.id === selectedService.value);
+  if (!serviceExists) {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('construct/complex/add-service', {
+      complexId: selectedComplex.value.id,
+      serviceId: selectedService.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await getServicesInComplex();
+      selectedService.value = null;
+      root.$emit('msg', 'ok', 'Услуга добавлена');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  } else {
+    root.$emit('msg', 'error', 'Услуга уже добавлена');
+  }
 };
 
 onMounted(() => {

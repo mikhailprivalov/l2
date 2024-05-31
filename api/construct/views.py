@@ -141,3 +141,13 @@ def get_services_in_complex(request):
     services = ComplexService.get_services_in_complex(complex_id)
     return JsonResponse({"result": services})
 
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def add_service_in_complex(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    service_id = request_data.get("serviceId")
+    result = ComplexService.add_service(complex_id, service_id)
+    return status_response(**result)
+
