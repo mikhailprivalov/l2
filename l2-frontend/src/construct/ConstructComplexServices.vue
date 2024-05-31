@@ -19,7 +19,10 @@
         </colgroup>
         <tr>
           <td>
-            <input v-model="complexTitle" class="form-control nbr left-radius complex-title">
+            <input
+              v-model="complexTitle"
+              class="form-control nbr left-radius complex-title"
+            >
           </td>
           <td v-if="complexIsSelected">
             <div class="button">
@@ -72,7 +75,11 @@
               v-if="!complexIsHidden"
             >
               <div class="button">
-                <button class="btn btn-blue-nb nbr btn-flex" v-tippy :title="service.hide ? 'Показать' : 'Скрыть'">
+                <button
+                  v-tippy
+                  class="btn btn-blue-nb nbr btn-flex"
+                  :title="service.hide ? 'Показать' : 'Скрыть'"
+                >
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
                 </button>
               </div>
@@ -114,6 +121,7 @@
                 v-tippy
                 class="btn btn-blue-nb nbr btn-flex right-radius"
                 title="Добавить услугу"
+                :disabled="!selectedService"
                 @click="addService"
               >
                 Добавить
