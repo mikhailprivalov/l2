@@ -456,7 +456,11 @@ class FTPConnection:
         patient.pid.pid_2 = str(direction.client.pk)
         patient.pid.pid_5 = f"{individual.family}^{individual.name}^{individual.patronymic}"
         patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
-        patient.pid.pid_8 = individual.sex.upper()
+        if individual.sex.upper() == "Ж":
+            sex = "F"
+        else:
+            sex = "M"
+        patient.pid.pid_8 = sex
         byte_email = direction.client.email.encode("utf-8")
         field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}@@@{base64.b64encode(byte_email).decode('UTF-8')}"
         patient.pid.pid_13.value = field_13
@@ -506,7 +510,7 @@ class FTPConnection:
                 obr.obr_34.value = ""
 
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-            content = content.replace("R", "~").replace("\\", "")
+            content = content.replace("@", "~").replace("\\", "")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
             self.log("Writing file", filename, "\n", content)
