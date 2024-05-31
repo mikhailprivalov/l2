@@ -11,26 +11,32 @@
       <div class="edit-complex">
         <input class="form-control nbr edit-complex-title left-radius">
         <button
+          v-if="!complexIsSelected"
           v-tippy
           class="btn last btn-blue-nb nbr"
           :title="complexIsHidden ? 'Показать': 'Скрыть'"
         >
           <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
         </button>
-        <button class="btn btn-blue-nb nbr btn-border-left right-radius">
-          {{ selectedComplex ? 'Сохранить' : 'Создать' }}
+        <button
+          class="btn btn-blue-nb nbr btn-border-left right-radius"
+        >
+          {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
         </button>
       </div>
     </div>
     <div
-      v-if="selectedComplex"
+      v-if="complexIsSelected"
       class="block shadow"
     >
       <div class="scroll">
         <table class="table">
           <colgroup>
             <col>
-            <col width="35">
+            <col
+              v-if="!complexIsHidden"
+              width="35"
+            >
           </colgroup>
           <tr
             v-for="service in servicesInComplex"
@@ -40,7 +46,7 @@
               class="research border padding-left"
               :text="service.label"
             />
-            <td>
+            <td v-if="!complexIsHidden">
               <div class="button">
                 <button class="btn btn-blue-nb btn-flex btn-border-left">
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
@@ -63,7 +69,34 @@
       v-if="selectedComplex"
       class="block shadow"
     >
-      <h4>Добавление услуги в комплекс</h4>
+      <table>
+        <colgroup>
+          <col>
+          <col width="100">
+        </colgroup>
+        <tr>
+          <td>
+            <Treeselect
+              v-model="selectedService"
+              :options="services"
+              :disable-branch-nodes="true"
+              :append-to-body="true"
+              placeholder="Выберите услугу..."
+            />
+          </td>
+          <td>
+            <div class="button">
+              <button
+                v-tippy
+                class="btn last btn-blue-nb nbr"
+                title="Добавить услугу"
+              >
+                Добавить
+              </button>
+            </div>
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
 </template>
@@ -88,6 +121,7 @@ const hiddenStatus = ref(false);
 const complexTitle = ref('');
 
 const complexIsHidden = computed(() => hiddenStatus.value);
+const complexIsSelected = computed(() => selectedComplex.value.id !== -1);
 
 const getComplexs = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -125,7 +159,21 @@ watch(selectedComplex, () => {
     servicesInComplex.value = [];
     complexTitle.value = '';
     hiddenStatus.value = false;
+    selectedComplex.value = { id: -1, label: 'Не выбрано' };
   }
+});
+
+const services = ref([]);
+const selectedService = ref(null);
+const getServices = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('get-research-list', { complexId: selectedComplex.value.id });
+  await store.dispatch(actions.DEC_LOADING);
+  services.value = result;
+};
+
+onMounted(() => {
+  getServices();
 });
 
 </script>
