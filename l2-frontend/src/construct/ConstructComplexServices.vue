@@ -58,6 +58,7 @@
           >
             <VueTippyTd
               class="service-padding"
+              :class="service.hide ? 'hide-background' : '' "
               :text="service.label"
             />
             <td
@@ -331,5 +332,9 @@ onMounted(() => {
 }
 ::v-deep .add-treeselect .vue-treeselect__control {
   border-radius: 5px 0 0 5px !important;
+}
+.hide-background {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
 }
 </style>
