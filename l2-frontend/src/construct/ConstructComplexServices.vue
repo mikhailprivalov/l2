@@ -148,6 +148,15 @@ onMounted(() => {
   getComplexs();
 });
 
+const services = ref([]);
+const selectedService = ref(null);
+const getServices = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { data } = await api('get-research-list');
+  await store.dispatch(actions.DEC_LOADING);
+  services.value = data;
+};
+
 const servicesInComplex = ref([]);
 
 const getServicesInComplex = async () => {
@@ -188,6 +197,7 @@ const updateComplex = async () => {
     if (!complexIsSelected.value) {
       selectedComplex.value = { id, label: complexTitle };
     }
+    await getServices();
     root.$emit('msg', 'ok', 'Обновлено');
   } else {
     root.$emit('msg', 'error', 'Ошибка');
@@ -221,15 +231,6 @@ watch(selectedComplex, () => {
     selectedComplex.value = null;
   }
 });
-
-const services = ref([]);
-const selectedService = ref(null);
-const getServices = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { data } = await api('get-research-list');
-  await store.dispatch(actions.DEC_LOADING);
-  services.value = data;
-};
 
 const addService = async () => {
   const serviceExists = servicesInComplex.value.find((service) => service.id === selectedService.value);
