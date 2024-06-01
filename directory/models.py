@@ -83,7 +83,7 @@ class ResearchSite(models.Model):
         (7, "Формы"),
         (10, "Мониторинги"),
         (12, "Случаи"),
-        (14, "Комплексные услуги")
+        (14, "Комплексные услуги"),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
