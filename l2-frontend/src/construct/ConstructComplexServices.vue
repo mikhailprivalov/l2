@@ -8,46 +8,28 @@
       placeholder="Выберите комплексную услугу"
     />
     <div class="block">
-      <table class="table left-radius right-radius">
-        <colgroup>
-          <col>
-          <col
-            v-if="complexIsSelected"
-            width="35"
+      <div class="edit-complex">
+        <input
+          v-model="complexTitle"
+          class="form-control nbr left-radius complex-title"
+        >
+        <button
+          v-if="complexIsSelected"
+          v-tippy
+          class="btn last btn-blue-nb nbr hidden-button"
+          :title="complexIsHidden ? 'Показать': 'Скрыть'"
+        >
+          <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
+        </button>
+        <div class="save-button">
+          <button
+            class="btn btn-blue-nb nbr right-radius save-button-item"
+            :class="complexIsSelected ? 'btn-border-left' : '' "
           >
-          <col width="100">
-        </colgroup>
-        <tr>
-          <td>
-            <input
-              v-model="complexTitle"
-              class="form-control nbr left-radius complex-title"
-            >
-          </td>
-          <td v-if="complexIsSelected">
-            <div class="button">
-              <button
-                v-if="complexIsSelected"
-                v-tippy
-                class="btn last btn-blue-nb nbr btn-flex"
-                :title="complexIsHidden ? 'Показать': 'Скрыть'"
-              >
-                <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
-              </button>
-            </div>
-          </td>
-          <td>
-            <div class="button">
-              <button
-                class="btn btn-blue-nb nbr btn-flex right-radius"
-                :class="complexIsSelected ? 'btn-border-left' : '' "
-              >
-                {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
-              </button>
-            </div>
-          </td>
-        </tr>
-      </table>
+            {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
+          </button>
+        </div>
+      </div>
     </div>
     <div
       v-if="complexIsSelected"
@@ -77,7 +59,7 @@
               <div class="button">
                 <button
                   v-tippy
-                  class="btn btn-blue-nb nbr btn-flex"
+                  class="btn btn-blue-nb nbr hidden-button"
                   :title="service.hide ? 'Показать' : 'Скрыть'"
                 >
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
@@ -116,10 +98,10 @@
             />
           </td>
           <td>
-            <div class="button">
+            <div class="save-button">
               <button
                 v-tippy
-                class="btn btn-blue-nb nbr btn-flex right-radius"
+                class="btn btn-blue-nb nbr save-button-item right-radius"
                 title="Добавить услугу"
                 :disabled="!selectedService"
                 @click="addService"
@@ -248,6 +230,7 @@ onMounted(() => {
 .complex-title {
   padding: 17px 12px;
   border: 1px solid #ddd;
+  flex-grow: 1;
 }
 .complex-title:focus {
   border: 1px solid #3bafda;
@@ -272,9 +255,7 @@ onMounted(() => {
   justify-content: stretch;
 }
 .btn-flex {
-    align-self: stretch;
-    flex: 1;
-    padding: 7px 0;
+  flex: 1;
 }
 
 .btn-border-left {
@@ -294,11 +275,15 @@ onMounted(() => {
 .padding-left {
   padding-left: 12px;
 }
-::v-deep .vue-treeselect__control {
-  border-radius: 5px 0 0 5px !important;
-  border-collapse: unset !important;
+.hidden-button {
+  width: 35px;
 }
-::v-deep .table.table .vue-treeselect__control.table {
-  border-collapse: unset !important;
+.save-button {
+  display: flex;
+  width: 100px;
+}
+.save-button-item {
+  flex: 1;
+  width: 100px;
 }
 </style>
