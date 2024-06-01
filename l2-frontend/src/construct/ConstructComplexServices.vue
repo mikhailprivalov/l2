@@ -87,6 +87,7 @@
           v-model="selectedService"
           :options="services"
           :disable-branch-nodes="true"
+          class="add-treeselect"
           placeholder="Выберите услугу..."
         />
         <div class="flex">
@@ -270,5 +271,8 @@ onMounted(() => {
 .save-button {
   flex: 1;
   width: 100px;
+}
+::v-deep .add-treeselect .vue-treeselect__control {
+  border-radius: 5px 0 0 5px !important;
 }
 </style>
