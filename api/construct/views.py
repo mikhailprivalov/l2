@@ -118,14 +118,14 @@ def get_subgroups_all(request):
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def get_complexs(request):
     services = Researches.get_complex_services()
     return JsonResponse({"result": services})
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def check_complex_hidden(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
@@ -134,7 +134,7 @@ def check_complex_hidden(request):
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def get_services_in_complex(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
@@ -143,7 +143,7 @@ def get_services_in_complex(request):
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def add_service_in_complex(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
@@ -153,7 +153,7 @@ def add_service_in_complex(request):
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def change_complex_hidden(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
@@ -162,7 +162,7 @@ def change_complex_hidden(request):
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def update_complex(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
@@ -172,7 +172,7 @@ def update_complex(request):
 
 
 @login_required
-@group_required("Конструктор: Настройка организации")
+@group_required("Конструктор: Комплексные услуги")
 def change_service_hidden(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")

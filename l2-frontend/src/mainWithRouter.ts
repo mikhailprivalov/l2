@@ -198,7 +198,7 @@ const router = new Router({
       component: () => import('@/construct/ConstructComplexServices.vue'),
       meta: {
         title: 'Комплексные услуги',
-        groups: ['Конструктор: Настройка организации'],
+        groups: ['Конструктор: Комплексные услуги'],
         narrowLayout: true,
       },
     },
