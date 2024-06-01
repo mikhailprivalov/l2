@@ -875,7 +875,6 @@ class ComplexService(models.Model):
                 return {"ok": False, "message": "Нельзя добавить комплекс с комплексами"}
         return {"ok": True, "message": ""}
 
-
     @staticmethod
     def add_service(complex_id: int, service_id: int):
         if not complex_id or not service_id:
