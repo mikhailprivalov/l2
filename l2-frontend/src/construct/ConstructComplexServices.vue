@@ -8,7 +8,7 @@
       placeholder="Выберите комплексную услугу"
     />
     <div class="block">
-      <div class="edit-complex">
+      <div class="flex">
         <input
           v-model="complexTitle"
           class="form-control nbr left-radius complex-title"
@@ -21,9 +21,9 @@
         >
           <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
         </button>
-        <div class="save-button">
+        <div class="flex">
           <button
-            class="btn btn-blue-nb nbr right-radius save-button-item"
+            class="btn btn-blue-nb nbr right-radius save-button"
             :class="complexIsSelected ? 'btn-border-left' : '' "
           >
             {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
@@ -33,7 +33,7 @@
     </div>
     <div
       v-if="complexIsSelected"
-      class="block shadow nbr"
+      class="block nbr"
     >
       <div class="scroll">
         <table class="table">
@@ -80,38 +80,27 @@
     </div>
     <div
       v-if="complexIsSelected && !complexIsHidden"
-      class="block "
+      class="block"
     >
-      <table class="table left-radius right-radius">
-        <colgroup>
-          <col>
-          <col width="100">
-        </colgroup>
-        <tr>
-          <td>
-            <Treeselect
-              v-model="selectedService"
-              :options="services"
-              :disable-branch-nodes="true"
-              class="left-radius"
-              placeholder="Выберите услугу..."
-            />
-          </td>
-          <td>
-            <div class="save-button">
-              <button
-                v-tippy
-                class="btn btn-blue-nb nbr save-button-item right-radius"
-                title="Добавить услугу"
-                :disabled="!selectedService"
-                @click="addService"
-              >
-                Добавить
-              </button>
-            </div>
-          </td>
-        </tr>
-      </table>
+      <div class="flex">
+        <Treeselect
+          v-model="selectedService"
+          :options="services"
+          :disable-branch-nodes="true"
+          placeholder="Выберите услугу..."
+        />
+        <div class="flex">
+          <button
+            v-tippy
+            class="btn btn-blue-nb nbr save-button right-radius"
+            title="Добавить услугу"
+            :disabled="!selectedService"
+            @click="addService"
+          >
+            Добавить
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -224,7 +213,7 @@ onMounted(() => {
   border-radius: 5px;
   margin-bottom: 20px;
 }
-.edit-complex {
+.flex {
   display: flex;
 }
 .complex-title {
@@ -279,10 +268,6 @@ onMounted(() => {
   width: 35px;
 }
 .save-button {
-  display: flex;
-  width: 100px;
-}
-.save-button-item {
   flex: 1;
   width: 100px;
 }
