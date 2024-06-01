@@ -2812,6 +2812,7 @@ def get_research_list(request):
         "Лечение": {"Общие": []},
         "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
         "Стоматология": {"Общие": []},
+        "Комплексные услуги": {"Общие": []},
     }
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
@@ -2836,6 +2837,13 @@ def get_research_list(request):
                 res_list["Стоматология"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
             else:
                 res_list["Стоматология"][research.site_type.title].append({"id": research.pk, "label": research.title})
+        elif research.is_complex:
+            if research.site_type is None:
+                res_list["Комплексные услуги"]["Общие"].append({"id": research.pk, "label": research.title})
+            elif not res_list["Комплексные услуги"].get(research.site_type.title):
+                res_list["Комплексные услуги"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+            else:
+                res_list["Комплексные услуги"][research.site_type.title].append({"id": research.pk, "label": research.title})
         elif research.is_form:
             if research.site_type is None:
                 res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})

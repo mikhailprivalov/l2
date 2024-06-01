@@ -868,6 +868,8 @@ class ComplexService(models.Model):
     def add_service(complex_id: int, service_id: int):
         if not complex_id or not service_id:
             return {"ok": False, "message": "Комплекс или услуга не переданы"}
+        if complex_id == service_id:
+            return {"ok": False, "message": "Нельзя добавить в комплекс этот же комплекс"}
         service_exists = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).exists()
         if service_exists:
             return {"ok": False, "message": "Услуга уже есть"}
