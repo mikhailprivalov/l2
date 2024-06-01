@@ -588,11 +588,7 @@ export default {
           }
         }
       } else if (this.rev_t < -2) {
-        console.log('мы сюда зашли');
-        console.log(this.$store.getters.researches);
-        console.log(this.rev_t);
         for (const row of this.$store.getters.researches[this.rev_t] || []) {
-          console.log(row);
           if (row.site_type === dep || (dep === -1 && !row.site_type)) {
             r.push(row);
           }
