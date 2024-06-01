@@ -405,7 +405,7 @@ class Researches(models.Model):
             15: dict(is_monitoring=True),
             16: dict(is_expertise=True),
             17: dict(is_case=True),
-            18: dict(is_complex=True)
+            18: dict(is_complex=True),
         }
         return ts.get(t + 1, {})
 
