@@ -861,7 +861,7 @@ class ComplexService(models.Model):
     @staticmethod
     def get_services_in_complex(complex_id: int):
         services = ComplexService.objects.filter(main_research_id=complex_id).select_related("slave_research")
-        result = [{"id": service.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
+        result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
         return result
 
     @staticmethod
@@ -894,6 +894,16 @@ class ComplexService(models.Model):
             complex = Researches(title=complex_title, is_complex=True)
         complex.save()
         return {"ok": True, "id": complex.pk}
+
+    @staticmethod
+    def change_service_hidden(complex_id: int, service_id: int):
+        service_in_complex = ComplexService.objects.get(main_research_id=complex_id, slave_research_id=service_id)
+        if service_in_complex.hide:
+            service_in_complex.hide = False
+        else:
+            service_in_complex.hide = True
+        service_in_complex.save()
+        return True
 
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")

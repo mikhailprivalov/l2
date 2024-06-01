@@ -68,6 +68,7 @@
                   v-tippy
                   class="btn btn-blue-nb nbr hidden-button"
                   :title="service.hide ? 'Показать' : 'Скрыть'"
+                  @click="changeServiceHidden(service.id)"
                 >
                   <i :class="service.hide ?'fa fa-eye' : 'fa fa-times'" />
                 </button>
@@ -188,6 +189,21 @@ const updateComplex = async () => {
       selectedComplex.value = { id, label: complexTitle };
     }
     root.$emit('msg', 'ok', 'Обновлено');
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
+const changeServiceHidden = async (serviceId: number) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('construct/complex/change-service-hidden', {
+    complexId: selectedComplex.value.id,
+    serviceId,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getServicesInComplex();
+    root.$emit('msg', 'ok', 'Успешно');
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
