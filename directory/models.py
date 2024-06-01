@@ -909,6 +909,8 @@ class ComplexService(models.Model):
         service_in_complex.save()
         return True
 
+
+class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")
     show_title = models.BooleanField()
     research = models.ForeignKey(Researches, on_delete=models.CASCADE)
