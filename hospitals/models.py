@@ -52,11 +52,13 @@ class Hospitals(models.Model):
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения результатов (ftp://user:password@host.example.com/path)'
     )
     hl7_sender_application = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение отправитель')
+    hl7_sender_org = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 организация отправитель')
     hl7_receiver_appplication = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение получатель')
     hl7_rule_file = models.CharField(max_length=60, null=True, blank=True, default="default.json", help_text="Название ф-ла правил HL7")
     is_auto_transfer_hl7_file = models.BooleanField(default=False, blank=True, help_text='Автоматическая отправка файла в каталог', db_index=True)
     title_stamp_executor = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Исполнителя - клеше")
     title_stamp_customer = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Закачика - клеше")
+    acronym_title = models.CharField(max_length=128, blank=True, default='', help_text="Акроним (Аббревиатура) наименование", db_index=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

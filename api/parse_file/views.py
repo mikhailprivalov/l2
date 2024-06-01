@@ -8,6 +8,7 @@ from copy import deepcopy
 from sys import stdout
 
 from django.http import HttpRequest, JsonResponse
+from django.utils.module_loading import import_string
 
 from api.directions.views import eds_documents
 from api.models import Application
@@ -25,6 +26,7 @@ import directions.models as directions
 from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups, ParaclinicInputField
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
+from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
@@ -661,64 +663,9 @@ def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_fam
     return patient_card
 
 
-def load_price_coasts(price_id: int, file):
-    price = PriceName.objects.filter(pk=price_id).first()
-    if not price:
-        return False
-    wb = load_workbook(filename=file)
-    ws = wb[wb.sheetnames[0]]
-    internal_code_idx, title_idx, code_idx, coast_idx = '', '', '', ''
-    starts = False
-    for row in ws.rows:
-        cells = [str(x.value) for x in row]
-        if not starts:
-            if "Код по прайсу" in cells:
-                internal_code_idx = cells.index("Код по прайсу")
-                title_idx = cells.index("Услуга")
-                code_idx = cells.index("Код ОКМУ")
-                service_cols = [internal_code_idx, title_idx, code_idx]
-                coast_idx = None
-                for idx, cell in enumerate(cells):
-                    if idx in service_cols:
-                        continue
-                    coast_idx = idx
-                price_title = f"{price.title}-{price.symbol_code}"
-                if price_title != cells[coast_idx].strip():
-                    return False
-                starts = True
-        else:
-            internal_code = cells[internal_code_idx].strip()
-            coast = cells[coast_idx].strip()
-            if internal_code == "None" or coast == "None" or coast == "0":
-                continue
-            service = Researches.objects.filter(internal_code=internal_code).first()
-            if not service:
-                continue
-            current_coast = PriceCoast.objects.filter(price_name_id=price.pk, research_id=service.pk).first()
-            if current_coast:
-                if current_coast.coast != coast:
-                    current_coast.coast = coast
-                    current_coast.save()
-            else:
-                new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
-                new_coast.save()
-    return True
-
-
 @login_required
 def load_csv(request):
     file_data = request.FILES["file"]
-    selected_price = request.POST.get('selectedPrice')
-    if selected_price:
-        result = False
-        try:
-            result = load_price_coasts(selected_price, file_data)
-        except:
-            stdout.write('Файл не загружен')
-        if result:
-            return JsonResponse({"ok": True, "results": [], "methods": []})
-        else:
-            return JsonResponse({"ok": False, "results": [], "methods": []})
     file_data = file_data.read().decode("utf-8")
     io_string = io.StringIO(file_data)
 
@@ -953,3 +900,28 @@ def get_parts_fio(fio_data):
     if len(fio_data) > 2:
         patronymic_data = fio_data[2]
     return family_data, name_data, patronymic_data
+
+
+def upload_file(request):
+    # todo - Логирование загрузки файлов
+    try:
+        file = request.FILES["file"]
+        request_data = request.POST
+        selected_form = request_data.get("selectedForm")
+        entity_id = request_data.get("entityId")
+        other_need_data = request_data.get("otherNeedData")
+        data = {"file": file, "selectedForm": selected_form, "entity_id": entity_id, "other_need_data": other_need_data}
+        function = import_string(selected_form)
+        result = function(
+            request_data={
+                **data,
+                "user": request.user,
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            }
+        )
+    except Exception as e:
+        # todo - Выводить структуру файла которая нужна, если передано не-то
+        exception_string = f"{e}"
+        stdout.write(exception_string)
+        return JsonResponse({"ok": False, "result": [], "message": exception_string})
+    return JsonResponse({"ok": result["ok"], "result": result["result"], "message": result["message"]})

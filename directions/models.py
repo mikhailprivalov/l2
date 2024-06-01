@@ -1095,7 +1095,10 @@ class Napravleniya(models.Model):
             pass
         client = Clients.Card.objects.get(pk=client_id)
         if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
-            price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
+            current_hospital = doc.hospital_id
+            if hospital:
+                current_hospital = hospital
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(current_hospital, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
 
         dir = Napravleniya(
@@ -2310,6 +2313,23 @@ class Issledovaniya(models.Model):
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
     plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
+    billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
+
+    @staticmethod
+    def save_billing(billing_id, iss_ids):
+        iss = Issledovaniya.objects.filter(pk__in=iss_ids)
+        for i in iss:
+            i.billing_id = billing_id
+            i.save()
+        return True
+
+    @staticmethod
+    def cancel_billing(billing_id):
+        iss = Issledovaniya.objects.filter(billing_id=billing_id)
+        for i in iss:
+            i.billing_id = None
+            i.save()
+        return True
 
     @property
     def time_save_local(self):
@@ -2372,7 +2392,7 @@ class Issledovaniya(models.Model):
         )
 
     def __str__(self):
-        return f"{self.pk} - {self.napravleniye.pk}-{self.napravleniye.client.get_fio_w_card()}"
+        return f"{self.pk} - {self.napravleniye}"
 
     def is_get_material(self):
         """

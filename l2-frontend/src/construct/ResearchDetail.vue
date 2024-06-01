@@ -4,9 +4,8 @@
       <div class="flex">
         <h4
           class="header"
-          @click="showAdditionalModal"
         >
-          Редактирование анализа - {{ researchShortTitle }}
+          Редактирование анализа ({{ research.pk }}) - {{ researchShortTitle }}
         </h4>
       </div>
       <div class="research-detail">
@@ -22,6 +21,7 @@
               v-tippy="{
                 maxWidth: '50%'
               }"
+              maxlength="255"
               :title="research.title"
               class="form-control"
               placeholder="Введите полное наименование"
@@ -35,6 +35,7 @@
             <input
               id="shortTitle"
               v-model="research.shortTitle"
+              maxlength="255"
               class="form-control"
               placeholder="Введите краткое наименование"
             >
@@ -75,6 +76,7 @@
               <input
                 id="ecpId"
                 v-model="research.ecpId"
+                maxlength="16"
                 class="form-control"
                 placeholder="Введите код"
               >
@@ -87,6 +89,7 @@
               <input
                 id="internalCode"
                 v-model="research.internalCode"
+                maxlength="255"
                 class="form-control"
                 placeholder="Введите код"
               >
@@ -115,6 +118,7 @@
               id="preparation"
               v-model="research.preparation"
               class="form-control"
+              maxlength="2047"
               style="height: 90px"
               rows="4"
               placeholder="Введите подготовку (напр. 'Не требуется')"
@@ -129,6 +133,7 @@
               <input
                 id="laboratoryDuration"
                 v-model="research.laboratoryDuration"
+                maxlength="3"
                 class="form-control"
                 type="number"
               >
@@ -169,7 +174,7 @@
             v-if="currentFractionData.title"
             class="fraction-detail"
           >
-            <h6>Фракция - {{ currentFractionData.title }}</h6>
+            <h6>Фракция ({{ currentFractionData.id }}) - {{ currentFractionData.title }}</h6>
             <div class="flex">
               <label for="fractionHide">Скрыто</label>
               <input
@@ -188,7 +193,11 @@
               :clearable="false"
               :append-to-body="true"
             />
-            <label>Формула</label>
+            <label>Формула <a><i
+              v-tippy
+              class="fa fa-question-circle-o"
+              title="{id анализа | id фракции} +/-/*/ и т.д {id анализа | id фракции}"
+            /></a></label>
             <input
               v-model="currentFractionData.formula"
               class="form-control"
@@ -314,11 +323,6 @@
         </button>
       </div>
     </div>
-    <LabResearchAdditional
-      v-if="showAdditional"
-      :research-id="research.pk"
-      @hideAdditionalModal="hideAdditionalModal"
-    />
   </div>
 </template>
 
@@ -336,7 +340,6 @@ import api from '@/api';
 import FractionsGroup from '@/construct/FractionsGroup.vue';
 import { refBook } from '@/construct/ConstructLaboratory.vue';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
-import LabResearchAdditional from '@/modals/LabResearchAdditional.vue';
 
 const store = useStore();
 
@@ -399,15 +402,6 @@ interface researchData {
   laboratoryDuration: string,
   tubes: tubeData[]
 }
-
-const showAdditional = ref(false);
-
-const hideAdditionalModal = () => {
-  showAdditional.value = false;
-};
-const showAdditionalModal = () => {
-  showAdditional.value = true;
-};
 
 const selectedTubes = ref({
   id: -1,

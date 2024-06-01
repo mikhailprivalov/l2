@@ -2682,17 +2682,20 @@ def update_price(request):
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"]
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"],
+                contract_number=request_data.get("contractNumber")
             )
         elif request_data.get("typePrice") == "Заказчик":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True,
+                contract_number=request_data.get("contractNumber")
             )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True,
+                contract_number=request_data.get("contractNumber")
             )
         if current_price:
             current_price.save()
@@ -2708,9 +2711,10 @@ def update_price(request):
         current_price.symbol_code = request_data["code"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
+        current_price.contract_number = request_data["contractNumber"]
+        if request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
-        else:
+        elif request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price.hospital = hospital
         current_price.save()
@@ -2935,12 +2939,17 @@ def delete_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_companies(request):
+    request_data = json.loads(request.body)
+    if request_data.get('selectedType') == 'Работодатель' or not request_data.get('selectedType'):
+        companies = Company.objects.filter(active_status=True).order_by("title")
+    else:
+        companies = Hospitals.objects.filter(hide=False).order_by('title')
     company_data = [
         {
             "pk": company.pk,
             "title": company.title,
         }
-        for company in Company.objects.filter(active_status=True).order_by("title")
+        for company in companies
     ]
     return JsonResponse({"data": company_data})
 
