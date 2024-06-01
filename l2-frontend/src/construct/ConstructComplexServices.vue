@@ -13,15 +13,21 @@
           v-model="complexTitle"
           class="form-control nbr left-radius complex-title"
         >
-        <button
-          v-if="complexIsSelected"
-          v-tippy
-          class="btn last btn-blue-nb nbr hidden-button"
-          :title="complexIsHidden ? 'Показать': 'Скрыть'"
-        >
-          <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
-        </button>
         <div class="flex">
+          <button
+            v-if="complexIsSelected"
+            v-tippy
+            class="btn last btn-blue-nb nbr hidden-button"
+            :title="complexIsHidden ? 'Показать': 'Скрыть'"
+            @click="changeComplexHidden"
+          >
+            <i :class="complexIsHidden ? 'fa fa-eye' : 'fa fa-times'" />
+          </button>
+        </div>
+        <div
+          v-if="!complexIsHidden"
+          class="flex"
+        >
           <button
             class="btn btn-blue-nb nbr right-radius save-button"
             :class="complexIsSelected ? 'btn-border-left' : '' "
@@ -50,7 +56,7 @@
             class="tr-border"
           >
             <VueTippyTd
-              class="padding-left"
+              class="service-padding"
               :text="service.label"
             />
             <td
@@ -154,6 +160,18 @@ const checkHidden = async () => {
   const { result } = await api('construct/complex/check-hidden', { complexId: selectedComplex.value.id });
   await store.dispatch(actions.DEC_LOADING);
   hiddenStatus.value = result;
+};
+
+const changeComplexHidden = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('construct/complex/change-complex-hidden', { complexId: selectedComplex.value.id });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Успешно');
+    hiddenStatus.value = !hiddenStatus.value;
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
 };
 
 watch(selectedComplex, () => {
@@ -262,11 +280,12 @@ onMounted(() => {
 .tr-border {
   border: 1px solid #ddd;
 }
-.padding-left {
-  padding-left: 12px;
+.service-padding {
+  padding: 6px 0 6px 12px
 }
 .hidden-button {
   width: 35px;
+  padding: 6px;
 }
 .save-button {
   flex: 1;

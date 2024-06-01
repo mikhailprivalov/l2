@@ -151,3 +151,12 @@ def add_service_in_complex(request):
     result = ComplexService.add_service(complex_id, service_id)
     return status_response(**result)
 
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def change_complex_hidden(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    result = ComplexService.change_hidden(complex_id)
+    return status_response(result)
+

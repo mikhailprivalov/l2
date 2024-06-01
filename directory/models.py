@@ -875,6 +875,16 @@ class ComplexService(models.Model):
         complex_service.save()
         return {"ok": True, "message": ""}
 
+    @staticmethod
+    def change_hidden(complex_id: int):
+        complex = Researches.objects.get(pk=complex_id)
+        if complex.hide:
+            complex.hide = False
+        else:
+            complex.hide = True
+        complex.save()
+        return True
+
 
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")
