@@ -34,7 +34,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (APPLICATIONS, "Заявления"),
         (MONITORINGS, "Мониторинги"),
         (CASE, "Случаи"),
-        (COMPLEX, "Комплексные услуги")
+        (COMPLEX, "Комплексные услуги"),
     )
 
     ODII_TYPES = (
