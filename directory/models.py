@@ -876,7 +876,7 @@ class ComplexService(models.Model):
         return {"ok": True, "message": ""}
 
     @staticmethod
-    def change_hidden(complex_id: int):
+    def change_hidden_complex(complex_id: int):
         complex = Researches.objects.get(pk=complex_id)
         if complex.hide:
             complex.hide = False
@@ -885,6 +885,15 @@ class ComplexService(models.Model):
         complex.save()
         return True
 
+    @staticmethod
+    def update_complex(complex_id: int, complex_title: str):
+        if complex_id:
+            complex = Researches.objects.get(pk=complex_id)
+            complex.title = complex_title
+        else:
+            complex = Researches(title=complex_title, is_complex=True)
+        complex.save()
+        return {"ok": True, "id": complex.pk}
 
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")

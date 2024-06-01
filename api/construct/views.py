@@ -157,6 +157,16 @@ def add_service_in_complex(request):
 def change_complex_hidden(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
-    result = ComplexService.change_hidden(complex_id)
+    result = ComplexService.change_hidden_complex(complex_id)
     return status_response(result)
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def update_complex(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    complex_title = request_data.get("complexTitle")
+    result = ComplexService.update_complex(complex_id, complex_title)
+    return JsonResponse({"ok": result["ok"], "id": result["id"]})
 

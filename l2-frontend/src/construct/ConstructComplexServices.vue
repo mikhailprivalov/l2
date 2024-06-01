@@ -31,6 +31,7 @@
           <button
             class="btn btn-blue-nb nbr right-radius save-button"
             :class="complexIsSelected ? 'btn-border-left' : '' "
+            @click="updateComplex"
           >
             {{ complexIsSelected ? 'Сохранить' : 'Создать' }}
           </button>
@@ -169,6 +170,24 @@ const changeComplexHidden = async () => {
   if (ok) {
     root.$emit('msg', 'ok', 'Успешно');
     hiddenStatus.value = !hiddenStatus.value;
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+};
+
+const updateComplex = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, id } = await api('construct/complex/update-complex', {
+    complexId: complexIsSelected.value ? selectedComplex.value.id : null,
+    complexTitle: complexTitle.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getComplexs();
+    if (!complexIsSelected.value) {
+      selectedComplex.value = { id, label: complexTitle };
+    }
+    root.$emit('msg', 'ok', 'Обновлено');
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
