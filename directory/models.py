@@ -865,14 +865,31 @@ class ComplexService(models.Model):
         return result
 
     @staticmethod
+    def check_complex(master_complex_id, slave_complex_services):
+        master_complex_services = ComplexService.objects.filter(main_research_id=master_complex_id).values_list("slave_research_id", flat=True)
+        master_complex_ids = set(master_complex_services)
+        for service in slave_complex_services:
+            if service.slave_research_id in master_complex_ids:
+                return {"ok": False, "message": "В добавляемом комплексе пересекаются услуги"}
+            if service.slave_research.is_complex:
+                return {"ok": False, "message": "Нельзя добавить комплекс с комплексами"}
+        return {"ok": True, "message": ""}
+
+
+    @staticmethod
     def add_service(complex_id: int, service_id: int):
         if not complex_id or not service_id:
             return {"ok": False, "message": "Комплекс или услуга не переданы"}
         if complex_id == service_id:
             return {"ok": False, "message": "Нельзя добавить в комплекс этот же комплекс"}
-        service_exists = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).exists()
-        if service_exists:
+        current_service: ComplexService = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).first()
+        if current_service:
             return {"ok": False, "message": "Услуга уже есть"}
+        slave_complex_service = ComplexService.objects.filter(main_research_id=service_id).select_related('slave_research')
+        if slave_complex_service.exists():
+            check_result = ComplexService.check_complex(complex_id, slave_complex_service)
+            if not check_result["ok"]:
+                return check_result
         complex_service = ComplexService(main_research_id=complex_id, slave_research_id=service_id)
         complex_service.save()
         return {"ok": True, "message": ""}
