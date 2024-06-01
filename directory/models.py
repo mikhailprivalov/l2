@@ -891,6 +891,8 @@ class ComplexService(models.Model):
     def update_complex(complex_id: int, complex_title: str):
         if complex_id:
             complex = Researches.objects.get(pk=complex_id)
+            if complex.hide:
+                return {"ok": False, "id": ""}
             complex.title = complex_title
         else:
             complex = Researches(title=complex_title, is_complex=True)
