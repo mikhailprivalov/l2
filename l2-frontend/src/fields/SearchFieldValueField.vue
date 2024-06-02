@@ -159,7 +159,6 @@ export default {
       if (this.fpk.indexOf('&') > -1) {
         logicalAnd = true;
       }
-      console.log(this.title);
       if (result) {
         this.direction = result.direction;
         if (this.raw || logicalAnd) {
