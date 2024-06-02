@@ -990,10 +990,10 @@ def directions_services(request):
             receive_datetime = None
             for i in (
                 Issledovaniya.objects.filter(napravleniye=n)
-                    .filter(
+                .filter(
                     Q(research__is_paraclinic=True) | Q(research__is_doc_refferal=True) | Q(research__is_microbiology=True) | Q(research__is_citology=True) | Q(research__is_gistology=True)
                 )
-                    .distinct()
+                .distinct()
             ):
                 researches.append(
                     {
@@ -2006,18 +2006,18 @@ def directions_paraclinic_result(request):
     if (
         force
         or diss.filter(
-        Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
-        | Q(research__is_doc_refferal=True)
-        | Q(research__is_paraclinic=True)
-        | Q(research__is_treatment=True)
-        | Q(research__is_gistology=True)
-        | Q(research__is_stom=True)
-        | Q(research__is_microbiology=True)
-        | Q(research__is_form=True)
-        | Q(research__is_monitoring=True)
-        | Q(research__is_expertise=True)
-        | Q(research__is_aux=True)
-    ).exists()
+            Q(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
+            | Q(research__is_doc_refferal=True)
+            | Q(research__is_paraclinic=True)
+            | Q(research__is_treatment=True)
+            | Q(research__is_gistology=True)
+            | Q(research__is_stom=True)
+            | Q(research__is_microbiology=True)
+            | Q(research__is_form=True)
+            | Q(research__is_monitoring=True)
+            | Q(research__is_expertise=True)
+            | Q(research__is_aux=True)
+        ).exists()
         or request.user.is_staff
     ):
         iss = Issledovaniya.objects.get(pk=pk)
@@ -2590,8 +2590,8 @@ def directions_paraclinic_history(request):
             | Q(issledovaniya__doc_confirmation=request.user.doctorprofile)
             | Q(issledovaniya__executor_confirmation=request.user.doctorprofile)
         )
-            .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) | Q(issledovaniya__time_save__range=(date_start, date_end)))
-            .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation")
+        .filter(Q(issledovaniya__time_confirmation__range=(date_start, date_end)) | Q(issledovaniya__time_save__range=(date_start, date_end)))
+        .order_by("-issledovaniya__time_save", "-issledovaniya__time_confirmation")
     ):
         if direction.pk in has_dirs:
             continue
@@ -4439,8 +4439,8 @@ def direction_history(request):
                     180003,
                 ),
             )
-                .distinct()
-                .order_by('time')
+            .distinct()
+            .order_by('time')
         ):
             client_send.append([["title", "{}, {}".format(strdatetime(lg.time), lg.get_type_display())], *[[k, v] for k, v in json.loads(lg.body).items()]])
 
@@ -4523,7 +4523,7 @@ def send_results_to_hospital(request):
     if not directions_ids:
         return status_response(False, "Empty directions ids")
 
-    directions_ids_chunks = [directions_ids[i: i + 20] for i in range(0, len(directions_ids), 20)]
+    directions_ids_chunks = [directions_ids[i : i + 20] for i in range(0, len(directions_ids), 20)]
 
     for directions_ids_chunk in directions_ids_chunks:
         ids_from = directions_ids_chunk[0]
