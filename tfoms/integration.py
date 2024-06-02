@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlencode
 import requests
 
 from appconf.manager import SettingManager
-from tfoms.l2 import check_l2_enp, check_l2_patient
+from tfoms.l2 import check_l2_enp, check_l2_patient, check_l2_snils
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +64,21 @@ def match_enp(enp) -> Optional[dict]:
             return None
         return resp.get('patient_data')
     data = make_request("match-patient-by-enp-set2", {"enp": enp}, timeout=5)
+    if isinstance(data, list) and len(data) > 0:
+        return data[0]
+    return data
+
+
+def match_snils(snils) -> Optional[dict]:
+    logger.exception(f"tfms: match snils: {snils}")
+    if SettingManager.get("l2_patients_is_active", default='f', default_type='b'):
+        logger.exception("l2_patients_is_active")
+        resp = check_l2_snils(snils)
+        logger.exception(f"resp: {resp}")
+        if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('patient_data'):
+            return None
+        return resp.get('patient_data')
+    data = make_request("match-patient-by-snils", {"snils": snils}, timeout=5)
     if isinstance(data, list) and len(data) > 0:
         return data[0]
     return data
