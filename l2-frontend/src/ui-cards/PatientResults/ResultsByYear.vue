@@ -68,7 +68,7 @@
                 <button
                   v-tippy="{ placement: 'bottom' }"
                   class="btn btn-blue-nb btn-xs nbr"
-                  title="Год назад"pacs_study_uid
+                  title="Год назад"
                   @click="minus_year"
                 >
                   <i
