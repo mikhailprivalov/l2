@@ -151,7 +151,7 @@ const complexIsSelected = computed(() => selectedComplex.value);
 
 const getComplexs = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/complex/get-complexs');
+  const { result } = await api('construct/complex/get-complexes');
   await store.dispatch(actions.DEC_LOADING);
   complexs.value = result;
 };

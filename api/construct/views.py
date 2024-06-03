@@ -119,7 +119,7 @@ def get_subgroups_all(request):
 
 @login_required
 @group_required("Конструктор: Комплексные услуги")
-def get_complexs(request):
+def get_complexes(request):
     services = Researches.get_complex_services()
     return JsonResponse({"result": services})
 

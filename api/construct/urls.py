@@ -15,7 +15,7 @@ urlpatterns = [
     path('department/get-subgroups', views.get_subgroups_department),
     path('department/save-subgroups', views.save_subgroups_department),
     path('get-subgroups-all', views.get_subgroups_all),
-    path('complex/get-complexs', views.get_complexs),
+    path('complex/get-complexes', views.get_complexes),
     path('complex/check-hidden', views.check_complex_hidden),
     path('complex/get-services', views.get_services_in_complex),
     path('complex/add-service', views.add_service_in_complex),
