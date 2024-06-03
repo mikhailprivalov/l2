@@ -42,6 +42,15 @@
     </div>
     <div
       v-if="complexIsSelected"
+      class="block"
+    >
+      <input
+        v-model="search"
+        class="form-control left-radius right-radius"
+      >
+    </div>
+    <div
+      v-if="complexIsSelected"
       class="block nbr"
     >
       <div class="scroll">
@@ -54,7 +63,7 @@
             >
           </colgroup>
           <tr
-            v-for="service in servicesInComplex"
+            v-for="service in filteredService"
             :key="service.id"
             class="tr-border"
           >
@@ -79,8 +88,8 @@
             </td>
           </tr>
           <tr
-            v-if="servicesInComplex.length === 0"
-            class="text-center"
+            v-if="filteredService.length === 0"
+            class="text-center empty-list"
           >
             <td>
               Нет данных
@@ -160,7 +169,15 @@ const getServices = async () => {
   services.value = data;
 };
 
-const servicesInComplex = ref([]);
+const search = ref('');
+
+interface serviceInComplex {
+  id: string,
+  label: string,
+  hide: boolean,
+}
+
+const servicesInComplex = ref<serviceInComplex[]>([]);
 
 const getServicesInComplex = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -168,6 +185,12 @@ const getServicesInComplex = async () => {
   await store.dispatch(actions.DEC_LOADING);
   servicesInComplex.value = result;
 };
+
+const filteredService = computed(() => servicesInComplex.value.filter(service => {
+  const serviceTitle = service.label.toLowerCase();
+  const searchTerm = search.value.toLowerCase();
+  return serviceTitle.includes(searchTerm);
+}));
 
 const checkHidden = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -211,7 +234,7 @@ const updateComplex = async () => {
   }
 };
 
-const changeServiceHidden = async (serviceId: number) => {
+const changeServiceHidden = async (serviceId: number | string) => {
   await store.dispatch(actions.INC_LOADING);
   const { ok } = await api('construct/complex/change-service-hidden', {
     complexId: selectedComplex.value.id,
@@ -269,9 +292,6 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-.shadow {
-  box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
-}
 .block {
   background-color: #fff;
   border-radius: 5px;
@@ -345,5 +365,9 @@ onMounted(() => {
 }
 .hide-border {
   border: 0;
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
 }
 </style>
