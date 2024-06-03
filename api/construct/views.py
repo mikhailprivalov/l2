@@ -151,7 +151,7 @@ def add_service_in_complex(request):
     service_id = request_data.get("serviceId")
     result = ComplexService.add_service(complex_id, service_id)
     Log.log(result["result"], 210003, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id})
-    return status_response(**result)
+    return status_response(result["ok"])
 
 
 @login_required

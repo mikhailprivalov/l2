@@ -902,7 +902,7 @@ class ComplexService(models.Model):
         else:
             complex.hide = True
         complex.save()
-        return {"ok": True, "result": complex.hide}
+        return {"ok": True, "hide": complex.hide}
 
     @staticmethod
     def update_complex(complex_id: int, complex_title: str):
@@ -926,7 +926,7 @@ class ComplexService(models.Model):
         else:
             service_in_complex.hide = True
         service_in_complex.save()
-        return {"ok": True, "result": service_in_complex.hide}
+        return {"ok": True, "hide": service_in_complex.hide}
 
 
 class ParaclinicInputGroups(models.Model):
