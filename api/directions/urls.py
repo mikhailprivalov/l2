@@ -9,6 +9,7 @@ urlpatterns = [
     path('rmis-direction', views.directions_rmis_direction),
     path('history', views.directions_history),
     path('result-patient-year', views.directions_result_year),
+    path('get-study-url', views.get_study_url),
     path('result-patient-by-direction', views.results_by_direction),
     path('hosp_set_parent', views.hosp_set_parent),
     path('update_parent', views.update_parent),
