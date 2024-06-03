@@ -758,9 +758,9 @@ class Researches(models.Model):
     @staticmethod
     def get_complex_services(append_hide=True):
         if append_hide:
-            complexs = Researches.objects.filter(is_complex=True).values_list("pk", "title")
+            complexs = Researches.objects.filter(is_complex=True).values_list("pk", "title").order_by("title")
         else:
-            complexs = Researches.objects.filter(is_complex=True, hide=False).values_list("pk", "title")
+            complexs = Researches.objects.filter(is_complex=True, hide=False).values_list("pk", "title").order_by("title")
         result = [{"id": complex[0], "label": complex[1]} for complex in complexs]
         return result
 
