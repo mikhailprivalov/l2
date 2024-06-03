@@ -2806,7 +2806,7 @@ def update_coast_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
-    researches = Researches.objects.all()
+    researches = Researches.objects.all().order_by("title")
     res_list = {
         "Лаборатория": {},
         "Параклиника": {},
