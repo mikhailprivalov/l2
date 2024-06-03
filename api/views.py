@@ -2821,7 +2821,7 @@ def get_research_list(request):
     for research in researches:
         is_hide = ""
         if research.hide:
-            is_hide = "(скрыто)"
+            is_hide = "-(скрыто)"
         research_title = f"{research.title} {is_hide}"
         if research.is_doc_refferal:
             if research.site_type is None:
