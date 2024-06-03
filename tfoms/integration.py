@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlencode
 import requests
 
 from appconf.manager import SettingManager
-from tfoms.l2 import check_l2_enp, check_l2_patient, check_l2_snils
+from tfoms.l2 import check_l2_enp, check_l2_patient
 
 logger = logging.getLogger(__name__)
 

@@ -50,7 +50,7 @@ from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose
-from tfoms.integration import match_enp, match_patient, match_snils, match_patient_by_snils
+from tfoms.integration import match_enp, match_patient, match_patient_by_snils
 from directory.models import DispensaryPlan
 from utils.data_verification import data_parse
 
@@ -123,8 +123,6 @@ def patients_search_card(request):
     c = None
     has_phone_search = False
     inc_archive = form and form.get('archive', False)
-
-    print(p_snils)
 
     if extended_search and form:
         q = {}
