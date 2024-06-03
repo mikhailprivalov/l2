@@ -50,7 +50,7 @@ from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose
-from tfoms.integration import match_enp, match_patient, match_snils
+from tfoms.integration import match_enp, match_patient, match_snils, match_patient_by_snils
 from directory.models import DispensaryPlan
 from utils.data_verification import data_parse
 
@@ -217,7 +217,7 @@ def patients_search_card(request):
         objects = list(Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС'))
     elif p_snils:
         if tfoms_module and not suggests:
-            from_tfoms = match_snils(query)
+            from_tfoms = match_patient_by_snils(query)
             if from_tfoms and isinstance(from_tfoms, dict):
                 Individual.import_from_tfoms(from_tfoms)
 

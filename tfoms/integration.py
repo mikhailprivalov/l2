@@ -69,21 +69,6 @@ def match_enp(enp) -> Optional[dict]:
     return data
 
 
-def match_snils(snils) -> Optional[dict]:
-    logger.exception(f"tfms: match snils: {snils}")
-    if SettingManager.get("l2_patients_is_active", default='f', default_type='b'):
-        logger.exception("l2_patients_is_active")
-        resp = check_l2_snils(snils)
-        logger.exception(f"resp: {resp}")
-        if not isinstance(resp, dict) or not resp.get('ok') or not resp.get('patient_data'):
-            return None
-        return resp.get('patient_data')
-    data = make_request("match-patient-by-snils", {"snils": snils}, timeout=5)
-    if isinstance(data, list) and len(data) > 0:
-        return data[0]
-    return data
-
-
 def get_attachment_by_idt(idt) -> Optional[dict]:
     logger.exception(f"tfms: get_attachment_by_idt: {idt}")
     data = make_request("get-attachment-info-by-idt", {"idt": idt}, timeout=5)
