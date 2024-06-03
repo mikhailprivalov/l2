@@ -3318,17 +3318,25 @@ def directions_result_year(request):
     directions = {}
 
     for d in confirmed_directions:
-        pacs_link = None
-        if d.study_instance_uid and len(DICOM_SERVERS) > 1:
-            pacs_link = check_dicom_study_instance_uid(DICOM_SERVERS, d.study_instance_uid)
-        elif d.study_instance_uid and len(DICOM_SERVERS) <= 1:
-            pacs_link = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={d.study_instance_uid}'
-
+        pacs_study_uid = None
+        if d.study_instance_uid:
+            pacs_study_uid = d.study_instance_uid
         if d.direction not in directions:
-            directions[d.direction] = {'dir': d.direction, 'date': d.ch_time_confirmation, 'researches': [], 'pacsLink': pacs_link}
+            directions[d.direction] = {'dir': d.direction, 'date': d.ch_time_confirmation, 'researches': [], 'pacsStudyUid': pacs_study_uid}
 
         directions[d.direction]['researches'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
+
+
+@login_required
+def get_study_url(request):
+    request_data = json.loads(request.body)
+    study_uid = request_data.get("studyUid")
+    if study_uid and len(DICOM_SERVERS) > 1:
+        study_url = check_dicom_study_instance_uid(DICOM_SERVERS, study_uid)
+    elif study_uid and len(DICOM_SERVERS) <= 1:
+        study_url = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={study_uid}'
+    return JsonResponse({"studyUrl": study_url})
 
 
 @login_required
