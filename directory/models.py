@@ -6,6 +6,7 @@ from jsonfield import JSONField
 from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from slog.models import Log
 from users.models import DoctorProfile, Speciality
 
 
@@ -876,7 +877,7 @@ class ComplexService(models.Model):
         return {"ok": True, "message": ""}
 
     @staticmethod
-    def add_service(complex_id: int, service_id: int):
+    def add_service(complex_id: int, service_id: int, ):
         if not complex_id or not service_id:
             return {"ok": False, "message": "Комплекс или услуга не переданы"}
         if complex_id == service_id:
@@ -891,7 +892,7 @@ class ComplexService(models.Model):
                 return check_result
         complex_service = ComplexService(main_research_id=complex_id, slave_research_id=service_id)
         complex_service.save()
-        return {"ok": True, "message": ""}
+        return {"ok": True, "message": "", "result": complex_service.main_research_id}
 
     @staticmethod
     def change_hidden_complex(complex_id: int):
