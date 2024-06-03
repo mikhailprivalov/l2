@@ -149,7 +149,7 @@ const complexTitle = ref('');
 const complexIsHidden = computed(() => hiddenStatus.value);
 const complexIsSelected = computed(() => selectedComplex.value);
 
-const getComplexs = async () => {
+const getComplexes = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/complex/get-complexes');
   await store.dispatch(actions.DEC_LOADING);
@@ -157,7 +157,7 @@ const getComplexs = async () => {
 };
 
 onMounted(() => {
-  getComplexs();
+  getComplexes();
 });
 
 const services = ref([]);
