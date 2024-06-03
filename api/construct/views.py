@@ -150,9 +150,7 @@ def add_service_in_complex(request):
     complex_id = request_data.get("complexId")
     service_id = request_data.get("serviceId")
     result = ComplexService.add_service(complex_id, service_id)
-    Log.log(result["result"], 210003, request.user.doctorprofile, {"new_complex_data": {
-        "complex_pk": result["result"]
-    }})
+    Log.log(result["result"], 210003, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id})
     return status_response(**result)
 
 
@@ -162,8 +160,8 @@ def change_complex_hidden(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
     result = ComplexService.change_hidden_complex(complex_id)
-    Log.log(complex_id, 210002, request.user.doctorprofile, {"complex_pk": complex_id, "hide": result})
-    return status_response(result)
+    Log.log(complex_id, 210002, request.user.doctorprofile, {"complex_pk": complex_id, "hide": result["hide"]})
+    return status_response(result["ok"])
 
 
 @login_required
@@ -174,9 +172,9 @@ def update_complex(request):
     complex_title = request_data.get("complexTitle")
     result = ComplexService.update_complex(complex_id, complex_title)
     if complex_id:
-        Log.log(complex_id, 210001, request.user.doctorprofile, {"complex_pk": complex_id })
+        Log.log(complex_id, 210001, request.user.doctorprofile, {"complex_pk": complex_id, "old_title": result["old_title"], "new_title": complex_title})
     else:
-        Log.log(result["id"], 210000, request.user.doctorprofile, {"complex_pk": result["id"] })
+        Log.log(result["id"], 210000, request.user.doctorprofile, {"complex_pk": result["id"], "new_title": complex_title})
     return JsonResponse({"ok": result["ok"], "id": result["id"]})
 
 
@@ -187,5 +185,5 @@ def change_service_hidden(request):
     complex_id = request_data.get("complexId")
     service_id = request_data.get("serviceId")
     result = ComplexService.change_service_hidden(complex_id, service_id)
-    Log.log(service_id, 210004, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id})
-    return status_response(result)
+    Log.log(service_id, 210004, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id, "hide": result["hide"]})
+    return status_response(result["ok"])
