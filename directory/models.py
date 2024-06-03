@@ -860,7 +860,7 @@ class ComplexService(models.Model):
 
     @staticmethod
     def get_services_in_complex(complex_id: int):
-        services = ComplexService.objects.filter(main_research_id=complex_id).select_related("slave_research")
+        services = ComplexService.objects.filter(main_research_id=complex_id).select_related("slave_research").order_by("slave_research__title")
         result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
         return result
 

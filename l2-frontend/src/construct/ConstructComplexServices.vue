@@ -220,7 +220,7 @@ const updateComplex = async () => {
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      await getComplexs();
+      await getComplexes();
       if (!complexIsSelected.value) {
         selectedComplex.value = { id, label: complexTitle };
       }
