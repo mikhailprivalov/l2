@@ -87,7 +87,7 @@ def full_patient_search_data(p, query):
                 btday = btday[2] + "-" + btday[1] + "-" + btday[0]
             rmis_req["birthDate"] = btday
     return f, n, p, rmis_req, split
-11
+
 
 @login_required
 def patients_search_card(request):
