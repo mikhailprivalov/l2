@@ -945,7 +945,7 @@
                     v-model="row.operator_enter_param"
                     type="checkbox"
                   > оператор </label>
-                  <label v-show="[2, 14, 28, 34].includes(row.field_type)"><input
+                  <label> <input
                     v-model="row.not_edit"
                     type="checkbox"
                   > только чтение </label>
