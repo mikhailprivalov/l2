@@ -92,7 +92,7 @@
                 :update_value="updateValue(field)"
                 :value="field.value"
                 :values="field.values_to_input"
-                :confirmed="confirmed || userGroups.includes(field.deniedGroup)"
+                :confirmed="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                 :field_type="field.field_type"
                 :field_title="field.title"
               />
@@ -102,7 +102,7 @@
               >
                 <TextFieldWithTemplates
                   v-model="field.value"
-                  :confirmed="confirmed || userGroups.includes(field.deniedGroup)"
+                  :confirmed="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   :field-pk="field.pk"
                   :lines="field.lines"
                 />
@@ -320,7 +320,7 @@
                   :variants="field.values_to_input"
                   :fields="research.groups.reduce((a, b) => a.concat(b.fields), [])"
                   :field-pk="field.pk"
-                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                  :disabled="confirmed || field.not_edit || userGroups.includes(field.deniedGroup)"
                   :card_pk="patient.card_pk"
                   :iss_pk="pk"
                 />
