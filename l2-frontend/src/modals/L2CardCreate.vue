@@ -519,6 +519,7 @@
             <col>
             <col>
             <col>
+            <col>
           </colgroup>
           <thead>
             <tr>
@@ -526,6 +527,7 @@
               <th>Тип документа</th>
               <th>Серия</th>
               <th>Номер</th>
+              <th>Дата выд.</th>
               <th>Действие</th>
               <th />
             </tr>
@@ -553,6 +555,9 @@
               </td>
               <td>
                 {{ d.number }}
+              </td>
+              <td>
+                {{ d.date_start }}
               </td>
               <td>
                 {{ d.is_active ? 'действ.' : 'не действителен' }}
