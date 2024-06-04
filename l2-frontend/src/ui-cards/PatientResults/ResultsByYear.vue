@@ -110,11 +110,11 @@
               </td>
               <td class="right-buttons">
                 <a
-                  v-if="row.pacsLink"
+                  v-if="row.pacsStudyUid"
                   v-tippy="{ placement: 'bottom' }"
-                  :href="row.pacsLink"
-                  target="_blank"
+                  href="#"
                   title="Снимок"
+                  @click.prevent="getStudyUrl(row.pacsStudyUid)"
                 ><i class="fa fa-camera" /></a>
                 <a
                   v-tippy="{ placement: 'bottom' }"
@@ -231,6 +231,10 @@ export default {
     },
     print_result(pk) {
       this.$root.$emit('print:results', [pk]);
+    },
+    async getStudyUrl(studyUid) {
+      const { studyUrl } = await this.$api('directions/get-study-url', { studyUid });
+      window.open(studyUrl, '_blank');
     },
   },
 };
