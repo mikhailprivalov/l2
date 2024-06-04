@@ -602,6 +602,7 @@ class Individual(models.Model):
                 data = {}
         idp = data.get('idp')
         updated_data = []
+
         family = data.get('family', '').title().strip()
         name = data.get('given', '').title().strip()
         patronymic = data.get('patronymic', '').title().strip()
