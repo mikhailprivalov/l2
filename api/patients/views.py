@@ -326,7 +326,7 @@ def patients_search_card(request):
         inc_archive = inc_archive or (len(parts) > 2 and parts[2] == 'true')
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects)
-        
+
         if not has_phone_search and not p_snils and re.match(p3, query):
             cards = cards.filter(number=query)
 
