@@ -87,7 +87,7 @@ def full_patient_search_data(p, query):
                 btday = btday[2] + "-" + btday[1] + "-" + btday[0]
             rmis_req["birthDate"] = btday
     return f, n, p, rmis_req, split
-
+11
 
 @login_required
 def patients_search_card(request):
@@ -216,7 +216,7 @@ def patients_search_card(request):
     elif p_snils:
         if tfoms_module and not suggests:
             from_tfoms = match_patient_by_snils(query)
-            if from_tfoms and isinstance(from_tfoms, dict):
+            if from_tfoms and len(from_tfoms) == 1 and isinstance(from_tfoms[0], dict):
                 Individual.import_from_tfoms(from_tfoms)
 
         objects = list(Individual.objects.filter(document__number=query, document__document_type__title='СНИЛС'))
@@ -326,8 +326,7 @@ def patients_search_card(request):
         inc_archive = inc_archive or (len(parts) > 2 and parts[2] == 'true')
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects)
-
-        if not has_phone_search and re.match(p3, query):
+        if not has_phone_search and not p_snils and re.match(p3, query):
             cards = cards.filter(number=query)
 
     if p_enp and cards:
@@ -345,7 +344,6 @@ def patients_search_card(request):
 
     if not inc_archive:
         cards = cards.filter(is_archive=False)
-
     row: Card
     for row in (
         cards.select_related("individual", "base")
@@ -432,7 +430,6 @@ def patients_search_card(request):
                 "disp_data": disp_data,
             }
         )
-
     return JsonResponse({"results": data})
 
 
