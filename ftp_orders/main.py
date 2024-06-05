@@ -488,7 +488,6 @@ class FTPConnection:
         pv.PV1.PV1_46.value = ""
 
         created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
         hl7.ORM_O01_ORDER.orc.orc_1 = "1"
 
         ordd = hl7.ORM_O01_ORDER.add_group("ORM_O01_ORDER_DETAIL")
