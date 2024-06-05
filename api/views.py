@@ -2807,7 +2807,7 @@ def update_coast_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
-    researches = Researches.objects.all()
+    researches = Researches.objects.all().order_by("title")
     res_list = {
         "Лаборатория": {},
         "Параклиника": {},
@@ -2823,7 +2823,7 @@ def get_research_list(request):
     for research in researches:
         is_hide = ""
         if research.hide:
-            is_hide = "-(скрыто)"
+            is_hide = "- (скрыто)"
         research_title = f"{research.title} {is_hide}"
         if research.is_doc_refferal:
             if research.site_type is None:
