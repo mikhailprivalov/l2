@@ -50,7 +50,7 @@ from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
 from slog.models import Log
 from statistics_tickets.models import VisitPurpose
-from tfoms.integration import match_enp, match_patient
+from tfoms.integration import match_enp, match_patient, match_patient_by_snils
 from directory.models import DispensaryPlan
 from utils.data_verification import data_parse
 
@@ -111,6 +111,8 @@ def patients_search_card(request):
     p3 = re.compile(r'^[0-9]{1,15}$')
     p_enp_re = re.compile(r'^[0-9]{16}$')
     p_enp = bool(re.search(p_enp_re, query))
+    p_snils_re = re.compile(r'^[0-9]{11}$')
+    p_snils = bool(re.search(p_snils_re, query))
     p4 = re.compile(r'card_pk:\d+(:(true|false))?', flags=re.IGNORECASE)
     p4i = bool(re.search(p4, query.lower()))
     p5 = re.compile(r'phone:.+')
@@ -211,6 +213,13 @@ def patients_search_card(request):
                 Individual.import_from_tfoms(from_tfoms)
 
         objects = list(Individual.objects.filter(document__number=query, document__document_type__title='Полис ОМС'))
+    elif p_snils:
+        if tfoms_module and not suggests:
+            from_tfoms = match_patient_by_snils(query)
+            if from_tfoms and len(from_tfoms) == 1 and isinstance(from_tfoms[0], dict):
+                Individual.import_from_tfoms(from_tfoms)
+
+        objects = list(Individual.objects.filter(document__number=query, document__document_type__title='СНИЛС'))
     elif not p4i:
         if inc_tfoms:
             t_parts = re.search(p_tfoms, query.lower()).groups()
@@ -318,7 +327,7 @@ def patients_search_card(request):
     else:
         cards = Card.objects.filter(base=card_type, individual__in=objects)
 
-        if not has_phone_search and re.match(p3, query):
+        if not has_phone_search and not p_snils and re.match(p3, query):
             cards = cards.filter(number=query)
 
     if p_enp and cards:
@@ -336,7 +345,6 @@ def patients_search_card(request):
 
     if not inc_archive:
         cards = cards.filter(is_archive=False)
-
     row: Card
     for row in (
         cards.select_related("individual", "base")
@@ -423,7 +431,6 @@ def patients_search_card(request):
                 "disp_data": disp_data,
             }
         )
-
     return JsonResponse({"results": data})
 
 
