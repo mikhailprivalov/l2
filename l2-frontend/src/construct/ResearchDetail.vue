@@ -501,19 +501,40 @@ watch(() => [props.research.pk, props.research.tubes], () => {
   }
 }, { immediate: true });
 
+const validateResearch = () => {
+  const titleFilled = research.value.title;
+  const departmentFilled = research.value.departmentId && research.value.departmentId !== -1;
+  const tubesFilled = research.value.tubes.length > 0;
+  if (!titleFilled) {
+    return { ok: false, message: 'Не заполнено название' };
+  }
+  if (!departmentFilled) {
+    return { ok: false, message: 'Не выбрано подразделение' };
+  }
+  if (!tubesFilled) {
+    return { ok: false, message: 'Не выбрана пробирка' };
+  }
+  return { ok: true, message: '' };
+};
+
 const updateResearch = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, pk } = await api('construct/laboratory/update-research', { research: research.value });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    if (pk) {
-      research.value.pk = pk;
+  const researchValidate = validateResearch();
+  if (researchValidate.ok) {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, pk } = await api('construct/laboratory/update-research', { research: research.value });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      if (pk) {
+        research.value.pk = pk;
+      }
+      root.$emit('msg', 'ok', 'Обновлено');
+      await getResearch();
+      emit('updateResearch');
+    } else {
+      root.$emit('msg', 'error', 'Ошибка');
     }
-    root.$emit('msg', 'ok', 'Обновлено');
-    await getResearch();
-    emit('updateResearch');
   } else {
-    root.$emit('msg', 'error', 'Ошибка');
+    root.$emit('msg', 'error', researchValidate.message);
   }
 };
 
