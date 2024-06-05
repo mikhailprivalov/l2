@@ -84,7 +84,7 @@
     "vuex": "^3.6.2"
   },
   "devDependencies": {
-    "@types/jquery": "^3.5.27",
+    "@types/jquery": "^3.5.30",
     "@types/lodash": "^4.14.194",
     "@types/pdfobject": "^2.2.3",
     "@types/promise.prototype.finally": "^2.0.4",
