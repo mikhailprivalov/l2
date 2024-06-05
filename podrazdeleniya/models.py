@@ -17,6 +17,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     APPLICATIONS = 13
     MONITORINGS = 14
     CASE = 16
+    COMPLEX = 18
 
     TYPES = (
         (HIDDEN, "Скрыто"),
@@ -33,6 +34,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         (APPLICATIONS, "Заявления"),
         (MONITORINGS, "Мониторинги"),
         (CASE, "Случаи"),
+        (COMPLEX, "Комплексные услуги"),
     )
 
     ODII_TYPES = (

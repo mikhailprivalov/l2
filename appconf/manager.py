@@ -227,6 +227,7 @@ class SettingManager:
                 13: SettingManager.l2("applications"),
                 14: SettingManager.l2("monitorings"),
                 16: SettingManager.l2("case"),
+                18: SettingManager.l2("complex"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
