@@ -487,6 +487,7 @@ def researches_update(request):
                     is_monitoring=department_pk == -12,
                     is_expertise=department_pk == -13,
                     is_case=department_pk == -14,
+                    is_complex=department_pk == -16,
                     is_slave_hospital=stationar_slave,
                     microbiology_tube_id=tube if department_pk == -6 else None,
                     site_type_id=site_type,
@@ -531,6 +532,7 @@ def researches_update(request):
                 res.is_monitoring = department_pk == -12
                 res.is_expertise = department_pk == -13
                 res.is_case = department_pk == -14
+                res.is_complex = department_pk == -16
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide

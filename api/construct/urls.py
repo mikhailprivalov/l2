@@ -15,4 +15,11 @@ urlpatterns = [
     path('department/get-subgroups', views.get_subgroups_department),
     path('department/save-subgroups', views.save_subgroups_department),
     path('get-subgroups-all', views.get_subgroups_all),
+    path('complex/get-complexes', views.get_complexes),
+    path('complex/check-hidden', views.check_complex_hidden),
+    path('complex/get-services', views.get_services_in_complex),
+    path('complex/add-service', views.add_service_in_complex),
+    path('complex/change-complex-hidden', views.change_complex_hidden),
+    path('complex/update-complex', views.update_complex),
+    path('complex/change-service-hidden', views.change_service_hidden),
 ]

@@ -2131,6 +2131,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
         {"url": "/ui/construct/route-perform-service", "title": "Маршрут исследований", "access": ["Конструктор: Маршрут исследований"], "module": None},
+        {"url": "/ui/construct/complex-services", "title": "Комплексные услуги", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2806,7 +2807,7 @@ def update_coast_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
-    researches = Researches.objects.all()
+    researches = Researches.objects.all().order_by("title")
     res_list = {
         "Лаборатория": {},
         "Параклиника": {},
@@ -2815,13 +2816,14 @@ def get_research_list(request):
         "Лечение": {"Общие": []},
         "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
         "Стоматология": {"Общие": []},
+        "Комплексные услуги": {"Общие": []},
     }
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
         is_hide = ""
         if research.hide:
-            is_hide = "-(скрыто)"
+            is_hide = "- (скрыто)"
         research_title = f"{research.title} {is_hide}"
         if research.is_doc_refferal:
             if research.site_type is None:
@@ -2843,6 +2845,13 @@ def get_research_list(request):
                 res_list["Стоматология"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
             else:
                 res_list["Стоматология"][research.site_type.title].append({"id": research.pk, "label": research_title})
+        elif research.is_complex:
+            if research.site_type is None:
+                res_list["Комплексные услуги"]["Общие"].append({"id": research.pk, "label": research_title})
+            elif not res_list["Комплексные услуги"].get(research.site_type.title):
+                res_list["Комплексные услуги"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
+            else:
+                res_list["Комплексные услуги"][research.site_type.title].append({"id": research.pk, "label": research_title})
         elif research.is_form:
             if research.site_type is None:
                 res_list["Формы"]["Общие"].append({"id": research.pk, "label": research_title})
