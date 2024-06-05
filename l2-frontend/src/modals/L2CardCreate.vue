@@ -547,6 +547,16 @@
               </td>
               <td>
                 {{ d.type_title }}
+                <a v-if="d.date_start">
+                  <i
+                    v-tippy="{
+                      interactive: true,
+                      trigger: 'click'
+                    }"
+                    class="fa fa-question-circle-o"
+                    :title="`Дата выдачи: ${d.date_start.split('-').reverse().join('.')}`"
+                  />
+                </a>
               </td>
               <td>
                 {{ d.serial }}

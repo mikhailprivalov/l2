@@ -226,6 +226,8 @@ const addFraction = () => {
       order: minMaxOrder.value.max + 1, tubeIdx: props.tubeidx,
     };
     emit('addFraction', newFraction);
+  } else {
+    root.$emit('msg', 'error', 'Есть пустые фракции');
   }
 };
 </script>
