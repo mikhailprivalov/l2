@@ -154,7 +154,7 @@ const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
   } if (selectedType.value) {
-    return selectedTypeLabel;
+    return selectedTypeLabel.value;
   }
   return '--:--\n--:--';
 });
