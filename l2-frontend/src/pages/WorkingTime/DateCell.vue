@@ -12,7 +12,7 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      class="transparentButton current-time-width"
+      class="transparentButton current-time-wh"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
       <p class="current-time-text">{{ currentTime }}</p>
@@ -37,7 +37,7 @@
           :key="variant.id"
           class="variant"
           :class="activeVariant === variant.id && 'active'"
-          @click="selectVariant(variant.id)"
+          @click="selectVariant(variant.id, variant.startWork, variant.endWork)"
         >
           {{ `${variant.startWork}-${variant.endWork}` }}
         </div>
@@ -68,6 +68,12 @@
           <i class="fa-solid fa-save" />
         </button>
       </div>
+      <div class="tp-row">
+        <RadioFieldById
+          v-model="selectedType"
+          :variants="typesWork"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +83,8 @@ import {
   computed,
   getCurrentInstance, ref, watch,
 } from 'vue';
+
+import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 const emit = defineEmits(['changeWorkTime']);
 const props = defineProps({
@@ -97,6 +105,9 @@ const props = defineProps({
 
 const root = getCurrentInstance().proxy.$root;
 
+const startWork = ref(null);
+const endWork = ref(null);
+
 const activeVariant = ref(null);
 const workTimeVariants = ref([
   { id: 1, startWork: '08:00', endWork: '16:30' },
@@ -105,17 +116,27 @@ const workTimeVariants = ref([
   { id: 4, startWork: '19:48', endWork: '21:00' },
   { id: 5, startWork: '14:48', endWork: '16:00' },
 ]);
+const selectedType = ref(null);
+const typesWork = ref([
+  { id: 1, label: 'А' },
+  { id: 2, label: 'Б' },
+  { id: 3, label: 'В' },
+  { id: 4, label: 'Г' },
+  { id: 5, label: 'Д' },
+  { id: 6, label: 'Е' },
+]);
 
-const selectVariant = (variantId) => {
+const selectVariant = (variantId: number, start: string, end: string) => {
   activeVariant.value = variantId;
+  startWork.value = start;
+  endWork.value = end;
 };
-
-const startWork = ref(null);
-const endWork = ref(null);
 
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
+  } if (selectedType.value) {
+    return typesWork.value.find((type) => type.id === selectedType.value).label;
   }
   return '--:--\n--:--';
 });
@@ -144,6 +165,7 @@ const copyPrevTime = () => {
 watch(() => props.workTime, () => {
   appendCurrentTime();
 }, { immediate: true });
+
 </script>
 
 <style scoped lang="scss">
@@ -180,13 +202,14 @@ button[disabled] {
   margin-top: 24px;
 }
 .tp {
-  height: 120px;
+  height: 150px;
   width: 254px;
 }
 
 .tp-row {
   display: flex;
   flex-wrap: wrap;
+  margin-bottom: 2px;
 }
 .tp-label {
   height: 19px;
@@ -212,7 +235,8 @@ button[disabled] {
 .current-time-text {
   margin: 0;
 }
-.current-time-width {
+.current-time-wh {
   width: 50px;
+  height: 42px;
 }
 </style>
