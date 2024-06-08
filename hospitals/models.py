@@ -59,6 +59,7 @@ class Hospitals(models.Model):
     title_stamp_executor = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Исполнителя - клеше")
     title_stamp_customer = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Закачика - клеше")
     acronym_title = models.CharField(max_length=128, blank=True, default='', help_text="Акроним (Аббревиатура) наименование", db_index=True)
+    send_result_after_time_min = models.PositiveSmallIntegerField(default=0, blank=True, null=True, verbose_name="Время (мин) отправки результатов")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
@@ -110,6 +111,12 @@ class Hospitals(models.Model):
         )
         email.attach(file.name, file.read(), 'application/pdf')
         email.send()
+
+    @staticmethod
+    def hospitals_need_send_result_mail():
+        return [
+            {"id": i.pk, "mail": i.email, "send_after_time_min": i.send_result_after_time_min} for i in Hospitals.objects.filter(need_send_result=True, email__isnull=False).exclude(email="")
+        ]
 
     def __str__(self):
         return f"{self.short_title} – {self.code_tfoms}"

@@ -840,7 +840,7 @@ class Individual(models.Model):
         if i:
             snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
             document_snils = i.add_or_update_doc(snils_type, '', snils)
-            enp_type = DocumentType.objects.filter(title__startswith="полис омс").first()
+            enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
             document_enp = i.add_or_update_doc(enp_type, '', enp)
             card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils, polis=document_enp)
 

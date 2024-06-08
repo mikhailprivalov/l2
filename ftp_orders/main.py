@@ -475,8 +475,10 @@ class FTPConnection:
             for price in prices:
                 if direction.istochnik_f.title.lower() == "омс" and "омс" in price.title.lower():
                     pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
+                    pv.PV1.PV1_7.value = f"{price.symbol_code}"
                 if direction.istochnik_f.title.lower() == "договор" and "договор" in price.title.lower():
                     pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
+                    pv.PV1.PV1_7.value = f"{price.symbol_code}"
         else:
             if direction.istochnik_f.title.lower() == "договор":
                 pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"

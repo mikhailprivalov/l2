@@ -463,20 +463,27 @@ def get_type_confirm_direction(directions_tuple):
     return rows
 
 
-def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
+def get_confirm_direction_by_hospital(hospitals, d_start, d_end, email_with_results_sent_is_false='-1'):
     with connection.cursor() as cursor:
         cursor.execute(
             """ 
         SELECT 
             DISTINCT (directions_napravleniya.id) as direction,
             directions_napravleniya.hospital_id as hospital,
-            directions_napravleniya.email_with_results_sent
+            directions_napravleniya.email_with_results_sent,
+            directions_napravleniya.last_confirmed_at
         FROM directions_napravleniya
         WHERE directions_napravleniya.hospital_id in %(hospitals)s and
         directions_napravleniya.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        AND 
+            CASE WHEN %(email_with_results_sent_is_false)s != '-1' THEN
+                directions_napravleniya.email_with_results_sent = false
+                WHEN %(email_with_results_sent_is_false)s = '-1' THEN
+                directions_napravleniya.id IS NOT NULL
+            END
         ORDER BY directions_napravleniya.hospital_id
         """,
-            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
+            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE, 'email_with_results_sent_is_false': email_with_results_sent_is_false},
         )
         rows = namedtuplefetchall(cursor)
     return rows
