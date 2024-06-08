@@ -72,6 +72,7 @@
         <RadioFieldById
           v-model="selectedType"
           :variants="typesWork"
+          :start-null="true"
         />
       </div>
     </div>
