@@ -14,7 +14,9 @@
       }"
       class="transparentButton"
     >
-      <p class="current-time-text">{{ currentTime }}</p> // eslint-disable-line
+      <!-- eslint-disable vue/singleline-html-element-content-newline -->
+      <p class="current-time-text">{{ currentTime }}</p>
+      <!-- eslint-enable -->
     </button>
     <button
       v-tippy
