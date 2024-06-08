@@ -85,7 +85,6 @@ import {
   computed,
   getCurrentInstance, ref, watch,
 } from 'vue';
-import { end } from '@popperjs/core';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
@@ -146,7 +145,6 @@ const selectType = (typeId: number) => {
 
 watch([startWork, endWork], () => {
   if (startWork.value && endWork.value && !activeVariant.value && selectedType.value) {
-    console.log('vs nfrb ');
     selectedType.value = null;
     selectedTypeLabel.value = '';
   }
