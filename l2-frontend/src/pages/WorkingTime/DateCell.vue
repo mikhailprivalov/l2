@@ -85,6 +85,7 @@ import {
   computed,
   getCurrentInstance, ref, watch,
 } from 'vue';
+import { end } from '@popperjs/core';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
@@ -128,10 +129,10 @@ const typesWork = ref([
   { id: 6, label: 'Е' },
 ]);
 
-const selectVariant = (variantId: number, start: string, end: string) => {
+const selectVariant = (variantId: number, startTime: string, endTime: string) => {
   activeVariant.value = variantId;
-  startWork.value = start;
-  endWork.value = end;
+  startWork.value = startTime;
+  endWork.value = endTime;
   selectedType.value = null;
 };
 
@@ -141,6 +142,7 @@ const selectType = (typeId: number) => {
   endWork.value = null;
   activeVariant.value = null;
 };
+
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
@@ -149,6 +151,7 @@ const currentTime = computed(() => {
   }
   return '--:--\n--:--';
 });
+
 const appendCurrentTime = () => {
   startWork.value = props.workTime.startWorkTime;
   endWork.value = props.workTime.endWorkTime;
