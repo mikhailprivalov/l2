@@ -132,11 +132,9 @@ const selectVariant = (variantId: number, startTime: string, endTime: string) =>
   activeVariant.value = variantId;
   startWork.value = startTime;
   endWork.value = endTime;
-  selectedType.value = null;
 };
 
-const selectType = (typeId: number) => {
-  selectedType.value = typeId;
+const selectType = () => {
   selectedTypeLabel.value = typesWork.value.find((type) => type.id === selectedType.value).label;
   startWork.value = null;
   endWork.value = null;
@@ -144,7 +142,7 @@ const selectType = (typeId: number) => {
 };
 
 watch([startWork, endWork], () => {
-  if (startWork.value && endWork.value && !activeVariant.value && selectedType.value) {
+  if (startWork.value && endWork.value && selectedType.value) {
     selectedType.value = null;
     selectedTypeLabel.value = '';
   }
