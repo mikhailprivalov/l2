@@ -63,7 +63,7 @@
           v-tippy
           class="transparentButton tp-button"
           title="Сохранить"
-          @click="changeExact"
+          @click="updateTime"
         >
           <i class="fa-solid fa-save" />
         </button>
@@ -109,6 +109,13 @@ const root = getCurrentInstance().proxy.$root;
 
 const startWork = ref(null);
 const endWork = ref(null);
+
+const timeValid = () => {
+  if (startWork.value > endWork.value && endWork.value !== '00:00') {
+    return { ok: false, message: 'Время начала больше времени конца' };
+  }
+  return { ok: true, message: '' };
+};
 
 const selectedTimeOption = ref(null);
 const timeOptions = ref([
@@ -162,14 +169,16 @@ const appendCurrentTime = () => {
   endWork.value = props.workTime.endWorkTime;
 };
 
-const changeExact = () => {
-  if ((startWork.value && endWork.value) && ((startWork.value < endWork.value) || (startWork.value > endWork.value
-    && endWork.value === '00:00'))) {
-    emit('changeWorkTime', {
-      start: startWork.value, end: endWork.value, rowIndex: props.rowIndex, columnKey: props.columnKey,
-    });
-  } else if (startWork.value >= endWork.value) {
-    root.$emit('msg', 'error', 'Время не верно');
+const updateTime = () => {
+  if (startWork.value && endWork.value) {
+    const { ok, message } = timeValid();
+    if (ok) {
+      root.$emit('msg', 'ok', 'Обновлено');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  } else {
+    root.$emit('msg', 'ok', 'Отпуск установлен');
   }
 };
 
