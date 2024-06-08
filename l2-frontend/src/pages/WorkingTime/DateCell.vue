@@ -33,13 +33,13 @@
     >
       <div class="tp-row">
         <div
-          v-for="variant in workTimeVariants"
-          :key="variant.id"
+          v-for="option in timeOptions"
+          :key="option.id"
           class="variant"
-          :class="activeVariant === variant.id && 'active'"
-          @click="selectVariant(variant.id, variant.startWork, variant.endWork)"
+          :class="selectedTimeOption === option.id && 'active'"
+          @click="selectTime(option.id, option.startWork, option.endWork)"
         >
-          {{ `${variant.startWork}-${variant.endWork}` }}
+          {{ `${option.startWork}-${option.endWork}` }}
         </div>
       </div>
       <div class="tp-row">
@@ -70,10 +70,10 @@
       </div>
       <div class="tp-row">
         <RadioFieldById
-          v-model="selectedType"
-          :variants="typesWork"
+          v-model="selectedTimeOff"
+          :variants="typesTimeOff"
           :start-null="true"
-          @modified="selectType"
+          @modified="timeOff"
         />
       </div>
     </div>
@@ -110,16 +110,16 @@ const root = getCurrentInstance().proxy.$root;
 const startWork = ref(null);
 const endWork = ref(null);
 
-const activeVariant = ref(null);
-const workTimeVariants = ref([
+const selectedTimeOption = ref(null);
+const timeOptions = ref([
   { id: 1, startWork: '08:00', endWork: '16:30' },
   { id: 2, startWork: '08:00', endWork: '15:48' },
   { id: 3, startWork: '15:48', endWork: '00:00' },
   { id: 4, startWork: '19:48', endWork: '21:00' },
   { id: 5, startWork: '14:48', endWork: '16:00' },
 ]);
-const selectedType = ref(null);
-const typesWork = ref([
+const selectedTimeOff = ref(null);
+const typesTimeOff = ref([
   { id: 1, label: 'А' },
   { id: 2, label: 'Б' },
   { id: 3, label: 'В' },
@@ -128,22 +128,22 @@ const typesWork = ref([
   { id: 6, label: 'Е' },
 ]);
 const selectedTypeLabel = ref('');
-const selectVariant = (variantId: number, startTime: string, endTime: string) => {
-  activeVariant.value = variantId;
+const selectTime = (variantId: number, startTime: string, endTime: string) => {
+  selectedTimeOption.value = variantId;
   startWork.value = startTime;
   endWork.value = endTime;
 };
 
-const selectType = () => {
-  selectedTypeLabel.value = typesWork.value.find((type) => type.id === selectedType.value).label;
+const timeOff = () => {
+  selectedTypeLabel.value = typesTimeOff.value.find((type) => type.id === selectedTimeOff.value).label;
   startWork.value = null;
   endWork.value = null;
-  activeVariant.value = null;
+  selectedTimeOption.value = null;
 };
 
 watch([startWork, endWork], () => {
-  if (startWork.value && endWork.value && selectedType.value) {
-    selectedType.value = null;
+  if (startWork.value && endWork.value && selectedTimeOff.value) {
+    selectedTimeOff.value = null;
     selectedTypeLabel.value = '';
   }
 });
@@ -151,7 +151,7 @@ watch([startWork, endWork], () => {
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
-  } if (selectedType.value) {
+  } if (selectedTimeOff.value) {
     return selectedTypeLabel.value;
   }
   return '--:--\n--:--';
