@@ -12,7 +12,7 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      class="transparentButton"
+      class="transparentButton current-time-width"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
       <p class="current-time-text">{{ currentTime }}</p>
@@ -211,5 +211,8 @@ button[disabled] {
 }
 .current-time-text {
   margin: 0;
+}
+.current-time-width {
+  width: 50px;
 }
 </style>
