@@ -16,6 +16,7 @@
     >
       <VeTable
         v-show="filteredEmployees.length > 0"
+        :max-height="600"
         :columns="columns"
         :table-data="filteredEmployees"
         :row-style-option="rowStyleOption"

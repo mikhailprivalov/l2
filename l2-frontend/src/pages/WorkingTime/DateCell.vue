@@ -14,7 +14,7 @@
       }"
       class="transparentButton"
     >
-      <p>{{ currentTime }}</p>
+      <p class="current-time-text">{{ currentTime }}</p>
     </button>
     <button
       v-tippy
@@ -115,7 +115,7 @@ const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
   }
-  return '--:-- - --:--';
+  return '--:--\n--:--';
 });
 const appendCurrentTime = () => {
   startWork.value = props.workTime.startWorkTime;
