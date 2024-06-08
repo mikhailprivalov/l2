@@ -2131,6 +2131,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/research-sets", "title": "Наборы исследований", "access": ["Конструктор: Настройка организации"], "module": None},
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
         {"url": "/ui/construct/route-perform-service", "title": "Маршрут исследований", "access": ["Конструктор: Маршрут исследований"], "module": None},
+        {"url": "/ui/construct/complex-services", "title": "Комплексные услуги", "access": ["Конструктор: Настройка организации"], "module": None},
     ]
 
     from context_processors.utils import make_menu
@@ -2681,17 +2682,20 @@ def update_price(request):
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"]
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"],
+                contract_number=request_data.get("contractNumber")
             )
         elif request_data.get("typePrice") == "Заказчик":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True,
+                contract_number=request_data.get("contractNumber")
             )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True
+                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True,
+                contract_number=request_data.get("contractNumber")
             )
         if current_price:
             current_price.save()
@@ -2707,9 +2711,10 @@ def update_price(request):
         current_price.symbol_code = request_data["code"]
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
-        if request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Работодатель":
+        current_price.contract_number = request_data["contractNumber"]
+        if request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
-        else:
+        elif request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price.hospital = hospital
         current_price.save()
@@ -2802,7 +2807,7 @@ def update_coast_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
-    researches = Researches.objects.filter(hide=False)
+    researches = Researches.objects.all().order_by("title")
     res_list = {
         "Лаборатория": {},
         "Параклиника": {},
@@ -2811,58 +2816,70 @@ def get_research_list(request):
         "Лечение": {"Общие": []},
         "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
         "Стоматология": {"Общие": []},
+        "Комплексные услуги": {"Общие": []},
     }
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
+        is_hide = ""
+        if research.hide:
+            is_hide = "- (скрыто)"
+        research_title = f"{research.title} {is_hide}"
         if research.is_doc_refferal:
             if research.site_type is None:
-                res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research.title})
+                res_list["Консультации"]["Общие"].append({"id": research.pk, "label": research_title})
             elif not res_list["Консультации"].get(research.site_type.title):
-                res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                res_list["Консультации"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
             else:
-                res_list["Консультации"][research.site_type.title].append({"id": research.pk, "label": research.title})
+                res_list["Консультации"][research.site_type.title].append({"id": research.pk, "label": research_title})
         elif research.is_citology:
-            res_list["Морфология"]["Цитология"].append({"id": research.pk, "label": research.title})
+            res_list["Морфология"]["Цитология"].append({"id": research.pk, "label": research_title})
         elif research.is_gistology:
-            res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research.title})
+            res_list["Морфология"]["Гистология"].append({"id": research.pk, "label": research_title})
         elif research.is_microbiology:
-            res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research.title})
+            res_list["Морфология"]["Микробиология"].append({"id": research.pk, "label": research_title})
         elif research.is_stom:
             if research.site_type is None:
-                res_list["Стоматология"]["Общие"].append({"id": research.pk, "label": research.title})
+                res_list["Стоматология"]["Общие"].append({"id": research.pk, "label": research_title})
             elif not res_list["Стоматология"].get(research.site_type.title):
-                res_list["Стоматология"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                res_list["Стоматология"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
             else:
-                res_list["Стоматология"][research.site_type.title].append({"id": research.pk, "label": research.title})
+                res_list["Стоматология"][research.site_type.title].append({"id": research.pk, "label": research_title})
+        elif research.is_complex:
+            if research.site_type is None:
+                res_list["Комплексные услуги"]["Общие"].append({"id": research.pk, "label": research_title})
+            elif not res_list["Комплексные услуги"].get(research.site_type.title):
+                res_list["Комплексные услуги"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
+            else:
+                res_list["Комплексные услуги"][research.site_type.title].append({"id": research.pk, "label": research_title})
         elif research.is_form:
             if research.site_type is None:
-                res_list["Формы"]["Общие"].append({"id": research.pk, "label": research.title})
+                res_list["Формы"]["Общие"].append({"id": research.pk, "label": research_title})
             elif not res_list["Формы"].get(research.site_type.title):
-                res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                res_list["Формы"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
             else:
-                res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research.title})
+                res_list["Формы"][research.site_type.title].append({"id": research.pk, "label": research_title})
         elif research.is_treatment:
             if research.site_type is None:
-                res_list["Лечение"]["Общие"].append({"id": research.pk, "label": research.title})
+                res_list["Лечение"]["Общие"].append({"id": research.pk, "label": research_title})
             elif not res_list["Лечение"].get(research.site_type.title):
-                res_list["Лечение"][research.site_type.title] = [{"id": research.pk, "label": research.title}]
+                res_list["Лечение"][research.site_type.title] = [{"id": research.pk, "label": research_title}]
             else:
-                res_list["Лечение"][research.site_type.title].append({"id": research.pk, "label": research.title})
+                res_list["Лечение"][research.site_type.title].append({"id": research.pk, "label": research_title})
         elif research.is_paraclinic:
             if research.podrazdeleniye is None:
                 pass
             elif not res_list["Параклиника"].get(research.podrazdeleniye.title):
-                res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+                res_list["Параклиника"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research_title}]
             else:
-                res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+                res_list["Параклиника"][research.podrazdeleniye.title].append({"id": research.pk, "label": research_title})
         elif research.podrazdeleniye is None:
             pass
         elif research.podrazdeleniye.pk in lab_podr:
             if not res_list["Лаборатория"].get(research.podrazdeleniye.title):
-                res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research.title}]
+                res_list["Лаборатория"][research.podrazdeleniye.title] = [{"id": research.pk, "label": research_title}]
             else:
-                res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research.title})
+                res_list["Лаборатория"][research.podrazdeleniye.title].append({"id": research.pk, "label": research_title})
 
     result_list = []
     count = 0
@@ -2926,12 +2943,17 @@ def delete_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_companies(request):
+    request_data = json.loads(request.body)
+    if request_data.get('selectedType') == 'Работодатель' or not request_data.get('selectedType'):
+        companies = Company.objects.filter(active_status=True).order_by("title")
+    else:
+        companies = Hospitals.objects.filter(hide=False).order_by('title')
     company_data = [
         {
             "pk": company.pk,
             "title": company.title,
         }
-        for company in Company.objects.filter(active_status=True).order_by("title")
+        for company in companies
     ]
     return JsonResponse({"data": company_data})
 

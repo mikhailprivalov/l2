@@ -774,11 +774,7 @@ export default class EDS extends Vue {
             });
 
             if (ok) {
-              const msg = `Подпись успешно добавлена: ${r.pk}, ${d.type}, ${this.selectedSignatureMode}`;
-              this.$root.$emit('msg', 'ok', msg, 1500);
               docToLog.status = true;
-            } else {
-              this.$root.$emit('msg', 'error', message);
             }
           } catch (e) {
             // eslint-disable-next-line no-console

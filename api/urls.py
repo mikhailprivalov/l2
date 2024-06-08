@@ -99,6 +99,7 @@ urlpatterns = [
     path('health/', include('api.health.urls')),
     path('chats/', include('api.chats.urls')),
     path('ecp/', include('api.ecp.urls')),
+    path('contracts/', include('api.contracts.urls')),
     path('transfer-document/', include('api.transfer_document.urls')),
     path('edit-forms/', include('api.edit_forms.urls')),
     path('hospitals/', include('api.hospitals.urls')),

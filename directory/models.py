@@ -83,6 +83,7 @@ class ResearchSite(models.Model):
         (7, "Формы"),
         (10, "Мониторинги"),
         (12, "Случаи"),
+        (14, "Комплексные услуги"),
     )
 
     site_type = models.SmallIntegerField(choices=TYPES, help_text="Тип раздела", db_index=True)
@@ -404,6 +405,7 @@ class Researches(models.Model):
             15: dict(is_monitoring=True),
             16: dict(is_expertise=True),
             17: dict(is_case=True),
+            18: dict(is_complex=True),
         }
         return ts.get(t + 1, {})
 
@@ -433,6 +435,11 @@ class Researches(models.Model):
             return 2 - Podrazdeleniya.MORFOLOGY
         if self.is_case:
             return -14
+        if self.is_complex:
+            # -16 потому что на фронт отдаётся тип подразделения 18, на фронте 2 - 18 = -16
+            # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
+            # тип подразделения Podrazdeleniye.TYPES = 18,
+            return -16
         return self.podrazdeleniye_id or -2
 
     @property
@@ -445,6 +452,7 @@ class Researches(models.Model):
             or self.is_microbiology
             or self.is_hospital
             or self.is_case
+            or self.is_complex
             or self.is_citology
             or self.is_gistology
             or self.is_form
@@ -635,7 +643,7 @@ class Researches(models.Model):
         return True
 
     @staticmethod
-    def get_research(research_pk: int):
+    def get_lab_research(research_pk: int):
         research = Researches.objects.get(pk=research_pk)
         research_tubes = Researches.get_tube_data(research_pk, True)
         result = {
@@ -747,6 +755,15 @@ class Researches(models.Model):
         result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
         return result
 
+    @staticmethod
+    def get_complex_services(append_hide=True):
+        if append_hide:
+            complexs = Researches.objects.filter(is_complex=True).values_list("pk", "title").order_by("title")
+        else:
+            complexs = Researches.objects.filter(is_complex=True, hide=False).values_list("pk", "title").order_by("title")
+        result = [{"id": complex[0], "label": complex[1]} for complex in complexs]
+        return result
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -840,6 +857,75 @@ class ComplexService(models.Model):
 
     def __str__(self):
         return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
+
+    @staticmethod
+    def get_services_in_complex(complex_id: int):
+        services = ComplexService.objects.filter(main_research_id=complex_id).select_related("slave_research").order_by("slave_research__title")
+        result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
+        return result
+
+    @staticmethod
+    def check_complex(master_complex_id, slave_complex_services):
+        master_complex_services = ComplexService.objects.filter(main_research_id=master_complex_id).values_list("slave_research_id", flat=True)
+        master_complex_ids = set(master_complex_services)
+        for service in slave_complex_services:
+            if service.slave_research_id in master_complex_ids:
+                return {"ok": False, "message": "В добавляемом комплексе пересекаются услуги"}
+            if service.slave_research.is_complex:
+                return {"ok": False, "message": "Нельзя добавить комплекс с комплексами"}
+        return {"ok": True, "message": ""}
+
+    @staticmethod
+    def add_service(complex_id: int, service_id: int, ):
+        if not complex_id or not service_id:
+            return {"ok": False, "message": "Комплекс или услуга не переданы"}
+        if complex_id == service_id:
+            return {"ok": False, "message": "Нельзя добавить в комплекс этот же комплекс"}
+        current_service: ComplexService = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).first()
+        if current_service:
+            return {"ok": False, "message": "Услуга уже есть"}
+        slave_complex_service = ComplexService.objects.filter(main_research_id=service_id).select_related('slave_research')
+        if slave_complex_service.exists():
+            check_result = ComplexService.check_complex(complex_id, slave_complex_service)
+            if not check_result["ok"]:
+                return check_result
+        complex_service = ComplexService(main_research_id=complex_id, slave_research_id=service_id)
+        complex_service.save()
+        return {"ok": True, "message": "", "result": complex_service.main_research_id}
+
+    @staticmethod
+    def change_hidden_complex(complex_id: int):
+        complex = Researches.objects.get(pk=complex_id)
+        if complex.hide:
+            complex.hide = False
+        else:
+            complex.hide = True
+        complex.save()
+        return {"ok": True, "hide": complex.hide}
+
+    @staticmethod
+    def update_complex(complex_id: int, complex_title: str):
+        complex_old_title = ''
+        if complex_id:
+            complex = Researches.objects.get(pk=complex_id)
+            if complex.hide:
+                return {"ok": False, "id": ""}
+            complex_old_title = complex.title
+            complex.title = complex_title
+        else:
+            complex = Researches(title=complex_title, is_complex=True)
+        complex.save()
+        return {"ok": True, "id": complex.pk, "old_title": complex_old_title}
+
+    @staticmethod
+    def change_service_hidden(complex_id: int, service_id: int):
+        service_in_complex = ComplexService.objects.get(main_research_id=complex_id, slave_research_id=service_id)
+        if service_in_complex.hide:
+            service_in_complex.hide = False
+        else:
+            service_in_complex.hide = True
+        service_in_complex.save()
+        return {"ok": True, "hide": service_in_complex.hide}
 
 
 class ParaclinicInputGroups(models.Model):
@@ -1172,6 +1258,7 @@ class Fractions(models.Model):
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text="Контролируемый параметр", on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
+    external_code = models.CharField(max_length=255, default="", help_text="Внешний код теста", blank=True, db_index=True)
 
     def get_unit(self):
         if self.unit:

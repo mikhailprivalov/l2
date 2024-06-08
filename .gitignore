@@ -243,3 +243,4 @@ external_system/settings/phones_org.json
 /ftp_orders/hl7_rule
 !/ftp_orders/hl7_rule/default.json
 /xml_generate/templates/
+/forms/xlsx/media/

@@ -623,6 +623,10 @@ class Individual(models.Model):
             passport_type = DocumentType.objects.filter(title__startswith="Паспорт гражданина РФ").first()
             birth_cert_type = DocumentType.objects.filter(title__startswith="Свидетельство о рождении").first()
             enp = (data.get('enp') or '').strip()
+            enp_date_begin = None
+            enp_date_begin_str = data.get('polis_datebegin', '').strip()
+            if enp_date_begin_str:
+                enp_date_begin = enp_date_begin_str.split(' ')[0]
             birthday = datetime.strptime(bdate, "%d.%m.%Y" if '.' in bdate else "%Y-%m-%d").date()
             address = data.get('address', '').title().replace('Ул.', 'ул.').replace('Д.', 'д.').replace('Кв.', 'кв.').strip()
             document_type = data.get('document_type', '').strip()
@@ -751,7 +755,7 @@ class Individual(models.Model):
             enp_doc = None
             if enp_type and enp:
                 print('Sync ENP')  # noqa: T001
-                enp_doc = i.add_or_update_doc(enp_type, '', enp, insurer_full_code)
+                enp_doc = i.add_or_update_doc(enp_type, '', enp, insurer_full_code, enp_date_begin)
 
             print('Sync L2 card')  # noqa: T001
             card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
@@ -778,6 +782,7 @@ class Individual(models.Model):
         sex = data.get('sex', '').lower().strip()
         birthday = data.get('birthday', '').split(' ')[0]
         snils = data.get('snils', '').split(' ')[0]
+        enp = data.get('enp', '').split(' ')[0]
 
         i = None
         card = None
@@ -835,18 +840,20 @@ class Individual(models.Model):
         if i:
             snils_type = DocumentType.objects.filter(title__startswith="СНИЛС").first()
             document_snils = i.add_or_update_doc(snils_type, '', snils)
-            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils)
+            enp_type = DocumentType.objects.filter(title__startswith="Полис ОМС").first()
+            document_enp = i.add_or_update_doc(enp_type, '', enp)
+            card = Card.add_l2_card(individual=i, force=True, owner=owner, snils=document_snils, polis=document_enp)
 
         return card
 
-    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str, insurer_full_code=""):
+    def add_or_update_doc(self, doc_type: 'DocumentType', serial: str, number: str, insurer_full_code="", date_start: str = None):
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() > 1:
             ds.delete()
 
         ds = Document.objects.filter(individual=self, document_type=doc_type, is_active=True)
         if ds.count() == 0:
-            d = Document(individual=self, document_type=doc_type, serial=serial, number=number, insurer_full_code=insurer_full_code)
+            d = Document(individual=self, document_type=doc_type, serial=serial, number=number, insurer_full_code=insurer_full_code, date_start=date_start)
             d.save()
         else:
             d: Document = ds.first()
@@ -862,6 +869,9 @@ class Individual(models.Model):
             if d.insurer_full_code != insurer_full_code:
                 d.insurer_full_code = insurer_full_code
                 updated.append('insurer_full_code')
+            if d.date_start != date_start:
+                d.date_start = date_start
+                updated.append('date_start')
 
             if updated:
                 d.save(update_fields=updated)
@@ -1066,6 +1076,7 @@ class HarmfulFactor(models.Model):
     template = models.ForeignKey(AssignmentTemplates, db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
     cpp_key = models.UUIDField(null=True, blank=True, editable=False, help_text="UUID, с справочника", db_index=True)
     nsi_id = models.CharField(max_length=128, db_index=True, blank=True, default=None, null=True)
+    nsi_title = models.CharField(max_length=255, blank=True, default=None, null=True, help_text='НСИ-наименование')
 
     class Meta:
         verbose_name = 'Фактор вредности'
@@ -1121,6 +1132,7 @@ class Card(models.Model):
     work_place = models.CharField(max_length=128, blank=True, default='', help_text="Место работы")
     work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы из базы")
     work_position = models.CharField(max_length=128, blank=True, default='', help_text="Должность")
+    work_position_nsi_code = models.CharField(max_length=24, blank=True, null=True, default='', help_text="Код Должность НСИ")
     work_department = models.CharField(max_length=128, blank=True, default='', help_text="Подразделение")  # DEPRECATED
     work_department_db = models.ForeignKey('contracts.CompanyDepartment', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место отдела из базы")
     mother = models.ForeignKey('self', related_name='mother_p', help_text="Мать", blank=True, null=True, default=None, on_delete=models.SET_NULL)

@@ -8,9 +8,10 @@ from django.db import models
 import directory.models as directory
 from contracts.sql_func import search_companies, get_examination_data
 from clients.models import Card, HarmfulFactor
+from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM
 from laboratory.utils import current_year
-from users.models import AssignmentResearches
+from users.models import AssignmentResearches, DoctorProfile
 
 
 class PriceCategory(models.Model):
@@ -38,6 +39,7 @@ class PriceName(models.Model):
     subcontract = models.BooleanField(default=False, blank=True, help_text="Прайс субподряд", db_index=True)
     symbol_code = models.CharField(max_length=55, unique=True, blank=True, null=True, default=None, help_text="Код прайса", db_index=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
+    contract_number = models.CharField(max_length=55, blank=True, null=True, default=None, verbose_name="Номер договора", help_text="№00-00/00/2024", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -52,6 +54,14 @@ class PriceName(models.Model):
     @staticmethod
     def get_hospital_price_by_date(hospital_id, date_start, date_end, is_subcontract=False):
         return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract).first()
+
+    @staticmethod
+    def get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=False):
+        return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract)
+
+    @staticmethod
+    def get_hospital_extrenal_price_by_date(external_hospital_id, date_start, date_end, external_performer=True):
+        return PriceName.objects.filter(hospital_id=external_hospital_id, date_start__lte=date_start, date_end__gte=date_end, external_performer=external_performer)
 
     class Meta:
         verbose_name = "Название прайса"
@@ -78,6 +88,7 @@ class PriceName(models.Model):
             "companyTitle": company_title,
             "symbolCode": price.symbol_code,
             "uuid": str(price.uuid),
+            "contractNumber": price.contract_number
         }
         return json_data
 
@@ -162,7 +173,7 @@ class Company(models.Model):
     contract = models.ForeignKey(Contract, blank=True, null=True, db_index=True, on_delete=models.CASCADE)
     email = models.CharField(max_length=128, blank=True, default="", help_text="email")
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
-    cpp_send = models.BooleanField(default=False, help_text='отправлять в ЦПП', db_index=True)
+    cpp_send = models.BooleanField(default=False, help_text="отправлять в ЦПП", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -348,3 +359,114 @@ class MedicalExamination(models.Model):
     class Meta:
         verbose_name = "Медицинский осмотр"
         verbose_name_plural = "Медицинские осмотры"
+
+
+class BillingRegister(models.Model):
+    company = models.ForeignKey(Company, db_index=True, default=None, blank=True, null=True, help_text="Работодатель", on_delete=models.SET_NULL)
+    hospital = models.ForeignKey(Hospitals, db_index=True, default=None, blank=True, null=True, help_text="Заказачик больница", on_delete=models.SET_NULL)
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text="Создатель счета", on_delete=models.SET_NULL)
+    date_start = models.DateField(help_text="Дата начала периода", default=None, blank=True, null=True, db_index=True)
+    date_end = models.DateField(help_text="Дата окончания периода", default=None, blank=True, null=True, db_index=True)
+    info = models.CharField(max_length=128, help_text="Информация по счет", default=None, blank=True, null=True)
+    is_confirmed = models.BooleanField(default=False, help_text="Сформирован счет")
+    price = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, default=None, blank=True, null=True, db_index=True)
+    date_from = models.DateField(verbose_name="От", help_text="2024-05-16", default=None, blank=True, null=True, db_index=True)
+    registry_number = models.CharField(max_length=64, verbose_name="Реестр №", help_text="1YYYY", default=None, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.company} - {self.date_start} - {self.date_end} - {self.price}"
+
+    @staticmethod
+    def update_billing(billing_id, date_start, date_end, info, price_id, date_from, registry_number):
+        current_billing = BillingRegister.objects.filter(id=billing_id).first()
+        if current_billing:
+            current_billing.date_start = date_start
+            current_billing.date_end = date_end
+            current_billing.info = info
+            current_billing.price_id = price_id
+            current_billing.date_from = date_from
+            current_billing.registry_number = registry_number
+            current_billing.save()
+            return info
+        else:
+            return False
+
+    @staticmethod
+    def create_billing(company_id, hospital_id, date_start, date_end, info, price_id, date_from, registry_number):
+        current_billing = BillingRegister(
+            hospital_id=hospital_id, company_id=company_id, date_start=date_start, date_end=date_end, info=info, price_id=price_id, date_from=date_from, registry_number=registry_number
+        )
+        current_billing.save()
+        return current_billing.pk
+
+    @staticmethod
+    def confirm_billing(billing_id, user_who_create):
+        current_billing = BillingRegister.objects.filter(id=billing_id).first()
+        current_billing.is_confirmed = True
+        current_billing.who_create = user_who_create
+        current_billing.save()
+        return True
+
+    @staticmethod
+    def get_billings(hospital_id=None, company_id=None):
+        if hospital_id:
+            billings = BillingRegister.objects.filter(hospital_id=hospital_id).select_related("hospital")
+            result = [
+                {
+                    "id": billing.pk,
+                    "label": f"{billing.date_start.strftime('%d.%m.%Y')} "
+                    f" - {billing.date_end.strftime('%d.%m.%Y')}____Прайс {billing.price.title if billing.price else ''}_____{'Закрыт' if billing.is_confirmed else 'Проект'}",
+                }
+                for billing in billings
+            ]
+        else:
+            billings = BillingRegister.objects.filter(company_id=company_id).select_related("company")
+            result = [
+                {"id": billing.pk, "label": f"{billing.info}-{billing.price.title}-{billing.date_start.strftime('%d.%m.%Y')}-{billing.date_end.strftime('%d.%m.%Y')}"} for billing in billings
+            ]
+        return result
+
+    def as_json(self):
+        result = {
+            "id": self.pk,
+            "hospitalId": self.hospital_id,
+            "companyId": self.company_id,
+            "createAt": self.create_at,
+            "whoCreat": self.who_create_id,
+            "dateStart": self.date_start,
+            "dateEnd": self.date_end,
+            "info": self.info,
+            "isConfirmed": self.is_confirmed,
+            "priceId": self.price_id,
+            "dateFrom": self.date_from,
+            "registryNumber": self.registry_number,
+        }
+        return result
+
+    @staticmethod
+    def get_billing(billing_id: int):
+        billing: BillingRegister = BillingRegister.objects.filter(id=billing_id).first()
+        if billing:
+            return billing.as_json()
+        return None
+
+    class Meta:
+        verbose_name = "Счет-реестр"
+        verbose_name_plural = "Счета-реестры"
+
+
+class RawDocumentBillingRegister(models.Model):
+    billing = models.ForeignKey(BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Cчету", on_delete=models.SET_NULL)
+    raw_data = models.TextField(default=None, blank=True, null=True, help_text="Данные документа")
+    create_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+
+    @staticmethod
+    def create_raw_billing_data(billing_id, raw_data):
+        raw_data_billing = RawDocumentBillingRegister(billing_id=billing_id, raw_data=raw_data)
+        raw_data_billing.save()
+        return raw_data_billing.pk
+
+    class Meta:
+        verbose_name = "Счет-реестр документ"
+        verbose_name_plural = "Счета-реестры документы исторические версии"

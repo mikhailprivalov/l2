@@ -21,7 +21,7 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -126,6 +126,13 @@ class FTPConnection:
         except Exception as e:
             self.error(f"Error deleting file {file}: {e}")
 
+    def copy_file(self, file_name: str, path: str):
+        with tempfile.NamedTemporaryFile() as file:
+            self.ftp.retrbinary(f"RETR {file_name}", file.write)
+            file.seek(0)
+            self.ftp.storbinary(f"STOR {path}{file_name}", file)
+            self.log(f"File {file_name} copied")
+
     def read_file_as_text(self, file):
         self.log(f"Reading file {file}")
         with tempfile.NamedTemporaryFile() as f:
@@ -165,7 +172,6 @@ class FTPConnection:
         if RegisteredOrders.objects.filter(file_name=file).exists():
             self.error(f"Skipping file {file} because it already exists")
             return
-
         hl7_result, hl7_content = self.read_file_as_hl7(file)
 
         if not hl7_content or not hl7_result:
@@ -205,7 +211,11 @@ class FTPConnection:
 
         snils = pid.PID_19.value
         snils = snils.replace("-", "").replace(" ", "")
-
+        enp = ""
+        if len(pid.PID_18.value) > 1:
+            document_data = pid.PID_18.value.split("^")
+            if document_data[2] == "Полис":
+                enp = document_data[4]
         adds_data = pid.to_er7().split("|")[13].split("~")
 
         phone = adds_data[0] if adds_data[0] else ""
@@ -238,6 +248,7 @@ class FTPConnection:
                     "sex": sex,
                     "birthday": birthday,
                     "snils": snils,
+                    "enp": enp,
                 },
                 self.hospital,
                 patient_id_company,
@@ -431,8 +442,8 @@ class FTPConnection:
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
 
-        hl7.msh.msh_3 = "L2"
-        hl7.msh.msh_4 = "ORDER"
+        hl7.msh.msh_3 = direction.hospital.hl7_sender_application if direction.hospital.hl7_sender_application else "L2"
+        hl7.msh.msh_4 = direction.hospital.hl7_sender_org if direction.hospital.hl7_sender_org else "ORDER"
         hl7.msh.msh_5 = "qLIS"
         hl7.msh.msh_6 = "LukaLab"
         hl7.msh.msh_9 = "ORM^O01"
@@ -445,19 +456,34 @@ class FTPConnection:
         patient.pid.pid_2 = str(direction.client.pk)
         patient.pid.pid_5 = f"{individual.family}^{individual.name}^{individual.patronymic}"
         patient.pid.pid_7 = individual.birthday.strftime("%Y%m%d")
-        patient.pid.pid_8 = individual.sex.upper()
+        if individual.sex.upper() == "Ж":
+            sex = "F"
+        else:
+            sex = "M"
+        patient.pid.pid_8 = sex
         byte_email = direction.client.email.encode("utf-8")
-        field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}~~~{base64.b64encode(byte_email).decode('UTF-8')}"
+        field_13 = f"{direction.client.phone.replace(' ', '').replace('-', '')}@@@{base64.b64encode(byte_email).decode('UTF-8')}"
         patient.pid.pid_13.value = field_13
+        patient.pid.pid_18 = f"^^Полис^^{data_indivdual['enp']}"
         patient.pid.pid_19 = data_indivdual["snils"]
 
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
 
-        if direction.istochnik_f.title.lower() in ["договор"]:
-            pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
+        if OWN_SETUP_TO_SEND_FTP_EXECUTOR:
+            prices = PriceName.get_hospital_extrenal_price_by_date(direction.external_executor_hospital, direction.data_sozdaniya, direction.data_sozdaniya)
+            for price in prices:
+                if direction.istochnik_f.title.lower() == "омс" and "омс" in price.title.lower():
+                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
+                    pv.PV1.PV1_7.value = f"{price.symbol_code}"
+                if direction.istochnik_f.title.lower() == "договор" and "договор" in price.title.lower():
+                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
+                    pv.PV1.PV1_7.value = f"{price.symbol_code}"
         else:
-            pv.PV1.PV1_20.value = "Наличные"
+            if direction.istochnik_f.title.lower() == "договор":
+                pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
+            else:
+                pv.PV1.PV1_20.value = "Наличные"
         pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
         pv.PV1.PV1_46.value = ""
 
@@ -471,9 +497,7 @@ class FTPConnection:
             direction.need_order_redirection = False
             direction.time_send_hl7 = current_time()
             direction.save(update_fields=["time_send_hl7", "need_order_redirection"])
-
             n = 0
-
             for iss in direction.issledovaniya_set.all():
                 n += 1
                 obr = ordd.add_segment("OBR")
@@ -488,7 +512,7 @@ class FTPConnection:
                 obr.obr_34.value = ""
 
             content = hl7.value.replace("\r", "\n").replace("ORC|1\n", "")
-            content = content.replace("R", "~").replace("\\", "")
+            content = content.replace("@", "~")
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
 
             self.log("Writing file", filename, "\n", content)
@@ -584,7 +608,6 @@ def process_pull_orders():
     processed_files_by_url = defaultdict(set)
 
     hospitals = get_hospitals_pull_orders()
-
     stdout.write("Getting ftp links")
     ftp_links = {x.orders_pull_by_numbers: x for x in hospitals}
 
@@ -600,6 +623,10 @@ def process_pull_orders():
         stdout.write(f"Iterating over {len(ftp_links)} servers")
         for ftp_url, ftp_connection in ftp_connections.items():
             processed_files_new = set()
+            path_to_copy = None
+            path_to_push = ftp_connection.hospital.orders_push_by_numbers
+            if len(path_to_push) > 0:
+                path_to_copy = urlparse(path_to_push).path
             try:
                 ftp_connection.connect()
                 file_list = ftp_connection.get_file_list()
@@ -608,6 +635,8 @@ def process_pull_orders():
                     processed_files_new.add(file)
 
                     if file not in processed_files_by_url[ftp_url]:
+                        if path_to_copy:
+                            ftp_connection.copy_file(file, path_to_copy)
                         ftp_connection.pull_order(file)
 
             except ftplib.all_errors as e:
@@ -662,7 +691,11 @@ def process_push_orders():
                 directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
             for dir_external in directions_external_executor:
                 if dir_external not in directions:
-                    directions.append(dir_external)
+                    tube_data = []
+                    for iss in dir_external.issledovaniya_set.all():
+                        tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
+                    if len(tube_data) > 0:
+                        directions.append(dir_external)
 
             if NEED_RECIEVE_TUBE_TO_PUSH_ORDER:
                 for direction in directions:

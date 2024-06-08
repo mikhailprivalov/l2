@@ -14,12 +14,23 @@
       placeholder="Выберите прайс"
       class="select-price"
     />
+    <span>
+      <a
+        class="a-under a-align margin-top  margin-bottom"
+        href="#"
+        @click.prevent="downloadCoastTOXlsx()"
+      >
+        Все цены - XLSX
+      </a>
+    </span>
     <div class="edit-price">
       <table class="table">
         <colgroup>
           <col width="240">
           <col width="120">
           <col width="120">
+          <col width="120">
+          <col width="150">
           <col width="120">
           <col>
           <col
@@ -41,7 +52,10 @@
             <th class="text-center">
               <strong>Дата конца</strong>
             </th>
-            <th class="text-center">
+            <th
+              class="text-center"
+              colspan="3"
+            >
               <strong>Компания</strong>
             </th>
             <th v-if="priceIsActive" />
@@ -70,7 +84,9 @@
               :disabled="!priceIsActive"
             >
           </td>
-          <td class="border">
+          <td
+            class="border"
+          >
             <input
               v-model="priceData.end"
               type="date"
@@ -78,7 +94,10 @@
               :disabled="!priceIsActive"
             >
           </td>
-          <td class="border">
+          <td
+            class="border"
+            colspan="3"
+          >
             <Treeselect
               v-model="priceData.company"
               :multiple="false"
@@ -140,9 +159,22 @@
           </td>
           <td
             class="padding-left"
-            :colspan="priceIsActive ? 3 : 2"
+            colspan="2"
           >
             {{ priceData.uuid }}
+          </td>
+          <td class="border text-center">
+            <strong>Договор</strong>
+          </td>
+          <td
+            class="padding-left"
+            :colspan="priceIsActive ? 2 : 1"
+          >
+            <input
+              v-model="priceData.contractNumber"
+              class="form-control"
+              :disabled="!priceIsActive"
+            >
           </td>
         </tr>
       </table>
@@ -158,16 +190,31 @@
       <a
         class="a-under a-align r-padding"
         href="#"
+        @click.prevent="downloadCoastTOXlsx(selectedPrice)"
+      >
+        Текущий прайс - XLSX
+      </a>
+      <a
+        class="a-under a-align r-padding"
+        href="#"
         @click.prevent="copyPrice"
       >
         Скопировать
       </a>
-      <a>
+      <a class="float-left">
         <LoadFile
           :is-gen-commercial-offer="true"
           :selected-price="selectedPrice"
         />
       </a>
+      <UploadFileModal
+        class="float-left l-padding"
+        title="Загрузить цены"
+        :types-file="['XLSX']"
+        :forms-file="['api.contracts.forms100.form_01']"
+        :entity-id="selectedPrice"
+        @uploadSuccess="getCoastsResearchesInPrice"
+      />
     </span>
     <div
       v-if="priceIsSelected"
@@ -346,11 +393,16 @@ import * as actions from '@/store/action-types';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import RadioField from '@/fields/RadioField.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'ConstructPrice',
   components: {
-    RadioField, VueTippyTd, Treeselect, LoadFile,
+    UploadFileModal,
+    RadioField,
+    VueTippyTd,
+    Treeselect,
+    LoadFile,
   },
   data() {
     return {
@@ -452,6 +504,9 @@ export default {
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
     },
+    downloadCoastTOXlsx(priceId = null) {
+      window.open(`/forms/xlsx?type=100.01&priceId=${priceId}`, '_blank');
+    },
     async copyPrice() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { ok, message } = await this.$api('copy-price', {
@@ -480,6 +535,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
+          contractNumber: this.priceData.contractNumber,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -498,6 +554,7 @@ export default {
           end: this.priceData.end,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
+          contractNumber: this.priceData.contractNumber,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -511,6 +568,7 @@ export default {
             end: '',
             company: null,
             uuid: '',
+            contractNumber: '',
           };
         } else {
           this.$root.$emit('msg', 'error', message);
@@ -630,6 +688,9 @@ export default {
 .margin-bottom {
   margin-bottom: 10px;
 }
+.margin-top {
+  margin-top: 10px;
+}
 .border {
   border: 1px solid #ddd;
 }
@@ -700,10 +761,16 @@ export default {
 .r-padding {
   padding-right: 10px;
 }
+.l-padding {
+  padding-left: 10px
+}
 .negative-margin-top {
   margin-top: -20px;
 }
 .height-row {
   height: 37px;
+}
+.float-left {
+  float: left;
 }
 </style>

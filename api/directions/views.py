@@ -10,7 +10,7 @@ from contracts.models import PriceCategory, PriceCoast, PriceName, Company
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook
 from integration_framework.common_func import directions_pdf_result
-from l2vi.integration import gen_cda_xml, send_cda_xml
+from l2vi.integration import gen_cda_xml, send_cda_xml, send_lab_direction_to_ecp
 import collections
 
 from integration_framework.views import get_cda_data
@@ -3318,15 +3318,25 @@ def directions_result_year(request):
     directions = {}
 
     for d in confirmed_directions:
+        pacs_study_uid = None
+        if d.study_instance_uid:
+            pacs_study_uid = d.study_instance_uid
         if d.direction not in directions:
-            directions[d.direction] = {
-                'dir': d.direction,
-                'date': d.ch_time_confirmation,
-                'researches': [],
-            }
+            directions[d.direction] = {'dir': d.direction, 'date': d.ch_time_confirmation, 'researches': [], 'pacsStudyUid': pacs_study_uid}
 
         directions[d.direction]['researches'].append(d.research_title)
     return JsonResponse({"results": list(directions.values())})
+
+
+@login_required
+def get_study_url(request):
+    request_data = json.loads(request.body)
+    study_uid = request_data.get("studyUid")
+    if study_uid and len(DICOM_SERVERS) > 1:
+        study_url = check_dicom_study_instance_uid(DICOM_SERVERS, study_uid)
+    elif study_uid and len(DICOM_SERVERS) <= 1:
+        study_url = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={study_uid}'
+    return JsonResponse({"studyUrl": study_url})
 
 
 @login_required
@@ -3554,7 +3564,11 @@ def tubes_for_get(request):
                 if vrpk not in has_rels:
                     with transaction.atomic():
                         try:
-                            generator_pk = TubesRegistration.get_tube_number_generator_pk(request.user.doctorprofile.get_hospital())
+                            if direction.external_executor_hospital:
+                                hospital_for_generator_tube = direction.external_executor_hospital
+                            else:
+                                hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
+                            generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                             generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                             number = generator.get_next_value()
                         except NoGenerator as e:
@@ -3639,11 +3653,15 @@ def tubes_register_get(request):
         val = TubesRegistration.objects.get(number=pk)
         issledovanie_in_tube = Issledovaniya.objects.filter(tubes__id=val.pk).first()
         if issledovanie_in_tube:
-            all_issledovania = Issledovaniya.objects.filter(napravleniye_id=issledovanie_in_tube.napravleniye_id)
+            napravleniye_id = issledovanie_in_tube.napravleniye_id
+            all_issledovania = Issledovaniya.objects.filter(napravleniye_id=napravleniye_id)
             for issledovanie in all_issledovania:
                 if len(issledovanie.tubes.all()) == 0:
                     issledovanie.tubes.add(val.pk)
                     issledovanie.save()
+            napravleniye = Napravleniya.objects.filter(pk=napravleniye_id).first()
+            if napravleniye.external_executor_hospital and napravleniye.external_executor_hospital.is_external_performing_organization:
+                napravleniye.need_order_redirection = True
         if not val.doc_get and not val.time_get:
             val.set_get(request.user.doctorprofile)
         get_details[pk] = val.get_details()
@@ -3920,7 +3938,6 @@ def process_to_sign_direction(direction, pk, user, iss_obj):
 
         for s in [x for x in required_signatures['signsRequired'] if x not in signatures]:
             signatures[s] = None
-
         if not d.file:
             file = None
             filename = None
@@ -4150,6 +4167,90 @@ def eds_to_sign(request):
         )
 
     return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count, "error": False, "message": ''})
+
+
+@login_required
+def need_send_ecp(request):
+    data = json.loads(request.body)
+    filters = data['filters']
+    mode = filters['mode']
+    status = filters['status']
+    department = filters['department']
+    number = filters['number']
+    page = max(int(data["page"]), 1)
+
+    rows = []
+    base = SettingManager.get_api_ecp_base_url()
+    if base != 'empty':
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "Cервер отправки в ЕЦП не доступен"})
+
+    if status == "need":
+        d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False)
+    else:
+        d_qs = Napravleniya.objects.filter(total_confirmed=True, rmis_resend_services=True)
+    if number:
+        d_qs = d_qs.filter(pk=number if number.isdigit() else -1)
+    else:
+        date = filters['date']
+        day1 = try_strptime(
+            date,
+            formats=(
+                '%Y-%m-%d',
+                '%d.%m.%Y',
+            ),
+        )
+        day2 = day1 + timedelta(days=1)
+        d_qs = d_qs.filter(last_confirmed_at__range=(day1, day2))
+        if mode == 'department' and department != -1:
+            d_qs = d_qs.filter(issledovaniya__doc_confirmation__podrazdeleniye_id=department)
+        elif mode == 'my':
+            if not request.user.doctorprofile.additional_info:
+                return JsonResponse({"rows": rows, "page": page, "pages": 0, "total": 0, "error": True, "message": "Сведения по доктору не заполнены"})
+            d_qs = d_qs.filter(issledovaniya__doc_confirmation=request.user.doctorprofile)
+
+    d: Napravleniya
+    p = Paginator(d_qs.order_by('pk', 'last_confirmed_at').distinct('pk'), SettingManager.get("eds-to-sign_page-size", default='40', default_type='i'))
+    for d in p.page(page).object_list:
+        ltc = d.last_time_confirm()
+        ldc = d.last_doc_confirm()
+
+        result_send = "Не отправлены"
+        if d.rmis_resend_services:
+            result_send = "отправлены"
+
+        rows.append(
+            {
+                'pk': d.pk,
+                "totallySigned": False,
+                'confirmedAt': strfdatetime(ltc),
+                'docConfirmation': ldc,
+                'services': [x.research.get_title() for x in d.issledovaniya_set.all()],
+                'ecpDirectionNumber': d.ecp_direction_number if d.ecp_direction_number else result_send,
+            }
+        )
+
+    return JsonResponse({"rows": rows, "page": page, "pages": p.num_pages, "total": p.count, "error": False, "message": ''})
+
+
+@login_required
+def send_ecp(request):
+    data = json.loads(request.body)
+    directions = data['directions']
+
+    base = SettingManager.get_api_ecp_base_url()
+    if base != 'empty':
+        available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+        if not available:
+            return JsonResponse({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
+    res = send_lab_direction_to_ecp(directions)
+
+    num_dir = Napravleniya.objects.filter(pk__in=directions)
+    for n in num_dir:
+        n.rmis_resend_services = True
+        n.save()
+    return JsonResponse({"ok": True, "data": res})
 
 
 @login_required

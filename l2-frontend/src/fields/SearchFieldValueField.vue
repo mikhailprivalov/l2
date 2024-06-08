@@ -166,8 +166,6 @@ export default {
         } else {
           this.val = `${result.value} (${result.date}, направление ${result.direction})`;
         }
-      } else {
-        this.$root.$emit('msg', 'error', `Результат не найден (${this.title})!`);
       }
     },
     print_results() {

@@ -53,8 +53,8 @@
           <colgroup>
             <col width="50">
             <col width="80">
-            <col width="300">
-            <col width="80">
+            <col width="295">
+            <col width="85">
           </colgroup>
           <tbody>
             <tr>
@@ -109,6 +109,13 @@
                 {{ row.researches.join('; ') }}
               </td>
               <td class="right-buttons">
+                <a
+                  v-if="row.pacsStudyUid"
+                  v-tippy="{ placement: 'bottom' }"
+                  href="#"
+                  title="Снимок"
+                  @click.prevent="getStudyUrl(row.pacsStudyUid)"
+                ><i class="fa fa-camera" /></a>
                 <a
                   v-tippy="{ placement: 'bottom' }"
                   href="#"
@@ -224,6 +231,10 @@ export default {
     },
     print_result(pk) {
       this.$root.$emit('print:results', [pk]);
+    },
+    async getStudyUrl(studyUid) {
+      const { studyUrl } = await this.$api('directions/get-study-url', { studyUid });
+      window.open(studyUrl, '_blank');
     },
   },
 };

@@ -193,6 +193,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/complex-services',
+      name: 'construct_complex',
+      component: () => import('@/construct/ConstructComplexServices.vue'),
+      meta: {
+        title: 'Комплексные услуги',
+        groups: ['Конструктор: Комплексные услуги'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/district',
       name: 'construct_district',
       component: () => import('@/construct/ConstructDistrict.vue'),
@@ -335,6 +345,19 @@ const router = new Router({
           'Свидетельство о смерти-доступ',
         ],
         module: 'l2_eds',
+      },
+    },
+    {
+      path: '/ui/upload-directions',
+      name: 'upload_directions',
+      component: () => import('@/pages/UploadDirections.vue'),
+      meta: {
+        title: 'Выгрузка',
+        groups: [
+          'Врач параклиники',
+          'Врач консультаций',
+          'Врач-лаборант',
+        ],
       },
     },
     {
@@ -726,6 +749,15 @@ const router = new Router({
       meta: {
         title: 'Обороты',
         groups: ['Обороты'],
+      },
+    },
+    {
+      path: '/ui/billing',
+      name: 'Billing',
+      component: () => import('@/pages/Billing/index.vue'),
+      meta: {
+        title: 'Счет на оплату',
+        groups: ['Счет: проект'],
       },
     },
     {

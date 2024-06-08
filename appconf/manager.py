@@ -76,6 +76,10 @@ class SettingManager:
         return SettingManager.get("cda_base_url", default='empty', default_type='s')
 
     @staticmethod
+    def get_api_ecp_base_url():
+        return SettingManager.get("api_ecp_base_url", default='empty', default_type='s')
+
+    @staticmethod
     def get_l2vi_base_url():
         return SettingManager.get("l2vi_base_url", default='empty', default_type='s')
 
@@ -223,6 +227,7 @@ class SettingManager:
                 13: SettingManager.l2("applications"),
                 14: SettingManager.l2("monitorings"),
                 16: SettingManager.l2("case"),
+                18: SettingManager.l2("complex"),
             }
 
             cache.set(k, simplejson.dumps(result), 60 * 60 * 8)

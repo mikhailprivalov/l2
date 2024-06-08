@@ -16,6 +16,7 @@ urlpatterns = [
     path('direction/pdf', views.get_pdf_direction),
     path('direction/data', views.direction_data),
     path('direction/records', views.direction_records),
+    path('direction/ecp-status', views.direction_ecp_status),
     path('direction/category-confirm', views.directions_by_category_result_year),
     path('direction/result', views.results_by_direction),
     path('iss/data', views.issledovaniye_data),
@@ -71,5 +72,6 @@ urlpatterns = [
     path('client/results', views.client_results_list),
     path('client/fcm', views.client_fcm),
     path('researches/', include('integration_framework.researches.urls')),
+    path('send-messages/', include('integration_framework.send_messages.urls')),
     path('employees/', include('integration_framework.employees.urls')),
 ]

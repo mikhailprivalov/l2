@@ -5,8 +5,10 @@ import logging
 import re
 import tempfile
 from copy import deepcopy
+from sys import stdout
 
 from django.http import HttpRequest, JsonResponse
+from django.utils.module_loading import import_string
 
 from api.directions.views import eds_documents
 from api.models import Application
@@ -19,11 +21,12 @@ from api.patients.views import patients_search_card
 from api.views import endpoint
 from openpyxl import load_workbook
 from appconf.manager import SettingManager
-from contracts.models import PriceCoast, Company, MedicalExamination, CompanyDepartment
+from contracts.models import PriceCoast, Company, MedicalExamination, CompanyDepartment, PriceName
 import directions.models as directions
 from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups, ParaclinicInputField
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
+from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
@@ -897,3 +900,28 @@ def get_parts_fio(fio_data):
     if len(fio_data) > 2:
         patronymic_data = fio_data[2]
     return family_data, name_data, patronymic_data
+
+
+def upload_file(request):
+    # todo - Логирование загрузки файлов
+    try:
+        file = request.FILES["file"]
+        request_data = request.POST
+        selected_form = request_data.get("selectedForm")
+        entity_id = request_data.get("entityId")
+        other_need_data = request_data.get("otherNeedData")
+        data = {"file": file, "selectedForm": selected_form, "entity_id": entity_id, "other_need_data": other_need_data}
+        function = import_string(selected_form)
+        result = function(
+            request_data={
+                **data,
+                "user": request.user,
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            }
+        )
+    except Exception as e:
+        # todo - Выводить структуру файла которая нужна, если передано не-то
+        exception_string = f"{e}"
+        stdout.write(exception_string)
+        return JsonResponse({"ok": False, "result": [], "message": exception_string})
+    return JsonResponse({"ok": result["ok"], "result": result["result"], "message": result["message"]})

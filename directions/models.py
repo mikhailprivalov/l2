@@ -502,6 +502,9 @@ class Napravleniya(models.Model):
         'Issledovaniya', related_name='parent_slave_hosp', help_text="Из стационарного протокола", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
     )
     parent_case = models.ForeignKey('Issledovaniya', related_name='parent_case', help_text="Случай основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    parent_complex_research = models.ForeignKey(
+        "Issledovaniya", related_name="parent_complex_research", help_text="Комлексная услуга основание", db_index=True, blank=True, null=True, default=None, on_delete=models.SET_NULL
+    )
     rmis_slot_id = models.CharField(max_length=20, blank=True, null=True, default=None, help_text="РМИС слот")
     microbiology_n = models.CharField(max_length=10, blank=True, default='', help_text="Номер в микробиологической лаборатории")
     time_microbiology_receive = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата/время приёма материала микробиологии')
@@ -561,6 +564,7 @@ class Napravleniya(models.Model):
     price_name = models.ForeignKey(contracts.PriceName, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Прайс для направления')
     cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
     need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
+    ecp_direction_number = models.CharField(max_length=64, default=None, blank=True, null=True, db_index=True, help_text='Id-направления ЕЦП')
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -1091,7 +1095,10 @@ class Napravleniya(models.Model):
             pass
         client = Clients.Card.objects.get(pk=client_id)
         if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
-            price_name_obj = contracts.PriceName.get_hospital_price_by_date(doc.hospital_id, current_time(only_date=True), current_time(only_date=True), True)
+            current_hospital = doc.hospital_id
+            if hospital:
+                current_hospital = hospital
+            price_name_obj = contracts.PriceName.get_hospital_price_by_date(current_hospital, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
 
         dir = Napravleniya(
@@ -2306,6 +2313,23 @@ class Issledovaniya(models.Model):
     )
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
     plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
+    billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
+
+    @staticmethod
+    def save_billing(billing_id, iss_ids):
+        iss = Issledovaniya.objects.filter(pk__in=iss_ids)
+        for i in iss:
+            i.billing_id = billing_id
+            i.save()
+        return True
+
+    @staticmethod
+    def cancel_billing(billing_id):
+        iss = Issledovaniya.objects.filter(billing_id=billing_id)
+        for i in iss:
+            i.billing_id = None
+            i.save()
+        return True
 
     @property
     def time_save_local(self):
@@ -2368,7 +2392,7 @@ class Issledovaniya(models.Model):
         )
 
     def __str__(self):
-        return f"{self.pk} - {self.napravleniye.pk}-{self.napravleniye.client.get_fio_w_card()}"
+        return f"{self.pk} - {self.napravleniye}"
 
     def is_get_material(self):
         """

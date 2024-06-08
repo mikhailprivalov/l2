@@ -1,10 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
-from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory
+from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory, ComplexService
 from laboratory.decorators import group_required
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from slog.models import Log
 from utils.response import status_response
 
 
@@ -43,7 +44,7 @@ def change_visibility_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def get_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.get_research(request_data["researchPk"])
+    result = Researches.get_lab_research(request_data["researchPk"])
     return JsonResponse({"result": result})
 
 
@@ -115,3 +116,74 @@ def get_subgroups_all(request):
         for subgroup in SubGroupDirectory.objects.all().order_by("title")
     ]
     return JsonResponse(rows, safe=False)
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def get_complexes(request):
+    services = Researches.get_complex_services()
+    return JsonResponse({"result": services})
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def check_complex_hidden(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    service = Researches.objects.get(pk=complex_id)
+    return JsonResponse({"result": service.hide})
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def get_services_in_complex(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    services = ComplexService.get_services_in_complex(complex_id)
+    return JsonResponse({"result": services})
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def add_service_in_complex(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    service_id = request_data.get("serviceId")
+    result = ComplexService.add_service(complex_id, service_id)
+    Log.log(result["result"], 210003, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id})
+    return status_response(result["ok"])
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def change_complex_hidden(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    result = ComplexService.change_hidden_complex(complex_id)
+    Log.log(complex_id, 210002, request.user.doctorprofile, {"complex_pk": complex_id, "hide": result["hide"]})
+    return status_response(result["ok"])
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def update_complex(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    complex_title = request_data.get("complexTitle")
+    result = ComplexService.update_complex(complex_id, complex_title)
+    if complex_id:
+        Log.log(complex_id, 210001, request.user.doctorprofile, {"complex_pk": complex_id, "old_title": result["old_title"], "new_title": complex_title})
+    else:
+        Log.log(result["id"], 210000, request.user.doctorprofile, {"complex_pk": result["id"], "new_title": complex_title})
+    return JsonResponse({"ok": result["ok"], "id": result["id"]})
+
+
+@login_required
+@group_required("Конструктор: Комплексные услуги")
+def change_service_hidden(request):
+    request_data = json.loads(request.body)
+    complex_id = request_data.get("complexId")
+    service_id = request_data.get("serviceId")
+    result = ComplexService.change_service_hidden(complex_id, service_id)
+    Log.log(service_id, 210004, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id, "hide": result["hide"]})
+    return status_response(result["ok"])

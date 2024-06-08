@@ -225,3 +225,44 @@ def get_research_data_for_contract_specification(price_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_researches():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT id, internal_code, title, code FROM directory_researches
+            WHERE hide=False and internal_code != ''
+            ORDER BY internal_code
+        """,
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_coasts(prices_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT coast, price_name_id, research_id FROM contracts_pricecoast
+            WHERE price_name_id in %(prices_ids)s
+            ORDER BY price_name_id
+        """,
+            params={"prices_ids": prices_ids},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_prices(date_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT id, title, symbol_code FROM contracts_pricename
+            WHERE date_end >= %(date_end)s OR date_end is null
+            ORDER BY title
+        """,
+            params={"date_end": date_end},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

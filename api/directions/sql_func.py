@@ -312,6 +312,7 @@ def get_confirm_direction_patient_year(d_s, d_e, lab_podr, card_pk1, is_lab=Fals
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as ch_time_confirmation,
             directions_issledovaniya.research_id,
             directory_researches.title as research_title,
+            directions_issledovaniya.study_instance_uid,
             directions_issledovaniya.study_instance_uid_tag
             FROM directions_napravleniya
             INNER JOIN directions_issledovaniya ON (directions_napravleniya.id = directions_issledovaniya.napravleniye_id)
@@ -462,20 +463,27 @@ def get_type_confirm_direction(directions_tuple):
     return rows
 
 
-def get_confirm_direction_by_hospital(hospitals, d_start, d_end):
+def get_confirm_direction_by_hospital(hospitals, d_start, d_end, email_with_results_sent_is_false='-1'):
     with connection.cursor() as cursor:
         cursor.execute(
             """ 
         SELECT 
             DISTINCT (directions_napravleniya.id) as direction,
             directions_napravleniya.hospital_id as hospital,
-            directions_napravleniya.email_with_results_sent
+            directions_napravleniya.email_with_results_sent,
+            directions_napravleniya.last_confirmed_at
         FROM directions_napravleniya
         WHERE directions_napravleniya.hospital_id in %(hospitals)s and
         directions_napravleniya.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+        AND 
+            CASE WHEN %(email_with_results_sent_is_false)s != '-1' THEN
+                directions_napravleniya.email_with_results_sent = false
+                WHEN %(email_with_results_sent_is_false)s = '-1' THEN
+                directions_napravleniya.id IS NOT NULL
+            END
         ORDER BY directions_napravleniya.hospital_id
         """,
-            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
+            params={'hospitals': hospitals, 'd_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE, 'email_with_results_sent_is_false': email_with_results_sent_is_false},
         )
         rows = namedtuplefetchall(cursor)
     return rows

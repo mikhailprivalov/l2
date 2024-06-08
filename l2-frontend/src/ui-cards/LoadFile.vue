@@ -382,6 +382,7 @@ export default {
         this.results = [];
         const formData = new FormData();
         formData.append('file', this.csvFile);
+        formData.append('selectedPrice', this.selectedPrice);
         const { data } = await axios.post('/api/parse-file/loadcsv', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
