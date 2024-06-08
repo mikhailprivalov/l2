@@ -73,6 +73,7 @@
           v-model="selectedType"
           :variants="typesWork"
           :start-null="true"
+          @modified="selectType"
         />
       </div>
     </div>
@@ -131,8 +132,15 @@ const selectVariant = (variantId: number, start: string, end: string) => {
   activeVariant.value = variantId;
   startWork.value = start;
   endWork.value = end;
+  selectedType.value = null;
 };
 
+const selectType = (typeId: number) => {
+  selectedType.value = typeId;
+  startWork.value = null;
+  endWork.value = null;
+  activeVariant.value = null;
+};
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
