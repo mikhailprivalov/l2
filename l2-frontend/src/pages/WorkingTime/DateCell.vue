@@ -14,7 +14,7 @@
       }"
       class="transparentButton"
     >
-      {{ сurrentTime }}
+      {{ currentTime }}
     </button>
     <button
       v-tippy
