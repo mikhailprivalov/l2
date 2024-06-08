@@ -140,7 +140,7 @@ const getColumns = () => {
       field: dateString,
       title: dateTitle,
       align: 'center',
-      width: 130,
+      width: 95,
       isWeekend: weekend,
       renderBodyCell: ({ row, column, rowIndex }, h) => h(
         DateCell,

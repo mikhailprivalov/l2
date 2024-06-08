@@ -14,7 +14,7 @@
       }"
       class="transparentButton"
     >
-      <p class="current-time-text">{{ currentTime }}</p>
+      <p class="current-time-text">{{ currentTime }}</p> // eslint-disable-line
     </button>
     <button
       v-tippy
