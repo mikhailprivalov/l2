@@ -61,7 +61,7 @@ const props = defineProps({
   },
   department: {
     type: Number,
-    required: true,
+    required: false,
   },
 });
 const root = getCurrentInstance().proxy.$root;

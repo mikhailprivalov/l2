@@ -128,7 +128,7 @@ const typesWork = ref([
   { id: 5, label: 'Д' },
   { id: 6, label: 'Е' },
 ]);
-
+const selectedTypeLabel = ref('');
 const selectVariant = (variantId: number, startTime: string, endTime: string) => {
   activeVariant.value = variantId;
   startWork.value = startTime;
@@ -138,16 +138,25 @@ const selectVariant = (variantId: number, startTime: string, endTime: string) =>
 
 const selectType = (typeId: number) => {
   selectedType.value = typeId;
+  selectedTypeLabel.value = typesWork.value.find((type) => type.id === selectedType.value).label;
   startWork.value = null;
   endWork.value = null;
   activeVariant.value = null;
 };
 
+watch([startWork, endWork], () => {
+  if (startWork.value && endWork.value && !activeVariant.value && selectedType.value) {
+    console.log('vs nfrb ');
+    selectedType.value = null;
+    selectedTypeLabel.value = '';
+  }
+});
+
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
   } if (selectedType.value) {
-    return typesWork.value.find((type) => type.id === selectedType.value).label;
+    return selectedTypeLabel;
   }
   return '--:--\n--:--';
 });
