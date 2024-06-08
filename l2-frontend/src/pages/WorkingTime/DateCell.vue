@@ -177,7 +177,7 @@ const updateTime = () => {
     } else {
       root.$emit('msg', 'error', message);
     }
-  } else {
+  } else if (selectedTimeOff.value) {
     root.$emit('msg', 'ok', 'Отпуск установлен');
   }
 };
