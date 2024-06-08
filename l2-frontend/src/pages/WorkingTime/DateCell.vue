@@ -14,7 +14,7 @@
       }"
       class="transparentButton"
     >
-      {{ currentTime }}
+      <p>{{ currentTime }}</p>
     </button>
     <button
       v-tippy
@@ -113,7 +113,7 @@ const endWork = ref(null);
 
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
-    return `${startWork.value} - ${endWork.value}`;
+    return `${startWork.value}\n${endWork.value}`;
   }
   return '--:-- - --:--';
 });
@@ -206,5 +206,8 @@ button[disabled] {
   &.active {
       background-color: #d9f1d7;
   }
+}
+.current-time-text {
+  margin: 0;
 }
 </style>
