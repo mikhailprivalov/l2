@@ -103,10 +103,10 @@ def direction_pdf_content(direction_id):
     return localclient.get(addr, params).content
 
 
-def directions_pdf_result(pks):
+def directions_pdf_result(pks, split="1"):
     localclient = TC(enforce_csrf_checks=False)
     addr = "/results/pdf"
-    params = {"pk": json.dumps(pks), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7", 'withSignatureStamps': '1'}
+    params = {"pk": json.dumps(pks), 'leftnone': '1', 'token': "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7", 'withSignatureStamps': '1', 'split': split}
     result = localclient.get(addr, params).content
     pdf_content = base64.b64encode(result).decode('utf-8')
     return pdf_content
