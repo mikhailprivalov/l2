@@ -761,7 +761,7 @@ export default class EDS extends Vue {
             const sign = await createDetachedSignature(this.selectedCertificate, m);
 
             this.signingProcess.currentOperation = `${docTitle} отправка подписи`;
-            const { ok, message } = await this.$api('/directions/eds/add-sign', {
+            const { ok } = await this.$api('/directions/eds/add-sign', {
               pk: d.pk,
               sign,
               mode: this.selectedSignatureMode,
