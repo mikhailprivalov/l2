@@ -51,7 +51,7 @@ def get_pdf_for_mail_send(request):
 
     for direction_id in directions_ids:
         n = Napravleniya.objects.get(pk=direction_id)
-        if n.hospital != hospital_id:
+        if n.hospital_id != hospital_id:
             return Response(f"Направление №{n.pk} не принадлежит организации {hospital_id}")
         if not n.total_confirmed:
             return Response(f"Направление №{n.pk} не подтверждено")
@@ -62,24 +62,12 @@ def get_pdf_for_mail_send(request):
     if not directions_ids:
         return status_response(False, "Empty directions ids")
 
-    pdf = directions_pdf_result(directions_ids)
+    pdf_b64 = directions_pdf_result(directions_ids)
     filename = f"results_{hospital_id}_{directions_ids[0]}--_.pdf"
-    file = ContentFile(base64.b64decode(pdf), name=filename)
-    hospital = Hospitals.objects.get(pk=hospital_id)
     for direction_id in directions_ids:
         n = Napravleniya.objects.get(pk=direction_id)
         n.email_with_results_sent = True
         n.save(update_fields=["email_with_results_sent"])
-        Log.log(
-            direction_id,
-            140000,
-            request.user.doctorprofile,
-            {
-                "hospital": hospital.title,
-                "hospital_id": hospital_id,
-                "directions_ids": directions_ids,
-            },
-        )
-    result = {"file": file, "filename": filename}
+    result = {"b64File": pdf_b64, "filename": filename}
 
     return Response(result)
