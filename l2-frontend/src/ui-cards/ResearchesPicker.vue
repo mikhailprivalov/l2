@@ -36,6 +36,13 @@
       </button>
       <div class="top-inner">
         <div
+          class="top-inner-select all-dep"
+          :class="{ active: dep === -9999 }"
+          @click="select_dep(-9999)"
+        >
+          <span> {{ 'Все' }}</span>
+        </div>
+        <div
           v-for="row in departments_of_type"
           :key="row.pk"
           v-tippy="{ placement: 'bottom', arrow: true }"
@@ -1064,5 +1071,9 @@ export default {
   border-radius: 0;
   padding: 7px 5px;
   font-size: 13px;
+}
+.all-dep {
+  width: 30px;
+  flex: none;
 }
 </style>
