@@ -835,7 +835,6 @@ def receive_history(request):
 
     t = TubesRegistration.objects.filter(time_recive__range=(date1, date2), doc_recive=request.user.doctorprofile)
 
-
     if lpk >= 0:
         t = t.filter(issledovaniya__research__podrazdeleniye=lab)
     elif SettingManager.get("l2_gistology", default='false', default_type='b'):
