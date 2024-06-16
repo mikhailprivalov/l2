@@ -855,8 +855,6 @@ def receive_history(request):
                 }
             )
 
-    tmp_loop = False
-    tmp_sql_loop = True
     recieve_by_one_sql_method = SettingManager.get('recieve_by_one_sql_method', default="false", default_type='b')
     if not recieve_by_one_sql_method:
         for row in t.order_by("-daynum").distinct():
@@ -930,7 +928,7 @@ def receive_history(request):
             old_labs.append(row.department_title)
             old_defect_text = row.tube_defect_text
             old_is_defect = row.tube_is_defect
-            old_is_external_executor = True if row.plan_external_perform_org else False,
+            old_is_external_executor = True if row.plan_external_perform_org else False
             old_n = row.tube_daynum
             old_himself_input_external_hosp_title = row.himself_input_external_hosp_title
             step += 1
