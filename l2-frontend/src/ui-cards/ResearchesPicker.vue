@@ -84,7 +84,7 @@
             v-for="row in selectedSubcategoryObj.researches || []"
             :key="row.pk"
             class="research-select"
-            :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+            :class="{ active: research_selected(row.pk) }"
             :research="row"
             @click.native="select_research(row.pk)"
           />
@@ -95,7 +95,7 @@
           v-for="row in researches_display"
           :key="row.pk"
           class="research-select"
-          :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+          :class="{ active: research_selected(row.pk) }"
           :research="row"
           @click.native="select_research(row.pk)"
         />
