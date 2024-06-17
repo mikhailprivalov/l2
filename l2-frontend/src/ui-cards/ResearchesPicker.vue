@@ -466,7 +466,11 @@ export default {
       return this.$store.getters.templates;
     },
     researches_display() {
-      return this.researches_dep_display();
+      return this.researches_dep_display().filter((research) => {
+        const searchTerm = this.search.toLowerCase();
+        const researchTitle = research.full_title.toLowerCase();
+        return researchTitle.includes(searchTerm);
+      });
     },
     founded_n() {
       let r = 'Не найдено';
