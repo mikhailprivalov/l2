@@ -37,8 +37,8 @@
       <div class="top-inner">
         <div
           class="top-inner-select all-dep"
-          :class="{ active: dep === -9999 }"
-          @click="select_dep(-9999)"
+          :class="{ active: dep === 'all' }"
+          @click="select_dep('all')"
         >
           <span> {{ 'Все' }}</span>
         </div>
