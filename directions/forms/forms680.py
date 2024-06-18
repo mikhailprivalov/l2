@@ -305,7 +305,8 @@ def form_01(request_data):
     objs.append(Paragraph(f"ПОДПИСЬ ________________ {patient_family} {patient_name[0]}.{patient_patronymic[0]}.{space_symbol * 5} ДАТА: {direction_create.split(' ')[0]}", style))
     objs.append(Spacer(1, 2 * mm))
     objs.append(
-        Paragraph("Настоящим подтверждаю, что с правилами преаналитики ознакомлен(а), мне разъяснено, что несоблюдение указанных правил может повлиять на результат исследований.", style))
+        Paragraph("Настоящим подтверждаю, что с правилами преаналитики ознакомлен(а), мне разъяснено, что несоблюдение указанных правил может повлиять на результат исследований.", style)
+    )
     objs.append(Paragraph(f"ПОДПИСЬ ________________ {patient_family} {patient_name[0]}.{patient_patronymic[0]}.{space_symbol * 5}ДАТА: {direction_create.split(' ')[0]}", style))
 
     doc.build(objs)
