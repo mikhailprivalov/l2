@@ -372,6 +372,7 @@
           <span>Сохранить и печать</span>
         </button>
         <button
+          v-if="showButtonBarcode"
           v-tippy
           class="btn btn-blue-nb top-inner-select hidden-small"
           :disabled="!can_save"
@@ -381,6 +382,7 @@
           <span>Сохранить и печать ш/к</span>
         </button>
         <button
+          v-if="showButtonWithoutPrint"
           v-tippy
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
@@ -390,6 +392,7 @@
           <span>Без печати</span>
         </button>
         <button
+          v-if="showButtonSetDocument"
           v-tippy
           class="btn btn-blue-nb top-inner-select"
           :disabled="!can_save"
@@ -958,6 +961,15 @@ export default {
     canChangeHospitalDirection() {
       const groups = this.$store.getters.user_data.groups || [];
       return groups.includes('Изменение больницы в направлении');
+    },
+    showButtonBarcode() {
+      return this.$store.getters.modules.l2_show_button_barcode;
+    },
+    showButtonSetDocument() {
+      return this.$store.getters.modules.l2_show_button_set_document;
+    },
+    showButtonWithoutPrint() {
+      return this.$store.getters.modules.l2_show_button_without_print;
     },
   },
   watch: {

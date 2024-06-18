@@ -36,7 +36,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult, IstochnikiFinansirovaniya
 from laboratory.decorators import logged_in_or_token
-from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE, PRINT_APPENDIX_PAGE_DIRECTION
+from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE, PRINT_APPENDIX_PAGE_DIRECTION, FORMS_LABORATORY_DIRECTION_DEFAULT
 from laboratory.utils import strtime, strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
@@ -218,6 +218,20 @@ def gen_pdf_dir(request):
     if narrow_format:
         from directions.forms.forms580 import form_01 as form_80
         fc = form_80(
+            request_data={
+                **dict(request.GET.items()),
+                "user": request.user,
+                "card_pk": dn[0].client_id,
+                "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            }
+        )
+        if fc:
+            response.write(fc)
+            return response
+
+    if FORMS_LABORATORY_DIRECTION_DEFAULT:
+        default_form_fc = import_string(FORMS_LABORATORY_DIRECTION_DEFAULT)
+        fc = default_form_fc(
             request_data={
                 **dict(request.GET.items()),
                 "user": request.user,
