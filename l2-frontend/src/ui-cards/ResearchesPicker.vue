@@ -91,7 +91,7 @@
             v-for="row in selectedSubcategoryObj.researches || []"
             :key="row.pk"
             class="research-select"
-            :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+            :class="{ active: research_selected(row.pk) }"
             :research="row"
             @click.native="select_research(row.pk)"
           />
@@ -102,7 +102,7 @@
           v-for="row in researches_display"
           :key="row.pk"
           class="research-select"
-          :class="{ active: research_selected(row.pk), highlight_search: highlight_search(row) }"
+          :class="{ active: research_selected(row.pk) }"
           :research="row"
           @click.native="select_research(row.pk)"
         />
@@ -473,7 +473,11 @@ export default {
       return this.$store.getters.templates;
     },
     researches_display() {
-      return this.researches_dep_display();
+      return this.researches_dep_display().filter((research) => {
+        const searchTerm = this.search.toLowerCase();
+        const researchTitle = research.full_title.toLowerCase();
+        return researchTitle.includes(searchTerm);
+      });
     },
     founded_n() {
       let r = 'Не найдено';
