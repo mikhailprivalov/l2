@@ -482,6 +482,7 @@ class FTPConnection:
         else:
             if direction.istochnik_f.title.lower() == "договор":
                 pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
+                pv.PV1.PV1_7.value = f"{direction.price_name.symbol_code}"
             else:
                 pv.PV1.PV1_20.value = "Наличные"
         pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
