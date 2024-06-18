@@ -1096,7 +1096,7 @@ class Napravleniya(models.Model):
         client = Clients.Card.objects.get(pk=client_id)
         if price_name_id is None and istochnik_f and istochnik_f.title.lower() in ["договор"]:
             current_hospital = doc.hospital_id
-            if hospital:
+            if hospital != -1:
                 current_hospital = hospital
             price_name_obj = contracts.PriceName.get_hospital_price_by_date(current_hospital, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
