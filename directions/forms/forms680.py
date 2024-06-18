@@ -156,7 +156,7 @@ def form_01(request_data):
         TableStyle(
             [
                 ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-                ('LEFTPADDING', (0, 0), (-1, -1),  0 * mm),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0 * mm),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), -0.2 * mm),
                 ('TOPPADDING', (0, 0), (-1, -1), -0.2 * mm),
@@ -187,7 +187,7 @@ def form_01(request_data):
         TableStyle(
             [
                 ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-                ('LEFTPADDING', (0, 0), (-1, -1),  0.1 * mm),
+                ('LEFTPADDING', (0, 0), (-1, -1), 0.1 * mm),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), -0.2 * mm),
                 ('TOPPADDING', (0, 0), (-1, -1), -0.2 * mm),
@@ -226,7 +226,7 @@ def form_01(request_data):
         TableStyle(
             [
                 ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-                ('LEFTPADDING', (0, 0), (-1, -1),  2 * mm),
+                ('LEFTPADDING', (0, 0), (-1, -1), 2 * mm),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), -0.1 * mm),
                 ('TOPPADDING', (0, 0), (-1, -1), -0.1 * mm),
@@ -282,7 +282,7 @@ def form_01(request_data):
         TableStyle(
             [
                 ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-                ('LEFTPADDING', (0, 0), (-1, -1),  2 * mm),
+                ('LEFTPADDING', (0, 0), (-1, -1), 2 * mm),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 0.4 * mm),
                 ('TOPPADDING', (0, 0), (-1, -1), 0.3 * mm),
