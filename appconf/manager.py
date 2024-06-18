@@ -65,7 +65,10 @@ class SettingManager:
 
     @staticmethod
     def forms_url():
-        return 'https://forms.yandex.ru/u/6327b35ab4d9a1750ea721f2/'
+        link_review = ''
+        if SettingManager.get("show_review", default='true', default_type='b'):
+            link_review = 'https://forms.yandex.ru/u/6327b35ab4d9a1750ea721f2/'
+        return link_review
 
     @staticmethod
     def get_eds_base_url():
@@ -180,6 +183,10 @@ class SettingManager:
                     "schedule_in_protocol",
                     "feed",
                     "equipment_load_file",
+                    "show_button_barcode",
+                    "show_button_set_document",
+                    "show_button_summ",
+                    "show_button_without_print",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
@@ -198,7 +205,6 @@ class SettingManager:
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
-
         return result
 
     @staticmethod

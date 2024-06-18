@@ -15,6 +15,7 @@ from django.utils import datetime_safe
 from appconf.manager import SettingManager
 from barcodes.views import tubes
 from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
+from directions.sql_func import get_tube_registration
 from directory.models import Fractions, Researches, Unit
 from ftp_orders.main import push_result
 from laboratory.decorators import group_required
@@ -822,7 +823,6 @@ def receive_one_by_one(request):
 @group_required("Получатель биоматериала")
 def receive_history(request):
     request_data = json.loads(request.body)
-
     result = {"rows": []}
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
@@ -837,7 +837,7 @@ def receive_history(request):
 
     if lpk >= 0:
         t = t.filter(issledovaniya__research__podrazdeleniye=lab)
-    else:
+    elif SettingManager.get("l2_gistology", default='false', default_type='b'):
         ns = Napravleniya.objects.filter(time_gistology_receive__range=(date1, date2), issledovaniya__research__is_gistology=True, doc_gistology_receive=request.user.doctorprofile)
         for n in ns.order_by('-time_gistology_receive'):
             result["rows"].append(
@@ -854,36 +854,98 @@ def receive_history(request):
                 }
             )
 
-    for row in t.order_by("-daynum").distinct():
-        first_iss: Issledovaniya = row.issledovaniya_set.first()
-        if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
-            podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
-            lab_titles = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
-            lab_titles = ",".join(lab_titles)
-            podrs = [f"{podrs[0]}, {lab_titles}"]
-            is_external_executor = True
-        else:
-            podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
-            is_external_executor = False
+    recieve_by_one_sql_method = SettingManager.get('recieve_by_one_sql_method', default="false", default_type='b')
+    if not recieve_by_one_sql_method:
+        for row in t.order_by("-daynum").distinct():
+            first_iss: Issledovaniya = row.issledovaniya_set.first()
+            if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_executor_hospital:
+                podrs = [first_iss.napravleniye.external_executor_hospital.safe_short_title]
+                lab_titles = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+                lab_titles = ",".join(lab_titles)
+                podrs = [f"{podrs[0]}, {lab_titles}"]
+                is_external_executor = True
+            else:
+                podrs = sorted(list(set([f"{x.research.get_podrazdeleniye_title_recieve_recieve()}" for x in row.issledovaniya_set.all()])))
+                is_external_executor = False
 
-        if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_order:
-            external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
-        else:
-            external_order_organization = None
-        result["rows"].append(
-            {
-                "pk": row.number,
-                "n": row.daynum or 0,
-                "type": str(row.type.tube),
-                "color": row.type.tube.color,
-                "labs": podrs,
-                "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__number=row.number)],
-                'defect_text': row.defect_text,
-                'is_defect': row.is_defect,
-                'isExternalExecutor': is_external_executor,
-                'externalOrderOrganization': external_order_organization,
-            }
-        )
+            if first_iss and first_iss.napravleniye and first_iss.napravleniye.external_order:
+                external_order_organization = first_iss.napravleniye.external_order.organization.safe_short_title
+            else:
+                external_order_organization = None
+            result["rows"].append(
+                {
+                    "pk": row.number,
+                    "n": row.daynum or 0,
+                    "type": str(row.type.tube),
+                    "color": row.type.tube.color,
+                    "labs": podrs,
+                    "researches": [x.research.title for x in Issledovaniya.objects.filter(tubes__number=row.number)],
+                    'defect_text': row.defect_text,
+                    'is_defect': row.is_defect,
+                    'isExternalExecutor': is_external_executor,
+                    'externalOrderOrganization': external_order_organization,
+                }
+            )
+
+    if recieve_by_one_sql_method:
+        result_sql = get_tube_registration(date1, date2, request.user.doctorprofile.pk)
+        old_n = -1
+        step = 0
+        tmp_researches = []
+        old_labs = []
+        old_tube_number = ""
+        old_tube_title = ""
+        old_tube_color = ""
+        old_is_defect = None
+        old_defect_text = ""
+        old_is_external_executor = False
+        old_himself_input_external_hosp_title = None
+
+        for row in result_sql:
+            if (row.tube_daynum != old_n) and step > 0:
+                result["rows"].append(
+                    {
+                        "pk": old_tube_number,
+                        "n": old_n or 0,
+                        "type": old_tube_title,
+                        "color": old_tube_color,
+                        "labs": list(set(old_labs)),
+                        "researches": tmp_researches,
+                        'defect_text': old_defect_text,
+                        'is_defect': old_is_defect,
+                        'isExternalExecutor': old_is_external_executor,
+                        'externalOrderOrganization': row.himself_input_external_hosp_title,
+                    }
+                )
+                tmp_researches = []
+                old_labs = []
+
+            tmp_researches.append(row.research_title)
+            old_tube_number = row.tube_number
+            old_tube_title = row.tube_title
+            old_tube_color = row.tube_color
+            old_labs.append(row.department_title)
+            old_defect_text = row.tube_defect_text
+            old_is_defect = row.tube_is_defect
+            old_is_external_executor = True if row.plan_external_perform_org else False
+            old_n = row.tube_daynum
+            old_himself_input_external_hosp_title = row.himself_input_external_hosp_title
+            step += 1
+        if step > 0:
+            result["rows"].append(
+                {
+                    "pk": old_tube_number,
+                    "n": old_n or 0,
+                    "type": old_tube_title,
+                    "color": old_tube_color,
+                    "labs": list(set(old_labs)),
+                    "researches": tmp_researches,
+                    'defect_text': old_defect_text,
+                    'is_defect': old_is_defect,
+                    'isExternalExecutor': old_is_external_executor,
+                    'externalOrderOrganization': old_himself_input_external_hosp_title,
+                }
+            )
     return JsonResponse(result)
 
 
