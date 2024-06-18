@@ -8,7 +8,7 @@ import simplejson as json
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import mm, cm
+from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image
@@ -130,19 +130,19 @@ def form_01(request_data):
 
     opinion = [
         [
-            Paragraph(f'Заказчик', styleT),
+            Paragraph('Заказчик', styleT),
             Paragraph(f'{himself_input_external_hosp_title}', styleT),
         ],
         [
-            Paragraph(f'Пациент', styleT),
+            Paragraph('Пациент', styleT),
             Paragraph(f'{patient_fio}', styleT),
         ],
         [
-            Paragraph(f'Дата рождения:', styleT),
+            Paragraph('Дата рождения:', styleT),
             Paragraph(f'{patient_birthday}', styleT),
         ],
         [
-            Paragraph(f'Пол:', styleT),
+            Paragraph('Пол:', styleT),
             Paragraph(f'{patient_sex}', styleT),
         ],
         [
@@ -169,15 +169,15 @@ def form_01(request_data):
 
     opinion = [
         [
-            Paragraph(f'Лаборатория', styleT),
-            Paragraph(f'{def_hospital.title}', styleT),
+            Paragraph('Лаборатория', styleT),
+            Paragraph(def_hospital.title, styleT),
         ],
         [
-            Paragraph(f'Время взятия', styleT),
+            Paragraph('Время взятия', styleT),
             Paragraph(direction_create, styleT),
         ],
         [
-            Paragraph(f'(создания заказа)', styleT),
+            Paragraph('(создания заказа)', styleT),
             Paragraph('', styleT),
         ],
     ]
