@@ -5,6 +5,8 @@ import uuid
 from typing import Optional
 
 from django.core.paginator import Paginator
+
+from barcodes.views import tubes
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory, PriceCoast, PriceName, Company
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
@@ -207,6 +209,14 @@ def directions_generate(request):
                 d: Napravleniya = Napravleniya.objects.get(pk=pk)
                 d.fill_acsn()
                 fill_slot_ecp_free_nearest(d)
+                if SettingManager.get("auto_create_tubes_with_direction", default='false', default_type='b'):
+                    resp = tubes(request, direction_implict_id=pk)
+                    content_type = resp.headers.get("content-type")
+                    if content_type == 'application/json':
+                        resp_json = json.loads(resp.content)
+                        if isinstance(resp_json, dict) and "message" in resp_json:
+                            message_tube = resp_json["message"]
+                            result["message"] + message_tube
     return JsonResponse(result)
 
 
