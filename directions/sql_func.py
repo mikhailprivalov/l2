@@ -184,4 +184,3 @@ def get_data_by_directions_id(direction_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
