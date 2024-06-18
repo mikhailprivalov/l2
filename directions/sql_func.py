@@ -143,3 +143,45 @@ def get_tube_registration(d_start, d_end, doctorprofile_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_data_by_directions_id(direction_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_tubesregistration.id as tube_id,
+            directions_tubesregistration.number as tube_number,
+            di.napravleniye_id as direction_number,
+            dr.title as research_title,
+            himself_input_external_hosp.title as himself_input_external_hosp_title,
+            restubes.title as tube_title,
+            restubes.color as tube_color,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic,
+            ci.sex as patient_sex,
+            cc.id as patient_card_id,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YY') as patient_birthday,
+            to_char(dn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI') as direction_create,
+            dr.internal_code as research_internal_code,
+            dlm.title as laboratory_material
+            FROM directions_tubesregistration
+            LEFT JOIN directions_issledovaniya_tubes dit on directions_tubesregistration.id = dit.tubesregistration_id
+            LEFT JOIN directory_releationsft drft on drft.id = directions_tubesregistration.type_id
+            LEFT JOIN researches_tubes restubes on drft.tube_id = restubes.id
+            LEFT JOIN directions_issledovaniya di on dit.issledovaniya_id = di.id
+            LEFT JOIN directions_napravleniya dn on di.napravleniye_id = dn.id
+            LEFT JOIN directory_researches dr on di.research_id = dr.id
+            LEFT JOIN directory_laboratorymaterial dlm on dr.laboratory_material_id=dlm.id
+            LEFT JOIN hospitals_hospitals himself_input_external_hosp on dn.hospital_id=himself_input_external_hosp.id
+            LEFT JOIN clients_card cc on dn.client_id = cc.id
+            LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            WHERE di.napravleniye_id in %(direction_ids)s
+            ORDER BY di.napravleniye_id, directions_tubesregistration.id
+            """,
+            params={'direction_ids': direction_ids, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+

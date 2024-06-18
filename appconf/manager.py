@@ -183,6 +183,10 @@ class SettingManager:
                     "schedule_in_protocol",
                     "feed",
                     "equipment_load_file",
+                    "show_button_barcode",
+                    "show_button_set_document",
+                    "show_button_summ",
+                    "show_button_without_print",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

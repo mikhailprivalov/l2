@@ -402,6 +402,7 @@ CDA_TEMPLATE_XML_DIRECTORY = ""
 IDGTL_KEY = ""
 ROUTE_LIST_ROW_HEIGHTS = 25
 OWN_SETUP_TO_SEND_FTP_EXECUTOR = False
+FORMS_LABORATORY_DIRECTION_DEFAULT = ""
 
 
 FCM_CERT_PATH = ""
@@ -480,3 +481,5 @@ if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
 # db = DATABASES.get('default', {})
 # db['OPTIONS'] = db.get('OPTIONS', {})
 # db['OPTIONS']['options'] = f'-c statement_timeout={QUERY_TIMEOUT * 1000}'
+
+
