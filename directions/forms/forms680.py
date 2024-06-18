@@ -5,28 +5,18 @@ from copy import deepcopy
 from io import BytesIO
 from typing import List, Union
 import simplejson as json
-from reportlab.graphics.barcode.code128 import Code128
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm, cm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak, Image
-from transliterate import translit
-from directions.models import Napravleniya
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image
 from directions.sql_func import get_data_by_directions_id
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
-from laboratory.utils import strdate, strtime
-from podrazdeleniya.models import Podrazdeleniya
-from utils import xh
-from reportlab.graphics.barcode import qr
 from reportlab.graphics.barcode import createBarcodeDrawing
-
-from django.core.paginator import Paginator
-from reportlab.platypus.flowables import HRFlowable
-from reportlab.lib.pagesizes import A4, landscape, portrait
+from reportlab.lib.pagesizes import A4
 
 
 def form_01(request_data):
