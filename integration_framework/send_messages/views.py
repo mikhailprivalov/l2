@@ -43,7 +43,7 @@ def get_directions_for_mail_send(request):
     return Response(result)
 
 
-@api_view()
+@api_view(['POST'])
 def get_pdf_for_mail_send(request):
     body = json.loads(request.body)
     hospital_id = body.get("hospitalId")
