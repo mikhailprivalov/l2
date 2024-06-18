@@ -147,10 +147,10 @@ def tubes(request, direction_implict_id=None):
                         if not ntube:
                             with transaction.atomic():
                                 try:
-                                    if tmp2.external_executor_hospital:
-                                        hospital_for_generator_tube = tmp2.external_executor_hospital
-                                    elif tmp2.hospital:
+                                    if tmp2.hospital:
                                         hospital_for_generator_tube = tmp2.hospital
+                                    elif tmp2.external_executor_hospital:
+                                        hospital_for_generator_tube = tmp2.external_executor_hospital
                                     else:
                                         hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                                     generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
