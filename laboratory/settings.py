@@ -66,6 +66,7 @@ INSTALLED_APPS = (
     'chats.apps.ChatsConfig',
     'employees.apps.EmployeesConfig',
     'results_feed.apps.ResultsFeedConfig',
+    'document_management',
 )
 
 MIDDLEWARE = [
