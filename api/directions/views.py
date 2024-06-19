@@ -3587,7 +3587,9 @@ def tubes_for_get(request):
                 if vrpk not in has_rels:
                     with transaction.atomic():
                         try:
-                            if direction.external_executor_hospital:
+                            if direction.hospital:
+                                hospital_for_generator_tube = direction.hospital
+                            elif direction.external_executor_hospital:
                                 hospital_for_generator_tube = direction.external_executor_hospital
                             else:
                                 hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
@@ -3600,6 +3602,7 @@ def tubes_for_get(request):
                             return status_response(False, str(e))
                         ntube = TubesRegistration(type=rel, number=number, chunk_number=chunk_number)
                         ntube.save()
+
                         has_rels[vrpk] = ntube
                         new_tubes.append(ntube)
                 else:
