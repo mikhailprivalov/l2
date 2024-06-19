@@ -37,7 +37,7 @@ def form_01(request_data):
             internal_code = cells[internal_code_idx].strip()
             try:
                 coast = float(cells[coast_idx].strip())
-            except:
+            except Exception as e:
                 continue
             if internal_code == "None" or not coast:
                 continue
