@@ -368,7 +368,7 @@ class Researches(models.Model):
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
-    volume_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
+    count_volume_material_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -659,6 +659,7 @@ class Researches(models.Model):
             "laboratoryMaterialId": research.laboratory_material_id,
             "subGroupId": research.sub_group_id,
             "laboratoryDuration": research.laboratory_duration,
+            "countVolumeMaterialForTube": research.count_volume_material_for_tube,
             "tubes": [value for _, value in research_tubes.items()],
         }
         return result
@@ -684,6 +685,7 @@ class Researches(models.Model):
             research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
             research.sub_group_id = research_data.get("subGroupId", None)
             research.laboratory_duration = research_data["laboratoryDuration"]
+            research.count_volume_material_for_tube = research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
             research.save()
             fractions = Fractions.objects.filter(research_id=research.pk)
         elif research_title:
