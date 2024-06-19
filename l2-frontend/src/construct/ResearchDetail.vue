@@ -157,7 +157,7 @@
               >Доля контейнера</label>
               <input
                 id="laboratoryDuration"
-                v-model="research.volumeForTube"
+                v-model="research.countVolumeMaterialForTube"
                 class="form-control"
                 type="number"
               >
@@ -438,7 +438,7 @@ const research = ref<researchData>({
   laboratoryMaterialId: null,
   subGroupId: null,
   laboratoryDuration: '',
-  volumeForTube: null,
+  countVolumeMaterialForTube: null,
   tubes: [],
 });
 
@@ -496,7 +496,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
       laboratoryMaterialId: null,
       subGroupId: null,
       laboratoryDuration: '',
-      volumeForTube: null,
+      countVolumeMaterialForTube: null,
       tubes: [],
     };
     for (const tube of props.research.tubes) {
