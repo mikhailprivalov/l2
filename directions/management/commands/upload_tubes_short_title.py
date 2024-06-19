@@ -30,7 +30,7 @@ class Command(BaseCommand):
                 if short_title == "None":
                     continue
                 if len(short_title) > 6:
-                    self.stdout.write(f'{title} - Не больше 30 символов')
+                    self.stdout.write(f'{title} - Не больше 6 символов')
                     continue
                 tube: Tubes = Tubes.objects.filter(title__iexact=title).first()
                 if tube:
