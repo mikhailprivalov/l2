@@ -12,7 +12,7 @@ class Tubes(models.Model):
     id = models.AutoField(primary_key=True, db_index=True)
     color = models.CharField(max_length=7)  # Цвет в CSS формате (#1122FF)
     title = models.CharField(max_length=255)  # Название
-    short_title = models.CharField(max_length=30, default="", blank=True)
+    short_title = models.CharField(max_length=6, default="", blank=True)
     is_default_external_tube = models.BooleanField(default=False, blank=True, db_index=True)
 
     def __str__(self):
