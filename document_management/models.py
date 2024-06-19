@@ -49,6 +49,7 @@ class TypeDocuments(models.Model):
             'title': self.title,
         }
 
+
 class TypeDocumentsAttributes(models.Model):
     type_document = models.ForeignKey(TypeDocuments, default=None, blank=True, null=True, help_text='Тип документа', on_delete=models.SET_NULL)
     attribute = models.ForeignKey(Attributes, default=None, blank=True, null=True, help_text='Тип реквизита', on_delete=models.SET_NULL)
