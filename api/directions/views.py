@@ -74,8 +74,15 @@ from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplat
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
-from laboratory.settings import DICOM_SERVER, TIME_ZONE, REMD_ONLY_RESEARCH, REMD_EXCLUDE_RESEARCH, SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE, DICOM_SERVERS, \
-    TUBE_MAX_RESEARCH_WITH_SHARE
+from laboratory.settings import (
+    DICOM_SERVER,
+    TIME_ZONE,
+    REMD_ONLY_RESEARCH,
+    REMD_EXCLUDE_RESEARCH,
+    SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE,
+    DICOM_SERVERS,
+    TUBE_MAX_RESEARCH_WITH_SHARE,
+)
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
 from results.sql_func import get_not_confirm_direction, get_laboratory_results_by_directions
