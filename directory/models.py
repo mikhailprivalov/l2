@@ -764,6 +764,14 @@ class Researches(models.Model):
         result = [{"id": complex[0], "label": complex[1]} for complex in complexs]
         return result
 
+    @staticmethod
+    def get_all_ids(array: bool = False, hide: bool = False):
+        if array:
+            result = list(Researches.objects.filter(hide=hide).values_list('id', flat=True))
+        else:
+            result = set(Researches.objects.filter(hide=hide).values_list('id', flat=True))
+        return result
+
 
 class HospitalService(models.Model):
     TYPES = (

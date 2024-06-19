@@ -11,6 +11,10 @@ from random import randint
 from django.contrib.auth import authenticate, login
 from django.db import transaction
 
+from contracts.models import PriceName, PriceCoast
+from directory.models import Researches
+from hospitals.models import Hospitals
+from laboratory.utils import current_time
 from users.tasks import send_password_reset_code
 
 from utils.response import status_response
@@ -247,6 +251,18 @@ def disable_totp(request):
 
 @login_required
 def update_restricted_directions(request):
-    request_data = json.loads(request.body)
-    print(request_data)
+    request_data: dict = json.loads(request.body)
+    user_pk: int = request_data.get('userPk')
+    hospital_pk: int = request_data.get('hospitalPk')
+    doctor_profile: DoctorProfile = DoctorProfile.objects.get(user_id=user_pk)
+    hospital: Hospitals = Hospitals.objects.get(pk=hospital_pk)
+    if hospital.is_external_performing_organization:
+        price = PriceName.get_hospital_price_by_date(hospital_pk, current_time(only_date=True), current_time(only_date=True), True)
+    else:
+        price = PriceName.get_hospital_price_by_date(hospital_pk, current_time(only_date=True), current_time(only_date=True))
+    price_researches_ids = PriceCoast.get_researches_ids_by_price(price.pk)
+    all_researches_ids = Researches.get_all_ids()
+    research_for_restrict = set(all_researches_ids - price_researches_ids)
+    doctor_profile.restricted_to_direct = research_for_restrict
+    doctor_profile.save()
     return status_response(True)
