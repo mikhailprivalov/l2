@@ -52,4 +52,6 @@ def form_01(request_data):
             else:
                 new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
                 new_coast.save()
+    if not starts:
+        return {"ok": False, "result": [], "message": "Не найдены колонка 'Код по прайсу' "}
     return {"ok": True, "result": [], "message": ""}
