@@ -533,6 +533,13 @@
             >
               Ограничить услуги по прайсу
             </button>
+            <button
+              class="btn btn-blue-nb sidebar-btn"
+              style="font-size: 13px"
+              @click="cancelRestricted"
+            >
+              Убрать ограничение
+            </button>
           </div>
           <div
             v-if="setup_forbidden"
@@ -1216,14 +1223,25 @@ export default {
     },
     async restrictedOfPrice() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('users/update-restricted-directions', {
+      const { ok } = await this.$api('users/update-restricted-directions', {
         userPk: this.user.doc_pk,
         hospitalPk: this.selected_hospital,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'успешно');
-        await this.load_users(true);
+      } else {
+        this.$root.$emit('msg', 'error', 'ошибка');
+      }
+    },
+    async cancelRestricted() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok } = await this.$api('users/cancel-restricted-directions', {
+        userPk: this.user.doc_pk,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'успешно');
       } else {
         this.$root.$emit('msg', 'error', 'ошибка');
       }

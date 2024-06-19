@@ -266,3 +266,12 @@ def update_restricted_directions(request):
     doctor_profile.restricted_to_direct.add(*research_for_restrict)
     doctor_profile.save()
     return status_response(True)
+
+
+@login_required
+def cancel_restricted_directions(request):
+    request_data: dict = json.loads(request.body)
+    user_pk: int = request_data.get('userPk')
+    doctor_profile: DoctorProfile = DoctorProfile.objects.get(user_id=user_pk)
+    doctor_profile.restricted_to_direct.clear()
+    return status_response(True)
