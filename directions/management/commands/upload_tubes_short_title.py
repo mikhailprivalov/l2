@@ -32,14 +32,15 @@ class Command(BaseCommand):
                     starts = True
             else:
                 title = cells[title_idx].strip()
+                print(title)
                 short_title = cells[short_title_idx].strip()
-
                 if short_title == "None":
                     continue
-                if len(short_title) > 6:
-                    self.stdout.write(f'{title} - Не больше 6 символов')
+                if len(short_title) > 30:
+                    self.stdout.write(f'{title} - Не больше 30 символов')
                     continue
                 tube: Tubes = Tubes.objects.filter(title__iexact=title).first()
-                tube.short_title = short_title
-                tube.save()
-                self.stdout.write(f'Пробирка {tube.title} обновлена')
+                if tube:
+                    tube.short_title = short_title
+                    tube.save()
+                    self.stdout.write(f'Пробирка {tube.title} обновлена')
