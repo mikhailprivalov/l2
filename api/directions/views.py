@@ -3602,6 +3602,7 @@ def tubes_for_get(request):
                             return status_response(False, str(e))
                         ntube = TubesRegistration(type=rel, number=number, chunk_number=chunk_number)
                         ntube.save()
+
                         has_rels[vrpk] = ntube
                         new_tubes.append(ntube)
                 else:
