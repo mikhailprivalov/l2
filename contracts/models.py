@@ -140,6 +140,14 @@ class PriceCoast(models.Model):
         verbose_name = "Цена прайса"
         verbose_name_plural = "Цены прайса"
 
+    @staticmethod
+    def get_researches_ids_by_price(price_pk: int, array: bool = False):
+        if array:
+            result = list(PriceCoast.objects.filter(price_name_id=price_pk).values_list('research_id', flat=True))
+        else:
+            result = set(PriceCoast.objects.filter(price_name_id=price_pk).values_list('research_id', flat=True))
+        return result
+
 
 class Contract(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text="Наименование организации", db_index=True)
