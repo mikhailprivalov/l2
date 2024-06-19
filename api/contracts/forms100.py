@@ -35,8 +35,11 @@ def form_01(request_data):
                 starts = True
         else:
             internal_code = cells[internal_code_idx].strip()
-            coast = cells[coast_idx].strip()
-            if internal_code == "None" or coast == "None" or coast == "0":
+            try:
+                coast = float(cells[coast_idx].strip())
+            except Exception:
+                continue
+            if internal_code == "None" or not coast:
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
             if not service:
@@ -49,4 +52,6 @@ def form_01(request_data):
             else:
                 new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
                 new_coast.save()
+    if not starts:
+        return {"ok": False, "result": [], "message": "Не найдены колонка 'Код по прайсу' "}
     return {"ok": True, "result": [], "message": ""}
