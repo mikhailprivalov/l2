@@ -412,7 +412,7 @@ interface researchData {
   laboratoryMaterialId: number,
   subGroupId: number,
   laboratoryDuration: string,
-  volumeForTube: number,
+  countVolumeMaterialForTube: number,
   tubes: tubeData[]
 }
 
