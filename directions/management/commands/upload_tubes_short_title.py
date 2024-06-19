@@ -1,12 +1,6 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Q
-from openpyxl.workbook import Workbook
-
-from appconf.manager import SettingManager
-from directory.models import Researches, Fractions, Unit
 from openpyxl import load_workbook
 
-from external_system.models import FsliRefbookTest
 from researches.models import Tubes
 
 
@@ -32,7 +26,6 @@ class Command(BaseCommand):
                     starts = True
             else:
                 title = cells[title_idx].strip()
-                print(title)
                 short_title = cells[short_title_idx].strip()
                 if short_title == "None":
                     continue
