@@ -263,6 +263,6 @@ def update_restricted_directions(request):
     price_researches_ids = PriceCoast.get_researches_ids_by_price(price.pk)
     all_researches_ids = Researches.get_all_ids()
     research_for_restrict = set(all_researches_ids - price_researches_ids)
-    doctor_profile.restricted_to_direct = research_for_restrict
+    doctor_profile.restricted_to_direct.add(*research_for_restrict)
     doctor_profile.save()
     return status_response(True)
