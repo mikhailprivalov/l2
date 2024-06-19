@@ -368,7 +368,7 @@ class Researches(models.Model):
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
-    volume_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости", blank=True)
+    volume_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
 
     @staticmethod
     def save_plan_performer(tb_data):
