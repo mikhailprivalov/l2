@@ -18,7 +18,7 @@ import directory.models as directory
 from appconf.manager import SettingManager
 from directions.models import Napravleniya, Issledovaniya, TubesRegistration, NumberGenerator, NoGenerator, GeneratorValuesAreOver
 from laboratory.decorators import group_required
-from laboratory.settings import FONTS_FOLDER, BARCODE_SIZE
+from laboratory.settings import FONTS_FOLDER, BARCODE_SIZE, TUBE_MAX_RESEARCH_WITH_SHARE, TUBE_BARCODE_OFFSET_X, TUBE_BARCODE_WIDTH_MINDEX
 from users.models import DoctorProfile
 from laboratory.utils import strdate
 from reportlab.graphics.shapes import Drawing
@@ -134,10 +134,15 @@ def tubes(request, direction_implict_id=None):
                             vrpk = absor.fupper.relation_id
                             rel = absor.fupper.relation
 
-                    if rel.max_researches_per_tube:
+                    if rel.max_researches_per_tube and not TUBE_MAX_RESEARCH_WITH_SHARE:
                         actual_count = relation_researches_count.get(rel.pk, 0) + 1
                         relation_researches_count[rel.pk] = actual_count
                         chunk_number = math.ceil(actual_count / rel.max_researches_per_tube)
+                        vrpk = f"{vrpk}_{chunk_number}"
+                    elif v.research.count_volume_material_for_tube and TUBE_MAX_RESEARCH_WITH_SHARE:
+                        actual_volume_share = relation_researches_count.get(rel.pk, 0) + v.research.count_volume_material_for_tube
+                        relation_researches_count[rel.pk] = actual_volume_share
+                        chunk_number = math.ceil(actual_volume_share / 1)
                         vrpk = f"{vrpk}_{chunk_number}"
                     else:
                         chunk_number = None
@@ -228,9 +233,12 @@ def tubes(request, direction_implict_id=None):
             if tube >= 1000000:
                 m = 0.016
             if tube >= 10000000000:
-                m = 0.013
+                m = TUBE_BARCODE_WIDTH_MINDEX
             barcode = code128.Code128(str(tube), barHeight=ph * mm - 12 * mm, barWidth=pw / 43 * inch * m)
-            barcode.drawOn(c, -3 * mm, 4 * mm)
+            if tube >= 10000000000:
+                barcode.drawOn(c, TUBE_BARCODE_OFFSET_X * mm, 4 * mm)
+            else:
+                barcode.drawOn(c, -3 * mm, 4 * mm)
 
             c.showPage()
     c.save()
