@@ -659,6 +659,7 @@ class Researches(models.Model):
             "laboratoryMaterialId": research.laboratory_material_id,
             "subGroupId": research.sub_group_id,
             "laboratoryDuration": research.laboratory_duration,
+            "volumeForTube": research.volume_for_tube,
             "tubes": [value for _, value in research_tubes.items()],
         }
         return result
@@ -684,6 +685,7 @@ class Researches(models.Model):
             research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
             research.sub_group_id = research_data.get("subGroupId", None)
             research.laboratory_duration = research_data["laboratoryDuration"]
+            research.volume_for_tube = research_data["volumeForTube"]
             research.save()
             fractions = Fractions.objects.filter(research_id=research.pk)
         elif research_title:

@@ -150,6 +150,18 @@
                 :append-to-body="true"
               />
             </div>
+            <div class="margin flex-item">
+              <label
+                for="laboratoryDuration"
+                class="research-detail-label"
+              >Доля контейнера</label>
+              <input
+                id="laboratoryDuration"
+                v-model="research.volumeForTube"
+                class="form-control"
+                type="number"
+              >
+            </div>
           </div>
         </div>
       </div>
@@ -400,6 +412,7 @@ interface researchData {
   laboratoryMaterialId: number,
   subGroupId: number,
   laboratoryDuration: string,
+  volumeForTube: number,
   tubes: tubeData[]
 }
 
@@ -425,6 +438,7 @@ const research = ref<researchData>({
   laboratoryMaterialId: null,
   subGroupId: null,
   laboratoryDuration: '',
+  volumeForTube: null,
   tubes: [],
 });
 
@@ -482,6 +496,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
       laboratoryMaterialId: null,
       subGroupId: null,
       laboratoryDuration: '',
+      volumeForTube: null,
       tubes: [],
     };
     for (const tube of props.research.tubes) {
