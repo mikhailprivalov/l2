@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 short_title = cells[short_title_idx].strip()
                 if short_title == "None":
                     continue
-                if len(short_title) > 30:
+                if len(short_title) > 6:
                     self.stdout.write(f'{title} - Не больше 30 символов')
                     continue
                 tube: Tubes = Tubes.objects.filter(title__iexact=title).first()
