@@ -10,4 +10,5 @@ urlpatterns = [
     path('generate-totp-code', views.generate_totp_code),
     path('set-totp', views.set_totp),
     path('disable-totp', views.disable_totp),
+    path('update-restricted-directions', views.update_restricted_directions),
 ]

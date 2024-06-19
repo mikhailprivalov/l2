@@ -243,3 +243,10 @@ def disable_totp(request):
         doc.save()
     slog.Log(key='', type=120003, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
     return status_response(True)
+
+
+@login_required
+def update_restricted_directions(request):
+    request_data = json.loads(request.body)
+    print(request_data)
+    return status_response(True)

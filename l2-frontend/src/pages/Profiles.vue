@@ -526,6 +526,13 @@
                 @click="change_setup_forbidden"
               />
             </button>
+            <button
+              class="btn btn-blue-nb sidebar-btn"
+              style="font-size: 13px"
+              @click="restrictedOfPrice"
+            >
+              Ограничить услуги по прайсу
+            </button>
           </div>
           <div
             v-if="setup_forbidden"
@@ -1206,6 +1213,20 @@ export default {
     },
     change_setup_forbidden() {
       this.setup_forbidden = !this.setup_forbidden;
+    },
+    async restrictedOfPrice() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('users/update-restricted-directions', {
+        userPk: this.user.doc_pk,
+        hospitalPk: this.selected_hospital,
+      });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'успешно');
+        await this.load_users(true);
+      } else {
+        this.$root.$emit('msg', 'error', 'ошибка');
+      }
     },
     change_setup_analyzer() {
       this.setup_analyzer = !this.setup_analyzer;
