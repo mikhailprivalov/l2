@@ -35,8 +35,11 @@ def form_01(request_data):
                 starts = True
         else:
             internal_code = cells[internal_code_idx].strip()
-            coast = cells[coast_idx].strip()
-            if internal_code == "None" or coast == "None" or coast == "0":
+            try:
+                coast = float(cells[coast_idx].strip())
+            except:
+                continue
+            if internal_code == "None" or not coast:
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
             if not service:
