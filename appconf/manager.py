@@ -187,6 +187,7 @@ class SettingManager:
                     "show_button_set_document",
                     "show_button_summ",
                     "show_button_without_print",
+                    "research_select_col",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
