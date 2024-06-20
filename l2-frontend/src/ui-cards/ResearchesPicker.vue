@@ -102,7 +102,7 @@
           v-for="row in researches_display"
           :key="row.pk"
           class="research-select"
-          :class="{ active: research_selected(row.pk) }"
+          :class="[{ active: research_selected(row.pk) }, l2_research_col ? `research-select-col-${l2_research_col}` : '']"
           :research="row"
           @click.native="select_research(row.pk)"
         />
@@ -362,6 +362,9 @@ export default {
     },
     l2_without_lab_and_paraclinic() {
       return this.$store.getters.modules.l2_without_lab_and_paraclinic;
+    },
+    l2_research_col() {
+      return this.$store.getters.modules.l2_research_select_col;
     },
     types() {
       let result = this.$store.getters.allTypes.filter(
@@ -1079,5 +1082,11 @@ export default {
 .all-dep {
   width: 30px;
   flex: none;
+}
+.research-select-col-2 {
+  width: 50%;
+}
+.research-select-col-1 {
+  width: 100%;
 }
 </style>
