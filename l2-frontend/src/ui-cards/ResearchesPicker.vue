@@ -102,7 +102,7 @@
           v-for="row in researches_display"
           :key="row.pk"
           class="research-select"
-          :class="[{ active: research_selected(row.pk) }, l2_research_col ? `research-select-col-${l2_research_col}` : '']"
+          :class="[{ active: research_selected(row.pk) }, l2_research_col ? `research-select-col--${l2_research_col}` : '']"
           :research="row"
           @click.native="select_research(row.pk)"
         />
@@ -1083,10 +1083,15 @@ export default {
   width: 30px;
   flex: none;
 }
-.research-select-col-2 {
-  width: 50%;
-}
-.research-select-col-1 {
-  width: 100%;
+.research-select-col {
+  &--1 {
+    width: 100%;
+  }
+  &--2 {
+    width: 50%;
+  }
+  &--3 {
+    width: 33.3%;
+  }
 }
 </style>
