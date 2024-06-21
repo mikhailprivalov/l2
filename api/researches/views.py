@@ -185,6 +185,7 @@ def get_researches(request, last_used=False):
                     "autoadd": autoadd,
                     "addto": addto,
                     "code": r.code,
+                    "internal_code": r.internal_code,
                     "type": "4" if not r.podrazdeleniye else str(r.podrazdeleniye.p_type),
                     "site_type": r.get_site_type_id(),
                     "site_type_raw": r.site_type_id if not r.is_application else -13,
