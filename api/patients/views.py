@@ -642,6 +642,7 @@ def patients_card_save(request):
         with transaction.atomic():
             base = CardBase.objects.select_for_update().get(pk=request_data["base_pk"], internal_type=True)
             c = Card(number=Card.next_l2_n(), base=base, individual=i, main_diagnosis="", main_address="", fact_address="")
+            c.owner = request.user.doctorprofile.hospital
             c.save()
             card_pk = c.pk
         Log.log(card_pk, 30000, request.user.doctorprofile, request_data)
