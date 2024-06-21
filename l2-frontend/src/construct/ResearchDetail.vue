@@ -159,6 +159,8 @@
                 id="laboratoryDuration"
                 v-model="research.countVolumeMaterialForTube"
                 class="form-control"
+                max="1"
+                step="0.01"
                 type="number"
               >
             </div>
@@ -520,16 +522,28 @@ const validateResearch = () => {
   const titleFilled = research.value.title;
   const departmentFilled = research.value.departmentId && research.value.departmentId !== -1;
   const tubesFilled = research.value.tubes.length > 0;
+  const countForTubeNormal = research.value.countVolumeMaterialForTube <= 1;
+  const variants = {
+    0: { ok: true, message: '' },
+    1: { ok: false, message: 'Не заполнено название' },
+    2: { ok: false, message: 'Не выбрано подразделение' },
+    3: { ok: false, message: 'Не выбрана пробирка' },
+    4: { ok: false, message: 'Доля в контейнере не может быть больше 1' },
+  };
+  let result = 0;
   if (!titleFilled) {
-    return { ok: false, message: 'Не заполнено название' };
+    result = 1;
   }
   if (!departmentFilled) {
-    return { ok: false, message: 'Не выбрано подразделение' };
+    result = 2;
   }
   if (!tubesFilled) {
-    return { ok: false, message: 'Не выбрана пробирка' };
+    result = 3;
   }
-  return { ok: true, message: '' };
+  if (!countForTubeNormal) {
+    result = 4;
+  }
+  return variants[result];
 };
 
 const updateResearch = async () => {
