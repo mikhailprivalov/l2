@@ -345,6 +345,8 @@ def patients_search_card(request):
 
     if not inc_archive:
         cards = cards.filter(is_archive=False)
+    if request.user.doctorprofile.hospital.strict_data_ownership:
+        cards = cards.filter(owner=request.user.doctorprofile.hospital)
     row: Card
     for row in (
         cards.select_related("individual", "base")
