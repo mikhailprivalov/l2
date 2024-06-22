@@ -569,38 +569,38 @@ def get_direction_data_by_directions_id(directions):
 
 
 def get_total_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=False, is_doc_refferal=False):
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """     
-            SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
-            LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
-            WHERE (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s) AND dn.total_confirmed = true
-            AND research_id IN (SELECT id FROM directory_researches WHERE CASE
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """     
+        SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
+        LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
+        WHERE (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s) AND dn.total_confirmed = true
+        AND research_id IN (SELECT id FROM directory_researches WHERE CASE
 
-            WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
-              is_paraclinic = TRUE
-            WHEN %(is_lab)s = FALSE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-              is_doc_refferal = TRUE or is_form = TRUE
+        WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
+          is_paraclinic = TRUE
+        WHEN %(is_lab)s = FALSE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
+          is_doc_refferal = TRUE or is_form = TRUE
 
-            WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE  THEN 
-              is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE
+        WHEN  %(is_lab)s = FALSE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE  THEN 
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE
 
-            WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = FALSE THEN
-                podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = FALSE THEN
+            podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
 
-            WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
-              is_paraclinic = TRUE and is_doc_refferal = FALSE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = FALSE THEN
+          is_paraclinic = TRUE and is_doc_refferal = FALSE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
 
-            WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
-              is_paraclinic = FALSE and is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = FALSE AND %(is_doc_refferal)s = TRUE THEN
+          is_paraclinic = FALSE and is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
 
-            WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE THEN
-              is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
-            END
-            )
+        WHEN %(is_lab)s = TRUE AND %(is_paraclinic)s = TRUE AND %(is_doc_refferal)s = TRUE THEN
+          is_paraclinic = TRUE or is_doc_refferal = TRUE or is_form = TRUE or podrazdeleniye_id = ANY(ARRAY[%(lab_podr)s])
+        END
+        )
 
-            """,
-                params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal, 'lab_podr': lab_podr},
-            )
+        """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'is_lab': is_lab, 'is_paraclinic': is_paraclinic, 'is_doc_refferal': is_doc_refferal, 'lab_podr': lab_podr},
+        )
         rows = namedtuplefetchall(cursor)
-
+    return rows

@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 
-from api.directions.sql_func import get_confirm_direction_by_hospital, get_lab_podr, get_confirm_direction, get_direction_data_by_directions_id, get_total_confirm_direction
+from api.directions.sql_func import get_confirm_direction_by_hospital, get_lab_podr, get_direction_data_by_directions_id, get_total_confirm_direction
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
@@ -10,11 +10,7 @@ from laboratory.utils import current_time, TZ
 from rest_framework.decorators import api_view
 import simplejson as json
 
-from results.sql_func import get_not_confirm_direction
 from utils.response import status_response
-from django.core.files.base import ContentFile
-import base64
-from slog.models import Log
 
 
 @api_view()
