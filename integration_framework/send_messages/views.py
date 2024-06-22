@@ -44,7 +44,7 @@ def get_directions_for_org_mail_send(request):
     return Response(result)
 
 
-@api_view()
+@api_view(['POST'])
 def get_directions_for_person_mail_send(request):
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
