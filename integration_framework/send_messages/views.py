@@ -62,7 +62,7 @@ def get_directions_for_person_mail_send(request):
     is_doc_refferal = request_data.get('is_doc_refferal', False) == 'is_doc_refferal'
 
     if not is_lab and not is_doc_refferal and not is_paraclinic:
-        return Response({"results": []})
+        return Response([])
 
     if is_lab:
         lab_podr = get_lab_podr()
@@ -72,7 +72,7 @@ def get_directions_for_person_mail_send(request):
 
     confirm_direction = get_total_confirm_direction(d_start, d_end, lab_podr, is_lab, is_paraclinic, is_doc_refferal)
     if not confirm_direction:
-        return Response({"results": []})
+        return Response([])
     result_direction = [i.napravleniye_id for i in confirm_direction]
     direction_data = get_direction_data_by_directions_id(tuple(result_direction))
     direction_structure_by_client = {}
@@ -82,11 +82,11 @@ def get_directions_for_person_mail_send(request):
             continue
 
         if not direction_structure_by_client.get(row.client_id):
-            direction_structure_by_client[row.client_id] = {"mail": row.patien_email, "fio": f"{row.family} {row.name} {row.patronymic}", "directions": [row.direction_id]}
+            direction_structure_by_client[row.client_id] = {"mail": row.patient_email, "fio": f"{row.family} {row.name} {row.patronymic}", "directions": [row.direction_id]}
         else:
             direction_structure_by_client[row.client_id]["directions"].append(row.direction_id)
 
-    result = [{"clientId": k, "mail": v["mail"], "dirs": v["directions"]} for k, v in direction_structure_by_client]
+    result = [{"clientId": k, "mail": v["mail"], "dirs": v["directions"]} for k, v in direction_structure_by_client.items()]
 
     return Response(result)
 
