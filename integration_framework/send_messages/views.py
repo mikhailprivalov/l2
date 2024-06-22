@@ -86,7 +86,6 @@ def get_directions_for_person_mail_send(request):
         else:
             direction_structure_by_client[row.client_id]["directions"].append(row.direction_id)
 
-
     result = [{"clientId": k, "mail": v["mail"], "dirs": v["directions"]} for k, v in direction_structure_by_client]
 
     return Response(result)
