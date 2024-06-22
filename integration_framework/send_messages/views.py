@@ -44,7 +44,7 @@ def get_directions_for_org_mail_send(request):
     return Response(result)
 
 
-@api_view()
+@api_view(['POST'])
 def get_directions_for_person_mail_send(request):
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
@@ -62,7 +62,7 @@ def get_directions_for_person_mail_send(request):
     is_doc_refferal = request_data.get('is_doc_refferal', False) == 'is_doc_refferal'
 
     if not is_lab and not is_doc_refferal and not is_paraclinic:
-        return Response({"results": []})
+        return Response([])
 
     if is_lab:
         lab_podr = get_lab_podr()
@@ -72,8 +72,8 @@ def get_directions_for_person_mail_send(request):
 
     confirm_direction = get_total_confirm_direction(d_start, d_end, lab_podr, is_lab, is_paraclinic, is_doc_refferal)
     if not confirm_direction:
-        return Response({"results": []})
-    result_direction = [i for i in confirm_direction.napravleniye_id]
+        return Response([])
+    result_direction = [i.napravleniye_id for i in confirm_direction]
     direction_data = get_direction_data_by_directions_id(tuple(result_direction))
     direction_structure_by_client = {}
 
@@ -82,11 +82,11 @@ def get_directions_for_person_mail_send(request):
             continue
 
         if not direction_structure_by_client.get(row.client_id):
-            direction_structure_by_client[row.client_id] = {"mail": row.patien_email, "fio": f"{row.family} {row.name} {row.patronymic}", "directions": [row.direction_id]}
+            direction_structure_by_client[row.client_id] = {"mail": row.patient_email, "fio": f"{row.family} {row.name} {row.patronymic}", "directions": [row.direction_id]}
         else:
             direction_structure_by_client[row.client_id]["directions"].append(row.direction_id)
 
-    result = [{"clientId": k, "mail": v["mail"], "dirs": v["directions"]} for k, v in direction_structure_by_client]
+    result = [{"clientId": k, "mail": v["mail"], "dirs": v["directions"]} for k, v in direction_structure_by_client.items()]
 
     return Response(result)
 
@@ -118,8 +118,12 @@ def get_pdf_for_mail_send(request):
     filename = f"results_{hospital_id}_{directions_ids[0]}--_.pdf"
     for direction_id in directions_ids:
         n = Napravleniya.objects.get(pk=direction_id)
-        n.email_with_results_sent = True
-        n.save(update_fields=["email_with_results_sent"])
+        if is_person_send:
+            n.email_with_results_sent_to_person = True
+            n.save(update_fields=["email_with_results_sent_to_person"])
+        else:
+            n.email_with_results_sent = True
+            n.save(update_fields=["email_with_results_sent"])
     result = {"b64File": pdf_b64, "filename": filename}
 
     return Response(result)

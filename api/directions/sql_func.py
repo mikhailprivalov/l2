@@ -559,7 +559,7 @@ def get_direction_data_by_directions_id(directions):
                 FROM directions_napravleniya
                 LEFT JOIN clients_card cc on cc.id = directions_napravleniya.client_id
                 LEFT JOIN clients_individual ci on cc.individual_id = ci.id
-                WHERE directions_napravleniya.id in %(directions)s AND
+                WHERE directions_napravleniya.id in %(directions)s
                 ORDER BY directions_napravleniya.client_id
             """,
             params={
