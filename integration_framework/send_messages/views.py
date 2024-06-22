@@ -73,7 +73,7 @@ def get_directions_for_person_mail_send(request):
     confirm_direction = get_total_confirm_direction(d_start, d_end, lab_podr, is_lab, is_paraclinic, is_doc_refferal)
     if not confirm_direction:
         return Response({"results": []})
-    result_direction = [i for i in confirm_direction.napravleniye_id]
+    result_direction = [i.napravleniye_id for i in confirm_direction]
     direction_data = get_direction_data_by_directions_id(tuple(result_direction))
     direction_structure_by_client = {}
 
