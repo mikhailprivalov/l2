@@ -118,12 +118,12 @@ def get_pdf_for_mail_send(request):
     filename = f"results_{hospital_id}_{directions_ids[0]}--_.pdf"
     for direction_id in directions_ids:
         n = Napravleniya.objects.get(pk=direction_id)
-        if not is_person_send:
-            n.email_with_results_sent = True
-            n.save(update_fields=["email_with_results_sent"])
-        else:
+        if is_person_send:
             n.email_with_results_sent_to_person = True
             n.save(update_fields=["email_with_results_sent_to_person"])
+        else:
+            n.email_with_results_sent = True
+            n.save(update_fields=["email_with_results_sent"])
     result = {"b64File": pdf_b64, "filename": filename}
 
     return Response(result)
