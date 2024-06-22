@@ -562,7 +562,9 @@ def get_direction_data_by_directions_id(directions):
                 WHERE directions_napravleniya.id in %(directions)s AND
                 ORDER BY directions_napravleniya.client_id
             """,
-            params={'directions': directions, },
+            params={
+                'directions': directions,
+            },
         )
         rows = namedtuplefetchall(cursor)
     return rows
