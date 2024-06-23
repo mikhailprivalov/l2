@@ -596,9 +596,6 @@ export default {
       let r = [];
       if (this.rev_t === -2 || dep === -13) {
         for (const d of Object.keys(this.$store.getters.researches)) {
-          if (d === 'all') {
-            continue; // Заплатка, не вставлять из all в консультации или заявления
-          }
           for (const row of this.$store.getters.researches[d] || []) {
             if ((row.doc_refferal || row.is_application) && row.site_type === dep) {
               r.push(row);
