@@ -122,7 +122,7 @@ def get_researches(request, last_used=False):
         res = (
             DResearches.objects.filter(hide=False, **q)
             .exclude(pk__in=restricted_to_direct)
-            .select_related('podrazdeleniye', 'comment_variants')
+            .select_related('podrazdeleniye', 'comment_variants', 'site_type')
             .prefetch_related(
                 Prefetch('localization', queryset=Localization.objects.only('pk', 'title'), to_attr='localization_list'),
                 Prefetch('service_location', queryset=ServiceLocation.objects.only('pk', 'title'), to_attr='service_location_list'),
@@ -237,7 +237,7 @@ def get_researches(request, last_used=False):
                     for t in tpls:
                         has_templates[t['pk']] = True
             deps['-109999' if last_used else r.reversed_type].append(research_data)
-            if r.podrazdeleniye.p_type in [2, 3, 4]:  # Выводить в Все только лаб, пар. конс.
+            if (r.podrazdeleniye_id and r.podrazdeleniye.p_type in [2, 3]) or (r.site_type_id and r.site_type.site_type == 0):
                 deps['all'].append(research_data)
 
         for dk in deps:
