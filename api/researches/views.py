@@ -237,7 +237,8 @@ def get_researches(request, last_used=False):
                     for t in tpls:
                         has_templates[t['pk']] = True
             deps['-109999' if last_used else r.reversed_type].append(research_data)
-            deps['all'].append(research_data)
+            if r.podrazdeleniye_id and r.podrazdeleniye.p_type in [2, 3]:
+                deps['all'].append(research_data)
 
         for dk in deps:
             if last_used:
