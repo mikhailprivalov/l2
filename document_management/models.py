@@ -128,7 +128,7 @@ class DocumentFields(models.Model):
         (9, "Table"),
         (10, "Исполнитель"),
     )
-    type_document = models.ForeignKey(TypeDocuments, default=None,  db_index=True, blank=True, null=True, help_text='Тип документа', on_delete=models.SET_NULL)
+    type_document = models.ForeignKey(TypeDocuments, default=None, db_index=True, blank=True, null=True, help_text='Тип документа', on_delete=models.SET_NULL)
     title = models.CharField(max_length=400, help_text="Название поля ввода")
     short_title = models.CharField(max_length=400, default="", blank=True, help_text="Синоним-короткое название поля ввода")
     order = models.IntegerField()
