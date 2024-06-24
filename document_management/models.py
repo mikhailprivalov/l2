@@ -172,11 +172,12 @@ class Documents(models.Model):
 
 class DocumentEmployeeApprove(models.Model):
     document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
-    employee = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text='Согласующий', on_delete=models.SET_NULL)
-    time_approve = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
-    who_create = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text='кто запросил согласование', on_delete=models.SET_NULL)
+    employee = models.ForeignKey(DoctorProfile, related_name='employee_approve', db_index=True, default=None, blank=True, null=True, help_text='Согласующий', on_delete=models.SET_NULL)
+    time_approve = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время согласования исполнителем')
+    create_at_approve = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время запроса согласования')
+    who_create = models.ForeignKey(DoctorProfile, related_name='who_create_to_approve', db_index=True, default=None, blank=True, null=True, help_text='кто запросил согласование', on_delete=models.SET_NULL)
     is_cancel = models.BooleanField(default=True, blank=True, db_index=True)
-    note_cancel = models.CharField(max_length=130, blank=True, help_text="причина отмены")
+    note_cancel = models.CharField(max_length=130, blank=True, help_text="Причина отмены")
 
     class Meta:
         verbose_name = 'Согласование документа'
@@ -188,9 +189,9 @@ class DocumentEmployeeApprove(models.Model):
 
 class DocumentResolution(models.Model):
     document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
-    employee = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text='Исполнитель', on_delete=models.SET_NULL)
-    time_resolution = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения результата')
-    who_create = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text='кто запросил согласование', on_delete=models.SET_NULL)
+    employee = models.ForeignKey(DoctorProfile, related_name='employee_resolution', db_index=True, default=None, blank=True, null=True, help_text='Исполнитель', on_delete=models.SET_NULL)
+    time_resolution = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время создания резолюции')
+    who_create = models.ForeignKey(DoctorProfile, related_name='who_create_resolution', db_index=True, default=None, blank=True, null=True, help_text='Кто создал резолюцию', on_delete=models.SET_NULL)
     is_cancel = models.BooleanField(default=True, blank=True, db_index=True)
     note_cancel = models.CharField(max_length=128, blank=True, help_text="Причина отмены")
     note_resolution = models.CharField(max_length=255, blank=True, help_text="Содержание резолюции")
@@ -208,7 +209,7 @@ class DocumentControl(models.Model):
     document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
     time_control = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Дата контроля')
     resolution = models.ForeignKey(DocumentResolution, db_index=True, on_delete=models.CASCADE, help_text='Резолюция')
-    is_completed = models.BooleanField(default=False, blank=True, db_index=True)
+    is_completed = models.BooleanField(default=False, blank=True, db_index=True, help_text='Выполнена резолюция')
 
     class Meta:
         verbose_name = 'Контроль документа'
@@ -245,7 +246,7 @@ class DocumentFiles(models.Model):
     uploaded_file = models.FileField(upload_to=get_file_path, blank=True, null=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     type_file = models.CharField(max_length=16, blank=True, help_text="Тип документа")
-    who_add_files = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="who_add_files", help_text='Создатель направления', on_delete=models.SET_NULL)
+    who_add_files = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="document_who_add_files", help_text='Создатель направления', on_delete=models.SET_NULL)
     comment = models.CharField(max_length=130, blank=True, help_text="Комментарий")
 
     class Meta:
