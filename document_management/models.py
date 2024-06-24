@@ -175,7 +175,9 @@ class DocumentEmployeeApprove(models.Model):
     employee = models.ForeignKey(DoctorProfile, related_name='employee_approve', db_index=True, default=None, blank=True, null=True, help_text='Согласующий', on_delete=models.SET_NULL)
     time_approve = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время согласования исполнителем')
     create_at_approve = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время запроса согласования')
-    who_create = models.ForeignKey(DoctorProfile, related_name='who_create_to_approve', db_index=True, default=None, blank=True, null=True, help_text='кто запросил согласование', on_delete=models.SET_NULL)
+    who_create = models.ForeignKey(
+        DoctorProfile, related_name='who_create_to_approve', db_index=True, default=None, blank=True, null=True, help_text='кто запросил согласование', on_delete=models.SET_NULL
+    )
     is_cancel = models.BooleanField(default=True, blank=True, db_index=True)
     note_cancel = models.CharField(max_length=130, blank=True, help_text="Причина отмены")
 
