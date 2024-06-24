@@ -191,7 +191,9 @@ class DocumentResolution(models.Model):
     document = models.ForeignKey(Documents, db_index=True, on_delete=models.CASCADE)
     employee = models.ForeignKey(DoctorProfile, related_name='employee_resolution', db_index=True, default=None, blank=True, null=True, help_text='Исполнитель', on_delete=models.SET_NULL)
     time_resolution = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время создания резолюции')
-    who_create = models.ForeignKey(DoctorProfile, related_name='who_create_resolution', db_index=True, default=None, blank=True, null=True, help_text='Кто создал резолюцию', on_delete=models.SET_NULL)
+    who_create = models.ForeignKey(
+        DoctorProfile, related_name='who_create_resolution', db_index=True, default=None, blank=True, null=True, help_text='Кто создал резолюцию', on_delete=models.SET_NULL
+    )
     is_cancel = models.BooleanField(default=True, blank=True, db_index=True)
     note_cancel = models.CharField(max_length=128, blank=True, help_text="Причина отмены")
     note_resolution = models.CharField(max_length=255, blank=True, help_text="Содержание резолюции")
