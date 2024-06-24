@@ -150,7 +150,7 @@ class DocumentFields(models.Model):
 
 
 class Documents(models.Model):
-    type_document = models.ForeignKey(TypeDocuments,  db_index=True, default=None, blank=True, null=True, help_text='Тип документа', on_delete=models.SET_NULL)
+    type_document = models.ForeignKey(TypeDocuments, db_index=True, default=None, blank=True, null=True, help_text='Тип документа', on_delete=models.SET_NULL)
     who_create = models.ForeignKey(DoctorProfile, db_index=True, default=None, blank=True, null=True, help_text='Создатель документа', on_delete=models.SET_NULL)
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания документа', db_index=True)
     time_registration = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время регистрации')
