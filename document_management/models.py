@@ -120,8 +120,8 @@ class Documents(models.Model):
     create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания документа', db_index=True)
 
     class Meta:
-        verbose_name = 'Реквизит для документа'
-        verbose_name_plural = 'Реквизит для документов'
+        verbose_name = 'Документ экземпляр'
+        verbose_name_plural = 'Документы экземляров'
 
     def __str__(self):
         return f'{self.type_document}'
