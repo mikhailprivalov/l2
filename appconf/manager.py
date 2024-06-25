@@ -188,6 +188,7 @@ class SettingManager:
                     "show_button_summ",
                     "show_button_without_print",
                     "research_select_col",
+                    "code_price",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
