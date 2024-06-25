@@ -15,6 +15,7 @@ from django.db import transaction
 from hl7apy import VALIDATION_LEVEL, core
 from hl7apy.parser import parse_message
 
+from appconf.manager import SettingManager
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
 from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles, Issledovaniya, Result
@@ -470,19 +471,28 @@ class FTPConnection:
         pv = hl7.add_group("ORM_O01_PATIENT_VISIT")
         pv.PV1.PV1_2.value = "O"
 
+        l2_price_code = SettingManager.get("l2_price_code", default='ТЛ0000001', default_type='s')
         if OWN_SETUP_TO_SEND_FTP_EXECUTOR:
             prices = PriceName.get_hospital_extrenal_price_by_date(direction.external_executor_hospital, direction.data_sozdaniya, direction.data_sozdaniya)
             for price in prices:
+                if l2_price_code:
+                    price_code_value = l2_price_code
+                else:
+                    price_code_value = price.symbol_code
                 if direction.istochnik_f.title.lower() == "омс" and "омс" in price.title.lower():
-                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
-                    pv.PV1.PV1_7.value = f"{price.symbol_code}"
+                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price_code_value}"
+                    pv.PV1.PV1_7.value = f"{price_code_value}"
                 if direction.istochnik_f.title.lower() == "договор" and "договор" in price.title.lower():
-                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price.symbol_code}"
-                    pv.PV1.PV1_7.value = f"{price.symbol_code}"
+                    pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price_code_value}"
+                    pv.PV1.PV1_7.value = f"{price_code_value}"
         else:
             if direction.istochnik_f.title.lower() == "договор":
-                pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{direction.price_name.symbol_code}"
-                pv.PV1.PV1_7.value = f"{direction.price_name.symbol_code}"
+                if l2_price_code:
+                    price_code_value = l2_price_code
+                else:
+                    price_code_value = direction.price_name.symbol_code
+                pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{price_code_value}"
+                pv.PV1.PV1_7.value = f"{price_code_value}"
             else:
                 pv.PV1.PV1_20.value = "Наличные"
         pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
