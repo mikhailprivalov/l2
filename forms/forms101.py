@@ -8,6 +8,7 @@ from io import BytesIO
 import pytils
 import simplejson
 from django.utils import timezone, dateformat
+from django.utils.module_loading import import_string
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.pagesizes import A4, portrait
@@ -20,9 +21,10 @@ from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Individual, Card, Document, CardDocUsage
+from forms.forms112 import join_two_pdf_data
 from hospitals.models import Hospitals
 from laboratory import settings
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, RELATED_AGREES_FORMS_TOGETHER
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 
@@ -320,6 +322,7 @@ def form_02(request_data):
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
+
     return pdf
 
 
@@ -6614,6 +6617,19 @@ def form_28(request_data):
     objs.append(Paragraph('', style))
     doc.build(objs)
     pdf = buffer.getvalue()
+
+    http_params = {
+        **dict(request_data.items()),
+        "user": request_data["user"],
+        "card_pk": request_data["card_pk"],
+        "hospital": request_data["hospital"],
+    }
+    related_form = RELATED_AGREES_FORMS_TOGETHER.get('forms.form101.form_28')
+    if related_form:
+        for rf in related_form:
+            pdf = join_two_pdf_data(import_string(rf), http_params, request_data['user'], buffer, ind_card, "get")
+            buffer = BytesIO()
+            buffer.write(pdf)
     buffer.close()
     return pdf
 
