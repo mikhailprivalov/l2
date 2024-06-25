@@ -36,6 +36,7 @@
       </button>
       <div class="top-inner">
         <div
+          v-if="l2_all_service"
           class="top-inner-select all-dep"
           :class="{ active: dep === 'all' }"
           @click="select_dep('all')"
@@ -365,6 +366,9 @@ export default {
     },
     l2_research_col() {
       return this.$store.getters.modules.l2_research_select_col;
+    },
+    l2_all_service() {
+      return this.$store.getters.modules.l2_all_service;
     },
     types() {
       let result = this.$store.getters.allTypes.filter(
