@@ -21,7 +21,6 @@ from reportlab.platypus.flowables import HRFlowable
 
 from appconf.manager import SettingManager
 from clients.models import Individual, Card, Document, CardDocUsage
-from directions.views import exteranl_add_pdf
 from forms.forms112 import join_two_pdf_data
 from hospitals.models import Hospitals
 from laboratory import settings
@@ -6625,7 +6624,7 @@ def form_28(request_data):
         "card_pk": request_data["card_pk"],
         "hospital": request_data["hospital"],
     }
-    related_form = RELATED_AGREES_FORMS.get(f'forms.form101.form_28')
+    related_form = RELATED_AGREES_FORMS.get('forms.form101.form_28')
     if related_form:
         for rf in related_form:
             pdf = join_two_pdf_data(import_string(rf), http_params, request_data['user'], buffer, ind_card, "get")
