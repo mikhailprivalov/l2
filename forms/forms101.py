@@ -24,7 +24,7 @@ from clients.models import Individual, Card, Document, CardDocUsage
 from forms.forms112 import join_two_pdf_data
 from hospitals.models import Hospitals
 from laboratory import settings
-from laboratory.settings import FONTS_FOLDER, RELATED_AGREES_FORMS
+from laboratory.settings import FONTS_FOLDER, RELATED_AGREES_FORMS_TOGETHER
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 
@@ -6624,7 +6624,7 @@ def form_28(request_data):
         "card_pk": request_data["card_pk"],
         "hospital": request_data["hospital"],
     }
-    related_form = RELATED_AGREES_FORMS.get('forms.form101.form_28')
+    related_form = RELATED_AGREES_FORMS_TOGETHER.get('forms.form101.form_28')
     if related_form:
         for rf in related_form:
             pdf = join_two_pdf_data(import_string(rf), http_params, request_data['user'], buffer, ind_card, "get")
