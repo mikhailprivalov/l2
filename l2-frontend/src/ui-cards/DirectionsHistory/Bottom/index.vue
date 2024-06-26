@@ -123,6 +123,7 @@ export default {
         l2_send_patients_email_results: this.$store.getters.modules.l2_send_patients_email_results,
         l2_docx_aggregate_laboratory_results: this.$store.getters.modules.l2_docx_aggregate_laboratory_results,
         l2_need_order_redirection: this.$store.getters.modules.l2_need_order_redirection,
+        l2_show_barcode_button_in_direction_history: this.$store.getters.modules.show_barcode_button_in_direction_history,
       };
     },
     menuItemsFiltered() {
