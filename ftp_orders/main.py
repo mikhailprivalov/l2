@@ -677,19 +677,19 @@ def process_push_orders():
     hospitals = get_hospitals_push_orders()
 
     stdout.write("Getting ftp links")
-    ftp_links = {x.orders_push_by_numbers: x for x in hospitals}
+    ftp_links = {x: x.orders_push_by_numbers for x in hospitals}
 
     ftp_connections = {}
 
-    for ftp_url in ftp_links:
-        ftp_connection = FTPConnection(ftp_url, hospital=ftp_links[ftp_url])
-        ftp_connections[ftp_url] = ftp_connection
+    for hospital in ftp_links:
+        ftp_connection = FTPConnection(ftp_links[hospital], hospital=hospital)
+        ftp_connections[hospital] = ftp_connection
 
     time_start = time.time()
 
     while time.time() - time_start < MAX_LOOP_TIME:
         stdout.write(f"Iterating over {len(ftp_links)} servers")
-        for ftp_url, ftp_connection in ftp_connections.items():
+        for hospital, ftp_connection in ftp_connections.items():
             directions_to_sync = []
             directions = []
             directions_external_executor = []
