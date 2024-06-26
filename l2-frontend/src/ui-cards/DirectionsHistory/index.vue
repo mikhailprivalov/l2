@@ -67,6 +67,15 @@
         >
           <i class="glyphicon glyphicon-refresh" />
         </button>
+        <button
+          v-if="modules.showBarcodeButtonInDirectionHistory && checked.length > 0"
+          v-tippy
+          class="btn btn-blue-nb btn-ell nbr"
+          title="Ш/К"
+          @click="printBarcodes"
+        >
+          <i class="fa fa-barcode" />
+        </button>
       </div>
     </div>
     <div class="content-picker">
@@ -519,6 +528,7 @@ export default {
     modules() {
       return {
         rmisQueue: this.$store.getters.modules.l2_rmis_queue,
+        showBarcodeButtonInDirectionHistory: this.$store.getters.modules.l2_show_barcode_button_in_direction_history,
       };
     },
   },
@@ -715,6 +725,9 @@ export default {
       } else if (!this.in_checked(pk)) {
         this.checked.push(pk);
       }
+    },
+    printBarcodes() {
+      this.$root.$emit('print:barcodes', this.checked);
     },
   },
 };
