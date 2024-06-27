@@ -728,7 +728,7 @@ class Researches(models.Model):
                 if current_fraction:
                     Fractions.update_fraction(current_fraction, fraction_data)
                 else:
-                    new_fraction = Fractions.create_fraction(fraction_data, service.pk, relation.pk)
+                    Fractions.create_fraction(fraction_data, service.pk, relation.pk)
         return {"ok": True}
 
     @staticmethod
@@ -761,7 +761,7 @@ class Researches(models.Model):
                 relation.save()
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
-                new_fractions = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
+                Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
         return {"ok": True, "pk": new_service.pk}
 
     @staticmethod
