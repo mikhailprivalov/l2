@@ -6,7 +6,6 @@ from jsonfield import JSONField
 from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
-from slog.models import Log
 from users.models import DoctorProfile, Speciality
 
 
@@ -693,7 +692,7 @@ class Researches(models.Model):
             "laboratory_material_id": research_data.get("laboratoryMaterialId", None),
             "sub_group_id": research_data.get("subGroupId", None),
             "laboratory_duration": research_data["laboratoryDuration"],
-            "count_volume_material_for_tube": research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
+            "count_volume_material_for_tube": research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0,
         }
 
     @staticmethod
@@ -762,7 +761,7 @@ class Researches(models.Model):
             laboratory_material_id=service_data["laboratory_material_id"],
             sub_group_id=service_data["sub_group_id"],
             laboratory_duration=service_data["laboratory_duration"],
-            count_volume_material_for_tube=service_data["count_volume_material_for_tube"]
+            count_volume_material_for_tube=service_data["count_volume_material_for_tube"],
         )
         new_service.save()
         return new_service
