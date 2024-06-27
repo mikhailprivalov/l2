@@ -671,28 +671,41 @@ class Researches(models.Model):
         return result
 
     @staticmethod
-    def update_lab_research(research_data):
-        research_title = research_data["title"].strip() if research_data["title"] else None
-        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
-        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ""
-        research_code = research_data["code"].strip() if research_data["code"] else ""
-        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ""
-        research = Researches.objects.filter(pk=research_data["pk"]).first()
+    def normalize_research_data(research_data):
+        return {
+            "pk": research_data["pk"],
+            "title": research_data["title"].strip() if research_data["title"] else None,
+            "short_title": research_data["shortTitle"].strip() if research_data["shortTitle"] else "",
+            "ecp_id": research_data["ecpId"].strip() if research_data["ecpId"] else "",
+            "code": research_data["code"].strip() if research_data["code"] else "",
+            "internal_code": research_data["internalCode"].strip() if research_data["internalCode"] else "",
+            "prepartion": research_data["preparation"],
+            "department_id": research_data["departmentId"],
+            "laboratory_material_id": research_data.get("laboratoryMaterialId", None),
+            "sub_group_id": research_data.get("subGroupId", None),
+            "laboratory_duration": research_data["laboratoryDuration"],
+            "count_volume_material_for_tube": research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
+        }
 
-        if not research or not research_title:
+    @staticmethod
+    def update_lab_research(research_data):
+        service_data = Researches.normalize_research_data(research_data)
+        research = Researches.objects.filter(pk=service_data["pk"]).first()
+
+        if not service_data["title"]:
             return False
 
-        research.title = research_title
-        research.short_title = research_short_title
-        research.code = research_code
-        research.ecp_id = research_ecp_id
-        research.internal_code = research_internal_code
-        research.preparation = research_data["preparation"]
-        research.podrazdeleniye_id = research_data["departmentId"]
-        research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
-        research.sub_group_id = research_data.get("subGroupId", None)
-        research.laboratory_duration = research_data["laboratoryDuration"]
-        research.count_volume_material_for_tube = research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
+        research.title = service_data["title"]
+        research.short_title = service_data["short_title"]
+        research.code = service_data["code"]
+        research.ecp_id = service_data["ecp_id"]
+        research.internal_code = service_data["internal_code"]
+        research.preparation = service_data["preparation"]
+        research.podrazdeleniye_id = service_data["department_id"]
+        research.laboratory_material_id = service_data["laboratory_material_id"]
+        research.sub_group_id = service_data["sub_group_id"]
+        research.laboratory_duration = service_data["laboratory_duration"]
+        research.count_volume_material_for_tube = service_data["count_volume_material_for_tube"]
         research.save()
         fractions = Fractions.objects.filter(research_id=research.pk)
         for tube in research_data["tubes"]:
@@ -740,10 +753,12 @@ class Researches(models.Model):
         return {"ok": True}
 
     @staticmethod
-    def get_lab_additional_data(research_pk: int):
-        current_research = Researches.objects.get(pk=research_pk)
-        result = {"instruction": current_research.instructions, "commentVariantsId": current_research.comment_variants_id, "templateForm": current_research.template}
-        return result
+    def create_lab_research(research_data):
+        research_title = research_data["title"].strip() if research_data["title"] else None
+        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
+        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ""
+        research_code = research_data["code"].strip() if research_data["code"] else ""
+        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ""
 
     @staticmethod
     def get_complex_services(append_hide=True):
