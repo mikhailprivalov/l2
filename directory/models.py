@@ -679,7 +679,7 @@ class Researches(models.Model):
             "ecp_id": research_data["ecpId"].strip() if research_data["ecpId"] else "",
             "code": research_data["code"].strip() if research_data["code"] else "",
             "internal_code": research_data["internalCode"].strip() if research_data["internalCode"] else "",
-            "prepartion": research_data["preparation"],
+            "preparation": research_data["preparation"],
             "department_id": research_data["departmentId"],
             "laboratory_material_id": research_data.get("laboratoryMaterialId", None),
             "sub_group_id": research_data.get("subGroupId", None),
