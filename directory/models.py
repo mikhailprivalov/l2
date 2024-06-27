@@ -48,6 +48,15 @@ class ReleationsFT(models.Model):
         verbose_name = "Физическая пробирка для фракций"
         verbose_name_plural = "Физические пробирки для фракций"
 
+    @staticmethod
+    def get_or_create_relation(tube):
+        relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+        if not relation:
+            tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+            relation = ReleationsFT(tube_id=tube_relation.pk)
+            relation.save()
+        return relation
+
 
 class ResearchGroup(models.Model):
     """
@@ -702,24 +711,16 @@ class Researches(models.Model):
         service.count_volume_material_for_tube = service_data["count_volume_material_for_tube"]
         service.save()
 
-
     @staticmethod
     def update_lab_research_and_fractions(research_data):
         service_data = Researches.normalize_research_data(research_data)
         service = Researches.objects.filter(pk=service_data["pk"]).first()
 
-        if not service_data["title"]:
-            return False
-
         Researches.update_lab_service(service, service_data)
 
         service_fractions = Fractions.objects.filter(research_id=service.pk)
         for tube in research_data["tubes"]:
-            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
-            if not relation:
-                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
-                relation = ReleationsFT(tube_id=tube_relation.pk)
-                relation.save()
+            relation = ReleationsFT.get_or_create_relation(tube)
             for fraction in tube["fractions"]:
                 current_fraction = None
                 fraction_data = Fractions.normalize_fraction_data(fraction)
@@ -754,11 +755,7 @@ class Researches(models.Model):
         service_data = Researches.normalize_research_data(research_data)
         new_service = Researches.create_lab_service(service_data)
         for tube in research_data["tubes"]:
-            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
-            if not relation:
-                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
-                relation = ReleationsFT(tube_id=tube_relation.pk)
-                relation.save()
+            relation = ReleationsFT.get_or_create_relation(tube)
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
                 Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
