@@ -570,6 +570,23 @@ class Researches(models.Model):
         }
         return result
 
+    def as_json_lab_full(self):
+        return {
+            "pk": self.pk,
+            "title": self.title,
+            "shortTitle": self.short_title,
+            "code": self.code,
+            "internalCode": self.internal_code,
+            "ecpId": self.ecp_id,
+            "preparation": self.preparation,
+            "departmentId": self.podrazdeleniye_id,
+            "laboratoryMaterialId": self.laboratory_material_id,
+            "subGroupId": self.sub_group_id,
+            "laboratoryDuration": self.laboratory_duration,
+            "countVolumeMaterialForTube": self.count_volume_material_for_tube,
+        }
+
+
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
         fractions = Fractions.objects.filter(research_id=research_pk).select_related("relation__tube", "unit", "variants").order_by("relation_id", "sort_weight")
@@ -668,7 +685,9 @@ class Researches(models.Model):
         return result
 
     @staticmethod
-    def update_lab_research(research_data):
+    def update_lab_research(research_data, return_data: bool = False):
+        old_research_data = {}
+        new_research_data = {}
         research_pk = None
         research_title = research_data["title"].strip() if research_data["title"] else None
         research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
@@ -677,6 +696,8 @@ class Researches(models.Model):
         research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ""
         research = Researches.objects.filter(pk=research_data["pk"]).first()
         fractions = None
+        if research and return_data:
+            old_research_data = research
         if research and research_title:
             research.title = research_title
             research.short_title = research_short_title
