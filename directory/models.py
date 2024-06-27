@@ -672,11 +672,7 @@ class Researches(models.Model):
 
     @staticmethod
     def update_lab_research(research_data, return_data: bool = False):
-        old_research_data = {}
-        new_research_data = {}
-        old_fractions_data = {}
-        new_fractions_data = {}
-        research_pk = None
+        new_research_pk = None
         research_title = research_data["title"].strip() if research_data["title"] else None
         research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
         research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ""
@@ -685,8 +681,6 @@ class Researches(models.Model):
         research = Researches.objects.filter(pk=research_data["pk"]).first()
         fractions = None
         if research and research_title:
-            if return_data:
-                old_research_data = research.as_json_lab_full()
             research.title = research_title
             research.short_title = research_short_title
             research.code = research_code
@@ -699,8 +693,6 @@ class Researches(models.Model):
             research.laboratory_duration = research_data["laboratoryDuration"]
             research.count_volume_material_for_tube = research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
             research.save()
-            if research_data:
-                new_research_data = research.as_json_lab_full()
             fractions = Fractions.objects.filter(research_id=research.pk)
         elif research_title:
             research = Researches(
@@ -717,8 +709,7 @@ class Researches(models.Model):
                 sort_weight=research_data["order"],
             )
             research.save()
-            new_research_data = research.as_json_lab_full()
-            research_pk = research.pk
+            new_research_pk = research.pk
         else:
             return False
         for tube in research_data["tubes"]:
@@ -736,7 +727,6 @@ class Researches(models.Model):
                 if fractions:
                     current_fraction = fractions.filter(pk=fraction["id"]).first()
                 if current_fraction:
-                    old_fractions_data[current_fraction.pk] = Fractions.as_json(current_fraction)
                     current_fraction.title = fraction_title
                     current_fraction.ecp_id = ecp_id
                     current_fraction.fsli = fraction.get("fsli", None)
@@ -748,7 +738,6 @@ class Researches(models.Model):
                     current_fraction.ref_m = ref_m
                     current_fraction.ref_f = ref_f
                     current_fraction.save()
-                    new_fractions_data[current_fraction.pk] = Fractions.as_json(current_fraction)
                 else:
                     new_fraction = Fractions(
                         research_id=research.pk,
@@ -766,8 +755,8 @@ class Researches(models.Model):
                     )
                     new_fraction.save()
                     new_fractions_data[new_fraction.pk] = Fractions.as_json(new_fraction)
-        if research_pk:
-            return {"ok": True, "pk": research_pk}
+        if new_research_pk:
+            return {"ok": True, "pk": new_research_pk}
         return {"ok": True}
 
     @staticmethod
