@@ -89,14 +89,6 @@ def get_comments_variants(request):
 
 
 @login_required
-@group_required("Конструктор: Лабораторные исследования")
-def get_lab_research_additional_data(request):
-    request_data = json.loads(request.body)
-    result = Researches.get_lab_additional_data(request_data["researchPk"])
-    return JsonResponse({"result": result})
-
-
-@login_required
 def get_subgroups_department(request):
     request_data = json.loads(request.body)
     pk = request_data['department_pk']
