@@ -728,21 +728,7 @@ class Researches(models.Model):
                 if current_fraction:
                     Fractions.update_fraction(current_fraction, fraction_data)
                 else:
-                    new_fraction = Fractions(
-                        research_id=service.pk,
-                        title=fraction_data["title"],
-                        ecp_id=fraction_data["ecp_id"],
-                        fsli=fraction_data["fsli"],
-                        unit_id=fraction_data["unit_id"],
-                        relation_id=relation.pk,
-                        sort_weight=fraction_data["order"],
-                        variants_id=fraction_data["variants_id"],
-                        formula=fraction_data["formula"],
-                        hide=fraction_data["hide"],
-                        ref_m=fraction_data["ref_m"],
-                        ref_f=fraction_data["ref_f"],
-                    )
-                    new_fraction.save()
+                    new_fraction = Fractions.create_fraction(fraction_data, service.pk, relation.pk)
         return {"ok": True}
 
     @staticmethod
@@ -1391,6 +1377,25 @@ class Fractions(models.Model):
         fraction.ref_m = fraction_data["ref_m"]
         fraction.ref_f = fraction_data["ref_f"]
         fraction.save()
+
+    @staticmethod
+    def create_fraction(fraction_data, service_pk, relation_pk):
+        new_fraction = Fractions(
+            research_id=service_pk,
+            title=fraction_data["title"],
+            ecp_id=fraction_data["ecp_id"],
+            fsli=fraction_data["fsli"],
+            unit_id=fraction_data["unit_id"],
+            relation_id=relation_pk,
+            sort_weight=fraction_data["order"],
+            variants_id=fraction_data["variants_id"],
+            formula=fraction_data["formula"],
+            hide=fraction_data["hide"],
+            ref_m=fraction_data["ref_m"],
+            ref_f=fraction_data["ref_f"],
+        )
+        new_fraction.save()
+        return new_fraction
 
 
 class Absorption(models.Model):
