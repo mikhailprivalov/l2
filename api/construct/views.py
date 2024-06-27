@@ -87,6 +87,7 @@ def create_lab_research(request):
     )
     return JsonResponse(result)
 
+
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
 def get_lab_ref_books(request):
