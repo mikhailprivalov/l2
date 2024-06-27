@@ -672,46 +672,29 @@ class Researches(models.Model):
 
     @staticmethod
     def update_lab_research(research_data):
-        new_research_pk = None
         research_title = research_data["title"].strip() if research_data["title"] else None
         research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
         research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ""
         research_code = research_data["code"].strip() if research_data["code"] else ""
         research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ""
         research = Researches.objects.filter(pk=research_data["pk"]).first()
-        fractions = None
-        if research and research_title:
-            research.title = research_title
-            research.short_title = research_short_title
-            research.code = research_code
-            research.ecp_id = research_ecp_id
-            research.internal_code = research_internal_code
-            research.preparation = research_data["preparation"]
-            research.podrazdeleniye_id = research_data["departmentId"]
-            research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
-            research.sub_group_id = research_data.get("subGroupId", None)
-            research.laboratory_duration = research_data["laboratoryDuration"]
-            research.count_volume_material_for_tube = research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
-            research.save()
-            fractions = Fractions.objects.filter(research_id=research.pk)
-        elif research_title:
-            research = Researches(
-                title=research_title,
-                short_title=research_short_title,
-                ecp_id=research_ecp_id,
-                code=research_code,
-                internal_code=research_internal_code,
-                preparation=research_data["preparation"],
-                podrazdeleniye_id=research_data["departmentId"],
-                laboratory_material_id=research_data.get("laboratoryMaterialId", None),
-                sub_group_id=research_data.get("subGroupId", None),
-                laboratory_duration=research_data["laboratoryDuration"],
-                sort_weight=research_data["order"],
-            )
-            research.save()
-            new_research_pk = research.pk
-        else:
+
+        if not research or not research_title:
             return False
+
+        research.title = research_title
+        research.short_title = research_short_title
+        research.code = research_code
+        research.ecp_id = research_ecp_id
+        research.internal_code = research_internal_code
+        research.preparation = research_data["preparation"]
+        research.podrazdeleniye_id = research_data["departmentId"]
+        research.laboratory_material_id = research_data.get("laboratoryMaterialId", None)
+        research.sub_group_id = research_data.get("subGroupId", None)
+        research.laboratory_duration = research_data["laboratoryDuration"]
+        research.count_volume_material_for_tube = research_data["countVolumeMaterialForTube"] if research_data["countVolumeMaterialForTube"] else 0
+        research.save()
+        fractions = Fractions.objects.filter(research_id=research.pk)
         for tube in research_data["tubes"]:
             relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
             if not relation:
@@ -754,9 +737,6 @@ class Researches(models.Model):
                         ref_f=ref_f,
                     )
                     new_fraction.save()
-                    new_fractions_data[new_fraction.pk] = Fractions.as_json(new_fraction)
-        if new_research_pk:
-            return {"ok": True, "pk": new_research_pk}
         return {"ok": True}
 
     @staticmethod

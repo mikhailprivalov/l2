@@ -70,6 +70,13 @@ def update_lab_research(request):
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
+def update_lab_research(request):
+    request_data = json.loads(request.body)
+    result = Researches.update_lab_research(request_data["research"])
+    return JsonResponse(result)
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
 def get_lab_ref_books(request):
     request_data = json.loads(request.body)
     units = Unit.get_units()
