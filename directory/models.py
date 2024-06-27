@@ -718,12 +718,14 @@ class Researches(models.Model):
         service_data = Researches.normalize_research_data(research_data)
         service = Researches.objects.filter(pk=service_data["pk"]).first()
         if need_log_data:
-            old_log_data[service.pk] = service.as_json_lab_full()
+            old_log_data = service.as_json_lab_full()
+            old_log_data["fractions"] = {}
 
         Researches.update_lab_service(service, service_data)
 
         if need_log_data:
-            new_log_data[service.pk] = service.as_json_lab_full()
+            new_log_data = service.as_json_lab_full()
+            new_log_data["fractions"] = {}
 
         service_fractions = Fractions.objects.filter(research_id=service.pk)
         for tube in research_data["tubes"]:
@@ -735,14 +737,14 @@ class Researches(models.Model):
                     current_fraction = service_fractions.filter(pk=fraction["id"]).first()
                 if current_fraction:
                     if need_log_data:
-                        old_log_data[service.pk][current_fraction.pk] = Fractions.as_json(current_fraction)
+                        old_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
                     Fractions.update_fraction(current_fraction, fraction_data)
                     if need_log_data:
-                        new_log_data[service.pk][current_fraction.pk] = Fractions.as_json(current_fraction)
+                        new_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
                 else:
                     Fractions.create_fraction(fraction_data, service.pk, relation.pk)
                     if need_log_data:
-                        new_log_data[service.pk][current_fraction.pk] = Fractions.as_json(current_fraction)
+                        new_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
         if need_log_data:
             return {"ok": True, "old_data": old_log_data, "new_data": new_log_data}
         return {"ok": True}
@@ -771,13 +773,14 @@ class Researches(models.Model):
         service_data = Researches.normalize_research_data(research_data)
         new_service = Researches.create_lab_service(service_data)
         if need_log_data:
-            log_data[new_service.pk] = new_service.as_json_lab_full()
+            log_data = new_service.as_json_lab_full()
+            log_data["fractions"] = {}
         for tube in research_data["tubes"]:
             relation = ReleationsFT.get_or_create_relation(tube)
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
                 new_fractions = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
-                log_data[new_service.pk][new_fractions] = Fractions.as_json(new_fractions)
+                log_data["fractions"][new_fractions] = Fractions.as_json(new_fractions)
         if need_log_data:
             return {"ok": True, "pk": new_service.pk, "log_data": log_data}
         return {"ok": True, "pk": new_service.pk}

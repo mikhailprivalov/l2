@@ -64,9 +64,9 @@ def get_lab_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def update_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.update_lab_research_and_fractions(request_data["researchPk"], True)
+    result = Researches.update_lab_research_and_fractions(request_data["research"], True)
     Log.log(
-        request_data["researchPk"],
+        result["old_data"]["pk"],
         220002,
         request.user.doctorprofile,
         {"old_data": result["old_data"], "new_data": result["new_data"]},
@@ -80,7 +80,7 @@ def create_lab_research(request):
     request_data = json.loads(request.body)
     result = Researches.create_lab_research_and_fractions(request_data["research"], True)
     Log.log(
-        request_data["researchPk"],
+        result["log_data"]["pk"],
         220003,
         request.user.doctorprofile,
         result["log_data"],
