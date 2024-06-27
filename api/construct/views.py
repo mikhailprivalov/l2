@@ -64,7 +64,7 @@ def get_lab_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def update_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.update_lab_research_and_fractions(request_data["research"], True)
+    result = Researches.update_lab_research_and_fractions(request_data["researchPk"], True)
     Log.log(
         request_data["researchPk"],
         220002,
