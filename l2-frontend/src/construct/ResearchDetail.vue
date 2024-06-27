@@ -342,7 +342,7 @@
           :disabled="!research.title"
           @click="createResearch"
         >
-          Сохранить
+          Создать
         </button>
       </div>
     </div>
