@@ -671,7 +671,7 @@ class Researches(models.Model):
         return result
 
     @staticmethod
-    def update_lab_research(research_data, return_data: bool = False):
+    def update_lab_research(research_data):
         new_research_pk = None
         research_title = research_data["title"].strip() if research_data["title"] else None
         research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
