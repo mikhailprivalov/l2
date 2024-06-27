@@ -6,6 +6,7 @@ from jsonfield import JSONField
 from laboratory.settings import DEATH_RESEARCH_PK
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
+from slog.models import Log
 from users.models import DoctorProfile, Speciality
 
 
@@ -634,13 +635,15 @@ class Researches(models.Model):
         return True
 
     @staticmethod
-    def change_visibility(research_pk: int):
+    def change_visibility(research_pk: int, return_hide_status: bool = False):
         research = Researches.objects.get(pk=research_pk)
         if research.hide:
             research.hide = False
         else:
             research.hide = True
         research.save()
+        if return_hide_status:
+            return {"ok": True, "hide": research.hide}
         return True
 
     @staticmethod

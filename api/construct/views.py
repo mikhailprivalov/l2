@@ -29,6 +29,12 @@ def get_tubes(request):
 def update_order_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_order(request_data["researchPk"], request_data["researchNearbyPk"], request_data["action"])
+    Log.log(
+        request_data["researchPk"],
+        220000,
+        request.user.doctorprofile,
+        {"research_pk": request_data["researchPk"], "action": request_data["action"]},
+    )
     return status_response(result)
 
 
@@ -36,8 +42,14 @@ def update_order_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def change_visibility_research(request):
     request_data = json.loads(request.body)
-    result = Researches.change_visibility(request_data["researchPk"])
-    return status_response(result)
+    result = Researches.change_visibility(request_data["researchPk"], True)
+    Log.log(
+        request_data["researchPk"],
+        220001,
+        request.user.doctorprofile,
+        {"research_pk": request_data["researchPk"], "hide": result["hide"]},
+    )
+    return status_response(result["ok"])
 
 
 @login_required
