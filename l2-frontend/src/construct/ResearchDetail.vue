@@ -330,7 +330,7 @@
       <div>
         <button
           v-if="research.pk !== -1"
-          class="btn btn-blue-nb"
+          class="btn btn-blue-nb button-width"
           :disabled="!research.title"
           @click="updateResearch"
         >
@@ -338,7 +338,7 @@
         </button>
         <button
           v-else
-          class="btn btn-blue-nb"
+          class="btn btn-blue-nb button-width"
           :disabled="!research.title"
           @click="createResearch"
         >
@@ -778,5 +778,8 @@ const deleteRef = (idx: number, refKey: string) => {
   height: 30px;
   padding: 0 12px;
   align-self: center;
+}
+.button-width {
+  width: 100px;
 }
 </style>
