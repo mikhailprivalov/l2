@@ -64,15 +64,15 @@ def get_lab_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def update_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.update_lab_research(request_data["research"])
+    result = Researches.update_lab_research_and_fractions(request_data["research"])
     return JsonResponse(result)
 
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def update_lab_research(request):
+def create_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.update_lab_research_and_fractions(request_data["research"])
+    result = Researches.create_lab_research_and_fractions(request_data["research"])
     return JsonResponse(result)
 
 @login_required
