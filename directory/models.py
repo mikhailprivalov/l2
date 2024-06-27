@@ -746,8 +746,7 @@ class Researches(models.Model):
         return {"ok": True}
 
     @staticmethod
-    def create_lab_research(research_data):
-        service_data = Researches.normalize_research_data(research_data)
+    def create_lab_service(service_data):
         new_service = Researches(
             title=service_data["title"],
             short_title=service_data["short_title"],
@@ -762,6 +761,12 @@ class Researches(models.Model):
             count_volume_material_for_tube=service_data["count_volume_material_for_tube"]
         )
         new_service.save()
+        return new_service
+
+    @staticmethod
+    def create_lab_research_and_fractions(research_data):
+        service_data = Researches.normalize_research_data(research_data)
+        new_service = Researches.create_lab_service(service_data)
         for tube in research_data["tubes"]:
             relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
             if not relation:
@@ -769,6 +774,22 @@ class Researches(models.Model):
                 relation = ReleationsFT(tube_id=tube_relation.pk)
                 relation.save()
             for fraction in tube["fractions"]:
+                fraction_data = Fractions.normalize_fraction_data(fraction)
+                new_fraction = Fractions(
+                    research_id=new_service.pk,
+                    title=fraction_data["title"],
+                    ecp_id=fraction_data["ecp_id"],
+                    fsli=fraction_data["fsli"],
+                    unit_id=fraction_data["unit_id"],
+                    relation_id=relation.pk,
+                    sort_weight=fraction_data["order"],
+                    variants_id=fraction_data["variants_id"],
+                    formula=fraction_data["formula"],
+                    hide=fraction_data["hide"],
+                    ref_m=fraction_data["ref_m"],
+                    ref_f=fraction_data["ref_f"],
+                )
+                    new_fraction.save()
 
 
 
