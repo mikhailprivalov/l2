@@ -713,7 +713,7 @@ class Researches(models.Model):
 
         Researches.update_lab_service(service, service_data)
 
-        current_fractions = Fractions.objects.filter(research_id=service.pk)
+        service_fractions = Fractions.objects.filter(research_id=service.pk)
         for tube in research_data["tubes"]:
             relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
             if not relation:
@@ -723,8 +723,8 @@ class Researches(models.Model):
             for fraction in tube["fractions"]:
                 current_fraction = None
                 fraction_data = Fractions.normalize_fraction_data(fraction)
-                if current_fractions:
-                    current_fraction = current_fractions.filter(pk=fraction["id"]).first()
+                if service_fractions:
+                    current_fraction = service_fractions.filter(pk=fraction["id"]).first()
                 if current_fraction:
                     Fractions.update_fraction(current_fraction, fraction_data)
                 else:
