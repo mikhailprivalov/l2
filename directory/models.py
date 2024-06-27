@@ -761,22 +761,8 @@ class Researches(models.Model):
                 relation.save()
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
-                new_fraction = Fractions(
-                    research_id=new_service.pk,
-                    title=fraction_data["title"],
-                    ecp_id=fraction_data["ecp_id"],
-                    fsli=fraction_data["fsli"],
-                    unit_id=fraction_data["unit_id"],
-                    relation_id=relation.pk,
-                    sort_weight=fraction_data["order"],
-                    variants_id=fraction_data["variants_id"],
-                    formula=fraction_data["formula"],
-                    hide=fraction_data["hide"],
-                    ref_m=fraction_data["ref_m"],
-                    ref_f=fraction_data["ref_f"],
-                )
-                new_fraction.save()
-    return {"ok": True}
+                new_fractions = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
+        return {"ok": True}
 
     @staticmethod
     def get_complex_services(append_hide=True):
