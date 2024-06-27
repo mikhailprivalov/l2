@@ -780,7 +780,7 @@ class Researches(models.Model):
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
                 new_fractions = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
-                log_data["fractions"][new_fractions] = Fractions.as_json(new_fractions)
+                log_data["fractions"][new_fractions.pk] = Fractions.as_json(new_fractions)
         if need_log_data:
             return {"ok": True, "pk": new_service.pk, "log_data": log_data}
         return {"ok": True, "pk": new_service.pk}
