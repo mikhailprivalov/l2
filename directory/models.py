@@ -49,10 +49,10 @@ class ReleationsFT(models.Model):
         verbose_name_plural = "Физические пробирки для фракций"
 
     @staticmethod
-    def get_or_create_relation(tube):
-        relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+    def get_or_create_relation(relation_data):
+        relation = ReleationsFT.objects.filter(pk=relation_data["id"]).first()
         if not relation:
-            tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+            tube_relation = Tubes.objects.filter(pk=relation_data["tubeId"]).first()
             relation = ReleationsFT(tube_id=tube_relation.pk)
             relation.save()
         return relation
