@@ -586,7 +586,6 @@ class Researches(models.Model):
             "countVolumeMaterialForTube": self.count_volume_material_for_tube,
         }
 
-
     @staticmethod
     def get_tube_data(research_pk: int, need_fractions: bool = False) -> dict:
         fractions = Fractions.objects.filter(research_id=research_pk).select_related("relation__tube", "unit", "variants").order_by("relation_id", "sort_weight")
@@ -667,21 +666,8 @@ class Researches(models.Model):
     def get_lab_research(research_pk: int):
         research = Researches.objects.get(pk=research_pk)
         research_tubes = Researches.get_tube_data(research_pk, True)
-        result = {
-            "pk": research.pk,
-            "title": research.title,
-            "shortTitle": research.short_title,
-            "code": research.code,
-            "internalCode": research.internal_code,
-            "ecpId": research.ecp_id,
-            "preparation": research.preparation,
-            "departmentId": research.podrazdeleniye_id,
-            "laboratoryMaterialId": research.laboratory_material_id,
-            "subGroupId": research.sub_group_id,
-            "laboratoryDuration": research.laboratory_duration,
-            "countVolumeMaterialForTube": research.count_volume_material_for_tube,
-            "tubes": [value for _, value in research_tubes.items()],
-        }
+        result = research.as_json_lab_full()
+        result["tubes"] = [value for _, value in research_tubes.items()]
         return result
 
     @staticmethod
