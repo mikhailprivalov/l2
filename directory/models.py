@@ -789,9 +789,8 @@ class Researches(models.Model):
                     ref_m=fraction_data["ref_m"],
                     ref_f=fraction_data["ref_f"],
                 )
-                    new_fraction.save()
-
-
+                new_fraction.save()
+    return {"ok": True}
 
     @staticmethod
     def get_complex_services(append_hide=True):
