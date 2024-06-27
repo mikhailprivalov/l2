@@ -688,26 +688,32 @@ class Researches(models.Model):
         }
 
     @staticmethod
-    def update_lab_research(research_data):
+    def update_lab_service(service, service_data):
+        service.title = service_data["title"]
+        service.short_title = service_data["short_title"]
+        service.code = service_data["code"]
+        service.ecp_id = service_data["ecp_id"]
+        service.internal_code = service_data["internal_code"]
+        service.preparation = service_data["preparation"]
+        service.podrazdeleniye_id = service_data["department_id"]
+        service.laboratory_material_id = service_data["laboratory_material_id"]
+        service.sub_group_id = service_data["sub_group_id"]
+        service.laboratory_duration = service_data["laboratory_duration"]
+        service.count_volume_material_for_tube = service_data["count_volume_material_for_tube"]
+        service.save()
+
+
+    @staticmethod
+    def update_lab_research_and_fractions(research_data):
         service_data = Researches.normalize_research_data(research_data)
-        research = Researches.objects.filter(pk=service_data["pk"]).first()
+        service = Researches.objects.filter(pk=service_data["pk"]).first()
 
         if not service_data["title"]:
             return False
 
-        research.title = service_data["title"]
-        research.short_title = service_data["short_title"]
-        research.code = service_data["code"]
-        research.ecp_id = service_data["ecp_id"]
-        research.internal_code = service_data["internal_code"]
-        research.preparation = service_data["preparation"]
-        research.podrazdeleniye_id = service_data["department_id"]
-        research.laboratory_material_id = service_data["laboratory_material_id"]
-        research.sub_group_id = service_data["sub_group_id"]
-        research.laboratory_duration = service_data["laboratory_duration"]
-        research.count_volume_material_for_tube = service_data["count_volume_material_for_tube"]
-        research.save()
-        fractions = Fractions.objects.filter(research_id=research.pk)
+        Researches.update_lab_service(service, service_data)
+
+        current_fractions = Fractions.objects.filter(research_id=service.pk)
         for tube in research_data["tubes"]:
             relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
             if not relation:
@@ -716,49 +722,55 @@ class Researches(models.Model):
                 relation.save()
             for fraction in tube["fractions"]:
                 current_fraction = None
-                fraction_title = fraction["title"].strip() if fraction["title"] else ""
-                ecp_id = fraction["ecpId"].strip() if fraction["ecpId"] else ""
-                unit_id = fraction.get("unitId", None)
-                ref_m, ref_f = Fractions.convert_ref(fraction["refM"], fraction["refF"], True)
-                if fractions:
-                    current_fraction = fractions.filter(pk=fraction["id"]).first()
+                fraction_data = Fractions.normalize_fraction_data(fraction)
+                if current_fractions:
+                    current_fraction = current_fractions.filter(pk=fraction["id"]).first()
                 if current_fraction:
-                    current_fraction.title = fraction_title
-                    current_fraction.ecp_id = ecp_id
-                    current_fraction.fsli = fraction.get("fsli", None)
-                    current_fraction.sort_weight = fraction["order"]
-                    current_fraction.unit_id = unit_id
-                    current_fraction.variants_id = fraction.get("variantsId", None)
-                    current_fraction.formula = fraction["formula"]
-                    current_fraction.hide = fraction["hide"]
-                    current_fraction.ref_m = ref_m
-                    current_fraction.ref_f = ref_f
-                    current_fraction.save()
+                    Fractions.update_fraction(current_fraction, fraction_data)
                 else:
                     new_fraction = Fractions(
-                        research_id=research.pk,
-                        title=fraction_title,
-                        ecp_id=ecp_id,
-                        fsli=fraction["fsli"],
-                        unit_id=unit_id,
+                        research_id=service.pk,
+                        title=fraction_data["title"],
+                        ecp_id=fraction_data["ecp_id"],
+                        fsli=fraction_data["fsli"],
+                        unit_id=fraction_data["unit_id"],
                         relation_id=relation.pk,
-                        sort_weight=fraction["order"],
-                        variants_id=fraction.get("variantsId", None),
-                        formula=fraction["formula"],
-                        hide=fraction["hide"],
-                        ref_m=ref_m,
-                        ref_f=ref_f,
+                        sort_weight=fraction_data["order"],
+                        variants_id=fraction_data["variants_id"],
+                        formula=fraction_data["formula"],
+                        hide=fraction_data["hide"],
+                        ref_m=fraction_data["ref_m"],
+                        ref_f=fraction_data["ref_f"],
                     )
                     new_fraction.save()
         return {"ok": True}
 
     @staticmethod
     def create_lab_research(research_data):
-        research_title = research_data["title"].strip() if research_data["title"] else None
-        research_short_title = research_data["shortTitle"].strip() if research_data["shortTitle"] else ""
-        research_ecp_id = research_data["ecpId"].strip() if research_data["ecpId"] else ""
-        research_code = research_data["code"].strip() if research_data["code"] else ""
-        research_internal_code = research_data["internalCode"].strip() if research_data["internalCode"] else ""
+        service_data = Researches.normalize_research_data(research_data)
+        new_service = Researches(
+            title=service_data["title"],
+            short_title=service_data["short_title"],
+            code=service_data["code"],
+            ecp_id=service_data["ecp_id"],
+            internal_code=service_data["internal_code"],
+            preparation=service_data["preparation"],
+            podrazdeleniye_id=service_data["department_id"],
+            laboratory_material_id=service_data["laboratory_material_id"],
+            sub_group_id=service_data["sub_group_id"],
+            laboratory_duration=service_data["laboratory_duration"],
+            count_volume_material_for_tube=service_data["count_volume_material_for_tube"]
+        )
+        new_service.save()
+        for tube in research_data["tubes"]:
+            relation = ReleationsFT.objects.filter(pk=tube["id"]).first()
+            if not relation:
+                tube_relation = Tubes.objects.filter(pk=tube["tubeId"]).first()
+                relation = ReleationsFT(tube_id=tube_relation.pk)
+                relation.save()
+            for fraction in tube["fractions"]:
+
+
 
     @staticmethod
     def get_complex_services(append_hide=True):
@@ -1329,6 +1341,36 @@ class Fractions(models.Model):
     class Meta:
         verbose_name = "Фракция"
         verbose_name_plural = "Фракции"
+
+    @staticmethod
+    def normalize_fraction_data(fraction_data):
+        ref_m, ref_f = Fractions.convert_ref(fraction_data["refM"], fraction_data["refF"], True)
+        return {
+            "title": fraction_data["title"].strip() if fraction_data["title"] else "",
+            "ecp_id": fraction_data["ecpId"].strip() if fraction_data["ecpId"] else "",
+            "unit_id": fraction_data.get("unitId", None),
+            "ref_m": ref_m,
+            "ref_f": ref_f,
+            "fsli": fraction_data.get("fsli", None),
+            "order": fraction_data["order"],
+            "variants_id": fraction_data.get("variantsId", None),
+            "formula": fraction_data["formula"],
+            "hide": fraction_data["hide"],
+        }
+
+    @staticmethod
+    def update_fraction(fraction, fraction_data):
+        fraction.title = fraction_data["title"]
+        fraction.ecp_id = fraction_data["ecp_id"]
+        fraction.fsli = fraction_data["fsli"]
+        fraction.sort_weight = fraction_data["order"]
+        fraction.unit_id = fraction_data["unit_id"]
+        fraction.variants_id = fraction_data["variants_id"]
+        fraction.formula = fraction_data["formula"]
+        fraction.hide = fraction_data["hide"]
+        fraction.ref_m = fraction_data["ref_m"]
+        fraction.ref_f = fraction_data["ref_f"]
+        fraction.save()
 
 
 class Absorption(models.Model):
