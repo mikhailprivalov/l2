@@ -25,7 +25,6 @@ const props = defineProps({});
 .two-col {
   display: grid;
   grid-template-columns: minmax(200px, 380px) minmax(150px, auto);
-  margin-bottom: 5px;
   height: calc(100vh - 36px);
 }
 .sidebar {
@@ -36,7 +35,6 @@ const props = defineProps({});
 
   .form-control {
     border-radius: 0;
-    height: 36px;
   }
 }
 .empty-list {
