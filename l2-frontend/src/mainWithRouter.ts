@@ -766,6 +766,7 @@ const router = new Router({
       component: () => import('@/pages/DocumentManagement/DocumentViewer.vue'),
       meta: {
         title: 'Документы',
+        fullPageLayout: true,
         groups: ['Документооборот: просмотр документов'],
       },
     },

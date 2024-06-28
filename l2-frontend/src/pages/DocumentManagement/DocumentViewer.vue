@@ -11,7 +11,9 @@
         </button>
       </div>
     </div>
-    <div class="viewer" />
+    <div class="viewer">
+      <h4>Просмотрщик</h4>
+    </div>
   </div>
 </template>
 
