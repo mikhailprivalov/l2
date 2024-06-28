@@ -34,7 +34,10 @@
       >
         {{ selected_type.title }}
       </button>
-      <div class="top-inner">
+      <div
+        class="top-inner"
+        :class="departments_of_type.length > 7 ? 'top-inner-right' : '' "
+      >
         <div
           v-if="l2_all_service"
           class="top-inner-select all-dep"
@@ -44,7 +47,7 @@
           <span> {{ 'Все' }}</span>
         </div>
         <div
-          v-for="row in departments_of_type"
+          v-for="row in departments_of_type.slice(0, 7)"
           :key="row.pk"
           v-tippy="{ placement: 'bottom', arrow: true }"
           class="top-inner-select"
@@ -59,6 +62,32 @@
             </span>
           </span>
         </div>
+      </div>
+      <div class="btn-group depart-other">
+        <button
+          v-if="departments_of_type.length > 7"
+          class="btn btn-blue-nb btn-ell dropdown-toggle depart-other depart-other-btn"
+          type="button"
+          data-toggle="dropdown"
+        >
+          <span class="caret" />
+          {{ dep_i > 6 ? departments_of_type[dep_i].title : 'Ещё' }}
+        </button>
+        <ul
+          v-if="departments_of_type.length > 7"
+          class="dropdown-menu depart-other-dropdown"
+          style="margin-top: 1px"
+        >
+          <li
+            v-for="row in departments_of_type.slice(7)"
+            :key="row.pk"
+          >
+            <a
+              href="#"
+              @click.prevent="select_dep(row.pk)"
+            >{{ row.title }}</a>
+          </li>
+        </ul>
       </div>
     </div>
     <div
@@ -944,6 +973,10 @@ export default {
   overflow: hidden;
 }
 
+.top-inner-right {
+  right: 120px;
+}
+
 .top-inner-select,
 .research-select {
   align-self: stretch;
@@ -1098,5 +1131,24 @@ export default {
   &--3 {
     width: 33.3%;
   }
+}
+.depart-other {
+  float: right;
+  width: 120px;
+  text-align: right !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+.depart-other-btn {
+  float: left;
+  font-size: 12px;
+  height: 34px;
+}
+.depart-other-dropdown {
+  position: relative;
+  float: right;
+  text-align: right;
+  max-height: 250px;
+  overflow-y: auto;
 }
 </style>
