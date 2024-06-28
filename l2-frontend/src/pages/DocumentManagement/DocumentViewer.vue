@@ -10,6 +10,23 @@
           Найти
         </button>
       </div>
+      <div class="sidebar-row bottom-border space-between">
+        <a>Мои документы</a>
+        <a>что-то ещё</a>
+      </div>
+      <div class="sidebar-row bottom-border">
+        <button class="btn btn-blue-nb">
+          Создать документ
+        </button>
+      </div>
+      <div class="sidebar-row bottom-border">
+        <Treeselect
+          :options="documentGroups"
+          class="treeselect-noborder"
+          :clearable="false"
+          placeholder="Выберите группу документов"
+        />
+      </div>
     </div>
     <div class="viewer">
       <h4>Просмотрщик</h4>
@@ -18,7 +35,23 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps({});
+import {
+  computed, getCurrentInstance, onMounted, ref, watch,
+} from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+
+// import { useStore } from '@/store';
+// import * as actions from '@/store/action-types';
+// import api from '@/api';
+
+const documentGroups = [
+  { id: 1, label: 'ОРД' },
+  { id: 2, label: 'ЧТД' },
+  { id: 3, label: 'МВЗ' },
+];
+
 </script>
 
 <style scoped lang="scss">
@@ -45,7 +78,12 @@ const props = defineProps({});
 .sidebar-row {
   display: flex;
 }
-
+.bottom-border {
+  border-bottom: 1px solid #b1b1b1;
+}
+.space-between {
+  justify-content: space-between;
+}
 .sidebar-content {
   height: calc(100vh - 142px);
   overflow-y: auto;
