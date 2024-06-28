@@ -31,10 +31,9 @@
         v-for="group in documentGroups"
         :key="group.id"
         class="sidebar-row bottom-border"
-        style="flex-direction: column"
       >
         <button
-          class="btn btn-blue-nb nbr"
+          class="transparent-button"
         >
           {{ group.label }}
         </button>
@@ -58,11 +57,11 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 // import * as actions from '@/store/action-types';
 // import api from '@/api';
 
-const documentGroups = [
+const documentGroups = ref([
   { id: 1, label: 'ОРД' },
   { id: 2, label: 'ЧТД' },
   { id: 3, label: 'МВЗ' },
-];
+]);
 
 </script>
 
@@ -97,14 +96,21 @@ const documentGroups = [
 .space-between {
   justify-content: space-between;
 }
-.sidebar-content {
-  height: calc(100vh - 142px);
-  overflow-y: auto;
+.transparent-button {
+  background-color: transparent;
+  align-self: stretch;
+  color: #434A54;
+  flex: 1;
+  border: none;
+  padding: 1px 5px;
 }
-
-.sidebar-footer {
-  border-radius: 0;
-  margin: 0;
-  flex: 0 0 34px;
+.transparent-button:hover {
+  background-color: #434a54;
+  color: #FFFFFF;
+  border: none;
+}
+.transparent-button:active {
+  background-color: #37BC9B;
+  color: #FFFFFF;
 }
 </style>
