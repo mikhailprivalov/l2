@@ -15,8 +15,8 @@
         <a>что-то ещё</a>
       </div>
       <div class="sidebar-row bottom-border">
-        <button class="btn btn-blue-nb">
-          Создать документ
+        <button class="btn btn-blue-nb nbr">
+          Создать
         </button>
       </div>
       <div class="sidebar-row bottom-border">
@@ -26,6 +26,18 @@
           :clearable="false"
           placeholder="Выберите группу документов"
         />
+      </div>
+      <div
+        v-for="group in documentGroups"
+        :key="group.id"
+        class="sidebar-row bottom-border"
+        style="flex-direction: column"
+      >
+        <button
+          class="btn btn-blue-nb nbr"
+        >
+          {{ group.label }}
+        </button>
       </div>
     </div>
     <div class="viewer">
@@ -68,6 +80,7 @@ const documentGroups = [
 
   .form-control {
     border-radius: 0;
+    padding-left: 10px;
   }
 }
 .empty-list {
