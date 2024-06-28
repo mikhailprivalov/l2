@@ -761,6 +761,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/document-viewer',
+      name: 'Billing',
+      component: () => import('@/pages/DocumentManagement/DocumentViewer.vue'),
+      meta: {
+        title: 'Документы',
+        groups: ['Документооборот: просмотр документов'],
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),
