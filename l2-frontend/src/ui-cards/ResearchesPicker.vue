@@ -71,7 +71,7 @@
           data-toggle="dropdown"
         >
           <span class="caret" />
-          {{ dep_i > 6 ? departments_of_type[dep_i].title : 'Ещё' }}
+          {{ dep_i > 6 ? departments_of_type[dep_i]?.title : 'Ещё' }}
         </button>
         <ul
           v-if="departments_of_type.length > 7"
