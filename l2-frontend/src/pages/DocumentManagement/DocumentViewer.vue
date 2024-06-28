@@ -11,13 +11,7 @@
         </button>
       </div>
       <div class="sidebar-row bottom-border space-between">
-        <a>Мои документы</a>
-        <a>что-то ещё</a>
-      </div>
-      <div class="sidebar-row bottom-border">
-        <button class="btn btn-blue-nb nbr">
-          Создать
-        </button>
+        <RadioFieldById :variants="buttons" />
       </div>
       <div class="sidebar-row bottom-border">
         <Treeselect
@@ -52,10 +46,15 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 // import { useStore } from '@/store';
 // import * as actions from '@/store/action-types';
 // import api from '@/api';
+const buttons = ref([
+  { id: 1, label: 'Мои' },
+  { id: 2, label: 'Создать' },
+]);
 
 const documentGroups = ref([
   { id: 1, label: 'ОРД' },
