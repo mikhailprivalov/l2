@@ -29,6 +29,12 @@ def get_tubes(request):
 def update_order_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_order(request_data["researchPk"], request_data["researchNearbyPk"], request_data["action"])
+    Log.log(
+        request_data["researchPk"],
+        220000,
+        request.user.doctorprofile,
+        {"research_pk": request_data["researchPk"], "action": request_data["action"]},
+    )
     return status_response(result)
 
 
@@ -36,8 +42,14 @@ def update_order_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def change_visibility_research(request):
     request_data = json.loads(request.body)
-    result = Researches.change_visibility(request_data["researchPk"])
-    return status_response(result)
+    result = Researches.change_visibility(request_data["researchPk"], True)
+    Log.log(
+        request_data["researchPk"],
+        220001,
+        request.user.doctorprofile,
+        {"research_pk": request_data["researchPk"], "hide": result["hide"]},
+    )
+    return status_response(result["ok"])
 
 
 @login_required
@@ -52,7 +64,27 @@ def get_lab_research(request):
 @group_required("Конструктор: Лабораторные исследования")
 def update_lab_research(request):
     request_data = json.loads(request.body)
-    result = Researches.update_lab_research(request_data["research"])
+    result = Researches.update_lab_research_and_fractions(request_data["research"], True)
+    Log.log(
+        result["old_data"]["pk"],
+        220002,
+        request.user.doctorprofile,
+        {"old_data": result["old_data"], "new_data": result["new_data"]},
+    )
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Конструктор: Лабораторные исследования")
+def create_lab_research(request):
+    request_data = json.loads(request.body)
+    result = Researches.create_lab_research_and_fractions(request_data["research"], True)
+    Log.log(
+        result["log_data"]["pk"],
+        220003,
+        request.user.doctorprofile,
+        result["log_data"],
+    )
     return JsonResponse(result)
 
 
@@ -73,14 +105,6 @@ def get_lab_ref_books(request):
 @group_required("Конструктор: Лабораторные исследования")
 def get_comments_variants(request):
     result = MaterialVariants.get_all()
-    return JsonResponse({"result": result})
-
-
-@login_required
-@group_required("Конструктор: Лабораторные исследования")
-def get_lab_research_additional_data(request):
-    request_data = json.loads(request.body)
-    result = Researches.get_lab_additional_data(request_data["researchPk"])
     return JsonResponse({"result": result})
 
 
