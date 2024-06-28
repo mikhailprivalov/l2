@@ -13,24 +13,53 @@
       <div class="sidebar-row bottom-border space-between">
         <RadioFieldById :variants="buttons" />
       </div>
-      <div class="sidebar-row bottom-border">
-        <Treeselect
-          :options="documentGroups"
-          class="treeselect-noborder"
-          :clearable="false"
-          placeholder="Выберите группу документов"
-        />
-      </div>
-      <div
-        v-for="group in documentGroups"
-        :key="group.id"
-        class="sidebar-row bottom-border"
-      >
-        <button
-          class="transparent-button"
+      <h5>Группы</h5>
+      <div>
+        <div
+          v-for="group in documentGroups"
+          :key="group.id"
+          class="sidebar-row row-border"
         >
-          {{ group.label }}
-        </button>
+          <button
+            class="transparent-button"
+            :class="{ 'active-button': selectedGroup === group.id}"
+            @click="selectGroup(group.id)"
+          >
+            {{ group.label }}
+          </button>
+        </div>
+      </div>
+      <h5>Виды</h5>
+      <div>
+        <div
+          v-for="type in documentTypes"
+          :key="type.id"
+          class="sidebar-row row-border"
+        >
+          <button
+            class="transparent-button"
+            :class="{ 'active-button': selectedType === type.id}"
+            @click="selectType(type.id)"
+          >
+            {{ type.label }}
+          </button>
+        </div>
+      </div>
+      <h5>Документы</h5>
+      <div class="scroll">
+        <div
+          v-for="document in documents"
+          :key="document.id"
+          class="sidebar-row row-border"
+        >
+          <button
+            class="transparent-button"
+            :class="{ 'active-button': selectedDocument === document.id}"
+            @click="selectDocument(document.id)"
+          >
+            {{ document.label }}
+          </button>
+        </div>
       </div>
     </div>
     <div class="viewer">
@@ -56,11 +85,46 @@ const buttons = ref([
   { id: 2, label: 'Создать' },
 ]);
 
+const selectedGroup = ref(null);
 const documentGroups = ref([
-  { id: 1, label: 'ОРД' },
-  { id: 2, label: 'ЧТД' },
-  { id: 3, label: 'МВЗ' },
+  { id: 1, label: 'Группа доков 1' },
+  { id: 2, label: 'Группа доков 1' },
+  { id: 3, label: 'Группа доков 1' },
 ]);
+
+const selectGroup = (groupId: number) => {
+  selectedGroup.value = groupId;
+};
+
+const selectedType = ref(null);
+const documentTypes = ref([
+  { id: 1, label: 'Тип дока 1' },
+  { id: 2, label: 'Тип дока 2' },
+  { id: 3, label: 'Тип дока 3' },
+]);
+
+const selectType = (typeId: number) => {
+  selectedType.value = typeId;
+};
+
+const selectedDocument = ref(null);
+const documents = ref([
+  { id: 1, label: 'Документ 1' },
+  { id: 2, label: 'Документ 2' },
+  { id: 3, label: 'Документ 3' },
+  { id: 4, label: 'Документ 4' },
+  { id: 5, label: 'Документ 5' },
+  { id: 6, label: 'Документ 6' },
+  { id: 7, label: 'Документ 7' },
+  { id: 8, label: 'Документ 8' },
+  { id: 9, label: 'Документ 9' },
+  { id: 10, label: 'Документ 10' },
+  { id: 11, label: 'Документ 11' },
+]);
+
+const selectDocument = (documentId: number) => {
+  selectedDocument.value = documentId;
+};
 
 </script>
 
@@ -89,8 +153,11 @@ const documentGroups = ref([
 .sidebar-row {
   display: flex;
 }
-.bottom-border {
+.row-border {
   border-bottom: 1px solid #b1b1b1;
+}
+.row-border:nth-child(1) {
+  border-top: 1px solid #b1b1b1;
 }
 .space-between {
   justify-content: space-between;
@@ -111,5 +178,13 @@ const documentGroups = ref([
 .transparent-button:active {
   background-color: #37BC9B;
   color: #FFFFFF;
+}
+.active-button {
+  background-color: #049372;
+  color: #FFFFFF;
+}
+.scroll {
+  max-height: 231px;
+  overflow-y: auto;
 }
 </style>
