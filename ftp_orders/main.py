@@ -425,14 +425,22 @@ class FTPConnection:
                 if ref_str:
                     ref_str = ref_str.replace('"', "'")
                     ref_str = f'{{"Все": "{ref_str}"}}'
-                Result(
-                    issledovaniye=iss,
-                    fraction=fraction,
-                    value=value,
-                    units=units,
-                    ref_f=ref_str,
-                    ref_m=ref_str,
-                ).save()
+                if Result.objects.filter(issledovaniye=iss, fraction=fraction).first():
+                    update_result = Result.objects.filter(issledovaniye=iss, fraction=fraction).first()
+                    update_result.value = value
+                    update_result.units = units
+                    update_result.ref_f = ref_str
+                    update_result.ref_m=ref_str
+                    update_result.save()
+                else:
+                    Result(
+                        issledovaniye=iss,
+                        fraction=fraction,
+                        value=value,
+                        units=units,
+                        ref_f=ref_str,
+                        ref_m=ref_str,
+                    ).save()
         else:
             iss.lab_comment = ("",)
             iss.time_confirmation = (None,)
