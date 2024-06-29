@@ -3557,6 +3557,19 @@ def tubes_for_get(request):
         x: TubesRegistration  # noqa: F842
         has_rels = {x.type_id if not x.chunk_number else f"{x.type_id}_{x.chunk_number}": x for x in v.tubes.all()}
         new_tubes = []
+
+        chunk_number = None
+        vrpk_for_research = None
+        if v.research.count_volume_material_for_tube and TUBE_MAX_RESEARCH_WITH_SHARE:
+            relation_tube = Fractions.objects.filter(research=v.research).first()
+            rel = relation_tube.relation
+            vrpk = relation_tube.relation_id
+
+            actual_volume_share = relation_researches_count.get(rel.pk, 0) + v.research.count_volume_material_for_tube
+            relation_researches_count[rel.pk] = actual_volume_share
+            chunk_number = math.ceil(actual_volume_share / 1)
+            vrpk_for_research = f"{vrpk}_{chunk_number}"
+
         for val in v.research.fractions_set.all():
             vrpk = val.relation_id
             rel = val.relation
@@ -3576,10 +3589,7 @@ def tubes_for_get(request):
                 chunk_number = math.ceil(actual_count / rel.max_researches_per_tube)
                 vrpk = f"{vrpk}_{chunk_number}"
             elif v.research.count_volume_material_for_tube and TUBE_MAX_RESEARCH_WITH_SHARE:
-                actual_volume_share = relation_researches_count.get(rel.pk, 0) + v.research.count_volume_material_for_tube
-                relation_researches_count[rel.pk] = actual_volume_share
-                chunk_number = math.ceil(actual_volume_share / 1)
-                vrpk = f"{vrpk}_{chunk_number}"
+                vrpk = vrpk_for_research
             else:
                 chunk_number = None
 
