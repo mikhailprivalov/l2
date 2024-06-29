@@ -741,9 +741,9 @@ class Researches(models.Model):
                     if need_log_data:
                         new_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
                 else:
-                    Fractions.create_fraction(fraction_data, service.pk, relation.pk)
+                    new_fraction = Fractions.create_fraction(fraction_data, service.pk, relation.pk)
                     if need_log_data:
-                        new_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
+                        new_log_data["fractions"][new_fraction.pk] = Fractions.as_json(new_fraction)
         if need_log_data:
             return {"ok": True, "old_data": old_log_data, "new_data": new_log_data}
         return {"ok": True}
@@ -778,8 +778,8 @@ class Researches(models.Model):
             relation = ReleationsFT.get_or_create_relation(tube)
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
-                new_fractions = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
-                log_data["fractions"][new_fractions.pk] = Fractions.as_json(new_fractions)
+                new_fraction = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
+                log_data["fractions"][new_fraction.pk] = Fractions.as_json(new_fraction)
         if need_log_data:
             return {"ok": True, "pk": new_service.pk, "log_data": log_data}
         return {"ok": True, "pk": new_service.pk}
