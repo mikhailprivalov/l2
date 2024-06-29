@@ -588,9 +588,12 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
         if len(fraction_compare) > 0:
             fractions = fraction_compare
 
+
+
         if iss.api_app:
             laboratory_analyzer_data.append(iss.api_app.name)
 
+        fsli_data = []
         if len(fractions) > 0:
             if len(fractions) == 1:
                 tmp = [Paragraph('<font face="FreeSans" size="8">' + iss.research.title + "</font>", styleSheet["BodyText"])]
@@ -690,6 +693,9 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
 
                 result_is_norm = []
                 for f in fractions:
+                    if f.fsli in fsli_data:
+                        continue
+                    fsli_data.append(f.fsli)
                     j += 1
 
                     tmp = []
