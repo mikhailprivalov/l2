@@ -617,6 +617,11 @@ class Researches(models.Model):
         return research_tubes
 
     @staticmethod
+    def check_duplicated_internal_code(internal_code):
+        result = Researches.objects.filter(internal_code=internal_code)
+        return result.exists()
+
+    @staticmethod
     def get_laboratory_researches(podrazdelenie_id: int):
         if podrazdelenie_id == -1:
             podrazdeleniya = Podrazdeleniya.objects.filter(p_type=Podrazdeleniya.LABORATORY).values_list("pk", flat=True)
@@ -715,6 +720,10 @@ class Researches(models.Model):
         old_log_data = {}
         new_log_data = {}
         service_data = Researches.normalize_research_data(research_data)
+        internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"])
+        if internal_code_is_duplicated:
+            return {"ok": False, "message": "Такой внутренний код уже есть"}
+
         service = Researches.objects.filter(pk=service_data["pk"]).first()
         if need_log_data:
             old_log_data = service.as_json_lab_full()
@@ -770,6 +779,9 @@ class Researches(models.Model):
     def create_lab_research_and_fractions(research_data, need_log_data: bool = False):
         log_data = {}
         service_data = Researches.normalize_research_data(research_data)
+        internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"])
+        if internal_code_is_duplicated:
+            return {"ok": False, "message": "Такой внутренний код уже есть"}
         new_service = Researches.create_lab_service(service_data)
         if need_log_data:
             log_data = new_service.as_json_lab_full()
