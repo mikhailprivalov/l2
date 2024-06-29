@@ -320,7 +320,7 @@
         <div>
           <button
             class="btn btn-blue-nb"
-            :disabled="!selectedTubes"
+            :disabled="selectedTubes.id === -1"
             @click="addTubes"
           >
             Добавить
@@ -470,14 +470,23 @@ const defaultFraction = ref<fractionsData>({
 const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });
 
 const addTubes = () => {
-  const tubesData = {
-    id: -1,
-    tubeId: selectedTubes.value.id,
-    title: selectedTubes.value.label,
-    color: selectedTubes.value.color,
-    fractions: [{ ...defaultFraction.value }],
-  };
-  research.value.tubes.push(tubesData);
+  if (selectedTubes.value.id === -1) {
+    root.$emit('msg', 'error', 'Ёмкость не выбрана');
+  } else {
+    const tubesData = {
+      id: -1,
+      tubeId: selectedTubes.value.id,
+      title: selectedTubes.value.label,
+      color: selectedTubes.value.color,
+      fractions: [{ ...defaultFraction.value }],
+    };
+    research.value.tubes.push(tubesData);
+    selectedTubes.value = {
+      id: -1,
+      label: 'Выберите ёмкость',
+      color: '',
+    };
+  }
 };
 
 const getResearch = async () => {
