@@ -416,7 +416,7 @@ class FTPConnection:
             iss.save()
 
             for res in result:
-                fraction = Fractions.objects.filter(fsli=res["fsli"]).first()
+                fraction = Fractions.objects.filter(fsli=res["fsli"], research__hide=False, research__podrazdeleniye__p_type=2).first()
                 if not fraction:
                     continue
                 value = res["value"]
