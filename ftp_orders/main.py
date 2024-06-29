@@ -399,7 +399,7 @@ class FTPConnection:
             tmp_fractions["fsli"] = obx.OBX.obx_3.obx_3_1.value
             tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
             tmp_fractions["value"] = obx.OBX.obx_5.obx_5_1.value
-            tmp_fractions["units"] = obx.OBX.obx_6.obx_6_1.value
+            tmp_fractions["units"] = obx.OBX.obx_6.value
             tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
             result.append(tmp_fractions.copy())
 
