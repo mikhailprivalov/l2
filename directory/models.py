@@ -617,8 +617,8 @@ class Researches(models.Model):
         return research_tubes
 
     @staticmethod
-    def check_duplicated_internal_code(internal_code):
-        result = Researches.objects.filter(internal_code=internal_code)
+    def check_duplicated_internal_code(internal_code, pk=None):
+        result = Researches.objects.filter(internal_code=internal_code).exclude(pk=pk)
         return result.exists()
 
     @staticmethod
@@ -720,7 +720,7 @@ class Researches(models.Model):
         old_log_data = {}
         new_log_data = {}
         service_data = Researches.normalize_research_data(research_data)
-        internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"])
+        internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"], service_data["pk"])
         if internal_code_is_duplicated:
             return {"ok": False, "message": "Такой внутренний код уже есть"}
 
@@ -793,7 +793,7 @@ class Researches(models.Model):
                 new_fraction = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
                 log_data["fractions"][new_fraction.pk] = Fractions.as_json(new_fraction)
         if need_log_data:
-            return {"ok": True, "pk": new_service.pk, "log_data": log_data}
+            return {"ok": True, "pk": new_service.pk, "log_data": log_data, "message": ""}
         return {"ok": True, "pk": new_service.pk}
 
     @staticmethod
