@@ -539,7 +539,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
 const validateResearch = () => {
   const titleFilled = research.value.title;
   const departmentFilled = research.value.departmentId && research.value.departmentId !== -1;
-  const tubesFilled = research.value.tubes.length > 0;
+  const tubesFilled = research.value.tubes.length > 0 && !research.value.tubes.find((tube) => tube.tubeId === -1);
   const countForTubeNormal = research.value.countVolumeMaterialForTube <= 1;
   const variants = {
     0: { ok: true, message: '' },
