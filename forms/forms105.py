@@ -844,8 +844,6 @@ def form_03(request_data):
     hosp_extract_data = hosp_extract_get_data(hosp_last_num)
 
     opinion_diagnos = []
-    print("############")
-    print(hosp_extract_data)
     if hosp_extract_data:
         opinion_diagnos = [
             [
@@ -915,7 +913,7 @@ def form_03(request_data):
         canvas.saveState()
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=first_pages)
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
 
