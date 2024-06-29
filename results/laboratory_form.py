@@ -588,8 +588,6 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
         if len(fraction_compare) > 0:
             fractions = fraction_compare
 
-
-
         if iss.api_app:
             laboratory_analyzer_data.append(iss.api_app.name)
 
