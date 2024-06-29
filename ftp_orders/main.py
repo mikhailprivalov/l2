@@ -430,7 +430,7 @@ class FTPConnection:
                     update_result.value = value
                     update_result.units = units
                     update_result.ref_f = ref_str
-                    update_result.ref_m=ref_str
+                    update_result.ref_m = ref_str
                     update_result.save()
                 else:
                     Result(
