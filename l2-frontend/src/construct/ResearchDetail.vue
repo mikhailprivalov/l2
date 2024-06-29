@@ -590,7 +590,7 @@ const createResearch = async () => {
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       research.value.pk = pk;
-      root.$emit('msg', 'ok', 'Создано');
+      root.$emit('msg', 'ok', 'Создано ');
       await getResearch();
       emit('updateResearch');
     } else {
