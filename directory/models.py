@@ -754,8 +754,8 @@ class Researches(models.Model):
                     if need_log_data:
                         new_log_data["fractions"][new_fraction.pk] = Fractions.as_json(new_fraction)
         if need_log_data:
-            return {"ok": True, "old_data": old_log_data, "new_data": new_log_data}
-        return {"ok": True}
+            return {"ok": True, "old_data": old_log_data, "new_data": new_log_data, "message": ""}
+        return {"ok": True, "message": ""}
 
     @staticmethod
     def create_lab_service(service_data):
@@ -781,7 +781,7 @@ class Researches(models.Model):
         service_data = Researches.normalize_research_data(research_data)
         internal_code_is_duplicated = Researches.check_duplicated_internal_code(service_data["internal_code"])
         if internal_code_is_duplicated:
-            return {"ok": False, "message": "Такой внутренний код уже есть"}
+            return {"ok": False, "pk": None, "message": "Такой внутренний код уже есть"}
         new_service = Researches.create_lab_service(service_data)
         if need_log_data:
             log_data = new_service.as_json_lab_full()

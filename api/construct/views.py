@@ -65,13 +65,14 @@ def get_lab_research(request):
 def update_lab_research(request):
     request_data = json.loads(request.body)
     result = Researches.update_lab_research_and_fractions(request_data["research"], True)
-    Log.log(
-        result["old_data"]["pk"],
-        220002,
-        request.user.doctorprofile,
-        {"old_data": result["old_data"], "new_data": result["new_data"]},
-    )
-    return JsonResponse(result)
+    if result["ok"]:
+        Log.log(
+            result["old_data"]["pk"],
+            220002,
+            request.user.doctorprofile,
+            {"old_data": result["old_data"], "new_data": result["new_data"]},
+        )
+    return JsonResponse({"ok": result["ok"], "message": result["message"]})
 
 
 @login_required
@@ -79,13 +80,14 @@ def update_lab_research(request):
 def create_lab_research(request):
     request_data = json.loads(request.body)
     result = Researches.create_lab_research_and_fractions(request_data["research"], True)
-    Log.log(
-        result["log_data"]["pk"],
-        220003,
-        request.user.doctorprofile,
-        result["log_data"],
-    )
-    return JsonResponse(result)
+    if result["ok"]:
+        Log.log(
+            result["log_data"]["pk"],
+            220003,
+            request.user.doctorprofile,
+            result["log_data"],
+        )
+    return JsonResponse({"ok": result["ok"], "pk": result["pk"], "message": result["message"]})
 
 
 @login_required

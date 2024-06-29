@@ -568,14 +568,14 @@ const updateResearch = async () => {
   const researchValidate = validateResearch();
   if (researchValidate.ok) {
     await store.dispatch(actions.INC_LOADING);
-    const { ok } = await api('construct/laboratory/update-research', { research: research.value });
+    const { ok, message } = await api('construct/laboratory/update-research', { research: research.value });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Обновлено');
       await getResearch();
       emit('updateResearch');
     } else {
-      root.$emit('msg', 'error', 'Ошибка');
+      root.$emit('msg', 'error', message);
     }
   } else {
     root.$emit('msg', 'error', researchValidate.message);
@@ -586,7 +586,7 @@ const createResearch = async () => {
   const researchValidate = validateResearch();
   if (researchValidate.ok) {
     await store.dispatch(actions.INC_LOADING);
-    const { ok, pk } = await api('construct/laboratory/create-research', { research: research.value });
+    const { ok, pk, message } = await api('construct/laboratory/create-research', { research: research.value });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       research.value.pk = pk;
@@ -594,7 +594,7 @@ const createResearch = async () => {
       await getResearch();
       emit('updateResearch');
     } else {
-      root.$emit('msg', 'error', 'Ошибка');
+      root.$emit('msg', 'error', message);
     }
   } else {
     root.$emit('msg', 'error', researchValidate.message);
