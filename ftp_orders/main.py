@@ -22,7 +22,7 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR, FTP_PATH_TO_SAVE
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -447,6 +447,8 @@ class FTPConnection:
             iss.time_save = current_time()
             iss.doc_confirmation_string = ""
             iss.save()
+        self.copy_file(file, FTP_PATH_TO_SAVE)
+        self.delete_file(file)
 
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)
