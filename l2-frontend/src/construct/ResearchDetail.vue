@@ -291,7 +291,7 @@
         <div>
           <label class="research-detail-label">Ёмкости</label>
           <Treeselect
-            v-model="selectedTubes"
+            v-model="selectedTube"
             value-format="object"
             class="treeselect-34px"
             placeholder="Выберите ёмкость"
@@ -320,7 +320,7 @@
         <div>
           <button
             class="btn btn-blue-nb"
-            :disabled="selectedTubes.id === -1"
+            :disabled="!selectedTube"
             @click="addTubes"
           >
             Добавить
@@ -427,11 +427,7 @@ interface researchData {
   tubes: tubeData[]
 }
 
-const selectedTubes = ref({
-  id: -1,
-  label: 'Выберите ёмкость',
-  color: '',
-});
+const selectedTube = ref(null);
 const researchShortTitle = ref('');
 
 const root = getCurrentInstance().proxy.$root;
@@ -470,22 +466,18 @@ const defaultFraction = ref<fractionsData>({
 const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });
 
 const addTubes = () => {
-  if (selectedTubes.value.id === -1) {
+  if (!selectedTube.value) {
     root.$emit('msg', 'error', 'Ёмкость не выбрана');
   } else {
     const tubesData = {
       id: -1,
-      tubeId: selectedTubes.value.id,
-      title: selectedTubes.value.label,
-      color: selectedTubes.value.color,
+      tubeId: selectedTube.value.id,
+      title: selectedTube.value.label,
+      color: selectedTube.value.color,
       fractions: [{ ...defaultFraction.value }],
     };
     research.value.tubes.push(tubesData);
-    selectedTubes.value = {
-      id: -1,
-      label: 'Выберите ёмкость',
-      color: '',
-    };
+    selectedTube.value = null;
   }
 };
 

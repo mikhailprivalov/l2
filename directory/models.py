@@ -618,6 +618,8 @@ class Researches(models.Model):
 
     @staticmethod
     def check_duplicated_internal_code(internal_code, pk=None):
+        if not internal_code:
+            return False
         result = Researches.objects.filter(internal_code=internal_code).exclude(pk=pk)
         return result.exists()
 
