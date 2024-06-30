@@ -512,8 +512,10 @@ export default {
       return this.researches_dep_display().filter((research) => {
         const searchTerm = this.search.toLowerCase();
         const researchTitle = research.full_title?.toLowerCase();
+        const researchShortTitle = research.title?.toLowerCase();
         const researchInternalCode = research.internal_code?.toLowerCase();
-        return researchTitle.includes(searchTerm) || researchInternalCode.includes(searchTerm);
+        return researchTitle.includes(searchTerm) || researchShortTitle.includes(searchTerm)
+          || researchInternalCode.includes(searchTerm);
       });
     },
     founded_n() {
