@@ -422,7 +422,6 @@ class FTPConnection:
             tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
             result.append(tmp_fractions.copy())
 
-
         if is_confirm:
             iss.lab_comment = ""
             iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
