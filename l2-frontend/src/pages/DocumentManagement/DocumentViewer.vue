@@ -10,9 +10,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-} from 'vue';
 
 import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue';
 
