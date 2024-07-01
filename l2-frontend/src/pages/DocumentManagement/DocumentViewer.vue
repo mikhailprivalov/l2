@@ -1,6 +1,8 @@
 <template>
   <div class="two-col">
-      <Explorer class="sidebar" />
+    <div class="sidebar">
+      <DocumentsExplorer />
+    </div>
     <div class="viewer">
       <h4>Просмотрщик</h4>
     </div>
@@ -12,7 +14,7 @@ import {
   ref,
 } from 'vue';
 
-import Explorer from '@/pages/DocumentManagement/Explorer.vue';
+import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue';
 
 </script>
 
