@@ -1,10 +1,14 @@
 <template>
-  <div class="base">
+  <div
+    class="base"
+    :class="{ 'auto-height': autoHeight }"
+  >
     <a
       v-for="v in variants"
       :key="v.id"
       href="#"
       :class="{ active: v.id === val, disabled, rounded }"
+      :style="`flex: 1 1 ${itemWidth}; height: ${itemHeight}`"
       @click.prevent="changeValue(v.id)"
     >
       <span>
@@ -34,6 +38,18 @@ export default {
     rounded: {
       required: false,
       default: false,
+      type: Boolean,
+    },
+    itemWidth: {
+      required: false,
+      type: String,
+    },
+    itemHeight: {
+      required: false,
+      type: String,
+    },
+    autoHeight: {
+      required: false,
       type: Boolean,
     },
   },
@@ -91,6 +107,10 @@ export default {
   align-items: stretch;
   overflow-y: auto;
   width: 100%;
+
+  &.auto-height {
+    height: auto;
+  }
 
   a {
     align-self: stretch;
