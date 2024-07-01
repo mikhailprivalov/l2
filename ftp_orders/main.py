@@ -411,7 +411,7 @@ class FTPConnection:
                 continue
             tmp_fsli = obx.OBX.obx_3.obx_3_1.value
             if tmp_fsli not in fractions_fsl:
-                Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None).save()
+                Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None)
                 self.copy_file(file, FTP_PATH_TO_SAVE)
                 self.delete_file(file)
                 return
