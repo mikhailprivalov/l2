@@ -112,7 +112,7 @@
     "thread-loader": "^4.0.1",
     "typescript": "~5.0.4",
     "url-loader": "^4.1.1",
-    "vue-eslint-parser": "^9.1.1",
+    "vue-eslint-parser": "^9.4.3",
     "webpack": "4",
     "webpack-manifest-plugin": "~4.1.1"
   },
