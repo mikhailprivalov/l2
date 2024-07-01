@@ -208,7 +208,7 @@ const selectDocument = (documentId: number) => {
   overflow-y: auto;
 }
 .scroll-doc {
-  height: calc(100vh - 424px);
+  height: calc(100vh - 465px);
   overflow-y: auto;
 }
 </style>
