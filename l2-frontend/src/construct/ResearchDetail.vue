@@ -291,7 +291,7 @@
         <div>
           <label class="research-detail-label">Ёмкости</label>
           <Treeselect
-            v-model="selectedTubes"
+            v-model="selectedTube"
             value-format="object"
             class="treeselect-34px"
             placeholder="Выберите ёмкость"
@@ -320,7 +320,7 @@
         <div>
           <button
             class="btn btn-blue-nb"
-            :disabled="!selectedTubes"
+            :disabled="!selectedTube"
             @click="addTubes"
           >
             Добавить
@@ -427,11 +427,7 @@ interface researchData {
   tubes: tubeData[]
 }
 
-const selectedTubes = ref({
-  id: -1,
-  label: 'Выберите ёмкость',
-  color: '',
-});
+const selectedTube = ref(null);
 const researchShortTitle = ref('');
 
 const root = getCurrentInstance().proxy.$root;
@@ -470,14 +466,19 @@ const defaultFraction = ref<fractionsData>({
 const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });
 
 const addTubes = () => {
-  const tubesData = {
-    id: -1,
-    tubeId: selectedTubes.value.id,
-    title: selectedTubes.value.label,
-    color: selectedTubes.value.color,
-    fractions: [{ ...defaultFraction.value }],
-  };
-  research.value.tubes.push(tubesData);
+  if (!selectedTube.value) {
+    root.$emit('msg', 'error', 'Ёмкость не выбрана');
+  } else {
+    const tubesData = {
+      id: -1,
+      tubeId: selectedTube.value.id,
+      title: selectedTube.value.label,
+      color: selectedTube.value.color,
+      fractions: [{ ...defaultFraction.value }],
+    };
+    research.value.tubes.push(tubesData);
+    selectedTube.value = null;
+  }
 };
 
 const getResearch = async () => {
@@ -530,7 +531,7 @@ watch(() => [props.research.pk, props.research.tubes], () => {
 const validateResearch = () => {
   const titleFilled = research.value.title;
   const departmentFilled = research.value.departmentId && research.value.departmentId !== -1;
-  const tubesFilled = research.value.tubes.length > 0;
+  const tubesFilled = research.value.tubes.length > 0 && !research.value.tubes.find((tube) => tube.tubeId === -1);
   const countForTubeNormal = research.value.countVolumeMaterialForTube <= 1;
   const variants = {
     0: { ok: true, message: '' },
@@ -559,14 +560,14 @@ const updateResearch = async () => {
   const researchValidate = validateResearch();
   if (researchValidate.ok) {
     await store.dispatch(actions.INC_LOADING);
-    const { ok } = await api('construct/laboratory/update-research', { research: research.value });
+    const { ok, message } = await api('construct/laboratory/update-research', { research: research.value });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Обновлено');
       await getResearch();
       emit('updateResearch');
     } else {
-      root.$emit('msg', 'error', 'Ошибка');
+      root.$emit('msg', 'error', message);
     }
   } else {
     root.$emit('msg', 'error', researchValidate.message);
@@ -577,15 +578,15 @@ const createResearch = async () => {
   const researchValidate = validateResearch();
   if (researchValidate.ok) {
     await store.dispatch(actions.INC_LOADING);
-    const { ok, pk } = await api('construct/laboratory/create-research', { research: research.value });
+    const { ok, pk, message } = await api('construct/laboratory/create-research', { research: research.value });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       research.value.pk = pk;
-      root.$emit('msg', 'ok', 'Создано');
+      root.$emit('msg', 'ok', 'Создано ');
       await getResearch();
       emit('updateResearch');
     } else {
-      root.$emit('msg', 'error', 'Ошибка');
+      root.$emit('msg', 'error', message);
     }
   } else {
     root.$emit('msg', 'error', researchValidate.message);

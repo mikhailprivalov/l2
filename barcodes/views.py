@@ -125,6 +125,18 @@ def tubes(request, direction_implict_id=None):
                         tubes_buffer[vrpk]["researches"].add(v.research.title)
                         tubes_id.add(ntube.number)
                     continue
+                chunk_number = None
+                vrpk_for_research = None
+                if v.research.count_volume_material_for_tube and TUBE_MAX_RESEARCH_WITH_SHARE:
+                    relation_tube = directory.Fractions.objects.filter(research=v.research).first()
+                    rel = relation_tube.relation
+                    vrpk = relation_tube.relation_id
+
+                    actual_volume_share = relation_researches_count.get(rel.pk, 0) + v.research.count_volume_material_for_tube
+                    relation_researches_count[rel.pk] = actual_volume_share
+                    chunk_number = math.ceil(actual_volume_share / 1)
+                    vrpk_for_research = f"{vrpk}_{chunk_number}"
+
                 for val in directory.Fractions.objects.filter(research=v.research):
                     vrpk = val.relation_id
                     rel = val.relation
@@ -140,13 +152,9 @@ def tubes(request, direction_implict_id=None):
                         chunk_number = math.ceil(actual_count / rel.max_researches_per_tube)
                         vrpk = f"{vrpk}_{chunk_number}"
                     elif v.research.count_volume_material_for_tube and TUBE_MAX_RESEARCH_WITH_SHARE:
-                        actual_volume_share = relation_researches_count.get(rel.pk, 0) + v.research.count_volume_material_for_tube
-                        relation_researches_count[rel.pk] = actual_volume_share
-                        chunk_number = math.ceil(actual_volume_share / 1)
-                        vrpk = f"{vrpk}_{chunk_number}"
+                        vrpk = vrpk_for_research
                     else:
                         chunk_number = None
-
                     if vrpk not in tubes_buffer.keys():
                         ntube: Optional[TubesRegistration] = v.tubes.filter(type=rel, chunk_number=chunk_number).first()
                         if not ntube:

@@ -22,7 +22,7 @@ from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, T
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
-from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR
+from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR, FTP_PATH_TO_SAVE
 from laboratory.utils import current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -399,7 +399,7 @@ class FTPConnection:
             tmp_fractions["fsli"] = obx.OBX.obx_3.obx_3_1.value
             tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
             tmp_fractions["value"] = obx.OBX.obx_5.obx_5_1.value
-            tmp_fractions["units"] = obx.OBX.obx_6.obx_6_1.value
+            tmp_fractions["units"] = obx.OBX.obx_6.value
             tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
             result.append(tmp_fractions.copy())
 
@@ -416,7 +416,7 @@ class FTPConnection:
             iss.save()
 
             for res in result:
-                fraction = Fractions.objects.filter(fsli=res["fsli"]).first()
+                fraction = Fractions.objects.filter(fsli=res["fsli"], research__hide=False, research__podrazdeleniye__p_type=2).first()
                 if not fraction:
                     continue
                 value = res["value"]
@@ -425,20 +425,30 @@ class FTPConnection:
                 if ref_str:
                     ref_str = ref_str.replace('"', "'")
                     ref_str = f'{{"Все": "{ref_str}"}}'
-                Result(
-                    issledovaniye=iss,
-                    fraction=fraction,
-                    value=value,
-                    units=units,
-                    ref_f=ref_str,
-                    ref_m=ref_str,
-                ).save()
+                if Result.objects.filter(issledovaniye=iss, fraction=fraction).first():
+                    update_result = Result.objects.filter(issledovaniye=iss, fraction=fraction).first()
+                    update_result.value = value
+                    update_result.units = units
+                    update_result.ref_f = ref_str
+                    update_result.ref_m = ref_str
+                    update_result.save()
+                else:
+                    Result(
+                        issledovaniye=iss,
+                        fraction=fraction,
+                        value=value,
+                        units=units,
+                        ref_f=ref_str,
+                        ref_m=ref_str,
+                    ).save()
         else:
             iss.lab_comment = ("",)
             iss.time_confirmation = (None,)
             iss.time_save = current_time()
             iss.doc_confirmation_string = ""
             iss.save()
+        self.copy_file(file, FTP_PATH_TO_SAVE)
+        self.delete_file(file)
 
     def push_order(self, direction: Napravleniya):
         hl7 = core.Message("ORM_O01", validation_level=VALIDATION_LEVEL.QUIET)

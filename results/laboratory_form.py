@@ -17,6 +17,7 @@ from laboratory.settings import FONTS_FOLDER
 from reportlab.lib.styles import getSampleStyleSheet
 from copy import deepcopy
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from operator import itemgetter
 
 
 def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, directory, show_norm, stl, print_vtype, get_r, result_normal):
@@ -575,16 +576,29 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
         pks.append(iss.pk)
         data = []
         fractions = directory.Fractions.objects.filter(research=iss.research, hide=False, render_type=0).order_by("pk").order_by("sort_weight")
+        results_iss = Result.objects.filter(issledovaniye=iss).order_by("fraction__sort_weight")  # Выборка результатов из базы
+
+        # проверить записанные результаты со справочником из Услуги названия
+        fractions_set = set([f.fraction for f in results_iss])
+        fractions_orders = [[fs.sort_weight, fs] for fs in fractions_set]
+        sorted_data = sorted(fractions_orders, key=itemgetter(0))
+        fractions_tmp = [s[1] for s in sorted_data]
+
+        fraction_compare = [el for el in fractions_tmp if el not in fractions]
+        if len(fraction_compare) > 0:
+            fractions = fraction_compare
+
         if iss.api_app:
             laboratory_analyzer_data.append(iss.api_app.name)
 
-        if fractions.count() > 0:
-            if fractions.count() == 1:
+        fsli_data = []
+        if len(fractions) > 0:
+            if len(fractions) == 1:
                 tmp = [Paragraph('<font face="FreeSans" size="8">' + iss.research.title + "</font>", styleSheet["BodyText"])]
                 norm = "none"
                 sign = RANGE_IN
-                if Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).exists():
-                    r = Result.objects.filter(issledovaniye=iss, fraction=fractions[0]).order_by("-pk")[0]
+                if len(fractions) > 0:
+                    r = fractions[0]
                     ref = r.get_ref()
                     if show_norm:
                         norm, sign, ref_res = r.get_is_norm(recalc=True, with_ref=True)
@@ -677,6 +691,9 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
 
                 result_is_norm = []
                 for f in fractions:
+                    if f.fsli in fsli_data:
+                        continue
+                    fsli_data.append(f.fsli)
                     j += 1
 
                     tmp = []
