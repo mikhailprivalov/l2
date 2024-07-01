@@ -19,6 +19,7 @@ from appconf.manager import SettingManager
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
 from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles, Issledovaniya, Result
+from directory.sql_func import get_fsli_fractions_by_research_id
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
@@ -371,6 +372,17 @@ class FTPConnection:
             external_add_order = obr.OBR_2.OBR_2_1.value
         else:
             iss_id = (obr.OBR_2.OBR_2_1.value).split("_")[1]
+        tube_number = obr.OBR_3.OBR_3_1.value
+        internal_code = obr.OBR_4.OBR_4_4.value
+        research_title = obr.OBR_4.OBR_4_5.value
+
+        if external_add_order:
+            iss = Issledovaniya.objects.filter(external_add_order__external_add_order=external_add_order).first()
+        else:
+            iss = Issledovaniya.objects.filter(id=iss_id).first()
+        fractions_data = get_fsli_fractions_by_research_id(iss.research_id)
+        fractions_fsl = [i.fraction_fsli for i in fractions_data]
+
         doctor_family_confirm = obr.OBR_32.OBR_32_2.value
         doctor_name_confirm = obr.OBR_32.OBR_32_3.value
         doctor_patronymic_confirm = obr.OBR_32.OBR_32_4.value
@@ -384,6 +396,7 @@ class FTPConnection:
         obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
         fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
         result = []
+
         for obx in obxes:
             tmp_fractions = fractions.copy()
             if (obx.OBX.obx_3.obx_3_1.value).lower == "pdf":
@@ -396,18 +409,18 @@ class FTPConnection:
                 tmp_fractions["html"] = obx.OBX.obx_5.obx_5_1.value
                 result.append(tmp_fractions.copy())
                 continue
-            tmp_fractions["fsli"] = obx.OBX.obx_3.obx_3_1.value
+            tmp_fsli = obx.OBX.obx_3.obx_3_1.value
+            if tmp_fsli not in fractions_fsl:
+                Log.log(key=tube_number, type=190005, body=json.dumps({"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}), user=None).save()
+                self.copy_file(file, FTP_PATH_TO_SAVE)
+                self.delete_file(file)
+                return
+            tmp_fractions["fsli"] = tmp_fsli
             tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
             tmp_fractions["value"] = obx.OBX.obx_5.obx_5_1.value
             tmp_fractions["units"] = obx.OBX.obx_6.value
             tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
             result.append(tmp_fractions.copy())
-
-        if external_add_order:
-            iss = Issledovaniya.objects.filter(external_add_order__external_add_order=external_add_order).first()
-        else:
-            iss = Issledovaniya.objects.filter(id=iss_id).first()
-
         if is_confirm:
             iss.lab_comment = ""
             iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
