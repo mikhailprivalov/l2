@@ -81,7 +81,7 @@ def get_fsli_fractions_by_research_id(research_id):
                 FROM directory_fractions
                 WHERE directory_fractions.research_id = %(research_id)s
         """,
-            params={},
+            params={'research_id': research_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
