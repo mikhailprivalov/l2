@@ -64,6 +64,9 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     print_additional_page_direction = models.CharField(max_length=255, default="", blank=True, verbose_name="Дополнительные формы при печати направления для подразделения")
     profile_ecp_code = models.CharField(max_length=16, default="", blank=True, verbose_name="Профиль отделения код ecp")
+    hosp_research_default = models.ForeignKey(
+        'directory.Researches', blank=True, default=None, null=True, verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны", on_delete=models.CASCADE
+    )
 
     def get_title(self):
         return self.short_title or self.title

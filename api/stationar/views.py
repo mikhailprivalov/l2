@@ -143,6 +143,8 @@ def hosp_services_by_type(request):
         hosp_research = i.research
         if int(data['hospResearch']) > -1:
             hosp_research = int(data['hospResearch'])
+        if request.user.doctorprofile.podrazdeleniye.hosp_research_default_id:
+            hosp_research = request.user.doctorprofile.podrazdeleniye.hosp_research_default_id
         for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=hosp_research, hide=False):
             result.append(
                 {
