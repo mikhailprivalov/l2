@@ -566,6 +566,7 @@ class Napravleniya(models.Model):
     cpp_upload_id = models.CharField(max_length=128, default=None, blank=True, null=True, db_index=True, help_text='Id-загрузки ЦПП')
     need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
     ecp_direction_number = models.CharField(max_length=64, default=None, blank=True, null=True, db_index=True, help_text='Id-направления ЕЦП')
+    is_cito = models.BooleanField(default=False, blank=True, help_text='Срочное исполнение')
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
