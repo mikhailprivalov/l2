@@ -66,7 +66,7 @@
       </div>
     </div>
     <div>
-      <div class="row">
+      <div class="flex">
         <span class="group-button-header">
           Документы
         </span>
@@ -75,7 +75,7 @@
         <div
           v-for="document in documents"
           :key="document.id"
-          class="row row-border"
+          class="flex row-border"
         >
           <button
             class="transparent-button"
