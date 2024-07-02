@@ -115,7 +115,7 @@
     >
       <DirectionsHistory
         :patient_pk="selected_card.pk"
-        :days-subtract="daysSubtractL2"
+        :days-subtract="daysSubtract"
       />
     </div>
     <div
@@ -344,7 +344,7 @@ export default {
     l2_schedule() {
       return this.$store.getters.modules.l2_schedule;
     },
-    daysSubtractL2() {
+    daysSubtract() {
       return this.$store.getters.modules.days_subtract;
     },
   },
