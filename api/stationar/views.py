@@ -139,13 +139,17 @@ def hosp_services_by_type(request):
     r_type = data["r_type"]
     result = []
     type_by_key = HospitalService.TYPES_BY_KEYS.get(r_type, -1)
+    hosp_research = None
+    if request.user.doctorprofile.hosp_research_template:
+        hosp_research = request.user.doctorprofile.hosp_research_template
+    elif request.user.doctorprofile.podrazdeleniye.hosp_research_default:
+        hosp_research = request.user.doctorprofile.podrazdeleniye.hosp_research_default
     for i in Issledovaniya.objects.filter(napravleniye__pk=base_direction_pk, research__is_hospital=True):
-        hosp_research = i.research
+        if not hosp_research:
+            hosp_research = i.research
         if int(data['hospResearch']) > -1:
             hosp_research = int(data['hospResearch'])
 
-        if request.user.doctorprofile.podrazdeleniye.hosp_research_default_id:
-            hosp_research = request.user.doctorprofile.podrazdeleniye.hosp_research_default_id
         for hs in HospitalService.objects.filter(site_type=type_by_key, main_research=hosp_research, hide=False):
             result.append(
                 {

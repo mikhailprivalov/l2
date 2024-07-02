@@ -39,6 +39,7 @@ class Speciality(models.Model):
 
 class Position(models.Model):
     title = models.CharField(max_length=255, help_text='Название')
+    title = models.CharField(max_length=255, help_text='Название')
     hide = models.BooleanField(help_text='Скрытие', default=False)
     rmis_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     n3_id = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
@@ -110,6 +111,9 @@ class DoctorProfile(models.Model):
     date_stop_certificate = models.DateField(help_text='Дата окончания сертификата', db_index=True, default=None, blank=True, null=True)
     replace_doctor_cda = models.ForeignKey('self', related_name='used_doctor_cda', help_text="Замена доктора для cda", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     additional_info = models.TextField(default='', blank=True, help_text='Дополнительная информация описывать словарем {}')
+    hosp_research_template = models.ForeignKey(
+        'directory.Researches', related_name='hosp_research_template', blank=True, default=None, null=True, verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны",
+        on_delete=models.CASCADE)
 
     @staticmethod
     def get_system_profile():
