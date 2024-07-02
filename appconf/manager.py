@@ -210,7 +210,6 @@ class SettingManager:
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
-        print(result)
         return result
 
     @staticmethod
