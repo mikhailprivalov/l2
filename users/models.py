@@ -112,8 +112,14 @@ class DoctorProfile(models.Model):
     replace_doctor_cda = models.ForeignKey('self', related_name='used_doctor_cda', help_text="Замена доктора для cda", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     additional_info = models.TextField(default='', blank=True, help_text='Дополнительная информация описывать словарем {}')
     hosp_research_template = models.ForeignKey(
-        'directory.Researches', related_name='hosp_research_template', blank=True, default=None, null=True, verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны",
-        on_delete=models.CASCADE)
+        'directory.Researches',
+        related_name='hosp_research_template',
+        blank=True,
+        default=None,
+        null=True,
+        verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны",
+        on_delete=models.CASCADE,
+    )
 
     @staticmethod
     def get_system_profile():
