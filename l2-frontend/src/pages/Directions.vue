@@ -113,7 +113,10 @@
       v-if="!l2_only_doc_call"
       class="c"
     >
-      <DirectionsHistory :patient_pk="selected_card.pk" />
+      <DirectionsHistory
+        :patient_pk="selected_card.pk"
+        :days-subtract="daysSubtractL2"
+      />
     </div>
     <div
       v-else-if="!hasGrid"
@@ -340,6 +343,9 @@ export default {
     },
     l2_schedule() {
       return this.$store.getters.modules.l2_schedule;
+    },
+    daysSubtractL2() {
+      return this.$store.getters.modules.days_subtract;
     },
   },
   watch: {

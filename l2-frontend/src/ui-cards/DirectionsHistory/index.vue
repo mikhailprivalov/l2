@@ -454,12 +454,17 @@ export default {
       required: false,
       default: null,
     },
+    daysSubtract: {
+      type: Number,
+      required: false,
+      default: 90,
+    },
   },
   data() {
     return {
       date_range: [
         moment()
-          .subtract(6, 'month')
+          .subtract(this.daysSubtract, 'day')
           .format('DD.MM.YY'),
         moment().format('DD.MM.YY'),
       ],

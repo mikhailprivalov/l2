@@ -116,7 +116,8 @@ class SettingManager:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
-            return simplejson.loads(cv)
+            pass
+            # return simplejson.loads(cv)
         result = {
             **{
                 'l2_{}'.format(x): SettingManager.l2(x)
@@ -206,9 +207,11 @@ class SettingManager:
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
+            "days_subtract": SettingManager.get("days_subtract", default='30', default_type='i'),
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
+        print(result)
         return result
 
     @staticmethod
