@@ -116,8 +116,7 @@ class SettingManager:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
-            pass
-            # return simplejson.loads(cv)
+            return simplejson.loads(cv)
         result = {
             **{
                 'l2_{}'.format(x): SettingManager.l2(x)
