@@ -4346,7 +4346,6 @@ def send_to_l2vi(request):
 @login_required
 @group_required("Врач параклиники", "Врач консультаций", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def add_file(request):
-    print(request.FILES)
     file = request.FILES.get('file')
     form = request.FILES['form'].read()
     request_data = json.loads(form)

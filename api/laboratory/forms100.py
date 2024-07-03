@@ -1,5 +1,3 @@
-from django.http import HttpRequest
-
 from directions.models import Issledovaniya, IssledovaniyaFiles
 
 
