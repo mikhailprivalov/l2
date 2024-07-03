@@ -78,6 +78,7 @@
 // todo - slot на вывод результата, для удобного вывода каждому)
 // todo - дефолтный вывод результата - таблица, строчка
 import {
+  computed,
   getCurrentInstance, onMounted, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
@@ -93,6 +94,11 @@ import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 const { getTypes, getForms } = typesAndForms();
 
 const store = useStore();
+
+const allowedFormsForOrganization = computed(() => {
+  return store.getters.modules.l2_allowed_forms;
+});
+
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   typesFile: {

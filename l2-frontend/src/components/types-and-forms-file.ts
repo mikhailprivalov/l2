@@ -42,8 +42,11 @@ export default function typesAndForms() {
     },
   });
   // todo - UploadResult + forms - получать только выбранные isResult функции (протестировать)
-  const getForms = (type: string, forms: string[] = null, onlyResult = false): formsFile[] => {
+  const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
     let result: formsFile[] = [];
+    if (!allowedForms) {
+      return result;
+    }
     if (forms && forms.length > 0) {
       for (const form of forms) {
         if (!onlyResult && fileForms.value[type][form]) {
