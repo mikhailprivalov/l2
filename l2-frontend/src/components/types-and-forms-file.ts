@@ -61,7 +61,8 @@ export default function typesAndForms() {
     } else if (onlyResult) {
       result = func(type, isResultForm.value, allowedForms);
     } else {
-      const tmpResult = Object.values(fileForms.value[type]);
+      const tmp: formsFile[] = Object.values(fileForms.value[type]);
+      const tmpResult = tmp.map(obj => obj.id);
       result = func(type, tmpResult, allowedForms);
     }
     return result;
