@@ -1,5 +1,6 @@
 from directions.models import Issledovaniya
 
+
 def form_01(request_data):
     file = request_data.get("file")
     issledovanie_id = request_data.get("entity_id")
