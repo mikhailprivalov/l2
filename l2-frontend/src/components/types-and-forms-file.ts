@@ -41,34 +41,28 @@ export default function typesAndForms() {
       'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата из QMS' },
     },
   });
-  // todo - UploadResult + forms - получать только выбранные isResult функции (протестировать)
-  const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
-    /* onlyResult - Выдаст только формы находящиеся в isResultForm, allowedForms - выдаст только те функции которые разрешены */
+  const func = (type: string, forms = null, allowedForms: string[] = null) => {
     const result: formsFile[] = [];
-    if (!allowedForms) {
-      return result;
+    for (const form of forms) {
+      if (allowedForms.includes(form) && fileForms.value[type][form]) {
+        result.push(fileForms.value[type][form]);
+      }
     }
-    if (forms && forms.length > 0) { // Если переданы формы
-      for (const form of forms) {
-        if (!onlyResult && fileForms.value[type][form] && allowedForms.includes(form)) {
-          result.push(fileForms.value[type][form]);
-        } else if (onlyResult && isResultForm.value.includes(form) && allowedForms.includes(form)) {
-          result.push(fileForms.value[type][form]);
-        }
-      }
-    } else if (!forms && onlyResult) { // если нет форм, но, есть "только результат"
-      for (const form of isResultForm.value) {
-        if (fileForms.value[type][form] && allowedForms.includes(form)) {
-          result.push(fileForms.value[type][form]);
-        }
-      }
-    } else { // Если нет форм и "только результат" - выдать всё разрешенное
+    return result;
+  };
+
+  const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
+    let result: formsFile[] = [];
+    if (!allowedForms) {
+      return [];
+    }
+    if (forms) {
+      result = func(type, forms, allowedForms);
+    } else if (onlyResult) {
+      result = func(type, isResultForm.value, allowedForms);
+    } else {
       const tmpResult = Object.values(fileForms.value[type]);
-      for (const form of tmpResult) {
-        if (allowedForms.includes(String(form))) {
-          result.push(fileForms.value[type][form]);
-        }
-      }
+      result = func(type, tmpResult, allowedForms);
     }
     return result;
   };
