@@ -643,10 +643,10 @@ def find_and_replace(text, symbol1, symbol2):
     result = []
     for i in range(len(text)):
         if text[i] == symbol1:
-            current_text = text[0:i] + symbol2 + text[i + 1:]
+            current_text = text[0:i] + symbol2 + text[i + 1 :]
             result.append(current_text)
         elif text[i] == symbol2:
-            current_text = text[0:i] + symbol1 + text[i + 1:]
+            current_text = text[0:i] + symbol1 + text[i + 1 :]
             result.append(current_text)
     return result
 
@@ -728,13 +728,13 @@ def load_equipment(request):
             result = re.findall(search_result, data_from_cell)
             if len(result) > 0:
                 num_row = cell.row
-                result_data = ws[f"A{num_row + 1}:M{num_row + 10}"]
+                result_data = ws[f"A{num_row + 1}:M{num_row+10}"]
                 result_list = [[j.value for j in k] for k in result_data]
 
             result = re.findall(search_tubes_number, data_from_cell)
             if len(result) > 0:
                 num_row = cell.row
-                tube_data = ws[f"A{num_row + 1}:M{num_row + 10}"]
+                tube_data = ws[f"A{num_row + 1}:M{num_row+10}"]
                 tube_list = [[j.value for j in k] for k in tube_data]
 
             if cell.value == "Тест:":
