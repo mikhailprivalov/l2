@@ -36,15 +36,6 @@
     <ul class="nav navbar-nav">
       <LoadFile />
     </ul>
-    <ul class="nav navbar-nav">
-      <UploadFileModal
-        tag="li"
-        title="Прикрепить результат"
-        :types-file="['PDF']"
-        :forms-file="['api.laboratory.forms100.form_01']"
-        :upload-result="true"
-      />
-    </ul>
   </div>
 </template>
 
@@ -59,7 +50,6 @@ import UploadFileModal from '@/modals/UploadFileModal.vue';
 export default {
   name: 'LaboratoryHeader',
   components: {
-    UploadFileModal,
     LoadFile,
     LaboratorySelector,
     ExecutionList,
