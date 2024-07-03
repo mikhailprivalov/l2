@@ -11,6 +11,7 @@ export interface formsFile {
 export default function typesAndForms() {
   const fileTypes = ref({
     XLSX: { id: 'XLSX', label: 'XLSX' },
+    PDF: { id: 'PDF', label: 'PDF' },
   });
   // todo - сделать соотношение - расширение файла - и все виды accept фильтров {xlsx: '.xlx, .xlsx, ws-excel'}
   const getTypes = (types: string[]): typesFile[] => {
@@ -27,24 +28,47 @@ export default function typesAndForms() {
     return result;
   };
 
+  const isResultForm = ref([
+    'api.laboratory.forms100.form_01',
+  ]);
+
   /* (101.01) - 101 номер файла, 01 - номер функции в файле для обработки загруженного файла (см. parseFile) */
   const fileForms = ref({
     XLSX: {
       'api.contracts.forms100.form_01': { id: 'api.contracts.forms100.form_01', label: 'Загрузка цен по прайсу' },
     },
+    PDF: {
+      'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата из QMS' },
+    },
   });
-  // todo - режим UploadResult - получать по расширению файла - только функции связанные с сохранением результата (анализаторы)
-  // todo - UploadResult + forms - получать только выбранные isResult функции
-  const getForms = (type: string, forms: string[] = []): formsFile[] => {
-    let result: formsFile[] = [];
-    if (forms && forms.length > 0) {
+  // todo - UploadResult + forms - получать только выбранные isResult функции (протестировать)
+  const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
+    /* onlyResult - Выдаст только формы находящиеся в isResultForm, allowedForms - выдаст только те функции которые разрешены */
+    const result: formsFile[] = [];
+    if (!allowedForms) {
+      return result;
+    }
+    if (forms && forms.length > 0) { // Если переданы формы
       for (const form of forms) {
-        if (fileForms.value[type][form]) {
+        if (!onlyResult && fileForms.value[type][form] && allowedForms.includes(form)) {
+          result.push(fileForms.value[type][form]);
+        } else if (onlyResult && isResultForm.value.includes(form) && allowedForms.includes(form)) {
           result.push(fileForms.value[type][form]);
         }
       }
-    } else {
-      result = Object.values(fileForms.value[type]);
+    } else if (!forms && onlyResult) { // если нет форм, но, есть "только результат"
+      for (const form of isResultForm.value) {
+        if (fileForms.value[type][form] && allowedForms.includes(form)) {
+          result.push(fileForms.value[type][form]);
+        }
+      }
+    } else { // Если нет форм и "только результат" - выдать всё разрешенное
+      const tmpResult = Object.values(fileForms.value[type]);
+      for (const form of tmpResult) {
+        if (allowedForms.includes(String(form))) {
+          result.push(fileForms.value[type][form]);
+        }
+      }
     }
     return result;
   };

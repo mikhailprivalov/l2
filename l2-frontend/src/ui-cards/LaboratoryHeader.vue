@@ -45,6 +45,7 @@ import LaboratorySelector from '@/ui-cards/LaboratorySelector.vue';
 import ExecutionList from '@/ui-cards/ExecutionList.vue';
 import LaboratoryJournal from '@/ui-cards/LaboratoryJournal.vue';
 import LaboratoryPrintResults from '@/ui-cards/LaboratoryPrintResults.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'LaboratoryHeader',
@@ -80,4 +81,9 @@ export default {
       background: #049372 !important;
       border: none !important;
   }
+
+  .nav-upload-file {
+    padding: 8px 15px;
+  }
+
 </style>

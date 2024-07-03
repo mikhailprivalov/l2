@@ -902,6 +902,7 @@ def get_parts_fio(fio_data):
     return family_data, name_data, patronymic_data
 
 
+@login_required()
 def upload_file(request):
     # todo - Логирование загрузки файлов
     try:
