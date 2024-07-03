@@ -911,7 +911,7 @@ def upload_file(request):
         selected_form = request_data.get("selectedForm")
         entity_id = request_data.get("entityId")
         other_need_data = request_data.get("otherNeedData")
-        data = {"file": file, "selectedForm": selected_form, "entity_id": entity_id, "other_need_data": other_need_data}
+        data = {"file": file, "selected_form": selected_form, "entity_id": entity_id, "other_need_data": other_need_data}
         function = import_string(selected_form)
         result = function(
             request_data={
