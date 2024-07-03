@@ -37,14 +37,13 @@
       <LoadFile />
     </ul>
     <ul class="nav navbar-nav">
-      <li>
-        <UploadFileModal
-          title="Прикрепить результат"
-          :types-file="['PDF']"
-          :forms-file="['api.laboratory.forms100.form_01']"
-          :upload-result="true"
-        />
-      </li>
+      <UploadFileModal
+        tag="li"
+        title="Прикрепить результат"
+        :types-file="['PDF']"
+        :forms-file="['api.laboratory.forms100.form_01']"
+        :upload-result="true"
+      />
     </ul>
   </div>
 </template>
@@ -92,4 +91,9 @@ export default {
       background: #049372 !important;
       border: none !important;
   }
+
+  .nav-upload-file {
+    padding: 8px 15px;
+  }
+
 </style>

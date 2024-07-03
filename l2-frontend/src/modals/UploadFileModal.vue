@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <component
+    :is="tag"
+  >
     <slot>
       <a
         class="pointer"
@@ -44,7 +46,7 @@
         </div>
       </div>
     </Modal>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -58,6 +60,11 @@ import UploadFile from '@/components/UploadFile.vue';
 const props = defineProps({
   title: {
     type: String,
+    required: false,
+  },
+  tag: {
+    type: String,
+    default: 'div',
     required: false,
   },
   typesFile: {
