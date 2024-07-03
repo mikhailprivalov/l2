@@ -44,6 +44,7 @@ export default function typesAndForms() {
   // todo - UploadResult + forms - получать только выбранные isResult функции (протестировать)
   const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
     let result: formsFile[] = [];
+    console.log(allowedForms);
     if (!allowedForms) {
       return result;
     }

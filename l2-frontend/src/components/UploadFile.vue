@@ -95,7 +95,7 @@ const { getTypes, getForms } = typesAndForms();
 
 const store = useStore();
 
-const allowedFormsForOrganization = computed(() => store.getters.modules.l2_allowed_forms_file);
+const allowedFormsForOrganization = computed(() => store.getters.modules.l2_allowed_forms_file.trim());
 
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
@@ -148,7 +148,7 @@ const changeType = () => {
     String(selectedType.value),
     props.formsFile,
     props.uploadResult,
-    allowedFormsForOrganization.value,
+    allowedFormsForOrganization.value.split(', '),
   );
   if (currentFileForms.value.length > 0) {
     selectedForm.value = currentFileForms.value[0].id;
