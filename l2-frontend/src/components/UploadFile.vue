@@ -144,6 +144,8 @@ const changeType = () => {
   currentFileForms.value = getForms(String(selectedType.value), props.formsFile, props.uploadResult);
   if (currentFileForms.value.length > 0) {
     selectedForm.value = currentFileForms.value[0].id;
+  } else {
+    selectedForm.value = null;
   }
 };
 
