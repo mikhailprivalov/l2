@@ -96,7 +96,7 @@ const { getTypes, getForms } = typesAndForms();
 const store = useStore();
 
 const allowedFormsForOrganization = computed(() => {
-  return store.getters.modules.l2_allowed_forms;
+  return store.getters.modules.allowed_forms_file;
 });
 
 const root = getCurrentInstance().proxy.$root;
@@ -146,7 +146,8 @@ const selectedForm = ref(null);
 
 const changeType = () => {
   fileFilter.value = `.${selectedType.value}`;
-  currentFileForms.value = getForms(String(selectedType.value), props.formsFile, props.uploadResult);
+  currentFileForms.value = getForms(String(selectedType.value), props.formsFile, props.uploadResult,
+    allowedFormsForOrganization.value);
   if (currentFileForms.value.length > 0) {
     selectedForm.value = currentFileForms.value[0].id;
   } else {
