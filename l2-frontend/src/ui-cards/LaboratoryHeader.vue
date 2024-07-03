@@ -40,7 +40,8 @@
       <li>
         <UploadFileModal
           title="Прикрепить результат"
-          :types-file="['PDF', 'XLSX']"
+          :types-file="['PDF']"
+          :forms-file="['api.laboratory.forms100.form_01']"
           :upload-result="true"
         />
       </li>

@@ -38,7 +38,7 @@ export default function typesAndForms() {
       'api.contracts.forms100.form_01': { id: 'api.contracts.forms100.form_01', label: 'Загрузка цен по прайсу' },
     },
     PDF: {
-      'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата' },
+      'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата из QMS' },
     },
   });
   // todo - режим UploadResult - получать по расширению файла - только функции связанные с сохранением результата (анализаторы)
