@@ -1,4 +1,4 @@
 
 def form_01(request):
     print('fdfd')
-    return
+    return {"ok": True, "result": [], "message": ""}
