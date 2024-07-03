@@ -41,7 +41,7 @@ export default function typesAndForms() {
       'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата из QMS' },
     },
   });
-  const func = (type: string, forms = null, allowedForms: string[] = null) => {
+  const addForms = (type: string, forms = null, allowedForms: string[] = null) => {
     const result: formsFile[] = [];
     for (const form of forms) {
       if (allowedForms.includes(form) && fileForms.value[type][form]) {
@@ -57,13 +57,13 @@ export default function typesAndForms() {
       return [];
     }
     if (forms) {
-      result = func(type, forms, allowedForms);
+      result = addForms(type, forms, allowedForms);
     } else if (onlyResult) {
-      result = func(type, isResultForm.value, allowedForms);
+      result = addForms(type, isResultForm.value, allowedForms);
     } else {
       const tmp: formsFile[] = Object.values(fileForms.value[type]);
       const tmpResult = tmp.map(obj => obj.id);
-      result = func(type, tmpResult, allowedForms);
+      result = addForms(type, tmpResult, allowedForms);
     }
     return result;
   };
