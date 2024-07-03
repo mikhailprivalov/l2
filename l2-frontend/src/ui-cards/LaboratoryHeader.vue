@@ -36,7 +36,7 @@
     <ul class="nav navbar-nav">
       <LoadFile />
     </ul>
-    <UploadFileModal title="Прикрепить результат" />
+    <UploadFileModal title="Прикрепить результат" :types-file="['PDF']" :upload-result="true" />
   </div>
 </template>
 

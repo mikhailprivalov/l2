@@ -28,7 +28,7 @@ export default function typesAndForms() {
     return result;
   };
 
-  const isResult = ref([
+  const isResultFunc = ref([
     'api.laboratory.forms100.form_01',
   ]);
 
@@ -49,8 +49,14 @@ export default function typesAndForms() {
       for (const form of forms) {
         if (!onlyResult && fileForms.value[type][form]) {
           result.push(fileForms.value[type][form]);
-        } else if (onlyResult && isResult.value.includes(form)) {
+        } else if (onlyResult && isResultFunc.value.includes(form)) {
           result.push(fileForms.value[type][form]);
+        }
+      }
+    } else if (!forms && onlyResult) {
+      for (const func of isResultFunc.value) {
+        if (fileForms.value[type][func]) {
+          result.push(fileForms.value[type][func]);
         }
       }
     } else {
