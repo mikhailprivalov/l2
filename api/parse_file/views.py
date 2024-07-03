@@ -921,7 +921,6 @@ def upload_file(request):
             }
         )
     except Exception as e:
-        # todo - Выводить структуру файла которая нужна, если передано не-то
         exception_string = f"{e}"
         stdout.write(exception_string)
         return JsonResponse({"ok": False, "result": [], "message": exception_string})
