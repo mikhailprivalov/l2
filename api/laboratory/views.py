@@ -379,6 +379,7 @@ def form(request):
         "allow_reset_confirm": iss.allow_reset_confirm(request.user),
         "research": {
             "title": research.title,
+            "enabled_add_files": research.enabled_add_files,
             "can_comment": research.can_lab_result_comment,
             "no_units_and_ref": research.no_units_and_ref,
             "co_executor_mode": research.co_executor_mode or 0,

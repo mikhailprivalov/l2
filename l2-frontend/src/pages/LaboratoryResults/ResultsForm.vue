@@ -73,6 +73,7 @@
           <tr>
             <td colspan="5">
               <UploadFileModal
+                v-if="research.enabled_add_files"
                 title="Прикрепить результат"
                 :types-file="['PDF']"
                 :forms-file="['api.laboratory.forms100.form_01']"
