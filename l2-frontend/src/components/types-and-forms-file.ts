@@ -28,7 +28,7 @@ export default function typesAndForms() {
     return result;
   };
 
-  const isResultFunc = ref([
+  const isResultForm = ref([
     'api.laboratory.forms100.form_01',
   ]);
 
@@ -43,27 +43,33 @@ export default function typesAndForms() {
   });
   // todo - UploadResult + forms - получать только выбранные isResult функции (протестировать)
   const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
-    let result: formsFile[] = [];
+    /* onlyResult - Выдаст только формы находящиеся в isResultForm, allowedForms - выдаст только те функции которые разрешены */
+    const result: formsFile[] = [];
     console.log(allowedForms);
     if (!allowedForms) {
       return result;
     }
     if (forms && forms.length > 0) {
       for (const form of forms) {
-        if (!onlyResult && fileForms.value[type][form]) {
+        if (!onlyResult && fileForms.value[type][form] && allowedForms.includes(form)) {
           result.push(fileForms.value[type][form]);
-        } else if (onlyResult && isResultFunc.value.includes(form)) {
+        } else if (onlyResult && isResultForm.value.includes(form) && allowedForms.includes(form)) {
           result.push(fileForms.value[type][form]);
         }
       }
     } else if (!forms && onlyResult) {
-      for (const func of isResultFunc.value) {
-        if (fileForms.value[type][func]) {
-          result.push(fileForms.value[type][func]);
+      for (const form of isResultForm.value) {
+        if (fileForms.value[type][form] && allowedForms.includes(form)) {
+          result.push(fileForms.value[type][form]);
         }
       }
     } else {
-      result = Object.values(fileForms.value[type]);
+      const tmpResult = Object.values(fileForms.value[type]);
+      for (const form of tmpResult) {
+        if (allowedForms.includes(String(form))) {
+          result.push(fileForms.value[type][form]);
+        }
+      }
     }
     return result;
   };
