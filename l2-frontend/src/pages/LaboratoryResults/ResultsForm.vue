@@ -76,6 +76,7 @@
                 title="Прикрепить результат"
                 :types-file="['PDF']"
                 :forms-file="['api.laboratory.forms100.form_01']"
+                :entity-id="pk"
               />
               <strong>
                 {{ research.title }}
