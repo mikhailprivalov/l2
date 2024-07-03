@@ -41,8 +41,7 @@ export default function typesAndForms() {
       'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата из QMS' },
     },
   });
-  // todo - режим UploadResult - получать по расширению файла - только функции связанные с сохранением результата (анализаторы)
-  // todo - UploadResult + forms - получать только выбранные isResult функции
+  // todo - UploadResult + forms - получать только выбранные isResult функции (протестировать)
   const getForms = (type: string, forms: string[] = null, onlyResult = false): formsFile[] => {
     let result: formsFile[] = [];
     if (forms && forms.length > 0) {
