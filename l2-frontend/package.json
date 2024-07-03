@@ -85,7 +85,7 @@
   },
   "devDependencies": {
     "@types/jquery": "^3.5.27",
-    "@types/lodash": "^4.14.194",
+    "@types/lodash": "^4.17.6",
     "@types/pdfobject": "^2.2.3",
     "@types/promise.prototype.finally": "^2.0.4",
     "@types/vue-router": "^2.0.0",
