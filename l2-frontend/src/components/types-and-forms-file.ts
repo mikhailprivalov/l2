@@ -45,7 +45,6 @@ export default function typesAndForms() {
   const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
     /* onlyResult - Выдаст только формы находящиеся в isResultForm, allowedForms - выдаст только те функции которые разрешены */
     const result: formsFile[] = [];
-    console.log(allowedForms);
     if (!allowedForms) {
       return result;
     }
