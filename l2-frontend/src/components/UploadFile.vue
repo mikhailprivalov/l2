@@ -141,7 +141,7 @@ const selectedForm = ref(null);
 
 const changeType = () => {
   fileFilter.value = `.${selectedType.value}`;
-  currentFileForms.value = getForms(String(selectedType.value), props.formsFile);
+  currentFileForms.value = getForms(String(selectedType.value), props.formsFile, props.uploadResult);
   if (currentFileForms.value.length > 0) {
     selectedForm.value = currentFileForms.value[0].id;
   }
