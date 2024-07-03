@@ -48,7 +48,7 @@ export default function typesAndForms() {
     if (!allowedForms) {
       return result;
     }
-    if (forms && forms.length > 0) {
+    if (forms && forms.length > 0) { // Если переданы формы
       for (const form of forms) {
         if (!onlyResult && fileForms.value[type][form] && allowedForms.includes(form)) {
           result.push(fileForms.value[type][form]);
@@ -56,13 +56,13 @@ export default function typesAndForms() {
           result.push(fileForms.value[type][form]);
         }
       }
-    } else if (!forms && onlyResult) {
+    } else if (!forms && onlyResult) { // если нет форм, но, есть "только результат"
       for (const form of isResultForm.value) {
         if (fileForms.value[type][form] && allowedForms.includes(form)) {
           result.push(fileForms.value[type][form]);
         }
       }
-    } else {
+    } else { // Если нет форм и "только результат" - выдать всё разрешенное
       const tmpResult = Object.values(fileForms.value[type]);
       for (const form of tmpResult) {
         if (allowedForms.includes(String(form))) {
