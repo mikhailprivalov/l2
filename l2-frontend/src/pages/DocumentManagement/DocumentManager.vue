@@ -24,7 +24,7 @@ import DocumentViewer from '@/pages/DocumentManagement/DocumentViewer.vue';
 .two-col {
   display: grid;
   grid-template-columns: minmax(200px, 380px) minmax(150px, auto);
-  height: calc(100vh - 36px);
+  height: calc(100vh - 86px);
 }
 .sidebar {
   display: flex;

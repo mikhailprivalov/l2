@@ -11,22 +11,22 @@
       </div>
     </div>
     <div class="filters-panel">
-      <div>
-        <label class="filters-label">Исполнитель</label>
-        <input class="form-control filters-input">
-      </div>
-      <div>
-        <label class="filters-label">Срок контроля</label>
-        <input class="form-control filters-input">
-      </div>
-      <div>
-        <label class="filters-label">Фильтр 3</label>
-        <input class="form-control filters-input">
-      </div>
-      <div>
-        <label class="filters-label">Фильтр 4</label>
-        <input class="form-control filters-input">
-      </div>
+      <input
+        class="form-control filters-input"
+        placeholder="Исполнитель"
+      >
+      <input
+        class="form-control filters-input"
+        placeholder="Контроль до"
+      >
+      <input
+        class="form-control filters-input"
+        placeholder="Фильтр 3"
+      >
+      <input
+        class="form-control filters-input"
+        placeholder="фильтр 4"
+      >
     </div>
   </div>
 </template>
@@ -58,11 +58,9 @@ const filterButtons = ref([
   flex-direction: row;
   background-color: #f8f7f7;
 }
-.filters-label {
-  margin-bottom: 0;
-  height: 25px;
-}
+
 .filters-input {
   height: 25px;
+  border-radius: 0;
 }
 </style>
