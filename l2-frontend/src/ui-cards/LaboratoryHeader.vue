@@ -80,4 +80,9 @@ export default {
       background: #049372 !important;
       border: none !important;
   }
+
+  .nav-upload-file {
+    padding: 8px 15px;
+  }
+
 </style>

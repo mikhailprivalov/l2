@@ -77,8 +77,8 @@
 <script setup lang="ts">
 // todo - slot на вывод результата, для удобного вывода каждому)
 // todo - дефолтный вывод результата - таблица, строчка
-// todo - уведомление о успешной загрузке файла
 import {
+  computed,
   getCurrentInstance, onMounted, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
@@ -94,6 +94,9 @@ import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 const { getTypes, getForms } = typesAndForms();
 
 const store = useStore();
+
+const allowedFormsForOrganization = computed(() => store.getters.modules.l2_allowed_forms_file.trim());
+
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   typesFile: {
@@ -141,9 +144,16 @@ const selectedForm = ref(null);
 
 const changeType = () => {
   fileFilter.value = `.${selectedType.value}`;
-  currentFileForms.value = getForms(String(selectedType.value), props.formsFile);
+  currentFileForms.value = getForms(
+    String(selectedType.value),
+    props.formsFile,
+    props.uploadResult,
+    allowedFormsForOrganization.value.split(', '),
+  );
   if (currentFileForms.value.length > 0) {
     selectedForm.value = currentFileForms.value[0].id;
+  } else {
+    selectedForm.value = null;
   }
 };
 

@@ -72,6 +72,13 @@
         <thead>
           <tr>
             <td colspan="5">
+              <UploadFileModal
+                v-if="research.enabled_add_files"
+                title="Прикрепить результат"
+                :types-file="['PDF']"
+                :forms-file="['api.laboratory.forms100.form_01']"
+                :entity-id="pk"
+              />
               <strong>
                 {{ research.title }}
               </strong>
@@ -320,10 +327,12 @@ import Ref from '@/pages/LaboratoryResults/Ref.vue';
 import TextInputField from '@/pages/LaboratoryResults/TextInputField.vue';
 import BloodTypeField from '@/pages/LaboratoryResults/BloodTypeField.vue';
 import RefSettings from '@/pages/LaboratoryResults/RefSettings.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'ResultsForm',
   components: {
+    UploadFileModal,
     RefSettings,
     TextInputField,
     BloodTypeField,
