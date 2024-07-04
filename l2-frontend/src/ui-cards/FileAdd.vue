@@ -7,7 +7,7 @@
       @click="show_modal"
     >
       Файлы
-      <span class="badge badge-secondary">{{ count_files }}</span>
+      <span class="badge badge-secondary">{{ countFiles }}</span>
     </button>
     <MountingPortal
       mount-to="#portal-place-modal"
