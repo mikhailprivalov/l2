@@ -2,20 +2,12 @@
   <div>
     <div class="flex">
       <input
-        class="form-control"
+        class="form-control search"
         placeholder="Номер документа"
       >
       <button class="btn btn-blue-nb nbr">
         Найти
       </button>
-    </div>
-    <div class="flex row-border">
-      <RadioFieldById
-        :variants="filterButtons"
-        item-width="33%"
-        item-height="25px"
-        :auto-height="true"
-      />
     </div>
     <div>
       <div class="flex">
@@ -169,6 +161,11 @@ const selectDocument = (documentId: number) => {
 }
 .row-border:nth-child(1) {
   border-top: 1px solid #b1b1b1;
+}
+
+.search {
+  border-radius: 0;
+  padding-left: 10px;
 }
 
 .group-button-header {
