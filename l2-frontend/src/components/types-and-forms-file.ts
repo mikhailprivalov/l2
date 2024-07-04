@@ -38,7 +38,10 @@ export default function typesAndForms() {
       'api.contracts.forms100.form_01': { id: 'api.contracts.forms100.form_01', label: 'Загрузка цен по прайсу' },
     },
     PDF: {
-      'api.laboratory.forms100.form_01': { id: 'api.laboratory.forms100.form_01', label: 'Загрузка PDF результата из QMS' },
+      'api.laboratory.forms100.form_01': {
+        id: 'api.laboratory.forms100.form_01',
+        label: 'Прикрепление результата к исследованию',
+      },
     },
   });
   const addForms = (type: string, forms = null, allowedForms: string[] = null) => {
