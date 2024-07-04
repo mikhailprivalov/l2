@@ -6,6 +6,8 @@ from directory.models import Researches
 
 def form_01(request_data):
     """
+    Загрузка цен по прайсу
+
     На входе:
     Файл XLSX с ценами прайса
     Cтруктура:
