@@ -138,7 +138,6 @@ const allowedFormsForOrganization = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('parse-file/get-allowed-forms');
   await store.dispatch(actions.DEC_LOADING);
-  console.log(result);
   allowedForms.value = result;
 };
 
