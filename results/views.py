@@ -45,7 +45,7 @@ import slog.models as slog
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign
+from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign, IssledovaniyaFiles
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
@@ -452,6 +452,10 @@ def result_print(request):
             if iss.link_file:
                 link_result.append(iss.link_file)
                 link_files = True
+            if IssledovaniyaFiles.objects.filter(issledovaniye=iss).first():
+                iss_uploaded_file = IssledovaniyaFiles.objects.filter(issledovaniye=iss).first()
+                link_result.append(iss_uploaded_file.uploaded_file.path)
+                link_files = True
             if 'выпис' in iss.research.title.lower():
                 is_extract = True
             if iss.research.is_gistology:
@@ -793,12 +797,15 @@ def result_print(request):
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
         date_now_str = str(random.random()) + str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
-        file_dir_l2 = os.path.join(dir_param, date_now_str + '_dir.pdf')
+
         buffer.seek(0)
-        save(buffer, filename=file_dir_l2)
-        dst_dir = SettingManager.get("root_dir")
-        file_dir = [os.path.join(dst_dir, link_f) for link_f in link_result]
-        file_dir.append(file_dir_l2)
+        file_dir_l2 = None
+        if buffer.getbuffer().nbytes > 0:
+            file_dir_l2 = os.path.join(dir_param, date_now_str + '_dir.pdf')
+            save(buffer, filename=file_dir_l2)
+        file_dir = [link_f for link_f in link_result]
+        if file_dir_l2:
+            file_dir.append(file_dir_l2)
         writer = PdfWriter()
         pdf_all = BytesIO()
         for inpfn in file_dir:
@@ -808,7 +815,8 @@ def result_print(request):
         pdf_all.close()
         response.write(pdf_out)
         buffer.close()
-        os.remove(file_dir_l2)
+        if file_dir_l2:
+            os.remove(file_dir_l2)
         return response
 
     pdf = buffer.getvalue()
