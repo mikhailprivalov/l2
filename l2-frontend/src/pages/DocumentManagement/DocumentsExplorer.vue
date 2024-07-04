@@ -87,18 +87,9 @@ import {
   ref,
 } from 'vue';
 
-import RadioFieldById from '@/fields/RadioFieldById.vue';
-
 // import { useStore } from '@/store';
 // import * as actions from '@/store/action-types';
 // import api from '@/api';
-const filterButtons = ref([
-  { id: 'my', label: 'Мои' },
-  { id: 'wrote', label: 'Отписал' },
-  { id: 'onControl', label: 'На контроле' },
-  { id: 'toBeAgreed', label: 'На согласовании' },
-  { id: 'onSignature', label: 'На подписи' },
-]);
 
 const selectedGroup = ref(null);
 const documentGroups = ref([

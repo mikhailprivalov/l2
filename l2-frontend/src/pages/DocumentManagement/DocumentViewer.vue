@@ -2,10 +2,32 @@
   <div>
     <div class="two-col-filters">
       <div class="sidebar">
-        <h6>фильтры</h6>
+        <div class="flex row-border">
+          <RadioFieldById
+            :variants="filterButtons"
+            item-width="33%"
+            item-height="25px"
+            :auto-height="true"
+          />
+        </div>
       </div>
       <div class="filters-panel">
-        <h6>ещё фильтры</h6>
+        <div>
+          <label class="filters-label">Исполнитель</label>
+          <input class="form-control filters-input">
+        </div>
+        <div>
+          <label class="filters-label">Срок контроля</label>
+          <input class="form-control filters-input">
+        </div>
+        <div>
+          <label class="filters-label">Фильтр 3</label>
+          <input class="form-control filters-input">
+        </div>
+        <div>
+          <label class="filters-label">Фильтр 4</label>
+          <input class="form-control filters-input">
+        </div>
       </div>
     </div>
     <div class="two-col">
@@ -13,8 +35,7 @@
         <DocumentsExplorer />
       </div>
       <div class="viewer">
-        <div class="filters-panel document-panel">
-        </div>
+        <div class="filters-panel document-panel" />
         <div>
           <h6>сам документ</h6>
         </div>
@@ -25,7 +46,18 @@
 
 <script setup lang="ts">
 
+import { ref } from 'vue';
+
+import RadioFieldById from '@/fields/RadioFieldById.vue';
 import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue';
+
+const filterButtons = ref([
+  { id: 'my', label: 'Мои' },
+  { id: 'wrote', label: 'Отписал' },
+  { id: 'onControl', label: 'На контроле' },
+  { id: 'toBeAgreed', label: 'На согласовании' },
+  { id: 'onSignature', label: 'На подписи' },
+]);
 
 </script>
 
@@ -56,6 +88,13 @@ import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue'
   height: 34px;
   border-top: 1px solid #b1b1b1;
   border-bottom: 1px solid #b1b1b1;
+}
+.filters-label {
+  margin-bottom: 0;
+  height: 25px;
+}
+.filters-input {
+  height: 25px;
 }
 
 </style>
