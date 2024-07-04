@@ -27,7 +27,7 @@ from directory.models import SetOrderResearch, Researches, ParaclinicInputGroups
 from directory.sql_func import is_paraclinic_filter_research, is_lab_filter_research
 from ecp_integration.integration import fill_slot_from_xlsx
 from hospitals.models import Hospitals
-from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT
+from laboratory.settings import CONTROL_AGE_MEDEXAM, DAYS_AGO_SEARCH_RESULT, ALLOWED_FORMS_FILE
 from results.sql_func import check_lab_instrumental_results_by_cards_and_period
 from statistic.views import commercial_offer_xls_save_file, data_xls_save_file, data_xls_save_headers_file
 from users.models import AssignmentResearches, DoctorProfile
@@ -925,3 +925,10 @@ def upload_file(request):
         stdout.write(exception_string)
         return JsonResponse({"ok": False, "result": [], "message": exception_string})
     return JsonResponse({"ok": result["ok"], "result": result["result"], "message": result["message"]})
+
+
+@login_required()
+def get_allowed_forms_file(request):
+    all_forms = ALLOWED_FORMS_FILE
+    result = [form for form in all_forms if all_forms[form]]
+    return JsonResponse({"result": result})

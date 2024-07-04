@@ -421,6 +421,10 @@ FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES = {
     "id_researches": [],
 }
 
+ALLOWED_FORMS_FILE = {
+    "100.01": True,
+}
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
