@@ -17,7 +17,7 @@
       class="modal-body"
     >
       <div
-        v-if="rows.length < 5"
+        v-if="rows.length < maxCountFiles"
         class="uploading-block"
       >
         <a
@@ -109,6 +109,11 @@ export default {
     iss_pk: {
       type: Number,
       required: true,
+    },
+    maxCountFiles: {
+      type: Number,
+      required: false,
+      default: 5,
     },
   },
   data() {

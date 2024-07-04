@@ -8,7 +8,7 @@ def form_01(request_data):
     issledovanie: Issledovaniya = Issledovaniya.objects.filter(pk=issledovanie_id).select_related('research').first()
     if issledovanie:
         iss_files = IssledovaniyaFiles.objects.filter(issledovaniye_id=issledovanie.pk)
-        if file and iss_files.count() >= 5:
+        if file and iss_files.count() >= 1:
             return {"ok": False, "result": [], "message": "Вы добавили слишком много файлов в одну заявку"}
 
         if file and file.size > 5242880:

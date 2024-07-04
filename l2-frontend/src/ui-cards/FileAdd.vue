@@ -7,7 +7,7 @@
       @click="show_modal"
     >
       Файлы
-      <span class="badge badge-secondary">{{ count_files }}</span>
+      <span class="badge badge-secondary">{{ countFiles }}</span>
     </button>
     <MountingPortal
       mount-to="#portal-place-modal"
@@ -17,6 +17,7 @@
       <FileAddModal
         v-if="showModal"
         :iss_pk="iss_pk"
+        :max-count-files="maxCountFiles"
         @add-file="countFilesAdd += 1"
       />
     </MountingPortal>
@@ -37,6 +38,11 @@ export default {
     count_files: {
       type: Number,
       required: false,
+    },
+    maxCountFiles: {
+      type: Number,
+      required: false,
+      default: 5,
     },
   },
   data() {
