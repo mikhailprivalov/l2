@@ -211,7 +211,7 @@
         class="float-left l-padding"
         title="Загрузить цены"
         :types-file="['XLSX']"
-        :forms-file="['api.contracts.forms100.form_01']"
+        :forms-file="['100.01']"
         :entity-id="selectedPrice"
         @uploadSuccess="getCoastsResearchesInPrice"
       />

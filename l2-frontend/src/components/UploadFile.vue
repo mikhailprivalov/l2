@@ -95,8 +95,6 @@ const { getTypes, getForms } = typesAndForms();
 
 const store = useStore();
 
-const allowedFormsForOrganization = computed(() => store.getters.modules.l2_allowed_forms_file.trim());
-
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   typesFile: {
@@ -132,15 +130,24 @@ const fileFilter = ref('');
 const currentFileTypes = ref<typesFile[]>([]);
 const selectedType = ref(null);
 
-onMounted(() => {
+const allowedForms = ref([]);
+const currentFileForms = ref<formsFile[]>([]);
+const selectedForm = ref(null);
+
+const allowedFormsForOrganization = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('parse-file/get-allowed-forms');
+  await store.dispatch(actions.DEC_LOADING);
+  allowedForms.value = result;
+};
+
+onMounted(async () => {
+  await allowedFormsForOrganization();
   currentFileTypes.value = getTypes(props.typesFile);
   if (props.simpleMode && currentFileTypes.value.length > 0) {
     selectedType.value = currentFileTypes.value[0].id;
   }
 });
-
-const currentFileForms = ref<formsFile[]>([]);
-const selectedForm = ref(null);
 
 const changeType = () => {
   fileFilter.value = `.${selectedType.value}`;
@@ -148,7 +155,7 @@ const changeType = () => {
     String(selectedType.value),
     props.formsFile,
     props.uploadResult,
-    allowedFormsForOrganization.value.split(', '),
+    allowedForms.value,
   );
   if (currentFileForms.value.length > 0) {
     selectedForm.value = currentFileForms.value[0].id;
