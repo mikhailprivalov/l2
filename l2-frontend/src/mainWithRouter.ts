@@ -761,9 +761,9 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/document-viewer',
+      path: '/ui/document-manager',
       name: 'Billing',
-      component: () => import('@/pages/DocumentManagement/DocumentViewer.vue'),
+      component: () => import('@/pages/DocumentManagement/DocumentManager.vue'),
       meta: {
         title: 'Документы',
         fullPageLayout: true,
