@@ -73,11 +73,17 @@
           <tr>
             <td colspan="5">
               <UploadFileModal
-                v-if="research.enabled_add_files"
+                v-if="research.enabled_add_files && !countFiles"
                 title="Прикрепить результат"
                 :types-file="['PDF']"
                 :forms-file="['api.laboratory.forms100.form_01']"
                 :entity-id="pk"
+              />
+              <FileAdd
+                v-else-if="research.enabled_add_files && countFiles > 0"
+                :iss_pk="pk"
+                :count_files="countFiles"
+                :max-count-files="1"
               />
               <strong>
                 {{ research.title }}
@@ -328,10 +334,12 @@ import TextInputField from '@/pages/LaboratoryResults/TextInputField.vue';
 import BloodTypeField from '@/pages/LaboratoryResults/BloodTypeField.vue';
 import RefSettings from '@/pages/LaboratoryResults/RefSettings.vue';
 import UploadFileModal from '@/modals/UploadFileModal.vue';
+import FileAdd from '@/ui-cards/FileAdd.vue';
 
 export default {
   name: 'ResultsForm',
   components: {
+    FileAdd,
     UploadFileModal,
     RefSettings,
     TextInputField,
@@ -345,6 +353,7 @@ export default {
       confirmed: false,
       saved: false,
       allow_reset_confirm: false,
+      countFiles: 0,
       showRefSettings: false,
       pk: null,
       research: {},
@@ -441,6 +450,7 @@ export default {
       this.result = data.result;
       this.confirmed = data.confirmed;
       this.saved = data.saved;
+      this.countFiles = data.count_files;
       this.laborants = data.laborants;
       this.co_executor = data.co_executor;
       this.co_executor2 = data.co_executor2;

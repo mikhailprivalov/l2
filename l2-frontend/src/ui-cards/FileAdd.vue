@@ -17,6 +17,7 @@
       <FileAddModal
         v-if="showModal"
         :iss_pk="iss_pk"
+        :max-count-files="maxCountFiles"
         @add-file="countFilesAdd += 1"
       />
     </MountingPortal>
@@ -37,6 +38,11 @@ export default {
     count_files: {
       type: Number,
       required: false,
+    },
+    maxCountFiles: {
+      type: Number,
+      required: false,
+      default: 5,
     },
   },
   data() {
