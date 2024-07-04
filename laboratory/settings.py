@@ -422,7 +422,7 @@ FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES = {
 }
 
 ALLOWED_FORMS_FILE = {
-    "100.01": True,
+    "100.01": False,
 }
 
 try:
