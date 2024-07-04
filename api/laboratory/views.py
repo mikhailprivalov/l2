@@ -14,7 +14,7 @@ from django.utils import datetime_safe
 
 from appconf.manager import SettingManager
 from barcodes.views import tubes
-from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result
+from directions.models import TubesRegistration, Issledovaniya, Napravleniya, Result, IssledovaniyaFiles
 from directions.sql_func import get_tube_registration
 from directory.models import Fractions, Researches, Unit
 from ftp_orders.main import push_result
@@ -362,6 +362,7 @@ def form(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
     iss: Issledovaniya = Issledovaniya.objects.prefetch_related('result_set').get(pk=pk)
+    count_files = IssledovaniyaFiles.objects.filter(issledovaniye_id=iss.pk).count()
     research: Researches = Researches.objects.prefetch_related(
         Prefetch('fractions_set', queryset=Fractions.objects.all().order_by("sort_weight", "pk").prefetch_related('references_set'))
     ).get(pk=iss.research_id)
@@ -376,6 +377,7 @@ def form(request):
             "docConfirmation": iss.doc_confirmation.get_fio() if iss.doc_confirmation else None,
             "app": iss.api_app.name if iss.api_app else None,
         },
+        "count_files": count_files,
         "allow_reset_confirm": iss.allow_reset_confirm(request.user),
         "research": {
             "title": research.title,
