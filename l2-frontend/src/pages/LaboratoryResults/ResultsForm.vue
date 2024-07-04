@@ -78,6 +78,7 @@
                 :types-file="['PDF']"
                 :forms-file="['api.laboratory.forms100.form_01']"
                 :entity-id="pk"
+                @uploadSuccess="loadForm(pk)"
               />
               <FileAdd
                 v-else-if="research.enabled_add_files && countFiles > 0"
