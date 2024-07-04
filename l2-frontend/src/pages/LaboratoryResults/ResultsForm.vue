@@ -72,16 +72,8 @@
         <thead>
           <tr>
             <td colspan="5">
-              <UploadFileModal
-                v-if="research.enabled_add_files && !countFiles"
-                title="Прикрепить результат"
-                :types-file="['PDF']"
-                :forms-file="['api.laboratory.forms100.form_01']"
-                :entity-id="pk"
-                @uploadSuccess="loadForm(pk)"
-              />
               <FileAdd
-                v-else-if="research.enabled_add_files && countFiles > 0"
+                v-if="research.enabled_add_files"
                 :iss_pk="pk"
                 :count_files="countFiles"
                 :max-count-files="1"
@@ -334,14 +326,12 @@ import Ref from '@/pages/LaboratoryResults/Ref.vue';
 import TextInputField from '@/pages/LaboratoryResults/TextInputField.vue';
 import BloodTypeField from '@/pages/LaboratoryResults/BloodTypeField.vue';
 import RefSettings from '@/pages/LaboratoryResults/RefSettings.vue';
-import UploadFileModal from '@/modals/UploadFileModal.vue';
 import FileAdd from '@/ui-cards/FileAdd.vue';
 
 export default {
   name: 'ResultsForm',
   components: {
     FileAdd,
-    UploadFileModal,
     RefSettings,
     TextInputField,
     BloodTypeField,
