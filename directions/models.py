@@ -2244,7 +2244,6 @@ class ComplexResearchAccountPerson(models.Model):
     patient_card = models.ForeignKey(Clients.Card, default=None, blank=True, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
     models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
 
-
     def __str__(self):
         return f"{self.complex_research} {self.iss_list}"
 
