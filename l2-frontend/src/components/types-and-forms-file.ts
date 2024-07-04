@@ -11,7 +11,6 @@ export interface formsFile {
 export default function typesAndForms() {
   const fileTypes = ref({
     XLSX: { id: 'XLSX', label: 'XLSX' },
-    PDF: { id: 'PDF', label: 'PDF' },
   });
   // todo - сделать соотношение - расширение файла - и все виды accept фильтров {xlsx: '.xlx, .xlsx, ws-excel'}
   const getTypes = (types: string[]): typesFile[] => {
@@ -36,12 +35,6 @@ export default function typesAndForms() {
   const fileForms = ref({
     XLSX: {
       'api.contracts.forms100.form_01': { id: 'api.contracts.forms100.form_01', label: 'Загрузка цен по прайсу' },
-    },
-    PDF: {
-      'api.laboratory.forms100.form_01': {
-        id: 'api.laboratory.forms100.form_01',
-        label: 'Прикрепление результата к исследованию',
-      },
     },
   });
   const addForms = (type: string, forms = null, allowedForms: string[] = null) => {
