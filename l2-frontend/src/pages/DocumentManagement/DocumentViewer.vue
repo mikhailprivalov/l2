@@ -13,7 +13,11 @@
         <DocumentsExplorer />
       </div>
       <div class="viewer">
-        <h4>Просмотрщик</h4>
+        <div class="filters-panel document-panel">
+        </div>
+        <div>
+          <h6>сам документ</h6>
+        </div>
       </div>
     </div>
   </div>
@@ -47,6 +51,10 @@ import DocumentsExplorer from '@/pages/DocumentManagement/DocumentsExplorer.vue'
   display: flex;
   flex-direction: row;
   background-color: #f8f7f7;
+}
+.document-panel {
+  height: 34px;
+  border-top: 1px solid #b1b1b1;
   border-bottom: 1px solid #b1b1b1;
 }
 
