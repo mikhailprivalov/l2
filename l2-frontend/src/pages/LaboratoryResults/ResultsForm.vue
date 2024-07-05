@@ -605,4 +605,7 @@ export default {
     }
   }
 }
+::v-deep .file-btn {
+  border-radius: 0;
+}
 </style>
