@@ -2809,23 +2809,7 @@ def update_coast_research_in_price(request):
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
     researches = Researches.objects.all().order_by("title")
-    res_list = {}
-    if not EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
-        res_list["Лаборатория"] = {}
-    if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
-        res_list["Параклиника"] = {}
-    if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
-        res_list["Консультации"] = {"Общие": []}
-    if not EXCLUDE_TYPE_RESEARCH["is_form"]:
-        res_list["Формы"] = {"Общие": []}
-    if not EXCLUDE_TYPE_RESEARCH["is_treatment"]:
-        res_list["Лечение"] = {"Общие": []}
-    if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not EXCLUDE_TYPE_RESEARCH["is_citology"]:
-        res_list["Морфология"] = {"Микробиология": [], "Гистология": [], "Цитология": []}
-    if not EXCLUDE_TYPE_RESEARCH["is_stom"]:
-        res_list["Стоматология"] = {"Общие": []}
-    if not EXCLUDE_TYPE_RESEARCH["is_complex"]:
-        res_list["Комплексные услуги"] = {"Общие": []}
+    res_list = Researches.gen_non_excluded_categories()
 
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]

@@ -859,6 +859,27 @@ class Researches(models.Model):
             result = False
         return result
 
+    @staticmethod
+    def gen_non_excluded_categories():
+        res_list = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+            res_list["Лаборатория"] = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
+            res_list["Параклиника"] = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
+            res_list["Консультации"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_form"]:
+            res_list["Формы"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_treatment"]:
+            res_list["Лечение"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not EXCLUDE_TYPE_RESEARCH["is_citology"]:
+            res_list["Морфология"] = {"Микробиология": [], "Гистология": [], "Цитология": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_stom"]:
+            res_list["Стоматология"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_complex"]:
+            res_list["Комплексные услуги"] = {"Общие": []}
+        return res_list
+
 
 class HospitalService(models.Model):
     TYPES = (
