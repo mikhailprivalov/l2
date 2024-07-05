@@ -38,8 +38,8 @@ import { ref } from 'vue';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 const filterButtons = ref([
-  { id: 'iCreated', label: 'Я создал' },
-  { id: 'iDoing', label: 'Я исполняю' },
+  { id: 'created', label: 'Я создал' },
+  { id: 'doing', label: 'Я исполняю' },
   { id: 'wrote', label: 'Я поручил' },
   { id: 'onControl', label: 'Я контролирую' },
   { id: 'toBeAgreed', label: 'Мне согласовать' },
