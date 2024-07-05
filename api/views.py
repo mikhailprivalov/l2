@@ -27,6 +27,7 @@ from laboratory.settings import (
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
     MEDEXAM_FIN_SOURCE_TITLE,
+    EXCLUDE_TYPE_RESEARCH,
 )
 from utils.response import status_response
 
@@ -2808,19 +2809,13 @@ def update_coast_research_in_price(request):
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
     researches = Researches.objects.all().order_by("title")
-    res_list = {
-        "Лаборатория": {},
-        "Параклиника": {},
-        "Консультации": {"Общие": []},
-        "Формы": {"Общие": []},
-        "Лечение": {"Общие": []},
-        "Морфология": {"Микробиология": [], "Гистология": [], "Цитология": []},
-        "Стоматология": {"Общие": []},
-        "Комплексные услуги": {"Общие": []},
-    }
+    res_list = Researches.gen_non_excluded_categories()
+
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
+        if not Researches.check_exclude(research):
+            continue
         is_hide = ""
         if research.hide:
             is_hide = "- (скрыто)"

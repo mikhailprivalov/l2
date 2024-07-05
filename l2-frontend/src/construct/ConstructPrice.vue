@@ -192,7 +192,7 @@
         href="#"
         @click.prevent="downloadCoastTOXlsx(selectedPrice)"
       >
-        Текущий прайс - XLSX
+        Текущий - XLSX
       </a>
       <a
         class="a-under a-align r-padding"
@@ -205,6 +205,7 @@
         <LoadFile
           :is-gen-commercial-offer="true"
           :selected-price="selectedPrice"
+          title-button="Смета"
         />
       </a>
       <UploadFileModal

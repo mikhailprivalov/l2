@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
-from laboratory.settings import DEATH_RESEARCH_PK
+from laboratory.settings import DEATH_RESEARCH_PK, EXCLUDE_TYPE_RESEARCH
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality
@@ -814,6 +814,71 @@ class Researches(models.Model):
         else:
             result = set(Researches.objects.filter(hide=hide).values_list('id', flat=True))
         return result
+
+    @staticmethod
+    def check_exclude(research):
+        """Проверка на исключенные типы услуг, на входе либо SQL namedtuple, либо объект researches"""
+        result = True
+        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
+            result = False
+        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
+            result = False
+        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH["is_treatment"]:
+            result = False
+        elif research.is_stom and EXCLUDE_TYPE_RESEARCH["is_stom"]:
+            result = False
+        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH["is_hospital"]:
+            result = False
+        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH["is_slave_hospital"]:
+            result = False
+        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH["is_microbiology"]:
+            result = False
+        elif research.is_citology and EXCLUDE_TYPE_RESEARCH["is_citology"]:
+            result = False
+        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH["is_gistology"]:
+            result = False
+        elif research.is_form and EXCLUDE_TYPE_RESEARCH["is_form"]:
+            result = False
+        elif research.is_application and EXCLUDE_TYPE_RESEARCH["is_application"]:
+            result = False
+        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH["is_direction_params"]:
+            result = False
+        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH["is_global_direction_params"]:
+            result = False
+        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH["is_monitoring"]:
+            result = False
+        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH["is_expertise"]:
+            result = False
+        elif research.is_aux and EXCLUDE_TYPE_RESEARCH["is_aux"]:
+            result = False
+        elif research.is_case and EXCLUDE_TYPE_RESEARCH["is_case"]:
+            result = False
+        elif research.is_complex and EXCLUDE_TYPE_RESEARCH["is_complex"]:
+            result = False
+        elif EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+            result = False
+        return result
+
+    @staticmethod
+    def gen_non_excluded_categories():
+        res_list = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+            res_list["Лаборатория"] = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
+            res_list["Параклиника"] = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
+            res_list["Консультации"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_form"]:
+            res_list["Формы"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_treatment"]:
+            res_list["Лечение"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not EXCLUDE_TYPE_RESEARCH["is_citology"]:
+            res_list["Морфология"] = {"Микробиология": [], "Гистология": [], "Цитология": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_stom"]:
+            res_list["Стоматология"] = {"Общие": []}
+        if not EXCLUDE_TYPE_RESEARCH["is_complex"]:
+            res_list["Комплексные услуги"] = {"Общие": []}
+        return res_list
 
 
 class HospitalService(models.Model):
