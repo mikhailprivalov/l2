@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
-from laboratory.settings import DEATH_RESEARCH_PK
+from laboratory.settings import DEATH_RESEARCH_PK, EXCLUDE_TYPE_RESEARCH
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from users.models import DoctorProfile, Speciality
@@ -813,6 +813,48 @@ class Researches(models.Model):
             result = list(Researches.objects.filter(hide=hide).values_list('id', flat=True))
         else:
             result = set(Researches.objects.filter(hide=hide).values_list('id', flat=True))
+        return result
+
+    @staticmethod
+    def check_exclude(research):
+        """Проверка на исключенные типы услуг, на входе либо SQL namedtuple, либо объект researches"""
+        result = True
+        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH.get("is_paraclinic"):
+            result = False
+        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH.get("is_doc_refferal"):
+            result = False
+        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH.get("is_treatment"):
+            result = False
+        elif research.is_stom and EXCLUDE_TYPE_RESEARCH.get("is_stom"):
+            result = False
+        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH.get("is_hospital"):
+            result = False
+        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH.get("is_slave_hospital"):
+            result = False
+        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH.get("is_microbiology"):
+            result = False
+        elif research.is_citology and EXCLUDE_TYPE_RESEARCH.get("is_citology"):
+            result = False
+        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH.get("is_gistology"):
+            result = False
+        elif research.is_form and EXCLUDE_TYPE_RESEARCH.get("is_form"):
+            result = False
+        elif research.is_application and EXCLUDE_TYPE_RESEARCH.get("is_application"):
+            result = False
+        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH.get("is_direction_params"):
+            result = False
+        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH.get("is_global_direction_params"):
+            result = False
+        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH.get("is_monitoring"):
+            result = False
+        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH.get("is_expertise"):
+            result = False
+        elif research.is_aux and EXCLUDE_TYPE_RESEARCH.get("is_aux"):
+            result = False
+        elif research.is_case and EXCLUDE_TYPE_RESEARCH.get("is_case"):
+            result = False
+        elif research.is_complex and EXCLUDE_TYPE_RESEARCH.get("is_complex"):
+            result = False
         return result
 
 

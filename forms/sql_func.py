@@ -231,7 +231,7 @@ def get_researches():
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT id, internal_code, title, code FROM directory_researches
+            SELECT * FROM directory_researches
             WHERE hide=False
             ORDER BY internal_code
         """,
