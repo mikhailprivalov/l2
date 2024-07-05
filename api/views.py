@@ -26,7 +26,8 @@ from laboratory.settings import (
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
-    MEDEXAM_FIN_SOURCE_TITLE, EXCLUDE_TYPE_RESEARCH,
+    MEDEXAM_FIN_SOURCE_TITLE,
+    EXCLUDE_TYPE_RESEARCH,
 )
 from utils.response import status_response
 
