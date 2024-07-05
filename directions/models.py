@@ -1331,7 +1331,10 @@ class Napravleniya(models.Model):
             return result
         pk_reseerches = []
         issledovaniye_case_id = None
+        print(researches)
         for v in researches.values():
+            print("v")
+            print(v)
             pk_reseerches.extend(v)
         card = Clients.Card.objects.get(pk=client_id)
         control_anketa_dispanserization = SettingManager.get("control_anketa_dispanserization", default='false', default_type='b')
@@ -1420,10 +1423,29 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
+            complex_researches_id = {}
+            used_research_for_all_complex_research = []
+            step = 0
             for v in researches:  # нормализация исследований
                 researches_grouped_by_lab.append({v: researches[v]})
+                print("researches_grouped_by_lab")
+                print(researches_grouped_by_lab)
+
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
+                    if research_tmp.is_complex:
+                        services_data = directory.ComplexService.get_services_in_complex(vv, filtered_hide=True)
+                        print(services_data)
+                        step += 1
+                        for s in services_data:
+                            if s.get('id') not in used_research_for_all_complex_research:
+                                if not complex_researches_id.get(step):
+                                    complex_researches_id[step] = [s.get('id')]
+                                else:
+                                    tmp_complex_researches_id = complex_researches_id.get(step)
+                                    tmp_complex_researches_id.append(s.get('id'))
+                                    complex_researches_id[step] = tmp_complex_researches_id.copy()
+                                used_research_for_all_complex_research.append(s.get('id'))
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
                         template_research_assign = limit_researches_by_period.get(vv)
                         if template_research_assign["period"] == 1:
@@ -1451,6 +1473,8 @@ class Napravleniya(models.Model):
             res = []
             only_lab_researches = []
             dir_group_onlylab = ''
+            print("lab_podrazdeleniye_pk")
+            print(lab_podrazdeleniye_pk)
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res += v[key]
@@ -1470,6 +1494,8 @@ class Napravleniya(models.Model):
                     auto_print_direction_research = AUTO_PRINT_RESEARCH_DIRECTION.get("researches")
                     repeat_research = list(set(res) & set(auto_print_direction_research))
                     auto_print_direction_research = list(set(auto_print_direction_research) - set(repeat_research))
+                print("res")
+                print(res)
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None

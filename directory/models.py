@@ -975,9 +975,12 @@ class ComplexService(models.Model):
         return f"{self.main_research.title} - {self.slave_research.title} - {self.hide}"
 
     @staticmethod
-    def get_services_in_complex(complex_id: int):
+    def get_services_in_complex(complex_id: int, filtered_hide=False):
         services = ComplexService.objects.filter(main_research_id=complex_id).select_related("slave_research").order_by("slave_research__title")
-        result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
+        if filtered_hide:
+            result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "type": service.slave_research.reversed_type} for service in services if not service.hide]
+        else:
+            result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
         return result
 
     @staticmethod
