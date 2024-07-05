@@ -426,6 +426,7 @@ ALLOWED_FORMS_FILE = {
 }
 
 EXCLUDE_TYPE_RESEARCH = {
+    "is_laboratory": False,
     "is_paraclinic": False,
     "is_doc_refferal": False,
     "is_treatment": False,

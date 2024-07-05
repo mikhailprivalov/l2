@@ -855,6 +855,8 @@ class Researches(models.Model):
             result = False
         elif research.is_complex and EXCLUDE_TYPE_RESEARCH.get("is_complex"):
             result = False
+        elif EXCLUDE_TYPE_RESEARCH.get("laboratory"):
+            result = False
         return result
 
 
