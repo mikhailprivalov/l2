@@ -819,43 +819,43 @@ class Researches(models.Model):
     def check_exclude(research):
         """Проверка на исключенные типы услуг, на входе либо SQL namedtuple, либо объект researches"""
         result = True
-        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH.get("is_paraclinic"):
+        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
             result = False
-        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH.get("is_doc_refferal"):
+        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
             result = False
-        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH.get("is_treatment"):
+        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH["is_treatment"]:
             result = False
-        elif research.is_stom and EXCLUDE_TYPE_RESEARCH.get("is_stom"):
+        elif research.is_stom and EXCLUDE_TYPE_RESEARCH["is_stom"]:
             result = False
-        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH.get("is_hospital"):
+        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH["is_hospital"]:
             result = False
-        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH.get("is_slave_hospital"):
+        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH["is_slave_hospital"]:
             result = False
-        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH.get("is_microbiology"):
+        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH["is_microbiology"]:
             result = False
-        elif research.is_citology and EXCLUDE_TYPE_RESEARCH.get("is_citology"):
+        elif research.is_citology and EXCLUDE_TYPE_RESEARCH["is_citology"]:
             result = False
-        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH.get("is_gistology"):
+        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH["is_gistology"]:
             result = False
-        elif research.is_form and EXCLUDE_TYPE_RESEARCH.get("is_form"):
+        elif research.is_form and EXCLUDE_TYPE_RESEARCH["is_form"]:
             result = False
-        elif research.is_application and EXCLUDE_TYPE_RESEARCH.get("is_application"):
+        elif research.is_application and EXCLUDE_TYPE_RESEARCH["is_application"]:
             result = False
-        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH.get("is_direction_params"):
+        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH["is_direction_params"]:
             result = False
-        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH.get("is_global_direction_params"):
+        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH["is_global_direction_params"]:
             result = False
-        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH.get("is_monitoring"):
+        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH["is_monitoring"]:
             result = False
-        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH.get("is_expertise"):
+        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH["is_expertise"]:
             result = False
-        elif research.is_aux and EXCLUDE_TYPE_RESEARCH.get("is_aux"):
+        elif research.is_aux and EXCLUDE_TYPE_RESEARCH["is_aux"]:
             result = False
-        elif research.is_case and EXCLUDE_TYPE_RESEARCH.get("is_case"):
+        elif research.is_case and EXCLUDE_TYPE_RESEARCH["is_case"]:
             result = False
-        elif research.is_complex and EXCLUDE_TYPE_RESEARCH.get("is_complex"):
+        elif research.is_complex and EXCLUDE_TYPE_RESEARCH["is_complex"]:
             result = False
-        elif EXCLUDE_TYPE_RESEARCH.get("laboratory"):
+        elif EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
             result = False
         return result
 
