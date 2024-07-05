@@ -229,7 +229,7 @@ def menu(request):
                     "access": ["Счет: проект, Счет: закрытие"],
                 },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
-                {"url": "/ui/document-manager", "title": "Документы", "nt": False, "access": ["Документооборот: просмотр документов"]},
+                {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
             ]
 
             hp = SettingManager.get(key="home_page", default="false")
