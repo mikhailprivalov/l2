@@ -232,7 +232,7 @@ def get_researches():
         cursor.execute(
             """
             SELECT id, internal_code, title, code FROM directory_researches
-            WHERE hide=False and internal_code != ''
+            WHERE hide=False
             ORDER BY internal_code
         """,
         )
