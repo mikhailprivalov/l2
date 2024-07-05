@@ -2236,6 +2236,22 @@ class ExternalAdditionalOrder(models.Model):
         verbose_name_plural = 'Внешние лабораторные номера заказов'
 
 
+class ComplexResearchAccountPerson(models.Model):
+    complex_research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Комплексная из справочника', db_index=True, on_delete=models.SET_NULL)
+    iss_list = models.CharField(max_length=1024, null=False, db_index=True, help_text="Исследования для комплексной услуги")
+    researches_id_list = models.CharField(max_length=128, null=False, db_index=True, help_text="Список услуг-id комплекса")
+    researches_title_list = models.CharField(max_length=128, null=False, db_index=True, help_text="Список услуг-наименования комплекса")
+    patient_card = models.ForeignKey(Clients.Card, default=None, blank=True, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
+    models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
+
+    def __str__(self):
+        return f"{self.complex_research} {self.iss_list}"
+
+    class Meta:
+        verbose_name = 'Комплексная услуги'
+        verbose_name_plural = 'Комплексные услуги'
+
+
 class Issledovaniya(models.Model):
     """
     Направления на исследования
@@ -2316,6 +2332,7 @@ class Issledovaniya(models.Model):
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
     plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
     billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
+    complex_account = models.ForeignKey(ComplexResearchAccountPerson, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит комплексу", on_delete=models.SET_NULL)
 
     @staticmethod
     def save_billing(billing_id, iss_ids):
