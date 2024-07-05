@@ -425,6 +425,29 @@ ALLOWED_FORMS_FILE = {
     "100.01": False,
 }
 
+EXCLUDE_TYPE_RESEARCH = {
+    "is_laboratory": False,
+    "is_paraclinic": False,
+    "is_doc_refferal": False,
+    "is_treatment": False,
+    "is_stom": False,
+    "is_hospital": False,
+    "is_slave_hospital": False,
+    "is_microbiology": False,
+    "is_citology": False,
+    "is_gistology": False,
+    "is_form": False,
+    "is_application": False,
+    "is_direction_params": False,
+    "is_global_direction_params": False,
+    "is_monitoring": False,
+    "is_expertise": False,
+    "is_aux": False,
+    "is_case": False,
+    "is_complex": False,
+}
+
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
