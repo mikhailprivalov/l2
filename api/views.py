@@ -26,7 +26,7 @@ from laboratory.settings import (
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
-    MEDEXAM_FIN_SOURCE_TITLE,
+    MEDEXAM_FIN_SOURCE_TITLE, EXCLUDE_TYPE_RESEARCH,
 )
 from utils.response import status_response
 
@@ -2821,6 +2821,8 @@ def get_research_list(request):
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
+        if not Researches.check_exclude(research):
+            continue
         is_hide = ""
         if research.hide:
             is_hide = "- (скрыто)"
