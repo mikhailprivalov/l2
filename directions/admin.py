@@ -34,6 +34,7 @@ from .models import (
     RegisteredOrders,
     ExternalAdditionalOrder,
     NapravleniyaHL7LinkFiles,
+    ComplexResearchAccountPerson,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -95,6 +96,11 @@ class NapravleniyaAdmin(admin.ModelAdmin):
 class DirectionDocumentAdmin(admin.ModelAdmin):
     autocomplete_fields = ('direction',)
     search_fields = ('direction__id',)
+
+
+@admin.register(ComplexResearchAccountPerson)
+class ComplexResearchAccountPersonAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'complex_research', 'patient_card', 'researches_id_list', 'researches_title_list', 'create_at']
 
 
 @admin.register(DocumentSign)
