@@ -2373,7 +2373,9 @@ class Issledovaniya(models.Model):
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
     plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
     billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
-    complex_research_account = models.ForeignKey(ComplexResearchAccountPerson, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит комплексу", on_delete=models.SET_NULL)
+    complex_research_account = models.ForeignKey(
+        ComplexResearchAccountPerson, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит комплексу", on_delete=models.SET_NULL
+    )
 
     @staticmethod
     def save_billing(billing_id, iss_ids):
