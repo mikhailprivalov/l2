@@ -1479,8 +1479,6 @@ class Napravleniya(models.Model):
                     if int(key) in lab_podrazdeleniye_pk:
                         only_lab_researches += v[key]
                     # {5:[0,2,5,7],6:[8]}
-            print("only_lab_researches")
-            print(only_lab_researches)
             if only_lab_researches or external_organization != "NONE":
                 dir_group_onlylab = -9999999
             if not no_attach:
@@ -1494,8 +1492,6 @@ class Napravleniya(models.Model):
                     auto_print_direction_research = AUTO_PRINT_RESEARCH_DIRECTION.get("researches")
                     repeat_research = list(set(res) & set(auto_print_direction_research))
                     auto_print_direction_research = list(set(auto_print_direction_research) - set(repeat_research))
-                print("res")
-                print(res)
                 for v in res:
                     research = directory.Researches.objects.get(pk=v)
                     research_coast = None
