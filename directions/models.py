@@ -25,7 +25,8 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
-from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research
+from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research, \
+    get_patient_complex_research_data
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import (
@@ -2287,6 +2288,16 @@ class ComplexResearchAccountPerson(models.Model):
 
         complex_account.save()
         return complex_account.pk
+
+    @staticmethod
+    def get_patient_complex_research(date_start, date_end, patient_card):
+        print(date_start)
+        print(date_end)
+        print(patient_card)
+        result = get_patient_complex_research_data(date_start, date_end, patient_card)
+        for r in result:
+            print(r)
+        return result
 
 
 class Issledovaniya(models.Model):

@@ -184,3 +184,25 @@ def get_data_by_directions_id(direction_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_patient_complex_research_data(date_start, date_end, patient_card_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_complexresearchaccountperson.id as complex_account_id,
+            dr.title as research_title,
+            directions_complexresearchaccountperson.iss_list,
+            directions_complexresearchaccountperson.researches_title_list,
+            to_char(directions_complexresearchaccountperson.create_at AT TIME ZONE %(tz)s, 'DD.MM.YY') as create_date
+            FROM directions_complexresearchaccountperson
+            LEFT JOIN directory_researches dr on directions_complexresearchaccountperson.complex_research_id = dr.id
+            WHERE directions_complexresearchaccountperson.create_at AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s and 
+            directions_complexresearchaccountperson.patient_card_id = %(patient_card_id)s
+            ORDER BY complex_account_id
+            """,
+            params={'date_start': date_start, 'date_end': date_end, 'patient_card_id': patient_card_id, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

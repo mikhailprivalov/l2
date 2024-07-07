@@ -96,6 +96,9 @@
             <th v-if="active_type === 7">
               № случ.
             </th>
+            <th v-else-if="active_type === 8">
+              № компл.
+            </th>
             <th v-else-if="active_type !== 5 && active_type !== 6">
               № напр.
             </th>
@@ -375,6 +378,23 @@
                   Талон-А6
                 </button>
               </div>
+              <div
+                v-else-if="active_type===8"
+                class="button-td-inner has_pacs"
+              >
+                <button
+                  class="btn btn-blue-nb"
+                  @click="show_results(row.pk)"
+                >
+                  Результаты
+                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_direction(row.pk)"
+                >
+                  Направления
+                </button>
+              </div>
             </td>
             <td class="nopd">
               <input
@@ -477,6 +497,7 @@ export default {
         { pk: 5, title: 'Договоры пациента' },
         { pk: 6, title: 'Регистратура пациента', module: 'rmisQueue' },
         { pk: 7, title: 'Случаи пациента' },
+        { pk: 8, title: 'Комплексы пациента' },
       ],
       active_type: this.onlyType || 3,
       checked_obj: {},

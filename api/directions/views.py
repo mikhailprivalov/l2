@@ -68,7 +68,7 @@ from directions.models import (
     IssledovaniyaResultLaborant,
     SignatureCertificateDetails,
     GeneratorValuesAreOver,
-    NoGenerator,
+    NoGenerator, ComplexResearchAccountPerson,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
 from laboratory import settings
@@ -334,6 +334,7 @@ def directions_history(request):
     # SQL-query
     res = {"directions": []}
     request_data = json.loads(request.body)
+    print(request_data)
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
@@ -352,8 +353,18 @@ def directions_history(request):
     # status: 4 - выписано пользователем, 0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
-    if req_status in [0, 1, 2, 3, 5, 7]:
+    if req_status in [0, 1, 2, 3, 5, 7, 8]:
         patient_card = pk
+
+    if req_status == 8:
+        patient_complex_data = ComplexResearchAccountPerson.get_patient_complex_research(date_start, date_end, patient_card)
+        final_result = [{"checked": False, "pacs": False, "has_hosp": False,
+                         "has_descriptive": False, "maybe_onco": False, "is_application": False, "lab": "", "parent": parent_obj, "is_expertise": False, "expertise_status": False,
+                         "person_contract_pk": "", "person_contract_dirs": "", 'pk': i.complex_account_id, 'researches': f"{i.research_title} ({i.researches_title_list})", 'cancel': False,
+                         'date': i.create_date, 'status': 'Комплексн'} for i in patient_complex_data]
+        res['directions'] = final_result
+
+        return JsonResponse(res)
 
     if req_status == 5:
         patient_contract = get_patient_contract(date_start, date_end, patient_card)
