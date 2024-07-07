@@ -1420,10 +1420,31 @@ class Napravleniya(models.Model):
             conflict_list = []
             conflict_keys = []
             limit_research_to_assign = {}
+            used_research_for_all_complex_research = {}
             for v in researches:  # нормализация исследований
-                researches_grouped_by_lab.append({v: researches[v]})
+                if v != '-16':
+                    researches_grouped_by_lab.append({v: researches[v]})
+
                 for vv in researches[v]:
                     research_tmp = directory.Researches.objects.get(pk=vv)
+                    if research_tmp.is_complex:
+                        services_data = directory.ComplexService.get_services_in_complex(vv, filtered_hide=True)
+                        researches_id_list = ','.join(map(str, [r_id.get('id') for r_id in services_data]))
+                        researches_title_list = ','.join(map(str, [r_title.get('label') for r_title in services_data]))
+                        complex_research_accunt_id = ComplexResearchAccountPerson.complex_account_save(vv, researches_id_list, researches_title_list, client_id)
+                        for s in services_data:
+                            used_research_for_all_complex_research[s.get('id')] = complex_research_accunt_id
+
+                            # добавить в общуюю стр-ру по типу услуги из комплекса
+                            add_from_complex_research_to_researches_grouped_by_lab = False
+                            for el in researches_grouped_by_lab:
+                                if list(el.keys())[0] == str(s.get('type')):
+                                    add_from_complex_research_to_researches_grouped_by_lab = True
+                                    if s.get('id') not in el[list(el.keys())[0]]:
+                                        el[list(el.keys())[0]].append(s.get('id'))
+                            if not add_from_complex_research_to_researches_grouped_by_lab:
+                                researches_grouped_by_lab.append({s.get('type'): [s.get('id')]})
+
                     if finsource and finsource.title.lower() != "платно" and limit_researches_by_period and limit_researches_by_period.get(vv, None):
                         template_research_assign = limit_researches_by_period.get(vv)
                         if template_research_assign["period"] == 1:
@@ -1451,6 +1472,7 @@ class Napravleniya(models.Model):
             res = []
             only_lab_researches = []
             dir_group_onlylab = ''
+
             for v in researches_grouped_by_lab:  # цикл перевода листа в словарь
                 for key in v.keys():
                     res += v[key]
@@ -1718,6 +1740,8 @@ class Napravleniya(models.Model):
                         issledovaniye.hospital_department_override_id = hospital_department_override
                     elif hospital_department_override == -1 and research.is_hospital and Podrazdeleniya.objects.filter(pk=research.podrazdeleniye.pk).exists():
                         issledovaniye.hospital_department_override_id = research.podrazdeleniye.pk
+                    if used_research_for_all_complex_research.get(v):
+                        issledovaniye.complex_research_account_id = used_research_for_all_complex_research.get(v)
                     issledovaniye.save()
 
                     if research.is_monitoring:
@@ -2238,18 +2262,31 @@ class ExternalAdditionalOrder(models.Model):
 
 class ComplexResearchAccountPerson(models.Model):
     complex_research = models.ForeignKey(directory.Researches, null=True, blank=True, help_text='Комплексная из справочника', db_index=True, on_delete=models.SET_NULL)
-    iss_list = models.CharField(max_length=1024, null=False, db_index=True, help_text="Исследования для комплексной услуги")
-    researches_id_list = models.CharField(max_length=128, null=False, db_index=True, help_text="Список услуг-id комплекса")
-    researches_title_list = models.CharField(max_length=128, null=False, db_index=True, help_text="Список услуг-наименования комплекса")
+    iss_list = models.CharField(max_length=1024, default=None, blank=True, null=True, db_index=True, help_text="Исследования для комплексной услуги")
+    researches_id_list = models.CharField(max_length=512, null=False, db_index=True, help_text="Список услуг-id комплекса")
+    researches_title_list = models.CharField(max_length=1024, null=False, db_index=True, help_text="Список услуг-наименования комплекса")
     patient_card = models.ForeignKey(Clients.Card, default=None, blank=True, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
-    models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
+    create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания направления', db_index=True)
 
     def __str__(self):
-        return f"{self.complex_research} {self.iss_list}"
+        return f"{self.id} {self.complex_research}"
 
     class Meta:
         verbose_name = 'Комплексная услуги'
         verbose_name_plural = 'Комплексные услуги'
+
+    @staticmethod
+    def complex_account_save(complex_research_id, researches_id_list, researches_title_list, patient_card_id, iss_list=None):
+        complex_account = ComplexResearchAccountPerson(
+            complex_research_id=complex_research_id,
+            researches_id_list=researches_id_list,
+            researches_title_list=researches_title_list,
+            patient_card_id=patient_card_id,
+            iss_list=iss_list,
+        )
+
+        complex_account.save()
+        return complex_account.pk
 
 
 class Issledovaniya(models.Model):
@@ -2332,7 +2369,9 @@ class Issledovaniya(models.Model):
     external_add_order = models.ForeignKey(ExternalAdditionalOrder, db_index=True, blank=True, null=True, default=None, help_text="Внешний заказ", on_delete=models.SET_NULL)
     plan_start_date = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Планируемое время начала услуги')
     billing = models.ForeignKey(contracts.BillingRegister, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит счету", on_delete=models.SET_NULL)
-    complex_account = models.ForeignKey(ComplexResearchAccountPerson, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит комплексу", on_delete=models.SET_NULL)
+    complex_research_account = models.ForeignKey(
+        ComplexResearchAccountPerson, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит комплексу", on_delete=models.SET_NULL
+    )
 
     @staticmethod
     def save_billing(billing_id, iss_ids):
