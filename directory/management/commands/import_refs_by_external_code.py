@@ -86,7 +86,7 @@ class Command(BaseCommand):
                             fraction.ref_f = ref_f
                         fraction.save()
                         result_ws.append([fraction.external_code, fraction.title, '+'])
-                        # self.stdout.write(f"Референсы {fraction.title} обновлены")
+                        self.stdout.write(f"Референсы {fraction.title} обновлены")
 
                     ref_m, ref_f = [], []
                     fraction = Fractions.objects.filter(external_code__iexact=code).first()
