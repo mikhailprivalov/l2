@@ -2314,8 +2314,15 @@ class ComplexResearchAccountPerson(models.Model):
             last_create_date = i.create_date
             step += 1
 
-        final_result.append({'pk': last_complex_account_id, 'researches': f"{last_researches_title} ({last_researches_title_list})", 'date': last_create_date,
-                             'current_sum_iss': current_sum_iss, 'current_sum_iss_confirm': current_sum_iss_confirm})
+        final_result.append(
+            {
+                'pk': last_complex_account_id,
+                'researches': f"{last_researches_title} ({last_researches_title_list})",
+                'date': last_create_date,
+                'current_sum_iss': current_sum_iss,
+                'current_sum_iss_confirm': current_sum_iss_confirm,
+            }
+        )
         return final_result
 
     @staticmethod
