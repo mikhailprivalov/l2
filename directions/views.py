@@ -34,7 +34,7 @@ from api.sql_func import search_case_by_card_date
 from hospitals.models import Hospitals
 import slog.models as slog
 from appconf.manager import SettingManager
-from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult, IstochnikiFinansirovaniya
+from directions.models import Napravleniya, Issledovaniya, TubesRegistration, DirectionParamsResult, IstochnikiFinansirovaniya, ComplexResearchAccountPerson
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import FONTS_FOLDER, PRINT_ADDITIONAL_PAGE_DIRECTION_FIN_SOURCE, PRINT_APPENDIX_PAGE_DIRECTION, FORMS_LABORATORY_DIRECTION_DEFAULT
 from laboratory.utils import strtime, strdate
@@ -173,6 +173,11 @@ def gen_pdf_dir(request):
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
     appendix = request.GET.get("appendix", 0)
     narrow_format = request.GET.get("narrowFormat", "0") == "1"
+    is_complex = request.GET.get("complex", "0") == "1"
+
+    if is_complex:
+        complex_id = json.loads(request.GET.get("complex_id", '[]'))
+        direction_id = ComplexResearchAccountPerson.get_complex_directions(tuple(complex_id))
 
     req_from_additional_pages = False
     req_from_appendix_pages = False
@@ -190,6 +195,8 @@ def gen_pdf_dir(request):
     pdfmetrics.registerFont(TTFont('OpenSans', os.path.join(FONTS_FOLDER, 'OpenSans.ttf')))
     pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))
+
+
     dn = (
         Napravleniya.objects.filter(pk__in=direction_id)
         .prefetch_related(

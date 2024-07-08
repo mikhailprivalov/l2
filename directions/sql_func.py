@@ -216,12 +216,11 @@ def get_directions_by_complex_id(complex_ids):
         cursor.execute(
             """
             SELECT
-            di.napravleniye_id,
-            di.time_confirmation
+            DISTINCT ON (di.napravleniye_id) napravleniye_id,
+            di.time_confirmation as iss_time_confirmation
             FROM directions_complexresearchaccountperson
             LEFT JOIN directions_issledovaniya di on directions_complexresearchaccountperson.id = di.complex_research_account_id
-            WHERE directions_complexresearchaccountperson.id in %(complex_ids)s and di.time_confirmation is not Null
-            ORDER BY di.time_confirmation DESC
+            WHERE directions_complexresearchaccountperson.id in %(complex_ids)s
             """,
             params={'complex_ids': complex_ids},
         )

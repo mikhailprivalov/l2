@@ -243,7 +243,7 @@
             </td>
             <td class="button-td">
               <div
-                v-if="!row.is_application && active_type !== 5 && active_type !== 6"
+                v-if="!row.is_application && active_type !== 5 && active_type !== 6 && active_type !== 8"
                 class="button-td-inner"
                 :class="[
                   {
@@ -352,6 +352,23 @@
                 </button>
               </div>
               <div
+                v-else-if="active_type===8"
+                class="button-td-inner"
+              >
+                <button
+                  class="btn btn-blue-nb"
+                  @click="show_results(row)"
+                >
+                  Результаты
+                </button>
+                <button
+                  class="btn btn-blue-nb"
+                  @click="print_direction_for_complex(row.pk)"
+                >
+                  Направления
+                </button>
+              </div>
+              <div
                 v-else-if="active_type===6"
                 class="button-td-inner has_pacs"
               >
@@ -376,23 +393,6 @@
                                       row.type_slot)"
                 >
                   Талон-А6
-                </button>
-              </div>
-              <div
-                v-else-if="active_type===8"
-                class="button-td-inner has_pacs"
-              >
-                <button
-                  class="btn btn-blue-nb"
-                  @click="show_results(row)"
-                >
-                  Результаты
-                </button>
-                <button
-                  class="btn btn-blue-nb"
-                  @click="print_direction_for_complex(row.pk)"
-                >
-                  Направления
                 </button>
               </div>
             </td>
@@ -676,7 +676,7 @@ export default {
       this.$root.$emit('print:directions', [pk]);
     },
     print_direction_for_complex(pk) {
-      this.$root.$emit('print:directions:complex', [pk]);
+      this.$root.$emit('print:complex:directions', [pk]);
     },
     print_hosp(pk) {
       this.$root.$emit('print:hosp', [pk]);
