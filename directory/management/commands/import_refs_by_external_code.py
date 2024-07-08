@@ -1,12 +1,9 @@
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 from openpyxl.workbook import Workbook
 
 from appconf.manager import SettingManager
-from directory.models import Researches, Fractions, Unit
+from directory.models import Fractions
 from openpyxl import load_workbook
-
-from external_system.models import FsliRefbookTest
 
 
 def is_float(str_float: str):
@@ -30,9 +27,8 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
 
         starts = False
-        code_idx, title_idx, conditions_idx, unit_idx, start_ref_idx, end_ref_idx = None, None, None, None, None, None
+        code_idx, title_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None, None
         fraction = None
-        current_code, current_title = None, None
         result_wb = Workbook()
         result_ws = result_wb[result_wb.sheetnames[0]]
         result_ws.append(['Внешний код', 'Название фракции (теста)', 'Статус'])
@@ -73,7 +69,7 @@ class Command(BaseCommand):
                         age_start = float(age_range[0].strip()) * 365
                         age_end = float(age_range[1].strip()) * 365
                         age = f"дней {age_start}-{age_end}"
-                    except Exception as e:
+                    except Exception:
                         self.stdout.write("Не удалось преобразовать в дни")
                         continue
                 elif not age:
