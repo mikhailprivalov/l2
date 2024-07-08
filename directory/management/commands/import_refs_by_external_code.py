@@ -71,9 +71,14 @@ class Command(BaseCommand):
                     gender = tmp_cond_str2[0].strip()
                 if age and is_float(age):
                     age_range = age.split("-")
-                    age_start = age_range[0].strip() * 365
-                    age_end = age_range[1].strip() * 365
-                    age = f"дней {age_start}-{age_end}"
+                    try:
+                        age_start = float(age_range[0].strip()) * 365
+                        age_end = float(age_range[1].strip()) * 365
+                        age = f"дней {age_start}-{age_end}"
+                    except Exception as e:
+                        self.stdout.write("Не удалось преобразовать в дни")
+                        continue
+
                 elif not age:
                     age = "Все"
 
