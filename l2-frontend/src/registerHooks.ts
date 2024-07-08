@@ -29,9 +29,7 @@ export default (instance: Vue): void => {
   });
 
   instance.$root.$on('print:directions:complex', pks => {
-    // printForm('/directions/pdf?napr_id={pks}&complex=1', pks);
-    const url = '/ui/directions/preview?napr_id={pks}&complex=1';
-    printForm(url, pks);
+    printForm('/directions/pdf?napr_id={pks}&complex=1', pks);
   });
 
   instance.$root.$on('print:directions:appendix', pks => {
