@@ -145,7 +145,6 @@ def result_print(request):
     if complex:
         pk = ComplexResearchAccountPerson.get_complex_directions(tuple(pk))
 
-
     doc = BaseDocTemplate(
         buffer,
         leftMargin=(27 if leftnone else 15) * mm,
