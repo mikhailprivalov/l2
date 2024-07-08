@@ -3162,7 +3162,6 @@ class Result(models.Model):
         return self.units or ""
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False, needsave=True):
-        print("function")
         if (not self.ref_title and not fromsave) or re_save:
             self.ref_title = "Default" if self.fraction.default_ref is None else self.fraction.default_ref.title
             self.save()
@@ -3185,8 +3184,6 @@ class Result(models.Model):
             return {"title": self.ref_title, "about": self.ref_about, "m": self.ref_m, "f": self.ref_f}
 
         ref = self.ref_f if self.issledovaniye.napravleniye.client.individual.sex.lower() != "м" else self.ref_m
-        print("ref")
-        print(ref)
 
         if isinstance(ref, str):
             ref = json.loads(ref)
