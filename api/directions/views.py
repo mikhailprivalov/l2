@@ -68,7 +68,8 @@ from directions.models import (
     IssledovaniyaResultLaborant,
     SignatureCertificateDetails,
     GeneratorValuesAreOver,
-    NoGenerator, ComplexResearchAccountPerson,
+    NoGenerator,
+    ComplexResearchAccountPerson,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
 from laboratory import settings
