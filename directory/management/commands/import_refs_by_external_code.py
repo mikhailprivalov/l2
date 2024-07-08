@@ -13,6 +13,8 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         """
         :param path - файл
+        Фаил с  колонками "Код", "Условия", "Ед. изм", Нижняя Гр., Верхняя Гр.
+        для импорта референсов в фракции по внешнему коду
         """
         parser.add_argument('path', type=str)
 
@@ -22,16 +24,32 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
 
         starts = False
-        title, unit, research, fsli, code = '', '', '', '', ''
+        code_idx, conditions_idx, unit_idx, start_ref_idx, end_ref_idx = None, None, None, None, None
+        current_code = None
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
                 if "Код ФСЛИ" in cells:
-                    title = cells.index("Название")
-                    unit = cells.index("Ед.Изм.")
-                    research = cells.index("Список услуг")
-                    fsli = cells.index("Код ФСЛИ")
-                    code = cells.index("Код")
+                    code_idx = cells.index("Код")
+                    conditions_idx = cells.index("Условия")
+                    unit_idx = cells.index("Ед.изм")
+                    start_ref_idx = cells.index("Нижняя Гр.")
+                    end_ref_idx = cells.index("Верхняя Гр.")
                     starts = True
             else:
-                research_nmy_code = cells[research].split(' - ')[0].strip()
+                code = cells[code_idx].strip()
+                conditions = cells[conditions_idx].strip()
+                unit = cells[unit_idx].strip()
+                start = cells[start_ref_idx].strip()
+                end = cells[end_ref_idx].strip()
+                gender = conditions.split("Пол: ")
+                print(gender)
+                # if code != "None" and code != current_code:
+                    # fraction = Fractions.objects.filter(external_code__iexact=code).first()
+                    # if not fraction:
+                    #     print('Такой фракции нет в справочнике л2')
+                    #     continue
+
+
+                # current_code = code
+
