@@ -78,7 +78,6 @@ class Command(BaseCommand):
                     except Exception as e:
                         self.stdout.write("Не удалось преобразовать в дни")
                         continue
-
                 elif not age:
                     age = "Все"
 
