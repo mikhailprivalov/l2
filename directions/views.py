@@ -196,7 +196,6 @@ def gen_pdf_dir(request):
     pdfmetrics.registerFont(TTFont('OpenSansBold', os.path.join(FONTS_FOLDER, 'OpenSans-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('TimesNewRoman', os.path.join(FONTS_FOLDER, 'TimesNewRoman.ttf')))
 
-
     dn = (
         Napravleniya.objects.filter(pk__in=direction_id)
         .prefetch_related(
