@@ -566,7 +566,7 @@ def directions_history(request):
                         'planed_doctor': planed_doctor,
                         'register_number': register_number,
                         'rmis_number': rmis_number,
-                        'countConfirms': ""
+                        'countConfirms': "",
                     }
                 )
                 child_researches_titles = ""
