@@ -67,9 +67,7 @@ class Command(BaseCommand):
                 if len(tmp_cond_str2) > 1:
                     gender = tmp_cond_str2[0].strip()
                     age = tmp_cond_str2[1].strip()
-                    print(tmp_cond_str2)
                 else:
-                    print(tmp_cond_str2)
                     gender = tmp_cond_str2[0].strip()
                 if age and is_float(age):
                     age_range = age.split("-")
@@ -80,34 +78,40 @@ class Command(BaseCommand):
                     age = "Все"
 
                 if code != "None":
-                    if fraction:
+                    if fraction and (len(ref_m) > 0 or len(ref_f) > 0):
                         ref_m, ref_f = Fractions.convert_ref(ref_m, ref_f, True)
-                        fraction.ref_m = ref_m
-                        fraction.ref_f = ref_f
+                        if len(ref_m) > 0:
+                            fraction.ref_m = ref_m
+                        if len(ref_f) > 0:
+                            fraction.ref_f = ref_f
                         fraction.save()
                         result_ws.append([fraction.external_code, fraction.title, '+'])
-                        self.stdout.write(f"Референсы {fraction.title} обновлены")
+                        # self.stdout.write(f"Референсы {fraction.title} обновлены")
 
                     ref_m, ref_f = [], []
                     fraction = Fractions.objects.filter(external_code__iexact=code).first()
                     if not fraction:
                         continue
 
-                    if gender.lower() == "общий" and len(fraction.ref_m) <= 2 and len(fraction.ref_f) <= 2:
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
+                    if gender.lower() == "общий":
+                        if len(str(fraction.ref_m)) <= 2:
+                            ref_m.append({"age": age, "value": f"{start}-{end}"})
+                        if len(str(fraction.ref_f)) <= 2:
+                            ref_f.append({"age": age, "value": f"{start}-{end}"})
+                    elif gender.lower() == "мужской" and len(str(fraction.ref_m)) <= 2:
                         ref_m.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "мужской" and len(fraction.ref_m) <= 2:
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "женский" and len(fraction.ref_f) <= 2:
+                    elif gender.lower() == "женский" and len(str(fraction.ref_f)) <= 2:
                         ref_f.append({"age": age, "value": f"{start}-{end}"})
 
                 elif code == "None" and fraction:
-                    if gender.lower() == "общий" and len(fraction.ref_m) <= 2 and len(fraction.ref_f) <= 2:
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
+                    if gender.lower() == "общий":
+                        if len(str(fraction.ref_m)) <= 2:
+                            ref_m.append({"age": age, "value": f"{start}-{end}"})
+                        if len(str(fraction.ref_f)) <= 2:
+                            ref_f.append({"age": age, "value": f"{start}-{end}"})
+                    elif gender.lower() == "мужской" and len(str(fraction.ref_m)) <= 2:
                         ref_m.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "мужской" and len(fraction.ref_m) <= 2:
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "женский" and len(fraction.ref_f) <= 2:
+                    elif gender.lower() == "женский" and len(str(fraction.ref_f)) <= 2:
                         ref_f.append({"age": age, "value": f"{start}-{end}"})
 
         dir_tmp = SettingManager.get("dir_param")
