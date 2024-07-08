@@ -358,17 +358,31 @@ def directions_history(request):
     if req_status == 8:
         patient_complex_data = ComplexResearchAccountPerson.get_patient_complex_research(date_start, date_end, patient_card)
 
-        final_result = [{"checked": False, "pacs": False, "has_hosp": False,
-                         "has_descriptive": False, "maybe_onco": False, "is_application": False, "lab": "", "parent": parent_obj, "is_expertise": False, "expertise_status": False,
-                         "person_contract_pk": "", "person_contract_dirs": "",
-                         "isComplex": True,
-                         'pk': i.get('pk'),
-                         'researches': i.get('researches'),
-                         'cancel': False,
-                         'date': i.get('date'),
-                         'status': f"из {i.get('current_sum_iss')} - {i.get('current_sum_iss_confirm')}",
-                         'planed_doctor': "",
-                         'register_number': ""} for i in patient_complex_data]
+        final_result = [
+            {
+                "checked": False,
+                "pacs": False,
+                "has_hosp": False,
+                "has_descriptive": False,
+                "maybe_onco": False,
+                "is_application": False,
+                "lab": "",
+                "parent": parent_obj,
+                "is_expertise": False,
+                "expertise_status": False,
+                "person_contract_pk": "",
+                "person_contract_dirs": "",
+                "isComplex": True,
+                'pk': i.get('pk'),
+                'researches': i.get('researches'),
+                'cancel': False,
+                'date': i.get('date'),
+                'status': f"из {i.get('current_sum_iss')} - {i.get('current_sum_iss_confirm')}",
+                'planed_doctor': "",
+                'register_number': "",
+            }
+            for i in patient_complex_data
+        ]
         res['directions'] = final_result
 
         return JsonResponse(res)
