@@ -27,7 +27,7 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
 
         starts = False
-        code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
+        code_idx, title_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None, None
         fraction = None
         result_wb = Workbook()
         result_ws = result_wb[result_wb.sheetnames[0]]
@@ -39,15 +39,18 @@ class Command(BaseCommand):
                 if "Условия" in cells:
                     code_idx = cells.index("Код")
                     conditions_idx = cells.index("Условия")
+                    title_idx = cells.index("Тест")
                     start_ref_idx = cells.index("Нижняя Гр.")
                     end_ref_idx = cells.index("Верхняя Гр.")
                     starts = True
             else:
                 code = cells[code_idx].strip()
+                title = cells[title_idx].strip()
                 conditions = cells[conditions_idx].strip()
                 start = cells[start_ref_idx].strip()
                 end = cells[end_ref_idx].strip()
                 if start == "None" or end == "None":
+                    result_ws.append([code, title, '-'])
                     continue
                 tmp_cond_str = conditions.split("Пол: ")
                 age = ""
@@ -71,6 +74,7 @@ class Command(BaseCommand):
                         age = f"дней {age_start}-{age_end}"
                     except Exception:
                         self.stdout.write("Не удалось преобразовать в дни")
+                        result_ws.append([code, title, '-'])
                         continue
                 elif not age:
                     age = "Все"
@@ -89,6 +93,7 @@ class Command(BaseCommand):
                     ref_m, ref_f = [], []
                     fraction = Fractions.objects.filter(external_code__iexact=code).first()
                     if not fraction:
+                        result_ws.append([code, title, '-'])
                         continue
 
                     if gender.lower() == "общий":
