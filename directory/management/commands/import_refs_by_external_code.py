@@ -37,11 +37,7 @@ class Command(BaseCommand):
         result_ws = result_wb[result_wb.sheetnames[0]]
         result_ws.append(['Внешний код', 'Название фракции (теста)', 'Статус'])
         ref_m, ref_f = [], []
-        step = 0
         for row in ws.rows:
-            step += 1
-            if step > 11:
-                break
             cells = [str(x.value) for x in row]
             if not starts:
                 if "Условия" in cells:
@@ -62,15 +58,19 @@ class Command(BaseCommand):
                 tmp_cond_str = conditions.split("Пол: ")
                 age = ""
                 gender = ""
+                tmp_cond_str2 = ""
                 if len(tmp_cond_str) < 2:
-                    continue
-                tmp_cond_str = tmp_cond_str[1].split("Возр.: ")
-                if len(tmp_cond_str) > 1:
-                    gender = tmp_cond_str[0].strip()
-                    age = tmp_cond_str[1].strip()
-                else:
-                    gender = tmp_cond_str[0].strip()
+                    gender = "общий"
                     age = None
+                elif len(tmp_cond_str) >= 2:
+                    tmp_cond_str2 = tmp_cond_str[1].split("Возр.: ")
+                if len(tmp_cond_str2) > 1:
+                    gender = tmp_cond_str2[0].strip()
+                    age = tmp_cond_str2[1].strip()
+                    print(tmp_cond_str2)
+                else:
+                    print(tmp_cond_str2)
+                    gender = tmp_cond_str2[0].strip()
                 if age and is_float(age):
                     age_range = age.split("-")
                     age_start = age_range[0].strip() * 365
@@ -86,6 +86,7 @@ class Command(BaseCommand):
                         fraction.ref_f = ref_f
                         fraction.save()
                         result_ws.append([fraction.external_code, fraction.title, '+'])
+                        self.stdout.write(f"Референсы {fraction.title} обновлены")
 
                     ref_m, ref_f = [], []
                     fraction = Fractions.objects.filter(external_code__iexact=code).first()
