@@ -45,7 +45,7 @@ import slog.models as slog
 from api.stationar.stationar_func import hosp_get_hosp_direction
 from appconf.manager import SettingManager
 from clients.models import CardBase
-from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign, IssledovaniyaFiles
+from directions.models import Issledovaniya, Result, Napravleniya, ParaclinicResult, Recipe, DirectionDocument, DocumentSign, IssledovaniyaFiles, ComplexResearchAccountPerson
 from laboratory.decorators import logged_in_or_token
 from laboratory.settings import (
     DEATH_RESEARCH_PK,
@@ -131,7 +131,6 @@ def result_print(request):
     interactive_text_field = SettingManager.get("interactive_text_field", default='False', default_type='b')
 
     buffer = BytesIO()
-
     split = request.GET.get("split", "1") == "1"
     protocol_plain_text = request.GET.get("protocol_plain_text", "0") == "1"
     leftnone = request.GET.get("leftnone", "0") == "0"
@@ -140,7 +139,11 @@ def result_print(request):
     if med_certificate:
         med_certificate_title = "Справка - "
     hosp = request.GET.get("hosp", "0") == "1"
+    complex = request.GET.get("complex", "0") == "1"
     with_signature_stamps = request.GET.get("withSignatureStamps", "0") == "1"
+
+    if complex:
+        pk = ComplexResearchAccountPerson.get_complex_directions(tuple(pk))
 
     doc = BaseDocTemplate(
         buffer,

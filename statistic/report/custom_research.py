@@ -21,7 +21,7 @@ def custom_research_data(query_sql):
                 "Пол": i.patient_sex,
                 "Дата рождения": i.patient_birthday,
                 "Возраст": i.patient_age,
-                "Адрес": i.patient_main_address,
+                "Адрес": i.patient_fact_address if i.patient_fact_address else i.patient_main_address,
                 "Исполнитель": i.doc_fio,
                 "Код врача": i.personal_code,
             }
