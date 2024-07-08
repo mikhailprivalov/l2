@@ -42,14 +42,12 @@ class Command(BaseCommand):
             if not starts:
                 if "Условия" in cells:
                     code_idx = cells.index("Код")
-                    title_idx = cells.index("Тест")
                     conditions_idx = cells.index("Условия")
                     start_ref_idx = cells.index("Нижняя Гр.")
                     end_ref_idx = cells.index("Верхняя Гр.")
                     starts = True
             else:
                 code = cells[code_idx].strip()
-                title = cells[title_idx].strip()
                 conditions = cells[conditions_idx].strip()
                 start = cells[start_ref_idx].strip()
                 end = cells[end_ref_idx].strip()
