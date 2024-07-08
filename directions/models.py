@@ -25,8 +25,14 @@ from django.utils import timezone
 from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
-from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research, \
-    get_patient_complex_research_data, get_directions_by_complex_id
+from directions.sql_func import (
+    check_limit_assign_researches,
+    get_count_researches_by_doc,
+    check_confirm_patient_research,
+    check_create_direction_patient_by_research,
+    get_patient_complex_research_data,
+    get_directions_by_complex_id,
+)
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import (
@@ -2300,8 +2306,15 @@ class ComplexResearchAccountPerson(models.Model):
         last_researches_title, last_researches_title_list, last_create_date = "", "", ""
         for i in result:
             if i.complex_account_id != last_complex_account_id and step != 0:
-                final_result.append({'pk': last_complex_account_id, 'researches': f"{last_researches_title} ({last_researches_title_list})", 'date': last_create_date,
-                                     'current_sum_iss': current_sum_iss, 'current_sum_iss_confirm': current_sum_iss_confirm})
+                final_result.append(
+                    {
+                        'pk': last_complex_account_id,
+                        'researches': f"{last_researches_title} ({last_researches_title_list})",
+                        'date': last_create_date,
+                        'current_sum_iss': current_sum_iss,
+                        'current_sum_iss_confirm': current_sum_iss_confirm,
+                    }
+                )
                 current_sum_iss = 0
                 current_sum_iss_confirm = 0
 
@@ -2314,8 +2327,15 @@ class ComplexResearchAccountPerson(models.Model):
             last_create_date = i.create_date
             step += 1
 
-        final_result.append({'pk': last_complex_account_id, 'researches': f"{last_researches_title} ({last_researches_title_list})", 'date': last_create_date,
-                             'current_sum_iss': current_sum_iss, 'current_sum_iss_confirm': current_sum_iss_confirm})
+        final_result.append(
+            {
+                'pk': last_complex_account_id,
+                'researches': f"{last_researches_title} ({last_researches_title_list})",
+                'date': last_create_date,
+                'current_sum_iss': current_sum_iss,
+                'current_sum_iss_confirm': current_sum_iss_confirm,
+            }
+        )
         return final_result
 
     @staticmethod
