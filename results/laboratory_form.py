@@ -597,12 +597,8 @@ def lab_form_1(fwb, interactive_text_field, pw, direction, styleSheet, directory
                 tmp = [Paragraph('<font face="FreeSans" size="8">' + iss.research.title + "</font>", styleSheet["BodyText"])]
                 norm = "none"
                 sign = RANGE_IN
-                print(fractions)
-                print(type(fractions))
                 if len(fractions) > 0:
                     r = fractions[0]
-                    print("r")
-                    print(type(r))
                     ref = r.get_ref()
                     if show_norm:
                         norm, sign, ref_res = r.get_is_norm(recalc=True, with_ref=True)
