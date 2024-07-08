@@ -28,6 +28,10 @@ export default (instance: Vue): void => {
     printForm('/directions/pdf?napr_id={pks}&contract=1', pks);
   });
 
+  instance.$root.$on('print:directions:complex', pks => {
+    printForm('/directions/pdf?napr_id={pks}&complex=1', pks);
+  });
+
   instance.$root.$on('print:directions:appendix', pks => {
     printForm('/directions/pdf?napr_id={pks}&appendix=1', pks);
   });
@@ -40,8 +44,9 @@ export default (instance: Vue): void => {
     printForm('/barcodes/tubes?iss_ids={pks}', pks);
   });
 
-  instance.$root.$on('print:results', pks => {
-    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar') ? 1 : 0}&sort=${0}`;
+  instance.$root.$on('print:results', (pks, isComplex) => {
+    const url = `/ui/results/preview?pk={pks}&hosp=${window.location.href.includes('/stationar')
+      ? 1 : 0}&sort=${0} &complex=${isComplex ? 1 : 0}`;
     printForm(url, pks);
   });
 

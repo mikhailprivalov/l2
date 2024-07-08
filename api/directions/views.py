@@ -69,6 +69,7 @@ from directions.models import (
     SignatureCertificateDetails,
     GeneratorValuesAreOver,
     NoGenerator,
+    ComplexResearchAccountPerson,
 )
 from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
 from laboratory import settings
@@ -352,8 +353,40 @@ def directions_history(request):
     # status: 4 - выписано пользователем, 0 - только выписанные, 1 - Материал получен лабораторией. 2 - результат подтвержден, 3 - направления пациента,  -1 - отменено,
     if req_status == 4:
         user_creater = request.user.doctorprofile.pk
-    if req_status in [0, 1, 2, 3, 5, 7]:
+    if req_status in [0, 1, 2, 3, 5, 7, 8]:
         patient_card = pk
+
+    if req_status == 8:
+        patient_complex_data = ComplexResearchAccountPerson.get_patient_complex_research(date_start, date_end, patient_card)
+
+        final_result = [
+            {
+                "checked": False,
+                "pacs": False,
+                "has_hosp": False,
+                "has_descriptive": False,
+                "maybe_onco": False,
+                "is_application": False,
+                "lab": "",
+                "parent": parent_obj,
+                "is_expertise": False,
+                "expertise_status": False,
+                "person_contract_pk": "",
+                "person_contract_dirs": "",
+                "isComplex": True,
+                'pk': i.get('pk'),
+                'researches': i.get('researches'),
+                'cancel': False,
+                'date': i.get('date'),
+                'status': f"из {i.get('current_sum_iss')} - {i.get('current_sum_iss_confirm')}",
+                'planed_doctor': "",
+                'register_number': "",
+            }
+            for i in patient_complex_data
+        ]
+        res['directions'] = final_result
+
+        return JsonResponse(res)
 
     if req_status == 5:
         patient_contract = get_patient_contract(date_start, date_end, patient_card)
@@ -372,6 +405,7 @@ def directions_history(request):
             'has_descriptive': False,
             'maybe_onco': False,
             'is_application': False,
+            'isComplex': False,
             'lab': "",
             'parent': parent_obj,
             'is_expertise': False,
@@ -395,6 +429,7 @@ def directions_history(request):
                     'has_descriptive': False,
                     'maybe_onco': False,
                     'is_application': False,
+                    'isComplex': False,
                     'lab': "",
                     'parent': parent_obj,
                     'is_expertise': False,
@@ -446,6 +481,7 @@ def directions_history(request):
                 'has_descriptive': False,
                 'maybe_onco': False,
                 'is_application': False,
+                'isComplex': False,
                 'lab': "",
                 'parent': parent_obj,
                 'is_expertise': False,
@@ -481,8 +517,8 @@ def directions_history(request):
     child_researches_titles = ''
 
     last_dir, dir, status, date, cancel, pacs, has_hosp, has_descriptive = None, None, None, None, None, None, None, None
-    maybe_onco, is_application, is_expertise, expertise_status, can_has_pacs = False, False, False, False, False
-    parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
+    maybe_onco, is_application, is_expertise, expertise_status, can_has_pacs, isComplex = False, False, False, False, False, False
+    parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": "", 'countConfirms': ""}
     person_contract_pk = -1
     status_set = {-2}
     lab = set()
@@ -535,6 +571,7 @@ def directions_history(request):
                         'has_descriptive': has_descriptive,
                         'maybe_onco': maybe_onco,
                         'is_application': is_application,
+                        'isComplex,': False,
                         'lab': lab_title,
                         'parent': parent_obj,
                         'is_expertise': is_expertise,
@@ -544,6 +581,7 @@ def directions_history(request):
                         'planed_doctor': planed_doctor,
                         'register_number': register_number,
                         'rmis_number': rmis_number,
+                        'countConfirms': "",
                     }
                 )
                 child_researches_titles = ""
@@ -568,6 +606,7 @@ def directions_history(request):
             pacs = None
             maybe_onco = False
             is_application = False
+            isComplex = False
             can_has_pacs = False
             parent_obj = {"iss_id": "", "parent_title": "", "parent_is_hosp": "", "parent_is_doc_refferal": ""}
             if i[13]:
@@ -668,6 +707,7 @@ def directions_history(request):
                 'has_descriptive': has_descriptive,
                 'maybe_onco': maybe_onco,
                 'is_application': is_application,
+                'isComplex': isComplex,
                 'lab': lab_title,
                 'parent': parent_obj,
                 'is_expertise': is_expertise,
@@ -677,6 +717,7 @@ def directions_history(request):
                 'planed_doctor': planed_doctor,
                 'register_number': register_number,
                 'rmis_number': rmis_number,
+                'countConfirms': "",
             }
         )
     res['directions'] = final_result

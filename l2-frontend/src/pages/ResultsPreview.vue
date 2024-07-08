@@ -74,6 +74,7 @@ import PDFObject from 'pdfobject';
       withSignatureStamps: false,
       pks: [],
       hosp: 0,
+      complex: 0,
       portion: 0,
       sort: 0,
     };
@@ -124,6 +125,8 @@ export default class ResultsPreview extends Vue {
 
   hosp: number;
 
+  complex: number;
+
   portion: number;
 
   sort: number;
@@ -145,6 +148,7 @@ export default class ResultsPreview extends Vue {
     url.searchParams.append('withSignatureStamps', this.withSignatureStamps ? '1' : '0');
     url.searchParams.append('med_certificate', this.medCertificate ? '1' : '0');
     url.searchParams.append('hosp', String(this.hosp));
+    url.searchParams.append('complex', String(this.complex));
     url.searchParams.append('portion', String(this.portion));
     url.searchParams.append('sort', String(this.sort));
     return url;
@@ -173,6 +177,7 @@ export default class ResultsPreview extends Vue {
       this.$root.$emit('msg', 'error', 'Ошибка при получении параметров');
     }
     this.hosp = Number(urlParams.get('hosp') || 0);
+    this.complex = Number(urlParams.get('complex') || 0);
     this.portion = Number(urlParams.get('portion') || 0);
     this.sort = Number(urlParams.get('sort') || 0);
   }
