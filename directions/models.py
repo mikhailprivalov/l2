@@ -26,7 +26,7 @@ from jsonfield import JSONField
 import clients.models as Clients
 import directory.models as directory
 from directions.sql_func import check_limit_assign_researches, get_count_researches_by_doc, check_confirm_patient_research, check_create_direction_patient_by_research, \
-    get_patient_complex_research_data
+    get_patient_complex_research_data, get_directions_by_complex_id
 from directions.tasks import send_result
 from forms.sql_func import sort_direction_by_file_name_contract
 from laboratory.settings import (
@@ -2292,9 +2292,35 @@ class ComplexResearchAccountPerson(models.Model):
     @staticmethod
     def get_patient_complex_research(date_start, date_end, patient_card):
         result = get_patient_complex_research_data(date_start, date_end, patient_card)
-        for r in result:
-            print(r)
-        return result
+        last_complex_account_id = None
+        step = 0
+        final_result = []
+        current_sum_iss = 0
+        current_sum_iss_confirm = 0
+        last_researches_title, last_researches_title_list, last_create_date = "", "", ""
+        for i in result:
+            if i.complex_account_id != last_complex_account_id and step != 0:
+                final_result.append({'pk': last_complex_account_id, 'researches': f"{last_researches_title} ({last_researches_title_list})", 'date': last_create_date,
+                                     'current_sum_iss': current_sum_iss, 'current_sum_iss_confirm': current_sum_iss_confirm})
+                current_sum_iss = 0
+                current_sum_iss_confirm = 0
+
+            current_sum_iss += 1
+            if i.iss_time_confirm:
+                current_sum_iss_confirm += 1
+            last_complex_account_id = i.complex_account_id
+            last_researches_title = i.research_title
+            last_researches_title_list = i.researches_title_list
+            last_create_date = i.create_date
+            step += 1
+
+        final_result.append({'pk': last_complex_account_id, 'researches': f"{last_researches_title} ({last_researches_title_list})", 'date': last_create_date,
+                             'current_sum_iss': current_sum_iss, 'current_sum_iss_confirm': current_sum_iss_confirm})
+        return final_result
+
+    @staticmethod
+    def get_complex_directions(complex_ids):
+        return [i.napravleniye_id for i in get_directions_by_complex_id(complex_ids)]
 
 
 class Issledovaniya(models.Model):
@@ -3136,6 +3162,7 @@ class Result(models.Model):
         return self.units or ""
 
     def get_ref(self, as_str=False, full=False, fromsave=False, re_save=False, needsave=True):
+        print("function")
         if (not self.ref_title and not fromsave) or re_save:
             self.ref_title = "Default" if self.fraction.default_ref is None else self.fraction.default_ref.title
             self.save()
@@ -3158,6 +3185,8 @@ class Result(models.Model):
             return {"title": self.ref_title, "about": self.ref_about, "m": self.ref_m, "f": self.ref_f}
 
         ref = self.ref_f if self.issledovaniye.napravleniye.client.individual.sex.lower() != "м" else self.ref_m
+        print("ref")
+        print(ref)
 
         if isinstance(ref, str):
             ref = json.loads(ref)

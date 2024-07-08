@@ -173,6 +173,7 @@ def gen_pdf_dir(request):
     direction_id = json.loads(request.GET.get("napr_id", '[]'))
     appendix = request.GET.get("appendix", 0)
     narrow_format = request.GET.get("narrowFormat", "0") == "1"
+    from_complex = request.GET.get("complex", "0") == "1"
 
     req_from_additional_pages = False
     req_from_appendix_pages = False

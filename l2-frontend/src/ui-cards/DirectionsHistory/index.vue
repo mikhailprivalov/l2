@@ -384,13 +384,13 @@
               >
                 <button
                   class="btn btn-blue-nb"
-                  @click="show_results(row.pk)"
+                  @click="show_results(row)"
                 >
                   Результаты
                 </button>
                 <button
                   class="btn btn-blue-nb"
-                  @click="print_direction(row.pk)"
+                  @click="print_direction_for_complex(row.pk)"
                 >
                   Направления
                 </button>
@@ -666,12 +666,17 @@ export default {
     show_results(row) {
       if (row.has_descriptive) {
         this.$root.$emit('print:results', [row.pk]);
+      } else if (row.isComplex) {
+        this.$root.$emit('print:results', [row.pk], row.isComplex);
       } else {
         this.$root.$emit('show_results', row.pk);
       }
     },
     print_direction(pk) {
       this.$root.$emit('print:directions', [pk]);
+    },
+    print_direction_for_complex(pk) {
+      this.$root.$emit('print:directions:complex', [pk]);
     },
     print_hosp(pk) {
       this.$root.$emit('print:hosp', [pk]);
