@@ -334,7 +334,6 @@ def directions_history(request):
     # SQL-query
     res = {"directions": []}
     request_data = json.loads(request.body)
-    print(request_data)
     pk = request_data.get("patient", -1)
     req_status = request_data.get("type", 4)
     iss_pk = request_data.get("iss_pk", None)
