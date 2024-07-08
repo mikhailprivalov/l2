@@ -765,9 +765,9 @@ const router = new Router({
       name: 'Billing',
       component: () => import('@/pages/DocumentManagement/DocumentManager.vue'),
       meta: {
-        title: 'Документы',
+        title: 'ДОУ',
         fullPageLayout: true,
-        groups: ['Документооборот: просмотр документов'],
+        groups: ['ДОУ: просмотр документов'],
       },
     },
     {

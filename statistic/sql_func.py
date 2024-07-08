@@ -410,6 +410,7 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medica
                 date_part('year', age(directions_issledovaniya.medical_examination, clients_individual.birthday))::int as patient_age,
                 clients_individual.sex as patient_sex,
                 clients_card.main_address as patient_main_address,
+                clients_card.fact_address as patient_fact_address,
                 directions_napravleniya.parent_id as parent,
                 
                 directions_istochnikifinansirovaniya.title as fin_source

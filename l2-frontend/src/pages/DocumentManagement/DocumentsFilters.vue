@@ -38,11 +38,12 @@ import { ref } from 'vue';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 const filterButtons = ref([
-  { id: 'my', label: 'Мои' },
-  { id: 'wrote', label: 'Отписал' },
-  { id: 'onControl', label: 'На контроле' },
-  { id: 'toBeAgreed', label: 'На согласовании' },
-  { id: 'onSignature', label: 'На подписи' },
+  { id: 'created', label: 'Я создал' },
+  { id: 'doing', label: 'Я исполняю' },
+  { id: 'wrote', label: 'Я поручил' },
+  { id: 'onControl', label: 'Я контролирую' },
+  { id: 'toBeAgreed', label: 'Мне согласовать' },
+  { id: 'onSignature', label: 'Мне подписать' },
 ]);
 </script>
 
