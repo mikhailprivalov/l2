@@ -2306,8 +2306,15 @@ class ComplexResearchAccountPerson(models.Model):
         last_researches_title, last_researches_title_list, last_create_date = "", "", ""
         for i in result:
             if i.complex_account_id != last_complex_account_id and step != 0:
-                final_result.append({'pk': last_complex_account_id, 'researches': f"{last_researches_title} ({last_researches_title_list})", 'date': last_create_date,
-                                     'current_sum_iss': current_sum_iss, 'current_sum_iss_confirm': current_sum_iss_confirm})
+                final_result.append(
+                    {
+                        'pk': last_complex_account_id,
+                        'researches': f"{last_researches_title} ({last_researches_title_list})",
+                        'date': last_create_date,
+                        'current_sum_iss': current_sum_iss,
+                        'current_sum_iss_confirm': current_sum_iss_confirm,
+                    }
+                )
                 current_sum_iss = 0
                 current_sum_iss_confirm = 0
 
