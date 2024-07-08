@@ -75,7 +75,7 @@ class Command(BaseCommand):
                     age_range = age.split("-")
                     age_start = age_range[0].strip() * 365
                     age_end = age_range[1].strip() * 365
-                    age = f"{age_start}-{age_end}"
+                    age = f"дней {age_start}-{age_end}"
                 elif not age:
                     age = "Все"
 
