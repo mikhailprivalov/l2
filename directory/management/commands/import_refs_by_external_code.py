@@ -29,7 +29,7 @@ class Command(BaseCommand):
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
-                if "Код ФСЛИ" in cells:
+                if "Условия" in cells:
                     code_idx = cells.index("Код")
                     conditions_idx = cells.index("Условия")
                     unit_idx = cells.index("Ед.изм")
@@ -52,4 +52,7 @@ class Command(BaseCommand):
 
 
                 # current_code = code
+        if not starts:
+            self.stdout.write('Не найдено столбца "Условия"')
+
 
