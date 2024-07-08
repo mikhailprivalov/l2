@@ -361,7 +361,7 @@ def directions_history(request):
         final_result = [{"checked": False, "pacs": False, "has_hosp": False,
                          "has_descriptive": False, "maybe_onco": False, "is_application": False, "lab": "", "parent": parent_obj, "is_expertise": False, "expertise_status": False,
                          "person_contract_pk": "", "person_contract_dirs": "", 'pk': i.complex_account_id, 'researches': f"{i.research_title} ({i.researches_title_list})", 'cancel': False,
-                         'date': i.create_date, 'status': 'Комплексн'} for i in patient_complex_data]
+                         'date': i.create_date, 'status': 'Комплексн', 'planed_doctor': "", 'register_number': ""} for i in patient_complex_data]
         res['directions'] = final_result
 
         return JsonResponse(res)

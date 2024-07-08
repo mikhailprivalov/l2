@@ -2291,9 +2291,6 @@ class ComplexResearchAccountPerson(models.Model):
 
     @staticmethod
     def get_patient_complex_research(date_start, date_end, patient_card):
-        print(date_start)
-        print(date_end)
-        print(patient_card)
         result = get_patient_complex_research_data(date_start, date_end, patient_card)
         for r in result:
             print(r)

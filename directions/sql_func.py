@@ -200,7 +200,7 @@ def get_patient_complex_research_data(date_start, date_end, patient_card_id):
             LEFT JOIN directory_researches dr on directions_complexresearchaccountperson.complex_research_id = dr.id
             WHERE directions_complexresearchaccountperson.create_at AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s and 
             directions_complexresearchaccountperson.patient_card_id = %(patient_card_id)s
-            ORDER BY complex_account_id
+            ORDER BY complex_account_id DESC
             """,
             params={'date_start': date_start, 'date_end': date_end, 'patient_card_id': patient_card_id, 'tz': TIME_ZONE},
         )
