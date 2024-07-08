@@ -27,7 +27,7 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
 
         starts = False
-        code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None, None
+        code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
         fraction = None
         result_wb = Workbook()
         result_ws = result_wb[result_wb.sheetnames[0]]
