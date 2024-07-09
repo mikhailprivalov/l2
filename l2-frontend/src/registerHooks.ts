@@ -28,8 +28,8 @@ export default (instance: Vue): void => {
     printForm('/directions/pdf?napr_id={pks}&contract=1', pks);
   });
 
-  instance.$root.$on('print:directions:complex', pks => {
-    printForm('/directions/pdf?napr_id={pks}&complex=1', pks);
+  instance.$root.$on('print:complex:directions', pks => {
+    printForm('/directions/pdf?complex_id={pks}&complex=1', pks);
   });
 
   instance.$root.$on('print:directions:appendix', pks => {
