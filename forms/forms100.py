@@ -22,7 +22,7 @@ from appconf.manager import SettingManager
 from clients.models import Card, DispensaryReg, DispensaryRegPlans
 from directory.models import DispensaryPlan, Researches
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER, FORM_100_08_A4_FORMAT
+from laboratory.settings import FONTS_FOLDER, FORM_100_08_A4_FORMAT, USERS_PK_SHOW_FACT_ADDRESSES_025U
 from laboratory.utils import strdate
 from statistics_tickets.models import VisitPurpose
 from utils.dates import normalize_date
@@ -456,6 +456,10 @@ def form_02(request_data):
         p_card_type = '(' + str(card_num_obj[1]) + ')'
     else:
         p_card_type = ''
+    patient_fact_address = ""
+    if request_data['user'].doctorprofile.pk in USERS_PK_SHOW_FACT_ADDRESSES_025U:
+        patient_fact_address = f"<br/>({patient_data['fact_address']})"
+
     content_title = [
         Indenter(left=0 * mm),
         Spacer(1, 1 * mm),
@@ -467,7 +471,7 @@ def form_02(request_data):
         Paragraph('1.Дата заполнения медицинской карты: {}'.format(pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())), style),
         Paragraph("2. Фамилия, имя, отчество:&nbsp;  <font size=11.7 fontname ='PTAstraSerifBold'> {} </font> ".format(patient_data['fio']), style),
         Paragraph('3. Пол: {} {} 4. Дата рождения: {}'.format(patient_data['sex'], 3 * space_symbol, patient_data['born']), style),
-        Paragraph('5. Место регистрации: {}'.format(patient_data['main_address']), style),
+        Paragraph(f"5. Место регистрации: {patient_data['main_address']} {patient_fact_address}", style),
         Paragraph('{}'.format(p_phone), style),
         Paragraph('6. Местность: городская — 1, сельская — 2', style),
         Paragraph(
