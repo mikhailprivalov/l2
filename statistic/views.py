@@ -842,7 +842,6 @@ def statistic_xls(request):
         response['Content-Disposition'] = str.translate("attachment; filename=\"Услуги.xlsx\"", tr)
         research = request_data.get("research")
         users_docprofile_id = request_data.get("users")
-        print(users_docprofile_id)
         d_s = request_data.get("date-start")
         d_e = request_data.get("date-end")
         d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
