@@ -125,7 +125,6 @@ class Command(BaseCommand):
             else:
                 code = cells[code_idx].strip()
                 fsli = cells[fsli_idx].strip()
-            
                 if code == "None" or fsli == "None" or fsli == "-":
                     continue
                 if not result_first_file.get(code):
