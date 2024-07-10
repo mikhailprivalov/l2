@@ -380,6 +380,16 @@ class FTPConnection:
             iss = Issledovaniya.objects.filter(external_add_order__external_add_order=external_add_order).first()
         else:
             iss = Issledovaniya.objects.filter(id=iss_id).first()
+        if not iss:
+            Log.log(
+                key=tube_number,
+                type=190005,
+                body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file, "reason": "нет такого исследования"},
+                user=None,
+            )
+            self.copy_file(file, FTP_PATH_TO_SAVE)
+            self.delete_file(file)
+            return
         fractions_data = get_fsli_fractions_by_research_id(iss.research_id)
         fractions_fsl = [i.fraction_fsli for i in fractions_data]
 
