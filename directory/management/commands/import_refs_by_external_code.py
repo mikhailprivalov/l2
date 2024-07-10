@@ -20,6 +20,7 @@ class Command(BaseCommand):
         для импорта референсов в фракции по внешнему коду
         """
         parser.add_argument('path', type=str)
+        parser.add_argument('path1', type=str)
 
     def handle(self, *args, **kwargs):
         fp = kwargs["path"]
@@ -27,30 +28,25 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
 
         starts = False
-        code_idx, title_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None, None
-        fraction = None
-        result_wb = Workbook()
-        result_ws = result_wb[result_wb.sheetnames[0]]
-        result_ws.append(['Внешний код', 'Название фракции (теста)', 'Статус'])
-        ref_m, ref_f = [], []
+        code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
+        current_code = None
+        ref_m, ref_f = {}, {}
+        result_first_file = {}
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
                 if "Условия" in cells:
                     code_idx = cells.index("Код")
                     conditions_idx = cells.index("Условия")
-                    title_idx = cells.index("Тест")
                     start_ref_idx = cells.index("Нижняя Гр.")
                     end_ref_idx = cells.index("Верхняя Гр.")
                     starts = True
             else:
                 code = cells[code_idx].strip()
-                title = cells[title_idx].strip()
                 conditions = cells[conditions_idx].strip()
                 start = cells[start_ref_idx].strip()
                 end = cells[end_ref_idx].strip()
                 if start == "None" or end == "None":
-                    result_ws.append([code, title, '-'])
                     continue
                 tmp_cond_str = conditions.split("Пол: ")
                 age = ""
@@ -71,51 +67,80 @@ class Command(BaseCommand):
                     try:
                         age_start = float(age_range[0].strip()) * 365
                         age_end = float(age_range[1].strip()) * 365
-                        age = f"дней {age_start}-{age_end}"
+                        age = f"дней {int(age_start)}-{int(age_end)}"
                     except Exception:
                         self.stdout.write("Не удалось преобразовать в дни")
-                        result_ws.append([code, title, '-'])
                         continue
                 elif not age:
                     age = "Все"
-
-                if code != "None":
-                    if fraction and (len(ref_m) > 0 or len(ref_f) > 0):
-                        ref_m, ref_f = Fractions.convert_ref(ref_m, ref_f, True)
-                        if len(ref_m) > 0:
-                            fraction.ref_m = ref_m
-                        if len(ref_f) > 0:
-                            fraction.ref_f = ref_f
-                        fraction.save()
-                        result_ws.append([fraction.external_code, fraction.title, '+'])
-                        self.stdout.write(f"Референсы {fraction.title} обновлены")
-
-                    ref_m, ref_f = [], []
-                    fraction = Fractions.objects.filter(external_code__iexact=code).first()
-                    if not fraction:
-                        result_ws.append([code, title, '-'])
-                        continue
-
+                if code != "None" and code != current_code:
+                    current_code = code
                     if gender.lower() == "общий":
-                        if len(str(fraction.ref_m)) <= 2:
-                            ref_m.append({"age": age, "value": f"{start}-{end}"})
-                        if len(str(fraction.ref_f)) <= 2:
-                            ref_f.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "мужской" and len(str(fraction.ref_m)) <= 2:
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "женский" and len(str(fraction.ref_f)) <= 2:
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
-
-                elif code == "None" and fraction:
+                        if age == "Все":
+                            ref_m = {"all": True, "data": {age: f"{start}-{end}"}}
+                            ref_f = {"all": True, "data": {age: f"{start}-{end}"}}
+                        else:
+                            ref_m = {"all": False, "data": {age: f"{start}-{end}"}}
+                            ref_f = {"all": False, "data": {age: f"{start}-{end}"}}
+                    elif gender.lower() == "мужской":
+                        if age == "Все":
+                            ref_m = {"all": True, "data": {age: f"{start}-{end}"}}
+                        else:
+                            ref_m = {"all": False, "data": {age: f"{start}-{end}"}}
+                    elif gender.lower() == "женский":
+                        if age == "Все":
+                            ref_f = {"all": True, "data": {age: f"{start}-{end}"}}
+                        else:
+                            ref_f = {"all": False, "data": {age: f"{start}-{end}"}}
+                    result_first_file[current_code] = {"fsli": "", "ref_m": ref_m, "ref_f": ref_f}
+                else:
                     if gender.lower() == "общий":
-                        if len(str(fraction.ref_m)) <= 2:
-                            ref_m.append({"age": age, "value": f"{start}-{end}"})
-                        if len(str(fraction.ref_f)) <= 2:
-                            ref_f.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "мужской" and len(str(fraction.ref_m)) <= 2:
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
-                    elif gender.lower() == "женский" and len(str(fraction.ref_f)) <= 2:
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
+                        if not result_first_file[current_code]["ref_m"]["all"]:
+                            result_first_file[current_code]["ref_m"]["data"][age] = f"{start}-{end}"
+                        if not result_first_file[current_code]["ref_f"]["all"]:
+                            result_first_file[current_code]["ref_f"]["data"][age] = f"{start}-{end}"
+                    elif gender.lower() == "мужской":
+                        if not result_first_file[current_code]["ref_m"]["all"]:
+                            result_first_file[current_code]["ref_m"]["data"][age] = f"{start}-{end}"
+                    elif gender.lower() == "женский":
+                        if not result_first_file[current_code]["ref_f"]["all"]:
+                            result_first_file[current_code]["ref_f"]["data"][age] = f"{start}-{end}"
+        fp1 = kwargs["path1"]
+        wb1 = load_workbook(filename=fp1)
+        ws1 = wb1[wb1.sheetnames[0]]
 
+        starts = False
+        code_idx, fsli_idx = None, None
+        for row in ws1.rows:
+            cells = [str(x.value) for x in row]
+            if not starts:
+                if "Код ФСЛИ" in cells:
+                    code_idx = cells.index("Код")
+                    fsli_idx = cells.index("Код ФСЛИ")
+                    starts = True
+            else:
+                code = cells[code_idx].strip()
+                fsli = cells[fsli_idx].strip()
+                if code == "None" or fsli == "None" or fsli == "-":
+                    continue
+                if not result_first_file.get(code):
+                    continue
+                result_first_file[code]["fsli"] = fsli.split(" ")[0].strip()
+        result_wb = Workbook()
+        result_ws = result_wb[result_wb.sheetnames[0]]
+        result_ws.append(['Код', 'ФСЛИ', 'статус', 'кол-во'])
+        for key, value in result_first_file.items():
+            tmp_result_count = 0
+            fractions = Fractions.objects.filter(fsli=value["fsli"])
+            if not fractions.exists():
+                continue
+            for fraction in fractions:
+                if value["ref_m"]["data"]:
+                    fraction.ref_m = value["ref_m"]["data"]
+                if value["ref_f"]["data"]:
+                    fraction.ref_f = value["ref_f"]["data"]
+                fraction.save()
+                tmp_result_count += 1
+            result_ws.append([key, value["fsli"], "+", tmp_result_count])
         dir_tmp = SettingManager.get("dir_param")
-        result_wb.save(f"{dir_tmp}/result_import_refs.xlsx")
+        result_wb.save(f"{dir_tmp}/result_import_fractions.xlsx")
