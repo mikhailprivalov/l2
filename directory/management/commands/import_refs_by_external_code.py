@@ -94,7 +94,6 @@ class Command(BaseCommand):
                             ref_f ={"all": True, "data": {age: f"{start}-{end}"}}
                         else:
                             ref_f = {"all": False, "data": {age: f"{start}-{end}"}}
-                    
                     result_first_file[current_code] = {"fsli": "", "ref_m": ref_m, "ref_f": ref_f}
                 else:
                     if gender.lower() == "общий":
