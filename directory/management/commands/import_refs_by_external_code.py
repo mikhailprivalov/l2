@@ -153,4 +153,3 @@ class Command(BaseCommand):
             
         dir_tmp = SettingManager.get("dir_param")
         result_wb.save(f"{dir_tmp}/result_import_fractions.xlsx")
-                
