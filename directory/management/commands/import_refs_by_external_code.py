@@ -79,8 +79,8 @@ class Command(BaseCommand):
                     
                     if gender.lower() == "общий":
                         if age == "Все":
-                            ref_m ={"all": True, "data": {age: f"{start}-{end}"}}
-                            ref_f ={"all": True, "data": {age: f"{start}-{end}"}}
+                            ref_m = {"all": True, "data": {age: f"{start}-{end}"}}
+                            ref_f = {"all": True, "data": {age: f"{start}-{end}"}}
                         else:
                             ref_m = {"all": False, "data": {age: f"{start}-{end}"}}
                             ref_f = {"all": False, "data": {age: f"{start}-{end}"}}
@@ -91,7 +91,7 @@ class Command(BaseCommand):
                             ref_m = {"all": False, "data": {age: f"{start}-{end}"}}
                     elif gender.lower() == "женский":
                         if age == "Все":
-                            ref_f ={"all": True, "data": {age: f"{start}-{end}"}}
+                            ref_f = {"all": True, "data": {age: f"{start}-{end}"}}
                         else:
                             ref_f = {"all": False, "data": {age: f"{start}-{end}"}}
                     result_first_file[current_code] = {"fsli": "", "ref_m": ref_m, "ref_f": ref_f}
