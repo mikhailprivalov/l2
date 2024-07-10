@@ -133,7 +133,6 @@ class Command(BaseCommand):
                     continue
                 
                 result_first_file[code]["fsli"] = fsli.split(" ")[0].strip()
-        
         result_wb = Workbook()
         result_ws = result_wb[result_wb.sheetnames[0]]
         result_ws.append(['Код', 'ФСЛИ', 'статус', 'кол-во'])
