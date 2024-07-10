@@ -128,7 +128,7 @@
             </Treeselect>
           </td>
           <td class="border">
-            <input type="checkbox">
+            <input type="checkbox" class="archive">
           </td>
           <td
             v-if="priceIsActive"
@@ -780,5 +780,8 @@ export default {
 }
 .float-left {
   float: left;
+}
+.archive {
+  margin: auto 23px;
 }
 </style>
