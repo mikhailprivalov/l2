@@ -131,7 +131,6 @@ class Command(BaseCommand):
                     continue
                 if not result_first_file.get(code):
                     continue
-                
                 result_first_file[code]["fsli"] = fsli.split(" ")[0].strip()
         result_wb = Workbook()
         result_ws = result_wb[result_wb.sheetnames[0]]
