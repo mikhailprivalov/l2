@@ -46,7 +46,6 @@ class Command(BaseCommand):
                 conditions = cells[conditions_idx].strip()
                 start = cells[start_ref_idx].strip()
                 end = cells[end_ref_idx].strip()
-            
                 if start == "None" or end == "None":
                     continue
                 tmp_cond_str = conditions.split("Пол: ")
