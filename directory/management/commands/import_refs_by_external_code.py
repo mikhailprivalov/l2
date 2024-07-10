@@ -109,7 +109,6 @@ class Command(BaseCommand):
                     elif gender.lower() == "женский":
                         if not result_first_file[current_code]["ref_f"]["all"]:
                             result_first_file[current_code]["ref_f"]["data"][age] = f"{start}-{end}"
-                    
         fp1 = kwargs["path1"]
         wb1 = load_workbook(filename=fp1)
         ws1 = wb1[wb1.sheetnames[0]]
