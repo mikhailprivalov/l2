@@ -525,7 +525,11 @@ class FTPConnection:
                 else:
                     price_code_value = direction.price_name.symbol_code
                 pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{price_code_value}"
-                pv.PV1.PV1_7.value = f"{price_code_value}"
+                if direction.doc_who_create.podrazdeleniye.oid:
+                    department_code = direction.doc_who_create.podrazdeleniye.oid
+                else:
+                    department_code = l2_price_code
+                pv.PV1.PV1_7.value = f"{department_code}"
             else:
                 pv.PV1.PV1_20.value = "Наличные"
         pv.PV1.PV1_44.value = direction.data_sozdaniya.strftime("%Y%m%d")
