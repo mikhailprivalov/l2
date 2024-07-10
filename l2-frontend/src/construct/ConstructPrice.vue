@@ -128,7 +128,10 @@
             </Treeselect>
           </td>
           <td class="border">
-            <input type="checkbox" class="archive">
+            <input
+              type="checkbox"
+              class="archive"
+            >
           </td>
           <td
             v-if="priceIsActive"
