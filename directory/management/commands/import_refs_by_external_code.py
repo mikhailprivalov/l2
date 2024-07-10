@@ -110,26 +110,46 @@ class Command(BaseCommand):
                         if not result_first_file[current_code]["ref_f"]["all"]:
                             result_first_file[current_code]["ref_f"]["data"][age] = f"{start}-{end}"
                     
-        print(result_first_file)
-        # for key, value in result_first_file.items():
-        #     print(key, "key", value)
         fp1 = kwargs["path1"]
-        wb1 = load_workbook(filename=fp)
-        ws1 = wb1[wb.sheetnames[0]]
+        wb1 = load_workbook(filename=fp1)
+        ws1 = wb1[wb1.sheetnames[0]]
 
         starts = False
-        code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
-        current_code = None
-        ref_m, ref_f = [], []
-        result_first_file = {}
+        code_idx, fsli_idx = None, None
         for row in ws1.rows:
             cells = [str(x.value) for x in row]
             if not starts:
-                if "Условия" in cells:
+                if "Код ФСЛИ" in cells:
                     code_idx = cells.index("Код")
-                    conditions_idx = cells.index("Условия")
-                    start_ref_idx = cells.index("Нижняя Гр.")
-                    end_ref_idx = cells.index("Верхняя Гр.")
+                    fsli_idx = cells.index("Код ФСЛИ")
                     starts = True
             else:
                 code = cells[code_idx].strip()
+                fsli = cells[fsli_idx].strip()
+            
+                if code == "None" or fsli == "None" or fsli == "-":
+                    continue
+                if not result_first_file.get(code):
+                    continue
+                
+                result_first_file[code]["fsli"] = fsli.split(" ")[0].strip()
+        
+        result_wb = Workbook()
+        result_ws = result_wb[result_wb.sheetnames[0]]
+        result_ws.append(['Код', 'ФСЛИ', 'статус', 'кол-во'])
+        for key, value in result_first_file.items():
+            tmp_result_count = 0
+            fractions = Fractions.objects.filter(fsli=value["fsli"])
+            if not fractions.exists():
+                continue
+            for fraction in fractions:
+                if value["ref_m"]["data"]:
+                    fraction.ref_m = value["ref_m"]["data"]
+                if value["ref_f"]["data"]:
+                    fraction.ref_f = value["ref_f"]["data"]
+                tmp_result_count += 1
+            result_ws.append([key, value["fsli"], "+", tmp_result_count])
+                # fractions.save()
+        dir_tmp = SettingManager.get("dir_param")
+        result_wb.save(f"{dir_tmp}/result_import_fractions.xlsx")
+                
