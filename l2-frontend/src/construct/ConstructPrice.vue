@@ -33,6 +33,7 @@
           <col width="150">
           <col width="120">
           <col>
+          <col width="60">
           <col
             v-if="priceIsActive"
             width="100"
@@ -58,6 +59,7 @@
             >
               <strong>Компания</strong>
             </th>
+            <th>Архив</th>
             <th v-if="priceIsActive" />
           </tr>
         </thead>
@@ -125,6 +127,9 @@
               </div>
             </Treeselect>
           </td>
+          <td class="border">
+            <input type="checkbox">
+          </td>
           <td
             v-if="priceIsActive"
             class="border"
@@ -163,12 +168,14 @@
           >
             {{ priceData.uuid }}
           </td>
-          <td class="border text-center">
+          <td
+            class="border text-center"
+          >
             <strong>Договор</strong>
           </td>
           <td
             class="padding-left"
-            :colspan="priceIsActive ? 2 : 1"
+            :colspan="priceIsActive ? 3 : 2"
           >
             <input
               v-model="priceData.contractNumber"
