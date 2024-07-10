@@ -147,7 +147,7 @@ class Command(BaseCommand):
                     fraction.ref_m = value["ref_m"]["data"]
                 if value["ref_f"]["data"]:
                     fraction.ref_f = value["ref_f"]["data"]
-                fractions.save()
+                fraction.save()
                 tmp_result_count += 1
             result_ws.append([key, value["fsli"], "+", tmp_result_count])
             
