@@ -380,6 +380,8 @@ class FTPConnection:
             iss = Issledovaniya.objects.filter(external_add_order__external_add_order=external_add_order).first()
         else:
             iss = Issledovaniya.objects.filter(id=iss_id).first()
+        if not iss:
+            return
         fractions_data = get_fsli_fractions_by_research_id(iss.research_id)
         fractions_fsl = [i.fraction_fsli for i in fractions_data]
 
