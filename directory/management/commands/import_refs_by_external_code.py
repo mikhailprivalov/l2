@@ -147,9 +147,10 @@ class Command(BaseCommand):
                     fraction.ref_m = value["ref_m"]["data"]
                 if value["ref_f"]["data"]:
                     fraction.ref_f = value["ref_f"]["data"]
+                fractions.save()
                 tmp_result_count += 1
             result_ws.append([key, value["fsli"], "+", tmp_result_count])
-                # fractions.save()
+            
         dir_tmp = SettingManager.get("dir_param")
         result_wb.save(f"{dir_tmp}/result_import_fractions.xlsx")
                 
