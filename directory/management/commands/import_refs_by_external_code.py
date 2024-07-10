@@ -150,6 +150,5 @@ class Command(BaseCommand):
                 fraction.save()
                 tmp_result_count += 1
             result_ws.append([key, value["fsli"], "+", tmp_result_count])
-            
         dir_tmp = SettingManager.get("dir_param")
         result_wb.save(f"{dir_tmp}/result_import_fractions.xlsx")
