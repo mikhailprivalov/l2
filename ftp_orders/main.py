@@ -381,8 +381,12 @@ class FTPConnection:
         else:
             iss = Issledovaniya.objects.filter(id=iss_id).first()
         if not iss:
-            Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file,
-                                                        "reason": "нет такого исследования"}, user=None)
+            Log.log(
+                key=tube_number,
+                type=190005,
+                body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file, "reason": "нет такого исследования"},
+                user=None,
+            )
             self.copy_file(file, FTP_PATH_TO_SAVE)
             self.delete_file(file)
             return
