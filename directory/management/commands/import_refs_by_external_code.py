@@ -75,7 +75,6 @@ class Command(BaseCommand):
                     age = "Все"
                 if code != "None" and code != current_code:
                     current_code = code
-                    
                     if gender.lower() == "общий":
                         if age == "Все":
                             ref_m = {"all": True, "data": {age: f"{start}-{end}"}}
