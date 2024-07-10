@@ -20,18 +20,21 @@ const menuItems = [
   },
   {
     title: 'Печать результатов',
+    onlyForTypes: [0, 1, 2, 3, 4],
     handler() {
       this.$root.$emit('print:results', this.checked);
     },
   },
   {
     title: 'Печать штрих-кодов',
+    onlyForTypes: [0, 1, 2, 3, 4],
     handler() {
       this.$root.$emit('print:barcodes', this.checked);
     },
   },
   {
     title: 'Печать направлений',
+    onlyForTypes: [0, 1, 2, 3, 4],
     handler() {
       this.$root.$emit('print:directions', this.checked);
     },

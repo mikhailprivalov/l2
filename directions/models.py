@@ -2340,7 +2340,11 @@ class ComplexResearchAccountPerson(models.Model):
 
     @staticmethod
     def get_complex_directions(complex_ids):
-        return [i.napravleniye_id for i in get_directions_by_complex_id(complex_ids)]
+        return list(set([i.napravleniye_id for i in get_directions_by_complex_id(complex_ids)]))
+
+    @staticmethod
+    def get_complex_confirm_directions(complex_ids):
+        return list(set([i.napravleniye_id for i in get_directions_by_complex_id(complex_ids) if i.iss_time_confirmation]))
 
 
 class Issledovaniya(models.Model):

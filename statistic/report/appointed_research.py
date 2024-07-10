@@ -27,20 +27,21 @@ def appointed_base(ws1, d1, d2, researches):
 
 def parse_data(researches_sql, users_final_data, research_data):
     for data in researches_sql:
+        is_doctor = False
         current_id_doctor = None
         current_fio = ""
         if users_final_data.get(data.doctor_id):
             current_id_doctor = data.doctor_id
             current_fio = f"{data.doctor_family} {data.doctor_name} {data.doctor_patronymic}"
+            is_doctor = True
         elif users_final_data.get(data.d_from_doc_id):
             current_id_doctor = data.d_from_doc_id
             current_fio = f"{data.d_from_doc_family} {data.d_from_doc_name} {data.d_from_doc_patronymic}"
-        tmp_doctor = users_final_data.get(current_id_doctor)
-        tmp_doctor[-999]["count"] = current_fio
-        count_research = tmp_doctor.get(data.research_id)["count"]
-        count_research += 1
-        tmp_doctor.get(data.research_id)["count"] = count_research
-        users_final_data[current_id_doctor] = dict(sorted(tmp_doctor.items()))
+            is_doctor = True
+        if is_doctor:
+            users_final_data[current_id_doctor][data.research_id]["count"] += 1
+            users_final_data[current_id_doctor][-999]["count"] = current_fio
+
     return users_final_data
 
 
@@ -53,9 +54,13 @@ def fill_appointed_research_by_doctors(ws1, data, row=6):
     r = row
     for value in data.values():
         column = 1
+        is_count = True
         for key, research_data in value.items():
+            if research_data.get("count") == 0 or not research_data.get("count"):
+                is_count = False
             ws1.cell(row=r, column=column).value = research_data.get("count", "-")
             ws1.cell(row=r, column=column).style = style_border1
             column += 1
-        r += 1
+        if is_count:
+            r += 1
     return ws1

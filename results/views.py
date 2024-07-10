@@ -143,7 +143,7 @@ def result_print(request):
     with_signature_stamps = request.GET.get("withSignatureStamps", "0") == "1"
 
     if complex:
-        pk = ComplexResearchAccountPerson.get_complex_directions(tuple(pk))
+        pk = ComplexResearchAccountPerson.get_complex_confirm_directions(tuple(pk))
 
     doc = BaseDocTemplate(
         buffer,
