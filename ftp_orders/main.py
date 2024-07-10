@@ -390,7 +390,6 @@ class FTPConnection:
             self.copy_file(file, FTP_PATH_TO_SAVE)
             self.delete_file(file)
             return
-        
         fractions_data = get_fsli_fractions_by_research_id(iss.research_id)
         fractions_fsl = [i.fraction_fsli for i in fractions_data]
 
