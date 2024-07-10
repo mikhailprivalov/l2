@@ -30,9 +30,13 @@ class Command(BaseCommand):
         starts = False
         code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
         current_code = None
-        ref_m, ref_f = [], []
+        ref_m, ref_f = {}, {}
         result_first_file = {}
+        step = 0
         for row in ws.rows:
+            step += 1
+            if step > 6:
+                break
             cells = [str(x.value) for x in row]
             if not starts:
                 if "Условия" in cells:
@@ -75,50 +79,48 @@ class Command(BaseCommand):
                 elif not age:
                     age = "Все"
                 if code != "None" and code != current_code:
-                    
-                    if len(ref_m) > 0 or len(ref_f) > 0:
-                        ref_m, ref_f = Fractions.convert_ref(ref_m, ref_f, True)
-                        result_first_file[current_code] = { "fsli": "", "ref_m": ref_m, "ref_f": ref_f }
-                        ref_m, ref_f = [], []
+                    current_code = code
                     
                     if gender.lower() == "общий":
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
+                        ref_m = {age: f"{start}-{end}"}
+                        ref_f = {age: f"{start}-{end}"}
                     elif gender.lower() == "мужской":
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
+                        ref_m = {age: f"{start}-{end}"}
                     elif gender.lower() == "женский":
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
-                        
-                    current_code = code
+                        ref_f = {age: f"{start}-{end}"}
+                    
+                    result_first_file[current_code] = { "fsli": "", "ref_m": ref_m, "ref_f": ref_f }
+                    
                 else:
                     if gender.lower() == "общий":
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
+                        result_first_file[current_code]["ref_m"][age] = f"{start}-{end}"
+                        result_first_file[current_code]["ref_f"][age] = f"{start}-{end}"
                     elif gender.lower() == "мужской":
-                        ref_m.append({"age": age, "value": f"{start}-{end}"})
+                        result_first_file[current_code]["ref_m"][age] = f"{start}-{end}"
                     elif gender.lower() == "женский":
-                        ref_f.append({"age": age, "value": f"{start}-{end}"})
-            
+                        result_first_file[current_code]["ref_f"][age] = f"{start}-{end}"
+                    
+        print(result_first_file)
         # for key, value in result_first_file.items():
         #     print(key, "key", value)
-        fp1 = kwargs["path1"]
-        print(fp1)
-        wb1 = load_workbook(filename=fp)
-        ws1 = wb1[wb.sheetnames[0]]
-
-        starts = False
-        code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
-        current_code = None
-        ref_m, ref_f = [], []
-        result_first_file = {}
-        for row in ws1.rows:
-            cells = [str(x.value) for x in row]
-            if not starts:
-                if "Условия" in cells:
-                    code_idx = cells.index("Код")
-                    conditions_idx = cells.index("Условия")
-                    start_ref_idx = cells.index("Нижняя Гр.")
-                    end_ref_idx = cells.index("Верхняя Гр.")
-                    starts = True
-            else:
-                code = cells[code_idx].strip()
+        # fp1 = kwargs["path1"]
+        # print(fp1)
+        # wb1 = load_workbook(filename=fp)
+        # ws1 = wb1[wb.sheetnames[0]]
+        #
+        # starts = False
+        # code_idx, conditions_idx, start_ref_idx, end_ref_idx = None, None, None, None
+        # current_code = None
+        # ref_m, ref_f = [], []
+        # result_first_file = {}
+        # for row in ws1.rows:
+        #     cells = [str(x.value) for x in row]
+        #     if not starts:
+        #         if "Условия" in cells:
+        #             code_idx = cells.index("Код")
+        #             conditions_idx = cells.index("Условия")
+        #             start_ref_idx = cells.index("Нижняя Гр.")
+        #             end_ref_idx = cells.index("Верхняя Гр.")
+        #             starts = True
+        #     else:
+        #         code = cells[code_idx].strip()
