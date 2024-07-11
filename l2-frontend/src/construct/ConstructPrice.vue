@@ -454,7 +454,7 @@ export default {
       });
     },
     priceIsActive() {
-      return this.activeStatus.ok;
+      return !this.priceData.hide;
     },
     priceIsSelected() {
       return !!this.selectedPrice;
