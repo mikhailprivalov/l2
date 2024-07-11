@@ -232,7 +232,8 @@ def get_researches():
         cursor.execute(
             """
             SELECT * FROM directory_researches
-            WHERE hide=False
+            LEFT JOIN podrazdeleniya_podrazdeleniya ON directory_researches.podrazdeleniye_id = podrazdeleniya_podrazdeleniya.id
+            WHERE directory_researches.hide=False and podrazdeleniya_podrazdeleniya.p_type != 0
             ORDER BY internal_code
         """,
         )
