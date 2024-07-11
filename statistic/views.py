@@ -361,7 +361,7 @@ def statistic_xls(request):
             direction_tube = []
             for tube in tubes:
                 direction_tube.append(tube.number)
-            cards[c.pk]["d"][d.pk]["tubes"] =  ','.join(map(str, [t for t in direction_tube]))
+            cards[c.pk]["d"][d.pk]["tubes"] = ','.join(map(str, [t for t in direction_tube]))
 
             for i in Issledovaniya.objects.filter(napravleniye=d):
                 cards[c.pk]["d"][d.pk]["r"].append(
