@@ -258,10 +258,7 @@
             <col>
             <col width="100">
             <col width="100">
-            <col
-              v-if="priceIsActive"
-              width="100"
-            >
+            <col width="100">
           </colgroup>
           <thead class="sticky">
             <tr class="border-no-top">
