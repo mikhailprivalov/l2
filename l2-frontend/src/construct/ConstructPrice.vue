@@ -7,6 +7,16 @@
         full-width
         @modified="filteredPriceObject"
       />
+      <input
+        id="acrhive"
+        v-model="showArchive"
+        class="archive-search"
+        type="checkbox"
+      >
+      <label
+        class="archive-search"
+        for="acrhive"
+      >Архив</label>
     </div>
     <Treeselect
       v-model="selectedPrice"
@@ -129,8 +139,9 @@
           </td>
           <td class="border">
             <input
+              v-model="priceData"
               type="checkbox"
-              class="archive"
+              class="archive-price"
             >
           </td>
           <td
@@ -430,6 +441,7 @@ export default {
       search: '',
       coastResearches: [],
       searchTypesObject: 'Работодатель',
+      showArchive: false,
       typesObject: [],
     };
   },
@@ -506,7 +518,7 @@ export default {
       };
     },
     async getPrices() {
-      this.prices = await this.$api('/get-prices', { searchTypesObject: this.searchTypesObject });
+      this.prices = await this.$api('/get-prices', { searchTypesObject: this.searchTypesObject, showArchive: this.showArchive });
     },
     filteredPriceObject() {
       this.getPrices();
@@ -682,6 +694,7 @@ export default {
   margin-right: auto;
   margin-top: 10px;
   margin-bottom: 10px;
+  display: flex;
 }
 
 ::v-deep .form-control {
@@ -784,7 +797,10 @@ export default {
 .float-left {
   float: left;
 }
-.archive {
+.archive-price {
   margin: auto 23px;
+}
+.archive-search {
+  margin: auto 3px;
 }
 </style>

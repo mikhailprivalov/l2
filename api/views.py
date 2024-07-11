@@ -2656,12 +2656,15 @@ def statistic_params_search(request):
 def get_prices(request):
     request_data = json.loads(request.body)
     prices = None
+    active = True
+    if request_data.get("showArchive"):
+        active = False
     if request_data.get("searchTypesObject") == "Работодатель":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=False, external_performer=False).order_by("title")]
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=False, external_performer=False, active_status=active).order_by("title")]
     elif request_data.get("searchTypesObject") == "Заказчик":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=True).order_by("title")]
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=True, active_status=active).order_by("title")]
     elif request_data.get("searchTypesObject") == "Внешний исполнитель":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(external_performer=True).order_by("title")]
+        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(external_performer=True, active_status=active).order_by("title")]
 
     return JsonResponse({"data": prices})
 
