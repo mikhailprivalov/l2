@@ -10,9 +10,9 @@
       <input
         id="acrhive"
         v-model="showArchive"
-        @change="filteredPriceObject"
         class="archive-search"
         type="checkbox"
+        @change="filteredPriceObject"
       >
       <label
         class="archive-search"
