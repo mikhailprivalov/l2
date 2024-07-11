@@ -2687,19 +2687,19 @@ def update_price(request):
         if request_data.get("typePrice") == "Работодатель":
             current_price = PriceName(
                 title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"],
-                contract_number=request_data.get("contractNumber")
+                contract_number=request_data.get("contractNumber"), active_status=True
             )
         elif request_data.get("typePrice") == "Заказчик":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
                 title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True,
-                contract_number=request_data.get("contractNumber")
+                contract_number=request_data.get("contractNumber"), active_status=True
             )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
                 title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True,
-                contract_number=request_data.get("contractNumber")
+                contract_number=request_data.get("contractNumber"), active_status=True
             )
         if current_price:
             current_price.save()
@@ -2716,6 +2716,7 @@ def update_price(request):
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
         current_price.contract_number = request_data["contractNumber"]
+        current_price.active_status = True if not request_data["hide"] else False
         if request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
         elif request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Внешний исполнитель":

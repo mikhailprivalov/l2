@@ -139,7 +139,7 @@
           </td>
           <td class="border">
             <input
-              v-model="priceData"
+              v-model="priceData.hide"
               type="checkbox"
               class="archive-price"
             >
@@ -556,6 +556,7 @@ export default {
           code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
+          hide: this.priceData.hide,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
           contractNumber: this.priceData.contractNumber,
@@ -575,6 +576,7 @@ export default {
           code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
+          hide: this.priceData.hide,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
           contractNumber: this.priceData.contractNumber,
@@ -589,6 +591,7 @@ export default {
             code: '',
             start: '',
             end: '',
+            hide: false,
             company: null,
             uuid: '',
             contractNumber: '',

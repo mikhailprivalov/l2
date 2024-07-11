@@ -84,6 +84,7 @@ class PriceName(models.Model):
             "code": price.symbol_code,
             "start": price.date_start,
             "end": price.date_end,
+            "hide": False if price.active_status else True,
             "company": company_id,
             "companyTitle": company_title,
             "symbolCode": price.symbol_code,
