@@ -10,6 +10,7 @@
       <input
         id="acrhive"
         v-model="showArchive"
+        @change="filteredPriceObject"
         class="archive-search"
         type="checkbox"
       >
@@ -483,7 +484,6 @@ export default {
         this.activeStatus.ok = true;
       } else {
         this.getCoastsResearchesInPrice();
-        this.checkPriceHidden();
         this.getPriceData();
       }
     },
@@ -598,11 +598,6 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      }
-    },
-    async checkPriceHidden() {
-      if (this.selectedPrice) {
-        this.activeStatus = await this.$api('/check-price-active', { id: this.selectedPrice });
       }
     },
     async getPriceData() {

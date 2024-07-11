@@ -791,19 +791,19 @@ def directive_from(request):
     hospital = request.user.doctorprofile.hospital
     for dep in (
         Podrazdeleniya.objects.filter(p_type__in=(Podrazdeleniya.DEPARTMENT, Podrazdeleniya.HOSP, Podrazdeleniya.PARACLINIC, Podrazdeleniya.CASE), hospital__in=(hospital, None))
-        .prefetch_related(
+            .prefetch_related(
             Prefetch(
                 "doctorprofile_set",
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
-                    .distinct("fio", "pk")
-                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
-                    .order_by("fio")
+                        .distinct("fio", "pk")
+                        .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
+                        .order_by("fio")
                 ),
             )
         )
-        .order_by("title")
-        .only("pk", "title")
+            .order_by("title")
+            .only("pk", "title")
     ):
         d = {
             "pk": dep.pk,
@@ -865,13 +865,13 @@ def statistics_tickets_get(request):
     n = 0
     for row in (
         StatisticsTicket.objects.filter(Q(doctor=request.user.doctorprofile) | Q(creator=request.user.doctorprofile))
-        .filter(
+            .filter(
             date__range=(
                 date_start,
                 date_end,
             )
         )
-        .order_by("pk")
+            .order_by("pk")
     ):
         if not row.invalid_ticket:
             n += 1
@@ -2491,8 +2491,8 @@ def org_generators_add(request):
             if is_simple_generator and key != "externalOrderNumber":
                 if (
                     directions.NumberGenerator.objects.filter(key=key)
-                    .filter(Q(start__lte=start, end__lte=end, end__gte=start) | Q(start__gte=start, start__lte=end, end__gte=end) | Q(start__gte=start, end__lte=end))
-                    .exists()
+                        .filter(Q(start__lte=start, end__lte=end, end__gte=start) | Q(start__gte=start, start__lte=end, end__gte=end) | Q(start__gte=start, end__lte=end))
+                        .exists()
                 ):
                     raise directions.GeneratorOverlap("Уже существуют генераторы, включающие указанные интервалы")
 
@@ -2655,18 +2655,19 @@ def statistic_params_search(request):
 @group_required("Конструктор: Настройка организации")
 def get_prices(request):
     request_data = json.loads(request.body)
+    result = []
     prices = None
-    active = True
-    if request_data.get("showArchive"):
-        active = False
     if request_data.get("searchTypesObject") == "Работодатель":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=False, external_performer=False, active_status=active).order_by("title")]
+        prices = PriceName.objects.filter(subcontract=False, external_performer=False).order_by("title")
     elif request_data.get("searchTypesObject") == "Заказчик":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=True, active_status=active).order_by("title")]
+        prices = PriceName.objects.filter(subcontract=True).order_by("title")
     elif request_data.get("searchTypesObject") == "Внешний исполнитель":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(external_performer=True, active_status=active).order_by("title")]
+        prices = PriceName.objects.filter(external_performer=True).order_by("title")
+    if not request_data.get("showArchive"):
+        prices.filter(active_status=True)
+    result = [{"id": price.pk, "label": price.title} for price in prices]
 
-    return JsonResponse({"data": prices})
+    return JsonResponse({"data": result})
 
 
 @login_required
