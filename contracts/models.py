@@ -102,6 +102,9 @@ class PriceName(models.Model):
             price = PriceName.objects.filter(symbol_code=price_code).first()
         return price
 
+    @staticmethod
+    def check_
+
 
 class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
