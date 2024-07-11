@@ -2664,8 +2664,8 @@ def get_prices(request):
     elif request_data.get("searchTypesObject") == "Внешний исполнитель":
         prices = PriceName.objects.filter(external_performer=True).order_by("title")
     if not request_data.get("showArchive"):
-        prices.filter(active_status=True)
-    result = [{"id": price.pk, "label": price.title} for price in prices]
+        prices = prices.filter(active_status=True)
+    result = [{"id": price.pk, "label": f"{price.title if price.active_status else price.title + ' - Архив'}"} for price in prices]
 
     return JsonResponse({"data": result})
 
