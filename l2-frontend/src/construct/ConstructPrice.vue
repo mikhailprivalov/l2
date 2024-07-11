@@ -70,7 +70,7 @@
               <strong>Компания</strong>
             </th>
             <th>Архив</th>
-            <th v-if="priceIsActive" />
+            <th />
           </tr>
         </thead>
         <tr>
@@ -145,7 +145,6 @@
             >
           </td>
           <td
-            v-if="priceIsActive"
             class="border"
           >
             <div class="button">
@@ -189,7 +188,7 @@
           </td>
           <td
             class="padding-left"
-            :colspan="priceIsActive ? 3 : 2"
+            colspan="3"
           >
             <input
               v-model="priceData.contractNumber"
