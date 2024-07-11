@@ -2655,7 +2655,6 @@ def statistic_params_search(request):
 @group_required("Конструктор: Настройка организации")
 def get_prices(request):
     request_data = json.loads(request.body)
-    result = []
     prices = None
     if request_data.get("searchTypesObject") == "Работодатель":
         prices = PriceName.objects.filter(subcontract=False, external_performer=False).order_by("title")
