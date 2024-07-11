@@ -2785,7 +2785,7 @@ def get_coasts_researches_in_price(request):
 @group_required("Конструктор: Настройка организации")
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
-    current_coast_research = PriceCoast.objects.get(id=request_data["coastResearchId"])
+    current_coast_research = PriceCoast.objects.filter(id=request_data["coastResearchId"]).select_related('price_name').first()
     if not current_coast_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:

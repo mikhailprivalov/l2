@@ -320,7 +320,6 @@
               >
             </td>
             <td
-              v-if="priceIsActive"
               class="border"
             >
               <div class="button">
@@ -328,6 +327,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Сохранить цену"
+                  :disabled="!priceIsActive"
                   @click="updateCoastResearchInPrice(coastResearch)"
                 >
                   <i class="fa fa-save" />
@@ -336,6 +336,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Удалить исследование"
+                  :disabled="!priceIsActive"
                   @click="deleteResearchInPrice(coastResearch)"
                 >
                   <i class="fa fa-times" />
