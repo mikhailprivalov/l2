@@ -4,6 +4,7 @@ import uuid
 from decimal import Decimal
 
 from django.db import models
+from django.db.models import Q
 
 import directory.models as directory
 from contracts.sql_func import search_companies, get_examination_data
@@ -103,7 +104,11 @@ class PriceName(models.Model):
         return price
 
     @staticmethod
-    def check_
+    def check_unique(title, symbol_code, id):
+        if PriceName.objects.filter(Q(title=title) | Q(symbol_code=symbol_code)).exclude(pk=id).exists():
+            return False
+        return True
+
 
 
 class PriceCoast(models.Model):

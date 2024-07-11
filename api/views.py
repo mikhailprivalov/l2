@@ -2683,6 +2683,9 @@ def get_price_data(request):
 def update_price(request):
     request_data = json.loads(request.body)
     current_price = None
+    price_unique = PriceName.check_unique(request_data["title"], request_data["code"], request_data["id"])
+    if not price_unique:
+        return status_response(False, "Такое название или символьный код уже есть")
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
             current_price = PriceName(
