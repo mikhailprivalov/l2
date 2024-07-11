@@ -357,10 +357,9 @@ def statistic_xls(request):
                     "d": {},
                 }
             cards[c.pk]["d"][d.pk] = {"r": [], "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)), "tubes": []}
+
             tubes = TubesRegistration.objects.filter(issledovaniya__napravleniye=d).distinct()
-            direction_tube = []
-            for tube in tubes:
-                direction_tube.append(tube.number)
+            direction_tube = [tube.number for tube in tubes ]
             cards[c.pk]["d"][d.pk]["tubes"] = ','.join(map(str, [t for t in direction_tube]))
 
             for i in Issledovaniya.objects.filter(napravleniye=d):
