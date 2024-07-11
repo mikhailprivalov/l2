@@ -356,11 +356,7 @@ def statistic_xls(request):
                     "hn": d.history_num,
                     "d": {},
                 }
-            cards[c.pk]["d"][d.pk] = {
-                "r": [],
-                "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
-                "tubes": []
-            }
+            cards[c.pk]["d"][d.pk] = {"r": [], "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)), "tubes": []}
             tubes = TubesRegistration.objects.filter(issledovaniya__napravleniye=d).distinct()
             direction_tube = []
             for tube in tubes:
