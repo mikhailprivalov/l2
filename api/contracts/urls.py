@@ -11,4 +11,5 @@ urlpatterns = [
     path('get-billing', views.get_billing),
     path('get-hospital-prices', views.get_hospital_prices),
     path('price/delete-all-coasts', views.delete_all_price_coasts),
+    path('price/get-price-coasts', views.get_price_coasts),
 ]

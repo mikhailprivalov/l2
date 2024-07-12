@@ -115,4 +115,22 @@ def get_data_for_confirm_billing(billing_id):
     return rows
 
 
+def get_researches_and_coasts_in_price(price_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT contracts_pricecoast.id, contracts_pricecoast.coast, contracts_pricecoast.number_services_by_contract, directory_researches.id as research_id, 
+        directory_researches.title as research_title
+        FROM contracts_pricecoast
+        INNER JOIN directory_researches ON contracts_pricecoast.research_id = directory_researches.id
+        WHERE contracts_pricecoast.price_name_id = %(price_id)s
+        ORDER BY directory_researches.title
+
+        """,
+            params={"price_id": price_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 

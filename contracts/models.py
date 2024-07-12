@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models import Q
 
 import directory.models as directory
-from contracts.sql_func import search_companies, get_examination_data
+from contracts.sql_func import search_companies, get_examination_data, get_researches_and_coasts_in_price
 from clients.models import Card, HarmfulFactor
 from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM
@@ -165,6 +165,21 @@ class PriceCoast(models.Model):
         coasts = PriceCoast.objects.filter(price_name=price.pk)
         coasts.delete()
         return {"ok": True, "message": ""}
+
+    @staticmethod
+    def get_researches_and_coasts_by_price(price_id: int):
+        coasts = get_researches_and_coasts_in_price(price_id)
+        result = [
+            {
+                "id": coast.id,
+                "coast": coast.coast,
+                "numberService": coast.number_services_by_contract,
+                "research": {"id": coast.research_id, "title": coast.research_title}
+            } for coast in coasts
+        ]
+        return result
+
+
 
 
 class Contract(models.Model):

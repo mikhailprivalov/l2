@@ -2764,17 +2764,6 @@ def copy_price(request):
 
 @login_required
 @group_required("Конструктор: Настройка организации")
-def get_coasts_researches_in_price(request):
-    request_data = json.loads(request.body)
-    coast_research = [
-        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f"{data.coast}", "numberService": data.number_services_by_contract}
-        for data in PriceCoast.objects.filter(price_name_id=request_data["id"]).prefetch_related("research").order_by("research__title")
-    ]
-    return JsonResponse({"data": coast_research})
-
-
-@login_required
-@group_required("Конструктор: Настройка организации")
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
     current_coast_research = PriceCoast.objects.filter(id=request_data["coastResearchId"]).select_related('price_name').first()

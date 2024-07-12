@@ -163,3 +163,12 @@ def delete_all_price_coasts(request):
     price_id = body.get("priceId")
     result = PriceCoast.delete_all_price_coasts(price_id)
     return status_response(result["ok"], result["message"])
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def get_price_coasts(request):
+    body = json.loads(request.body)
+    price_id = body.get("priceId")
+    result = PriceCoast.get_researches_and_coasts_by_price(price_id)
+    return JsonResponse({"result": result})

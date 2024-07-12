@@ -626,8 +626,8 @@ export default {
       }
     },
     async getCoastsResearchesInPrice() {
-      const coast = await this.$api('/get-coasts-researches-in-price', { id: this.selectedPrice });
-      this.coastResearches = coast.data;
+      const { result } = await this.$api('contracts/price/get-price-coasts', { priceId: this.selectedPrice });
+      this.coastResearches = result;
     },
     async updateCoastResearchInPrice(coastResearch) {
       if (Number(coastResearch.coast) > 0) {
