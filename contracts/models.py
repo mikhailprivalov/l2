@@ -4,9 +4,10 @@ import uuid
 from decimal import Decimal
 
 from django.db import models
+from django.db.models import Q
 
 import directory.models as directory
-from contracts.sql_func import search_companies, get_examination_data
+from contracts.sql_func import search_companies, get_examination_data, get_researches_and_coasts_in_price
 from clients.models import Card, HarmfulFactor
 from hospitals.models import Hospitals
 from laboratory.settings import CONTROL_AGE_MEDEXAM
@@ -84,6 +85,7 @@ class PriceName(models.Model):
             "code": price.symbol_code,
             "start": price.date_start,
             "end": price.date_end,
+            "hide": False if price.active_status else True,
             "company": company_id,
             "companyTitle": company_title,
             "symbolCode": price.symbol_code,
@@ -100,6 +102,12 @@ class PriceName(models.Model):
         elif price_code:
             price = PriceName.objects.filter(symbol_code=price_code).first()
         return price
+
+    @staticmethod
+    def check_unique(title, symbol_code, id):
+        if PriceName.objects.filter(Q(title=title) | Q(symbol_code=symbol_code)).exclude(pk=id).exists():
+            return False
+        return True
 
 
 class PriceCoast(models.Model):
@@ -146,6 +154,24 @@ class PriceCoast(models.Model):
             result = list(PriceCoast.objects.filter(price_name_id=price_pk).values_list('research_id', flat=True))
         else:
             result = set(PriceCoast.objects.filter(price_name_id=price_pk).values_list('research_id', flat=True))
+        return result
+
+    @staticmethod
+    def delete_all_price_coasts(price_id: int):
+        price = PriceName.objects.get(pk=price_id)
+        if not price.active_status:
+            return {"ok": False, "message": "Прайс неактивен"}
+        coasts = PriceCoast.objects.filter(price_name=price.pk)
+        coasts.delete()
+        return {"ok": True, "message": ""}
+
+    @staticmethod
+    def get_researches_and_coasts_by_price(price_id: int):
+        coasts = get_researches_and_coasts_in_price(price_id)
+        result = [
+            {"id": coast.id, "coast": coast.coast, "numberService": coast.number_services_by_contract, "research": {"id": coast.research_id, "title": coast.research_title}}
+            for coast in coasts
+        ]
         return result
 
 

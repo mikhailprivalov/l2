@@ -7,6 +7,17 @@
         full-width
         @modified="filteredPriceObject"
       />
+      <input
+        id="acrhive"
+        v-model="showArchive"
+        class="archive-search"
+        type="checkbox"
+        @change="filteredPriceObject"
+      >
+      <label
+        class="archive-search"
+        for="acrhive"
+      >Архив</label>
     </div>
     <Treeselect
       v-model="selectedPrice"
@@ -33,6 +44,7 @@
           <col width="150">
           <col width="120">
           <col>
+          <col width="60">
           <col
             v-if="priceIsActive"
             width="100"
@@ -58,7 +70,8 @@
             >
               <strong>Компания</strong>
             </th>
-            <th v-if="priceIsActive" />
+            <th>Архив</th>
+            <th />
           </tr>
         </thead>
         <tr>
@@ -125,8 +138,14 @@
               </div>
             </Treeselect>
           </td>
+          <td class="border">
+            <input
+              v-model="priceData.hide"
+              type="checkbox"
+              class="archive-price"
+            >
+          </td>
           <td
-            v-if="priceIsActive"
             class="border"
           >
             <div class="button">
@@ -163,12 +182,14 @@
           >
             {{ priceData.uuid }}
           </td>
-          <td class="border text-center">
+          <td
+            class="border text-center"
+          >
             <strong>Договор</strong>
           </td>
           <td
             class="padding-left"
-            :colspan="priceIsActive ? 2 : 1"
+            colspan="3"
           >
             <input
               v-model="priceData.contractNumber"
@@ -237,10 +258,7 @@
             <col>
             <col width="100">
             <col width="100">
-            <col
-              v-if="priceIsActive"
-              width="100"
-            >
+            <col width="100">
           </colgroup>
           <thead class="sticky">
             <tr class="border-no-top">
@@ -254,9 +272,20 @@
                 <strong>Цена</strong>
               </th>
               <th
-                v-if="priceIsActive"
-                class="border-right"
-              />
+                class="border-right delete-all-coast"
+              >
+                <div class="button">
+                  <button
+                    v-tippy
+                    class="btn last btn-blue-nb nbr"
+                    title="Удалить все цены в прайсе"
+                    :disabled="!priceIsActive || filteredRows.length === 0"
+                    @click="deleteAllPriceCoasts"
+                  >
+                    Удалить все
+                  </button>
+                </div>
+              </th>
             </tr>
           </thead>
           <tr
@@ -299,7 +328,6 @@
               >
             </td>
             <td
-              v-if="priceIsActive"
               class="border"
             >
               <div class="button">
@@ -307,6 +335,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Сохранить цену"
+                  :disabled="!priceIsActive"
                   @click="updateCoastResearchInPrice(coastResearch)"
                 >
                   <i class="fa fa-save" />
@@ -315,6 +344,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Удалить исследование"
+                  :disabled="!priceIsActive"
                   @click="deleteResearchInPrice(coastResearch)"
                 >
                   <i class="fa fa-times" />
@@ -420,6 +450,7 @@ export default {
       search: '',
       coastResearches: [],
       searchTypesObject: 'Работодатель',
+      showArchive: false,
       typesObject: [],
     };
   },
@@ -432,7 +463,7 @@ export default {
       });
     },
     priceIsActive() {
-      return this.activeStatus.ok;
+      return !this.priceData.hide;
     },
     priceIsSelected() {
       return !!this.selectedPrice;
@@ -462,7 +493,6 @@ export default {
         this.activeStatus.ok = true;
       } else {
         this.getCoastsResearchesInPrice();
-        this.checkPriceHidden();
         this.getPriceData();
       }
     },
@@ -496,7 +526,7 @@ export default {
       };
     },
     async getPrices() {
-      this.prices = await this.$api('/get-prices', { searchTypesObject: this.searchTypesObject });
+      this.prices = await this.$api('/get-prices', { searchTypesObject: this.searchTypesObject, showArchive: this.showArchive });
     },
     filteredPriceObject() {
       this.getPrices();
@@ -534,6 +564,7 @@ export default {
           code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
+          hide: this.priceData.hide,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
           contractNumber: this.priceData.contractNumber,
@@ -553,6 +584,7 @@ export default {
           code: this.priceData.code,
           start: this.priceData.start,
           end: this.priceData.end,
+          hide: this.priceData.hide,
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
           contractNumber: this.priceData.contractNumber,
@@ -567,6 +599,7 @@ export default {
             code: '',
             start: '',
             end: '',
+            hide: false,
             company: null,
             uuid: '',
             contractNumber: '',
@@ -574,11 +607,6 @@ export default {
         } else {
           this.$root.$emit('msg', 'error', message);
         }
-      }
-    },
-    async checkPriceHidden() {
-      if (this.selectedPrice) {
-        this.activeStatus = await this.$api('/check-price-active', { id: this.selectedPrice });
       }
     },
     async getPriceData() {
@@ -598,8 +626,8 @@ export default {
       }
     },
     async getCoastsResearchesInPrice() {
-      const coast = await this.$api('/get-coasts-researches-in-price', { id: this.selectedPrice });
-      this.coastResearches = coast.data;
+      const { result } = await this.$api('contracts/price/get-price-coasts', { priceId: this.selectedPrice });
+      this.coastResearches = result;
     },
     async updateCoastResearchInPrice(coastResearch) {
       if (Number(coastResearch.coast) > 0) {
@@ -630,6 +658,22 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Исследование удалено');
+        await this.getCoastsResearchesInPrice();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
+    async deleteAllPriceCoasts() {
+      try {
+        await this.$dialog.confirm('Подтвердите удаление всех исследований из прайса');
+      } catch (_) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('contracts/price/delete-all-coasts', { priceId: this.selectedPrice });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Цены удалены');
         await this.getCoastsResearchesInPrice();
       } else {
         this.$root.$emit('msg', 'error', message);
@@ -672,6 +716,7 @@ export default {
   margin-right: auto;
   margin-top: 10px;
   margin-bottom: 10px;
+  display: flex;
 }
 
 ::v-deep .form-control {
@@ -773,5 +818,14 @@ export default {
 }
 .float-left {
   float: left;
+}
+.archive-price {
+  margin: auto 23px;
+}
+.archive-search {
+  margin: auto 3px;
+}
+.delete-all-coast {
+  padding: 0px
 }
 </style>
