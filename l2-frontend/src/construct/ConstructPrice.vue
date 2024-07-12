@@ -279,7 +279,7 @@
                     v-tippy
                     class="btn last btn-blue-nb nbr"
                     title="Удалить все цены в прайсе"
-                    :disabled="!priceIsActive"
+                    :disabled="!priceIsActive || filteredRows.length === 0"
                     @click="deleteAllPriceCoasts"
                   >
                     Удалить все
@@ -670,7 +670,7 @@ export default {
         return;
       }
       await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('price/delete-all-coasts', { priceId: this.selectedPrice });
+      const { ok, message } = await this.$api('contracts/price/delete-all-coasts', { priceId: this.selectedPrice });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (ok) {
         this.$root.$emit('msg', 'ok', 'Цены удалены');

@@ -162,4 +162,4 @@ def delete_all_price_coasts(request):
     body = json.loads(request.body)
     price_id = body.get("priceId")
     result = PriceCoast.delete_all_price_coasts(price_id)
-    return status_response(True)
+    return status_response(result["ok"], result["message"])
