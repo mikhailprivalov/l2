@@ -2657,13 +2657,16 @@ def get_prices(request):
     request_data = json.loads(request.body)
     prices = None
     if request_data.get("searchTypesObject") == "Работодатель":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=False, external_performer=False).order_by("title")]
+        prices = PriceName.objects.filter(subcontract=False, external_performer=False).order_by("title")
     elif request_data.get("searchTypesObject") == "Заказчик":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(subcontract=True).order_by("title")]
+        prices = PriceName.objects.filter(subcontract=True).order_by("title")
     elif request_data.get("searchTypesObject") == "Внешний исполнитель":
-        prices = [{"id": price.pk, "label": price.title} for price in PriceName.objects.filter(external_performer=True).order_by("title")]
+        prices = PriceName.objects.filter(external_performer=True).order_by("title")
+    if not request_data.get("showArchive"):
+        prices = prices.filter(active_status=True)
+    result = [{"id": price.pk, "label": price.title if price.active_status else f"{price.title} - Архив"} for price in prices]
 
-    return JsonResponse({"data": prices})
+    return JsonResponse({"data": result})
 
 
 @login_required
@@ -2680,23 +2683,26 @@ def get_price_data(request):
 def update_price(request):
     request_data = json.loads(request.body)
     current_price = None
+    price_unique = PriceName.check_unique(request_data["title"], request_data["code"], request_data["id"])
+    if not price_unique:
+        return status_response(False, "Такое название или символьный код уже есть")
     if request_data["id"] == -1:
         if request_data.get("typePrice") == "Работодатель":
             current_price = PriceName(
                 title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], company_id=request_data["company"],
-                contract_number=request_data.get("contractNumber")
+                contract_number=request_data.get("contractNumber"), active_status=True
             )
         elif request_data.get("typePrice") == "Заказчик":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
                 title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, subcontract=True,
-                contract_number=request_data.get("contractNumber")
+                contract_number=request_data.get("contractNumber"), active_status=True
             )
         elif request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
                 title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital, external_performer=True,
-                contract_number=request_data.get("contractNumber")
+                contract_number=request_data.get("contractNumber"), active_status=True
             )
         if current_price:
             current_price.save()
@@ -2713,6 +2719,7 @@ def update_price(request):
         current_price.date_start = request_data["start"]
         current_price.date_end = request_data["end"]
         current_price.contract_number = request_data["contractNumber"]
+        current_price.active_status = True if not request_data["hide"] else False
         if request_data.get("typePrice") == "Работодатель":
             current_price.company_id = request_data["company"]
         elif request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Внешний исполнитель":
@@ -2757,28 +2764,9 @@ def copy_price(request):
 
 @login_required
 @group_required("Конструктор: Настройка организации")
-def check_price_active(request):
-    request_data = json.loads(request.body)
-    current_price = PriceName.objects.get(pk=request_data["id"])
-    return status_response(current_price.active_status)
-
-
-@login_required
-@group_required("Конструктор: Настройка организации")
-def get_coasts_researches_in_price(request):
-    request_data = json.loads(request.body)
-    coast_research = [
-        {"id": data.pk, "research": {"title": data.research.title, "id": data.research.pk}, "coast": f"{data.coast}", "numberService": data.number_services_by_contract}
-        for data in PriceCoast.objects.filter(price_name_id=request_data["id"]).prefetch_related("research").order_by("research__title")
-    ]
-    return JsonResponse({"data": coast_research})
-
-
-@login_required
-@group_required("Конструктор: Настройка организации")
 def update_coast_research_in_price(request):
     request_data = json.loads(request.body)
-    current_coast_research = PriceCoast.objects.get(id=request_data["coastResearchId"])
+    current_coast_research = PriceCoast.objects.filter(id=request_data["coastResearchId"]).select_related('price_name').first()
     if not current_coast_research.price_name.active_status:
         return JsonResponse({"ok": False, "message": "Прайс неактивен"})
     elif float(request_data["coast"]) <= 0:
