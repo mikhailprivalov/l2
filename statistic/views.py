@@ -356,10 +356,12 @@ def statistic_xls(request):
                     "hn": d.history_num,
                     "d": {},
                 }
-            cards[c.pk]["d"][d.pk] = {
-                "r": [],
-                "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)),
-            }
+            cards[c.pk]["d"][d.pk] = {"r": [], "dn": str(dateformat.format(d.data_sozdaniya.date(), settings.DATE_FORMAT)), "tubes": []}
+
+            tubes = TubesRegistration.objects.filter(issledovaniya__napravleniye=d).distinct()
+            direction_tube = [tube.number for tube in tubes]
+            cards[c.pk]["d"][d.pk]["tubes"] = ','.join(map(str, [t for t in direction_tube]))
+
             for i in Issledovaniya.objects.filter(napravleniye=d):
                 cards[c.pk]["d"][d.pk]["r"].append(
                     {
@@ -384,6 +386,7 @@ def statistic_xls(request):
             ("Карта", 6000),
             ("Направление", 4000),
             ("Дата", 4000),
+            ("Номер Емкости", 7000),
             ("Назначение", 7000),
         ]
 
@@ -412,6 +415,7 @@ def statistic_xls(request):
                         s2 = True
                         row.append(str(dk))
                         row.append(c["d"][dk]["dn"])
+                        row.append(c["d"][dk]["tubes"])
                     else:
                         row.append("")
                         row.append("")
