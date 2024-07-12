@@ -112,7 +112,7 @@
             <button
               :disabled="!fraction.title"
               :class="fraction.title ? 'transparent-button' : 'transparent-button-disabled'"
-              @click="edit(fraction.order)"
+              @click="edit(fraction.id)"
             >
               <i class="fa fa-pencil" />
             </button>
@@ -199,8 +199,8 @@ const updateOrder = (fractionIdx: number, fractionOrder: number, action: string)
   }
 };
 
-const edit = (fractionOrder: number) => {
-  emit('edit', { fractionOrder, tubeIdx: props.tubeidx });
+const edit = (fractionId: number) => {
+  emit('edit', { fractionId, tubeIdx: props.tubeidx });
 };
 
 const getFsli = async ({ action, searchQuery, callback }) => {
