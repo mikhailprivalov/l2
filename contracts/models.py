@@ -175,8 +175,6 @@ class PriceCoast(models.Model):
         return result
 
 
-
-
 class Contract(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text="Наименование организации", db_index=True)
     number = models.CharField(max_length=255, blank=True, help_text="Номер договора", db_index=False)
