@@ -609,8 +609,8 @@ const updateOrder = async ({
   }
 };
 
-const edit = ({ fractionOrder, tubeIdx }) => {
-  currentFractionData.value = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.order === fractionOrder);
+const edit = ({ fractionId, tubeIdx }) => {
+  currentFractionData.value = research.value.tubes[tubeIdx].fractions.find(fraction => fraction.id === fractionId);
 };
 
 const addFraction = (newFraction: object) => {
