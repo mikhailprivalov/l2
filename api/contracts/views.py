@@ -4,7 +4,7 @@ import simplejson as json
 from django.db import transaction
 
 from api.contracts.func import researches_for_billing, get_confirm_data_for_billing, structure_table
-from contracts.models import BillingRegister, RawDocumentBillingRegister, PriceName
+from contracts.models import BillingRegister, RawDocumentBillingRegister, PriceName, PriceCoast
 from directions.models import Issledovaniya
 from directory.models import Researches
 from laboratory.decorators import group_required
@@ -154,3 +154,12 @@ def get_billing(request):
         return JsonResponse({"ok": data["ok"], "result": [], "message": data["message"]})
     structure_data = structure_table(data)
     return JsonResponse({"ok": True, "result": result, "message": "", **structure_data})
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def delete_all_price_coasts(request):
+    body = json.loads(request.body)
+    price_id = body.get("priceId")
+    result = PriceCoast.delete_all_price_coasts(price_id)
+    return status_response(True)

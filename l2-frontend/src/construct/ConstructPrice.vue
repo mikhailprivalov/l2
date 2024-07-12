@@ -272,9 +272,20 @@
                 <strong>Цена</strong>
               </th>
               <th
-                v-if="priceIsActive"
-                class="border-right"
-              />
+                class="border-right delete-all-coast"
+              >
+                <div class="button">
+                  <button
+                    v-tippy
+                    class="btn last btn-blue-nb nbr"
+                    title="Удалить все цены в прайсе"
+                    :disabled="!priceIsActive"
+                    @click="deleteAllPriceCoasts"
+                  >
+                    Удалить все
+                  </button>
+                </div>
+              </th>
             </tr>
           </thead>
           <tr
@@ -652,6 +663,22 @@ export default {
         this.$root.$emit('msg', 'error', message);
       }
     },
+    async deleteAllPriceCoasts() {
+      try {
+        await this.$dialog.confirm('Подтвердите удаление всех исследований из прайса');
+      } catch (_) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { ok, message } = await this.$api('price/delete-all-coasts', { priceId: this.selectedPrice });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Цены удалены');
+        await this.getCoastsResearchesInPrice();
+      } else {
+        this.$root.$emit('msg', 'error', message);
+      }
+    },
     async addResearchInPrice() {
       if (!(this.selectedResearch && this.coast && this.selectedPrice)) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
@@ -797,5 +824,8 @@ export default {
 }
 .archive-search {
   margin: auto 3px;
+}
+.delete-all-coast {
+  padding: 0px
 }
 </style>

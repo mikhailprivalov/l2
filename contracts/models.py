@@ -157,6 +157,15 @@ class PriceCoast(models.Model):
             result = set(PriceCoast.objects.filter(price_name_id=price_pk).values_list('research_id', flat=True))
         return result
 
+    @staticmethod
+    def delete_all_price_coasts(price_id: int):
+        price = PriceName.objects.get(pk=price_id)
+        if not price.active_status:
+            return {"ok": False, "message": "Прайс неактивен"}
+        coasts = PriceCoast.objects.filter(price_name=price.pk)
+        coasts.delete()
+        return {"ok": True, "message": ""}
+
 
 class Contract(models.Model):
     title = models.CharField(max_length=511, unique=True, help_text="Наименование организации", db_index=True)
