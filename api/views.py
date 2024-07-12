@@ -2764,14 +2764,6 @@ def copy_price(request):
 
 @login_required
 @group_required("Конструктор: Настройка организации")
-def check_price_active(request):
-    request_data = json.loads(request.body)
-    current_price = PriceName.objects.get(pk=request_data["id"])
-    return status_response(current_price.active_status)
-
-
-@login_required
-@group_required("Конструктор: Настройка организации")
 def get_coasts_researches_in_price(request):
     request_data = json.loads(request.body)
     coast_research = [
