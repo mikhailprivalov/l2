@@ -169,12 +169,8 @@ class PriceCoast(models.Model):
     def get_researches_and_coasts_by_price(price_id: int):
         coasts = get_researches_and_coasts_in_price(price_id)
         result = [
-            {
-                "id": coast.id,
-                "coast": coast.coast,
-                "numberService": coast.number_services_by_contract,
-                "research": {"id": coast.research_id, "title": coast.research_title}
-            } for coast in coasts
+            {"id": coast.id, "coast": coast.coast, "numberService": coast.number_services_by_contract, "research": {"id": coast.research_id, "title": coast.research_title}}
+            for coast in coasts
         ]
         return result
 
