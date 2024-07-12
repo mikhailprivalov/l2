@@ -131,6 +131,3 @@ def get_researches_and_coasts_in_price(price_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
-
-
