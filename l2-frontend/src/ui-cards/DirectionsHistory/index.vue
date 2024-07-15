@@ -60,6 +60,15 @@
           </ul>
         </div>
         <button
+          v-if="modules.showBarcodeButtonInDirectionHistory"
+          v-tippy
+          class="btn btn-blue-nb btn-ell nbr"
+          title="Акт"
+          @click="printBarcodes"
+        >
+          <i class="fa-regular fa-file-lines" />
+        </button>
+        <button
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
           title="Обновить"
@@ -309,14 +318,21 @@
                   <i class="fa fa-barcode" /> браслета
                 </button>
                 <button
-                  v-if="row.status <= 1 && !row.has_hosp"
+                  v-if="modules.showCancelButton && row.status <= 1 && !row.has_hosp"
                   class="btn btn-blue-nb"
                   @click="cancel_direction(row.pk)"
                 >
                   Отмена
                 </button>
                 <button
-                  v-else-if="!row.has_hosp"
+                  v-if="!modules.showCancelButton && row.status <= 1 && !row.has_hosp"
+                  class="btn btn-blue-nb"
+                  @click="printCurrentBarcodes(row.pk)"
+                >
+                  Ш/к
+                </button>
+                <button
+                  v-else-if="!row.has_hosp && row.status === 2"
                   class="btn btn-blue-nb"
                   @click="show_results(row)"
                 >
@@ -555,6 +571,7 @@ export default {
       return {
         rmisQueue: this.$store.getters.modules.l2_rmis_queue,
         showBarcodeButtonInDirectionHistory: this.$store.getters.modules.l2_show_barcode_button_in_direction_history,
+        showCancelButton: this.$store.getters.modules.show_cancel_button,
       };
     },
   },
@@ -759,6 +776,9 @@ export default {
     },
     printBarcodes() {
       this.$root.$emit('print:barcodes', this.checked);
+    },
+    printCurrentBarcodes(pk) {
+      this.$root.$emit('print:barcodes', [pk]);
     },
   },
 };

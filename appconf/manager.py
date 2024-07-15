@@ -207,6 +207,7 @@ class SettingManager:
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
+            "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
