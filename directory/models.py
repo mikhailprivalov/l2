@@ -891,7 +891,6 @@ class Researches(models.Model):
         return res_list
 
 
-
 class HospitalService(models.Model):
     TYPES = (
         (0, "Первичный прием"),
