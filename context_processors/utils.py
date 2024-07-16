@@ -226,7 +226,7 @@ def menu(request):
                     "url": '/ui/billing',
                     "title": "Счета на оплату",
                     "nt": True,
-                    "access": ["Счет: проект, Счет: закрытие"],
+                    "access": ["Счет: проект", "Счет: закрытие"],
                 },
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
