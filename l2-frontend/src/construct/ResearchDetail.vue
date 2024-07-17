@@ -567,6 +567,7 @@ const updateResearch = async () => {
       await getResearch();
       emit('updateResearch');
     } else {
+      await getResearch();
       root.$emit('msg', 'error', message);
     }
   } else {
@@ -586,6 +587,10 @@ const createResearch = async () => {
       await getResearch();
       emit('updateResearch');
     } else {
+      if (pk) {
+        research.value.pk = pk;
+        await getResearch();
+      }
       root.$emit('msg', 'error', message);
     }
   } else {
