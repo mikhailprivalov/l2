@@ -411,6 +411,7 @@ def custom_statistics_research(research_id, d_s, d_e, filter_hospital_id, medica
                 clients_individual.sex as patient_sex,
                 clients_card.main_address as patient_main_address,
                 clients_card.fact_address as patient_fact_address,
+                clients_card.phone as patient_phone,
                 directions_napravleniya.parent_id as parent,
                 
                 directions_istochnikifinansirovaniya.title as fin_source

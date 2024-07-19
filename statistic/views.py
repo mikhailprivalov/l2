@@ -832,6 +832,7 @@ def statistic_xls(request):
                 ws = custom_research.custom_monitorimg_research_base(ws, d1, d2, result, research_title[0])
             else:
                 result = custom_research.custom_research_data(researches_sql)
+                print(result)
                 ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
         else:
