@@ -1005,6 +1005,7 @@ def hosp_get_operation_data(num_dir):
         'Код манипуляции',
         'Оперативное вмешательство',
         'Описание манипуляции',
+        'Анестезиолог',
         'Код анестезиолога',
         'Категория сложности',
         'Диагноз после оперативного лечения',
@@ -1038,6 +1039,7 @@ def hosp_get_operation_data(num_dir):
                 'complications': '',
                 'doc_fio': '',
                 'code_operation': '',
+                'doc_anesthesia': '',
                 'code_doc_anesthesia': '',
                 'plan_operation': '',
                 'diagnos_after_operation': '',
@@ -1082,6 +1084,9 @@ def hosp_get_operation_data(num_dir):
                     continue
                 if field[3] == 'Код манипуляции':
                     operation_data['code_operation'] = field[2]
+                    continue
+                if field[3] == 'Анестезиолог':
+                    operation_data['doc_anesthesia'] = field[2]
                     continue
                 if field[3] == 'Код анестезиолога':
                     operation_data['code_doc_anesthesia'] = field[2]
