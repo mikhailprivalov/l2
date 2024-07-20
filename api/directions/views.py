@@ -4426,8 +4426,6 @@ def file_log(request):
     pk = request_data["pk"]
     rows = []
     for row in IssledovaniyaFiles.objects.filter(issledovaniye_id=pk).order_by('-created_at'):
-        print(row)
-
         rows.append(
             {
                 'pk': row.pk,
