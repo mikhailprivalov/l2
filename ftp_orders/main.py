@@ -1,4 +1,5 @@
 import base64
+from django.core.files.base import ContentFile
 import datetime
 import ftplib
 import json
@@ -18,7 +19,17 @@ from hl7apy.parser import parse_message
 from appconf.manager import SettingManager
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles, Issledovaniya, Result
+from directions.models import (
+    Napravleniya,
+    RegisteredOrders,
+    NumberGenerator,
+    TubesRegistration,
+    IstochnikiFinansirovaniya,
+    NapravleniyaHL7LinkFiles,
+    Issledovaniya,
+    Result,
+    IssledovaniyaFiles,
+)
 from directory.sql_func import get_fsli_fractions_by_research_id
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
@@ -410,7 +421,13 @@ class FTPConnection:
         for obx in obxes:
             tmp_fractions = fractions.copy()
             if (obx.OBX.obx_3.obx_3_1.value).lower == "pdf":
-                continue
+                pdf_base_64 = obx.OBX.obx_5.obx_5_5.value
+                base64_bytes = pdf_base_64.encode('utf-8')
+                data = ContentFile(base64.b64decode(base64_bytes))
+                iss_file = IssledovaniyaFiles(issledovaniye=iss, uploaded_file=data)
+                file_name_internal_code = internal_code.replace(".", "_")
+                iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
+                iss_file.save()
             elif (obx.OBX.obx_3.obx_3_1.value).lower() == "jpg":
                 tmp_fractions["jpg"] = obx.OBX.obx_5.obx_5_5.value
                 result.append(tmp_fractions.copy())
@@ -421,6 +438,12 @@ class FTPConnection:
                 continue
             tmp_fsli = obx.OBX.obx_3.obx_3_1.value
             if tmp_fsli not in fractions_fsl:
+                if is_confirm:
+                    iss.lab_comment = ""
+                    iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
+                    iss.time_save = current_time()
+                    iss.doc_confirmation_string = doctor_fio
+                    iss.save()
                 Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None)
                 self.copy_file(file, FTP_PATH_TO_SAVE)
                 self.delete_file(file)
@@ -632,13 +655,14 @@ def check_replace_fields(field_replace, line_new, direction):
     for fr in field_replace:
         if fr == "2" and line_new[0] == "MSH":
             line_new[int(fr)] = direction.external_executor_hospital.hl7_sender_application
+            line_new[int(fr)] = direction.hospital.hl7_sender_application
         elif fr == "3" and line_new[0] == "MSH":
-            line_new[int(fr)] = direction.external_executor_hospital.short_title
+            line_new[int(fr)] = direction.hospital.hl7_sender_org
         elif fr == "2-2" and line_new[0] == "OBR":
             positions = fr.split("-")
             data = line_new[int(positions[0])]
             data_pos = data.split("^")
-            data_pos[int(positions[1]) - 1] = direction.external_executor_hospital.hl7_sender_application
+            data_pos[int(positions[1]) - 1] = direction.hospital.hl7_sender_application
             data = "^".join(data_pos)
             line_new[int(positions[0])] = data
     return line_new

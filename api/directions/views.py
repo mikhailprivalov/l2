@@ -3952,8 +3952,8 @@ def eds_documents(request):
         if v in ["", None]:
             error_doctor = f"{k} - не верно;{error_doctor}"
 
-    if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
-        return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
+    # if not iss_obj.doc_confirmation.podrazdeleniye.n3_id or not iss_obj.doc_confirmation.hospital.code_tfoms:
+    #     return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "UUID подразделения или код ТФОМС не заполнен"})
 
     base = SettingManager.get_cda_base_url()
     if base != "empty":
