@@ -19,8 +19,17 @@ from hl7apy.parser import parse_message
 from appconf.manager import SettingManager
 from clients.models import Individual, CardBase
 from contracts.models import PriceName
-from directions.models import Napravleniya, RegisteredOrders, NumberGenerator, TubesRegistration, IstochnikiFinansirovaniya, NapravleniyaHL7LinkFiles, Issledovaniya, Result, \
-    IssledovaniyaFiles
+from directions.models import (
+    Napravleniya,
+    RegisteredOrders,
+    NumberGenerator,
+    TubesRegistration,
+    IstochnikiFinansirovaniya,
+    NapravleniyaHL7LinkFiles,
+    Issledovaniya,
+    Result,
+    IssledovaniyaFiles,
+)
 from directory.sql_func import get_fsli_fractions_by_research_id
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
