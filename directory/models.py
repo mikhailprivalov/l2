@@ -1487,7 +1487,6 @@ class Fractions(models.Model):
         return new_fraction
 
 
-
 class Absorption(models.Model):
     """
     Поглощение
