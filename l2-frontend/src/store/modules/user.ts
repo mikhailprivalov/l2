@@ -14,7 +14,11 @@ const stateInitial = {
     modules: {},
     groups: [],
     hospital: null,
-    shiftId: null,
+    cashRegister: {
+      id: null,
+      title: null,
+      shiftId: null,
+    },
   },
   menu: {
     buttons: [],
