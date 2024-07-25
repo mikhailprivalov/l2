@@ -187,7 +187,7 @@ import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
-import SelectCashRegisterModal from '@/modals/SelectCashRegisterModal.vue';
+import SelectCashRegisterModal from '@/modals/ShiftModal.vue';
 
 @Component({
   computed: mapGetters([

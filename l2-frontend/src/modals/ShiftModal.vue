@@ -25,20 +25,20 @@
           <div class="body">
             <div class="flex">
               <div class="input-group">
-              <span
-                class="input-group-addon nbr"
-                style="width: 150px"
-              >Касса</span>
-              <Treeselect
-                v-model="selectedCashRegister"
-                :options="cashRegisters"
-                class="treeselect-noborder"
-                placeholder="Выберите кассу"
-              />
-            </div>
-            <button class="btn btn-blue-nb">
-              выбрать
-            </button>
+                <span
+                  class="input-group-addon nbr"
+                  style="width: 150px"
+                >Касса</span>
+                <Treeselect
+                  v-model="selectedCashRegister"
+                  :options="cashRegisters"
+                  class="treeselect-noborder"
+                  placeholder="Выберите кассу"
+                />
+              </div>
+              <button class="btn btn-blue-nb">
+                выбрать
+              </button>
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@ const props = defineProps({
 const titleLocal = ref('');
 
 onMounted(() => {
-  titleLocal.value = props.title ? props.title : 'Выбрать кассу';
+  titleLocal.value = props.title ? props.title : 'Открыть смену';
 });
 
 const open = ref(false);
