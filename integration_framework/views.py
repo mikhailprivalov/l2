@@ -1620,6 +1620,8 @@ def external_list_direction_create(request):
     body_directions = json.loads(request.body)
     for body in body_directions:
         result = create_direction_by_param(body, request)
+        print("result")
+        print(result)
         if not result.get("ok"):
             try:
                 Log.log(
@@ -1643,18 +1645,23 @@ def create_direction_by_param(body, request):
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
     else:
         hospital = Hospitals.objects.filter(oid=oid_org).first()
+    print("hospital")
+    print(hospital)
 
     if not hospital:
         return {"ok": False, "message": "Организация не найдена"}
 
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
         return {"ok": False, "message": "Нет доступа в переданную организацию"}
+    print("go go gog go ")
 
     is_exclude_contorl_documnets = False
     if hospital.pk in HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION:
         is_exclude_contorl_documnets = True
 
     patient = body.get("patient", {})
+    print("patient")
+    print(patient)
 
     enp = (patient.get("enp") or "").replace(" ", "")
 
@@ -1678,8 +1685,13 @@ def create_direction_by_param(body, request):
         sex = "м"
     else:
         sex = "ж"
+    print(birthdate)
+    print(sex)
+    print(lastname)
+    print(firstname)
+    print(patronymic)
 
-    if not enp and not (lastname and firstname and birthdate and birthdate):
+    if not enp and not (lastname and firstname and birthdate):
         return {"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"}
 
     if lastname and not firstname:
@@ -1732,7 +1744,8 @@ def create_direction_by_param(body, request):
             },
             need_return_individual=True,
         )
-
+    print("individual")
+    print(individual)
     if not individual:
         return {"ok": False, "message": "Физлицо не найдено"}
 
@@ -1742,15 +1755,19 @@ def create_direction_by_param(body, request):
 
     if not card:
         return {"ok": False, "message": "Карта не найдена"}
-
+    print("card")
+    print(card)
+    print(body)
     financing_source_title = body.get("financingSource", "")
+    print(financing_source_title)
     if financing_source_title.lower() not in ["омс", "бюджет", "платно"]:
         return {"ok": False, "message": "Некорректный источник финансирования"}
 
-    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title="ОМС", hide=False).first()
     financing_category_code = body.get("financingCategory", "")
     price_category = PriceCategory.objects.filter(title__startswith=financing_category_code).first()
-
+    print("get financing_source")
+    print(financing_source)
     if not financing_source:
         return {"ok": False, "message": "Некорректный источник финансирования"}
 
@@ -1763,16 +1780,19 @@ def create_direction_by_param(body, request):
     department = body.get("department", "")
     additiona_info = body.get("additionalInfo", "")
     last_result_data = body.get("lastResultData", "")
-
+    print("get diagText")
     diag_text = body.get("diagText", "")  # обязательно
     if not diag_text:
         return {"ok": False, "message": "Диагноз описание не заполнено"}
+    print("get MkB")
 
     diag_mkb10 = body.get("diagMKB10", "")  # обязательно
     if not diag_mkb10:
         return {"ok": False, "message": "Диагноз по МКБ10 не заполнен (не верно)"}
     open_skob = "{"
     close_skob = "}"
+    print("diag_mkb10")
+    print(diag_mkb10)
 
     diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
     diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}", "id":"{diag_mcb10_data.pk}"{close_skob}'
@@ -1786,18 +1806,26 @@ def create_direction_by_param(body, request):
         7: "самопроизвольно отделившиеся фрагменты тканей—7",
     }
     method_obtain_material = body.get("methodObtainMaterial", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
-    if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
+    print("method_obtain_material")
+    print(method_obtain_material)
+    print(type(method_obtain_material))
+    if not method_obtain_material or int(method_obtain_material) not in [1, 2, 3, 4, 5, 6, 7]:
         return {"ok": False, "message": "Способо забора не верно заполнено"}
 
-    resident_code = patient.get("residentCode", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
-    if not resident_code or resident_code not in [1, 2]:
+    resident_code = patient.get("residentCode", 1)  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
+    print("resident_code")
+    print(resident_code)
+    if not resident_code or int(resident_code) not in [1, 2, '1', '2']:
         return {"ok": False, "message": "Не указан вид жительства"}
-    if resident_code == 1:
+    if int(resident_code) == 1:
         resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
     else:
         resident_data = f'{open_skob}"code": "2", "title": "Село"{close_skob}'
 
-    solution10 = body.get("solution10", "")  # обязательно
+    solution_10 = body.get("solution10", "")  # обязательно
+    solution10 = "false"
+    if solution_10 == '2':
+        solution10 = "true"
     if not solution10 or solution10 not in ["true", "false"]:
         return {"ok": False, "message": "Не указано помещен в 10% раствор"}
 
@@ -1811,6 +1839,8 @@ def create_direction_by_param(body, request):
         if not result_check:
             return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
+    print("numbers_vial")
+    print(numbers_vial)
 
     try:
         with transaction.atomic():
@@ -1864,6 +1894,8 @@ def create_direction_by_param(body, request):
                 "ФИО врача": doctor_fio,
                 "Вид места жительства": resident_data,
             }
+            print("match_keys")
+            print(match_keys)
 
             for group in ParaclinicInputGroups.objects.filter(research=direction_params):
                 for f in ParaclinicInputField.objects.filter(group=group):
