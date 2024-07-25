@@ -685,7 +685,7 @@ def current_user_info(request):
                 ret["groups"].append("Admin")
             ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret["modules"].get("l2_eds") else []
             ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
-            ret["cashRegister"] = doctorprofile.getCashRegisterData()
+            ret["cashRegister"] = users.DoctorProfile.getCashRegisterData()
 
             try:
                 connections.close_all()

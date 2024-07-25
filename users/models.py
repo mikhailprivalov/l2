@@ -483,7 +483,7 @@ class DoctorProfile(models.Model):
         return totp.verify(code)
 
     @staticmethod
-    def getCashRegisterData(self):
+    def getCashRegisterData():
         return {"id": 1, "title": "dsf", "shiftId": 1}
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
