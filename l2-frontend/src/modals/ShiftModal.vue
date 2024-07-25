@@ -24,7 +24,6 @@
         <div slot="body">
           <div class="body">
             <div
-              v-if="!shiftId"
               class="flex"
             >
               <div class="input-group">
@@ -35,17 +34,22 @@
                 <Treeselect
                   v-model="selectedCashRegister"
                   :options="cashRegisters"
+                  :disabled="shiftIsOpen"
                   class="treeselect-noborder"
                   placeholder="Выберите кассу"
                 />
               </div>
-              <button class="btn btn-blue-nb">
-                выбрать
-              </button>
-            </div>
-            <div v-else>
-              <button class="btn btn-blue-nb">
+              <button
+                v-if="shiftIsOpen"
+                class="btn btn-blue-nb"
+              >
                 Закрыть смену
+              </button>
+              <button
+                v-else
+                class="btn btn-blue-nb"
+              >
+                Открыть смену
               </button>
             </div>
           </div>
@@ -89,11 +93,19 @@ const props = defineProps({
 
 const titleLocal = ref('');
 const reverseTitle = ref('');
-const shiftId = computed(() => store.getters.shift);
+const cashRegister = computed(() => store.getters.cashRegister);
+const shiftIsOpen = computed(() => !!cashRegister.value?.id);
+const selectedCashRegister = ref(null);
+const cashRegisters = ref([
+  { id: 1, label: 'Касса 1' },
+  { id: 2, label: 'Касса 2' },
+  { id: 3, label: 'Касса 3' },
+]);
 
 onMounted(() => {
-  titleLocal.value = shiftId.value ? 'Смена открыта' : 'Смена закрыта';
-  reverseTitle.value = shiftId.value ? 'Закрытие смены' : 'Открытие смены';
+  titleLocal.value = shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта';
+  reverseTitle.value = shiftIsOpen.value ? 'Закрытие смены' : 'Открытие смены';
+  selectedCashRegister.value = shiftIsOpen.value ? cashRegister.value.id : null;
 });
 
 const open = ref(false);
@@ -104,13 +116,6 @@ const openModal = () => {
 const closeModal = () => {
   open.value = false;
 };
-
-const selectedCashRegister = ref(null);
-const cashRegisters = ref([
-  { id: 1, label: 'Касса 1' },
-  { id: 2, label: 'Касса 2' },
-  { id: 3, label: 'Касса 3' },
-]);
 
 </script>
 
