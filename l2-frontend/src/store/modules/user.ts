@@ -14,6 +14,7 @@ const stateInitial = {
     modules: {},
     groups: [],
     hospital: null,
+    shiftId: null,
   },
   menu: {
     buttons: [],
@@ -40,6 +41,7 @@ const getters = {
   semiLazyState: state => state.semiLazyState,
   hasGroup: (state, g) => (group) => g.user_groups.includes(group),
   hasAnyGroup: (state, g) => (groups) => groups.some(gr => g.hasGroup(gr)),
+  shift: (state, g) => g.user_data?.shiftId,
 };
 
 const actions = {
