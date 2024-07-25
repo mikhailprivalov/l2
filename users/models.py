@@ -482,6 +482,10 @@ class DoctorProfile(models.Model):
         totp = pyotp.TOTP(self.totp_secret)
         return totp.verify(code)
 
+    @staticmethod
+    def getCashRegisterData(self):
+        return {"id": 1, "title": "dsf", "shiftId": 1}
+
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
             return self.get_full_fio() + ', ' + self.podrazdeleniye.title
