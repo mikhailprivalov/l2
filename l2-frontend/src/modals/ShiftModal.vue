@@ -20,10 +20,13 @@
         margin-left-right="auto"
         @close="closeModal"
       >
-        <span slot="header">{{ titleLocal }}</span>
+        <span slot="header">{{ reverseTitle }}</span>
         <div slot="body">
           <div class="body">
-            <div class="flex">
+            <div
+              v-if="!shiftId"
+              class="flex"
+            >
               <div class="input-group">
                 <span
                   class="input-group-addon nbr"
@@ -38,6 +41,11 @@
               </div>
               <button class="btn btn-blue-nb">
                 выбрать
+              </button>
+            </div>
+            <div v-else>
+              <button class="btn btn-blue-nb">
+                Закрыть смену
               </button>
             </div>
           </div>
@@ -77,17 +85,15 @@ const props = defineProps({
     default: 'li',
     required: false,
   },
-  title: {
-    type: String,
-    required: false,
-  },
 });
 
 const titleLocal = ref('');
+const reverseTitle = ref('');
 const shiftId = computed(() => store.getters.shift);
 
 onMounted(() => {
   titleLocal.value = shiftId.value ? 'Смена открыта' : 'Смена закрыта';
+  reverseTitle.value = shiftId.value ? 'Закрытие смены' : 'Открытие смены';
 });
 
 const open = ref(false);
