@@ -62,12 +62,14 @@
 
 <script setup lang="ts">
 
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import { useStore } from '@/store';
+
+const store = useStore();
 
 const props = defineProps({
   tag: {
@@ -82,9 +84,10 @@ const props = defineProps({
 });
 
 const titleLocal = ref('');
+const shiftId = computed(() => store.getters.shift);
 
 onMounted(() => {
-  titleLocal.value = props.title ? props.title : 'Открыть смену';
+  titleLocal.value = shiftId.value ? 'Смена открыта' : 'Смена закрыта';
 });
 
 const open = ref(false);
