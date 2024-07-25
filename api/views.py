@@ -638,7 +638,7 @@ def current_user_info(request):
         "modules": SettingManager.l2_modules(),
         "user_services": [],
         "loading": False,
-        "shiftId": None
+        "cashRegister": {"id": None, "title": "", "shiftId": None}
     }
     if ret["auth"]:
         request.user.doctorprofile.mark_as_online()

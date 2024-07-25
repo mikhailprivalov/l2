@@ -45,7 +45,7 @@ const getters = {
   semiLazyState: state => state.semiLazyState,
   hasGroup: (state, g) => (group) => g.user_groups.includes(group),
   hasAnyGroup: (state, g) => (groups) => groups.some(gr => g.hasGroup(gr)),
-  shift: (state, g) => g.user_data?.shiftId,
+  cashRegister: (state, g) => g.user_data?.cashRegister,
 };
 
 const actions = {
