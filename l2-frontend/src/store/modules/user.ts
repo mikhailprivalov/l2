@@ -1,5 +1,6 @@
 import { Menu } from '@/types/menu';
 import userPoint from '@/api/user-point';
+import api from '@/api';
 
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
@@ -77,6 +78,10 @@ const actions = {
   async [actionsTypes.HAS_NEW_VERSION]({ commit }) {
     commit(mutationTypes.SET_HAS_NEW_VERSION);
   },
+  async [actionsTypes.OPEN_SHIFT]({ commit }) {
+    const { data } = await userPoint.openShift();
+    commit(mutationTypes.OPEN_SHIFT, data);
+  },
 };
 
 const mutations = {
@@ -101,6 +106,10 @@ const mutations = {
   },
   [mutationTypes.SET_SEMI_LAZY_STATE](state, { semiLazy }) {
     state.semiLazyState = semiLazy;
+  },
+  [mutationTypes.OPEN_SHIFT](state, { cashRegisterId, shiftId }) {
+    state.data.cashRegister.id = cashRegisterId;
+    state.data.cashRegister.shiftId = shiftId;
   },
 };
 

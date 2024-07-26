@@ -54,3 +54,6 @@ export const EDIT_SET_STATE = 'EDIT_SET_STATE';
 export const EDIT_CLEAR_STATE = 'EDIT_CLEAR_STATE';
 
 export const SET_PREV_EDIT_ID = 'SET_PREV_EDIT_ID';
+
+export const OPEN_SHIFT = 'OPEN_SHIFT';
+export const CLOSE_SHIFT = 'CLOSE_SHIFT';

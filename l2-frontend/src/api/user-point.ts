@@ -53,4 +53,7 @@ export default generator({
   loadUsersByGroup: {
     url: 'load-users-by-group',
   },
+  openShift: {
+    url: 'open-shift',
+  },
 });
