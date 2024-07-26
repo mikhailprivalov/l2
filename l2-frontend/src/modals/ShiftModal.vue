@@ -28,8 +28,7 @@
             >
               <div class="input-group">
                 <span
-                  class="input-group-addon nbr"
-                  style="width: 150px"
+                  class="input-group-addon nbr width"
                 >Касса</span>
                 <Treeselect
                   v-model="selectedCashRegister"
@@ -41,14 +40,14 @@
               </div>
               <button
                 v-if="shiftIsOpen"
-                class="btn btn-blue-nb"
+                class="btn btn-blue-nb nbr width"
                 @click="closeShift"
               >
                 Закрыть смену
               </button>
               <button
                 v-else
-                class="btn btn-blue-nb"
+                class="btn btn-blue-nb nbr width"
                 @click="openShift"
               >
                 Открыть смену
@@ -135,5 +134,8 @@ const closeShift = () => {
 }
 .flex {
   display: flex;
+}
+.width {
+  width: 150px;
 }
 </style>
