@@ -82,6 +82,10 @@ const actions = {
     const { data } = await userPoint.openShift();
     commit(mutationTypes.OPEN_SHIFT, data);
   },
+  async [actionsTypes.CLOSE_SHIFT]({ commit }) {
+    const { data } = await userPoint.closeShift();
+    commit(mutationTypes.CLOSE_SHIFT, data);
+  },
 };
 
 const mutations = {
@@ -108,6 +112,10 @@ const mutations = {
     state.semiLazyState = semiLazy;
   },
   [mutationTypes.OPEN_SHIFT](state, { cashRegisterId, shiftId }) {
+    state.data.cashRegister.id = cashRegisterId;
+    state.data.cashRegister.shiftId = shiftId;
+  },
+  [mutationTypes.CLOSE_SHIFT](state, { cashRegisterId, shiftId }) {
     state.data.cashRegister.id = cashRegisterId;
     state.data.cashRegister.shiftId = shiftId;
   },

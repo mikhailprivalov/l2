@@ -42,6 +42,7 @@
               <button
                 v-if="shiftIsOpen"
                 class="btn btn-blue-nb"
+                @click="closeShift"
               >
                 Закрыть смену
               </button>
@@ -77,6 +78,7 @@
 
 import { computed, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
+import * as actions from '@/store/action-types';
 
 import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -119,8 +121,11 @@ const closeModal = () => {
 };
 
 const openShift = () => {
-  console.log
-}
+  store.dispatch(actions.OPEN_SHIFT);
+};
+const closeShift = () => {
+  store.dispatch(actions.CLOSE_SHIFT);
+};
 
 </script>
 

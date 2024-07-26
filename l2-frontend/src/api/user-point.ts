@@ -56,4 +56,7 @@ export default generator({
   openShift: {
     url: 'cash-register/open-shift',
   },
+  closeShift: {
+    url: 'cash-register/close-shift',
+  },
 });

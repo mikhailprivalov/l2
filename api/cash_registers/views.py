@@ -7,6 +7,14 @@ from django.http import JsonResponse
 @login_required
 def open_shift(request):
     request_data = json.loads(request.body)
-    data = {"cashRegisterId": 1, "title": "fdfd", "shiftId": 1 }
+    data = {"cashRegisterId": 1, "title": "fdfd", "shiftId": 1}
     print('Мы тут смену решили открывтаь')
+    return JsonResponse({"data": data})
+
+
+@login_required
+def close_shift(request):
+    request_data = json.loads(request.body)
+    data = {"cashRegisterId": None, "title": "", "shiftId": None}
+    print('Мы тут смену решили закрывтаь')
     return JsonResponse({"data": data})
