@@ -543,14 +543,11 @@ const validateResearch = () => {
   let result = 0;
   if (!titleFilled) {
     result = 1;
-  }
-  if (!departmentFilled) {
+  } else if (!departmentFilled) {
     result = 2;
-  }
-  if (!tubesFilled) {
+  } else if (!tubesFilled) {
     result = 3;
-  }
-  if (!countForTubeNormal) {
+  } else if (!countForTubeNormal) {
     result = 4;
   }
   return variants[result];

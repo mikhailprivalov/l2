@@ -746,9 +746,6 @@ class Researches(models.Model):
                 fraction_data = Fractions.normalize_fraction_data(fraction)
                 if service_fractions:
                     current_fraction = service_fractions.filter(pk=fraction["id"]).first()
-                    fsli_is_duplicated = Fractions.check_duplicated_fsli_code(current_fraction.pk, fraction_data["fsli"])
-                    if not fsli_is_duplicated["ok"]:
-                        return {"ok": False, "message": f"В анализе {fsli_is_duplicated['research_title']} есть такой же код ФСЛИ ({fraction_data['fsli']})"}
                 if current_fraction:
                     if need_log_data:
                         old_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
@@ -756,9 +753,6 @@ class Researches(models.Model):
                     if need_log_data:
                         new_log_data["fractions"][current_fraction.pk] = Fractions.as_json(current_fraction)
                 else:
-                    fsli_is_duplicated = Fractions.check_duplicated_fsli_code(-1, fraction_data["fsli"])
-                    if not fsli_is_duplicated["ok"]:
-                        return {"ok": False, "message": f"В анализе {fsli_is_duplicated['research_title']} есть такой же код ФСЛИ ({fraction_data['fsli']})"}
                     new_fraction = Fractions.create_fraction(fraction_data, service.pk, relation.pk)
                     if need_log_data:
                         new_log_data["fractions"][new_fraction.pk] = Fractions.as_json(new_fraction)
@@ -799,9 +793,6 @@ class Researches(models.Model):
             relation = ReleationsFT.get_or_create_relation(tube)
             for fraction in tube["fractions"]:
                 fraction_data = Fractions.normalize_fraction_data(fraction)
-                fsli_is_duplicated = Fractions.check_duplicated_fsli_code(-1, fraction_data["fsli"])
-                if not fsli_is_duplicated["ok"]:
-                    return {"ok": False, "pk": new_service.pk, "message": f"В анализе {fsli_is_duplicated['research_title']} есть такой же код ФСЛИ ({fraction_data['fsli']})"}
                 new_fraction = Fractions.create_fraction(fraction_data, new_service.pk, relation.pk)
                 log_data["fractions"][new_fraction.pk] = Fractions.as_json(new_fraction)
         if need_log_data:
@@ -1494,14 +1485,6 @@ class Fractions(models.Model):
         )
         new_fraction.save()
         return new_fraction
-
-    @staticmethod
-    def check_duplicated_fsli_code(fraction_id: int, fsli_code):
-        fractions = Fractions.objects.filter(fsli=fsli_code).select_related('research').exclude(Q(pk=fraction_id) | Q(fsli=None))
-        if fractions.exists():
-            first_duplicated: Fractions = fractions.first()
-            return {"ok": False, "fraction_title": first_duplicated.title, "research_title": first_duplicated.research.title}
-        return {"ok": True}
 
 
 class Absorption(models.Model):

@@ -1439,6 +1439,12 @@ export default {
       if (!this.card.family || !this.card.name || !this.card.birthday) {
         return false;
       }
+      const now = moment();
+      const birthDate = moment(this.card.birthday, 'YYYYMMDD');
+      const age = now.diff(birthDate, 'years');
+      if (age > 105) {
+        return false;
+      }
       return !!(this.card.family.length > 0 && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
     },
     birthday() {

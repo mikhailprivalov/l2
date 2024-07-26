@@ -445,6 +445,8 @@ class FTPConnection:
                     iss.doc_confirmation_string = doctor_fio
                     iss.save()
                 Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None)
+                if iss.napravleniye.hospital.result_push_by_numbers:
+                    self.copy_file(file, iss.napravleniye.hospital.result_push_by_numbers)
                 self.copy_file(file, FTP_PATH_TO_SAVE)
                 self.delete_file(file)
                 return
