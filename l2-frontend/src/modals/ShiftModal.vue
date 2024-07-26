@@ -20,7 +20,7 @@
         margin-left-right="auto"
         @close="closeModal"
       >
-        <span slot="header">{{ reverseTitle }}</span>
+        <span slot="header">{{ 'Кассовые смены' }}</span>
         <div slot="body">
           <div class="body">
             <div
@@ -78,8 +78,8 @@
 
 import { computed, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
-import * as actions from '@/store/action-types';
 
+import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
@@ -94,10 +94,9 @@ const props = defineProps({
   },
 });
 
-const titleLocal = ref('');
-const reverseTitle = ref('');
 const cashRegister = computed(() => store.getters.cashRegister);
 const shiftIsOpen = computed(() => !!cashRegister.value?.id);
+const titleLocal = computed(() => (shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта'));
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([
   { id: 1, label: 'Касса 1' },
@@ -106,8 +105,6 @@ const cashRegisters = ref([
 ]);
 
 onMounted(() => {
-  titleLocal.value = shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта';
-  reverseTitle.value = shiftIsOpen.value ? 'Закрытие смены' : 'Открытие смены';
   selectedCashRegister.value = shiftIsOpen.value ? cashRegister.value.id : null;
 });
 

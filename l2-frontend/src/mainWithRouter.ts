@@ -53,7 +53,7 @@ const router = new Router({
         ],
         showCardReader: true,
         showExtendedPatientSearch: true,
-        showSelectCashRegister: true,
+        showShiftModal: true,
       },
     },
     {
