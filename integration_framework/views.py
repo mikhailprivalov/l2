@@ -1841,6 +1841,8 @@ def create_direction_by_param(body, request):
         numbers_vial = result_check
     print("numbers_vial")
     print(numbers_vial)
+    print("price_category")
+    print(price_category)
 
     try:
         with transaction.atomic():
@@ -1855,6 +1857,7 @@ def create_direction_by_param(body, request):
                 price_category=price_category,
                 rmis_number=id_in_hospital if body.get("isRMIS") else None,
             )
+            print("Направление создаем")
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
             if time_get and not valid_date(time_get) or not time_get:
@@ -1872,6 +1875,8 @@ def create_direction_by_param(body, request):
                     "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"}, {"type": 0, "width": "38%"}],
                 }
             }
+            print("data_marked")
+            print(data_marked)
 
             result_table_field = []
             pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
@@ -1880,12 +1885,14 @@ def create_direction_by_param(body, request):
                     [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m.get("pathologicalProcess", 7)], str(m_m["objectValue"]), m_m.get("description", "")]
                 )
             data_marked["rows"] = result_table_field
+            print("obtain_material")
+            print(obtain_material)
             match_keys = {
                 "Диагноз основной": diag_text,
                 "Код по МКБ": diag_mkb10,
                 "Дополнительные клинические сведения": additiona_info,
                 "Результаты предыдущие": last_result_data,
-                "Способ получения биопсийного (операционного) материала": obtain_material[method_obtain_material],
+                "Способ получения биопсийного (операционного) материала": int(obtain_material[method_obtain_material]),
                 "Материал помещен в 10%-ный раствор нейтрального формалина": "Да" if solution10.lower() == "true" else "Нет",
                 "Дата забора материала": time_get.split(" ")[0],
                 "Время забора материала": time_get.split(" ")[1],
