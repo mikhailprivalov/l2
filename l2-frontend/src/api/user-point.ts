@@ -54,6 +54,6 @@ export default generator({
     url: 'load-users-by-group',
   },
   openShift: {
-    url: 'open-shift',
+    url: 'cash-register/open-shift',
   },
 });
