@@ -48,6 +48,7 @@
               <button
                 v-else
                 class="btn btn-blue-nb"
+                @click="openShift"
               >
                 Открыть смену
               </button>
@@ -116,6 +117,10 @@ const openModal = () => {
 const closeModal = () => {
   open.value = false;
 };
+
+const openShift = () => {
+  console.log
+}
 
 </script>
 

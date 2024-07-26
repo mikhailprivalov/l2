@@ -484,7 +484,7 @@ class DoctorProfile(models.Model):
 
     @staticmethod
     def getCashRegisterData():
-        return {"id": 1, "title": "dsf", "shiftId": 1}
+        return {"id": None, "title": "dsf", "shiftId": None}
 
     def __str__(self):  # Получение фио при конвертации объекта DoctorProfile в строку
         if self.podrazdeleniye:
