@@ -67,6 +67,7 @@ INSTALLED_APPS = (
     'employees.apps.EmployeesConfig',
     'results_feed.apps.ResultsFeedConfig',
     'document_management',
+    'cash_registers',
 )
 
 MIDDLEWARE = [
