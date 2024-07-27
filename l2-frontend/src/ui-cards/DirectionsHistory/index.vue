@@ -64,7 +64,7 @@
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
           title="Акт"
-          @click="printBarcodes"
+          @click="printAct"
         >
           <i class="fa-regular fa-file-lines" />
         </button>
@@ -776,6 +776,10 @@ export default {
     },
     printBarcodes() {
       this.$root.$emit('print:barcodes', this.checked);
+    },
+    printAct() {
+      const dateStart = moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY');
+      window.open(`/forms/pdf?type=114.01&date=${dateStart}`, '_blank');
     },
     printCurrentBarcodes(pk) {
       this.$root.$emit('print:barcodes', [pk]);
