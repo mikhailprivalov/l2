@@ -87,8 +87,6 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import api from '@/api';
 
-import { afterWrite } from '@popperjs/core';
-
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
@@ -145,8 +143,16 @@ const openShift = async () => {
     }
   }
 };
-const closeShift = () => {
-  store.dispatch(actions.CLOSE_SHIFT);
+const closeShift = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('cash-register/close-shift');
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await store.dispatch(actions.CLOSE_SHIFT);
+    root.$emit('msg', 'ok', 'Смена закрыта');
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 
 </script>

@@ -76,7 +76,7 @@ const actions = {
   async [actionsTypes.HAS_NEW_VERSION]({ commit }) {
     commit(mutationTypes.SET_HAS_NEW_VERSION);
   },
-  async [actionsTypes.OPEN_SHIFT]({ commit }, { data }) {
+  async [actionsTypes.OPEN_SHIFT]({ commit }, data) {
     commit(mutationTypes.OPEN_SHIFT, data);
   },
   async [actionsTypes.CLOSE_SHIFT]({ commit }) {
@@ -111,9 +111,9 @@ const mutations = {
     state.data.cashRegister.id = cashRegisterId;
     state.data.cashRegister.shiftId = shiftId;
   },
-  [mutationTypes.CLOSE_SHIFT](state, { cashRegisterId, shiftId }) {
-    state.data.cashRegister.id = cashRegisterId;
-    state.data.cashRegister.shiftId = shiftId;
+  [mutationTypes.CLOSE_SHIFT](state) {
+    state.data.cashRegister.id = null;
+    state.data.cashRegister.shiftId = null;
   },
 };
 

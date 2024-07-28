@@ -14,7 +14,6 @@ def get_cash_registers(request):
 
 @login_required
 def open_shift(request):
-    request_data = json.loads(request.body)
     data = {"cashRegisterId": 1, "shiftId": 1}
     print('открыли такие смену')
     return JsonResponse({"ok": True, "message": "", "data": data})
@@ -22,7 +21,5 @@ def open_shift(request):
 
 @login_required
 def close_shift(request):
-    request_data = json.loads(request.body)
-    data = {"cashRegisterId": None, "title": "", "shiftId": None}
-    print('Мы тут смену решили закрывтаь')
-    return JsonResponse({"data": data})
+    print('открыли такие смену')
+    return JsonResponse({"ok": True, "message": ""})
