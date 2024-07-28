@@ -424,6 +424,10 @@ class FTPConnection:
                 pdf_base_64 = obx.OBX.obx_5.obx_5_5.value
                 base64_bytes = pdf_base_64.encode('utf-8')
                 data = ContentFile(base64.b64decode(base64_bytes))
+                if IssledovaniyaFiles.objects.filter(issledovaniye=iss).exists():
+                    iss_files = IssledovaniyaFiles.objects.filter(issledovaniye=iss)
+                    for iss_file in iss_files:
+                        iss_file.delete()
                 iss_file = IssledovaniyaFiles(issledovaniye=iss, uploaded_file=data)
                 file_name_internal_code = internal_code.replace(".", "_")
                 iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
