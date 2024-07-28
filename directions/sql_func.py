@@ -241,4 +241,3 @@ def get_directions_by_who_create(doctor_pks, d_s, d_e):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
