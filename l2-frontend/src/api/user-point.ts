@@ -53,10 +53,4 @@ export default generator({
   loadUsersByGroup: {
     url: 'load-users-by-group',
   },
-  openShift: {
-    url: 'cash-register/open-shift',
-  },
-  closeShift: {
-    url: 'cash-register/close-shift',
-  },
 });

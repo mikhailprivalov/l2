@@ -85,6 +85,9 @@ import * as actions from '@/store/action-types';
 import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
+import api from '@/api';
+
+import { afterWrite } from '@popperjs/core';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -106,7 +109,15 @@ const cashRegisters = ref([
   { id: 3, label: 'Касса 3' },
 ]);
 
-onMounted(() => {
+const getCashRegisters = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('cash-register/get-cash-registers');
+  await store.dispatch(actions.DEC_LOADING);
+  cashRegisters.value = result;
+};
+
+onMounted(async () => {
+  await getCashRegisters();
   selectedCashRegister.value = shiftIsOpen.value ? cashRegister.value.id : null;
 });
 
@@ -119,11 +130,19 @@ const closeModal = () => {
   open.value = false;
 };
 
-const openShift = () => {
-  if (selectedCashRegister.value) {
-    store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: selectedCashRegister.value });
-  } else {
+const openShift = async () => {
+  if (!selectedCashRegister.value) {
     root.$emit('msg', 'error', 'Касса не выбрана');
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message, data } = await api('cash-register/open-shift', { cashRegisterId: selectedCashRegister.value });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      await store.dispatch(actions.OPEN_SHIFT, data);
+      root.$emit('msg', 'ok', 'Смена открыта');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
   }
 };
 const closeShift = () => {

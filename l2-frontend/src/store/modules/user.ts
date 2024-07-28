@@ -76,13 +76,11 @@ const actions = {
   async [actionsTypes.HAS_NEW_VERSION]({ commit }) {
     commit(mutationTypes.SET_HAS_NEW_VERSION);
   },
-  async [actionsTypes.OPEN_SHIFT]({ commit }, { cashRegisterId }) {
-    const { data } = await userPoint.openShift({ cashRegisterId });
+  async [actionsTypes.OPEN_SHIFT]({ commit }, { data }) {
     commit(mutationTypes.OPEN_SHIFT, data);
   },
   async [actionsTypes.CLOSE_SHIFT]({ commit }) {
-    const { data } = await userPoint.closeShift();
-    commit(mutationTypes.CLOSE_SHIFT, data);
+    commit(mutationTypes.CLOSE_SHIFT);
   },
 };
 

@@ -1,5 +1,6 @@
 from django.db import models
 
+from cash_registers import sql_func
 from users.models import DoctorProfile
 
 
@@ -23,6 +24,11 @@ class CashRegister(models.Model):
             "id": self.id,
             "label": self.title,
         }
+
+    @staticmethod
+    def get_cash_registers():
+        result = [{"id": cash_register.id, "label": cash_register.title} for cash_register in sql_func.get_cash_registers()]
+        return result
 
 
 class Shift(models.Model):
