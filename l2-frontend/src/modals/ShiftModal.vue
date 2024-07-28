@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 
-import { computed, onMounted, ref } from 'vue';
+import {computed, getCurrentInstance, onMounted, ref} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import * as actions from '@/store/action-types';
@@ -85,7 +85,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 
 const store = useStore();
-
+const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
   tag: {
     type: String,
@@ -118,7 +118,11 @@ const closeModal = () => {
 };
 
 const openShift = () => {
-  store.dispatch(actions.OPEN_SHIFT);
+  if (selectedCashRegister.value) {
+    store.dispatch(actions.OPEN_SHIFT);
+  } else {
+    root.$emit('msg', 'error', 'Касса не выбрана');
+  }
 };
 const closeShift = () => {
   store.dispatch(actions.CLOSE_SHIFT);
