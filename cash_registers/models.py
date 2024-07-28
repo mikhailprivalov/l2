@@ -1,6 +1,7 @@
 from django.db import models
 
 from cash_registers import sql_func
+from laboratory.utils import current_time
 from users.models import DoctorProfile
 
 
@@ -34,7 +35,7 @@ class CashRegister(models.Model):
 class Shift(models.Model):
     cash_register = models.ForeignKey(CashRegister, db_index=True, on_delete=models.CASCADE)
     open_at = models.DateTimeField(verbose_name='Время открытия', help_text='2024-07-28 16:00', db_index=True)
-    close_at = models.DateTimeField(verbose_name='Время закрытия', help_text='2024-07-28 23:00', db_index=True)
+    close_at = models.DateTimeField(verbose_name='Время закрытия', help_text='2024-07-28 23:00', null=True, blank=True, db_index=True)
     operator = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Оператор', help_text='Сидоров м.п', null=True, on_delete=models.SET_NULL)
 
     class Meta:
@@ -43,3 +44,21 @@ class Shift(models.Model):
 
     def __str__(self):
         return f"{self.cash_register.title} - {self.open_at} - {self.close_at} - {self.operator}"
+
+    @staticmethod
+    def open_shift(cash_register_id: int, operator_id: int):
+        new_shift = Shift(cash_register_id=cash_register_id, open_at=current_time(), operator_id=operator_id)
+        new_shift.save()
+        return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
+
+    @staticmethod
+    def close_shift(operator_id:int):
+        shift = Shift.objects.filter(operator_id=operator_id).last()
+        shift.close_at = current_time()
+        shift.save()
+        return True
+
+    @staticmethod
+    def get_shift_data(operator_id: int):
+        shift = Shift.objects.filter(operator_id=operator_id).last()
+        return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}

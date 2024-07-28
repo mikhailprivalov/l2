@@ -14,8 +14,8 @@ const stateInitial = {
     modules: {},
     groups: [],
     hospital: null,
-    cashRegister: {
-      id: null,
+    cashRegisterShift: {
+      cashRegisterId: null,
       shiftId: null,
     },
   },
@@ -44,7 +44,7 @@ const getters = {
   semiLazyState: state => state.semiLazyState,
   hasGroup: (state, g) => (group) => g.user_groups.includes(group),
   hasAnyGroup: (state, g) => (groups) => groups.some(gr => g.hasGroup(gr)),
-  cashRegister: (state, g) => g.user_data?.cashRegister,
+  cashRegisterShift: (state, g) => g.user_data?.cashRegisterShift,
 };
 
 const actions = {
@@ -108,11 +108,11 @@ const mutations = {
     state.semiLazyState = semiLazy;
   },
   [mutationTypes.OPEN_SHIFT](state, { cashRegisterId, shiftId }) {
-    state.data.cashRegister.id = cashRegisterId;
-    state.data.cashRegister.shiftId = shiftId;
+    state.data.cashRegisterShift.cashRegisterId = cashRegisterId;
+    state.data.cashRegisterShift.shiftId = shiftId;
   },
   [mutationTypes.CLOSE_SHIFT](state) {
-    state.data.cashRegister.id = null;
+    state.data.cashRegisterShift.cashRegisterId = null;
     state.data.cashRegister.shiftId = null;
   },
 };
