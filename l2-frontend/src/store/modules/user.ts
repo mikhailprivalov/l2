@@ -113,7 +113,7 @@ const mutations = {
   },
   [mutationTypes.CLOSE_SHIFT](state) {
     state.data.cashRegisterShift.cashRegisterId = null;
-    state.data.cashRegister.shiftId = null;
+    state.data.cashRegisterShift.shiftId = null;
   },
 };
 
