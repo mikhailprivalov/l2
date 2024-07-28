@@ -226,3 +226,18 @@ def get_directions_by_complex_id(complex_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_directions_by_who_create(doctor_pks, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            id as napravleniye_id            
+            FROM directions_napravleniya
+            WHERE doc_who_create_id in %(doctor_pks)s and data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            """,
+            params={'doctor_pks': doctor_pks, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
