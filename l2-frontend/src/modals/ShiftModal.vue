@@ -20,7 +20,15 @@
         margin-left-right="auto"
         @close="closeModal"
       >
-        <span slot="header">{{ 'Кассовые смены' }}</span>
+        <span
+          v-if="!loading"
+          slot="header"
+        >{{ 'Кассовые смены' }}</span>
+        <span
+          v-if="loading"
+          slot="header"
+          class="text-center"
+        >{{ 'Загрузка...' }}</span>
         <div slot="body">
           <div class="body">
             <div
@@ -33,14 +41,14 @@
                 <Treeselect
                   v-model="selectedCashRegister"
                   :options="cashRegisters"
-                  :disabled="shiftIsOpen"
+                  :disabled="shiftIsOpen || loading"
                   placeholder="Выберите кассу"
                 />
               </div>
               <button
                 v-if="shiftIsOpen"
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister"
+                :disabled="!selectedCashRegister || loading"
                 @click="closeShift"
               >
                 Закрыть
@@ -48,7 +56,7 @@
               <button
                 v-else
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister"
+                :disabled="!selectedCashRegister || loading"
                 @click="openShift"
               >
                 Открыть
@@ -62,6 +70,7 @@
               <button
                 class="btn btn-primary-nb btn-blue-nb"
                 type="button"
+                :disabled="loading"
                 @click="closeModal"
               >
                 Закрыть
@@ -96,6 +105,8 @@ const props = defineProps({
     required: false,
   },
 });
+
+const loading = ref(false);
 
 const cashRegister = computed(() => store.getters.cashRegister);
 const shiftIsOpen = computed(() => !!cashRegister.value?.id);
@@ -132,9 +143,9 @@ const openShift = async () => {
   if (!selectedCashRegister.value) {
     root.$emit('msg', 'error', 'Касса не выбрана');
   } else {
-    await store.dispatch(actions.INC_LOADING);
+    loading.value = true;
     const { ok, message, data } = await api('cash-register/open-shift', { cashRegisterId: selectedCashRegister.value });
-    await store.dispatch(actions.DEC_LOADING);
+    loading.value = false;
     if (ok) {
       await store.dispatch(actions.OPEN_SHIFT, data);
       root.$emit('msg', 'ok', 'Смена открыта');
@@ -144,9 +155,9 @@ const openShift = async () => {
   }
 };
 const closeShift = async () => {
-  await store.dispatch(actions.INC_LOADING);
+  loading.value = true;
   const { ok, message } = await api('cash-register/close-shift');
-  await store.dispatch(actions.DEC_LOADING);
+  loading.value = false;
   if (ok) {
     await store.dispatch(actions.CLOSE_SHIFT);
     root.$emit('msg', 'ok', 'Смена закрыта');
