@@ -22,6 +22,8 @@ class ShiftAdmin(admin.ModelAdmin):
         'cash_register'
     )
 
+    list_filter = ('operator', )
+
 
 admin.site.register(CashRegister, CashRegisterAdmin)
 admin.site.register(Shift, ShiftAdmin)
