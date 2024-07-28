@@ -1,20 +1,17 @@
-import datetime
 import locale
 import os.path
 import sys
 from copy import deepcopy
 from io import BytesIO
 from typing import List, Union
-import simplejson as json
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image
 
-from directions.models import Napravleniya
 from directions.sql_func import get_data_by_directions_id, get_directions_by_who_create
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
@@ -39,7 +36,7 @@ def form_01(request_data):
     pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=10 * mm, rightMargin=5 * mm, topMargin=1 * mm, bottomMargin=1 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=12 * mm, rightMargin=5 * mm, topMargin=1 * mm, bottomMargin=15 * mm, allowSplitting=1, title="Форма {}".format("80 мм"))
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
     style.fontName = "PTAstraSerifReg"
@@ -56,14 +53,15 @@ def form_01(request_data):
     styleFL.firstLineIndent = 10
     styleFL.fontSize = 16
 
-    styleCenter = deepcopy(style)
+    styleCenter = deepcopy(styleBold)
     styleCenter.alignment = TA_CENTER
     styleCenter.fontSize = 10
-    styleCenter.leading = 10
-    styleCenter.spaceAfter = 0 * mm
 
     styleCenterHospital = deepcopy(styleCenter)
     styleCenterHospital.fontSize = 8
+
+    styleRightBold = deepcopy(styleCenter)
+    styleRightBold.alignment = TA_RIGHT
 
     styleCenterTitle = deepcopy(styleCenter)
     styleCenterTitle.fontSize = 14
@@ -112,10 +110,13 @@ def form_01(request_data):
     )
     objs.append(tbl)
     objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph(f'Подразделение: {user_data.doctorprofile.podrazdeleniye.title} ({hospital_title})', style))
+    department_data = f"{user_data.doctorprofile.podrazdeleniye.title} ({hospital_title})"
+    objs.append(Paragraph(f'Подразделение: {department_data}', style))
     objs.append(Spacer(1, 0.5 * mm))
     objs.append(Paragraph(f'За дату: {date_act}', style))
     objs.append(Paragraph(f'Время формирования: {time_now} ', style))
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph(f'Сопроводительная ведомость от {date_act}', styleCenterTitle))
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Контейнеры', style))
     objs.append(Spacer(1, 1 * mm))
@@ -177,7 +178,7 @@ def form_01(request_data):
         ]
     )
 
-    tbl = Table(opinion, colWidths=[35 * mm, 30 * mm, 50 * mm, 50 * mm, 28 * mm], hAlign='LEFT')
+    tbl = Table(opinion, colWidths=[35 * mm, 30 * mm, 50 * mm, 45 * mm, 28 * mm], hAlign='LEFT')
     tbl.setStyle(
         TableStyle(
             [
@@ -193,13 +194,87 @@ def form_01(request_data):
 
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Свод по контейнерам', style))
+    objs.append(Spacer(1, 0.5 * mm))
 
+    opinion = [
+        [
+            Paragraph('Тип', styleT),
+            Paragraph('Количество', styleT),
+        ]
+    ]
+    total = 0
+    for k, v in total_container.items():
+        opinion.append(
+            [
+                Paragraph(str(k), styleT),
+                Paragraph(str(v), styleCenter),
+            ]
+        )
+        total += v
 
+    opinion.append(
+        [
+            Paragraph("Итого", styleRightBold),
+            Paragraph(str(total), styleCenter),
+        ]
+    )
 
+    tbl = Table(opinion, colWidths=[90 * mm, 25 * mm], hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
+                ('LEFTPADDING', (0, 0), (-1, -1), 2 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0.4 * mm),
+                ('TOPPADDING', (0, 0), (-1, -1), 0.3 * mm),
+            ]
+        )
+    )
+    objs.append(tbl)
+    objs.append(Spacer(1, 5 * mm))
+    objs.append(Paragraph("Ответственный ", style))
+    objs.append(Paragraph("____________________/____________________ ", style))
 
-    objs.append(Paragraph("ПОДПИСЬ ________________ ", style))
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.setFont("PTAstraSerifReg", 9)
+        # вывести атрибуты для подписей
+        canvas.setFont('PTAstraSerifReg', 10)
+        canvas.drawString(40 * mm, 10 * mm, '____________________________')
+        canvas.drawString(135 * mm, 10 * mm, '____________________________')
 
-    doc.build(objs)
+        canvas.setFont('PTAstraSerifReg', 8)
+        canvas.drawString(50 * mm, 7 * mm, '(подпись кто передал)')
+        canvas.drawString(145 * mm, 7 * mm, '(подпись кто принял)')
+
+        # вывестии защитны вертикальный мелкий текст
+        canvas.rotate(90)
+        left_size_str = f"{date_act}-{time_now}-{department_data}"
+        canvas.setFont('PTAstraSerifReg', 5.2)
+        canvas.drawString(2 * mm, -8 * mm, '{}'.format(6 * left_size_str))
+        canvas.restoreState()
+
+    def later_pages(canvas, document):
+        canvas.saveState()
+        canvas.setFont("PTAstraSerifReg", 9)
+        # вывести атрибуты для подписей
+        canvas.setFont('PTAstraSerifReg', 10)
+        canvas.drawString(40 * mm, 10 * mm, '____________________________')
+        canvas.drawString(135 * mm, 10 * mm, '____________________________')
+
+        canvas.setFont('PTAstraSerifReg', 8)
+        canvas.drawString(50 * mm, 7 * mm, '(подпись кто передал)')
+        canvas.drawString(145 * mm, 7 * mm, '(подпись кто принял)')
+
+        # вывестии защитны вертикальный мелкий текст
+        canvas.rotate(90)
+        left_size_str = f"{date_act}-{time_now}-{department_data}"
+        canvas.setFont('PTAstraSerifReg', 5.2)
+        canvas.drawString(2 * mm, -8 * mm, '{}'.format(6 * left_size_str))
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
