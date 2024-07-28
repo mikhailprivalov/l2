@@ -15,12 +15,14 @@ def get_cash_registers(request):
 @login_required
 def open_shift(request):
     request_data = json.loads(request.body)
-    new_shift = Shift.open_shift(request_data["cashRegisterId"], request.user.doctorprofile)
+    new_shift = Shift.open_shift(request_data["cashRegisterId"], request.user.doctorprofile.id)
+    if not new_shift:
+        return JsonResponse({"ok": False, "message": "Есть уже открытые смены"})
     data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
     return JsonResponse({"ok": True, "message": "", "data": data})
 
 
 @login_required
 def close_shift(request):
-    result = Shift.close_shift(request.user.doctorprofile)
+    result = Shift.close_shift(request.user.doctorprofile.id)
     return JsonResponse({"ok": result, "message": ""})
