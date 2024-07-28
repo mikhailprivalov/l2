@@ -34,13 +34,13 @@
                   v-model="selectedCashRegister"
                   :options="cashRegisters"
                   :disabled="shiftIsOpen"
-                  class="treeselect-noborder"
                   placeholder="Выберите кассу"
                 />
               </div>
               <button
                 v-if="shiftIsOpen"
                 class="btn btn-blue-nb nbr width-action"
+                :disabled="!selectedCashRegister"
                 @click="closeShift"
               >
                 Закрыть
@@ -48,6 +48,7 @@
               <button
                 v-else
                 class="btn btn-blue-nb nbr width-action"
+                :disabled="!selectedCashRegister"
                 @click="openShift"
               >
                 Открыть
@@ -140,5 +141,10 @@ const closeShift = () => {
 }
 .width-action {
   min-width: 100px;
+}
+
+::v-deep .vue-treeselect__control {
+  border: 1px solid #AAB2BD !important;
+  border-radius: 0;
 }
 </style>
