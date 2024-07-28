@@ -1,6 +1,5 @@
 import { Menu } from '@/types/menu';
 import userPoint from '@/api/user-point';
-import api from '@/api';
 
 import * as mutationTypes from '../mutation-types';
 import * as actionsTypes from '../action-types';
