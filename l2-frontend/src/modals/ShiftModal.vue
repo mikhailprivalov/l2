@@ -76,7 +76,9 @@
 
 <script setup lang="ts">
 
-import {computed, getCurrentInstance, onMounted, ref} from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import * as actions from '@/store/action-types';
@@ -119,7 +121,7 @@ const closeModal = () => {
 
 const openShift = () => {
   if (selectedCashRegister.value) {
-    store.dispatch(actions.OPEN_SHIFT);
+    store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: selectedCashRegister.value });
   } else {
     root.$emit('msg', 'error', 'Касса не выбрана');
   }
