@@ -19,6 +19,7 @@ from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.lib.pagesizes import A4
 from laboratory.utils import current_time, strdate, strdatetimeru
 from utils.dates import normalize_dots_date
+from utils.pagenum import PageNumCanvasPartitionAll
 
 
 def form_01(request_data):
@@ -274,7 +275,7 @@ def form_01(request_data):
         canvas.drawString(2 * mm, -8 * mm, '{}'.format(6 * left_size_str))
         canvas.restoreState()
 
-    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages, canvasmaker=PageNumCanvasPartitionAll)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
