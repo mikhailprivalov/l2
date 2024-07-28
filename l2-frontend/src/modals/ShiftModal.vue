@@ -108,8 +108,8 @@ const props = defineProps({
 
 const loading = ref(false);
 
-const cashRegister = computed(() => store.getters.cashRegister);
-const shiftIsOpen = computed(() => !!cashRegister.value?.id);
+const cashRegister = computed(() => store.getters.cashRegisterShift);
+const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const titleLocal = computed(() => (shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта'));
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([
@@ -127,7 +127,7 @@ const getCashRegisters = async () => {
 
 onMounted(async () => {
   await getCashRegisters();
-  selectedCashRegister.value = shiftIsOpen.value ? cashRegister.value.id : null;
+  selectedCashRegister.value = shiftIsOpen.value ? cashRegister.value.cashRegisterId : null;
 });
 
 const open = ref(false);

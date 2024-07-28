@@ -47,7 +47,7 @@ class Shift(models.Model):
 
     @staticmethod
     def open_shift(cash_register_id: int, operator_id: int):
-        shift_existing = Shift.objects.filter(operator_id=operator_id).last()
+        shift_existing = Shift.objects.filter(operator_id=operator_id, close_at__isnull=True).last()
         if shift_existing:
             return False
         new_shift = Shift(cash_register_id=cash_register_id, open_at=current_time(), operator_id=operator_id)
@@ -56,12 +56,14 @@ class Shift(models.Model):
 
     @staticmethod
     def close_shift(operator_id: int):
-        shift = Shift.objects.filter(operator_id=operator_id).last()
+        shift = Shift.objects.filter(operator_id=operator_id, close_at__isnull=True).last()
         shift.close_at = current_time()
         shift.save()
         return True
 
     @staticmethod
     def get_shift_data(operator_id: int):
-        shift = Shift.objects.filter(operator_id=operator_id).last()
+        shift = Shift.objects.filter(operator_id=operator_id, close_at__isnull=True).last()
+        if not shift:
+            return {"cash_register_id": None, "shift_id": None}
         return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
