@@ -16,11 +16,7 @@ class CashRegisterAdmin(admin.ModelAdmin):
 class ShiftAdmin(admin.ModelAdmin):
     list_display = ['pk', 'cash_register', 'open_at', 'close_at', 'operator']
 
-    search_fields = (
-        'pk',
-        'operator',
-        'cash_register'
-    )
+    search_fields = ('pk', 'operator', 'cash_register')
 
     list_filter = ('operator',)
 
