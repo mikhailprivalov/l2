@@ -16,7 +16,6 @@ const stateInitial = {
     hospital: null,
     cashRegister: {
       id: null,
-      title: null,
       shiftId: null,
     },
   },
