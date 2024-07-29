@@ -449,10 +449,7 @@ EXCLUDE_TYPE_RESEARCH = {
     "is_complex": False,
 }
 
-CASH_REGISTER_SERVER = {
-    "ip_address": '127.0.0.1',
-    "port": 3000,
-}
+CASH_REGISTER_SERVER_ADDRESS = 'http://127.0.0.1:3000/'
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
