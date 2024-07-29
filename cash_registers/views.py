@@ -1,5 +1,3 @@
-from django.http import JsonResponse
-
 from cash_registers.models import CashRegister, Shift
 
 
