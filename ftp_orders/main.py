@@ -442,8 +442,10 @@ class FTPConnection:
                 result.append(tmp_fractions.copy())
                 continue
             tmp_fsli = obx.OBX.obx_3.obx_3_1.value
+
             if tmp_fsli not in fractions_fsl:
                 fsli_error = True
+                continue
             else:
                 tmp_fractions["fsli"] = tmp_fsli
                 tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
@@ -453,6 +455,16 @@ class FTPConnection:
                 result.append(tmp_fractions.copy())
         if fsli_error:
             Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None)
+            if is_confirm:
+                iss.lab_comment = ""
+                iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
+                iss.time_save = current_time()
+                iss.doc_confirmation_string = doctor_fio
+                iss.save()
+            if iss.napravleniye.hospital.result_push_by_numbers:
+                self.copy_file(file, iss.napravleniye.hospital.result_push_by_numbers)
+            self.copy_file(file, FTP_PATH_TO_SAVE)
+            self.delete_file(file)
         if is_confirm:
             iss.lab_comment = ""
             iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
