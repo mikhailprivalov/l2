@@ -1631,6 +1631,7 @@ def external_list_direction_create(request):
                 )
             except Exception as e:
                 logger.exception(e)
+    return Response({"ok": True, "message": "Получено"})
 
 
 def create_direction_by_param(body, request):
@@ -1843,6 +1844,8 @@ def create_direction_by_param(body, request):
     print(numbers_vial)
     print("price_category")
     print(price_category)
+    if Napravleniya.objects.filter(id_in_hospital=id_in_hospital, hospital=hospital).first():
+        return {"ok": False, "message": f"Направление с таким Id {id_in_hospital} существует"}
 
     try:
         with transaction.atomic():
@@ -1880,7 +1883,14 @@ def create_direction_by_param(body, request):
 
             result_table_field = []
             pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
+            print("material_mark")
+            print(material_mark)
             for m_m in material_mark:
+                print("m_m")
+                print(m_m)
+                print(type(m_m.get("pathologicalProcess")))
+                if not m_m.get("pathologicalProcess"):
+                    m_m["pathologicalProcess"] = 7
                 result_table_field.append(
                     [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m.get("pathologicalProcess", 7)], str(m_m["objectValue"]), m_m.get("description", "")]
                 )
@@ -1892,7 +1902,7 @@ def create_direction_by_param(body, request):
                 "Код по МКБ": diag_mkb10,
                 "Дополнительные клинические сведения": additiona_info,
                 "Результаты предыдущие": last_result_data,
-                "Способ получения биопсийного (операционного) материала": int(obtain_material[method_obtain_material]),
+                "Способ получения биопсийного (операционного) материала": obtain_material[int(method_obtain_material)],
                 "Материал помещен в 10%-ный раствор нейтрального формалина": "Да" if solution10.lower() == "true" else "Нет",
                 "Дата забора материала": time_get.split(" ")[0],
                 "Время забора материала": time_get.split(" ")[1],
