@@ -73,4 +73,3 @@ class Shift(models.Model):
             return {"ok": False, "message": "У вас уже есть открытая смена"}
         if cash_register_exist:
             return {"ok": False, "message": "На этой кассе уже есть открытая смена"}
-
