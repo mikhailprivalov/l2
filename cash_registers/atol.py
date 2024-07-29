@@ -8,6 +8,3 @@ def send_request(json_data: dict):
     response = requests.post(CASH_REGISTER_SERVER_ADDRESS, json=json_data, headers=headers)
     response_data = response.json()
     return response_data
-
-
-
