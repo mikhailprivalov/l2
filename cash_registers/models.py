@@ -47,15 +47,9 @@ class Shift(models.Model):
 
     @staticmethod
     def open_shift(cash_register_id: int, operator_id: int):
-        shift_exist = Shift.objects.filter(operator_id=operator_id, close_at__isnull=True).last()
-        if shift_exist:
-            return {"ok": False, "message": "У вас уже есть открытая смена"}
-        cash_register_exist = Shift.objects.filter(cash_register_id=cash_register_id, close_at__isnull=True).last()
-        if cash_register_exist:
-            return {"ok": False, "message": "На этой кассе уже есть открытая смена"}
         new_shift = Shift(cash_register_id=cash_register_id, open_at=current_time(), operator_id=operator_id)
         new_shift.save()
-        return {"ok": True, "message": "", "cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
+        return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
 
     @staticmethod
     def close_shift(operator_id: int):
@@ -70,3 +64,13 @@ class Shift(models.Model):
         if not shift:
             return {"cash_register_id": None, "shift_id": None}
         return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
+
+    @staticmethod
+    def check_shift(cash_register_id: int, doctor_profile_id: int):
+        shift_exist = Shift.objects.filter(operator_id=doctor_profile_id, close_at__isnull=True).last()
+        cash_register_exist = Shift.objects.filter(cash_register_id=cash_register_id, close_at__isnull=True).last()
+        if shift_exist:
+            return {"ok": False, "message": "У вас уже есть открытая смена"}
+        if cash_register_exist:
+            return {"ok": False, "message": "На этой кассе уже есть открытая смена"}
+
