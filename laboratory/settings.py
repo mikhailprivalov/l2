@@ -450,6 +450,7 @@ EXCLUDE_TYPE_RESEARCH = {
 }
 
 CASH_REGISTER_SERVER_ADDRESS = 'http://127.0.0.1:3000/'
+CASH_REGISTER_SERVER_TOKEN = 'token'
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
