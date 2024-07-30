@@ -32,10 +32,10 @@ class CashRegister(models.Model):
 
 
 class Shift(models.Model):
-    cash_register = models.ForeignKey(CashRegister, db_index=True, on_delete=models.CASCADE)
-    open_at = models.DateTimeField(verbose_name='Время открытия', help_text='2024-07-28 16:00', db_index=True)
+    cash_register = models.ForeignKey(CashRegister, verbose_name='Касса', help_text='Касса 1', null=True, on_delete=models.SET_NULL, db_index=True)
+    open_at = models.DateTimeField(verbose_name='Время открытия', help_text='2024-07-28 16:00', auto_now_add=True, db_index=True)
     close_at = models.DateTimeField(verbose_name='Время закрытия', help_text='2024-07-28 23:00', null=True, blank=True, db_index=True)
-    operator = models.ForeignKey(DoctorProfile, db_index=True, verbose_name='Оператор', help_text='Сидоров м.п', null=True, on_delete=models.SET_NULL)
+    operator = models.ForeignKey(DoctorProfile, verbose_name='Оператор', help_text='Сидоров м.п', null=True, on_delete=models.SET_NULL, db_index=True)
 
     class Meta:
         verbose_name = "Кассовая смена"
