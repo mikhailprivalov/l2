@@ -417,6 +417,7 @@ class FTPConnection:
         obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
         fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
         result = []
+        fsli_error = False
 
         for obx in obxes:
             tmp_fractions = fractions.copy()
@@ -441,25 +442,29 @@ class FTPConnection:
                 result.append(tmp_fractions.copy())
                 continue
             tmp_fsli = obx.OBX.obx_3.obx_3_1.value
+
             if tmp_fsli not in fractions_fsl:
-                if is_confirm:
-                    iss.lab_comment = ""
-                    iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
-                    iss.time_save = current_time()
-                    iss.doc_confirmation_string = doctor_fio
-                    iss.save()
-                Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None)
-                if iss.napravleniye.hospital.result_push_by_numbers:
-                    self.copy_file(file, iss.napravleniye.hospital.result_push_by_numbers)
-                self.copy_file(file, FTP_PATH_TO_SAVE)
-                self.delete_file(file)
-                return
-            tmp_fractions["fsli"] = tmp_fsli
-            tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
-            tmp_fractions["value"] = obx.OBX.obx_5.obx_5_1.value
-            tmp_fractions["units"] = obx.OBX.obx_6.value
-            tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
-            result.append(tmp_fractions.copy())
+                fsli_error = True
+                continue
+            else:
+                tmp_fractions["fsli"] = tmp_fsli
+                tmp_fractions["title_fraction"] = obx.OBX.obx_3.obx_3_2.value
+                tmp_fractions["value"] = obx.OBX.obx_5.obx_5_1.value
+                tmp_fractions["units"] = obx.OBX.obx_6.value
+                tmp_fractions["refs"] = obx.OBX.obx_7.obx_7_1.value
+                result.append(tmp_fractions.copy())
+        if fsli_error:
+            Log.log(key=tube_number, type=190005, body={"tube": tube_number, "internal_code": internal_code, "researchTile": research_title, "file": file}, user=None)
+            if is_confirm:
+                iss.lab_comment = ""
+                iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
+                iss.time_save = current_time()
+                iss.doc_confirmation_string = doctor_fio
+                iss.save()
+            if iss.napravleniye.hospital.result_push_by_numbers:
+                self.copy_file(file, iss.napravleniye.hospital.result_push_by_numbers)
+            self.copy_file(file, FTP_PATH_TO_SAVE)
+            self.delete_file(file)
         if is_confirm:
             iss.lab_comment = ""
             iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")
@@ -499,6 +504,8 @@ class FTPConnection:
             iss.time_save = current_time()
             iss.doc_confirmation_string = ""
             iss.save()
+        if iss.napravleniye.hospital.result_push_by_numbers:
+            self.copy_file(file, iss.napravleniye.hospital.result_push_by_numbers)
         self.copy_file(file, FTP_PATH_TO_SAVE)
         self.delete_file(file)
 
