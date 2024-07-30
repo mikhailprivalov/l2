@@ -1,5 +1,4 @@
 from django.db import models
-
 from cash_registers import sql_func
 from laboratory.utils import current_time
 from users.models import DoctorProfile

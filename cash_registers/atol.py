@@ -1,5 +1,4 @@
 import requests
-
 from laboratory.settings import CASH_REGISTER_SERVER_ADDRESS, CASH_REGISTER_SERVER_TOKEN
 
 

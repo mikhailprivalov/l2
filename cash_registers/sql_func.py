@@ -1,5 +1,4 @@
 from django.db import connection
-
 from utils.db import namedtuplefetchall
 
 
