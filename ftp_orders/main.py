@@ -421,7 +421,7 @@ class FTPConnection:
 
         for obx in obxes:
             tmp_fractions = fractions.copy()
-            if (obx.OBX.obx_3.obx_3_1.value).lower == "pdf":
+            if (obx.OBX.obx_3.obx_3_1.value).lower() == "pdf":
                 pdf_base_64 = obx.OBX.obx_5.obx_5_5.value
                 base64_bytes = pdf_base_64.encode('utf-8')
                 data = ContentFile(base64.b64decode(base64_bytes))
@@ -430,6 +430,7 @@ class FTPConnection:
                     for iss_file in iss_files:
                         iss_file.delete()
                 iss_file = IssledovaniyaFiles(issledovaniye=iss, uploaded_file=data)
+
                 file_name_internal_code = internal_code.replace(".", "_")
                 iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
                 iss_file.save()
@@ -465,6 +466,7 @@ class FTPConnection:
                 self.copy_file(file, iss.napravleniye.hospital.result_push_by_numbers)
             self.copy_file(file, FTP_PATH_TO_SAVE)
             self.delete_file(file)
+            return
         if is_confirm:
             iss.lab_comment = ""
             iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y%m%d%H%M%S")

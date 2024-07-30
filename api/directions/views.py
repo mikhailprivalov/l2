@@ -4429,7 +4429,7 @@ def file_log(request):
         rows.append(
             {
                 'pk': row.pk,
-                'author': row.who_add_files.get_fio(),
+                'author': row.who_add_files.get_fio() if row.who_add_files else "-",
                 'createdAt': strfdatetime(row.created_at, "%d.%m.%Y %X"),
                 'file': row.uploaded_file.url if row.uploaded_file else None,
                 'fileName': os.path.basename(row.uploaded_file.name) if row.uploaded_file else None,
