@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from cash_registers import sql_func
 from laboratory.utils import current_time
@@ -50,7 +52,8 @@ class Shift(models.Model):
 
     @staticmethod
     def open_shift(cash_register_id: int, operator_id: int):
-        new_shift = Shift(cash_register_id=cash_register_id, open_at=current_time(), operator_id=operator_id)
+        uuid_data = uuid.uuid4()
+        new_shift = Shift(cash_register_id=cash_register_id, operator_id=operator_id, opening_uuid=uuid_data)
         new_shift.save()
         return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
 
@@ -74,5 +77,6 @@ class Shift(models.Model):
         cash_register_exist = Shift.objects.filter(cash_register_id=cash_register_id, close_at__isnull=True).last()
         if shift_exist:
             return {"ok": False, "message": "У вас уже есть открытая смена"}
-        if cash_register_exist:
+        elif cash_register_exist:
             return {"ok": False, "message": "На этой кассе уже есть открытая смена"}
+        return {"ok": True, "message": ""}
