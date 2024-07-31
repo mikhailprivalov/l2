@@ -3,11 +3,12 @@ from cash_registers.models import CashRegister, Shift
 
 
 class CashRegisterAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'title', 'ip_address', 'port']
+    list_display = ['pk', 'title', 'ip_address', 'port', 'department', 'address']
     search_fields = (
         'pk',
         'title',
     )
+    raw_id_fields = ['department']
 
 
 class ShiftAdmin(admin.ModelAdmin):
