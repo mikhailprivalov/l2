@@ -165,11 +165,7 @@ const closeShift = async () => {
     root.$emit('msg', 'error', message);
   }
 };
-const interval = ref(null)
-
-const getShiftStatus = () => {
-  const { ok, message } = await api('cash-register/close-shift');
-}
+const interval = ref(null);
 
 </script>
 
