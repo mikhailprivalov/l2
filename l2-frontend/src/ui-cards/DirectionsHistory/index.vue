@@ -208,6 +208,19 @@
                   :main-direction="row.pk"
                   :aux-research="row.aux_researches"
                 /></span>
+              <span v-if="row.lab && !row.has_hosp">
+                <a
+                  v-tippy
+                  href="#"
+                  title="Забор биоматериала"
+                  @click.prevent="getTubes(row.pk)"
+                >
+                  <i
+                    class="fa-solid fa-vial"
+                    style="color: #6f6f72"
+                  />
+                </a>
+              </span>
             </td>
             <td
               class="researches"
@@ -783,6 +796,9 @@ export default {
     },
     printCurrentBarcodes(pk) {
       this.$root.$emit('print:barcodes', [pk]);
+    },
+    getTubes(directionId) {
+      window.open(`/ui/biomaterial/get#{%22pk%22:${directionId}}`, '_blank');
     },
   },
 };
