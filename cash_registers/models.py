@@ -72,7 +72,7 @@ class Shift(models.Model):
 
     @staticmethod
     def get_shift_data(operator_id: int):
-        shift = Shift.objects.filter(operator_id=operator_id, close_at__isnull=True).last()
+        shift = Shift.objects.filter(operator_id=operator_id, open_status=True, close_status=False).last()
         if not shift:
             return {"cash_register_id": None, "shift_id": None}
         return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
