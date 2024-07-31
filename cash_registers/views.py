@@ -20,7 +20,10 @@ def close_shift(doctor_profile_id: int):
     return {"ok": result, "message": ""}
 
 
-def get_shift_status(doctor_profile_id: int, cash_register_id: int):
-    result = Shift.get_shift_status(doctor_profile_id, cash_register_id)
-    return {"ok": result, "message": ""}
-
+def get_shift_data(doctor_profile_id: int):
+    shift_data = Shift.get_shift_data(doctor_profile_id)
+    if not shift_data:
+        return {"ok": False, "data": shift_data}
+    data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"],
+              "status": shift_data["status"]}
+    return {"ok": True, "data": data }

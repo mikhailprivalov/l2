@@ -44,8 +44,8 @@ class Shift(models.Model):
     open_at = models.DateTimeField(verbose_name='Время открытия', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
     close_at = models.DateTimeField(verbose_name='Время закрытия', help_text='2024-07-28 23:00', null=True, blank=True, db_index=True)
     operator = models.ForeignKey(DoctorProfile, verbose_name='Оператор', help_text='Сидоров м.п', null=True, on_delete=models.SET_NULL, db_index=True)
-    open_uuid = models.UUIDField(verbose_name='UUID открытия', help_text='abbfg-45fsd2', null=True)
-    close_uuid = models.UUIDField(verbose_name='UUID Закрытия', help_text='abbfg-45fsd2', null=True)
+    open_uuid = models.UUIDField(verbose_name='UUID открытия', help_text='abbfg-45fsd2', null=True, blank=True)
+    close_uuid = models.UUIDField(verbose_name='UUID Закрытия', help_text='abbfg-45fsd2', null=True, blank=True)
     open_status = models.BooleanField(verbose_name='Статус открытия смены', default=False)
     close_status = models.BooleanField(verbose_name='Статус открытия смены', default=False)
 
@@ -71,11 +71,20 @@ class Shift(models.Model):
         return True
 
     @staticmethod
-    def get_shift_data(operator_id: int):
+    def get_open_shift(operator_id: int):
         shift = Shift.objects.filter(operator_id=operator_id, open_status=True, close_status=False).last()
         if not shift:
             return {"cash_register_id": None, "shift_id": None}
         return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
+
+    @staticmethod
+    def get_shift_data(operator_id: int):
+        shift: Shift = Shift.objects.filter(operator_id=operator_id, close_status=False).select_related('cash_register').last()
+        if not shift:
+            return None
+        data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title,
+                "status": True if shift.open_status else False}
+        return data
 
     @staticmethod
     def check_shift(cash_register_id: int, doctor_profile_id: int):

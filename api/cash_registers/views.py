@@ -24,7 +24,6 @@ def close_shift(request):
 
 
 @login_required
-def get_shift_status(request):
-    request_data = json.loads(request.body)
-    result = cash_register_views.get_shift_status(request.user.doctorprofile.id, request_data["cashRegisterId"])
+def get_shift_data(request):
+    result = cash_register_views.get_shift_data(request.user.doctorprofile.id)
     return JsonResponse(result)

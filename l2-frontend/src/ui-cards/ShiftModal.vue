@@ -112,11 +112,7 @@ const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const titleLocal = computed(() => (shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта'));
 const selectedCashRegister = ref(null);
-const cashRegisters = ref([
-  { id: 1, label: 'Касса 1' },
-  { id: 2, label: 'Касса 2' },
-  { id: 3, label: 'Касса 3' },
-]);
+const cashRegisters = ref([]);
 
 const getCashRegisters = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -125,9 +121,32 @@ const getCashRegisters = async () => {
   cashRegisters.value = result;
 };
 
+const shiftData = ref({});
+const statusShift = ref(false);
+const intervalReq = ref(null);
+
+const getShiftStatus = async () => {
+  console.log('Отправляем запрос по UUID');
+};
+const getShiftData = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, data } = await api('cash-register/get-shift-data');
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    shiftData.value = data;
+    statusShift.value = data.status;
+    if (!shiftIsOpen.value && statusShift.value) {
+      await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
+    } else if (!shiftIsOpen.value && !statusShift.value) {
+      intervalReq.value = () => setTimeout(() => getShiftStatus(), 1000);
+    }
+  }
+};
+
 onMounted(async () => {
   await getCashRegisters();
   selectedCashRegister.value = shiftIsOpen.value ? cashRegister.value.cashRegisterId : null;
+  await getShiftData();
 });
 
 const open = ref(false);
