@@ -13,18 +13,7 @@ def send_request(body: dict):
 
 
 def open_shift(uuid: str, cash_register: dict, operator: dict):
-    body = {
-        "cashRegister": cash_register,
-        "job": {
-            "uuid": uuid,
-            "request": [
-                {
-                    "type": "openShift",
-                    "operator": operator
-                }
-            ]
-        }
-    }
+    body = {"cashRegister": cash_register, "job": {"uuid": uuid, "request": [{"type": "openShift", "operator": operator}]}}
     return send_request(body)
 
 
