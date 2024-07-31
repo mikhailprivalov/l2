@@ -123,10 +123,11 @@ const getCashRegisters = async () => {
 
 const shiftData = ref({});
 const statusShift = ref(false);
-const intervalReq = ref(null);
+let intervalReq = null;
 
 const getShiftStatus = async () => {
   console.log('Отправляем запрос по UUID');
+  intervalReq = setTimeout(() => getShiftStatus(), 1000);
 };
 const getShiftData = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -138,7 +139,8 @@ const getShiftData = async () => {
     if (!shiftIsOpen.value && statusShift.value) {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
     } else if (!shiftIsOpen.value && !statusShift.value) {
-      intervalReq.value = () => setTimeout(() => getShiftStatus(), 1000);
+      console.log('Мы типо тут');
+      intervalReq = setTimeout(() => getShiftStatus(), 1000);
     }
   }
 };
