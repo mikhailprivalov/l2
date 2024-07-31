@@ -18,3 +18,9 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
 def close_shift(doctor_profile_id: int):
     result = Shift.close_shift(doctor_profile_id)
     return {"ok": result, "message": ""}
+
+
+def get_shift_status(doctor_profile_id: int, cash_register_id: int):
+    result = Shift.get_shift_status(doctor_profile_id, cash_register_id)
+    return {"ok": result, "message": ""}
+
