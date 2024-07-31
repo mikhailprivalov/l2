@@ -187,7 +187,7 @@ import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
-import shiftModal from '@/modals/ShiftModal.vue';
+import shiftModal from '@/ui-cards/ShiftModal.vue';
 
 @Component({
   computed: mapGetters([
