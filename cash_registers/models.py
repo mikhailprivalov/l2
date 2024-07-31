@@ -1,8 +1,10 @@
 import uuid
 
 from django.db import models
+from jsonfield import JSONField
 from cash_registers import sql_func
 from laboratory.utils import current_time
+from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 
 
@@ -10,9 +12,14 @@ class CashRegister(models.Model):
     title = models.CharField(max_length=255, blank=True, null=True, verbose_name='Наименование')
     ip_address = models.CharField(max_length=255, default="", verbose_name='IP адрес', help_text='192.168.10.10')
     port = models.CharField(max_length=5, default="", verbose_name='Порт', help_text='16333')
-    login = models.CharField(max_length=255, default="", help_text='Логин')
-    password = models.CharField(max_length=255, default="", help_text='Пароль')
+    login = models.CharField(max_length=255, default="", verbose_name='Логин', help_text='login')
+    password = models.CharField(max_length=255, default="", verbose_name='Пароль', help_text='123456')
     hide = models.BooleanField(default=False, blank=True, verbose_name='Скрытие')
+    address = models.CharField(max_length=128, blank=True, default='', verbose_name="Адрес")
+    address_fias = models.CharField(max_length=128, blank=True, default=None, null=True, verbose_name="ФИАС Адрес")
+    address_details = JSONField(blank=True, null=True, verbose_name="Детали адреса")
+    department = models.ForeignKey(Podrazdeleniya, null=True, db_index=True, verbose_name="Подразделение", on_delete=models.SET_NULL)
+    location = models.CharField(max_length=255, default="", verbose_name="Местоположение", help_text="2 этаж регистратура")
 
     class Meta:
         verbose_name = "Касса"
