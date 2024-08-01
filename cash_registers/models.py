@@ -57,9 +57,8 @@ class Shift(models.Model):
         return f"{self.cash_register.title} - {self.open_at} - {self.close_at} - {self.operator}"
 
     @staticmethod
-    def open_shift(cash_register_id: int, operator_id: int):
-        uuid_data = uuid.uuid4()
-        new_shift: Shift = Shift(cash_register_id=cash_register_id, operator_id=operator_id, open_uuid=uuid_data)
+    def open_shift(uuid: str, cash_register_id: int, operator_id: int):
+        new_shift: Shift = Shift(cash_register_id=cash_register_id, operator_id=operator_id, open_uuid=uuid)
         new_shift.save()
         return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
 
@@ -92,8 +91,8 @@ class Shift(models.Model):
 
     @staticmethod
     def check_shift(cash_register_id: int, doctor_profile_id: int):
-        shift_exist = Shift.objects.filter(operator_id=doctor_profile_id, close_at__isnull=True).last()
-        cash_register_exist = Shift.objects.filter(cash_register_id=cash_register_id, close_at__isnull=True).last()
+        shift_exist = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).last()
+        cash_register_exist = Shift.objects.filter(cash_register_id=cash_register_id, close_status=False).last()
         if shift_exist:
             return {"ok": False, "message": "У вас уже есть открытая смена"}
         elif cash_register_exist:
