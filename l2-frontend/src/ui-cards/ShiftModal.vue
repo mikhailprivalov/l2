@@ -31,7 +31,7 @@
         >{{ 'Загрузка...' }}</span>
         <div slot="body">
           <div class="body">
-            <div
+            <div12
               class="flex"
             >
               <div class="input-group">
@@ -48,7 +48,7 @@
               <button
                 v-if="shiftIsOpen"
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading"
+                :disabled="!selectedCashRegister || loading || []"
                 @click="closeShift"
               >
                 Закрыть
@@ -61,7 +61,7 @@
               >
                 Открыть
               </button>
-            </div>
+            </div12>
           </div>
         </div>
         <div slot="footer">
@@ -110,37 +110,43 @@ const loading = ref(false);
 
 const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
-const titleLocal = computed(() => (shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта'));
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
+const shiftData = ref({});
+const jobUuid = ref('');
+const statusShift = ref(-1);
+const statusVariant = ref({
+  '-1': 'Смена закрыта',
+  0: 'Смена открывается',
+  1: 'Смена открыта',
+  2: 'Смена закрывается',
+});
 
+let intervalReq = null;
+
+const titleLocal = computed(() => (statusVariant.value[statusShift.value]));
 const getCashRegisters = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('cash-register/get-cash-registers');
   await store.dispatch(actions.DEC_LOADING);
   cashRegisters.value = result;
 };
-
-const shiftData = ref({});
-const statusShift = ref(false);
-let intervalReq = null;
-
-const getShiftStatus = async () => {
-  console.log('Отправляем запрос по UUID');
-  intervalReq = setTimeout(() => getShiftStatus(), 1000);
-};
 const getShiftData = async () => {
-  await store.dispatch(actions.INC_LOADING);
   const { ok, data } = await api('cash-register/get-shift-data');
-  await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     shiftData.value = data;
     statusShift.value = data.status;
-    if (!shiftIsOpen.value && statusShift.value) {
+    if (!shiftIsOpen.value && statusShift.value === 1) {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
-    } else if (!shiftIsOpen.value && !statusShift.value) {
-      console.log('Мы типо тут');
-      intervalReq = setTimeout(() => getShiftStatus(), 1000);
+      intervalReq = null;
+    } else if (!shiftIsOpen.value && [0, 2].includes(statusShift.value)) {
+      intervalReq = setTimeout(() => getShiftData, 1000);
+    }
+  } else {
+    shiftData.value = {};
+    statusShift.value = -1;
+    if (shiftIsOpen.value) {
+      await store.dispatch(actions.CLOSE_SHIFT);
     }
   }
 };
@@ -165,10 +171,10 @@ const openShift = async () => {
     root.$emit('msg', 'error', 'Касса не выбрана');
   } else {
     loading.value = true;
-    const { ok, message, data } = await api('cash-register/open-shift', { cashRegisterId: selectedCashRegister.value });
+    const { ok, message } = await api('cash-register/open-shift', { cashRegisterId: selectedCashRegister.value });
     loading.value = false;
     if (ok) {
-      await store.dispatch(actions.OPEN_SHIFT, data);
+      await getShiftData();
       root.$emit('msg', 'ok', 'Смена открыта');
     } else {
       root.$emit('msg', 'error', message);
@@ -180,7 +186,7 @@ const closeShift = async () => {
   const { ok, message } = await api('cash-register/close-shift');
   loading.value = false;
   if (ok) {
-    await store.dispatch(actions.CLOSE_SHIFT);
+    await getShiftData();
     root.$emit('msg', 'ok', 'Смена закрыта');
   } else {
     root.$emit('msg', 'error', message);

@@ -82,8 +82,11 @@ class Shift(models.Model):
         shift: Shift = Shift.objects.filter(operator_id=operator_id, close_status=False).select_related('cash_register').last()
         if not shift:
             return None
-        data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title,
-                "status": True if shift.open_status else False}
+        data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title, "status": 0}
+        if shift.open_status:
+            data["status"] = 1
+        elif shift.close_uuid:
+            data["status"] = 2
         return data
 
     @staticmethod
