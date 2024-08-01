@@ -146,6 +146,7 @@ const getShiftData = async () => {
   } else {
     shiftData.value = {};
     statusShift.value = -1;
+    selectedCashRegister.value = null;
     if (shiftIsOpen.value) {
       await store.dispatch(actions.CLOSE_SHIFT);
     }
