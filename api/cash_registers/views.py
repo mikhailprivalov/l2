@@ -19,7 +19,8 @@ def open_shift(request):
 
 @login_required
 def close_shift(request):
-    result = cash_register_views.close_shift(request.user.doctorprofile.id)
+    request_data = json.loads(request.body)
+    result = cash_register_views.close_shift(request_data["cashRegisterId"], request.user.doctorprofile.id)
     return JsonResponse(result)
 
 

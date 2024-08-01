@@ -31,7 +31,7 @@
         >{{ 'Загрузка...' }}</span>
         <div slot="body">
           <div class="body">
-            <div12
+            <div
               class="flex"
             >
               <div class="input-group">
@@ -41,14 +41,14 @@
                 <Treeselect
                   v-model="selectedCashRegister"
                   :options="cashRegisters"
-                  :disabled="shiftIsOpen || loading"
+                  :disabled="shiftIsOpen || loading || statusShift === 2"
                   placeholder="Выберите кассу"
                 />
               </div>
               <button
                 v-if="shiftIsOpen"
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading || []"
+                :disabled="!selectedCashRegister || loading || statusShift === 2"
                 @click="closeShift"
               >
                 Закрыть
@@ -56,12 +56,12 @@
               <button
                 v-else
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading"
+                :disabled="!selectedCashRegister || loading || statusShift === 0"
                 @click="openShift"
               >
                 Открыть
               </button>
-            </div12>
+            </div>
           </div>
         </div>
         <div slot="footer">
@@ -113,7 +113,6 @@ const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
 const shiftData = ref({});
-const jobUuid = ref('');
 const statusShift = ref(-1);
 const statusVariant = ref({
   '-1': 'Смена закрыта',
@@ -139,8 +138,10 @@ const getShiftData = async () => {
     if (!shiftIsOpen.value && statusShift.value === 1) {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
       intervalReq = null;
-    } else if (!shiftIsOpen.value && [0, 2].includes(statusShift.value)) {
-      intervalReq = setTimeout(() => getShiftData, 1000);
+    } else if (!shiftIsOpen.value && statusShift.value === 0) {
+      intervalReq = setTimeout(() => getShiftData(), 1000);
+    } else if (shiftIsOpen.value && statusShift.value === 2) {
+      intervalReq = setTimeout(() => getShiftData(), 1000);
     }
   } else {
     shiftData.value = {};
@@ -183,7 +184,7 @@ const openShift = async () => {
 };
 const closeShift = async () => {
   loading.value = true;
-  const { ok, message } = await api('cash-register/close-shift');
+  const { ok, message } = await api('cash-register/close-shift', { cashRegisterId: selectedCashRegister.value });
   loading.value = false;
   if (ok) {
     await getShiftData();

@@ -15,8 +15,8 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     return {"ok": True, "message": "", "data": data}
 
 
-def close_shift(doctor_profile_id: int):
-    result = Shift.close_shift(doctor_profile_id)
+def close_shift(cash_register_id: int, doctor_profile_id: int):
+    result = Shift.close_shift(cash_register_id, doctor_profile_id)
     return {"ok": result, "message": ""}
 
 
