@@ -57,14 +57,13 @@ class Shift(models.Model):
         return f"{self.cash_register.title} - {self.open_at} - {self.close_at} - {self.operator}"
 
     @staticmethod
-    def open_shift(uuid: str, cash_register_id: int, operator_id: int):
-        new_shift: Shift = Shift(cash_register_id=cash_register_id, operator_id=operator_id, open_uuid=uuid)
+    def open_shift(uuid_data: str, cash_register_id: int, operator_id: int):
+        new_shift: Shift = Shift(cash_register_id=cash_register_id, operator_id=operator_id, open_uuid=uuid_data)
         new_shift.save()
         return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
 
     @staticmethod
-    def close_shift(cash_register_id: int, operator_id: int):
-        uuid_data = uuid.uuid4()
+    def close_shift(uuid_data: str, cash_register_id: int, operator_id: int):
         shift: Shift = Shift.objects.filter(cash_register_id=cash_register_id, operator_id=operator_id, open_status=True, close_status=False).last()
         shift.close_uuid = uuid_data
         shift.save()

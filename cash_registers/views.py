@@ -37,7 +37,7 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
     job_result = atol.close_shift(uuid_data, cash_register_data, operator_data)
     if not job_result["ok"]:
         return job_result
-    result = Shift.close_shift(cash_register_id, doctor_profile_id)
+    result = Shift.close_shift(uuid_data, cash_register_id, doctor_profile_id)
     return {"ok": result, "message": ""}
 
 
