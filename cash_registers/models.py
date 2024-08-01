@@ -117,9 +117,3 @@ class Shift(models.Model):
         elif cash_register_exist:
             return {"ok": False, "message": "На этой кассе уже есть открытая смена"}
         return {"ok": True, "message": ""}
-
-    @staticmethod
-    def get_shift_status(operator_id: int, cash_register_id: int):
-        shift: Shift = Shift.objects.filter(operator_id=operator_id, cash_register_id=cash_register_id, ).last()
-        if not shift:
-            return {"ok": False, "message": "Нет заявок на открытие смены"}

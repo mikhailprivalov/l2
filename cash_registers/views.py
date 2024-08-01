@@ -10,7 +10,7 @@ def get_cash_registers():
     return result
 
 
-def get_cash_register_data(cash_register_id: int):
+def get_cash_register_data(cash_register_id):
     cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
     cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
     return cash_register_data
@@ -47,22 +47,27 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
 
 
 def get_shift_data(doctor_profile_id: int):
-    shift_data = Shift.get_shift_data(doctor_profile_id)
+    shift: Shift = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).select_related('cash_register').last()
+    uuid_data = None
     status = None
-    if not shift_data:
-        return {"ok": False, "data": shift_data}
-    if not shift_data["uuid"]:
-        data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"], "status": shift_data["status"]}
-        return {"ok": True, "data": data}
-    cash_register_data = get_cash_register_data(shift_data["cash_register_id"])
-    job_result = atol.get_job_status(shift_data["uuid"], cash_register_data)
-    if not job_result["ok"]:
-        return {"ok": False, "message": "Не удалось запросить статус"}
-    if shift_data["status"] == 0:
-        confirm_open = Shift.confirm_open_shift(shift_data["shift_id"])
+    if not shift:
+        return None
+    if not shift.open_status and shift.open_uuid:
+        status = 0
+        uuid_data = shift.open_uuid
+    elif shift.open_status and not shift.close_uuid:
         status = 1
-    else:
-        confirm_close = Shift.confirm_close_shift(shift_data["shift_id"])
-        return {"ok": False, "data": None}
-    data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"], "status": status}
+    elif shift.open_status and shift.close_uuid:
+        status = 2
+        uuid_data = shift.close_uuid
+    cash_register_data = get_cash_register_data(shift.cash_register_id)
+    job_result = atol.get_job_status(uuid_data, cash_register_data)
+    print(job_result)
+    # if status == 0:
+    #     confirm_open = Shift.confirm_open_shift(shift.pk)
+    #     status = 1
+    # elif status == 2:
+    #     confirm_close = Shift.confirm_close_shift(shift.pk)
+
+    data = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": status}
     return {"ok": True, "data": data}
