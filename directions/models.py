@@ -1528,8 +1528,12 @@ class Napravleniya(models.Model):
                         research_data_params = None
                     else:
                         dir_group = -1
-                        if research.direction and external_organization == "NONE":
+                        if research.direction and external_organization == "NONE" and (not SettingManager.get("dirgroup_by_tube", default='false', default_type='b')):
                             dir_group = research.direction_id
+
+                        if SettingManager.get("dirgroup_by_tube", default='false', default_type='b') and research.podrazdeleniye.p_type == 2:
+                            fraction = directory.Fractions.objects.filter(research=research).first()
+                            dir_group = fraction.relation_id
 
                         if v in only_lab_researches and external_organization != "NONE":
                             dir_group = dir_group_onlylab
