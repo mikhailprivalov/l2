@@ -84,7 +84,7 @@ class Shift(models.Model):
         if not shift:
             return None
         data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title, "status": 0}
-        if shift.open_status:
+        if shift.open_status and not shift.close_uuid:
             data["status"] = 1
         elif shift.close_uuid:
             data["status"] = 2

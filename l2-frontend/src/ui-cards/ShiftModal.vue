@@ -193,7 +193,6 @@ const closeShift = async () => {
     root.$emit('msg', 'error', message);
   }
 };
-const interval = ref(null);
 
 </script>
 
