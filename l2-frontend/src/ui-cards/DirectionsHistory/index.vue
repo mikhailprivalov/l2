@@ -208,7 +208,7 @@
                   :main-direction="row.pk"
                   :aux-research="row.aux_researches"
                 /></span>
-              <span v-if="row.lab && !row.has_hosp">
+              <span v-if="row.lab && !row.has_hosp && roleCanUseGetBipmaterial">
                 <a
                   v-tippy
                   href="#"
@@ -556,6 +556,14 @@ export default {
     role_can_use_stationar() {
       for (const g of this.$store.getters.user_data.groups || []) {
         if (g === 'Врач стационара') {
+          return true;
+        }
+      }
+      return false;
+    },
+    roleCanUseGetBipmaterial() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Заборщик биоматериала') {
           return true;
         }
       }
