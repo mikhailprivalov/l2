@@ -29,19 +29,19 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     if not check_shift["ok"]:
         return check_shift
     operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
-    job_result = atol.open_shift(uuid_data, cash_register_data, operator_data)
-    if not job_result["ok"]:
-        return job_result
-    new_shift = Shift.open_shift(uuid_data, cash_register_id, doctor_profile_id)
+    # job_result = atol.open_shift(uuid_data, cash_register_data, operator_data)
+    # if not job_result["ok"]:
+    #     return job_result
+    new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
     data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
     return {"ok": True, "message": "", "data": data}
 
 
 def close_shift(cash_register_id: int, doctor_profile_id: int):
     operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
-    job_result = atol.close_shift(uuid_data, cash_register_data, operator_data)
-    if not job_result["ok"]:
-        return job_result
+    # job_result = atol.close_shift(str(uuid_data), cash_register_data, operator_data)
+    # if not job_result["ok"]:
+    #     return job_result
     result = Shift.close_shift(uuid_data, cash_register_id, doctor_profile_id)
     return {"ok": result, "message": ""}
 
@@ -51,7 +51,7 @@ def get_shift_data(doctor_profile_id: int):
     uuid_data = None
     status = None
     if not shift:
-        return None
+        return {"ok": False, "data": shift}
     if not shift.open_status and shift.open_uuid:
         status = 0
         uuid_data = shift.open_uuid
@@ -61,8 +61,8 @@ def get_shift_data(doctor_profile_id: int):
         status = 2
         uuid_data = shift.close_uuid
     cash_register_data = get_cash_register_data(shift.cash_register_id)
-    job_result = atol.get_job_status(uuid_data, cash_register_data)
-    print(job_result)
+    # job_result = atol.get_job_status(uuid_data, cash_register_data)
+    # print(job_result)
     # if status == 0:
     #     confirm_open = Shift.confirm_open_shift(shift.pk)
     #     status = 1
