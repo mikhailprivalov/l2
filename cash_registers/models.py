@@ -63,9 +63,23 @@ class Shift(models.Model):
         return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
 
     @staticmethod
+    def confirm_open_shift(shift_id: int):
+        shift: Shift = Shift.objects.get(pk=shift_id)
+        shift.open_status = True
+        shift.save()
+        return True
+
+    @staticmethod
     def close_shift(uuid_data: str, cash_register_id: int, operator_id: int):
         shift: Shift = Shift.objects.filter(cash_register_id=cash_register_id, operator_id=operator_id, open_status=True, close_status=False).last()
         shift.close_uuid = uuid_data
+        shift.save()
+        return True
+
+    @staticmethod
+    def confirm_close_shift(shift_id: int):
+        shift: Shift = Shift.objects.get(pk=shift_id)
+        shift.close_status = True
         shift.save()
         return True
 

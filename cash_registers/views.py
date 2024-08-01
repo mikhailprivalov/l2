@@ -48,6 +48,7 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
 
 def get_shift_data(doctor_profile_id: int):
     shift_data = Shift.get_shift_data(doctor_profile_id)
+    status = None
     if not shift_data:
         return {"ok": False, "data": shift_data}
     if not shift_data["uuid"]:
@@ -57,6 +58,11 @@ def get_shift_data(doctor_profile_id: int):
     job_result = atol.get_job_status(shift_data["uuid"], cash_register_data)
     if not job_result["ok"]:
         return {"ok": False, "message": "Не удалось запросить статус"}
-
-    data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"], "status": shift_data["status"]}
+    if shift_data["status"] == 0:
+        confirm_open = Shift.confirm_open_shift(shift_data["shift_id"])
+        status = 1
+    else:
+        confirm_close = Shift.confirm_close_shift(shift_data["shift_id"])
+        return {"ok": False, "data": None}
+    data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"], "status": status}
     return {"ok": True, "data": data}
