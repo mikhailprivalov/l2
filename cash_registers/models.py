@@ -79,13 +79,19 @@ class Shift(models.Model):
     @staticmethod
     def get_shift_data(operator_id: int):
         shift: Shift = Shift.objects.filter(operator_id=operator_id, close_status=False).select_related('cash_register').last()
+        status = None
+        uuid_data = None
         if not shift:
             return None
-        data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title, "status": 0}
-        if shift.open_status and not shift.close_uuid:
-            data["status"] = 1
+        if not shift.open_status and shift.open_uuid:
+            status = 0
+            uuid_data = shift.open_uuid
+        elif shift.open_status and not shift.close_uuid:
+            status = 1
         elif shift.open_status and shift.close_uuid:
-            data["status"] = 2
+            status = 2
+            uuid_data = shift.close_uuid
+        data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title, "status": status, "uuid": uuid_data}
         return data
 
     @staticmethod

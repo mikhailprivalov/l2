@@ -10,11 +10,16 @@ def get_cash_registers():
     return result
 
 
+def get_cash_register_data(cash_register_id: int):
+    cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
+    cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
+    return cash_register_data
+
+
 def get_shift_job_data(doctor_profile_id: int, cash_register_id):
     operator: DoctorProfile = DoctorProfile.objects.get(pk=doctor_profile_id)
     operator_data = {"name": operator.get_full_fio(), "vatin": operator.inn}
-    cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
-    cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
+    cash_register_data = get_cash_register_data(cash_register_id)
     uuid_data = str(uuid.uuid4())
     return operator_data, cash_register_data, uuid_data
 
@@ -45,5 +50,13 @@ def get_shift_data(doctor_profile_id: int):
     shift_data = Shift.get_shift_data(doctor_profile_id)
     if not shift_data:
         return {"ok": False, "data": shift_data}
+    if not shift_data["uuid"]:
+        data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"], "status": shift_data["status"]}
+        return {"ok": True, "data": data}
+    cash_register_data = get_cash_register_data(shift_data["cash_register_id"])
+    job_result = atol.get_job_status(shift_data["uuid"], cash_register_data)
+    if not job_result["ok"]:
+        return {"ok": False, "message": "Не удалось запросить статус"}
+
     data = {"shiftId": shift_data["shift_id"], "cashRegisterId": shift_data["cash_register_id"], "cashRegisterTitle": shift_data["cash_register_title"], "status": shift_data["status"]}
     return {"ok": True, "data": data}
