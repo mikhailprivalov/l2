@@ -3,7 +3,7 @@ from laboratory.settings import CASH_REGISTER_SERVER_ADDRESS, CASH_REGISTER_SERV
 
 
 def get_authorization_header():
-    headers = {"Authorization": f"bearer {CASH_REGISTER_SERVER_TOKEN}"}
+    headers = {"Authorization": f"Bearer {CASH_REGISTER_SERVER_TOKEN}"}
     return headers
 
 
