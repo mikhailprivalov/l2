@@ -207,7 +207,16 @@
                 <AuxResearch
                   :main-direction="row.pk"
                   :aux-research="row.aux_researches"
-                /></span>
+                />
+              </span>
+            </td>
+            <td
+              class="researches"
+              :title="row.researches +
+                (row.planed_doctor !== '' ? ' Назначен: ' + row.planed_doctor: '') +
+                (row.register_number !== '' ? ' (' + row.register_number + ')': '')
+              "
+            >
               <span v-if="row.lab && !row.has_hosp && roleCanUseGetBipmaterial">
                 <a
                   v-tippy
@@ -221,14 +230,6 @@
                   />
                 </a>
               </span>
-            </td>
-            <td
-              class="researches"
-              :title="row.researches +
-                (row.planed_doctor !== '' ? ' Назначен: ' + row.planed_doctor: '') +
-                (row.register_number !== '' ? ' (' + row.register_number + ')': '')
-              "
-            >
               {{ row.researches }}
             </td>
             <td
