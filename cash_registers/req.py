@@ -19,7 +19,7 @@ def check_cash_server():
 
 def check_cash_register(cash_register_data: dict):
     headers = get_authorization_header()
-    body = {"cashRegisters": [cash_register_data]}
+    body = {"cashRegister": cash_register_data}
     try:
         response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}get-cash-register-status", json=body, headers=headers, timeout=3)
         response_data = response.json()
