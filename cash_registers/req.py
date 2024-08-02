@@ -7,6 +7,16 @@ def get_authorization_header():
     return headers
 
 
+def check_cash_server():
+    headers = get_authorization_header()
+    try:
+        response = requests.post(CASH_REGISTER_SERVER_ADDRESS, headers=headers, timeout=3)
+        response_data = response.json()
+    except Exception as e:
+        return {"ok": False, "message": "Ошибка", "data": f"{e}", "connection_error": True}
+    return response_data
+
+
 def send_job(body: dict):
     headers = get_authorization_header()
     try:
