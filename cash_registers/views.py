@@ -3,6 +3,7 @@ from cash_registers.models import CashRegister, Shift
 import cash_registers.req as cash_req
 from users.models import DoctorProfile
 
+
 def get_cash_registers():
     result = CashRegister.get_cash_registers()
     return result
@@ -12,6 +13,7 @@ def get_cash_register_data(cash_register_id):
     cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
     cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
     return cash_register_data
+
 
 def get_shift_job_data(doctor_profile_id: int, cash_register_id):
     operator: DoctorProfile = DoctorProfile.objects.get(pk=doctor_profile_id)
@@ -26,8 +28,13 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     if not check_shift["ok"]:
         return check_shift
     # operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
-    result_check = cash_req.check_cash_server()
-    print(result_check)
+    cash_server_check = cash_req.check_cash_server()
+    if not cash_server_check.get("ok"):
+        return {"ok": False, "message": "Ошибка проверки кассового сервера"}
+    cash_register_data = get_cash_register_data(cash_register_id)
+    cash_register_check = cash_req.check_cash_register(cash_register_data)
+    print(cash_register_check)
+
     # job_result = cash_req.open_shift(uuid_data, cash_register_data, operator_data)
     # print(job_result)
     # if job_result.get("connection_error"):
