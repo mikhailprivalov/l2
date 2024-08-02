@@ -31,8 +31,10 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
     job_result = atol.open_shift(uuid_data, cash_register_data, operator_data)
     print(job_result)
-    if job_result.get("error"):
-        print('Произошла ошибка на этапе подключения к cash')
+    if job_result.get("connection_error"):
+        return {"ok": False, "message": "Кассовый сервер недоступен", "data": {}}
+    elif job_result.get('connectionError'):
+        return {"ok": False, "message": "Касса недоступна", "data": {}}
     # if not job_result["ok"]:
     #     return job_result
     # new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
