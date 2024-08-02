@@ -35,8 +35,8 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
         return {"ok": False, "message": "Кассовый сервер недоступен", "data": {}}
     elif job_result.get('connectionError'):
         return {"ok": False, "message": "Касса недоступна", "data": {}}
-    # if not job_result["ok"]:
-    #     return job_result
+    elif not job_result["ok"]:
+        return job_result
     # new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
     # data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
     return {"ok": False, "message": "", "data": {}}
