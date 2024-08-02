@@ -29,12 +29,15 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     if not check_shift["ok"]:
         return check_shift
     operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
-    # job_result = atol.open_shift(uuid_data, cash_register_data, operator_data)
+    job_result = atol.open_shift(uuid_data, cash_register_data, operator_data)
+    print(job_result)
+    if job_result.get("error"):
+        print('Произошла ошибка на этапе подключения к cash')
     # if not job_result["ok"]:
     #     return job_result
-    new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
-    data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
-    return {"ok": True, "message": "", "data": data}
+    # new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
+    # data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
+    return {"ok": False, "message": "", "data": {}}
 
 
 def close_shift(cash_register_id: int, doctor_profile_id: int):

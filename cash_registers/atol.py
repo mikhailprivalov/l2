@@ -29,10 +29,10 @@ def get_job_status(uuid: str, cash_register: dict):
 
 
 def open_shift(uuid: str, cash_register: dict, operator: dict):
-    body = {"cashRegister": cash_register, "job": {"uuid": uuid, "request": [{"type": "openShift", "operator": operator}]}}
+    body = {"cashRegister": cash_register, "uuid": uuid, "job": [{"type": "openShift", "operator": operator}]}
     return send_job(body)
 
 
 def close_shift(uuid: str, cash_register: dict, operator: dict):
-    body = {"cashRegister": cash_register, "job": {"uuid": uuid, "request": [{"type": "closeShift", "operator": operator}]}}
+    body = {"cashRegister": cash_register, "uuid": uuid, "job": [{"type": "closeShift", "operator": operator}]}
     return send_job(body)
