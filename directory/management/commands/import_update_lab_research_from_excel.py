@@ -92,11 +92,7 @@ class Command(BaseCommand):
                     relation_f.save()
 
                 if is_new_research:
-                    fraction = Fractions(
-                        research=research,
-                        title=cells[title],
-                        relation=relation_f
-                    )
+                    fraction = Fractions(research=research, title=cells[title], relation=relation_f)
                     fraction.save()
                     self.stdout.write(f'{step}-Услуга добавлена - {research.title}, фракция - {fraction.title}')
                 else:
