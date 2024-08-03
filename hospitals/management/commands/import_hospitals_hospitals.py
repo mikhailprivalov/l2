@@ -41,6 +41,6 @@ class Command(BaseCommand):
                         short_title=cells[short_title][:255],
                         code_tfoms=cells[code],
                         address=cells[address][:128],
-                        is_external_performing_organization=is_eternal_executor
+                        is_external_performing_organization=is_eternal_executor,
                     )
                     self.stdout.write(f'добавлено МО:{cells[code]}:{cells[full_title]}:{cells[short_title]}:{cells[address]}:')
