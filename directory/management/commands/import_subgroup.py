@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from directory.models import LaboratoryMaterial, SubGroupDirectory
+from directory.models import SubGroupDirectory
 from openpyxl import load_workbook
 
 

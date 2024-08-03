@@ -31,8 +31,6 @@ class Command(BaseCommand):
                     eternal_executor = cells.index("внешний исполнитель")
             else:
                 if Hospitals.objects.filter(code_tfoms=cells[code]).exists() or Hospitals.objects.filter(code_tfoms=cells[full_title]).exists():
-                    print(Hospitals.objects.filter(code_tfoms=cells[code]))  # noqa: T001
-                    print(Hospitals.objects.filter(code_tfoms=cells[full_title]))  # noqa: T001
                     continue
                 else:
                     is_eternal_executor = False
@@ -45,4 +43,4 @@ class Command(BaseCommand):
                         address=cells[address][:128],
                         is_external_performing_organization=is_eternal_executor
                     )
-                    print(f'добавлено МО:{cells[code]}:{cells[full_title]}:{cells[short_title]}:{cells[address]}:')  # noqa: T001
+                    self.stdout.write(f'добавлено МО:{cells[code]}:{cells[full_title]}:{cells[short_title]}:{cells[address]}:')

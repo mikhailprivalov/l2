@@ -24,7 +24,6 @@ class Command(BaseCommand):
                     title = cells.index("название")
                     color = cells.index("цвет")
                     starts = True
-                    print("Yes")
             else:
                 if Tubes.objects.filter(title=cells[title].strip()):
                     tube = Tubes.objects.filter(title=cells[title].strip()).first()
