@@ -105,5 +105,3 @@ class Command(BaseCommand):
                     fraction.save()
                     self.stdout.write(f'{step}-Услуга обновленая - {research.title}, фракция - {fraction.title}')
                 step += 1
-
-
