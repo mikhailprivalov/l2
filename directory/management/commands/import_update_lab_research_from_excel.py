@@ -37,8 +37,6 @@ class Command(BaseCommand):
                 material_obj = LaboratoryMaterial.objects.filter(title=cells[material].strip()).first()
                 department_obj = Podrazdeleniya.objects.filter(title=cells[department].strip()).first()
                 subgroup_obj = SubGroupDirectory.objects.filter(title=cells[sub_group].strip()).first()
-                print("cells[portion]")
-                print(cells[portion])
                 if cells[laboratory_duration] == "None":
                     cells[laboratory_duration] = ''
                 if float(cells[portion]) > 1:
@@ -46,9 +44,10 @@ class Command(BaseCommand):
                 else:
                     portion_result = float(cells[portion])
                 is_new_research = False
+                title_research = cells[title].strip()[0:254]
                 if Researches.objects.filter(internal_code=cells[internal_code].strip()).exists():
                     research = Researches.objects.filter(internal_code=cells[internal_code].strip()).first()
-                    research.title = cells[title].strip()
+                    research.title = title_research
                     research.laboratory_material = material_obj
                     research.podrazdeleniye = department_obj
                     research.sub_group = subgroup_obj
@@ -56,7 +55,7 @@ class Command(BaseCommand):
                     research.count_volume_material_for_tube = portion_result
                 else:
                     research = Researches(
-                        title=cells[title].strip(),
+                        title=title_research,
                         internal_code=cells[internal_code],
                         laboratory_material=material_obj,
                         podrazdeleniye=department_obj,
@@ -68,6 +67,8 @@ class Command(BaseCommand):
                 research.save()
 
                 tube = Tubes.objects.filter(title=cells[container].strip()).first()
+                if not tube:
+                    continue
 
                 fraction_data, relation_f = None, None
                 if ReleationsFT.objects.filter(tube=tube).exists():
@@ -101,5 +102,5 @@ class Command(BaseCommand):
                     fraction = Fractions.objects.filter(research=research).first()
                     fraction.relation = relation_f
                     fraction.save()
-                    self.stdout.write(f'{step}-Услуга обновленая - {research.title}, фракция - {fraction.title}')
+                    self.stdout.write(f'{step}-Услуга обновлена - {research.title}, фракция - {fraction.title}')
                 step += 1
