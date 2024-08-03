@@ -7,19 +7,19 @@ def get_authorization_header():
     return headers
 
 
-def check_cash_register(cash_register_data: dict):
+def check_cash_register_status(cash_register_data: dict):
     headers = get_authorization_header()
     body = {"cashRegister": cash_register_data}
     try:
         response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}get-cash-register-status", json=body, headers=headers, timeout=3)
         response_data = response.json()
     except Exception as e:
-        return {"ok": False, "connection_error": True, "data": f"{e}",}
+        return {"ok": False, "connection_error": True, "data": f"{e}", }
     return response_data
 
 
-def check_cash_server(cash_register_data: dict):
-    cash_register_check = check_cash_register(cash_register_data)
+def check_cash_register(cash_register_data: dict):
+    cash_register_check = check_cash_register_status(cash_register_data)
     if not cash_register_check["ok"] and cash_register_check.get("connection_error"):
         return {"ok": False, "message": "Ошибка подключения к кассовому серверу"}
     elif not cash_register_check["ok"] and cash_register_check.get("connectionError"):
@@ -30,7 +30,6 @@ def check_cash_server(cash_register_data: dict):
     else:
         # todo - проверять состояние кассы (бумага, очередь заданий, фискальник)
         return {"ok": True}
-
 
 
 def send_job(body: dict):

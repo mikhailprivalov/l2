@@ -28,29 +28,13 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     if not check_shift["ok"]:
         return check_shift
     operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
-    check_server = cash_req.check_cash_server(cash_register_data)
-    if not check_server["ok"]:
-        return check_server
-    # print(cash_server_check)
-    # if not cash_server_check.get("ok"):
-    #     return {"ok": False, "message": "Ошибка проверки кассового сервера"}
-    # cash_register_data = get_cash_register_data(cash_register_id)
-    # cash_register_check = cash_req.check_cash_register(cash_register_data)
-    # print(cash_register_check)
-
-    # return {"ok": False, "message": "Ошибка проверки кассовой программы"}
-
-    # job_result = cash_req.open_shift(uuid_data, cash_register_data, operator_data)
-    # print(job_result)
-    # if job_result.get("connection_error"):
-    #     return {"ok": False, "message": "Кассовый сервер недоступен", "data": {}}
-    # elif job_result.get('connectionError'):
-    #     return {"ok": False, "message": "Касса недоступна", "data": {}}
-    # elif not job_result["ok"]:
-    #     return job_result
-    # new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
-    # data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
-    return {"ok": False, "message": "", "data": {}}
+    check_cash_register = cash_req.check_cash_register(cash_register_data)
+    if not check_cash_register["ok"]:
+        return check_cash_register
+    job_result = cash_req.open_shift(uuid_data, cash_register_data, operator_data)
+    new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
+    data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
+    return {"ok": False, "message": "", "data": data}
 
 
 def close_shift(cash_register_id: int, doctor_profile_id: int):
@@ -77,8 +61,11 @@ def get_shift_data(doctor_profile_id: int):
         status = 2
         uuid_data = shift.close_uuid
     cash_register_data = get_cash_register_data(shift.cash_register_id)
-    # job_result = cash_req.get_job_status(uuid_data, cash_register_data)
-    # print(job_result)
+    check_cash_register = cash_req.check_cash_register(cash_register_data)
+    if not check_cash_register["ok"]:
+        return check_cash_register
+    job_result = cash_req.get_job_status(uuid_data, cash_register_data)
+    print(job_result)
     # if status == 0:
     #     confirm_open = Shift.confirm_open_shift(shift.pk)
     #     status = 1
