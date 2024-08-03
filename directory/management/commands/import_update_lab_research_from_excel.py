@@ -37,12 +37,14 @@ class Command(BaseCommand):
                 material_obj = LaboratoryMaterial.objects.filter(title=cells[material].strip()).first()
                 department_obj = Podrazdeleniya.objects.filter(title=cells[department].strip()).first()
                 subgroup_obj = SubGroupDirectory.objects.filter(title=cells[sub_group].strip()).first()
+                print("cells[portion]")
+                print(cells[portion])
                 if cells[laboratory_duration] == "None":
                     cells[laboratory_duration] = ''
                 if float(cells[portion]) > 1:
-                    portion = 0
+                    portion_result = 0
                 else:
-                    portion = float(cells[portion])
+                    portion_result = float(cells[portion])
                 is_new_research = False
                 if Researches.objects.filter(internal_code=cells[internal_code].strip()).exists():
                     research = Researches.objects.filter(internal_code=cells[internal_code].strip()).first()
@@ -51,7 +53,7 @@ class Command(BaseCommand):
                     research.podrazdeleniye = department_obj
                     research.sub_group = subgroup_obj
                     research.laboratory_duration = cells[laboratory_duration]
-                    research.count_volume_material_for_tube = portion
+                    research.count_volume_material_for_tube = portion_result
                 else:
                     research = Researches(
                         title=cells[title].strip(),
