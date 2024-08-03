@@ -60,7 +60,7 @@ class Command(BaseCommand):
                         laboratory_material=material_obj,
                         podrazdeleniye=department_obj,
                         laboratory_duration=cells[laboratory_duration],
-                        count_volume_material_for_tube=portion,
+                        count_volume_material_for_tube=portion_result,
                         sub_group=subgroup_obj,
                     )
                     is_new_research = True
