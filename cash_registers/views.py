@@ -27,16 +27,18 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     check_shift = Shift.check_shift(cash_register_id, doctor_profile_id)
     if not check_shift["ok"]:
         return check_shift
-    # operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
-    cash_server_check = cash_req.check_cash_server()
-    print(cash_server_check)
-    if not cash_server_check.get("ok"):
-        return {"ok": False, "message": "Ошибка проверки кассового сервера"}
-    cash_register_data = get_cash_register_data(cash_register_id)
-    cash_register_check = cash_req.check_cash_register(cash_register_data)
-    print(cash_register_check)
+    operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
+    check_server = cash_req.check_cash_server(cash_register_data)
+    if not check_server["ok"]:
+        return check_server
+    # print(cash_server_check)
+    # if not cash_server_check.get("ok"):
+    #     return {"ok": False, "message": "Ошибка проверки кассового сервера"}
+    # cash_register_data = get_cash_register_data(cash_register_id)
+    # cash_register_check = cash_req.check_cash_register(cash_register_data)
+    # print(cash_register_check)
 
-        # return {"ok": False, "message": "Ошибка проверки кассовой программы"}
+    # return {"ok": False, "message": "Ошибка проверки кассовой программы"}
 
     # job_result = cash_req.open_shift(uuid_data, cash_register_data, operator_data)
     # print(job_result)
