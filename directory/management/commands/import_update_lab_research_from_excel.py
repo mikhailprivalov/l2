@@ -60,7 +60,7 @@ class Command(BaseCommand):
                         podrazdeleniye=department_obj,
                         laboratory_duration=cells[laboratory_duration],
                         count_volume_material_for_tube=portion,
-                        sub_group=subgroup_obj
+                        sub_group=subgroup_obj,
                     )
                     is_new_research = True
                 research.save()
