@@ -60,7 +60,7 @@ class Command(BaseCommand):
                         podrazdeleniye=department_obj,
                         laboratory_duration=cells[laboratory_duration],
                         count_volume_material_for_tube=portion,
-                        sub_group=subgroup_obj
+                        sub_group=subgroup_obj,
                     )
                     is_new_research = True
                 research.save()
@@ -92,11 +92,7 @@ class Command(BaseCommand):
                     relation_f.save()
 
                 if is_new_research:
-                    fraction = Fractions(
-                        research=research,
-                        title=cells[title],
-                        relation=relation_f
-                    )
+                    fraction = Fractions(research=research, title=cells[title], relation=relation_f)
                     fraction.save()
                     self.stdout.write(f'{step}-Услуга добавлена - {research.title}, фракция - {fraction.title}')
                 else:
@@ -105,5 +101,3 @@ class Command(BaseCommand):
                     fraction.save()
                     self.stdout.write(f'{step}-Услуга обновленая - {research.title}, фракция - {fraction.title}')
                 step += 1
-
-

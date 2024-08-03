@@ -33,10 +33,7 @@ class Command(BaseCommand):
                     self.stdout.write(f'{step}-Контейнер изменен - {tube.title}, фракция - {tube.color}')
                     continue
                 else:
-                    tube = Tubes(
-                        title=cells[title].strip(),
-                        color=cells[color].strip()
-                    )
+                    tube = Tubes(title=cells[title].strip(), color=cells[color].strip())
                     tube.save()
                     step += 1
                     self.stdout.write(f'{step}-Контейнер добавлен - {tube.title}, фракция - {tube.color}')
