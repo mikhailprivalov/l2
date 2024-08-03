@@ -44,8 +44,8 @@ class Command(BaseCommand):
                 else:
                     portion = float(cells[portion])
                 is_new_research = False
-                if Researches.objects.filter(title=cells[internal_code].strip()).exists():
-                    research = Researches.objects.filter(title=cells[internal_code].strip()).first()
+                if Researches.objects.filter(internal_code=cells[internal_code].strip()).exists():
+                    research = Researches.objects.filter(internal_code=cells[internal_code].strip()).first()
                     research.title = cells[title].strip()
                     research.laboratory_material = material_obj
                     research.podrazdeleniye = department_obj
