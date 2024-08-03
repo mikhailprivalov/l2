@@ -39,6 +39,9 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
 
 def close_shift(cash_register_id: int, doctor_profile_id: int):
     operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
+    check_cash_register = cash_req.check_cash_register(cash_register_data)
+    if not check_cash_register["ok"]:
+        return check_cash_register
     # job_result = cash_req.close_shift(str(uuid_data), cash_register_data, operator_data)
     # if not job_result["ok"]:
     #     return job_result
