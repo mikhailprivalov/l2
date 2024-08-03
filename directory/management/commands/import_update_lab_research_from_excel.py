@@ -36,7 +36,7 @@ class Command(BaseCommand):
             else:
                 material_obj = LaboratoryMaterial.objects.filter(title=cells[material].strip()).first()
                 department_obj = Podrazdeleniya.objects.filter(title=cells[department].strip()).first()
-                subgroup_obj = SubGroupDirectory.objects.filter(title=cells[department].strip()).first()
+                subgroup_obj = SubGroupDirectory.objects.filter(title=cells[sub_group].strip()).first()
                 if cells[laboratory_duration] == "None":
                     cells[laboratory_duration] = ''
                 if float(cells[portion]) > 1:
