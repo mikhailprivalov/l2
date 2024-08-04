@@ -14,7 +14,11 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
         response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}get-cash-register-status", json=body, headers=headers)
         response_data = response.json()
     except Exception as e:
-        return {"ok": False, "connection_error": True, "data": f"{e}", }
+        return {
+            "ok": False,
+            "connection_error": True,
+            "data": f"{e}",
+        }
     return response_data
 
 
