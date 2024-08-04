@@ -16,7 +16,7 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
     except Exception as e:
         return {
             "ok": False,
-            "connection_error": True,
+            "connection_middle_server_error": True,
             "data": f"{e}",
         }
     return response_data
@@ -24,13 +24,16 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
 
 def check_cash_register(cash_register_data: dict):
     cash_register_check = check_cash_register_status(cash_register_data)
-    if not cash_register_check["ok"] and cash_register_check.get("connection_error"):
-        return {"ok": False, "message": "Ошибка подключения к кассовому серверу"}
-    elif not cash_register_check["ok"] and cash_register_check.get("connectionError"):
-        return {"ok": False, "message": "Кассовая программа недоступна"}
-    elif not cash_register_check["ok"] and cash_register_check.get("cash_register_connection_error"):
-        # todo - логировать ошибку из ключа "data"
-        return {"ok": False, "message": "Ошибка при подключении к кассе"}
+    message = ""
+    if not cash_register_check["ok"]:
+        if cash_register_check.get("connection_middle_server_error"):
+            message = "Кассовый middle сервер недоступен"
+        elif cash_register_check.get("connection_web_request_error"):
+            message = "Кассовый web-request atol сервер недоступен"
+        elif cash_register_check.get("cash_register_connection_error"):
+            # todo - логировать ошибку из ключа "data"
+            message = "Ошибка при подключении к кассе"
+        return {"ok": False, "message": message}
     else:
         # todo - проверять состояние кассы (бумага, очередь заданий, фискальник)
         device_status = cash_register_check["data"]["deviceStatus"]
