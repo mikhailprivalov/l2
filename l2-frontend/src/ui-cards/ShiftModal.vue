@@ -133,6 +133,7 @@ const getCashRegisters = async () => {
 const getShiftData = async () => {
   const { ok, data } = await api('cash-register/get-shift-data');
   if (ok) {
+    console.log(data);
     shiftData.value = data;
     statusShift.value = data.status;
     if (!shiftIsOpen.value && statusShift.value === 1) {

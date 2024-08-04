@@ -51,11 +51,13 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
 
 
 def get_shift_data(doctor_profile_id: int):
+    """ 0 - смена открывается, 1 - смена открыта, 2 - смена закрывается, -1 - Смена закрыта, """
     shift: Shift = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).select_related('cash_register').last()
     uuid_data = None
     status = None
     if not shift:
-        return {"ok": False, "data": shift}
+        data = {"shiftId": None, "cashRegisterId": None, "cashRegisterTitle": "", "status": -1}
+        return {"ok": True, "data": data}
     if not shift.open_status and shift.open_uuid:
         status = 0
         uuid_data = shift.open_uuid
@@ -76,7 +78,6 @@ def get_shift_data(doctor_profile_id: int):
     if not job_result["ok"]:
         return {"ok": False, "message": "Ошибка проверки задания"}
     job_status = job_result["data"]["results"][0]
-    print(job_status["result"]["fiscalParams"])
     if job_status["status"] == "ready" and status == 0:
         shift.confirm_open_shift()
         status = 1
