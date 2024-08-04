@@ -47,7 +47,7 @@ def get_shift_data(doctor_profile_id: int):
     if shift:
         uuid_data = None
         status = ""
-        result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": ""}
+        result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": status}
         if not shift.open_status and shift.open_uuid:
             status = "Смена открывается"
             uuid_data = shift.open_uuid
