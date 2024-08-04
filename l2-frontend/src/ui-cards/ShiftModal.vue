@@ -134,9 +134,10 @@ const getShiftData = async () => {
   const { ok, data } = await api('cash-register/get-shift-data');
   if (ok) {
     shiftData.value = data;
-    statusShift.value = data.status;
     if (!shiftIsOpen.value && statusShift.value === 1) {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
+      statusShift.value = data.status;
+      root.$emit('msg', 'ok', 'Смена открыта');
       intervalReq = null;
     } else if (!shiftIsOpen.value && statusShift.value === 0) {
       intervalReq = setTimeout(() => getShiftData(), 1000);
@@ -177,7 +178,6 @@ const openShift = async () => {
     loading.value = false;
     if (ok) {
       await getShiftData();
-      root.$emit('msg', 'ok', 'Смена открыта');
     } else {
       root.$emit('msg', 'error', message);
     }
