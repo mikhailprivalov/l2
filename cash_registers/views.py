@@ -44,9 +44,9 @@ def get_shift_data(doctor_profile_id: int):
     data = {"shiftId": None, "cashRegisterId": None, "cashRegisterTitle": "", "status": "Смена закрыта"}
     result = {"ok": True, "data": data}
     shift: Shift = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).select_related('cash_register').last()
-    uuid_data = None
-    status = "Смена закрыта"
     if shift:
+        uuid_data = None
+        status = ""
         result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": ""}
         if not shift.open_status and shift.open_uuid:
             status = "Смена открывается"
