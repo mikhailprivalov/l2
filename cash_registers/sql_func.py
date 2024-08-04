@@ -13,7 +13,7 @@ def get_cash_registers():
     return rows
 
 
-def check_shift(cash_register_id, doctor_profile_id, close_status):
+def check_shift(cash_register_id, doctor_profile_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
