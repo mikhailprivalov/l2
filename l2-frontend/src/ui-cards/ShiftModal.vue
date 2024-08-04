@@ -121,6 +121,7 @@ const statusVariant = ref({
   2: 'Смена закрывается',
 });
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let intervalReq = null;
 
 const titleLocal = computed(() => (statusVariant.value[statusShift.value]));
@@ -133,7 +134,6 @@ const getCashRegisters = async () => {
 const getShiftData = async () => {
   const { ok, data } = await api('cash-register/get-shift-data');
   if (ok) {
-    console.log(data);
     shiftData.value = data;
     statusShift.value = data.status;
     if (!shiftIsOpen.value && statusShift.value === 1) {
