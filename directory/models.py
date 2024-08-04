@@ -162,7 +162,7 @@ class LaboratoryMaterial(models.Model):
 
 
 class SubGroupDirectory(models.Model):
-    title = models.CharField(max_length=64, help_text="Подгруппа услуги")
+    title = models.CharField(max_length=128, help_text="Подгруппа услуги")
 
     def __str__(self):
         return "%s" % self.title
