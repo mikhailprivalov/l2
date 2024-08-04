@@ -1,7 +1,5 @@
-import uuid
 from cash_registers.models import CashRegister, Shift
 import cash_registers.req as cash_req
-from users.models import DoctorProfile
 
 
 def get_cash_registers():
