@@ -15,10 +15,11 @@ def get_cash_registers(request):
 def open_shift(request):
     request_data = json.loads(request.body)
     check_shift = Shift.check_shift(request_data["cashRegisterId"], request.user.doctorprofile.id)
-    if not check_shift["ok"]:
-        return check_shift
-    shift_data = cash_register_views.open_shift(request_data["cashRegisterId"], request.user.doctorprofile.id)
-    return JsonResponse(shift_data)
+    if check_shift["ok"]:
+        result = cash_register_views.open_shift(request_data["cashRegisterId"], request.user.doctorprofile.id)
+    else:
+        result = check_shift
+    return JsonResponse(result)
 
 
 @login_required
