@@ -1,5 +1,4 @@
 import uuid
-
 from django.db import models
 from jsonfield import JSONField
 from cash_registers import sql_func
