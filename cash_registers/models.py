@@ -96,14 +96,13 @@ class Shift(models.Model):
 
     @staticmethod
     def check_shift(cash_register_id: int, doctor_profile_id: int):
-        shift_exist = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).last()
-        if shift_exist:
-            result = {"ok": False, "message": "У вас уже есть открытая смена"}
-        cash_register_used = Shift.objects.filter(cash_register_id=cash_register_id, close_status=False).last()
-        if cash_register_used:
-            result = {"ok": False, "message": "На этой кассе уже есть открытая смена"}
-        else:
+        result_check = sql_func.check_shift(cash_register_id, doctor_profile_id)
+        if len(result_check) == 0:
             result = {"ok": True, "message": ""}
+        elif result_check[0].operator_id == doctor_profile_id:
+            result = {"ok": False, "message": "У вас уже есть открытая смена"}
+        else:
+            result = {"ok": False, "message": "На этой кассе уже есть открытая смена"}
         return result
 
     @staticmethod
