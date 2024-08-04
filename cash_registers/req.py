@@ -42,7 +42,6 @@ def check_cash_register(cash_register_data: dict):
     return result
 
 
-
 def send_job(body: dict):
     headers = get_authorization_header()
     try:
