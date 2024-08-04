@@ -81,29 +81,11 @@ class Shift(models.Model):
         return True
 
     @staticmethod
-    def get_open_shift(operator_id: int):
-        shift = Shift.objects.filter(operator_id=operator_id, open_status=True, close_status=False).last()
+    def get_open_shift_by_operator(operator_id: int):
+        shift: Shift = Shift.objects.filter(operator_id=operator_id, open_status=True, close_status=False).last()
         if not shift:
             return {"cash_register_id": None, "shift_id": None}
         return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
-
-    @staticmethod
-    def get_shift_data(operator_id: int):
-        shift: Shift = Shift.objects.filter(operator_id=operator_id, close_status=False).select_related('cash_register').last()
-        status = None
-        uuid_data = None
-        if not shift:
-            return None
-        if not shift.open_status and shift.open_uuid:
-            status = 0
-            uuid_data = shift.open_uuid
-        elif shift.open_status and not shift.close_uuid:
-            status = 1
-        elif shift.open_status and shift.close_uuid:
-            status = 2
-            uuid_data = shift.close_uuid
-        data = {"shift_id": shift.pk, "cash_register_id": shift.cash_register_id, "cash_register_title": shift.cash_register.title, "status": status, "uuid": uuid_data}
-        return data
 
     @staticmethod
     def check_shift(cash_register_id: int, doctor_profile_id: int):

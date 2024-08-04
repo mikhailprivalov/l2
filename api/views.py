@@ -686,7 +686,7 @@ def current_user_info(request):
                 ret["groups"].append("Admin")
             ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret["modules"].get("l2_eds") else []
             ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
-            shift_data = Shift.get_open_shift(request.user.doctorprofile.id)
+            shift_data = Shift.get_open_shift_by_operator(request.user.doctorprofile.id)
             ret["cashRegisterShift"] = {"cashRegisterId": shift_data["cash_register_id"], "shiftId": shift_data["shift_id"]}
 
             try:
