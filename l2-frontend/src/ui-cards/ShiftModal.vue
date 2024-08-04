@@ -112,7 +112,7 @@ const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
-const shiftData = ref({});
+const statusShift = ref('');
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let intervalReq = null;
@@ -127,7 +127,7 @@ const getCashRegisters = async () => {
 const getShiftData = async () => {
   const { ok, data } = await api('cash-register/get-shift-data');
   if (ok) {
-    shiftData.value = data;
+    statusShift.value = data.status;
     if (!shiftIsOpen.value && data.status === 'Смена открывается') {
       titleLocal.value = data.status;
       intervalReq = setTimeout(() => getShiftData(), 1000);
@@ -146,7 +146,6 @@ const getShiftData = async () => {
       intervalReq = null;
     }
   } else {
-    shiftData.value = {};
     titleLocal.value = 'Смена закрыта';
     selectedCashRegister.value = null;
     if (shiftIsOpen.value) {
