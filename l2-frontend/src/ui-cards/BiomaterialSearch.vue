@@ -428,6 +428,7 @@ import { debounce } from 'lodash/function';
 import * as actions from '@/store/action-types';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import Modal from '@/ui-cards/Modal.vue';
+import UrlData from '@/UrlData';
 
 @Component({
   components: {
@@ -457,12 +458,28 @@ import Modal from '@/ui-cards/Modal.vue';
 
     window.addEventListener('keypress', this.keypressHandler);
   },
+  async mounted() {
+    const storedData = UrlData.get();
+    if (storedData && typeof storedData === 'object') {
+      if (storedData.pk) {
+        this.query = (storedData.pk).toString();
+        await this.doSearch();
+      }
+    }
+    this.inited = true;
+  },
   beforeDestroy() {
     window.removeEventListener('keypress', this.keypressHandler);
   },
   watch: {
     query() {
       this.barScanner(this.query);
+    },
+    navState() {
+      if (this.inited) {
+        UrlData.set(this.navState);
+      }
+      UrlData.title(this.direction);
     },
   },
 })
@@ -553,6 +570,15 @@ export default class BiomaterialSearch extends Vue {
     this.query = '';
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
+  }
+
+  get navState() {
+    if (!this.direction) {
+      return null;
+    }
+    return {
+      pk: this.direction,
+    };
   }
 
   get needGlobalCheck() {

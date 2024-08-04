@@ -207,7 +207,8 @@
                 <AuxResearch
                   :main-direction="row.pk"
                   :aux-research="row.aux_researches"
-                /></span>
+                />
+              </span>
             </td>
             <td
               class="researches"
@@ -216,6 +217,19 @@
                 (row.register_number !== '' ? ' (' + row.register_number + ')': '')
               "
             >
+              <span v-if="row.lab && !row.has_hosp && roleCanUseGetBipmaterial">
+                <a
+                  v-tippy
+                  href="#"
+                  title="Забор биоматериала"
+                  @click.prevent="getTubes(row.pk)"
+                >
+                  <i
+                    class="fa-solid fa-vial"
+                    style="color: #6f6f72"
+                  />
+                </a>
+              </span>
               {{ row.researches }}
             </td>
             <td
@@ -548,6 +562,14 @@ export default {
       }
       return false;
     },
+    roleCanUseGetBipmaterial() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Заборщик биоматериала') {
+          return true;
+        }
+      }
+      return false;
+    },
     role_can_use_descriptive() {
       for (const g of this.$store.getters.user_data.groups || []) {
         if (['Врач консультаций', 'Врач параклиники', 'Свидетельство о смерти-доступ'].includes(g)) {
@@ -783,6 +805,9 @@ export default {
     },
     printCurrentBarcodes(pk) {
       this.$root.$emit('print:barcodes', [pk]);
+    },
+    getTubes(directionId) {
+      window.open(`/ui/biomaterial/get#{%22pk%22:${directionId}}`, '_blank');
     },
   },
 };
