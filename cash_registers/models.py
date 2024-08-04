@@ -62,11 +62,10 @@ class Shift(models.Model):
         new_shift.save()
         return {"cash_register_id": new_shift.cash_register_id, "shift_id": new_shift.pk}
 
-    @staticmethod
-    def confirm_open_shift(shift_id: int):
-        shift: Shift = Shift.objects.get(pk=shift_id)
-        shift.open_status = True
-        shift.save()
+    def confirm_open_shift(self):
+        self.open_status = True
+        self.open_at = current_time()
+        self.save()
         return True
 
     @staticmethod
@@ -76,11 +75,10 @@ class Shift(models.Model):
         shift.save()
         return True
 
-    @staticmethod
-    def confirm_close_shift(shift_id: int):
-        shift: Shift = Shift.objects.get(pk=shift_id)
-        shift.close_status = True
-        shift.save()
+    def confirm_close_shift(self):
+        self.close_status = True
+        self.close_at = current_time()
+        self.save()
         return True
 
     @staticmethod

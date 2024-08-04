@@ -55,7 +55,6 @@ def get_shift_data(doctor_profile_id: int):
     uuid_data = None
     status = None
     if not shift:
-        print('мы тут что-ли?')
         return {"ok": False, "data": shift}
     if not shift.open_status and shift.open_uuid:
         status = 0
@@ -71,20 +70,18 @@ def get_shift_data(doctor_profile_id: int):
 
     cash_register_data = get_cash_register_data(shift.cash_register_id)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
-    print(status)
     if not check_cash_register["ok"]:
         return check_cash_register
     job_result = cash_req.get_job_status(str(uuid_data), cash_register_data)
     if not job_result["ok"]:
         return {"ok": False, "message": "Ошибка проверки задания"}
     job_status = job_result["data"]["results"][0]
-    print(job_status)
-    print(status)
+    print(job_status["result"]["fiscalParams"])
     if job_status["status"] == "ready" and status == 0:
-        confirm_open = Shift.confirm_open_shift(shift.pk)
+        shift.confirm_open_shift()
         status = 1
     elif job_status["status"] == "ready" and status == 2:
-        confirm_close = Shift.confirm_close_shift(shift.pk)
+        shift.confirm_close_shift()
         status = -1
     data = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": status}
     return {"ok": True, "data": data}
