@@ -110,4 +110,5 @@ class Shift(models.Model):
         operator_data = {"name": operator.get_full_fio(), "vatin": operator.inn}
         cash_register_data = CashRegister.get_meta_data(cash_register_id)
         uuid_data = str(uuid.uuid4())
-        return operator_data, cash_register_data, uuid_data
+        result = {"operator_data": operator_data, "cash_register_data": cash_register_data, "uuid_data": uuid_data}
+        return result
