@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from jsonfield import JSONField
 from cash_registers import sql_func
@@ -36,6 +38,12 @@ class CashRegister(models.Model):
     def get_cash_registers():
         result = [{"id": cash_register.id, "label": cash_register.title} for cash_register in sql_func.get_cash_registers()]
         return result
+
+    @staticmethod
+    def get_meta_data(cash_register_id):
+        cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
+        cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
+        return cash_register_data
 
 
 class Shift(models.Model):
@@ -96,3 +104,11 @@ class Shift(models.Model):
         elif cash_register_exist:
             return {"ok": False, "message": "На этой кассе уже есть открытая смена"}
         return {"ok": True, "message": ""}
+
+    @staticmethod
+    def get_shift_job_data(doctor_profile_id: int, cash_register_id):
+        operator: DoctorProfile = DoctorProfile.objects.get(pk=doctor_profile_id)
+        operator_data = {"name": operator.get_full_fio(), "vatin": operator.inn}
+        cash_register_data = CashRegister.get_meta_data(cash_register_id)
+        uuid_data = str(uuid.uuid4())
+        return operator_data, cash_register_data, uuid_data

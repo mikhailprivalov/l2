@@ -9,25 +9,11 @@ def get_cash_registers():
     return result
 
 
-def get_meta_data_cash_register(cash_register_id):
-    cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
-    cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
-    return cash_register_data
-
-
-def get_shift_job_data(doctor_profile_id: int, cash_register_id):
-    operator: DoctorProfile = DoctorProfile.objects.get(pk=doctor_profile_id)
-    operator_data = {"name": operator.get_full_fio(), "vatin": operator.inn}
-    cash_register_data = get_meta_data_cash_register(cash_register_id)
-    uuid_data = str(uuid.uuid4())
-    return operator_data, cash_register_data, uuid_data
-
-
 def open_shift(cash_register_id: int, doctor_profile_id: int):
     check_shift = Shift.check_shift(cash_register_id, doctor_profile_id)
     if not check_shift["ok"]:
         return check_shift
-    operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
+    operator_data, cash_register_data, uuid_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if not check_cash_register["ok"]:
         return check_cash_register
@@ -39,7 +25,7 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
 
 
 def close_shift(cash_register_id: int, doctor_profile_id: int):
-    operator_data, cash_register_data, uuid_data = get_shift_job_data(doctor_profile_id, cash_register_id)
+    operator_data, cash_register_data, uuid_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if not check_cash_register["ok"]:
         return check_cash_register
@@ -70,7 +56,7 @@ def get_shift_data(doctor_profile_id: int):
         data = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": status}
         return {"ok": True, "data": data}
 
-    cash_register_data = get_meta_data_cash_register(shift.cash_register_id)
+    cash_register_data = CashRegister.get_meta_data(shift.cash_register_id)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if not check_cash_register["ok"]:
         return check_cash_register
