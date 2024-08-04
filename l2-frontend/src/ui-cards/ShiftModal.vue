@@ -113,18 +113,11 @@ const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
 const shiftData = ref({});
-const statusShift = ref(-1);
-const statusVariant = ref({
-  '-1': 'Смена закрыта',
-  0: 'Смена открывается',
-  1: 'Смена открыта',
-  2: 'Смена закрывается',
-});
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let intervalReq = null;
 
-const titleLocal = computed(() => (statusVariant.value[statusShift.value]));
+const titleLocal = ref('');
 const getCashRegisters = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('cash-register/get-cash-registers');
@@ -135,23 +128,26 @@ const getShiftData = async () => {
   const { ok, data } = await api('cash-register/get-shift-data');
   if (ok) {
     shiftData.value = data;
-    statusShift.value = data.status;
-    if (!shiftIsOpen.value && statusShift.value === 1) {
+    if (!shiftIsOpen.value && data.status === 'Смена открывается') {
+      titleLocal.value = data.status;
+      intervalReq = setTimeout(() => getShiftData(), 1000);
+    } else if (!shiftIsOpen.value && data.status === 'Смена открыта') {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
+      titleLocal.value = data.status;
       root.$emit('msg', 'ok', 'Смена открыта');
       intervalReq = null;
-    } else if (!shiftIsOpen.value && statusShift.value === 0) {
+    } else if (shiftIsOpen.value && data.status === 'Смена закрывается') {
+      titleLocal.value = data.status;
       intervalReq = setTimeout(() => getShiftData(), 1000);
-    } else if (shiftIsOpen.value && statusShift.value === 2) {
-      intervalReq = setTimeout(() => getShiftData(), 1000);
-    } else if (shiftIsOpen.value && statusShift.value === -1) {
+    } else if (shiftIsOpen.value && data.status === 'Смена закрыта') {
       await store.dispatch(actions.CLOSE_SHIFT);
+      titleLocal.value = data.status;
       root.$emit('msg', 'ok', 'Смена закрыта');
       intervalReq = null;
     }
   } else {
     shiftData.value = {};
-    statusShift.value = -1;
+    titleLocal.value = 'Смена закрыта';
     selectedCashRegister.value = null;
     if (shiftIsOpen.value) {
       await store.dispatch(actions.CLOSE_SHIFT);
