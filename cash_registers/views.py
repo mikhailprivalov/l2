@@ -32,6 +32,7 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     if not check_cash_register["ok"]:
         return check_cash_register
     job_result = cash_req.open_shift(uuid_data, cash_register_data, operator_data)
+    print(job_result)
     new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
     data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
     return {"ok": False, "message": "", "data": data}

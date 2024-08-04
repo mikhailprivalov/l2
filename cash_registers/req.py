@@ -7,11 +7,11 @@ def get_authorization_header():
     return headers
 
 
-def check_cash_register_status(cash_register_data: dict):
+def check_cash_register_status(cash_register_data: dict) -> dict:
     headers = get_authorization_header()
     body = {"cashRegister": cash_register_data}
     try:
-        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}get-cash-register-status", json=body, headers=headers, timeout=3)
+        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}get-cash-register-status", json=body, headers=headers)
         response_data = response.json()
     except Exception as e:
         return {"ok": False, "connection_error": True, "data": f"{e}", }
@@ -21,14 +21,21 @@ def check_cash_register_status(cash_register_data: dict):
 def check_cash_register(cash_register_data: dict):
     cash_register_check = check_cash_register_status(cash_register_data)
     if not cash_register_check["ok"] and cash_register_check.get("connection_error"):
+        print(cash_register_check)
         return {"ok": False, "message": "Ошибка подключения к кассовому серверу"}
     elif not cash_register_check["ok"] and cash_register_check.get("connectionError"):
         return {"ok": False, "message": "Кассовая программа недоступна"}
     elif not cash_register_check["ok"] and cash_register_check.get("cash_register_connection_error"):
         # todo - логировать ошибку из ключа "data"
+        print(cash_register_check.get("data"))
         return {"ok": False, "message": "Ошибка при подключении к кассе"}
     else:
         # todo - проверять состояние кассы (бумага, очередь заданий, фискальник)
+        device_status = cash_register_check["data"]["deviceStatus"]
+        if not device_status["paperPresent"]:
+            return {"ok": False, "message": "В кассе нет бумаги"}
+        if device_status["blocked"]:
+            return {"ok": False, "message": "Касса заблокирована"}
         return {"ok": True}
 
 
