@@ -90,9 +90,11 @@ class Shift(models.Model):
     @staticmethod
     def get_open_shift_by_operator(operator_id: int):
         shift: Shift = Shift.objects.filter(operator_id=operator_id, open_status=True, close_status=False).last()
-        if not shift:
-            return {"cash_register_id": None, "shift_id": None}
-        return {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
+        if shift:
+            result = {"cash_register_id": shift.cash_register_id, "shift_id": shift.pk}
+        else:
+            result = {"cash_register_id": None, "shift_id": None}
+        return result
 
     @staticmethod
     def check_shift(cash_register_id: int, doctor_profile_id: int):
