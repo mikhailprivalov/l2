@@ -148,9 +148,6 @@ const getShiftData = async () => {
   } else {
     titleLocal.value = 'Смена закрыта';
     selectedCashRegister.value = null;
-    if (shiftIsOpen.value) {
-      await store.dispatch(actions.CLOSE_SHIFT);
-    }
   }
 };
 
