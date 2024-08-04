@@ -27,7 +27,7 @@ def check_shift(cash_register_id, doctor_profile_id):
             and
             close_status = False
             """,
-            params={"cash_register_id": cash_register_id, "doctor_profile_id": doctor_profile_id}
+            params={"cash_register_id": cash_register_id, "doctor_profile_id": doctor_profile_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
