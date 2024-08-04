@@ -32,9 +32,9 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
     if not check_cash_register["ok"]:
         return check_cash_register
     job_result = cash_req.open_shift(uuid_data, cash_register_data, operator_data)
-    print(job_result)
-    new_shift = Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
-    # data = {"cashRegisterId": new_shift["cash_register_id"], "shiftId": new_shift["shift_id"]}
+    if not job_result["ok"]:
+        return job_result
+    Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
     return {"ok": True, "message": ""}
 
 
@@ -43,9 +43,9 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if not check_cash_register["ok"]:
         return check_cash_register
-    # job_result = cash_req.close_shift(str(uuid_data), cash_register_data, operator_data)
-    # if not job_result["ok"]:
-    #     return job_result
+    job_result = cash_req.close_shift(uuid_data, cash_register_data, operator_data)
+    if not job_result["ok"]:
+        return job_result
     result = Shift.close_shift(uuid_data, cash_register_id, doctor_profile_id)
     return {"ok": result, "message": ""}
 
@@ -85,6 +85,6 @@ def get_shift_data(doctor_profile_id: int):
         status = 1
     elif job_status["status"] == "ready" and status == 2:
         confirm_close = Shift.confirm_close_shift(shift.pk)
-        status = None
+        status = -1
     data = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "status": status}
     return {"ok": True, "data": data}

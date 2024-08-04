@@ -21,13 +21,11 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
 def check_cash_register(cash_register_data: dict):
     cash_register_check = check_cash_register_status(cash_register_data)
     if not cash_register_check["ok"] and cash_register_check.get("connection_error"):
-        print(cash_register_check)
         return {"ok": False, "message": "Ошибка подключения к кассовому серверу"}
     elif not cash_register_check["ok"] and cash_register_check.get("connectionError"):
         return {"ok": False, "message": "Кассовая программа недоступна"}
     elif not cash_register_check["ok"] and cash_register_check.get("cash_register_connection_error"):
         # todo - логировать ошибку из ключа "data"
-        print(cash_register_check.get("data"))
         return {"ok": False, "message": "Ошибка при подключении к кассе"}
     else:
         # todo - проверять состояние кассы (бумага, очередь заданий, фискальник)

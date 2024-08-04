@@ -143,6 +143,10 @@ const getShiftData = async () => {
       intervalReq = setTimeout(() => getShiftData(), 1000);
     } else if (shiftIsOpen.value && statusShift.value === 2) {
       intervalReq = setTimeout(() => getShiftData(), 1000);
+    } else if (shiftIsOpen.value && statusShift.value === -1) {
+      await store.dispatch(actions.CLOSE_SHIFT);
+      root.$emit('msg', 'ok', 'Смена закрыта');
+      intervalReq = null;
     }
   } else {
     shiftData.value = {};
@@ -189,7 +193,6 @@ const closeShift = async () => {
   loading.value = false;
   if (ok) {
     await getShiftData();
-    root.$emit('msg', 'ok', 'Смена закрыта');
   } else {
     root.$emit('msg', 'error', message);
   }
