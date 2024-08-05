@@ -115,3 +115,26 @@ class Shift(models.Model):
         uuid_data = str(uuid.uuid4())
         result = {"operator_data": operator_data, "cash_register_data": cash_register_data, "uuid_data": uuid_data}
         return result
+
+    def get_shift_status(self):
+        uuid_data = None
+        if not self.open_status and self.open_uuid:
+            status = "Смена открывается"
+            uuid_data = self.open_uuid
+        elif self.open_status and not self.close_uuid:
+            status = "Смена открыта"
+        else:
+            status = "Смена закрывается"
+            uuid_data = self.close_uuid
+        return {"status": status, "uuid": str(uuid_data)}
+
+    @staticmethod
+    def change_status(current_status, job_status, shift):
+        result = ""
+        if current_status == "Смена открывается" and job_status["status"] == "ready":
+            shift.confirm_open_shift()
+            result = "Смена открыта"
+        elif current_status == "Смена закрывается" and job_status["status"] == "ready":
+            shift.confirm_close_shift()
+            result = "Смена закрыта"
+        return result
