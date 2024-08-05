@@ -41,7 +41,7 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
 
 def get_shift_data(doctor_profile_id: int):
     """Проверка статуса смены: открывается, открыта, закрывается, закрыта"""
-    data = {"shiftId": None, "cashRegisterId": None, "status": "Смена закрыта"}
+    data = {"shiftId": None, "cashRegisterId": None, "status": "Закрыта"}
     result = {"ok": True, "message": "", "data": data}
     shift: Shift = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).select_related('cash_register').last()
     if shift:

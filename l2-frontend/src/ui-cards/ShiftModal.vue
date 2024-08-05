@@ -128,20 +128,20 @@ const getShiftData = async () => {
   const { ok, data } = await api('cash-register/get-shift-data');
   if (ok) {
     statusShift.value = data.status;
-    if (!shiftIsOpen.value && data.status === 'Смена открывается') {
-      titleLocal.value = data.status;
+    if (!shiftIsOpen.value && data.status === 'Открывается') {
+      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       intervalReq = setTimeout(() => getShiftData(), 1000);
-    } else if (!shiftIsOpen.value && data.status === 'Смена открыта') {
+    } else if (!shiftIsOpen.value && data.status === 'Открыта') {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
-      titleLocal.value = data.status;
+      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       root.$emit('msg', 'ok', 'Смена открыта');
       intervalReq = null;
-    } else if (shiftIsOpen.value && data.status === 'Смена закрывается') {
-      titleLocal.value = data.status;
+    } else if (shiftIsOpen.value && data.status === 'Закрывается') {
+      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       intervalReq = setTimeout(() => getShiftData(), 1000);
-    } else if (shiftIsOpen.value && data.status === 'Смена закрыта') {
+    } else if (shiftIsOpen.value && data.status === 'Закрыта') {
       await store.dispatch(actions.CLOSE_SHIFT);
-      titleLocal.value = data.status;
+      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       root.$emit('msg', 'ok', 'Смена закрыта');
       intervalReq = null;
     }
