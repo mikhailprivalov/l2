@@ -32,7 +32,6 @@
         <div slot="body">
           <div class="body">
             <div
-              v-if="!shiftIsOpen"
               class="flex"
             >
               <div class="input-group">
@@ -62,22 +61,6 @@
               >
                 Открыть
               </button>
-            </div>
-            <div v-else>
-              <table>
-                <colgroup>
-                  <col>
-                  <col>
-                  <col>
-                  <col>
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th />
-                  </tr>
-                </thead>
-                <tr></tr>
-              </table>
             </div>
           </div>
         </div>
