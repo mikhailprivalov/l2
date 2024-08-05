@@ -54,7 +54,7 @@ def get_shift_data(doctor_profile_id: int):
             cash_register_data = CashRegister.get_meta_data(shift.cash_register_id)
             check_cash_register = cash_req.check_cash_register(cash_register_data)
             if check_cash_register["ok"]:
-                job_result = cash_req.get_job_status(uuid_data, cash_register_data)
+                job_result = cash_req.get_job_status(str(uuid_data), cash_register_data)
                 if job_result["ok"]:
                     job_status = job_result["data"]["results"][0]
                     if job_status["status"] == "ready":

@@ -32,6 +32,7 @@
         <div slot="body">
           <div class="body">
             <div
+              v-if="!shiftIsOpen"
               class="flex"
             >
               <div class="input-group">
@@ -61,6 +62,22 @@
               >
                 Открыть
               </button>
+            </div>
+            <div v-else>
+              <table>
+                <colgroup>
+                  <col>
+                  <col>
+                  <col>
+                  <col>
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th />
+                  </tr>
+                </thead>
+                <tr></tr>
+              </table>
             </div>
           </div>
         </div>
@@ -125,7 +142,7 @@ const getCashRegisters = async () => {
   cashRegisters.value = result;
 };
 const getShiftData = async () => {
-  const { ok, data } = await api('cash-register/get-shift-data');
+  const { ok, message, data } = await api('cash-register/get-shift-data');
   if (ok) {
     statusShift.value = data.status;
     if (!shiftIsOpen.value && data.status === 'Открывается') {
@@ -144,11 +161,14 @@ const getShiftData = async () => {
       titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       root.$emit('msg', 'ok', 'Смена закрыта');
       intervalReq = null;
+    } else {
+      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
     }
   } else {
-    titleLocal.value = 'Смена закрыта';
+    titleLocal.value = shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта';
     selectedCashRegister.value = null;
     intervalReq = null;
+    root.$emit('msg', 'error', message);
   }
 };
 

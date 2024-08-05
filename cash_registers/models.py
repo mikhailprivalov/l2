@@ -126,7 +126,7 @@ class Shift(models.Model):
         else:
             status = "Закрывается"
             uuid_data = self.close_uuid
-        return {"status": status, "uuid": str(uuid_data)}
+        return {"status": status, "uuid": uuid_data}
 
     @staticmethod
     def change_status(current_status, job_status, shift):
