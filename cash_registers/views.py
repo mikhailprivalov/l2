@@ -42,7 +42,7 @@ def close_shift(cash_register_id: int, doctor_profile_id: int):
 def get_shift_data(doctor_profile_id: int):
     """Проверка статуса смены: открывается, открыта, закрывается, закрыта"""
     data = {"shiftId": None, "cashRegisterId": None, "status": "Смена закрыта"}
-    result = {"ok": True, "data": data}
+    result = {"ok": True, "message": "", "data": data}
     shift: Shift = Shift.objects.filter(operator_id=doctor_profile_id, close_status=False).select_related('cash_register').last()
     if shift:
         shift_status = shift.get_shift_status()
@@ -59,7 +59,10 @@ def get_shift_data(doctor_profile_id: int):
                     job_status = job_result["data"]["results"][0]
                     if job_status["status"] == "ready":
                         result["data"]["status"] = Shift.change_status(current_status, job_status, shift)
+                    elif job_status["status"] == "error":
+                        result = {"ok": False, "message": "Задача заблокирована на кассе"}
                     # todo - job_status == error, выводить ошибку и переставать запрашивать статус
+
                 else:
                     result = job_result
             else:

@@ -148,6 +148,7 @@ const getShiftData = async () => {
   } else {
     titleLocal.value = 'Смена закрыта';
     selectedCashRegister.value = null;
+    intervalReq = null;
   }
 };
 
