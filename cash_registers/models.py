@@ -130,11 +130,10 @@ class Shift(models.Model):
 
     @staticmethod
     def change_status(current_status, job_status, shift):
-        result = ""
-        if current_status == "Смена открывается" and job_status["status"] == "ready":
+        if current_status == "Смена открывается":
             shift.confirm_open_shift()
             result = "Смена открыта"
-        elif current_status == "Смена закрывается" and job_status["status"] == "ready":
+        else:
             shift.confirm_close_shift()
             result = "Смена закрыта"
         return result

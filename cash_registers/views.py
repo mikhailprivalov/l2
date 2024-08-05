@@ -57,7 +57,9 @@ def get_shift_data(doctor_profile_id: int):
                 job_result = cash_req.get_job_status(uuid_data, cash_register_data)
                 if job_result["ok"]:
                     job_status = job_result["data"]["results"][0]
-                    result["data"]["status"] = Shift.change_status(current_status, job_status, shift)
+                    if job_status["status"] == "ready":
+                        result["data"]["status"] = Shift.change_status(current_status, job_status, shift)
+                    # todo - job_status == error, выводить ошибку и переставать запрашивать статус
                 else:
                     result = job_result
             else:
