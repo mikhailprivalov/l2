@@ -61,8 +61,6 @@ def get_shift_data(doctor_profile_id: int):
                         result["data"]["status"] = Shift.change_status(current_status, job_status, shift)
                     elif job_status["status"] == "error":
                         result = {"ok": False, "message": "Задача заблокирована на кассе"}
-                    # todo - job_status == error, выводить ошибку и переставать запрашивать статус
-
                 else:
                     result = job_result
             else:

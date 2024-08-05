@@ -119,21 +119,21 @@ class Shift(models.Model):
     def get_shift_status(self):
         uuid_data = None
         if not self.open_status and self.open_uuid:
-            status = "Смена открывается"
+            status = "Открывается"
             uuid_data = self.open_uuid
         elif self.open_status and not self.close_uuid:
-            status = "Смена открыта"
+            status = "Открыта"
         else:
-            status = "Смена закрывается"
+            status = "Закрывается"
             uuid_data = self.close_uuid
         return {"status": status, "uuid": str(uuid_data)}
 
     @staticmethod
     def change_status(current_status, job_status, shift):
-        if current_status == "Смена открывается":
+        if current_status == "Открывается":
             shift.confirm_open_shift()
-            result = "Смена открыта"
+            result = "Открыта"
         else:
             shift.confirm_close_shift()
-            result = "Смена закрыта"
+            result = "Закрыта"
         return result
