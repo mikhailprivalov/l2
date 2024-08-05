@@ -23,7 +23,7 @@ def check_shift(cash_register_id, doctor_profile_id):
             close_status
             FROM cash_registers_shift
             WHERE
-            (operator_id=$(doctor_profile_id)s or cash_register_id=$(cash_register_id)s)
+            (operator_id=%(doctor_profile_id)s or cash_register_id=%(cash_register_id)s)
             and
             close_status = False
             """,
