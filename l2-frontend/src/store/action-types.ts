@@ -52,3 +52,6 @@ export const PRINT_QUEUE_FLUSH = 'PRINT_QUEUE_FLUSH';
 export const EDIT_OPEN = 'EDIT_OPEN';
 export const EDIT_HIDE = 'EDIT_HIDE';
 export const EDIT_SAVED_OBJECT = 'EDIT_SAVED_OBJECT';
+
+export const OPEN_SHIFT = 'OPEN_SHIFT';
+export const CLOSE_SHIFT = 'CLOSE_SHIFT';

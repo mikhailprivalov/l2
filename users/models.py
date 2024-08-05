@@ -91,6 +91,7 @@ class DoctorProfile(models.Model):
     black_list_monitoring = models.ManyToManyField('directory.Researches', related_name='black_list_monitoring', blank=True, help_text='Запрещены для просмотра мониторинги')
     position = models.ForeignKey(Position, blank=True, default=None, null=True, help_text='Должность пользователя', on_delete=models.SET_NULL)
     snils = models.CharField(max_length=11, help_text='СНИЛС', blank=True, default="", db_index=True)
+    inn = models.CharField(max_length=12, help_text='ИНН', blank=True, default="")
     n3_id = models.CharField(max_length=40, help_text='N3_ID', blank=True, default="")
     disabled_forms = models.CharField(max_length=255, help_text='Отключенные формы перчислить ч/з запятую', blank=True, default="")
     disabled_statistic_categories = models.CharField(max_length=255, help_text='Отключить доступ к статистике-категории ч/з запятую', blank=True, default="")

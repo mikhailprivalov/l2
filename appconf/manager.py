@@ -191,6 +191,7 @@ class SettingManager:
                     "code_price",
                     "all_service",
                     "show_barcode_button_in_direction_history",
+                    "cash",
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),

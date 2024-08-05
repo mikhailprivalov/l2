@@ -8,6 +8,7 @@ from typing import Optional, Union
 import pytz_deprecation_shim as pytz
 
 from api.models import ManageDoctorProfileAnalyzer, Analyzer
+from cash_registers.models import Shift
 from directions.views import create_case_by_cards
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
 from doctor_schedule.models import ScheduleResource
@@ -638,6 +639,7 @@ def current_user_info(request):
         "modules": SettingManager.l2_modules(),
         "user_services": [],
         "loading": False,
+        "cashRegisterShift": {"cashRegisterId": None, "shiftId": None},
     }
     if ret["auth"]:
         request.user.doctorprofile.mark_as_online()
@@ -684,6 +686,8 @@ def current_user_info(request):
                 ret["groups"].append("Admin")
             ret["eds_allowed_sign"] = doctorprofile.get_eds_allowed_sign() if ret["modules"].get("l2_eds") else []
             ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
+            shift_data = Shift.get_open_shift_by_operator(request.user.doctorprofile.id)
+            ret["cashRegisterShift"] = {"cashRegisterId": shift_data["cash_register_id"], "shiftId": shift_data["shift_id"]}
 
             try:
                 connections.close_all()
