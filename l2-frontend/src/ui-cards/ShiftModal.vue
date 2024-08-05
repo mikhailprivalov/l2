@@ -41,14 +41,14 @@
                 <Treeselect
                   v-model="selectedCashRegister"
                   :options="cashRegisters"
-                  :disabled="shiftIsOpen || loading || statusShift === 2"
+                  :disabled="shiftIsOpen || loading || statusShift === 'Смена закрывается'"
                   placeholder="Выберите кассу"
                 />
               </div>
               <button
                 v-if="shiftIsOpen"
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading || statusShift === 2"
+                :disabled="!selectedCashRegister || loading || statusShift === 'Смена закрывается'"
                 @click="closeShift"
               >
                 Закрыть
@@ -56,7 +56,7 @@
               <button
                 v-else
                 class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading || statusShift === 0"
+                :disabled="!selectedCashRegister || loading || statusShift === 'Смена открывается'"
                 @click="openShift"
               >
                 Открыть
