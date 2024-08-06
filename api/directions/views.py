@@ -3725,7 +3725,6 @@ def tubes_register_get(request):
     pks = data_parse(request.body, {'pks': list})[0]
     data = json.loads(request.body)
     manual_select_get_time = data.get('selectGetTime')
-    print(type(manual_select_get_time))
 
     get_details = {}
 
