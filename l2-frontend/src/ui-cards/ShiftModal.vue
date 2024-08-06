@@ -66,37 +66,48 @@
             <div>
               <table class="table">
                 <colgroup>
+                  <col style="width: 50px">
+                  <col style="width: 50px">
                   <col>
-                  <col width="100">
-                  <col width="100">
-                  <col width="100">
+                  <col style="width: 100px">
+                  <col style="width: 100px">
+                  <col style="width: 100px">
                 </colgroup>
                 <thead>
-                  <tr class="border-no-top">
-                    <th class="text-center border-right">
+                  <tr>
+                    <th class="text-center">
+                      <strong>Смена №</strong>
+                    </th>
+                    <th class="text-center">
+                      <strong>Касса №</strong>
+                    </th>
+                    <th class="text-center">
                       <strong>Название</strong>
                     </th>
-                    <th class="text-center border-right">
-                      <strong>Кол-во</strong>
+                    <th class="text-center">
+                      <strong>Открыта</strong>
                     </th>
-                    <th class="text-center border-right">
-                      <strong>Цена</strong>
+                    <th class="text-center">
+                      <strong>Статус</strong>
                     </th>
-                    <th
-                      class="border-right delete-all-coast"
-                    >
-                      <strong>Ещё</strong>
-                    </th>
+                    <th />
                   </tr>
                 </thead>
-                <tr
-                  v-if="filteredRows.length === 0"
-                  class="text-center"
-                >
-                  <td>{{ currentShiftData.shiftId }}</td>
-                  <td>{{ currentShiftData.cashRegisterId }}</td>
+                <tr>
+                  <td class="text-center">
+                    {{ currentShiftData.shiftId }}
+                  </td>
+                  <td class="text-center">
+                    {{ currentShiftData.cashRegisterId }}
+                  </td>
                   <td>{{ currentShiftData.cashRegisterTitle }}</td>
-                  <td>{{ currentShiftData.status }}</td>
+                  <td class="text-center">
+                    {{ currentShiftData.open_at }}
+                  </td>
+                  <td class="text-center">
+                    {{ currentShiftData.status }}
+                  </td>
+                  <td />
                 </tr>
               </table>
             </div>
@@ -133,7 +144,14 @@ import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import api from '@/api';
-import VueTippyTd from '@/construct/VueTippyTd.vue';
+
+interface shiftData {
+  shiftId: number,
+  cashRegisterId: number,
+  cashRegisterTitle: string,
+  open_at: string,
+  status: string
+}
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -151,7 +169,13 @@ const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
-const currentShiftData = ref({});
+const currentShiftData = ref<shiftData>({
+  shiftId: null,
+  cashRegisterId: null,
+  cashRegisterTitle: '',
+  open_at: '',
+  status: '',
+});
 const statusShift = ref('');
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
