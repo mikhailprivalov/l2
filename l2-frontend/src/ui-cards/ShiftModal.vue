@@ -32,6 +32,7 @@
         <div slot="body">
           <div class="body">
             <div
+              v-if="!shiftIsOpen"
               class="flex"
             >
               <div class="input-group">
@@ -61,6 +62,43 @@
               >
                 Открыть
               </button>
+            </div>
+            <div>
+              <table class="table">
+                <colgroup>
+                  <col>
+                  <col width="100">
+                  <col width="100">
+                  <col width="100">
+                </colgroup>
+                <thead>
+                  <tr class="border-no-top">
+                    <th class="text-center border-right">
+                      <strong>Название</strong>
+                    </th>
+                    <th class="text-center border-right">
+                      <strong>Кол-во</strong>
+                    </th>
+                    <th class="text-center border-right">
+                      <strong>Цена</strong>
+                    </th>
+                    <th
+                      class="border-right delete-all-coast"
+                    >
+                      <strong>Ещё</strong>
+                    </th>
+                  </tr>
+                </thead>
+                <tr
+                  v-if="filteredRows.length === 0"
+                  class="text-center"
+                >
+                  <td>{{ currentShiftData.shiftId }}</td>
+                  <td>{{ currentShiftData.cashRegisterId }}</td>
+                  <td>{{ currentShiftData.cashRegisterTitle }}</td>
+                  <td>{{ currentShiftData.status }}</td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>
@@ -95,6 +133,7 @@ import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import api from '@/api';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -112,6 +151,7 @@ const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
+const currentShiftData = ref({});
 const statusShift = ref('');
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -127,6 +167,7 @@ const getCashRegisters = async () => {
 const getShiftData = async () => {
   const { ok, message, data } = await api('cash-register/get-shift-data');
   if (ok) {
+    currentShiftData.value = data;
     statusShift.value = data.status;
     if (!shiftIsOpen.value && data.status === 'Открывается') {
       titleLocal.value = `Смена ${data.status.toLowerCase()}`;
@@ -217,5 +258,10 @@ const closeShift = async () => {
 ::v-deep .vue-treeselect__control {
   border: 1px solid #AAB2BD !important;
   border-radius: 0;
+}
+
+.table {
+  margin-bottom: 0;
+  table-layout: fixed;
 }
 </style>
