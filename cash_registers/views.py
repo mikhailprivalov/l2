@@ -1,5 +1,8 @@
+import pytz
+
 from cash_registers.models import CashRegister, Shift
 import cash_registers.req as cash_req
+from laboratory.settings import TIME_ZONE
 
 
 def get_cash_registers():
@@ -48,7 +51,8 @@ def get_shift_data(doctor_profile_id: int):
         shift_status = shift.get_shift_status()
         current_status = shift_status["status"]
         uuid_data = shift_status["uuid"]
-        result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "open_at": shift.open_at, "status": current_status}
+        open_at = shift.open_at.astimezone(pytz.timezone(TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
+        result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "open_at": open_at, "status": current_status}
 
         if uuid_data:
             cash_register_data = CashRegister.get_meta_data(shift.cash_register_id)
@@ -59,6 +63,8 @@ def get_shift_data(doctor_profile_id: int):
                     job_status = job_result["data"]["results"][0]
                     if job_status["status"] == "ready":
                         result["data"]["status"] = Shift.change_status(current_status, job_status, shift)
+                        open_at = shift.open_at.astimezone(pytz.timezone(TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
+                        result["data"]["open_at"] = open_at
                     elif job_status["status"] == "error":
                         result = {"ok": False, "message": "Задача заблокирована на кассе"}
                 else:
