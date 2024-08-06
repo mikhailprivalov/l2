@@ -77,6 +77,8 @@ class Command(BaseCommand):
                     for i in ReleationsFT.objects.filter(tube=tube):
                         if i.pk != relation_tmp:
                             fraction_obj = Fractions.objects.filter(relation_id=i.pk).first()
+                            if not fraction_obj:
+                                continue
                             fraction_data[i.pk] = fraction_obj.research.laboratory_material
                         relation_tmp = i.pk
 
