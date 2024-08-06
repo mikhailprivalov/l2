@@ -3723,6 +3723,9 @@ def tubes_for_get(request):
 @login_required
 def tubes_register_get(request):
     pks = data_parse(request.body, {'pks': list})[0]
+    data = json.loads(request.body)
+    manual_select_get_time = data.get('selectGetTime')
+    print(type(manual_select_get_time))
 
     get_details = {}
 
@@ -3740,7 +3743,7 @@ def tubes_register_get(request):
             if napravleniye.external_executor_hospital and napravleniye.external_executor_hospital.is_external_performing_organization:
                 napravleniye.need_order_redirection = True
         if not val.doc_get and not val.time_get:
-            val.set_get(request.user.doctorprofile)
+            val.set_get(request.user.doctorprofile, manual_select_get_time)
         get_details[pk] = val.get_details()
 
     return status_response(True, data={'details': get_details})

@@ -12,6 +12,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, Image
 
+from directions.models import TubesRegistration, Issledovaniya
 from directions.sql_func import get_data_by_directions_id, get_directions_by_who_create
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER
@@ -20,6 +21,7 @@ from reportlab.lib.pagesizes import A4
 from laboratory.utils import current_time, strdate, strdatetimeru
 from utils.dates import normalize_dots_date
 from utils.pagenum import PageNumCanvasPartitionAll
+import simplejson as json
 
 
 def form_01(request_data):
@@ -127,18 +129,29 @@ def form_01(request_data):
             Paragraph('Биоматериал', styleT),
             Paragraph('ФИО пациента', styleT),
             Paragraph('ШтрихКод', styleT),
-            Paragraph('Направление №', styleT),
+            Paragraph('Примечание', styleT),
         ]
     ]
-
-    directions = get_directions_by_who_create(tuple([user_data.doctorprofile.pk]), f"{normalize_date_act} 00:00:00", f"{normalize_date_act} 23:59:59")
-    directions = [i.napravleniye_id for i in directions]
+    tubes = []
+    directions = []
+    if "filter" in request_data.keys():
+        filterArray = json.loads(request_data.get("filter"))
+        for v in filterArray:
+            tubes.append(TubesRegistration.objects.get(number=v))
+        for v in tubes:  # Перебор пробирок
+            iss: Issledovaniya = Issledovaniya.objects.filter(tubes__number=v.number).first()
+            directions.append(iss.napravleniye_id)
+        directions = list(set(directions))
+    else:
+        directions = get_directions_by_who_create(tuple([user_data.doctorprofile.pk]), f"{normalize_date_act} 00:00:00", f"{normalize_date_act} 23:59:59")
+        directions = [i.napravleniye_id for i in directions]
     directions_data = get_data_by_directions_id(tuple(sorted(directions)))
     old_tube_number = ""
     old_type_material = ""
     old_tube_title = ""
     old_patient_fio = ""
     old_direction = ""
+    old_tube_registration_time = ""
     step = 0
 
     total_container = {}
@@ -152,7 +165,7 @@ def form_01(request_data):
                     Paragraph(str(old_type_material), styleT),
                     Paragraph(old_patient_fio, styleT),
                     bcd,
-                    Paragraph(str(old_direction), styleT),
+                    Paragraph(f"№{str(old_direction)}<br/>{old_tube_registration_time}", styleT),
                 ]
             )
             count = total_container.get(old_tube_title, 0)
@@ -163,6 +176,7 @@ def form_01(request_data):
         old_tube_title = i.tube_title
         old_patient_fio = f'{i.patient_family} {i.patient_name} {i.patient_patronymic}'
         old_direction = i.direction_number
+        old_tube_registration_time = i.tube_registration_time
         step += 1
     bcd = createBarcodeDrawing('Code128', value=old_tube_number, humanReadable=1, barHeight=7 * mm, width=45 * mm)
     bcd.hAlign = 'LEFT'
@@ -175,7 +189,7 @@ def form_01(request_data):
             Paragraph(str(old_type_material), styleT),
             Paragraph(old_patient_fio, styleT),
             bcd,
-            Paragraph(str(old_direction), styleT),
+            Paragraph(f"№{str(old_direction)}<br/>{old_tube_registration_time}", styleT),
         ]
     )
 

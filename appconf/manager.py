@@ -202,6 +202,7 @@ class SettingManager:
             "medbook_auto_start": SettingManager.get_medbook_auto_start(),
             "descriptive_rich_text": SettingManager.get("descriptive_rich_text", default='false', default_type='b'),
             "number_generator_field": SettingManager.get("number_generator_field", default='false', default_type='b'),
+            "show_manual_select_get_time": SettingManager.get("show_manual_select_get_time", default='false', default_type='b'),
             "tfoms_attachment_field": SettingManager.get("tfoms_attachment_field", default='false', default_type='b'),
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
