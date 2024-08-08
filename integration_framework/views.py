@@ -1620,8 +1620,6 @@ def external_list_direction_create(request):
     body_directions = json.loads(request.body)
     for body in body_directions:
         result = create_direction_by_param(body, request)
-        print("result")
-        print(result)
         if not result.get("ok"):
             try:
                 Log.log(
@@ -1646,23 +1644,18 @@ def create_direction_by_param(body, request):
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
     else:
         hospital = Hospitals.objects.filter(oid=oid_org).first()
-    print("hospital")
-    print(hospital)
 
     if not hospital:
         return {"ok": False, "message": "Организация не найдена"}
 
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
         return {"ok": False, "message": "Нет доступа в переданную организацию"}
-    print("go go gog go ")
 
     is_exclude_contorl_documnets = False
     if hospital.pk in HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION:
         is_exclude_contorl_documnets = True
 
     patient = body.get("patient", {})
-    print("patient")
-    print(patient)
 
     enp = (patient.get("enp") or "").replace(" ", "")
 
@@ -1686,11 +1679,6 @@ def create_direction_by_param(body, request):
         sex = "м"
     else:
         sex = "ж"
-    print(birthdate)
-    print(sex)
-    print(lastname)
-    print(firstname)
-    print(patronymic)
 
     if not enp and not (lastname and firstname and birthdate):
         return {"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"}
@@ -1745,8 +1733,7 @@ def create_direction_by_param(body, request):
             },
             need_return_individual=True,
         )
-    print("individual")
-    print(individual)
+
     if not individual:
         return {"ok": False, "message": "Физлицо не найдено"}
 
@@ -1756,19 +1743,16 @@ def create_direction_by_param(body, request):
 
     if not card:
         return {"ok": False, "message": "Карта не найдена"}
-    print("card")
-    print(card)
-    print(body)
+
     financing_source_title = body.get("financingSource", "")
-    print(financing_source_title)
+
     if financing_source_title.lower() not in ["омс", "бюджет", "платно"]:
         return {"ok": False, "message": "Некорректный источник финансирования"}
 
     financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title="ОМС", hide=False).first()
     financing_category_code = body.get("financingCategory", "")
     price_category = PriceCategory.objects.filter(title__startswith=financing_category_code).first()
-    print("get financing_source")
-    print(financing_source)
+
     if not financing_source:
         return {"ok": False, "message": "Некорректный источник финансирования"}
 
@@ -1781,19 +1765,16 @@ def create_direction_by_param(body, request):
     department = body.get("department", "")
     additiona_info = body.get("additionalInfo", "")
     last_result_data = body.get("lastResultData", "")
-    print("get diagText")
     diag_text = body.get("diagText", "")  # обязательно
     if not diag_text:
         return {"ok": False, "message": "Диагноз описание не заполнено"}
-    print("get MkB")
 
     diag_mkb10 = body.get("diagMKB10", "")  # обязательно
     if not diag_mkb10:
         return {"ok": False, "message": "Диагноз по МКБ10 не заполнен (не верно)"}
     open_skob = "{"
     close_skob = "}"
-    print("diag_mkb10")
-    print(diag_mkb10)
+
 
     diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
     diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}", "id":"{diag_mcb10_data.pk}"{close_skob}'
@@ -1807,15 +1788,11 @@ def create_direction_by_param(body, request):
         7: "самопроизвольно отделившиеся фрагменты тканей—7",
     }
     method_obtain_material = body.get("methodObtainMaterial", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
-    print("method_obtain_material")
-    print(method_obtain_material)
-    print(type(method_obtain_material))
     if not method_obtain_material or int(method_obtain_material) not in [1, 2, 3, 4, 5, 6, 7]:
         return {"ok": False, "message": "Способо забора не верно заполнено"}
 
     resident_code = patient.get("residentCode", 1)  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
-    print("resident_code")
-    print(resident_code)
+
     if not resident_code or int(resident_code) not in [1, 2, '1', '2']:
         return {"ok": False, "message": "Не указан вид жительства"}
     if int(resident_code) == 1:
@@ -1840,10 +1817,7 @@ def create_direction_by_param(body, request):
         if not result_check:
             return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
-    print("numbers_vial")
-    print(numbers_vial)
-    print("price_category")
-    print(price_category)
+
     if Napravleniya.objects.filter(id_in_hospital=id_in_hospital, hospital=hospital).first():
         return {"ok": False, "message": f"Направление с таким Id {id_in_hospital} существует"}
 
@@ -1860,7 +1834,6 @@ def create_direction_by_param(body, request):
                 price_category=price_category,
                 rmis_number=id_in_hospital if body.get("isRMIS") else None,
             )
-            print("Направление создаем")
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
             if time_get and not valid_date(time_get) or not time_get:
@@ -1878,25 +1851,16 @@ def create_direction_by_param(body, request):
                     "settings": [{"type": "rowNumber", "width": "7%"}, {"type": 0, "width": "25%"}, {"type": 10, "width": "20%"}, {"type": 18, "width": "10%"}, {"type": 0, "width": "38%"}],
                 }
             }
-            print("data_marked")
-            print(data_marked)
 
             result_table_field = []
             pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
-            print("material_mark")
-            print(material_mark)
             for m_m in material_mark:
-                print("m_m")
-                print(m_m)
-                print(type(m_m.get("pathologicalProcess")))
                 if not m_m.get("pathologicalProcess"):
                     m_m["pathologicalProcess"] = 7
                 result_table_field.append(
                     [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m.get("pathologicalProcess", 7)], str(m_m["objectValue"]), m_m.get("description", "")]
                 )
             data_marked["rows"] = result_table_field
-            print("obtain_material")
-            print(obtain_material)
             match_keys = {
                 "Диагноз основной": diag_text,
                 "Код по МКБ": diag_mkb10,
@@ -1911,8 +1875,6 @@ def create_direction_by_param(body, request):
                 "ФИО врача": doctor_fio,
                 "Вид места жительства": resident_data,
             }
-            print("match_keys")
-            print(match_keys)
 
             for group in ParaclinicInputGroups.objects.filter(research=direction_params):
                 for f in ParaclinicInputField.objects.filter(group=group):
