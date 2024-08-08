@@ -18,7 +18,7 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         print(ws)  # noqa: T001
         starts = False
-        code, full_title, short_title, address = '', '', '', ''
+        code, full_title, short_title, address, eternal_executor = '', '', '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -28,8 +28,19 @@ class Command(BaseCommand):
                     short_title = cells.index("краткое")
                     full_title = cells.index("полное")
                     address = cells.index("адрес")
+                    eternal_executor = cells.index("внешний исполнитель")
             else:
-                if Hospitals.objects.filter(code_tfoms=cells[code]).exists():
-                    print(Hospitals.objects.filter(code_tfoms=cells[code]))  # noqa: T001
-                Hospitals.objects.create(title=cells[full_title][:255], short_title=cells[short_title][:255], code_tfoms=cells[code], address=cells[address][:128])
-                print(f'добавлено МО:{cells[code]}:{cells[full_title]}:{cells[short_title]}:{cells[address]}:')  # noqa: T001
+                if Hospitals.objects.filter(code_tfoms=cells[code]).exists() or Hospitals.objects.filter(code_tfoms=cells[full_title]).exists():
+                    continue
+                else:
+                    is_eternal_executor = False
+                    if int(eternal_executor) == 1:
+                        is_eternal_executor = True
+                    Hospitals.objects.create(
+                        title=cells[full_title][:255],
+                        short_title=cells[short_title][:255],
+                        code_tfoms=cells[code],
+                        address=cells[address][:128],
+                        is_external_performing_organization=is_eternal_executor,
+                    )
+                    self.stdout.write(f'добавлено МО:{cells[code]}:{cells[full_title]}:{cells[short_title]}:{cells[address]}:')

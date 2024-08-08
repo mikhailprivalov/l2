@@ -118,7 +118,8 @@ class TubesRegistration(models.Model):
     number = models.BigIntegerField(db_index=True, help_text='Номер ёмкости', blank=True, null=True, default=None)
     chunk_number = models.PositiveSmallIntegerField(db_index=True, blank=True, null=True, default=None, help_text='Номер разложения ёмкости на несколько')
     type = models.ForeignKey(directory.ReleationsFT, help_text='Тип ёмкости', on_delete=models.CASCADE)
-    time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала', db_index=True)
+    time_get = models.DateTimeField(null=True, blank=True, help_text='Время взятия материала/ фиксация перации', db_index=True)
+    manual_selected_time_get = models.DateTimeField(null=True, blank=True, default=None, help_text='Время взятия материала введенное вручну', db_index=True)
     doc_get = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docget', help_text='Кто взял материал', on_delete=models.SET_NULL)
     time_recive = models.DateTimeField(null=True, blank=True, help_text='Время получения материала', db_index=True)
     doc_recive = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, related_name='docrecive', help_text='Кто получил материал', on_delete=models.SET_NULL)
@@ -187,7 +188,7 @@ class TubesRegistration(models.Model):
 
         return {"n": self.daynum, "new": new_t}
 
-    def set_get(self, doc_get):
+    def set_get(self, doc_get, manual_select_get_time=None):
         """
         Установка статуса взятия
         :param doc_get: врач/мед сестра, взявшая материал
@@ -198,6 +199,8 @@ class TubesRegistration(models.Model):
         self.time_get = timezone.now()
         self.doc_get = doc_get
         self.barcode = str(self.number)
+        if manual_select_get_time:
+            self.manual_selected_time_get = manual_select_get_time
         self.save()
         slog.Log(key=str(self.number), type=9, body="", user=doc_get).save()
 
@@ -1528,8 +1531,12 @@ class Napravleniya(models.Model):
                         research_data_params = None
                     else:
                         dir_group = -1
-                        if research.direction and external_organization == "NONE":
+                        if research.direction and external_organization == "NONE" and (not SettingManager.get("dirgroup_by_tube", default='false', default_type='b')):
                             dir_group = research.direction_id
+
+                        if SettingManager.get("dirgroup_by_tube", default='false', default_type='b') and research.podrazdeleniye and research.podrazdeleniye.p_type == 2:
+                            fraction = directory.Fractions.objects.filter(research=research).first()
+                            dir_group = fraction.relation_id
 
                         if v in only_lab_researches and external_organization != "NONE":
                             dir_group = dir_group_onlylab

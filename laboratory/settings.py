@@ -67,6 +67,7 @@ INSTALLED_APPS = (
     'employees.apps.EmployeesConfig',
     'results_feed.apps.ResultsFeedConfig',
     'document_management',
+    'cash_registers',
 )
 
 MIDDLEWARE = [
@@ -448,6 +449,8 @@ EXCLUDE_TYPE_RESEARCH = {
     "is_complex": False,
 }
 
+CASH_REGISTER_SERVER_ADDRESS = 'http://127.0.0.1:3000/'
+CASH_REGISTER_SERVER_TOKEN = 'token'
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

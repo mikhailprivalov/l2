@@ -14,13 +14,27 @@
         class="btn-group btn-group-justified"
         style="margin-bottom: 10px; width: 50%"
       >
-        <div class="btn-group">
+        <div
+          v-if="!showManualSelectGetTime"
+          class="btn-group"
+        >
           <a
             type="button"
             class="btn btn-primary-nb btn-ell"
             target="_blank"
             :href="historyUrl"
           >Печать</a>
+        </div>
+        <div
+          v-if="showManualSelectGetTime"
+          class="btn-group"
+        >
+          <a
+            type="button"
+            class="btn btn-primary-nb btn-ell"
+            target="_blank"
+            :href="actUrl"
+          >Акт</a>
         </div>
         <div class="btn-group">
           <button
@@ -112,6 +126,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import moment from 'moment/moment';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import JournalGetMaterial from '@/modals/JournalGetMaterial.vue';
@@ -143,6 +158,10 @@ export default class BiomaterialHistory extends Vue {
 
   showJournal: boolean;
 
+  get showManualSelectGetTime() {
+    return !!this.$store.getters.modules.show_manual_select_get_time;
+  }
+
   get historyUrl() {
     const checked = this.tubes.filter(t => t.checked).map(t => t.pk);
 
@@ -151,6 +170,15 @@ export default class BiomaterialHistory extends Vue {
     }
 
     return `/direction/researches/update/history/print?filter=${JSON.stringify(checked)}`;
+  }
+
+  get actUrl() {
+    const checked = this.tubes.filter(t => t.checked).map(t => t.pk);
+    if (checked.length === 0) {
+      return '/direction/researches/update/history/print';
+    }
+
+    return `/forms/pdf?type=114.01&filter=${JSON.stringify(checked)}`;
   }
 
   async load(pks = null) {

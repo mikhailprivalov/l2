@@ -64,7 +64,7 @@
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
           title="Акт"
-          @click="printBarcodes"
+          @click="printAct"
         >
           <i class="fa-regular fa-file-lines" />
         </button>
@@ -207,7 +207,8 @@
                 <AuxResearch
                   :main-direction="row.pk"
                   :aux-research="row.aux_researches"
-                /></span>
+                />
+              </span>
             </td>
             <td
               class="researches"
@@ -216,6 +217,19 @@
                 (row.register_number !== '' ? ' (' + row.register_number + ')': '')
               "
             >
+              <span v-if="row.lab && !row.has_hosp && roleCanUseGetBipmaterial">
+                <a
+                  v-tippy
+                  href="#"
+                  title="Забор биоматериала"
+                  @click.prevent="getTubes(row.pk)"
+                >
+                  <i
+                    class="fa-solid fa-vial"
+                    style="color: #6f6f72"
+                  />
+                </a>
+              </span>
               {{ row.researches }}
             </td>
             <td
@@ -548,6 +562,14 @@ export default {
       }
       return false;
     },
+    roleCanUseGetBipmaterial() {
+      for (const g of this.$store.getters.user_data.groups || []) {
+        if (g === 'Заборщик биоматериала') {
+          return true;
+        }
+      }
+      return false;
+    },
     role_can_use_descriptive() {
       for (const g of this.$store.getters.user_data.groups || []) {
         if (['Врач консультаций', 'Врач параклиники', 'Свидетельство о смерти-доступ'].includes(g)) {
@@ -777,8 +799,15 @@ export default {
     printBarcodes() {
       this.$root.$emit('print:barcodes', this.checked);
     },
+    printAct() {
+      const dateStart = moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY');
+      window.open(`/forms/pdf?type=114.01&date=${dateStart}`, '_blank');
+    },
     printCurrentBarcodes(pk) {
       this.$root.$emit('print:barcodes', [pk]);
+    },
+    getTubes(directionId) {
+      window.open(`/ui/biomaterial/get#{%22pk%22:${directionId}}`, '_blank');
     },
   },
 };

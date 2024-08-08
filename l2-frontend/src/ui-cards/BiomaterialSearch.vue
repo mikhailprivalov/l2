@@ -92,8 +92,11 @@
     </table>
 
     <div class="btn-group btn-group-justified control-buttons">
-      <div class="btn-group">
+      <div
+        class="btn-group"
+      >
         <button
+          v-if="!showManualSelectGetTime"
           v-tippy
           type="button"
           :disabled="!tubes || direction.full_confirm || !needGlobalCheck"
@@ -103,6 +106,14 @@
         >
           Отмена направления
         </button>
+        <input
+          v-if="showManualSelectGetTime"
+          v-model="manualSelectGetTime"
+          type="datetime-local"
+          :readonly="!tubes || !hasAnyChecked"
+          step="1"
+          class="form-control"
+        >
       </div>
       <div class="btn-group">
         <button
@@ -428,6 +439,7 @@ import { debounce } from 'lodash/function';
 import * as actions from '@/store/action-types';
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import Modal from '@/ui-cards/Modal.vue';
+import UrlData from '@/UrlData';
 
 @Component({
   components: {
@@ -448,6 +460,7 @@ import Modal from '@/ui-cards/Modal.vue';
       tubesForConfirm: [],
       loading: false,
       showConfirmList: false,
+      manualSelectGetTime: null,
     };
   },
   created() {
@@ -457,12 +470,28 @@ import Modal from '@/ui-cards/Modal.vue';
 
     window.addEventListener('keypress', this.keypressHandler);
   },
+  async mounted() {
+    const storedData = UrlData.get();
+    if (storedData && typeof storedData === 'object') {
+      if (storedData.pk) {
+        this.query = (storedData.pk).toString();
+        await this.doSearch();
+      }
+    }
+    this.inited = true;
+  },
   beforeDestroy() {
     window.removeEventListener('keypress', this.keypressHandler);
   },
   watch: {
     query() {
       this.barScanner(this.query);
+    },
+    navState() {
+      if (this.inited) {
+        UrlData.set(this.navState);
+      }
+      UrlData.title(this.direction);
     },
   },
 })
@@ -488,6 +517,8 @@ export default class BiomaterialSearch extends Vue {
   showConfirmList: boolean;
 
   tubesForConfirm: any[];
+
+  manualSelectGetTime: null | any;
 
   onKeyPress(event) {
     if (window.$('input').is(':focus') || this.loading) {
@@ -553,6 +584,19 @@ export default class BiomaterialSearch extends Vue {
     this.query = '';
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loading = false;
+  }
+
+  get showManualSelectGetTime() {
+    return !!this.$store.getters.modules.show_manual_select_get_time;
+  }
+
+  get navState() {
+    if (!this.direction) {
+      return null;
+    }
+    return {
+      pk: this.direction,
+    };
   }
 
   get needGlobalCheck() {
@@ -668,6 +712,7 @@ export default class BiomaterialSearch extends Vue {
 
   async save(needPrintBarcodes, toConfirmPks = null) {
     await this.$store.dispatch(actions.INC_LOADING);
+    const selectGetTime = this.manualSelectGetTime;
     const pks = toConfirmPks
       || Object.values<any>(this.tubes).reduce(
         (a, tubes) => [
@@ -678,7 +723,8 @@ export default class BiomaterialSearch extends Vue {
         ],
         [],
       );
-    const { ok, details } = await this.$api('/directions/tubes-register-get', { pks });
+    // eslint-disable-next-line max-len
+    const { ok, details } = await this.$api('/directions/tubes-register-get', { pks, selectGetTime });
     await this.$store.dispatch(actions.DEC_LOADING);
     if (needPrintBarcodes && ok) {
       this.printBarcodes(pks);
