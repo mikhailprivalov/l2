@@ -1625,7 +1625,7 @@ def external_list_direction_create(request):
                 Log.log(
                     str(body.get("internalId")),
                     122002,
-                    body={"data": body},
+                    body={"data": f"{body}-result:{result}"},
                 )
             except Exception as e:
                 logger.exception(e)
@@ -1916,6 +1916,24 @@ def get_directions(request):
         create_to = body.get(("createTo") or "")
         directions_data = Napravleniya.objects.values_list("pk", flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
         return Response({"ok": True, "data": directions_data})
+
+
+@api_view(["POST"])
+def receive_pair_direction(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+    pair_id_directions = body.get(("pairDirections") or {})
+
+    if not pair_id_directions:
+        return Response({"ok": False, "message": ""})
+    else:
+        for id_direction, rmis_id in pair_id_directions.items():
+            direction = Napravleniya.objects.filter(pk=id_direction).first()
+            direction.rmis_number = rmis_id
+            direction.save()
+        return Response({"ok": True})
 
 
 @api_view(["POST"])
