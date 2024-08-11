@@ -1932,6 +1932,7 @@ def receive_pair_direction(request):
         for id_direction, rmis_id in pair_id_directions.items():
             direction = Napravleniya.objects.filter(pk=id_direction).first()
             direction.rmis_number = rmis_id
+            direction.ecp_direction_number = rmis_id
             direction.save()
         return Response({"ok": True})
 
