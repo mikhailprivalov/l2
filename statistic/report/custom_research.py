@@ -99,7 +99,10 @@ def custom_research_fill_data(ws1, result_query, row=6):
                 except:
                     is_dict = False
             if not is_dict:
-                ws1.cell(row=r, column=column).value = i.get(title, '')
+                try:
+                    ws1.cell(row=r, column=column).value = i.get(title, '')
+                except:
+                    ws1.cell(row=r, column=column).value = '-'
                 ws1.cell(row=r, column=column).style = style_border1
             else:
                 for i in table_data.get("rows"):
