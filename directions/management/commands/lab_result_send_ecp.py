@@ -22,4 +22,3 @@ class Command(BaseCommand):
         for n in d_qs:
             n.rmis_resend_services = True
             n.save()
-            self.stdout.write(f"\n")
