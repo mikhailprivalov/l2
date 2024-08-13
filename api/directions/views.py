@@ -3583,7 +3583,7 @@ def tubes_for_get(request):
         if data["direction"]["full_confirm"] and not v.time_confirmation:
             data["direction"]["full_confirm"] = False
 
-        if direction.external_order:
+        if direction.external_order or SettingManager.get("auto_create_tubes_with_direction", default='false', default_type='b'):
             ntube: Optional[TubesRegistration] = v.tubes.all().first()
             if ntube:
                 vrpk = ntube.type_id
