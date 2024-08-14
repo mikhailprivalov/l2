@@ -15,7 +15,7 @@ def lab_report_base(ws1):
     columns = [
         ("№", 5),
         ("Внтренний код", 20),
-        ("Услуга", 7),
+        ("Наименование услуги", 50),
         ("Код НМУ", 11),
         ("Тест", 19),
         ("Код ФСЛИ", 11),
@@ -42,17 +42,17 @@ def fill_lab_report(ws1, data, row=14):
     style_border1.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
     r = row
     for val in data:
-        ws1.cell(row=r, column=1).value = val.get("serialNumber")
-        ws1.cell(row=r, column=2).value = val.get("patientFio")
-        ws1.cell(row=r, column=3).value = val.get("patientBirthDay")
-        ws1.cell(row=r, column=4).value = val.get("executeDate")
-        ws1.cell(row=r, column=5).value = val.get("internalId")
-        ws1.cell(row=r, column=6).value = val.get("codeNMU")
-        ws1.cell(row=r, column=7).value = val.get("researchTitle")
-        ws1.cell(row=r, column=8).value = val.get("tubeNumber")
-        ws1.cell(row=r, column=9).value = val.get("coast")
-        ws1.cell(row=r, column=10).value = 1
-        ws1.cell(row=r, column=11).value = val.get("summ") if val.get("summ") else val.get("coast")
+        ws1.cell(row=r, column=1).value = val.title
+        ws1.cell(row=r, column=2).value = val.internalId
+        ws1.cell(row=r, column=3).value = val.researchTitle
+        ws1.cell(row=r, column=4).value = val.nmuCode
+        ws1.cell(row=r, column=5).value = val.test
+        ws1.cell(row=r, column=6).value = val.fsliCode
+        ws1.cell(row=r, column=7).value = val.tubeType
+        ws1.cell(row=r, column=8).value = val.tubeId
+        ws1.cell(row=r, column=9).value = val.group
+        ws1.cell(row=r, column=10).value = val.subgroup
+        ws1.cell(row=r, column=11).value = val.status
         for i in range(1, 12):
             ws1.cell(row=r, column=i).style = style_border1
         r += 1

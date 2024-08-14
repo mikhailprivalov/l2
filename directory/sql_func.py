@@ -94,11 +94,24 @@ def get_lab_research_data(department_id):
                 SELECT
                 directory_fractions.id as fraction_id,
                 directory_fractions.title as fraction_title,
-                directory_fractions.fsli as fraction_fsli
+                directory_fractions.fsli as fraction_fsli,
+                dr.internal_code as internal_code,
+                dr.title as research_title,
+                dr.code as nmu_code,
+                dr.hide as hide_status,
+                pp.title as group_title,
+                ds.title as subgroup_title,
+                rft.id as tube_id,
+                rt.title as tube_title
                 FROM directory_fractions
-                WHERE directory_fractions.research_id = %(research_id)s
+                LEFT JOIN directory_researches dr on directory_fractions.research_id = dr.id
+                LEFT JOIN podrazdeleniya_podrazdeleniya pp on dr.podrazdeleniye_id = pp.id
+                LEFT JOIN directory_subgroupdirectory ds on dr.sub_group_id = ds.id
+                LEFT JOIN directory_releationsft rft on directory_fractions.relation_id = rft.id
+                LEFT JOIN researches_tubes rt on rft.tube_id = rt.id
+                WHERE pp.id = %(department_id)s
         """,
-            params={'research_id': research_id},
+            params={'department_id': department_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
