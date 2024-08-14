@@ -81,7 +81,7 @@
                     <th class="text-center">
                       <strong>Касса №</strong>
                     </th>
-                    <th class="text-center">
+                    <th>
                       <strong>Название</strong>
                     </th>
                     <th class="text-center">
