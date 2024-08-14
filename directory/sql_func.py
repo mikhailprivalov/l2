@@ -87,14 +87,14 @@ def get_fsli_fractions_by_research_id(research_id):
     return rows
 
 
-def get_lab_research_data(department_id):
+def get_lab_research_data(department_id, lab_podr=None):
     with connection.cursor() as cursor:
         cursor.execute(
             """
                 SELECT
-                directory_fractions.id as fraction_id,
-                directory_fractions.title as fraction_title,
-                directory_fractions.fsli as fraction_fsli,
+                df.id as fraction_id,
+                df.title as fraction_title,
+                df.fsli as fraction_fsli,
                 dr.internal_code as internal_code,
                 dr.title as research_title,
                 dr.code as nmu_code,
@@ -103,15 +103,22 @@ def get_lab_research_data(department_id):
                 ds.title as subgroup_title,
                 rft.id as tube_id,
                 rt.title as tube_title
-                FROM directory_fractions
-                LEFT JOIN directory_researches dr on directory_fractions.research_id = dr.id
+                FROM directory_researches as dr
+                LEFT JOIN directory_fractions df on df.research_id = dr.id
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp on dr.podrazdeleniye_id = pp.id
                 LEFT JOIN directory_subgroupdirectory ds on dr.sub_group_id = ds.id
-                LEFT JOIN directory_releationsft rft on directory_fractions.relation_id = rft.id
+                LEFT JOIN directory_releationsft rft on df.relation_id = rft.id
                 LEFT JOIN researches_tubes rt on rft.tube_id = rt.id
-                WHERE pp.id = %(department_id)s
+                WHERE 
+                CASE 
+                WHEN %(department_id)s > 0 THEN
+                    pp.id = %(department_id)s
+                WHEN %(department_id)s = 0 THEN 
+                    pp.id in %(lab_podr)s
+                END
+                ORDER BY pp.title, ds.title, dr.title
         """,
-            params={'department_id': department_id},
+            params={'department_id': department_id, 'lab_podr': lab_podr},
         )
         rows = namedtuplefetchall(cursor)
     return rows
