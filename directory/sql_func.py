@@ -85,3 +85,20 @@ def get_fsli_fractions_by_research_id(research_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_lab_research_data(department_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                directory_fractions.id as fraction_id,
+                directory_fractions.title as fraction_title,
+                directory_fractions.fsli as fraction_fsli
+                FROM directory_fractions
+                WHERE directory_fractions.research_id = %(research_id)s
+        """,
+            params={'research_id': research_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
