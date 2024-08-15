@@ -8,7 +8,6 @@ from directions.models import Napravleniya
 from l2vi.integration import send_lab_direction_to_ecp
 
 
-
 class Command(BaseCommand):
     help = "Отправить лабораторные результаты в ЕЦП"
 
