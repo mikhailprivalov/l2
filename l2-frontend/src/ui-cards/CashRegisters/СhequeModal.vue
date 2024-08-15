@@ -1,51 +1,42 @@
 <template>
-  <div>
-    <button
-      class="btn btn-blue-nb nbr"
-      :disabled="!shiftIsOpen"
-      @click="openModal"
+  <transition name="fade">
+    <Modal
+      v-if="open"
+      show-footer="true"
+      ignore-body
+      white-bg="true"
+      max-width="710px"
+      width="100%"
+      margin-left-right="auto"
+      @close="closeModal"
     >
-      Оплата
-    </button>
-    <transition name="fade">
-      <Modal
-        v-if="open"
-        show-footer="true"
-        ignore-body
-        white-bg="true"
-        max-width="710px"
-        width="100%"
-        margin-left-right="auto"
-        @close="closeModal"
-      >
-        <span
-          v-if="!loading"
-          slot="header"
-        >{{ 'Чек' }}</span>
-        <span
-          v-if="loading"
-          slot="header"
-          class="text-center"
-        >{{ 'Загрузка...' }}</span>
-        <div slot="body">
-          <div class="body" />
-        </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button
-                class="btn btn-primary-nb btn-blue-nb"
-                type="button"
-                @click="closeModal"
-              >
-                Закрыть
-              </button>
-            </div>
+      <span
+        v-if="!loading"
+        slot="header"
+      >{{ 'Чек' }}</span>
+      <span
+        v-if="loading"
+        slot="header"
+        class="text-center"
+      >{{ 'Загрузка...' }}</span>
+      <div slot="body">
+        <div class="body" />
+      </div>
+      <div slot="footer">
+        <div class="row">
+          <div class="col-xs-4">
+            <button
+              class="btn btn-primary-nb btn-blue-nb"
+              type="button"
+              @click="closeModal"
+            >
+              Закрыть
+            </button>
           </div>
         </div>
-      </Modal>
-    </transition>
-  </div>
+      </div>
+    </Modal>
+  </transition>
 </template>
 
 <script setup lang="ts">
@@ -62,7 +53,7 @@ import { useStore } from '@/store';
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const props = defineProps({
-  tag: {
+  serviceIds: {
     type: String,
     default: 'li',
     required: false,
