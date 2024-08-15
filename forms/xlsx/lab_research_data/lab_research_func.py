@@ -52,7 +52,7 @@ def fill_lab_report(ws1, data, row=2):
         ws1.cell(row=r, column=8).value = val.fraction_fsli
         ws1.cell(row=r, column=9).value = val.tube_title
         ws1.cell(row=r, column=10).value = val.tube_id
-        ws1.cell(row=r, column=11).value = "заблокирован " if val.hide_status else "активен"
+        ws1.cell(row=r, column=11).value = "заблокирован" if val.hide_status else "активен"
         ws1.cell(row=r, column=12).value = val.research_ecp
         ws1.cell(row=r, column=13).value = val.fraction_ecp
         for i in range(1, 12):
