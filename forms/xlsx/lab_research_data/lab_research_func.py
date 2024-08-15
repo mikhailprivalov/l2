@@ -21,6 +21,8 @@ def lab_report_base(ws1):
         ("Контейнер тип", 30),
         ("Контейнер ИД", 20),
         ("Статус", 17),
+        ("Код ЕЦП Услуги", 17),
+        ("Код ЕЦП Теста", 17),
     ]
 
     row = 1
@@ -50,7 +52,8 @@ def fill_lab_report(ws1, data, row=2):
         ws1.cell(row=r, column=8).value = val.fraction_fsli
         ws1.cell(row=r, column=9).value = val.tube_title
         ws1.cell(row=r, column=10).value = val.tube_id
-        ws1.cell(row=r, column=11).value = "заблокирован" if val.hide_status else "активен"
+        ws1.cell(row=r, column=12).value = val.research_ecp
+        ws1.cell(row=r, column=13).value = val.fraction_ecp
         for i in range(1, 12):
             ws1.cell(row=r, column=i).style = style_border1
         r += 1
