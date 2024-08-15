@@ -32,6 +32,7 @@
         <div slot="body">
           <div class="body">
             <div
+              v-if="!shiftIsOpen"
               class="flex"
             >
               <div class="input-group">
@@ -46,21 +47,75 @@
                 />
               </div>
               <button
-                v-if="shiftIsOpen"
-                class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading || statusShift === 'Смена закрывается'"
-                @click="closeShift"
-              >
-                Закрыть
-              </button>
-              <button
-                v-else
                 class="btn btn-blue-nb nbr width-action"
                 :disabled="!selectedCashRegister || loading || statusShift === 'Смена открывается'"
                 @click="openShift"
               >
                 Открыть
               </button>
+            </div>
+            <div>
+              <table class="table">
+                <colgroup>
+                  <col style="width: 50px">
+                  <col style="width: 50px">
+                  <col>
+                  <col style="width: 100px">
+                  <col style="width: 100px">
+                  <col style="width: 100px">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th class="text-center">
+                      <strong>Смена №</strong>
+                    </th>
+                    <th class="text-center">
+                      <strong>Касса №</strong>
+                    </th>
+                    <th class="text-center">
+                      <strong>Название кассы</strong>
+                    </th>
+                    <th class="text-center">
+                      <strong>Открыта</strong>
+                    </th>
+                    <th class="text-center">
+                      <strong>Статус</strong>
+                    </th>
+                    <th />
+                  </tr>
+                </thead>
+                <tr>
+                  <td class="text-center">
+                    {{ currentShiftData.shiftId }}
+                  </td>
+                  <td class="text-center">
+                    {{ currentShiftData.cashRegisterId }}
+                  </td>
+                  <VueTippyTd
+                    :text="currentShiftData.cashRegisterTitle"
+                    class="cash-register-title"
+                  />
+                  <td class="text-center">
+                    {{ currentShiftData.open_at }}
+                  </td>
+                  <td class="text-center">
+                    {{ currentShiftData.status }}
+                  </td>
+                  <td>
+                    <div class="button">
+                      <button
+                        v-tippy
+                        class="btn btn-blue-nb nbr close-button"
+                        title="Закрыть смену"
+                        :disabled="!shiftIsOpen || statusShift === 'Смена закрывается'"
+                        @click="closeShift"
+                      >
+                        <i class="fa fa-times" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </table>
             </div>
           </div>
         </div>
@@ -70,7 +125,6 @@
               <button
                 class="btn btn-primary-nb btn-blue-nb"
                 type="button"
-                :disabled="loading"
                 @click="closeModal"
               >
                 Закрыть
@@ -95,6 +149,15 @@ import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import api from '@/api';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
+
+interface shiftData {
+  shiftId: number,
+  cashRegisterId: number,
+  cashRegisterTitle: string,
+  open_at: string,
+  status: string
+}
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -112,6 +175,13 @@ const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const selectedCashRegister = ref(null);
 const cashRegisters = ref([]);
+const currentShiftData = ref<shiftData>({
+  shiftId: null,
+  cashRegisterId: null,
+  cashRegisterTitle: '',
+  open_at: '',
+  status: '',
+});
 const statusShift = ref('');
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -127,6 +197,7 @@ const getCashRegisters = async () => {
 const getShiftData = async () => {
   const { ok, message, data } = await api('cash-register/get-shift-data');
   if (ok) {
+    currentShiftData.value = data;
     statusShift.value = data.status;
     if (!shiftIsOpen.value && data.status === 'Открывается') {
       titleLocal.value = `Смена ${data.status.toLowerCase()}`;
@@ -217,5 +288,30 @@ const closeShift = async () => {
 ::v-deep .vue-treeselect__control {
   border: 1px solid #AAB2BD !important;
   border-radius: 0;
+}
+
+.table {
+  margin-bottom: 0;
+  table-layout: fixed;
+}
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
+.cash-register-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.close-button {
+  padding: 9px 0;
 }
 </style>
