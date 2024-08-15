@@ -296,7 +296,7 @@
           </tr>
         </tbody>
       </table>
-      <ChequeModal v-if="show_additions && l2CashEnabled" />
+      <ChequeModal v-if="show_additions && l2CashEnabled && pay_source" />
     </div>
     <div
       v-if="pay_source && !create_and_open"
