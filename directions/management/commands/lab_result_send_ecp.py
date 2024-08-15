@@ -26,5 +26,5 @@ class Command(BaseCommand):
         for n in d_qs:
             n.rmis_resend_services = True
             n.save()
-            count +=1
+            count += 1
         self.stdout.write(f"{count}\n")
