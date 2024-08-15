@@ -47,15 +47,6 @@
                 />
               </div>
               <button
-                v-if="shiftIsOpen"
-                class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading || statusShift === 'Смена закрывается'"
-                @click="closeShift"
-              >
-                Закрыть
-              </button>
-              <button
-                v-else
                 class="btn btn-blue-nb nbr width-action"
                 :disabled="!selectedCashRegister || loading || statusShift === 'Смена открывается'"
                 @click="openShift"
@@ -81,8 +72,8 @@
                     <th class="text-center">
                       <strong>Касса №</strong>
                     </th>
-                    <th>
-                      <strong>Название</strong>
+                    <th class="text-center">
+                      <strong>Название кассы</strong>
                     </th>
                     <th class="text-center">
                       <strong>Открыта</strong>
@@ -100,14 +91,29 @@
                   <td class="text-center">
                     {{ currentShiftData.cashRegisterId }}
                   </td>
-                  <td>{{ currentShiftData.cashRegisterTitle }}</td>
+                  <VueTippyTd
+                    :text="currentShiftData.cashRegisterTitle"
+                    class="cash-register-title"
+                  />
                   <td class="text-center">
                     {{ currentShiftData.open_at }}
                   </td>
                   <td class="text-center">
                     {{ currentShiftData.status }}
                   </td>
-                  <td />
+                  <td>
+                    <div class="button">
+                      <button
+                        v-tippy
+                        class="btn btn-blue-nb nbr close-button"
+                        title="Закрыть смену"
+                        :disabled="!shiftIsOpen || statusShift === 'Смена закрывается'"
+                        @click="closeShift"
+                      >
+                        <i class="fa fa-times" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </table>
             </div>
@@ -119,7 +125,6 @@
               <button
                 class="btn btn-primary-nb btn-blue-nb"
                 type="button"
-                :disabled="loading"
                 @click="closeModal"
               >
                 Закрыть
@@ -144,6 +149,7 @@ import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import api from '@/api';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 interface shiftData {
   shiftId: number,
@@ -287,5 +293,25 @@ const closeShift = async () => {
 .table {
   margin-bottom: 0;
   table-layout: fixed;
+}
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
+.cash-register-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.close-button {
+  padding: 9px 0;
 }
 </style>
