@@ -102,7 +102,9 @@ def get_lab_research_data(department_id, lab_podr=None):
                 pp.title as group_title,
                 ds.title as subgroup_title,
                 rft.id as tube_id,
-                rt.title as tube_title
+                rt.title as tube_title,
+                dr.ecp_id as research_ecp,
+                df.ecp_id as fraction_ecp
                 FROM directory_researches as dr
                 LEFT JOIN directory_fractions df on df.research_id = dr.id
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp on dr.podrazdeleniye_id = pp.id
