@@ -1625,10 +1625,11 @@ def external_list_direction_create(request):
                 Log.log(
                     str(body.get("internalId")),
                     122002,
-                    body={"data": body},
+                    body={"data": f"{body}-result:{result}"},
                 )
             except Exception as e:
                 logger.exception(e)
+    return Response({"ok": True, "message": "Получено"})
 
 
 def create_direction_by_param(body, request):
@@ -1679,7 +1680,7 @@ def create_direction_by_param(body, request):
     else:
         sex = "ж"
 
-    if not enp and not (lastname and firstname and birthdate and birthdate):
+    if not enp and not (lastname and firstname and birthdate):
         return {"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"}
 
     if lastname and not firstname:
@@ -1744,10 +1745,11 @@ def create_direction_by_param(body, request):
         return {"ok": False, "message": "Карта не найдена"}
 
     financing_source_title = body.get("financingSource", "")
+
     if financing_source_title.lower() not in ["омс", "бюджет", "платно"]:
         return {"ok": False, "message": "Некорректный источник финансирования"}
 
-    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title__iexact=financing_source_title, base__internal_type=True).first()
+    financing_source = directions.IstochnikiFinansirovaniya.objects.filter(title="ОМС", hide=False).first()
     financing_category_code = body.get("financingCategory", "")
     price_category = PriceCategory.objects.filter(title__startswith=financing_category_code).first()
 
@@ -1763,7 +1765,6 @@ def create_direction_by_param(body, request):
     department = body.get("department", "")
     additiona_info = body.get("additionalInfo", "")
     last_result_data = body.get("lastResultData", "")
-
     diag_text = body.get("diagText", "")  # обязательно
     if not diag_text:
         return {"ok": False, "message": "Диагноз описание не заполнено"}
@@ -1786,18 +1787,22 @@ def create_direction_by_param(body, request):
         7: "самопроизвольно отделившиеся фрагменты тканей—7",
     }
     method_obtain_material = body.get("methodObtainMaterial", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.99.2.33"
-    if not method_obtain_material or method_obtain_material not in [1, 2, 3, 4, 5, 6, 7]:
+    if not method_obtain_material or int(method_obtain_material) not in [1, 2, 3, 4, 5, 6, 7]:
         return {"ok": False, "message": "Способо забора не верно заполнено"}
 
-    resident_code = patient.get("residentCode", "")  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
-    if not resident_code or resident_code not in [1, 2]:
+    resident_code = patient.get("residentCode", 1)  # обязательно code из НСИ 1.2.643.5.1.13.13.11.1042"
+
+    if not resident_code or int(resident_code) not in [1, 2, '1', '2']:
         return {"ok": False, "message": "Не указан вид жительства"}
-    if resident_code == 1:
+    if int(resident_code) == 1:
         resident_data = f'{open_skob}"code": "1", "title": "Город"{close_skob}'
     else:
         resident_data = f'{open_skob}"code": "2", "title": "Село"{close_skob}'
 
-    solution10 = body.get("solution10", "")  # обязательно
+    solution_10 = body.get("solution10", "")  # обязательно
+    solution10 = "false"
+    if solution_10 == '2':
+        solution10 = "true"
     if not solution10 or solution10 not in ["true", "false"]:
         return {"ok": False, "message": "Не указано помещен в 10% раствор"}
 
@@ -1811,6 +1816,9 @@ def create_direction_by_param(body, request):
         if not result_check:
             return {"ok": False, "message": "Не верная маркировка материала"}
         numbers_vial = result_check
+
+    if Napravleniya.objects.filter(id_in_hospital=id_in_hospital, hospital=hospital).first():
+        return {"ok": False, "message": f"Направление с таким Id {id_in_hospital} существует"}
 
     try:
         with transaction.atomic():
@@ -1846,6 +1854,8 @@ def create_direction_by_param(body, request):
             result_table_field = []
             pathological_process = {1: "1-Внешне неизмененная ткань", 2: "2-Узел", 3: "3-Пятно", 4: "4-Полип", 5: "5-Эрозия", 6: "6-Язва", 7: "7-Прочие"}
             for m_m in material_mark:
+                if not m_m.get("pathologicalProcess"):
+                    m_m["pathologicalProcess"] = 7
                 result_table_field.append(
                     [str(m_m["numberVial"]), m_m.get("localization", ""), pathological_process[m_m.get("pathologicalProcess", 7)], str(m_m["objectValue"]), m_m.get("description", "")]
                 )
@@ -1855,7 +1865,7 @@ def create_direction_by_param(body, request):
                 "Код по МКБ": diag_mkb10,
                 "Дополнительные клинические сведения": additiona_info,
                 "Результаты предыдущие": last_result_data,
-                "Способ получения биопсийного (операционного) материала": obtain_material[method_obtain_material],
+                "Способ получения биопсийного (операционного) материала": obtain_material[int(method_obtain_material)],
                 "Материал помещен в 10%-ный раствор нейтрального формалина": "Да" if solution10.lower() == "true" else "Нет",
                 "Дата забора материала": time_get.split(" ")[0],
                 "Время забора материала": time_get.split(" ")[1],
@@ -1906,6 +1916,25 @@ def get_directions(request):
         create_to = body.get(("createTo") or "")
         directions_data = Napravleniya.objects.values_list("pk", flat=True).filter(hospital=hospital, data_sozdaniya__gte=create_from, data_sozdaniya__lte=create_to)
         return Response({"ok": True, "data": directions_data})
+
+
+@api_view(["POST"])
+def receive_pair_direction(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+    pair_id_directions = body.get(("pairDirections") or {})
+
+    if not pair_id_directions:
+        return Response({"ok": False, "message": ""})
+    else:
+        for id_direction, rmis_id in pair_id_directions.items():
+            direction = Napravleniya.objects.filter(pk=id_direction).first()
+            direction.rmis_number = rmis_id
+            direction.ecp_direction_number = rmis_id
+            direction.save()
+        return Response({"ok": True})
 
 
 @api_view(["POST"])
