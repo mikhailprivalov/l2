@@ -296,14 +296,7 @@
           </tr>
         </tbody>
       </table>
-      <button
-        v-if="show_additions && l2CashEnabled && pay_source"
-        class="btn btn-blue-nb nbr"
-        @click="openChequeModal"
-      >
-        Оплата
-      </button>
-      <ChequeModal v-if="showChequeModal" />
+      <ChequeModal v-if="show_additions && l2CashEnabled && pay_source" />
     </div>
     <div
       v-if="pay_source && !create_and_open"
@@ -777,7 +770,6 @@ export default {
       tableFieldsErrors: {},
       selectedCardLocal: null,
       patient_case: [{ id: -2, label: ' Не выбрано ' }],
-      showChequeModal: false,
     };
   },
   computed: {
@@ -1535,9 +1527,6 @@ export default {
       this.patient_case = [
         { id: -2, label: ' Не выбрано ' },
         { id: -1, label: ' Создать новый случай' }, ...patientOpenCase.data];
-    },
-    openChequeModal() {
-      this.showChequeModal = true;
     },
   },
 };
