@@ -19,7 +19,14 @@
         class="text-center"
       >{{ 'Загрузка...' }}</span>
       <div slot="body">
-        <div class="body" />
+        <div class="body">
+          <div v-if="shiftIsOpen">
+            <h4>Вот что будет если смена открыта</h4>
+          </div>
+          <h4 v-else>
+            Смена не открыта
+          </h4>
+        </div>
       </div>
       <div slot="footer">
         <div class="row">
