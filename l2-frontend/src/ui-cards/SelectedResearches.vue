@@ -303,7 +303,10 @@
         >
           Оплата
         </button>
-        <ChequeModal v-if="showChequeModal" @close="closeChequeModal" />
+          <ChequeModal
+            v-if="showChequeModal"
+            @close="closeChequeModal"
+          />
       </div>
     </div>
     <div

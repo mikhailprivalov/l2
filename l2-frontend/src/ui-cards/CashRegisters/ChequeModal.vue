@@ -1,5 +1,5 @@
 <template>
-  <transition>
+  <transition name="fade">
     <Modal
       show-footer="true"
       ignore-body
