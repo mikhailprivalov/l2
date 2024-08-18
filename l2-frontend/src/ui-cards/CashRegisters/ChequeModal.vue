@@ -22,6 +22,33 @@
         <div class="body">
           <div v-if="shiftIsOpen">
             <h4>Вот что будет если смена открыта</h4>
+            <table class="table">
+              <colgroup>
+                <col>
+                <col style="width: 100px">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th class="text-center">
+                    <strong>Услуга</strong>
+                  </th>
+                  <th class="text-center">
+                    <strong>Цена</strong>
+                  </th>
+                </tr>
+              </thead>
+              <tr
+                v-for="service in servicesCoasts"
+                :key="service.id"
+              >
+                <td class="text-center">
+                  {{ service.title }}
+                </td>
+                <td class="text-center">
+                  {{ service.coast }}
+                </td>
+              </tr>
+            </table>
           </div>
           <h4 v-else>
             Смена не открыта
@@ -57,6 +84,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -79,11 +107,15 @@ const closeModal = () => {
 };
 
 const servicesCoasts = ref([]);
+const summServiceCoasts = ref(0);
+const noCoast = ref(false);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
+  const { coasts, summ, serviceWithoutCoast } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
   await store.dispatch(actions.DEC_LOADING);
-  servicesCoasts.value = result;
+  servicesCoasts.value = coasts;
+  summServiceCoasts.value = summ;
+  noCoast.value = serviceWithoutCoast;
 };
 onMounted(async () => {
   await getServicesCoasts();

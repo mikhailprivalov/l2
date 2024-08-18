@@ -3,6 +3,8 @@ import pytz
 from cash_registers.models import CashRegister, Shift
 import cash_registers.req as cash_req
 from directions.models import IstochnikiFinansirovaniya
+import cash_registers.sql_func as sql_func
+from directory.models import Researches
 from laboratory.settings import TIME_ZONE
 
 
@@ -77,7 +79,23 @@ def get_shift_data(doctor_profile_id: int):
     return result
 
 
-def get_service_coasts(serviceIds: list):
-    result = []
-    fin_source = IstochnikiFinansirovaniya.objects.filter(title__iexact="платно").select_related('contracts__price')
-    return []
+def get_service_coasts(service_ids: list):
+    if not service_ids:
+        return
+    service_ids_tuple = tuple(service_ids)
+    service_without_coast = False
+    summ = 0
+    services = sql_func.get_services(service_ids_tuple)
+    services_coast = {service.id: {"id": service.id, "title": service.title, "coast": 0} for service in services}
+    coasts = sql_func.get_service_coasts(service_ids_tuple)
+
+    for coast in coasts:
+        services_coast[coast.research_id]["coast"] = coast.coast
+        summ += coast.coast
+
+    if len(coasts) < len(service_ids):
+        service_without_coast = True
+
+    result = {"coasts": [i for i in services_coast.values()], "summ": summ, "serviceWithoutCoast": service_without_coast}
+
+    return result
