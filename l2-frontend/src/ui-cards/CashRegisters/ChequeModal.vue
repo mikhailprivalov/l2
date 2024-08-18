@@ -49,22 +49,23 @@
 
 import {
   computed,
-  getCurrentInstance, ref,
+  getCurrentInstance, onMounted, ref,
 } from 'vue';
 
 import Modal from '@/ui-cards/Modal.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['closeModal']);
 const props = defineProps({
-  tag: {
-    type: String,
-    default: 'li',
-    required: false,
+  serviceIds: {
+    type: Array,
+    required: true,
   },
 });
 
@@ -74,9 +75,19 @@ const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
 const loading = ref(false);
 
 const closeModal = () => {
-  emit('close');
+  emit('closeModal');
 };
 
+const servicesCoasts = ref([]);
+const getServicesCoasts = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
+  await store.dispatch(actions.DEC_LOADING);
+  servicesCoasts.value = result;
+};
+onMounted(async () => {
+  await getServicesCoasts();
+});
 </script>
 
 <style scoped lang="scss">

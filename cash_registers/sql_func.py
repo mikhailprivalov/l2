@@ -31,3 +31,14 @@ def check_shift(cash_register_id, doctor_profile_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_service_coasts():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT * FROM 
+            """,
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

@@ -2,6 +2,7 @@ import pytz
 
 from cash_registers.models import CashRegister, Shift
 import cash_registers.req as cash_req
+from directions.models import IstochnikiFinansirovaniya
 from laboratory.settings import TIME_ZONE
 
 
@@ -74,3 +75,9 @@ def get_shift_data(doctor_profile_id: int):
             else:
                 result = check_cash_register
     return result
+
+
+def get_service_coasts(serviceIds: list):
+    result = []
+    fin_source = IstochnikiFinansirovaniya.objects.filter(title__iexact="платно").select_related('contracts__price')
+    return []

@@ -305,7 +305,8 @@
         </button>
         <ChequeModal
           v-if="showChequeModal"
-          @close="closeChequeModal"
+          :service-ids="researches"
+          @closeModal="closeChequeModal"
         />
       </div>
     </div>
