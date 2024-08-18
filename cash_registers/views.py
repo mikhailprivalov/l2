@@ -51,7 +51,9 @@ def get_shift_data(doctor_profile_id: int):
         shift_status = shift.get_shift_status()
         current_status = shift_status["status"]
         uuid_data = shift_status["uuid"]
-        open_at = shift.open_at.astimezone(pytz.timezone(TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
+        open_at = ""
+        if shift.open_at:
+            open_at = shift.open_at.astimezone(pytz.timezone(TIME_ZONE)).strftime('%d.%m.%Y %H:%M')
         result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "open_at": open_at, "status": current_status}
 
         if uuid_data:

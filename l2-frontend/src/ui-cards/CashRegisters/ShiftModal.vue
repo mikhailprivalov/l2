@@ -54,7 +54,7 @@
                 Открыть
               </button>
             </div>
-            <div>
+            <div v-if="shiftIsOpen">
               <table class="table">
                 <colgroup>
                   <col style="width: 50px">
