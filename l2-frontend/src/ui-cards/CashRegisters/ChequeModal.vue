@@ -87,7 +87,7 @@
               Закрыть
             </button>
           </div>
-        </div>F
+        </div>
       </div>
     </Modal>
   </transition>
