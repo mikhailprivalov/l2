@@ -18,16 +18,22 @@
         slot="header"
         class="text-center"
       >{{ 'Загрузка...' }}</span>
-      <div slot="body">
-        <div class="body">
-          <div v-if="shiftIsOpen">
-            <h4>Вот что будет если смена открыта</h4>
+      <div
+        slot="body"
+      >
+        <div
+          v-if="shiftIsOpen"
+          class="body"
+        >
+          <div
+            class="scroll"
+          >
             <table class="table">
               <colgroup>
                 <col>
                 <col style="width: 100px">
               </colgroup>
-              <thead>
+              <thead class="sticky">
                 <tr>
                   <th class="text-center">
                     <strong>Услуга</strong>
@@ -41,19 +47,34 @@
                 v-for="service in servicesCoasts"
                 :key="service.id"
               >
-                <td class="text-center">
-                  {{ service.title }}
-                </td>
-                <td class="text-center">
+                <VueTippyTd
+                  class="text-left padding service-title border"
+                  :text="service.title"
+                />
+                <td class="text-center border padding">
                   {{ service.coast }}
                 </td>
               </tr>
+              <tfoot class="sticky-footer">
+                <tr>
+                  <td class="text-right">
+                    <strong>
+                      Итого:
+                    </strong>
+                  </td>
+                  <td class="text-center">
+                    <strong>
+                      {{ summServiceCoasts }}
+                    </strong>
+                  </td>
+                </tr>
+              </tfoot>
             </table>
           </div>
-          <h4 v-else>
-            Смена не открыта
-          </h4>
         </div>
+        <h4 v-else>
+          Смена не открыта
+        </h4>
       </div>
       <div slot="footer">
         <div class="row">
@@ -66,7 +87,7 @@
               Закрыть
             </button>
           </div>
-        </div>
+        </div>F
       </div>
     </Modal>
   </transition>
@@ -127,7 +148,7 @@ onMounted(async () => {
   cursor: pointer;
 }
 .body {
-  height: 300px;
+  height: 500px;
 }
 .flex {
   display: flex;
@@ -143,29 +164,43 @@ onMounted(async () => {
   border: 1px solid #AAB2BD !important;
   border-radius: 0;
 }
-
+.scroll {
+  min-height: 106px;
+  max-height: calc(100% - 113px);
+  overflow-y: auto;
+}
 .table {
   margin-bottom: 0;
   table-layout: fixed;
 }
-.button {
-  width: 100%;
-  display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
-  justify-content: stretch;
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
 }
-  .btn {
-    align-self: stretch;
-    flex: 1;
-    padding: 7px 0;
-  }
-.cash-register-title {
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background-color: white;
+}
+.table > thead > tr > th {
+  border-bottom: 0;
+}
+.padding {
+  padding: 2px 0 2px 6px
+}
+.service-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.close-button {
-  padding: 9px 0;
+.border {
+  border: 1px solid #ddd;
+}
+.flex-right {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>
