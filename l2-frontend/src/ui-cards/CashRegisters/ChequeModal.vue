@@ -71,6 +71,22 @@
               </tfoot>
             </table>
           </div>
+          <div class="flex-space">
+            <div class="flex">
+              <div>
+                <label>Наличными</label>
+                <input type="number">
+              </div>
+              <div>
+                <label>Картой</label>
+                <input type="number">
+              </div>
+            </div>
+            <div>
+              <label>Скидка (%)</label>
+              <input type="number">
+            </div>
+          </div>
         </div>
         <h4 v-else>
           Смена не открыта
@@ -202,5 +218,9 @@ onMounted(async () => {
 .flex-right {
   display: flex;
   justify-content: flex-end;
+}
+.flex-space {
+  display: flex;
+  justify-content: space-between;
 }
 </style>
