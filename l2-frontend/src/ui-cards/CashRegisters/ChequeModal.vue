@@ -215,12 +215,13 @@ onMounted(async () => {
 .border {
   border: 1px solid #ddd;
 }
-.flex-right {
+.flex-start {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 .flex-space {
   display: flex;
   justify-content: space-between;
 }
+
 </style>
