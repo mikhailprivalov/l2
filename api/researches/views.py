@@ -1112,7 +1112,6 @@ def get_existing_tubes_relation(request):
     )
 
 
-
 @login_required
 @group_required('Оператор', 'Конструктор: Лабораторные исследования')
 def tube_related_data_update(request):
