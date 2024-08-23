@@ -14,7 +14,6 @@
         :disabled="selectedTubeTypeId===-1"
         @click="changeTube()"
       >
-<!--        <i class="fa-solid fa-right-left" />-->
         Изменить
       </button>
       <Treeselect
