@@ -9,6 +9,7 @@ urlpatterns = [
     path('laboratory/change-visibility-research', views.change_visibility_research),
     path('laboratory/get-research', views.get_lab_research),
     path('laboratory/update-research', views.update_lab_research),
+    path('laboratory/change-tube-for-fractions', views.change_tube_for_fractions),
     path('laboratory/create-research', views.create_lab_research),
     path('laboratory/get-ref-books', views.get_lab_ref_books),
     path('laboratory/get-comments-variants', views.get_comments_variants),

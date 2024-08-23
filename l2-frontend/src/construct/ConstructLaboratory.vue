@@ -175,6 +175,7 @@ export interface refBook {
   subGroups: object[],
   variants: object[],
   tubes: object[],
+  relations: object[],
 }
 const refBooks = ref<refBook>({
   units: [],
@@ -182,6 +183,7 @@ const refBooks = ref<refBook>({
   subGroups: [],
   variants: [],
   tubes: [],
+  relations: [],
 });
 
 const getRefbooks = async () => {

@@ -57,6 +57,12 @@ class ReleationsFT(models.Model):
             relation.save()
         return relation
 
+    @staticmethod
+    def get_all_relation():
+        relations = ReleationsFT.objects.all()
+        data = [{"id": i.pk, "label": f"{i.tube.title}-({i.pk})"} for i in relations]
+        return data
+
 
 class ResearchGroup(models.Model):
     """
@@ -1485,6 +1491,14 @@ class Fractions(models.Model):
         )
         new_fraction.save()
         return new_fraction
+
+    @staticmethod
+    def change_relation_tube(fraction_ids, old_tube_relation, new_tube_relation):
+        fractions = Fractions.objects.filter(id__in=fraction_ids, relation_id=old_tube_relation)
+        for f in fractions:
+            f.relation_id = new_tube_relation
+            f.save()
+        return True
 
 
 class Absorption(models.Model):

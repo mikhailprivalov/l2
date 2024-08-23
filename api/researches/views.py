@@ -1093,6 +1093,26 @@ def tube_related_data(request):
 
 
 @login_required
+@group_required('Конструктор: Лабораторные исследования')
+def get_existing_tubes_relation(request):
+    tubes = [{"id": -1, "label": "Пусто"}]
+    tubes_data = [
+        {
+            "id": x.pk,
+            "label": f"{x.title}-{x.pk}",
+        }
+        for x in Tubes.objects.all().order_by('pk')
+    ]
+    tubes.extend(tubes_data)
+
+    return JsonResponse(
+        {
+            "tubes": tubes,
+        }
+    )
+
+
+@login_required
 @group_required('Оператор', 'Конструктор: Лабораторные исследования')
 def tube_related_data_update(request):
     request_data = json.loads(request.body)
