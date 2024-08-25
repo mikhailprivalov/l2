@@ -149,7 +149,7 @@
 
 import {
   computed,
-  getCurrentInstance, onMounted, ref,
+  onMounted, ref,
 } from 'vue';
 
 import Modal from '@/ui-cards/Modal.vue';
