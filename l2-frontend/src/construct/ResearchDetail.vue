@@ -177,10 +177,12 @@
             :key="tube.pk"
             :tube="tube"
             :tubeidx="idx"
+            :tubes-data="props.refBooks.relations"
             :units="props.refBooks.units"
             @updateOrder="updateOrder"
             @edit="edit"
             @addFraction="addFraction"
+            @changeTube="updateResearch"
           />
         </div>
         <div class="main">

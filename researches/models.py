@@ -66,7 +66,7 @@ class Tubes(models.Model):
         result = [
             {
                 "id": tube.pk,
-                "label": tube.title,
+                "label": f"{tube.title} - tube.pk",
                 "color": tube.color,
             }
             for tube in Tubes.objects.all()

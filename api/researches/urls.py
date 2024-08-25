@@ -33,6 +33,7 @@ urlpatterns = [
     path('research-groups-by-laboratory', views.research_groups_by_laboratory),
     path('group-as-json', views.group_as_json),
     path('tube-related-data', views.tube_related_data),
+    path('existing-tubes-relation', views.get_existing_tubes_relation),
     path('tube-related-data/update', views.tube_related_data_update),
     path('research-performer-save', views.research_performer_save),
     path('get-research-performer', views.get_research_performer),
