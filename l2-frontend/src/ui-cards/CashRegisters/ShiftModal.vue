@@ -250,7 +250,7 @@ const openShift = async () => {
     loading.value = false;
     if (ok) {
       await getShiftData();
-      root.$emit('msg', 'error', 'Заявка отправлена');
+      root.$emit('msg', 'ok', 'Заявка отправлена');
     } else {
       root.$emit('msg', 'error', message);
     }
