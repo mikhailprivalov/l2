@@ -95,7 +95,7 @@
             <div>
               <label>Скидка (%)</label>
               <input
-                v-model="discount"
+                v-model.number="discount"
                 type="number"
                 class="form-control"
                 min="0"
@@ -104,7 +104,7 @@
             </div>
           </div>
           <div>
-            <h5>К оплате {{ summForPay }}</h5>
+            <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
           </div>
         </div>
         <h4 v-else>
@@ -170,7 +170,7 @@ const getServicesCoasts = async () => {
   const { coasts, summ, serviceWithoutCoast } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
   await store.dispatch(actions.DEC_LOADING);
   servicesCoasts.value = coasts;
-  summServiceCoasts.value = summ;
+  summServiceCoasts.value = Number(summ);
   noCoast.value = serviceWithoutCoast;
 };
 onMounted(async () => {
@@ -182,10 +182,12 @@ const paymentCard = ref(0);
 const discount = ref(0);
 
 const summForPay = computed(() => {
-  const summDiscount = (summServiceCoasts.value * discount.value) / 100;
-  const forPay = summServiceCoasts.value - summDiscount;
-  if (forPay > 0) {
-    return forPay;
+  if (discount.value >= 0 && discount.value <= 100) {
+    const summDiscount = (summServiceCoasts.value * discount.value) / 100;
+    return summServiceCoasts.value - summDiscount;
+  }
+  if (discount.value < 0) {
+    return summServiceCoasts.value;
   }
   return 0;
 });
