@@ -2,9 +2,7 @@ import pytz
 
 from cash_registers.models import CashRegister, Shift
 import cash_registers.req as cash_req
-from directions.models import IstochnikiFinansirovaniya
 import cash_registers.sql_func as sql_func
-from directory.models import Researches
 from laboratory.settings import TIME_ZONE
 
 

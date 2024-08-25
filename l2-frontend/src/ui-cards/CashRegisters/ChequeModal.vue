@@ -160,7 +160,6 @@ import api from '@/api';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
-const root = getCurrentInstance().proxy.$root;
 
 const emit = defineEmits(['closeModal']);
 const props = defineProps({
