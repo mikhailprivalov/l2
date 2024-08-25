@@ -73,38 +73,55 @@
           </div>
           <div class="flex-space">
             <div class="flex">
-              <div>
+              <div class="input-width">
                 <label>Наличными</label>
                 <input
-                  v-model="paymentCash"
+                  v-model.number="paymentCash"
                   type="number"
                   class="form-control"
+                  step="0.01"
                   min="0"
+                  :max="summForPay - paymentCard"
                 >
               </div>
-              <div>
+              <div class="input-width">
                 <label>Картой</label>
                 <input
-                  v-model="paymentCard"
+                  v-model.number="paymentCard"
                   type="number"
                   class="form-control"
+                  step="0.01"
                   min="0"
+                  :max="summForPay - paymentCash"
                 >
               </div>
             </div>
-            <div>
+            <div class="discount-width">
               <label>Скидка (%)</label>
               <input
                 v-model.number="discount"
                 type="number"
                 class="form-control"
                 min="0"
+                step="1"
                 max="100"
               >
             </div>
           </div>
           <div>
             <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
+          </div>
+          <div
+            v-if="paymentCash"
+            class="input-width"
+          >
+            <label>Получено наличными</label>
+            <input
+              v-model.number="receivedCash"
+              type="number"
+              class="form-control"
+            >
+            <h5>Сдача: {{ cashChange.toFixed(2) }}</h5>
           </div>
         </div>
         <h4 v-else>
@@ -189,9 +206,16 @@ const summForPay = computed(() => {
   if (discount.value < 0) {
     return summServiceCoasts.value;
   }
-  return 0;
+  return 0.00;
 });
 
+const receivedCash = ref(0);
+const cashChange = computed(() => {
+  if (receivedCash.value && receivedCash.value >= paymentCash.value) {
+    return receivedCash.value - paymentCash.value;
+  }
+  return 0;
+});
 </script>
 
 <style scoped lang="scss">
@@ -217,7 +241,7 @@ const summForPay = computed(() => {
 }
 .scroll {
   min-height: 106px;
-  height: calc(100% - 113px);
+  height: calc(100% - 200px);
   overflow-y: auto;
 }
 .table {
@@ -258,5 +282,13 @@ const summForPay = computed(() => {
   display: flex;
   justify-content: space-between;
 }
-
+.text-red {
+  color: red;
+}
+.input-width {
+  width: 165px;
+}
+.discount-width {
+  width: 90px;
+}
 </style>
