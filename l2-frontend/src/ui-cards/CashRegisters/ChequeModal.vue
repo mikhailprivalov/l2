@@ -182,7 +182,7 @@ onMounted(async () => {
 }
 .scroll {
   min-height: 106px;
-  max-height: calc(100% - 113px);
+  height: calc(100% - 113px);
   overflow-y: auto;
 }
 .table {
