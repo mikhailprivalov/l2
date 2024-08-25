@@ -75,17 +75,36 @@
             <div class="flex">
               <div>
                 <label>Наличными</label>
-                <input type="number">
+                <input
+                  v-model="paymentCash"
+                  type="number"
+                  class="form-control"
+                  min="0"
+                >
               </div>
               <div>
                 <label>Картой</label>
-                <input type="number">
+                <input
+                  v-model="paymentCard"
+                  type="number"
+                  class="form-control"
+                  min="0"
+                >
               </div>
             </div>
             <div>
               <label>Скидка (%)</label>
-              <input type="number">
+              <input
+                v-model="discount"
+                type="number"
+                class="form-control"
+                min="0"
+                max="100"
+              >
             </div>
+          </div>
+          <div>
+            <h5>К оплате {{ summForPay }}</h5>
           </div>
         </div>
         <h4 v-else>
@@ -157,6 +176,20 @@ const getServicesCoasts = async () => {
 onMounted(async () => {
   await getServicesCoasts();
 });
+
+const paymentCash = ref(0);
+const paymentCard = ref(0);
+const discount = ref(0);
+
+const summForPay = computed(() => {
+  const summDiscount = (summServiceCoasts.value * discount.value) / 100;
+  const forPay = summServiceCoasts.value - summDiscount;
+  if (forPay > 0) {
+    return forPay;
+  }
+  return 0;
+});
+
 </script>
 
 <style scoped lang="scss">
