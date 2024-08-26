@@ -121,7 +121,7 @@
               type="number"
               class="form-control"
             >
-            <h5>Сдача: {{ cashChange }}</h5>
+            <h5>Сдача: {{ cashChange.toFixed(2) }}</h5>
           </div>
         </div>
         <h4 v-else>
