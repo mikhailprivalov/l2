@@ -81,7 +81,7 @@
                   class="form-control"
                   step="0.01"
                   min="0"
-                  :max="summForPay - paymentCard"
+                  :max="maxPay.cash"
                 >
               </div>
               <div class="input-width">
@@ -92,7 +92,7 @@
                   class="form-control"
                   step="0.01"
                   min="0"
-                  :max="summForPay - paymentCash"
+                  :max="maxPay.card"
                 >
               </div>
             </div>
@@ -214,6 +214,13 @@ const cashChange = computed(() => {
     return receivedCash.value - paymentCash.value;
   }
   return 0;
+});
+
+const maxPay = computed(() => {
+  const summForPayNumber = Number(summForPay.value.toFixed(2));
+  const card = summForPayNumber - paymentCash.value;
+  const cash = summForPayNumber - paymentCard.value;
+  return { card: Number(card.toFixed(2)), cash: Number(cash.toFixed(2)) };
 });
 </script>
 
