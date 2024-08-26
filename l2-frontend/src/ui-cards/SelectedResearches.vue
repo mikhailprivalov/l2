@@ -296,6 +296,19 @@
           </tr>
         </tbody>
       </table>
+      <div v-if="show_additions && l2CashEnabled && pay_source">
+        <button
+          class="btn btn-blue-nb nbr"
+          @click="openChequeModal"
+        >
+          Оплата
+        </button>
+        <ChequeModal
+          v-if="showChequeModal"
+          :service-ids="researches"
+          @closeModal="closeChequeModal"
+        />
+      </div>
     </div>
     <div
       v-if="pay_source && !create_and_open"
@@ -621,6 +634,7 @@ import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 import MKBField from '@/fields/MKBField.vue';
 import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
+import ChequeModal from '@/ui-cards/CashRegisters/ChequeModal.vue';
 
 import ResearchDisplay from './ResearchDisplay.vue';
 import Modal from './Modal.vue';
@@ -630,6 +644,7 @@ import SelectedResearchesParams from './SelectedResearchesParams.vue';
 export default {
   name: 'SelectedResearches',
   components: {
+    ChequeModal,
     SelectFieldTitled,
     ResearchDisplay,
     Modal,
@@ -767,6 +782,7 @@ export default {
       tableFieldsErrors: {},
       selectedCardLocal: null,
       patient_case: [{ id: -2, label: ' Не выбрано ' }],
+      showChequeModal: false,
     };
   },
   computed: {
@@ -839,6 +855,9 @@ export default {
     },
     needRequiredChooseCase() {
       return this.$store.getters.modules.l2_required_choose_caseChoose;
+    },
+    l2CashEnabled() {
+      return this.$store.getters.modules.l2_cash;
     },
     researches_departments() {
       const r = {};
@@ -1521,6 +1540,12 @@ export default {
       this.patient_case = [
         { id: -2, label: ' Не выбрано ' },
         { id: -1, label: ' Создать новый случай' }, ...patientOpenCase.data];
+    },
+    openChequeModal() {
+      this.showChequeModal = true;
+    },
+    closeChequeModal() {
+      this.showChequeModal = false;
     },
   },
 };

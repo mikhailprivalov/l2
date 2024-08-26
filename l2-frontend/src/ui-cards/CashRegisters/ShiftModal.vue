@@ -54,7 +54,7 @@
                 Открыть
               </button>
             </div>
-            <div>
+            <div v-if="shiftIsOpen">
               <table class="table">
                 <colgroup>
                   <col style="width: 50px">
@@ -250,6 +250,7 @@ const openShift = async () => {
     loading.value = false;
     if (ok) {
       await getShiftData();
+      root.$emit('msg', 'ok', 'Заявка отправлена');
     } else {
       root.$emit('msg', 'error', message);
     }
