@@ -153,7 +153,6 @@ import {
 } from 'vue';
 
 import Modal from '@/ui-cards/Modal.vue';
-import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
@@ -225,25 +224,11 @@ const maxPay = computed(() => {
 </script>
 
 <style scoped lang="scss">
-.pointer {
-  cursor: pointer;
-}
 .body {
   height: 500px;
 }
 .flex {
   display: flex;
-}
-.width-title {
-  width: 100px;
-}
-.width-action {
-  min-width: 100px;
-}
-
-::v-deep .vue-treeselect__control {
-  border: 1px solid #AAB2BD !important;
-  border-radius: 0;
 }
 .scroll {
   min-height: 106px;
@@ -280,16 +265,9 @@ const maxPay = computed(() => {
 .border {
   border: 1px solid #ddd;
 }
-.flex-start {
-  display: flex;
-  justify-content: flex-start;
-}
 .flex-space {
   display: flex;
   justify-content: space-between;
-}
-.text-red {
-  color: red;
 }
 .input-width {
   width: 165px;
