@@ -108,8 +108,20 @@
               >
             </div>
           </div>
-          <div>
+          <div class="flex-space">
             <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
+            <button
+              v-if="!noCoast"
+              class="btn btn-blue-nb"
+            >
+              Оплатить
+            </button>
+            <h5
+              v-else
+              class="text-red"
+            >
+              Не все услуги имеют цену
+            </h5>
           </div>
           <div
             v-if="paymentCash"
@@ -149,7 +161,7 @@
 
 import {
   computed,
-  onMounted, ref,
+  onMounted, ref, watch,
 } from 'vue';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -205,6 +217,9 @@ const summForPay = computed(() => {
     return summServiceCoasts.value;
   }
   return 0.00;
+});
+watch([summForPay], () => {
+  paymentCard.value = Number(summForPay.value.toFixed(2));
 });
 
 const receivedCash = ref(0);
@@ -274,5 +289,8 @@ const maxPay = computed(() => {
 }
 .discount-width {
   width: 90px;
+}
+.text-red {
+  color: red;
 }
 </style>
