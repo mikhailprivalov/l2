@@ -176,6 +176,7 @@ class Cheque(models.Model):
 
 
 class ChequeItems(models.Model):
+    cheque = models.ForeignKey(Cheque, verbose_name='Чек', on_delete=models.CASCADE, db_index=True)
     research = models.ForeignKey(Researches, verbose_name='Услуга', null=True, on_delete=models.SET_NULL, db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
     count = models.PositiveIntegerField(default=0, verbose_name='Количество')
