@@ -186,3 +186,10 @@ class ChequeItems(models.Model):
     coast = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
     count = models.PositiveIntegerField(default=0, verbose_name='Количество')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма позиции')
+
+    class Meta:
+        verbose_name = "Элемент чека"
+        verbose_name_plural = "Элементы чека"
+
+    def __str__(self):
+        return f"{self.cheque} - {self.research_id} - {self.count} - {self.amount}"
