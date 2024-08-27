@@ -63,8 +63,11 @@
           </li>
         </ul>
         <ExtendedPatientSearch v-if="meta.showExtendedPatientSearch" />
-        <ul class="nav navbar-nav">
-          <shiftModal v-if="l2CashEnabled && meta.showShiftModal" />
+        <ul
+          v-if="l2CashEnabled && meta.showShiftModal"
+          class="nav navbar-nav"
+        >
+          <ShiftButton />
         </ul>
         <CardReader v-if="meta.showCardReader" />
         <Favorites v-if="meta.showHospFavorites" />
@@ -187,7 +190,7 @@ import Component from 'vue-class-component';
 import { mapGetters } from 'vuex';
 
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
-import shiftModal from '@/ui-cards/CashRegisters/ShiftModal.vue';
+import ShiftButton from '@/ui-cards/CashRegisters/ShiftButton.vue';
 
 @Component({
   computed: mapGetters([
@@ -200,7 +203,7 @@ import shiftModal from '@/ui-cards/CashRegisters/ShiftModal.vue';
     'hasNewVersion',
   ]),
   components: {
-    shiftModal,
+    ShiftButton,
     NavbarDropdownContent,
     CardReader: () => import('@/ui-cards/CardReader.vue'),
     ExtendedPatientSearch: () => import('@/ui-cards/ExtendedPatientSearch/index.vue'),

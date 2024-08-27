@@ -1,140 +1,126 @@
 <template>
-  <component
-    :is="props.tag"
+  <Modal
+    show-footer="true"
+    ignore-body
+    white-bg="true"
+    max-width="710px"
+    width="100%"
+    margin-left-right="auto"
+    @close="closeModal"
   >
-    <slot>
-      <a
-        class="pointer"
-        @click.prevent="openModal"
-      >{{ titleLocal }}
-      </a>
-    </slot>
-    <transition name="fade">
-      <Modal
-        v-if="open"
-        show-footer="true"
-        ignore-body
-        white-bg="true"
-        max-width="710px"
-        width="100%"
-        margin-left-right="auto"
-        @close="closeModal"
-      >
-        <span
-          v-if="!loading"
-          slot="header"
-        >{{ 'Кассовые смены' }}</span>
-        <span
-          v-if="loading"
-          slot="header"
-          class="text-center"
-        >{{ 'Загрузка...' }}</span>
-        <div slot="body">
-          <div class="body">
-            <div
-              v-if="!shiftIsOpen"
-              class="flex"
-            >
-              <div class="input-group">
-                <span
-                  class="input-group-addon nbr width-title"
-                >Касса</span>
-                <Treeselect
-                  v-model="selectedCashRegister"
-                  :options="cashRegisters"
-                  :disabled="shiftIsOpen || loading || statusShift === 'Смена закрывается'"
-                  placeholder="Выберите кассу"
-                />
-              </div>
-              <button
-                class="btn btn-blue-nb nbr width-action"
-                :disabled="!selectedCashRegister || loading || statusShift === 'Смена открывается'"
-                @click="openShift"
-              >
-                Открыть
-              </button>
-            </div>
-            <div v-if="shiftIsOpen">
-              <table class="table">
-                <colgroup>
-                  <col style="width: 50px">
-                  <col style="width: 50px">
-                  <col>
-                  <col style="width: 100px">
-                  <col style="width: 100px">
-                  <col style="width: 100px">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th class="text-center">
-                      <strong>Смена №</strong>
-                    </th>
-                    <th class="text-center">
-                      <strong>Касса №</strong>
-                    </th>
-                    <th class="text-center">
-                      <strong>Название кассы</strong>
-                    </th>
-                    <th class="text-center">
-                      <strong>Открыта</strong>
-                    </th>
-                    <th class="text-center">
-                      <strong>Статус</strong>
-                    </th>
-                    <th />
-                  </tr>
-                </thead>
-                <tr>
-                  <td class="text-center">
-                    {{ currentShiftData.shiftId }}
-                  </td>
-                  <td class="text-center">
-                    {{ currentShiftData.cashRegisterId }}
-                  </td>
-                  <VueTippyTd
-                    :text="currentShiftData.cashRegisterTitle"
-                    class="cash-register-title"
-                  />
-                  <td class="text-center">
-                    {{ currentShiftData.open_at }}
-                  </td>
-                  <td class="text-center">
-                    {{ currentShiftData.status }}
-                  </td>
-                  <td>
-                    <div class="button">
-                      <button
-                        v-tippy
-                        class="btn btn-blue-nb nbr close-button"
-                        title="Закрыть смену"
-                        :disabled="!shiftIsOpen || statusShift === 'Смена закрывается'"
-                        @click="closeShift"
-                      >
-                        <i class="fa fa-times" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </table>
-            </div>
+    <span
+      v-if="!loading"
+      slot="header"
+    >{{ 'Кассовые смены' }}</span>
+    <span
+      v-if="loading"
+      slot="header"
+      class="text-center"
+    >{{ 'Загрузка...' }}</span>
+    <div slot="body">
+      <div class="body">
+        <div
+          v-if="!shiftIsOpen"
+          class="flex"
+        >
+          <div class="input-group">
+            <span
+              class="input-group-addon nbr width-title"
+            >Касса</span>
+            <Treeselect
+              v-model="selectedCashRegister"
+              :options="cashRegisters"
+              :disabled="shiftIsOpen || loading || statusShift === 'Смена закрывается'"
+              placeholder="Выберите кассу"
+            />
           </div>
+          <button
+            class="btn btn-blue-nb nbr width-action"
+            :disabled="!selectedCashRegister || loading || statusShift === 'Смена открывается'"
+            @click="openShift"
+          >
+            Открыть
+          </button>
         </div>
-        <div slot="footer">
-          <div class="row">
-            <div class="col-xs-4">
-              <button
-                class="btn btn-primary-nb btn-blue-nb"
-                type="button"
-                @click="closeModal"
-              >
-                Закрыть
-              </button>
-            </div>
-          </div>
+        <div v-if="shiftIsOpen">
+          <table class="table">
+            <colgroup>
+              <col style="width: 50px">
+              <col style="width: 50px">
+              <col>
+              <col style="width: 100px">
+              <col style="width: 100px">
+              <col style="width: 100px">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="text-center">
+                  <strong>Смена №</strong>
+                </th>
+                <th class="text-center">
+                  <strong>Касса №</strong>
+                </th>
+                <th class="text-center">
+                  <strong>Название кассы</strong>
+                </th>
+                <th class="text-center">
+                  <strong>Открыта</strong>
+                </th>
+                <th class="text-center">
+                  <strong>Статус</strong>
+                </th>
+                <th />
+              </tr>
+            </thead>
+            <tr>
+              <td class="text-center">
+                {{ currentShiftData.shiftId }}
+              </td>
+              <td class="text-center">
+                {{ currentShiftData.cashRegisterId }}
+              </td>
+              <VueTippyTd
+                :text="currentShiftData.cashRegisterTitle"
+                class="cash-register-title"
+              />
+              <td class="text-center">
+                {{ currentShiftData.open_at }}
+              </td>
+              <td class="text-center">
+                {{ currentShiftData.status }}
+              </td>
+              <td>
+                <div class="button">
+                  <button
+                    v-tippy
+                    class="btn btn-blue-nb nbr close-button"
+                    title="Закрыть смену"
+                    :disabled="!shiftIsOpen || statusShift === 'Смена закрывается'"
+                    @click="closeShift"
+                  >
+                    <i class="fa fa-times" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </table>
         </div>
-      </Modal>
-    </transition>
-  </component>
+      </div>
+    </div>
+    <div slot="footer">
+      <div class="row">
+        <div class="col-xs-4">
+          <button
+            class="btn btn-primary-nb btn-blue-nb"
+            type="button"
+            @click="closeModal"
+          >
+            Закрыть
+          </button>
+        </div>
+      </div>
+    </div>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -161,13 +147,7 @@ interface shiftData {
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
-const props = defineProps({
-  tag: {
-    type: String,
-    default: 'li',
-    required: false,
-  },
-});
+const emit = defineEmits(['closeModal']);
 
 const loading = ref(false);
 
@@ -187,7 +167,6 @@ const statusShift = ref('');
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let intervalReq = null;
 
-const titleLocal = ref('');
 const getCashRegisters = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('cash-register/get-cash-registers');
@@ -200,26 +179,19 @@ const getShiftData = async () => {
     currentShiftData.value = data;
     statusShift.value = data.status;
     if (!shiftIsOpen.value && data.status === 'Открывается') {
-      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       intervalReq = setTimeout(() => getShiftData(), 1000);
     } else if (!shiftIsOpen.value && data.status === 'Открыта') {
       await store.dispatch(actions.OPEN_SHIFT, { cashRegisterId: data.cashRegisterId, shiftId: data.shiftId });
-      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       root.$emit('msg', 'ok', 'Смена открыта');
       intervalReq = null;
     } else if (shiftIsOpen.value && data.status === 'Закрывается') {
-      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       intervalReq = setTimeout(() => getShiftData(), 1000);
     } else if (shiftIsOpen.value && data.status === 'Закрыта') {
       await store.dispatch(actions.CLOSE_SHIFT);
-      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
       root.$emit('msg', 'ok', 'Смена закрыта');
       intervalReq = null;
-    } else {
-      titleLocal.value = `Смена ${data.status.toLowerCase()}`;
     }
   } else {
-    titleLocal.value = shiftIsOpen.value ? 'Смена открыта' : 'Смена закрыта';
     selectedCashRegister.value = null;
     intervalReq = null;
     root.$emit('msg', 'error', message);
@@ -232,13 +204,8 @@ onMounted(async () => {
   await getShiftData();
 });
 
-const open = ref(false);
-
-const openModal = () => {
-  open.value = true;
-};
 const closeModal = () => {
-  open.value = false;
+  emit('closeModal');
 };
 
 const openShift = async () => {
