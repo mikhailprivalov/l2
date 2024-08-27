@@ -45,8 +45,15 @@ def get_services_coasts(request):
 @login_required
 def payment(request):
     request_data = json.loads(request.body)
-    result = {"ok": True, "message": ""}
+    shift_id = request_data["shiftId"]
+    coasts = request_data["serviceCoasts"]
+    summ_coasts = request_data["summCoasts"]
+    discount = request_data["discount"]
+    for_pay = request_data["forPay"]
+    card_id = request_data["cardId"]
+    result = cash_register_views.payment(shift_id, coasts, summ_coasts, discount, for_pay, card_id)
     return JsonResponse(result)
+
 
 @login_required
 def get_cheque_data(request):

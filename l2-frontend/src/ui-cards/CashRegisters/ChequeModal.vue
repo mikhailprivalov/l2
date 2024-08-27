@@ -248,11 +248,9 @@ let intervalReq = null;
 const chequeId = ref(null);
 const getChequeData = async () => {
   console.log('каждую секунду мы спрашиваем get-cheque-data');
-  await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('cash-register/get-cheque-data', {
     chequeId: chequeId.value,
   });
-  await store.dispatch(actions.DEC_LOADING);
   intervalReq = setTimeout(() => getChequeData(), 1000);
 };
 
