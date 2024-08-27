@@ -126,7 +126,6 @@
 <script lang="ts">
 import Vue from 'vue';
 import Component from 'vue-class-component';
-import moment from 'moment/moment';
 
 import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import JournalGetMaterial from '@/modals/JournalGetMaterial.vue';

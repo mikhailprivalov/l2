@@ -164,11 +164,8 @@ import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
 import api from '@/api';
 import TippyTreeselect from '@/construct/TippyTreeselect.vue';
-import * as actions from '@/store/action-types';
-import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
 
 const props = defineProps({
   tube: {
