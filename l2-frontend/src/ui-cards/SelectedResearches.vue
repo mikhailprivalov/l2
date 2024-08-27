@@ -306,6 +306,7 @@
         <ChequeModal
           v-if="showChequeModal"
           :service-ids="researches"
+          :card-id="card_pk"
           @closeModal="closeChequeModal"
         />
       </div>

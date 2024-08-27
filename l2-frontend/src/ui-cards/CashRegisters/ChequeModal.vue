@@ -180,6 +180,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  cardId: {
+    type: Number,
+    required: true,
+  },
 });
 
 const cashRegister = computed(() => store.getters.cashRegisterShift);
@@ -260,6 +264,7 @@ const payment = async () => {
     summCoasts: summServiceCoasts.value,
     discount: discount.value,
     forPay: summForPay.value,
+    cardId: props.cardId,
   });
   await store.dispatch(actions.DEC_LOADING);
   chequeId.value = cheqId;
