@@ -254,11 +254,12 @@ const payment = async () => {
     serviceIds: props.serviceIds,
   });
   await store.dispatch(actions.DEC_LOADING);
+  console.log(ok);
   if (ok) {
     root.$emit('msg', 'ok', 'Заявка отправлена');
     await getChequeData();
   } else {
-    root.$emit('msg', 'error', message);
+    root.$emit('msg', 'error', 'Ошибка');
   }
 };
 

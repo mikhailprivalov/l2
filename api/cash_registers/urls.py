@@ -7,4 +7,5 @@ urlpatterns = [
     path('close-shift', views.close_shift),
     path('get-shift-data', views.get_shift_data),
     path('get-services-coasts', views.get_services_coasts),
+    path('payment', views.payment),
 ]

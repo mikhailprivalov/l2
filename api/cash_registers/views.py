@@ -40,3 +40,10 @@ def get_services_coasts(request):
     request_data = json.loads(request.body)
     result = cash_register_views.get_service_coasts(request_data["serviceIds"])
     return JsonResponse(result)
+
+
+@login_required
+def payment(request):
+    request_data = json.loads(request.body)
+    result = {"ok": True, "message": ""}
+    return JsonResponse(result)
