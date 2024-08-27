@@ -112,7 +112,8 @@
             <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
             <button
               v-if="!noCoast"
-              class="btn btn-blue-nb"
+              class="btn btn-blue-nb pay-button"
+              @click="payment"
             >
               Оплатить
             </button>
@@ -160,7 +161,7 @@
 <script setup lang="ts">
 
 import {
-  computed,
+  computed, getCurrentInstance,
   onMounted, ref, watch,
 } from 'vue';
 
@@ -171,6 +172,7 @@ import api from '@/api';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
 const emit = defineEmits(['closeModal']);
 const props = defineProps({
@@ -236,6 +238,30 @@ const maxPay = computed(() => {
   const cash = summForPayNumber - paymentCard.value;
   return { card: Number(card.toFixed(2)), cash: Number(cash.toFixed(2)) };
 });
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let intervalReq = null;
+
+const getChequeData = async () => {
+  console.log('каждую секунду мы спрашиваем');
+  intervalReq = setTimeout(() => getChequeData(), 1000);
+};
+
+const payment = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('cash-register/payment', {
+    shiftId: cashRegister.value.shiftId,
+    serviceIds: props.serviceIds,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Заявка отправлена');
+    await getChequeData();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -292,5 +318,8 @@ const maxPay = computed(() => {
 }
 .text-red {
   color: red;
+}
+.pay-button {
+  margin: 5px 0;
 }
 </style>

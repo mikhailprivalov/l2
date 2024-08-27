@@ -249,8 +249,8 @@ const openShift = async () => {
     const { ok, message } = await api('cash-register/open-shift', { cashRegisterId: selectedCashRegister.value });
     loading.value = false;
     if (ok) {
-      await getShiftData();
       root.$emit('msg', 'ok', 'Заявка отправлена');
+      await getShiftData();
     } else {
       root.$emit('msg', 'error', message);
     }
