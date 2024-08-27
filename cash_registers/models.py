@@ -145,7 +145,7 @@ class Shift(models.Model):
 
 
 class Cheque(models.Model):
-    SELL = "sell",
+    SELL = "sell"
     BUY = "buy"
     SELL_RETURN = "sell-return"
     BUY_RETURN = "buy-return"
@@ -157,14 +157,14 @@ class Cheque(models.Model):
     )
 
     shift = models.ForeignKey(Shift, verbose_name='Смена', help_text='1', null=True, on_delete=models.CASCADE, db_index=True)
-    type = models.IntegerField(choices=TYPES, verbose_name='Тип чека', help_text='sell, buy и т.д')
+    type = models.CharField(max_length=20, choices=TYPES, verbose_name='Тип чека', help_text='sell, buy и т.д')
     uuid = models.UUIDField(verbose_name='UUID', help_text='abbfg-45fsd2', null=True, blank=True)
     status = models.BooleanField(verbose_name='Статус', default=False)
     payment_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     received_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     payment_card = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     payment_at = models.DateTimeField(verbose_name='Время оплаты', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
-    card_id = models.ForeignKey(Card, verbose_name='Карта', help_text='1', on_delete=models.SET_NULL, db_index=True)
+    card_id = models.ForeignKey(Card, verbose_name='Карта', help_text='1', null=True, on_delete=models.SET_NULL, db_index=True)
     row_data = JSONField(blank=True, null=True, verbose_name="Json документ")
 
     class Meta:
