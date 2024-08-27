@@ -3,6 +3,7 @@ from django.db import models
 from jsonfield import JSONField
 from cash_registers import sql_func
 from clients.models import Card
+from directory.models import Researches
 from laboratory.utils import current_time
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
@@ -157,11 +158,14 @@ class Cheque(models.Model):
 
     shift = models.ForeignKey(Shift, verbose_name='Смена', help_text='1', null=True, on_delete=models.CASCADE, db_index=True)
     type = models.IntegerField(choices=TYPES, verbose_name='Тип чека', help_text='sell, buy и т.д')
+    uuid = models.UUIDField(verbose_name='UUID', help_text='abbfg-45fsd2', null=True, blank=True)
+    status = models.BooleanField(verbose_name='Статус', default=False)
     payment_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     received_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     payment_card = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     payment_at = models.DateTimeField(verbose_name='Время оплаты', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
     card_id = models.ForeignKey(Card, verbose_name='Карта', help_text='1', on_delete=models.SET_NULL, db_index=True)
+    row_data = JSONField(blank=True, null=True, verbose_name="Документ")
 
     class Meta:
         verbose_name = "Чек"
@@ -169,3 +173,10 @@ class Cheque(models.Model):
 
     def __str__(self):
         return f"{self.type} - {self.shift} - {self.payment_at} - {self.card_id}"
+
+
+class ChequeItems(models.Model):
+    research = models.ForeignKey(Researches, verbose_name='Услуга', null=True, on_delete=models.SET_NULL, db_index=True)
+    coast = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена')
+    count = models.PositiveIntegerField(default=0, verbose_name='Количество')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма позиции')
