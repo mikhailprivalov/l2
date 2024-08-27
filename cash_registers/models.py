@@ -161,10 +161,10 @@ class Cheque(models.Model):
     )
 
     shift = models.ForeignKey(Shift, verbose_name='Смена', help_text='1', null=True, on_delete=models.CASCADE, db_index=True)
-    type = models.CharField(max_length=20, choices=TYPES, verbose_name='Тип операции', help_text='sell, buy и т.д')
+    type = models.CharField(max_length=20, choices=TYPES, verbose_name='Тип операции', help_text='sell, buy и т.д', db_index=True)
     uuid = models.UUIDField(verbose_name='UUID', help_text='abbfg-45fsd2')
-    status = models.BooleanField(verbose_name='Проведен', default=False)
-    cancelled = models.BooleanField(verbose_name='Аннулирован', default=False)
+    status = models.BooleanField(verbose_name='Проведен', default=False, db_index=True)
+    cancelled = models.BooleanField(verbose_name='Аннулирован', default=False, db_index=True)
     payment_cash = models.DecimalField(max_digits=10, verbose_name='Оплата наличными', null=True, blank=True, default=0, decimal_places=2)
     received_cash = models.DecimalField(max_digits=10, verbose_name='Получено наличными', null=True, blank=True, default=0, decimal_places=2)
     payment_electronic = models.DecimalField(max_digits=10, verbose_name='Оплата электронно', null=True, blank=True, default=0, decimal_places=2)
