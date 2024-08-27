@@ -103,3 +103,5 @@ def payment(shift_id, coasts, summ_coasts, discount, for_pay, card_id):
     result = {"ok": True, "message": "", "cheqId": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register')
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
+    
+    return result
