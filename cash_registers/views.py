@@ -58,7 +58,7 @@ def get_shift_data(doctor_profile_id: int):
         result["data"] = {"shiftId": shift.pk, "cashRegisterId": shift.cash_register_id, "cashRegisterTitle": shift.cash_register.title, "open_at": open_at, "status": current_status}
 
         if uuid_data:
-            cash_register_data = CashRegister.get_meta_data(shift.cash_register_id)
+            cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
             check_cash_register = cash_req.check_cash_register(cash_register_data)
             if check_cash_register["ok"]:
                 job_result = cash_req.get_job_status(str(uuid_data), cash_register_data)
@@ -97,3 +97,7 @@ def get_service_coasts(service_ids: list):
     result = {"coasts": [i for i in services_coast.values()], "summ": summ, "serviceWithoutCoast": service_without_coast}
 
     return result
+
+
+def payment(shift_id, coasts, summ_coasts, discount, for_pay, card_id):
+    shift = Shift.objects.filter(pk=shift_id).select_related('cash_register')
