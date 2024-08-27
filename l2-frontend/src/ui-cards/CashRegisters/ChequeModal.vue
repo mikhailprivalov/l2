@@ -261,6 +261,9 @@ const payment = async () => {
     serviceCoasts: servicesCoasts.value,
     summCoasts: summServiceCoasts.value,
     discount: discount.value,
+    cash: paymentCash.value,
+    receivedCash: receivedCash.value,
+    card: paymentCard.value,
     forPay: summForPay.value,
     cardId: props.cardId,
   });

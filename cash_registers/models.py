@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from jsonfield import JSONField
 from cash_registers import sql_func
+from clients.models import Card
 from laboratory.utils import current_time
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
@@ -140,3 +141,31 @@ class Shift(models.Model):
             shift.confirm_close_shift()
             result = "Закрыта"
         return result
+
+
+class Cheque(models.Model):
+    SELL = "sell",
+    BUY = "buy"
+    SELL_RETURN = "sell-return"
+    BUY_RETURN = "buy-return"
+    TYPES = (
+        (SELL, "Приход"),
+        (BUY, "Расход"),
+        (SELL_RETURN, "Возврат прихода"),
+        (BUY_RETURN, "Возврат расхода"),
+    )
+
+    shift = models.ForeignKey(Shift, verbose_name='Смена', help_text='1', null=True, on_delete=models.CASCADE, db_index=True)
+    type = models.IntegerField(choices=TYPES, verbose_name='Тип чека', help_text='sell, buy и т.д')
+    payment_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+    received_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+    payment_card = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
+    payment_at = models.DateTimeField(verbose_name='Время оплаты', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
+    card_id = models.ForeignKey(Card, verbose_name='Карта', help_text='1', on_delete=models.SET_NULL, db_index=True)
+
+    class Meta:
+        verbose_name = "Чек"
+        verbose_name_plural = "Чеки"
+
+    def __str__(self):
+        return f"{self.type} - {self.shift} - {self.payment_at} - {self.card_id}"
