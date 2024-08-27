@@ -39,7 +39,7 @@ class CashRegister(models.Model):
         return result
 
     @staticmethod
-    def get_meta_data(cash_register_id = None, cash_register_obj = None):
+    def get_meta_data(cash_register_id=None, cash_register_obj=None):
         if cash_register_obj:
             cash_register_data = {"address": cash_register_obj.ip_address, "port": cash_register_obj.port, "login": cash_register_obj.login, "password": cash_register_obj.password}
         else:
