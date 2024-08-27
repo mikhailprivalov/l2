@@ -54,7 +54,7 @@ def payment(request):
     card = request_data["card"]
     for_pay = request_data["forPay"]
     card_id = request_data["cardId"]
-    result = cash_register_views.payment(shift_id, coasts, summ_coasts, discount, cash, received_cash card, for_pay, card_id)
+    result = cash_register_views.payment(shift_id, coasts, summ_coasts, discount, cash, received_cash, card, for_pay, card_id)
     return JsonResponse(result)
 
 
