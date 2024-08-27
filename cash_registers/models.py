@@ -149,11 +149,15 @@ class Cheque(models.Model):
     BUY = "buy"
     SELL_RETURN = "sell-return"
     BUY_RETURN = "buy-return"
+    CASH_IN = "cash-in"
+    CASH_OUT = "cash-out"
     TYPES = (
         (SELL, "Приход"),
         (BUY, "Расход"),
         (SELL_RETURN, "Возврат прихода"),
         (BUY_RETURN, "Возврат расхода"),
+        (CASH_IN, "Внесение"),
+        (CASH_OUT, "Выплата"),
     )
 
     shift = models.ForeignKey(Shift, verbose_name='Смена', help_text='1', null=True, on_delete=models.CASCADE, db_index=True)
@@ -164,7 +168,7 @@ class Cheque(models.Model):
     received_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     payment_card = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
     payment_at = models.DateTimeField(verbose_name='Время оплаты', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
-    card_id = models.ForeignKey(Card, verbose_name='Карта', help_text='1', null=True, on_delete=models.SET_NULL, db_index=True)
+    card_id = models.ForeignKey(Card, verbose_name='Карта', help_text='1', null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
     row_data = JSONField(blank=True, null=True, verbose_name="Json чек-документ")
 
     class Meta:
