@@ -241,19 +241,28 @@ const maxPay = computed(() => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let intervalReq = null;
-
+const chequeId = ref(null);
 const getChequeData = async () => {
-  console.log('каждую секунду мы спрашиваем');
+  console.log('каждую секунду мы спрашиваем get-cheque-data');
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('cash-register/get-cheque-data', {
+    chequeId: chequeId.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
   intervalReq = setTimeout(() => getChequeData(), 1000);
 };
 
 const payment = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('cash-register/payment', {
+  const { ok, message, cheqId } = await api('cash-register/payment', {
     shiftId: cashRegister.value.shiftId,
-    serviceIds: props.serviceIds,
+    serviceCoasts: servicesCoasts.value,
+    summCoasts: summServiceCoasts.value,
+    discount: discount.value,
+    forPay: summForPay.value,
   });
   await store.dispatch(actions.DEC_LOADING);
+  chequeId.value = cheqId;
   console.log(ok);
   if (ok) {
     root.$emit('msg', 'ok', 'Заявка отправлена');

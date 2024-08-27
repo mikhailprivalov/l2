@@ -47,3 +47,10 @@ def payment(request):
     request_data = json.loads(request.body)
     result = {"ok": True, "message": ""}
     return JsonResponse(result)
+
+@login_required
+def get_cheque_data(request):
+    request_data = json.loads(request.body)
+    result = {"ok": True, "message": ""}
+    return JsonResponse(result)
+
