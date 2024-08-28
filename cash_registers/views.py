@@ -2,7 +2,7 @@ import uuid
 
 import pytz
 
-from cash_registers.models import CashRegister, Shift, Cheque
+from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
 from laboratory.settings import TIME_ZONE
@@ -107,12 +107,18 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
     type = "sell"
-    items = []
+    items = ChequeItems.create_items(service_coasts)
     payments = Cheque.create_payments(cash, received_cash, electronic)
     total = for_pay
-
+    job_body = Cheque.create_job_json(cash_register_data, uuid_data, type, items, payments, total)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if check_cash_register["ok"]:
+        job_result = cash_req.send_job(job_body)
+        if job_result["ok"]:
+            Cheque.create_cheque()
+        else:
+            result = job_result
+    else:
+        result = check_cash_register
 
-        job_result =
     return result

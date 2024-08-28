@@ -195,9 +195,14 @@ class Cheque(models.Model):
         return result
 
     @staticmethod
-    def create_job_json(uuid, cash_register, operator):
-        body = {"cashRegister": cash_register, "uuid": uuid, "job": [{"type": "openShift", "operator": operator}]}
+    def create_job_json(cash_register_data, uuid, type, items, payments, total ):
+        body = {"cashRegister": cash_register_data, "uuid": uuid, "job": [{"type": type, "items": items, "payments": payments, "total": total}]}
         return body
+
+
+    @staticmethod
+    def create_cheque():
+        return True
 
 
 class ChequeItems(models.Model):
@@ -214,8 +219,19 @@ class ChequeItems(models.Model):
     def __str__(self):
         return f"{self.cheque} - {self.research_id} - {self.count} - {self.amount}"
 
-
     @staticmethod
     def create_items(items):
-        result = [{"type": "position", "name": item["title"], "price": item["coast"], "count": 1} for item in items]
-
+        result = [
+            {
+                "type": "position",
+                "name": item["title"],
+                "price": item["coast"],
+                "quantity": item["count"],
+                "amount": item["coast"] * item["count"],
+                "tax": {"type": "none"},
+                "paymentMethod": "fullPayment",
+                "paymentObject": "service"
+            }
+            for item in items
+        ]
+        return result
