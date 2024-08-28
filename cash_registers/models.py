@@ -199,9 +199,8 @@ class Cheque(models.Model):
         body = {"cashRegister": cash_register_data, "uuid": uuid, "job": [{"type": type, "items": items, "payments": payments, "total": total}]}
         return body
 
-
     @staticmethod
-    def create_cheque():
+    def create_cheque(shift_id, type, uuid, payments, card_id, items):
         return True
 
 

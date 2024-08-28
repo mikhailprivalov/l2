@@ -102,6 +102,7 @@ def get_service_coasts(service_ids: list):
 
 
 def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id):
+    # todo - в create_items не передаются id, надо где-то их оставлять
     result = {"ok": True, "message": "", "cheqId": None, "data": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
@@ -115,7 +116,7 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     if check_cash_register["ok"]:
         job_result = cash_req.send_job(job_body)
         if job_result["ok"]:
-            Cheque.create_cheque()
+            Cheque.create_cheque(shift_id, type, uuid_data, payments, card_id, items)
         else:
             result = job_result
     else:
