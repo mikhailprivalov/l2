@@ -223,7 +223,7 @@ class ChequeItems(models.Model):
                 "amount": item["coast"] * item["count"],
                 "tax": {"type": "none"},
                 "paymentMethod": "fullPayment",
-                "paymentObject": "service"
+                "paymentObject": "service",
             }
             for item in items
         ]
