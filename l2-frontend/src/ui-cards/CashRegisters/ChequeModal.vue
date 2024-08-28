@@ -251,6 +251,8 @@ const getChequeData = async () => {
     chequeId: chequeId.value,
   });
   intervalReq = setTimeout(() => getChequeData(), 1000);
+  data = ok;
+  data1 = message;
 };
 
 const payment = async () => {
@@ -268,12 +270,11 @@ const payment = async () => {
   });
   await store.dispatch(actions.DEC_LOADING);
   chequeId.value = cheqId;
-  console.log(ok);
   if (ok) {
     root.$emit('msg', 'ok', 'Заявка отправлена');
     await getChequeData();
   } else {
-    root.$emit('msg', 'error', 'Ошибка');
+    root.$emit('msg', 'error', message);
   }
 };
 
