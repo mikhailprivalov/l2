@@ -73,4 +73,3 @@ def close_shift(uuid: str, cash_register: dict, operator: dict):
     body = {"cashRegister": cash_register, "uuid": uuid, "job": [{"type": "closeShift", "operator": operator}]}
     result = send_job(body)
     return result
-
