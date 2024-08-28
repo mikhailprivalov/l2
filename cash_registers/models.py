@@ -180,7 +180,22 @@ class Cheque(models.Model):
         return f"{self.type} - {self.shift} - {self.payment_at} - {self.card_id}"
 
     @staticmethod
-    def get_job_json(uuid, cash_register, operator):
+    def create_payments(cash, received_cash, electronic):
+        result = []
+        if cash:
+            result.append({
+                "type": "cash",
+                "sum": received_cash
+            })
+        if electronic:
+            result.append({
+                "type": "electronically",
+                "sum": electronic
+            })
+        return result
+
+    @staticmethod
+    def create_job_json(uuid, cash_register, operator):
         body = {"cashRegister": cash_register, "uuid": uuid, "job": [{"type": "openShift", "operator": operator}]}
         return body
 
@@ -189,7 +204,7 @@ class ChequeItems(models.Model):
     cheque = models.ForeignKey(Cheque, verbose_name='Чек', on_delete=models.CASCADE, db_index=True)
     research = models.ForeignKey(Researches, verbose_name='Услуга', null=True, on_delete=models.SET_NULL, db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена за шт')
-    count = models.PositiveIntegerField(default=0, verbose_name='Количество')
+    count = models.PositiveIntegerField(default=1, verbose_name='Количество')
     amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма позиции')
 
     class Meta:
@@ -198,3 +213,9 @@ class ChequeItems(models.Model):
 
     def __str__(self):
         return f"{self.cheque} - {self.research_id} - {self.count} - {self.amount}"
+
+
+    @staticmethod
+    def create_items(items):
+        result = [{"type": "position", "name": item["title"], "price": item["coast"], "count": 1} for item in items]
+

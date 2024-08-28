@@ -2,7 +2,7 @@ import uuid
 
 import pytz
 
-from cash_registers.models import CashRegister, Shift
+from cash_registers.models import CashRegister, Shift, Cheque
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
 from laboratory.settings import TIME_ZONE
@@ -101,21 +101,16 @@ def get_service_coasts(service_ids: list):
     return result
 
 
-def payment(shift_id, coasts, summ_coasts, discount, cash, received_cash, card, for_pay, card_id):
+def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id):
     result = {"ok": True, "message": "", "cheqId": None, "data": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
     type = "sell"
     items = []
-    payments = []
-    total = 0
-    if cash:
-        payments.append({
-            "type": "cash",
-            "sum": received_cash
-        })
-    if ca
+    payments = Cheque.create_payments(cash, received_cash, electronic)
+    total = for_pay
+
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if check_cash_register["ok"]:
 
