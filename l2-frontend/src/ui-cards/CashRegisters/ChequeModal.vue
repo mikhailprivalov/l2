@@ -251,8 +251,11 @@ const getChequeData = async () => {
     chequeId: chequeId.value,
   });
   intervalReq = setTimeout(() => getChequeData(), 1000);
-  data = ok;
-  data1 = message;
+  if (ok) {
+    root.$emit('msg', 'ok', 'чек проверен');
+  } else {
+    root.$emit('msg', 'ok', message);
+  }
 };
 
 const payment = async () => {
