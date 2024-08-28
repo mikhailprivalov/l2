@@ -179,6 +179,11 @@ class Cheque(models.Model):
     def __str__(self):
         return f"{self.type} - {self.shift} - {self.payment_at} - {self.card_id}"
 
+    @staticmethod
+    def get_job_json(uuid, cash_register, operator):
+        body = {"cashRegister": cash_register, "uuid": uuid, "job": [{"type": "openShift", "operator": operator}]}
+        return body
+
 
 class ChequeItems(models.Model):
     cheque = models.ForeignKey(Cheque, verbose_name='Чек', on_delete=models.CASCADE, db_index=True)

@@ -87,12 +87,12 @@
               <div class="input-width">
                 <label>Картой</label>
                 <input
-                  v-model.number="paymentCard"
+                  v-model.number="paymentElectronic"
                   type="number"
                   class="form-control"
                   step="0.01"
                   min="0"
-                  :max="maxPay.card"
+                  :max="maxPay.electronic"
                 >
               </div>
             </div>
@@ -211,7 +211,7 @@ onMounted(async () => {
 });
 
 const paymentCash = ref(0);
-const paymentCard = ref(0);
+const paymentElectronic = ref(0);
 const discount = ref(0);
 
 const summForPay = computed(() => {
@@ -225,7 +225,7 @@ const summForPay = computed(() => {
   return 0.00;
 });
 watch([summForPay], () => {
-  paymentCard.value = Number(summForPay.value.toFixed(2));
+  paymentElectronic.value = Number(summForPay.value.toFixed(2));
 });
 
 const receivedCash = ref(0);
@@ -238,9 +238,9 @@ const cashChange = computed(() => {
 
 const maxPay = computed(() => {
   const summForPayNumber = Number(summForPay.value.toFixed(2));
-  const card = summForPayNumber - paymentCash.value;
-  const cash = summForPayNumber - paymentCard.value;
-  return { card: Number(card.toFixed(2)), cash: Number(cash.toFixed(2)) };
+  const electronic = summForPayNumber - paymentCash.value;
+  const cash = summForPayNumber - paymentElectronic.value;
+  return { electronic: Number(electronic.toFixed(2)), cash: Number(cash.toFixed(2)) };
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -263,7 +263,7 @@ const payment = async () => {
     discount: discount.value,
     cash: paymentCash.value,
     receivedCash: receivedCash.value,
-    card: paymentCard.value,
+    electronic: paymentElectronic.value,
     forPay: summForPay.value,
     cardId: props.cardId,
   });
