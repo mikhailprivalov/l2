@@ -269,7 +269,7 @@ const router = new Router({
     },
     {
       path: '/ui/case-control',
-      name: 'cases',
+      name: 'cases-control',
       component: () => import('@/pages/CaseControl/index.vue'),
       meta: {
         title: 'Случаи обслуживания',
