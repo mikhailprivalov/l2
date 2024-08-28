@@ -247,7 +247,6 @@ const maxPay = computed(() => {
 let intervalReq = null;
 const chequeId = ref(null);
 const getChequeData = async () => {
-  console.log('каждую секунду мы спрашиваем get-cheque-data');
   const { ok, message } = await api('cash-register/get-cheque-data', {
     chequeId: chequeId.value,
   });
