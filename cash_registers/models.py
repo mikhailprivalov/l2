@@ -183,10 +183,7 @@ class Cheque(models.Model):
     def create_payments(cash, received_cash, electronic):
         result = []
         if cash:
-            result.append({
-                "type": "cash",
-                "sum": received_cash
-            })
+            result.append({"type": "cash", "sum": received_cash})
         if electronic:
             result.append({
                 "type": "electronically",
