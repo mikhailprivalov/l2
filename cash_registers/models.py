@@ -185,14 +185,11 @@ class Cheque(models.Model):
         if cash:
             result.append({"type": "cash", "sum": received_cash})
         if electronic:
-            result.append({
-                "type": "electronically",
-                "sum": electronic
-            })
+            result.append({"type": "electronically", "sum": electronic})
         return result
 
     @staticmethod
-    def create_job_json(cash_register_data, uuid, type, items, payments, total ):
+    def create_job_json(cash_register_data, uuid, type, items, payments, total):
         body = {"cashRegister": cash_register_data, "uuid": uuid, "job": [{"type": type, "items": items, "payments": payments, "total": total}]}
         return body
 
