@@ -78,7 +78,6 @@
 // todo - slot на вывод результата, для удобного вывода каждому)
 // todo - дефолтный вывод результата - таблица, строчка
 import {
-  computed,
   getCurrentInstance, onMounted, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
