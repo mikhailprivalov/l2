@@ -236,11 +236,14 @@ const changeServiceAmount = (serviceId) => {
   const service = servicesCoasts.value.find(i => i.id === serviceId);
   service.amount = service.count * service.coast;
 };
+
 const sumServiceCoasts = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
-    result += service.amount;
+    console.log(service.amount);
+    result += Number(service.amount);
   }
+  console.log(result);
   return result;
 });
 const noCoast = ref(false);
