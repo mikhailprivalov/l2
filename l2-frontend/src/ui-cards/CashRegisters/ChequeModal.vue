@@ -83,6 +83,7 @@
                     step="0.01"
                     min="0"
                     :max="maxPay.cash"
+                    @input="changeElectronic"
                   >
                 </div>
                 <div class="input-width">
@@ -94,6 +95,7 @@
                     step="0.01"
                     min="0"
                     :max="maxPay.electronic"
+                    @input="changeCash"
                   >
                 </div>
               </div>
@@ -135,7 +137,7 @@
                 type="number"
                 class="form-control"
               >
-              <h5>Сдача: {{ cashChange.toFixed(2) }}</h5>
+              <h5>Сдача: {{ cashReturn.toFixed(2) }}</h5>
             </div>
           </div>
           <div v-else>
@@ -224,19 +226,41 @@ const discount = ref(0);
 const summForPay = computed(() => {
   if (discount.value >= 0 && discount.value <= 100) {
     const summDiscount = (summServiceCoasts.value * discount.value) / 100;
-    return summServiceCoasts.value - summDiscount;
+    return Number((summServiceCoasts.value - summDiscount).toFixed(2));
   }
   if (discount.value < 0) {
     return summServiceCoasts.value;
   }
   return 0.00;
 });
+
+const changeElectronic = () => {
+  const result = Number(summForPay.value.toFixed(2)) - paymentCash.value;
+  if (result > 0) {
+    paymentElectronic.value = result;
+  } else {
+    paymentElectronic.value = 0;
+  }
+};
+const changeCash = () => {
+  const result = Number(summForPay.value.toFixed(2)) - paymentElectronic.value;
+  if (result > 0) {
+    paymentCash.value = Number(summForPay.value.toFixed(2)) - paymentElectronic.value;
+  }
+  paymentCash.value = 0;
+};
+
 watch([summForPay], () => {
-  paymentElectronic.value = Number(summForPay.value.toFixed(2));
+  if (summForPay.value) {
+    paymentElectronic.value = Number(summForPay.value.toFixed(2)) - paymentCash.value;
+  } else {
+    paymentElectronic.value = 0.00;
+    paymentCash.value = 0.00;
+  }
 });
 
 const receivedCash = ref(0);
-const cashChange = computed(() => {
+const cashReturn = computed(() => {
   if (receivedCash.value && receivedCash.value >= paymentCash.value) {
     return receivedCash.value - paymentCash.value;
   }
