@@ -193,14 +193,22 @@ const props = defineProps({
 
 const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
-
+const cardIsSelected = computed(() => props.cardId !== -1);
 const loading = ref(false);
 
 const closeModal = () => {
   emit('closeModal');
 };
 
-const servicesCoasts = ref([]);
+interface serviceCoast {
+  id: number,
+  title: string,
+  coast: number,
+  count: number,
+  amount: number,
+}
+
+const servicesCoasts = ref<serviceCoast[]>([]);
 const summServiceCoasts = ref(0);
 const noCoast = ref(false);
 const getServicesCoasts = async () => {
@@ -214,8 +222,6 @@ const getServicesCoasts = async () => {
 onMounted(async () => {
   await getServicesCoasts();
 });
-
-const cardIsSelected = computed(() => props.cardId !== -1);
 
 const paymentCash = ref(0);
 const paymentElectronic = ref(0);
