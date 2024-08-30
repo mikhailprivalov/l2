@@ -32,6 +32,8 @@
               <colgroup>
                 <col>
                 <col style="width: 100px">
+                <col style="width: 100px">
+                <col style="width: 100px">
               </colgroup>
               <thead class="sticky">
                 <tr>
@@ -40,6 +42,12 @@
                   </th>
                   <th class="text-center">
                     <strong>Цена</strong>
+                  </th>
+                  <th class="text-center">
+                    <strong>Кол-во</strong>
+                  </th>
+                  <th>
+                    <strong>Сумма</strong>
                   </th>
                 </tr>
               </thead>
@@ -54,17 +62,31 @@
                 <td class="text-center border padding">
                   {{ service.coast }}
                 </td>
+                <td class="text-center border padding">
+                  <input
+                    v-model="service.count"
+                    min="1"
+                    type="number"
+                    class="form-control"
+                    @change="changeServiceAmount(service.id)"
+                  >
+                </td>
+                <td class="text-center border padding">
+                  {{ service.amount }}
+                </td>
               </tr>
               <tfoot class="sticky-footer">
                 <tr>
-                  <td class="text-right">
+                  <td class="text-right" />
+                  <td class="text-center" />
+                  <td class="text-center">
                     <strong>
                       Итого:
                     </strong>
                   </td>
                   <td class="text-center">
                     <strong>
-                      {{ summServiceCoasts }}
+                      {{ sumServiceCoasts }}
                     </strong>
                   </td>
                 </tr>
@@ -209,14 +231,24 @@ interface serviceCoast {
 }
 
 const servicesCoasts = ref<serviceCoast[]>([]);
-const summServiceCoasts = ref(0);
+
+const changeServiceAmount = (serviceId) => {
+  const service = servicesCoasts.value.find(i => i.id === serviceId);
+  service.amount = service.count * service.coast;
+};
+const sumServiceCoasts = computed(() => {
+  let result = 0;
+  for (const service of servicesCoasts.value) {
+    result += service.amount;
+  }
+  return result;
+});
 const noCoast = ref(false);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { coasts, summ, serviceWithoutCoast } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
+  const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
   await store.dispatch(actions.DEC_LOADING);
   servicesCoasts.value = coasts;
-  summServiceCoasts.value = Number(summ);
   noCoast.value = serviceWithoutCoast;
 };
 onMounted(async () => {
@@ -229,11 +261,11 @@ const discount = ref(0);
 
 const summForPay = computed(() => {
   if (discount.value >= 0 && discount.value <= 100) {
-    const summDiscount = (summServiceCoasts.value * discount.value) / 100;
-    return Number((summServiceCoasts.value - summDiscount).toFixed(2));
+    const summDiscount = (sumServiceCoasts.value * discount.value) / 100;
+    return Number((sumServiceCoasts.value - summDiscount).toFixed(2));
   }
   if (discount.value < 0) {
-    return Number(summServiceCoasts.value.toFixed(2));
+    return Number(sumServiceCoasts.value.toFixed(2));
   }
   return 0.00;
 });
@@ -298,7 +330,7 @@ const payment = async () => {
   const { ok, message, cheqId } = await api('cash-register/payment', {
     shiftId: cashRegister.value.shiftId,
     serviceCoasts: servicesCoasts.value,
-    summCoasts: summServiceCoasts.value,
+    sumCoasts: sumServiceCoasts.value,
     discount: discount.value,
     cash: paymentCash.value,
     receivedCash: receivedCash.value,
