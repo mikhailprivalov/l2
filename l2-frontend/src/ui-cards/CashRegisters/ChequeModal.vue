@@ -71,70 +71,75 @@
               </tfoot>
             </table>
           </div>
-          <div class="flex-space">
-            <div class="flex">
-              <div class="input-width">
-                <label>Наличными</label>
-                <input
-                  v-model.number="paymentCash"
-                  type="number"
-                  class="form-control"
-                  step="0.01"
-                  min="0"
-                  :max="maxPay.cash"
-                >
+          <div v-if="cardIsSelected">
+            <div class="flex-space">
+              <div class="flex">
+                <div class="input-width">
+                  <label>Наличными</label>
+                  <input
+                    v-model.number="paymentCash"
+                    type="number"
+                    class="form-control"
+                    step="0.01"
+                    min="0"
+                    :max="maxPay.cash"
+                  >
+                </div>
+                <div class="input-width">
+                  <label>Картой</label>
+                  <input
+                    v-model.number="paymentElectronic"
+                    type="number"
+                    class="form-control"
+                    step="0.01"
+                    min="0"
+                    :max="maxPay.electronic"
+                  >
+                </div>
               </div>
-              <div class="input-width">
-                <label>Картой</label>
+              <div class="discount-width">
+                <label>Скидка (%)</label>
                 <input
-                  v-model.number="paymentElectronic"
+                  v-model.number="discount"
                   type="number"
                   class="form-control"
-                  step="0.01"
                   min="0"
-                  :max="maxPay.electronic"
+                  step="1"
+                  max="100"
                 >
               </div>
             </div>
-            <div class="discount-width">
-              <label>Скидка (%)</label>
+            <div class="flex-space">
+              <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
+              <button
+                v-if="!noCoast"
+                class="btn btn-blue-nb pay-button"
+                @click="payment"
+              >
+                Оплатить
+              </button>
+              <h5
+                v-else
+                class="text-red"
+              >
+                Не все услуги имеют цену
+              </h5>
+            </div>
+            <div
+              v-if="paymentCash"
+              class="input-width"
+            >
+              <label>Получено наличными</label>
               <input
-                v-model.number="discount"
+                v-model.number="receivedCash"
                 type="number"
                 class="form-control"
-                min="0"
-                step="1"
-                max="100"
               >
+              <h5>Сдача: {{ cashChange.toFixed(2) }}</h5>
             </div>
           </div>
-          <div class="flex-space">
-            <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
-            <button
-              v-if="!noCoast"
-              class="btn btn-blue-nb pay-button"
-              @click="payment"
-            >
-              Оплатить
-            </button>
-            <h5
-              v-else
-              class="text-red"
-            >
-              Не все услуги имеют цену
-            </h5>
-          </div>
-          <div
-            v-if="paymentCash"
-            class="input-width"
-          >
-            <label>Получено наличными</label>
-            <input
-              v-model.number="receivedCash"
-              type="number"
-              class="form-control"
-            >
-            <h5>Сдача: {{ cashChange.toFixed(2) }}</h5>
+          <div v-else>
+            <h4>Пациент не выбран</h4>
           </div>
         </div>
         <h4 v-else>
@@ -209,6 +214,8 @@ const getServicesCoasts = async () => {
 onMounted(async () => {
   await getServicesCoasts();
 });
+
+const cardIsSelected = computed(() => props.cardId !== -1);
 
 const paymentCash = ref(0);
 const paymentElectronic = ref(0);
