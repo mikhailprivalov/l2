@@ -82,7 +82,6 @@
                     class="form-control"
                     step="0.01"
                     min="0"
-                    :max="maxPay.cash"
                     @input="changeElectronic"
                   >
                 </div>
@@ -94,7 +93,6 @@
                     class="form-control"
                     step="0.01"
                     min="0"
-                    :max="maxPay.electronic"
                     @input="changeCash"
                   >
                 </div>
@@ -229,33 +227,40 @@ const summForPay = computed(() => {
     return Number((summServiceCoasts.value - summDiscount).toFixed(2));
   }
   if (discount.value < 0) {
-    return summServiceCoasts.value;
+    return Number(summServiceCoasts.value.toFixed(2));
   }
   return 0.00;
 });
 
 const changeElectronic = () => {
-  const result = Number(summForPay.value.toFixed(2)) - paymentCash.value;
-  if (result > 0) {
-    paymentElectronic.value = result;
+  if (paymentCash.value < 0) {
+    paymentCash.value = 0.00;
+  }
+  const result = summForPay.value - paymentCash.value;
+  if (result >= 0) {
+    paymentElectronic.value = Number(result.toFixed(2));
   } else {
     paymentElectronic.value = 0;
   }
 };
 const changeCash = () => {
-  const result = Number(summForPay.value.toFixed(2)) - paymentElectronic.value;
-  if (result > 0) {
-    paymentCash.value = Number(summForPay.value.toFixed(2)) - paymentElectronic.value;
+  if (paymentElectronic.value < 0) {
+    paymentElectronic.value = 0.00;
   }
-  paymentCash.value = 0;
+  const result = summForPay.value - paymentElectronic.value;
+  if (result >= 0) {
+    paymentCash.value = Number(result.toFixed(2));
+  } else {
+    paymentCash.value = 0;
+  }
 };
 
 watch([summForPay], () => {
   if (summForPay.value) {
-    paymentElectronic.value = Number(summForPay.value.toFixed(2)) - paymentCash.value;
+    paymentElectronic.value = Number((summForPay.value - paymentCash.value).toFixed(2));
   } else {
-    paymentElectronic.value = 0.00;
-    paymentCash.value = 0.00;
+    paymentElectronic.value = 0;
+    paymentCash.value = 0;
   }
 });
 
@@ -265,13 +270,6 @@ const cashReturn = computed(() => {
     return receivedCash.value - paymentCash.value;
   }
   return 0;
-});
-
-const maxPay = computed(() => {
-  const summForPayNumber = Number(summForPay.value.toFixed(2));
-  const electronic = summForPayNumber - paymentCash.value;
-  const cash = summForPayNumber - paymentElectronic.value;
-  return { electronic: Number(electronic.toFixed(2)), cash: Number(cash.toFixed(2)) };
 });
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
