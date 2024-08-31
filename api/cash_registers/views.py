@@ -61,5 +61,5 @@ def payment(request):
 @login_required
 def get_cheque_data(request):
     request_data = json.loads(request.body)
-    result = {"ok": True, "message": "", "data": request_data}
+    result = cash_register_views.get_cheque_data(request_data["cheqId"])
     return JsonResponse(result)

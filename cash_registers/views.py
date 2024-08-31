@@ -6,6 +6,7 @@ from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
 from laboratory.settings import TIME_ZONE
+from laboratory.utils import current_time
 
 
 def get_cash_registers():
@@ -104,7 +105,7 @@ def get_service_coasts(service_ids: list):
 
 def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id):
     # todo - в create_items не передаются id, надо где-то их оставлять
-    result = {"ok": True, "message": "", "cheqId": None, "data": None}
+    result = {"ok": True, "message": "", "cheqId": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
@@ -118,10 +119,39 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     if check_cash_register["ok"]:
         job_result = cash_req.send_job(job_body)
         if job_result["ok"]:
-            Cheque.create_cheque(shift_id, type, uuid_data, cash, received_cash, electronic, card_id, items)
+            cheq_id = Cheque.create_cheque(shift_id, type, uuid_data, cash, received_cash, electronic, card_id, items)
+            result["cheqId"] = cheq_id
         else:
             result = job_result
     else:
         result = check_cash_register
+
+    return result
+
+
+def get_cheque_data(cheq_id):
+    result = {"ok": True, "message": ""}
+    cheque = Cheque.objects.filter(pk=cheq_id).select_related('shift', 'shift__cash_register').first()
+    if not cheque.cancelled:
+        cash_register_data = CashRegister.get_meta_data(cash_register_obj=cheque.shift.cash_register)
+        uuid_str = str(cheque.uuid)
+        check_cash_register = cash_req.check_cash_register(cash_register_data)
+        if check_cash_register["ok"]:
+            job_result = cash_req.get_job_status(uuid_str, cash_register_data)
+            if job_result["ok"]:
+                job_status = job_result["data"]["results"][0]
+                if job_status["status"] == "ready":
+                    time = current_time()
+                    cheque.status = True
+                    cheque.payment_at = time
+                    cheque.row_data["status"] = True,
+                    cheque.row_data["payment_at"] = time
+                    cheque.save()
+                elif job_status["status"] == "error":
+                    result = {"ok": False, "message": "Задача заблокирована на кассе"}
+            else:
+                result = job_result
+        else:
+            result = check_cash_register
 
     return result

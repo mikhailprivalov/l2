@@ -216,7 +216,7 @@ class Cheque(models.Model):
             }
             new_cheque.row_data = row_data
             new_cheque.save()
-        return True
+        return new_cheque.pk
 
 
 class ChequeItems(models.Model):
