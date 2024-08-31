@@ -189,13 +189,12 @@ class Cheque(models.Model):
         return result
 
     @staticmethod
-    def create_job_json(cash_register_data, uuid, type, items, payments, total):
-        body = {"cashRegister": cash_register_data, "uuid": uuid, "job": [{"type": type, "items": items, "payments": payments, "total": total}]}
+    def create_job_json(cash_register_data, uuid_data, type_operations, items, payments, total):
+        body = {"cashRegister": cash_register_data, "uuid": uuid_data, "job": [{"type": type_operations, "items": items, "payments": payments, "total": total}]}
         return body
 
     @staticmethod
     def create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items):
-        print(card_id)
         with transaction.atomic():
             new_cheque = Cheque(shift_id=shift_id, type=type_operations, uuid=uuid_data, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
             new_cheque.save()
@@ -204,8 +203,8 @@ class Cheque(models.Model):
                 new_items.save()
             row_data = {
                 "shift_id": shift_id,
-                "type": type,
-                "uuid": uuid,
+                "type": type_operations,
+                "uuid": uuid_data,
                 "status": False,
                 "cancelled": False,
                 "payment_cash": cash,
