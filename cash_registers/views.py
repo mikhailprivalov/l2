@@ -149,7 +149,7 @@ def get_cheque_data(cheq_id):
                     cheque.save()
                     result["chequeReady"] = True
                 elif job_status["status"] == "error":
-                    print(job_status)
+                    cheque.cancelled = True
                     result = {"ok": False, "message": f"Задача заблокирована на кассе: {job_status['error']['description']}"}
             else:
                 result = job_result

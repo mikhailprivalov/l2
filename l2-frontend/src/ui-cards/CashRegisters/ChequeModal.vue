@@ -337,7 +337,7 @@ const getChequeData = async () => {
       intervalReq = setTimeout(() => getChequeData(), 1000);
     }
   } else {
-    root.$emit('msg', 'ok', message);
+    root.$emit('msg', 'error', message);
     intervalReq = null;
   }
 };
