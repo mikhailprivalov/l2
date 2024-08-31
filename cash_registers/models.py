@@ -194,7 +194,22 @@ class Cheque(models.Model):
         return body
 
     @staticmethod
-    def create_cheque(shift_id, type, uuid, payments, card_id, items):
+    def create_cheque(shift_id, type, uuid, cash, received_cash, electronic, card_id, items):
+        row_data = {
+            "shift_id": shift_id,
+            "type": type,
+            "uuid": uuid,
+            "status": False,
+            "cancelled": False,
+            "payment_cash": cash,
+            "received_cash": received_cash,
+            "payment_electronic": electronic,
+            "payment_at": None,
+            "card_id": card_id,
+            "items": items
+        }
+        new_cheque = Cheque(shift_id=shift_id, type=type, uuid=uuid, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id, row_data=row_data)
+        new_cheque.save()
         return True
 
 
@@ -216,11 +231,12 @@ class ChequeItems(models.Model):
     def create_items(items):
         result = [
             {
+                "id": item["id"],
                 "type": "position",
                 "name": item["title"],
                 "price": item["coast"],
                 "quantity": item["count"],
-                "amount": item["coast"] * item["count"],
+                "amount": item["amount"],
                 "tax": {"type": "none"},
                 "paymentMethod": "fullPayment",
                 "paymentObject": "service",

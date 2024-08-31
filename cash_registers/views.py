@@ -108,7 +108,8 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
-    type = "sell"
+    type = Cheque.SELL
+    print(service_coasts)
     items = ChequeItems.create_items(service_coasts)
     payments = Cheque.create_payments(cash, received_cash, electronic)
     total = for_pay
@@ -117,7 +118,7 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     if check_cash_register["ok"]:
         job_result = cash_req.send_job(job_body)
         if job_result["ok"]:
-            Cheque.create_cheque(shift_id, type, uuid_data, payments, card_id, items)
+            Cheque.create_cheque(shift_id, type, uuid_data, cash, received_cash, electronic, card_id, items)
         else:
             result = job_result
     else:

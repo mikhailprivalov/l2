@@ -51,7 +51,7 @@ def payment(request):
     discount = request_data["discount"]
     cash = request_data["cash"]
     received_cash = request_data["receivedCash"]
-    electronic = request_data["card"]
+    electronic = request_data["electronic"]
     for_pay = request_data["forPay"]
     card_id = request_data["cardId"]
     result = cash_register_views.payment(shift_id, coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id)
