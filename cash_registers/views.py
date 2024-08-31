@@ -117,12 +117,12 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     job_body = Cheque.create_job_json(cash_register_data, uuid_data, type_operations, items, payments, total)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if check_cash_register["ok"]:
-        # job_result = cash_req.send_job(job_body)
-        # if job_result["ok"]:
-        cheq_id = Cheque.create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items)
-        result["cheqId"] = cheq_id
-        # else:
-        #     result = job_result
+        job_result = cash_req.send_job(job_body)
+        if job_result["ok"]:
+            cheq_id = Cheque.create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items)
+            result["cheqId"] = cheq_id
+        else:
+            result = job_result
     else:
         result = check_cash_register
 
@@ -130,7 +130,7 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
 
 
 def get_cheque_data(cheq_id):
-    result = {"ok": True, "message": ""}
+    result = {"ok": True, "message": "", "chequeReady": False}
     cheque = Cheque.objects.filter(pk=cheq_id).select_related('shift', 'shift__cash_register').first()
     if not cheque.cancelled:
         cash_register_data = CashRegister.get_meta_data(cash_register_obj=cheque.shift.cash_register)
@@ -147,8 +147,10 @@ def get_cheque_data(cheq_id):
                     cheque.row_data["status"] = True,
                     cheque.row_data["payment_at"] = time
                     cheque.save()
+                    result["chequeReady"] = True
                 elif job_status["status"] == "error":
-                    result = {"ok": False, "message": "Задача заблокирована на кассе"}
+                    print(job_status)
+                    result = {"ok": False, "message": f"Задача заблокирована на кассе: {job_status['error']['description']}"}
             else:
                 result = job_result
         else:

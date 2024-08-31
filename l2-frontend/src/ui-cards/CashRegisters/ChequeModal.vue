@@ -325,14 +325,17 @@ const cashReturn = computed(() => {
 let intervalReq = null;
 const chequeId = ref(null);
 const getChequeData = async () => {
-  const { ok, message } = await api('cash-register/get-cheque-data', {
+  const { ok, message, chequeReady } = await api('cash-register/get-cheque-data', {
     chequeId: chequeId.value,
   });
-  intervalReq = setTimeout(() => getChequeData(), 1000);
   if (ok) {
-    root.$emit('msg', 'ok', 'Чек проведён');
-    intervalReq = null;
-    loading.value = false;
+    if (chequeReady) {
+      root.$emit('msg', 'ok', 'Чек проведён');
+      intervalReq = null;
+      loading.value = false;
+    } else {
+      intervalReq = setTimeout(() => getChequeData(), 1000);
+    }
   } else {
     root.$emit('msg', 'ok', message);
     intervalReq = null;
@@ -358,7 +361,7 @@ const payment = async () => {
     chequeId.value = cheqId;
     if (ok) {
       root.$emit('msg', 'ok', 'Заявка отправлена');
-      // await getChequeData();
+      await getChequeData();
     } else {
       root.$emit('msg', 'error', message);
     }
