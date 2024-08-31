@@ -1,5 +1,5 @@
 import uuid
-from django.db import models
+from django.db import models, transaction
 from jsonfield import JSONField
 from cash_registers import sql_func
 from clients.models import Card
@@ -195,21 +195,27 @@ class Cheque(models.Model):
 
     @staticmethod
     def create_cheque(shift_id, type, uuid, cash, received_cash, electronic, card_id, items):
-        row_data = {
-            "shift_id": shift_id,
-            "type": type,
-            "uuid": uuid,
-            "status": False,
-            "cancelled": False,
-            "payment_cash": cash,
-            "received_cash": received_cash,
-            "payment_electronic": electronic,
-            "payment_at": None,
-            "card_id": card_id,
-            "items": items
-        }
-        new_cheque = Cheque(shift_id=shift_id, type=type, uuid=uuid, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id, row_data=row_data)
-        new_cheque.save()
+        with transaction.atomic():
+            new_cheque = Cheque(shift_id=shift_id, type=type, uuid=uuid, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
+            new_cheque.save()
+            for item in items:
+                new_items = ChequeItems(cheque_id=new_cheque.pk, research_id=item["id"], coast=item["price"], count=item["quantity"], amount=item["amount"])
+                new_items.save()
+            row_data = {
+                "shift_id": shift_id,
+                "type": type,
+                "uuid": uuid,
+                "status": False,
+                "cancelled": False,
+                "payment_cash": cash,
+                "received_cash": received_cash,
+                "payment_electronic": electronic,
+                "payment_at": None,
+                "card_id": card_id,
+                "items": items
+            }
+            new_cheque.row_data = row_data
+            new_cheque.save()
         return True
 
 
