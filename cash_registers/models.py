@@ -169,7 +169,7 @@ class Cheque(models.Model):
     received_cash = models.DecimalField(max_digits=10, verbose_name='Получено наличными', default=0, decimal_places=2)
     payment_electronic = models.DecimalField(max_digits=10, verbose_name='Оплата электронно', default=0, decimal_places=2)
     payment_at = models.DateTimeField(verbose_name='Время оплаты', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
-    card_id = models.ForeignKey(Card, verbose_name='Карта пациента/клиента', help_text='1', null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
+    card = models.ForeignKey(Card, verbose_name='Карта пациента/клиента', help_text='1', null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
     row_data = JSONField(blank=True, null=True, verbose_name="Json чек-документ")
 
     class Meta:
@@ -194,9 +194,10 @@ class Cheque(models.Model):
         return body
 
     @staticmethod
-    def create_cheque(shift_id, type, uuid, cash, received_cash, electronic, card_id, items):
+    def create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items):
+        print(card_id)
         with transaction.atomic():
-            new_cheque = Cheque(shift_id=shift_id, type=type, uuid=uuid, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
+            new_cheque = Cheque(shift_id=shift_id, type=type_operations, uuid=uuid_data, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
             new_cheque.save()
             for item in items:
                 new_items = ChequeItems(cheque_id=new_cheque.pk, research_id=item["id"], coast=item["price"], count=item["quantity"], amount=item["amount"])

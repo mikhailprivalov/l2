@@ -102,6 +102,7 @@
                   <input
                     v-model.number="paymentCash"
                     type="number"
+                    :disabled="loading"
                     class="form-control"
                     step="0.01"
                     min="0"
@@ -113,6 +114,7 @@
                   <input
                     v-model.number="paymentElectronic"
                     type="number"
+                    :disabled="loading"
                     class="form-control"
                     step="0.01"
                     min="0"
@@ -125,6 +127,7 @@
                 <input
                   v-model.number="discount"
                   type="number"
+                  :disabled="loading"
                   class="form-control"
                   min="0"
                   step="1"
@@ -355,7 +358,7 @@ const payment = async () => {
     chequeId.value = cheqId;
     if (ok) {
       root.$emit('msg', 'ok', 'Заявка отправлена');
-      await getChequeData();
+      // await getChequeData();
     } else {
       root.$emit('msg', 'error', message);
     }

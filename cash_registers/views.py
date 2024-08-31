@@ -5,6 +5,7 @@ import pytz
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
+from clients.models import Card
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import current_time
 
@@ -110,19 +111,21 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
     type = Cheque.SELL
-    print(service_coasts)
     items = ChequeItems.create_items(service_coasts)
     payments = Cheque.create_payments(cash, received_cash, electronic)
     total = for_pay
     job_body = Cheque.create_job_json(cash_register_data, uuid_data, type, items, payments, total)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
+    print(card_id)
+    card = Card.objects.filter(pk=card_id).first()
+    print(card)
     if check_cash_register["ok"]:
-        job_result = cash_req.send_job(job_body)
-        if job_result["ok"]:
-            cheq_id = Cheque.create_cheque(shift_id, type, uuid_data, cash, received_cash, electronic, card_id, items)
-            result["cheqId"] = cheq_id
-        else:
-            result = job_result
+        # job_result = cash_req.send_job(job_body)
+        # if job_result["ok"]:
+        cheq_id = Cheque.create_cheque(shift_id, type, uuid_data, cash, received_cash, electronic, card.pk, items)
+        result["cheqId"] = cheq_id
+        # else:
+        #     result = job_result
     else:
         result = check_cash_register
 
