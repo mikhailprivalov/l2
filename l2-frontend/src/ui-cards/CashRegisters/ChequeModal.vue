@@ -67,8 +67,9 @@
                     v-model="service.count"
                     min="1"
                     type="number"
+                    :disabled="loading"
                     class="form-control"
-                    @change="changeServiceAmount(service.id)"
+                    @input="changeServiceAmount(service.id)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -136,6 +137,7 @@
               <button
                 v-if="!noCoast"
                 class="btn btn-blue-nb pay-button"
+                :disabled="loading"
                 @click="payment"
               >
                 Оплатить
@@ -174,6 +176,7 @@
             <button
               class="btn btn-primary-nb btn-blue-nb"
               type="button"
+              :disabled="loading"
               @click="closeModal"
             >
               Закрыть
@@ -219,7 +222,9 @@ const cardIsSelected = computed(() => props.cardId !== -1);
 const loading = ref(false);
 
 const closeModal = () => {
-  emit('closeModal');
+  if (!loading.value) {
+    emit('closeModal');
+  }
 };
 
 interface serviceCoast {
@@ -233,17 +238,17 @@ interface serviceCoast {
 const servicesCoasts = ref<serviceCoast[]>([]);
 
 const changeServiceAmount = (serviceId) => {
-  const service = servicesCoasts.value.find(i => i.id === serviceId);
-  service.amount = service.count * service.coast;
+  if (!loading.value) {
+    const service = servicesCoasts.value.find(i => i.id === serviceId);
+    service.amount = service.count * service.coast;
+  }
 };
 
 const sumServiceCoasts = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
-    console.log(service.amount);
     result += Number(service.amount);
   }
-  console.log(result);
   return result;
 });
 const noCoast = ref(false);
@@ -322,32 +327,38 @@ const getChequeData = async () => {
   });
   intervalReq = setTimeout(() => getChequeData(), 1000);
   if (ok) {
-    root.$emit('msg', 'ok', 'чек проверен');
+    root.$emit('msg', 'ok', 'Чек проведён');
+    intervalReq = null;
+    loading.value = false;
   } else {
     root.$emit('msg', 'ok', message);
+    intervalReq = null;
   }
 };
 
 const payment = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, message, cheqId } = await api('cash-register/payment', {
-    shiftId: cashRegister.value.shiftId,
-    serviceCoasts: servicesCoasts.value,
-    sumCoasts: sumServiceCoasts.value,
-    discount: discount.value,
-    cash: paymentCash.value,
-    receivedCash: receivedCash.value,
-    electronic: paymentElectronic.value,
-    forPay: summForPay.value,
-    cardId: props.cardId,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  chequeId.value = cheqId;
-  if (ok) {
-    root.$emit('msg', 'ok', 'Заявка отправлена');
-    await getChequeData();
-  } else {
-    root.$emit('msg', 'error', message);
+  if (!loading.value) {
+    loading.value = true;
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message, cheqId } = await api('cash-register/payment', {
+      shiftId: cashRegister.value.shiftId,
+      serviceCoasts: servicesCoasts.value,
+      sumCoasts: sumServiceCoasts.value,
+      discount: discount.value,
+      cash: paymentCash.value,
+      receivedCash: receivedCash.value,
+      electronic: paymentElectronic.value,
+      forPay: summForPay.value,
+      cardId: props.cardId,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    chequeId.value = cheqId;
+    if (ok) {
+      root.$emit('msg', 'ok', 'Заявка отправлена');
+      await getChequeData();
+    } else {
+      root.$emit('msg', 'error', message);
+    }
   }
 };
 
