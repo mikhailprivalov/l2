@@ -113,7 +113,7 @@
     "typescript": "~5.0.4",
     "url-loader": "^4.1.1",
     "vue-eslint-parser": "^9.1.1",
-    "webpack": "4",
+    "webpack": "5",
     "webpack-manifest-plugin": "~4.1.1"
   },
   "browserslist": [
