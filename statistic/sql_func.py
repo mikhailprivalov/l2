@@ -1989,3 +1989,90 @@ def get_expertise_grade(parent_ids):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def statistics_corp_by_create_direction(d_start, d_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            dn.id as direction_num,
+            to_char(dn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as target_date,
+            dr.title as research_title,
+            hh.title as hospital_title,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday,
+            cc.id as patient_card,
+            di.research_id as iss_research_id,
+            research_coast.coast as research_coast,
+            dtr.number as tube_number
+            
+            FROM directions_issledovaniya di
+            LEFT JOIN directions_napravleniya dn on dn.id = di.napravleniye_id 
+            LEFT JOIN directory_researches dr on dr.id = di.research_id
+            LEFT JOIN hospitals_hospitals hh on hh.id = dn.hospital_id
+            LEFT JOIN clients_card cc on cc.id = dn.client_id
+            LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            LEFT JOIN directions_issledovaniya_tubes dit on dit.issledovaniya_id = di.id
+            LEFT JOIN directions_tubesregistration dtr on dit.tubesregistration_id = dtr.id 
+            LEFT JOIN (
+                SELECT research_id,
+                coast,
+                price_name_id
+                FROM contracts_pricecoast
+            ) as research_coast
+            ON research_coast.research_id = dr.id and research_coast.price_name_id = dn.price_name_id             
+            WHERE
+            data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            ORDER BY hh.title, cc.id, dtr.number
+            """,
+            params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_corp_by_confirm_direction(d_start, d_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            dn.id as direction_num,
+            to_char(dn.last_confirmed_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as target_date,
+            dr.title as research_title,
+            hh.title as hospital_title,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday,
+            cc.id as patient_card,
+            di.research_id as iss_research_id,
+            research_coast.coast as research_coast,
+            dtr.number as tube_number
+            FROM directions_issledovaniya di
+            LEFT JOIN directions_napravleniya dn on dn.id = di.napravleniye_id 
+            LEFT JOIN directory_researches dr on dr.id = di.research_id
+            LEFT JOIN hospitals_hospitals hh on hh.id = dn.hospital_id
+            LEFT JOIN clients_card cc on cc.id = dn.client_id
+            LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            LEFT JOIN directions_issledovaniya_tubes dit on dit.issledovaniya_id = di.id
+            LEFT JOIN directions_tubesregistration dtr on dit.tubesregistration_id = dtr.id
+            LEFT JOIN (
+                SELECT research_id,
+                coast,
+                price_name_id
+                FROM contracts_pricecoast
+            ) as research_coast
+            ON research_coast.research_id = dr.id and research_coast.price_name_id = dn.price_name_id             
+            
+            WHERE
+            dn.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            ORDER BY hh.title, cc.id, dtr.number
+            """,
+            params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

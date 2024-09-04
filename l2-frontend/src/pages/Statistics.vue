@@ -426,6 +426,17 @@
               </label>
             </span>
           </div>
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.BY_CREATE_DIRECTION)"
+            class="checkbox"
+          >
+            <label>
+              <input
+                v-model="values.byCreateDirection"
+                type="checkbox"
+              > По дате создания
+            </label>
+          </div>
           <a
             v-if="reportUrl && !checkReportParam(PARAMS_TYPES.LOAD_FILE)"
             class="btn btn-blue-nb"
@@ -477,6 +488,7 @@ const PARAMS_TYPES = {
   MONTH_YEAR: 'MONTH_YEAR',
   SPECIAL_FIELDS: 'SPECIAL_FIELDS',
   TYPE_DEPARTMENT: 'TYPE_DEPARTMENT',
+  BY_CREATE_DIRECTION: 'BY_CREATE_DIRECTION',
 };
 
 const STATS_CATEGORIES = {
@@ -678,6 +690,19 @@ const STATS_CATEGORIES = {
       },
     },
   },
+  partners: {
+    title: 'Контрагенты',
+    groups: ['Статистика-контрагент-заказы'],
+    reports: {
+      partnerCreateDirection: {
+        groups: ['Статистика-контрагент-заказы'],
+        title: 'Заказы',
+        params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.BY_CREATE_DIRECTION],
+        url: '/statistic/xls?type=statistics-corp-create&date_type=<date-type>&date_values=<date-values>'
+            + '&date-start=<date-start>&date-end=<date-end>&by-create-direction=<by-create-direction>',
+      },
+    },
+  },
 };
 
 const getVaues = () => ({
@@ -704,6 +729,7 @@ const getVaues = () => ({
   specialFields: false,
   medicalExam: false,
   isLabResult: false,
+  byCreateDirection: false,
 });
 
 const formatDate = (date: Date) => moment(date).format('DD.MM.YYYY');
@@ -741,6 +767,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       specialFields: false,
       medicalExam: false,
       isLabResult: false,
+      byCreateDirection: false,
       resultTreatment: [],
       titleReportStattalonFields: [],
       titleReportAllFinSourceNeed: [],
@@ -798,6 +825,8 @@ export default class Statistics extends Vue {
   specialFields: boolean;
 
   medicalExam: boolean;
+
+  byCreateDirection: boolean;
 
   isLabResult: boolean;
 
@@ -1051,6 +1080,13 @@ export default class Statistics extends Vue {
         }
 
         url = url.replace('<company>', this.values.company);
+      }
+
+      if (this.PARAMS_TYPES.BY_CREATE_DIRECTION === p) {
+        if (_.isNil(this.values.byCreateDirection)) {
+          url = url.replace('<by-create-direction>', false);
+        }
+        url = url.replace('<by-create-direction>', this.values.byCreateDirection);
       }
 
       if (this.PARAMS_TYPES.MONTH_YEAR === p) {
