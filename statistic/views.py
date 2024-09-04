@@ -2075,19 +2075,21 @@ def statistic_xls(request):
             old_patient_patronymic = i.patient_patronymic
             old_patient_birthday = i.patient_birthday
             old_patient_summ += i.research_coast if i.research_coast else 0
-            result.append({
-                "direction_num": i.direction_num,
-                "target_date": i.target_date,
-                "research_title": i.research_title,
-                "hospital_title": i.hospital_title,
-                "patient_family": i.patient_family,
-                "patient_name": i.patient_name,
-                "patient_patronymic": i.patient_patronymic,
-                "patient_birthday": i.patient_birthday,
-                "patient_card": i.patient_card,
-                "research_coast": i.research_coast if i.research_coast else 0,
-                "tube_number": i.tube_number if i.tube_number else "-",
-            })
+            result.append(
+                {
+                    "direction_num": i.direction_num,
+                    "target_date": i.target_date,
+                    "research_title": i.research_title,
+                    "hospital_title": i.hospital_title,
+                    "patient_family": i.patient_family,
+                    "patient_name": i.patient_name,
+                    "patient_patronymic": i.patient_patronymic,
+                    "patient_birthday": i.patient_birthday,
+                    "patient_card": i.patient_card,
+                    "research_coast": i.research_coast if i.research_coast else 0,
+                    "tube_number": i.tube_number if i.tube_number else "-",
+                }
+            )
             step += 1
 
         result.append(
