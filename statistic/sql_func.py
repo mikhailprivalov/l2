@@ -2040,7 +2040,7 @@ def statistics_corp_by_confirm_direction(d_start, d_end):
             """
             SELECT 
             dn.id as direction_num,
-            to_char(dn.last_confirmed_at AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as target_date,
+            to_char(di.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as target_date,
             dr.title as research_title,
             hh.title as hospital_title,
             ci.family as patient_family,
@@ -2068,7 +2068,7 @@ def statistics_corp_by_confirm_direction(d_start, d_end):
             ON research_coast.research_id = dr.id and research_coast.price_name_id = dn.price_name_id             
             
             WHERE
-            dn.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            di.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             ORDER BY hh.title, cc.id, dtr.number
             """,
             params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE},
