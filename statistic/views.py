@@ -2052,19 +2052,21 @@ def statistic_xls(request):
         for i in researches_sql:
             if step != 0 and (i.patient_card != old_patient_card):
                 old_patient_summ = 0
-                result.append({
-                    "direction_num": "-",
-                    "target_date": "-",
-                    "research_title": "-",
-                    "hospital_title": old_hosp_title,
-                    "patient_family": old_patient_family,
-                    "patient_name": old_patient_name,
-                    "patient_patronymic": old_patient_patronymic,
-                    "patient_birthday": old_patient_birthday,
-                    "patient_card": "Итого по пациенту",
-                    "research_coast": old_patient_summ,
-                    "tube_number": "-",
-                })
+                result.append(
+                    {
+                        "direction_num": "-",
+                        "target_date": "-",
+                        "research_title": "-",
+                        "hospital_title": old_hosp_title,
+                        "patient_family": old_patient_family,
+                        "patient_name": old_patient_name,
+                        "patient_patronymic": old_patient_patronymic,
+                        "patient_birthday": old_patient_birthday,
+                        "patient_card": "Итого по пациенту",
+                        "research_coast": old_patient_summ,
+                        "tube_number": "-",
+                    }
+                )
 
             old_hosp_title = i.hospital_title
             old_patient_card = i.patient_card
