@@ -2042,6 +2042,7 @@ def statistic_xls(request):
         result = []
         step = 0
         old_patient_summ = 0
+        old_hospital_summ = 0
         old_hosp_title = None
         old_patient_card = None
         old_patient_family = None
@@ -2051,12 +2052,11 @@ def statistic_xls(request):
 
         for i in researches_sql:
             if step != 0 and (i.patient_card != old_patient_card):
-                old_patient_summ = 0
                 result.append(
                     {
-                        "direction_num": "-",
-                        "target_date": "-",
-                        "research_title": "-",
+                        "direction_num": "",
+                        "target_date": "",
+                        "research_title": "",
                         "hospital_title": old_hosp_title,
                         "patient_family": old_patient_family,
                         "patient_name": old_patient_name,
@@ -2064,9 +2064,28 @@ def statistic_xls(request):
                         "patient_birthday": old_patient_birthday,
                         "patient_card": "Итого по пациенту",
                         "research_coast": old_patient_summ,
-                        "tube_number": "-",
+                        "tube_number": "",
                     }
                 )
+                old_patient_summ = 0
+
+            if step != 0 and (i.hospital_title != old_hosp_title):
+                result.append(
+                    {
+                        "direction_num": "",
+                        "target_date": "",
+                        "research_title": "",
+                        "hospital_title": old_hosp_title,
+                        "patient_family": "",
+                        "patient_name": "",
+                        "patient_patronymic": "",
+                        "patient_birthday": "",
+                        "patient_card": "Итого по контрагенту",
+                        "research_coast": old_hospital_summ,
+                        "tube_number": "",
+                    }
+                )
+                old_hospital_summ = 0
 
             old_hosp_title = i.hospital_title
             old_patient_card = i.patient_card
@@ -2075,6 +2094,7 @@ def statistic_xls(request):
             old_patient_patronymic = i.patient_patronymic
             old_patient_birthday = i.patient_birthday
             old_patient_summ += i.research_coast if i.research_coast else 0
+            old_hospital_summ += i.research_coast if i.research_coast else 0
             result.append(
                 {
                     "direction_num": i.direction_num,
@@ -2094,9 +2114,9 @@ def statistic_xls(request):
 
         result.append(
             {
-                "direction_num": "-",
-                "target_date": "-",
-                "research_title": "-",
+                "direction_num": "",
+                "target_date": "",
+                "research_title": "",
                 "hospital_title": old_hosp_title,
                 "patient_family": old_patient_family,
                 "patient_name": old_patient_name,
@@ -2104,7 +2124,22 @@ def statistic_xls(request):
                 "patient_birthday": old_patient_birthday,
                 "patient_card": "Итого по пациенту",
                 "research_coast": old_patient_summ,
-                "tube_number": "-",
+                "tube_number": "",
+            }
+        )
+        result.append(
+            {
+                "direction_num": "",
+                "target_date": "",
+                "research_title": "",
+                "hospital_title": old_hosp_title,
+                "patient_family": "",
+                "patient_name": "",
+                "patient_patronymic": "",
+                "patient_birthday": "",
+                "patient_card": "Итого по контрагенту",
+                "research_coast": old_hospital_summ,
+                "tube_number": "",
             }
         )
 

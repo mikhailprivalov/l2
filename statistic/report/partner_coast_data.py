@@ -37,13 +37,15 @@ def partner_coast_fill_data(ws1, result_query):
     style_border1.font = Font(bold=False, size=11)
     style_border1.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
     pink_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='FCD5B4', end_color='FCD5B4')
+    green_fill = openpyxl.styles.fills.PatternFill(patternType='solid', start_color='b6d7a8', end_color='b6d7a8')
 
     r = 5
     fill_rows = []
+    total_hosp_fill_rows = []
     for v in result_query:
         r += 1
         ws1.cell(row=r, column=1).value = v.get("hospital_title", "-")
-        ws1.cell(row=r, column=2).value = f'{v.get("patient_family", "-")} {v.get("patient_name", "-")} {v.get("patient_patronymic", "-")} ({v.get("patient_birthday")}'
+        ws1.cell(row=r, column=2).value = f'{v.get("patient_family", "-")} {v.get("patient_name", "-")} {v.get("patient_patronymic", "-")} {v.get("patient_birthday")}'
         ws1.cell(row=r, column=3).value = v.get("patient_card", "-")
         ws1.cell(row=r, column=4).value = v.get("direction_num", "-")
         ws1.cell(row=r, column=5).value = v.get("target_date", "-")
@@ -55,11 +57,19 @@ def partner_coast_fill_data(ws1, result_query):
             ws1.cell(row=r, column=c).style = style_border1
         if v.get("patient_card") == "Итого по пациенту":
             fill_rows.append(r)
+        if v.get("patient_card") == "Итого по контрагенту":
+            total_hosp_fill_rows.append(r)
 
     for k in fill_rows:
         rows = ws1[f'A{k}:H{k}']
         for row in rows:
             for cell in row:
                 cell.fill = pink_fill
+
+    for k in total_hosp_fill_rows:
+        rows = ws1[f'A{k}:H{k}']
+        for row in rows:
+            for cell in row:
+                cell.fill = green_fill
 
     return ws1
