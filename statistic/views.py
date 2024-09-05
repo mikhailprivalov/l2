@@ -2143,7 +2143,6 @@ def statistic_xls(request):
             }
         )
 
-
         ws = partner_coast_data.partner_coast_base(ws)
         ws = partner_coast_data.partner_coast_fill_data(ws, result)
 
