@@ -94,7 +94,7 @@
               </tfoot>
             </table>
           </div>
-          <div v-if="cardIsSelected">
+          <div v-if="cardIsSelected && !noCoast">
             <div class="flex-space">
               <div class="flex">
                 <div class="input-width">
@@ -138,19 +138,12 @@
             <div class="flex-space">
               <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
               <button
-                v-if="!noCoast"
                 class="btn btn-blue-nb pay-button"
                 :disabled="loading"
                 @click="payment"
               >
                 Оплатить
               </button>
-              <h5
-                v-else
-                class="text-red"
-              >
-                Не все услуги имеют цену
-              </h5>
             </div>
             <div
               v-if="paymentCash"
@@ -165,8 +158,11 @@
               <h5>Сдача: {{ cashReturn.toFixed(2) }}</h5>
             </div>
           </div>
-          <div v-else>
-            <h4>Пациент не выбран</h4>
+          <div v-if="!cardIsSelected">
+            <h4 class="text-red text-center">Пациент не выбран</h4>
+          </div>
+          <div v-if="noCoast">
+            <h4 class="text-red text-center">Не все услуги имеют цену</h4>
           </div>
         </div>
         <h4 v-else>
@@ -381,6 +377,7 @@ const payment = async () => {
   min-height: 106px;
   height: calc(100% - 200px);
   overflow-y: auto;
+  background-color: #FFF;
 }
 .table {
   margin-bottom: 0;
@@ -424,6 +421,7 @@ const payment = async () => {
 }
 .text-red {
   color: red;
+
 }
 .pay-button {
   margin: 5px 0;
