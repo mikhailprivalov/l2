@@ -112,7 +112,6 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
 
 
 def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id):
-    # todo - в create_items не передаются id, надо где-то их оставлять
     result = {"ok": True, "message": "", "cheqId": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
