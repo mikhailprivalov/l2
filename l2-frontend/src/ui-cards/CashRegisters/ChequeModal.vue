@@ -159,10 +159,14 @@
             </div>
           </div>
           <div v-if="!cardIsSelected">
-            <h4 class="text-red text-center">Пациент не выбран</h4>
+            <h4 class="text-red text-center">
+              Пациент не выбран
+            </h4>
           </div>
           <div v-if="noCoast">
-            <h4 class="text-red text-center">Не все услуги имеют цену</h4>
+            <h4 class="text-red text-center">
+              Не все услуги имеют цену
+            </h4>
           </div>
         </div>
         <h4 v-else>
@@ -213,6 +217,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  finSourceId: {
+    type: Number,
+    required: true,
+  },
 });
 
 const cashRegister = computed(() => store.getters.cashRegisterShift);
@@ -250,10 +258,13 @@ const sumServiceCoasts = computed(() => {
   }
   return result;
 });
-const noCoast = ref(false);
+const noCoast = ref(true);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', { serviceIds: props.serviceIds });
+  const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', {
+    serviceIds: props.serviceIds,
+    finSourceId: props.finSourceId,
+  });
   await store.dispatch(actions.DEC_LOADING);
   servicesCoasts.value = coasts;
   noCoast.value = serviceWithoutCoast;
