@@ -132,7 +132,7 @@
                     class="form-control nbr"
                     min="0"
                     step="1"
-                    max="100"
+                    :max="discountTypeSelected === 1 ? '100' : '100000'"
                   >
                   <RadioFieldById
                     v-model="discountTypeSelected"
@@ -162,9 +162,9 @@
               <input
                 v-model.number="receivedCash"
                 type="number"
-                class="form-control"
+                class="form-control nbr"
               >
-              <h5>Сдача: {{ cashReturn.toFixed(2) }}</h5>
+              <h5>Сдача: {{ cashReturn }}</h5>
             </div>
           </div>
           <div v-if="!cardIsSelected">
