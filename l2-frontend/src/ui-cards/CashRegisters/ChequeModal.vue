@@ -62,13 +62,13 @@
                 <td class="text-center border padding">
                   {{ service.coast }}
                 </td>
-                <td class="text-center border padding">
+                <td class="text-center border">
                   <input
                     v-model="service.count"
                     min="1"
                     type="number"
                     :disabled="loading"
-                    class="form-control"
+                    class="form-control nbr count-item"
                     @input="changeServiceAmount(service.id)"
                   >
                 </td>
@@ -103,7 +103,7 @@
                     v-model.number="paymentCash"
                     type="number"
                     :disabled="loading"
-                    class="form-control"
+                    class="form-control nbr"
                     step="0.01"
                     min="0"
                     @input="changeElectronic"
@@ -115,7 +115,7 @@
                     v-model.number="paymentElectronic"
                     type="number"
                     :disabled="loading"
-                    class="form-control"
+                    class="form-control nbr"
                     step="0.01"
                     min="0"
                     @input="changeCash"
@@ -123,22 +123,31 @@
                 </div>
               </div>
               <div class="discount-width">
-                <label>Скидка (%)</label>
-                <input
-                  v-model.number="discount"
-                  type="number"
-                  :disabled="loading"
-                  class="form-control"
-                  min="0"
-                  step="1"
-                  max="100"
-                >
+                <label>Скидка</label>
+                <div class="flex">
+                  <input
+                    v-model.number="discount"
+                    type="number"
+                    :disabled="loading"
+                    class="form-control nbr"
+                    min="0"
+                    step="1"
+                    max="100"
+                  >
+                  <RadioFieldById
+                    v-model="discountTypeSelected"
+                    :variants="discountTypes"
+                    item-width="100%"
+                    item-height="17px"
+                    class="discount-type"
+                  />
+                </div>
               </div>
             </div>
             <div class="flex-space">
               <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
               <button
-                class="btn btn-blue-nb pay-button"
+                class="btn btn-blue-nb nbr pay-button"
                 :disabled="loading"
                 @click="payment"
               >
@@ -203,6 +212,7 @@ import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
+import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -275,6 +285,8 @@ onMounted(async () => {
 
 const paymentCash = ref(0);
 const paymentElectronic = ref(0);
+const discountTypes = [{ id: 1, label: '%' }, { id: 2, label: 'Р' }];
+const discountTypeSelected = null;
 const discount = ref(0);
 
 const summForPay = computed(() => {
@@ -409,6 +421,9 @@ const payment = async () => {
 .table > thead > tr > th {
   border-bottom: 0;
 }
+.table > tfoot > tr > td {
+  border-top: 0;
+}
 .padding {
   padding: 2px 0 2px 6px
 }
@@ -420,6 +435,13 @@ const payment = async () => {
 .border {
   border: 1px solid #ddd;
 }
+.no-r-border {
+  border-right: none;
+}
+.no-l-border {
+  border-left: none;
+}
+
 .flex-space {
   display: flex;
   justify-content: space-between;
@@ -428,13 +450,24 @@ const payment = async () => {
   width: 165px;
 }
 .discount-width {
-  width: 90px;
+  width: 120px;
+}
+.discount-type {
+  flex: 1 1 50px;
 }
 .text-red {
   color: red;
-
 }
 .pay-button {
   margin: 5px 0;
+}
+.no-border {
+  border: none;
+}
+.count-item {
+  border: 1px solid transparent;
+}
+.count-item:focus {
+  border: 1px solid #3bafda;
 }
 </style>
