@@ -34,6 +34,9 @@
                 <col style="width: 100px">
                 <col style="width: 100px">
                 <col style="width: 100px">
+                <col style="width: 100px">
+                <col style="width: 100px">
+                <col style="width: 100px">
               </colgroup>
               <thead class="sticky">
                 <tr>
@@ -42,6 +45,15 @@
                   </th>
                   <th class="text-center">
                     <strong>Цена</strong>
+                  </th>
+                  <th class="text-center">
+                    <strong>Скидка %</strong>
+                  </th>
+                  <th class="text-center">
+                    <strong>Скидка Р</strong>
+                  </th>
+                  <th class="text-center">
+                    <strong>Цена со скидкой</strong>
                   </th>
                   <th class="text-center">
                     <strong>Кол-во</strong>
@@ -62,6 +74,30 @@
                 <td class="text-center border padding">
                   {{ service.coast }}
                 </td>
+                <td class="text-center border padding">
+                  <input
+                    v-model="service.discountRelative"
+                    type="number"
+                    :disabled="loading"
+                    class="form-control nbr count-item"
+                  >
+                </td>
+                <td class="text-center border padding">
+                  <input
+                    v-model="service.discountAbsolute"
+                    type="number"
+                    :disabled="loading"
+                    class="form-control nbr count-item"
+                  >
+                </td>
+                <td class="text-center border padding">
+                  <input
+                    v-model="service.discountedCoast"
+                    type="number"
+                    :disabled="loading"
+                    class="form-control nbr count-item"
+                  >
+                </td>
                 <td class="text-center border">
                   <input
                     v-model="service.count"
@@ -73,12 +109,15 @@
                   >
                 </td>
                 <td class="text-center border padding">
-                  {{ service.amount }}
+                  {{ service.total }}
                 </td>
               </tr>
               <tfoot class="sticky-footer">
                 <tr>
                   <td class="text-right" />
+                  <td class="text-center" />
+                  <td class="text-center" />
+                  <td class="text-center" />
                   <td class="text-center" />
                   <td class="text-center">
                     <strong>
@@ -250,8 +289,11 @@ interface serviceCoast {
   id: number,
   title: string,
   coast: number,
+  discountRelative: number,
+  discountAbsolute: number,
+  discountedCoast: number,
   count: number,
-  amount: number,
+  total: number,
 }
 
 const servicesCoasts = ref<serviceCoast[]>([]);
