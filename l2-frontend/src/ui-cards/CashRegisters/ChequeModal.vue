@@ -301,14 +301,14 @@ const servicesCoasts = ref<serviceCoast[]>([]);
 const changeServiceAmount = (serviceId) => {
   if (!loading.value) {
     const service = servicesCoasts.value.find(i => i.id === serviceId);
-    service.amount = service.count * service.coast;
+    service.total = service.count * service.coast;
   }
 };
 
 const sumServiceCoasts = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
-    result += Number(service.amount);
+    result += Number(service.total);
   }
   return result;
 });
