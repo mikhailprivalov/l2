@@ -285,8 +285,8 @@ onMounted(async () => {
 
 const paymentCash = ref(0);
 const paymentElectronic = ref(0);
-const discountTypes = [{ id: 1, label: '%' }, { id: 2, label: 'Р' }];
-const discountTypeSelected = null;
+const discountTypes = ref([{ id: 1, label: '%' }, { id: 2, label: 'Р' }]);
+const discountTypeSelected = ref(null);
 const discount = ref(0);
 
 const sumForPay = computed(() => {
