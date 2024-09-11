@@ -145,7 +145,7 @@
               </div>
             </div>
             <div class="flex-space">
-              <h5>К оплате {{ summForPay.toFixed(2) }}</h5>
+              <h5>К оплате {{ sumForPay }}</h5>
               <button
                 class="btn btn-blue-nb nbr pay-button"
                 :disabled="loading"
@@ -289,13 +289,16 @@ const discountTypes = [{ id: 1, label: '%' }, { id: 2, label: 'Р' }];
 const discountTypeSelected = null;
 const discount = ref(0);
 
-const summForPay = computed(() => {
-  if (discount.value >= 0 && discount.value <= 100) {
-    const summDiscount = (sumServiceCoasts.value * discount.value) / 100;
-    return Number((sumServiceCoasts.value - summDiscount).toFixed(2));
+const sumForPay = computed(() => {
+  if (discountTypeSelected.value === 1 && discount.value >= 0 && discount.value <= 100) {
+    const sumDiscount = (sumServiceCoasts.value * discount.value) / 100;
+    return Number((sumServiceCoasts.value - sumDiscount).toFixed(2));
   }
-  if (discount.value < 0) {
+  if (discountTypeSelected.value === 1 && discount.value < 0) {
     return Number(sumServiceCoasts.value.toFixed(2));
+  }
+  if (discountTypeSelected.value === 2) {
+    return Number(sumServiceCoasts.value - discount.value).toFixed(2);
   }
   return 0.00;
 });
@@ -304,7 +307,7 @@ const changeElectronic = () => {
   if (paymentCash.value < 0) {
     paymentCash.value = 0.00;
   }
-  const result = summForPay.value - paymentCash.value;
+  const result = sumForPay.value - paymentCash.value;
   if (result >= 0) {
     paymentElectronic.value = Number(result.toFixed(2));
   } else {
@@ -315,7 +318,7 @@ const changeCash = () => {
   if (paymentElectronic.value < 0) {
     paymentElectronic.value = 0.00;
   }
-  const result = summForPay.value - paymentElectronic.value;
+  const result = sumForPay.value - paymentElectronic.value;
   if (result >= 0) {
     paymentCash.value = Number(result.toFixed(2));
   } else {
@@ -323,9 +326,9 @@ const changeCash = () => {
   }
 };
 
-watch([summForPay], () => {
-  if (summForPay.value) {
-    paymentElectronic.value = Number((summForPay.value - paymentCash.value).toFixed(2));
+watch([sumForPay], () => {
+  if (sumForPay.value) {
+    paymentElectronic.value = Number((sumForPay.value - paymentCash.value).toFixed(2));
   } else {
     paymentElectronic.value = 0;
     paymentCash.value = 0;
@@ -373,7 +376,7 @@ const payment = async () => {
       cash: paymentCash.value,
       receivedCash: receivedCash.value,
       electronic: paymentElectronic.value,
-      forPay: summForPay.value,
+      forPay: sumForPay.value,
       cardId: props.cardId,
     });
     await store.dispatch(actions.DEC_LOADING);
