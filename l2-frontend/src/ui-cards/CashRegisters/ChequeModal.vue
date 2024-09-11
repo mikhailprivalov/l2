@@ -106,6 +106,7 @@
                     class="form-control nbr"
                     step="0.01"
                     min="0"
+                    :max="sumForPay"
                     @input="changeElectronic"
                   >
                 </div>
@@ -118,6 +119,7 @@
                     class="form-control nbr"
                     step="0.01"
                     min="0"
+                    :max="sumForPay"
                     @input="changeCash"
                   >
                 </div>
