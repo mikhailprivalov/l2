@@ -64,7 +64,7 @@
                 </tr>
               </thead>
               <tr
-                v-for="service in servicesCoasts"
+                v-for="(service, idx) in servicesCoasts"
                 :key="service.id"
               >
                 <VueTippyTd
@@ -78,25 +78,22 @@
                   <input
                     v-model="service.discountRelative"
                     type="number"
-                    :disabled="loading"
+                    :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
+                    @input="changeDiscountRelative(idx, service.discountStatic)"
                   >
                 </td>
                 <td class="text-center border padding">
                   <input
                     v-model="service.discountAbsolute"
                     type="number"
-                    :disabled="loading"
+                    :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
+                    @input="changeDiscountAbsolute(idx, service.discountStatic)"
                   >
                 </td>
                 <td class="text-center border padding">
-                  <input
-                    v-model="service.discountedCoast"
-                    type="number"
-                    :disabled="loading"
-                    class="form-control nbr count-item"
-                  >
+                  {{ service.discountedCoast }}
                 </td>
                 <td class="text-center border">
                   <input
@@ -105,7 +102,7 @@
                     type="number"
                     :disabled="loading"
                     class="form-control nbr count-item"
-                    @input="changeServiceAmount(service.id)"
+                    @input="changeServiceCount(idx)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -126,7 +123,7 @@
                   </td>
                   <td class="text-center">
                     <strong>
-                      {{ sumServiceCoasts }}
+                      {{ totalServiceCoasts }}
                     </strong>
                   </td>
                 </tr>
@@ -145,7 +142,7 @@
                     class="form-control nbr"
                     step="0.01"
                     min="0"
-                    :max="sumForPay"
+                    :max="totalServiceCoasts"
                     @input="changeElectronic"
                   >
                 </div>
@@ -158,35 +155,27 @@
                     class="form-control nbr"
                     step="0.01"
                     min="0"
-                    :max="sumForPay"
+                    :max="totalServiceCoasts"
                     @input="changeCash"
                   >
                 </div>
               </div>
               <div class="discount-width">
-                <label>Скидка</label>
-                <div class="flex">
-                  <input
-                    v-model.number="discount"
-                    type="number"
-                    :disabled="loading"
-                    class="form-control nbr"
-                    min="0"
-                    step="1"
-                    :max="discountTypeSelected === 1 ? '100' : '100000'"
-                  >
-                  <RadioFieldById
-                    v-model="discountTypeSelected"
-                    :variants="discountTypes"
-                    item-width="100%"
-                    item-height="17px"
-                    class="discount-type"
-                  />
-                </div>
+                <label>Скидка (%)</label>
+                <input
+                  v-model.number="discount"
+                  type="number"
+                  :disabled="loading"
+                  class="form-control nbr"
+                  min="0"
+                  step="1"
+                  max="100"
+                  @input="changeDiscountRelativeAll()"
+                >
               </div>
             </div>
             <div class="flex-space">
-              <h5>К оплате {{ sumForPay }}</h5>
+              <h5>К оплате {{ totalServiceCoasts }}</h5>
               <button
                 class="btn btn-blue-nb nbr pay-button"
                 :disabled="loading"
@@ -253,7 +242,6 @@ import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
-import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -291,6 +279,7 @@ interface serviceCoast {
   coast: number,
   discountRelative: number,
   discountAbsolute: number,
+  discountStatic: boolean,
   discountedCoast: number,
   count: number,
   total: number,
@@ -298,19 +287,43 @@ interface serviceCoast {
 
 const servicesCoasts = ref<serviceCoast[]>([]);
 
-const changeServiceAmount = (serviceId) => {
-  if (!loading.value) {
-    const service = servicesCoasts.value.find(i => i.id === serviceId);
-    service.total = service.count * service.coast;
+const changeDiscountRelative = (index: number, discountStatic: boolean) => {
+  if (!loading.value && !discountStatic) {
+    const service = servicesCoasts.value[index];
+    const discountAbsolute = (service.coast * service.discountRelative) / 100;
+    service.discountAbsolute = Number(discountAbsolute.toFixed(2));
+    const discountedCoast = service.coast - service.discountAbsolute;
+    service.discountedCoast = Number(discountedCoast.toFixed(2));
+    const total = service.count * service.discountedCoast;
+    service.total = Number(total.toFixed(2));
   }
 };
 
-const sumServiceCoasts = computed(() => {
+const changeDiscountAbsolute = (index: number, discountStatic: boolean) => {
+  if (!loading.value && !discountStatic) {
+    const service = servicesCoasts.value[index];
+    const discountRelative = (service.discountAbsolute / service.coast) * 100;
+    service.discountRelative = Number(discountRelative.toFixed(2));
+    const discountedCoast = service.coast - service.discountAbsolute;
+    service.discountedCoast = Number(discountedCoast.toFixed(2));
+    const total = service.count * service.discountedCoast;
+    service.total = Number(total.toFixed(2));
+  }
+};
+
+const changeServiceCount = (index) => {
+  if (!loading.value) {
+    const service = servicesCoasts.value[index];
+    service.total = service.count * service.discountedCoast;
+  }
+};
+
+const totalServiceCoasts = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
-    result += Number(service.total);
+    result += service.total;
   }
-  return result;
+  return Number(result.toFixed(2));
 });
 const noCoast = ref(true);
 const getServicesCoasts = async () => {
@@ -329,29 +342,23 @@ onMounted(async () => {
 
 const paymentCash = ref(0);
 const paymentElectronic = ref(0);
-const discountTypes = ref([{ id: 1, label: '%' }, { id: 2, label: 'Р' }]);
-const discountTypeSelected = ref(null);
 const discount = ref(0);
 
-const sumForPay = computed(() => {
-  if (discountTypeSelected.value === 1 && discount.value >= 0 && discount.value <= 100) {
-    const sumDiscount = (sumServiceCoasts.value * discount.value) / 100;
-    return Number((sumServiceCoasts.value - sumDiscount).toFixed(2));
+const changeDiscountRelativeAll = () => {
+  if (discount.value >= 0 && discount.value <= 100) {
+    for (const service of servicesCoasts.value) {
+      if (!service.discountStatic) {
+        service.discountRelative = discount.value;
+      }
+    }
   }
-  if (discountTypeSelected.value === 1 && discount.value < 0) {
-    return Number(sumServiceCoasts.value.toFixed(2));
-  }
-  if (discountTypeSelected.value === 2) {
-    return Number(sumServiceCoasts.value - discount.value).toFixed(2);
-  }
-  return 0.00;
-});
+};
 
 const changeElectronic = () => {
   if (paymentCash.value < 0) {
     paymentCash.value = 0.00;
   }
-  const result = sumForPay.value - paymentCash.value;
+  const result = totalServiceCoasts.value - paymentCash.value;
   if (result >= 0) {
     paymentElectronic.value = Number(result.toFixed(2));
   } else {
@@ -362,7 +369,7 @@ const changeCash = () => {
   if (paymentElectronic.value < 0) {
     paymentElectronic.value = 0.00;
   }
-  const result = sumForPay.value - paymentElectronic.value;
+  const result = totalServiceCoasts.value - paymentElectronic.value;
   if (result >= 0) {
     paymentCash.value = Number(result.toFixed(2));
   } else {
@@ -370,9 +377,9 @@ const changeCash = () => {
   }
 };
 
-watch([sumForPay], () => {
-  if (sumForPay.value) {
-    paymentElectronic.value = Number((sumForPay.value - paymentCash.value).toFixed(2));
+watch([totalServiceCoasts], () => {
+  if (totalServiceCoasts.value) {
+    paymentElectronic.value = Number((totalServiceCoasts.value - paymentCash.value).toFixed(2));
   } else {
     paymentElectronic.value = 0;
     paymentCash.value = 0;
@@ -415,12 +422,11 @@ const payment = async () => {
     const { ok, message, cheqId } = await api('cash-register/payment', {
       shiftId: cashRegister.value.shiftId,
       serviceCoasts: servicesCoasts.value,
-      sumCoasts: sumServiceCoasts.value,
+      sumCoasts: totalServiceCoasts.value,
       discount: discount.value,
       cash: paymentCash.value,
       receivedCash: receivedCash.value,
       electronic: paymentElectronic.value,
-      forPay: sumForPay.value,
       cardId: props.cardId,
     });
     await store.dispatch(actions.DEC_LOADING);
