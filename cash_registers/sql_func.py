@@ -55,7 +55,7 @@ def get_services(services_ids):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT directory_researches.id, directory_researches.title FROM directory_researches
+            SELECT directory_researches.id, directory_researches.title, directory_researches.def_discount, directory_researches.prior_discount FROM directory_researches
             WHERE directory_researches.id in %(services_ids)s
             """,
             params={"services_ids": services_ids},

@@ -91,16 +91,25 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
     summ = 0
     coasts = []
     services = sql_func.get_services(service_ids_tuple)
+    services_coast = {
+        service.id: {
+            "id": service.id,
+            "title": service.title,
+            "coast": 0,
+            "discountRelative": service.def_discount,
+            "discountAbsolute": 0,
+            "discountedCoast": 0,
+            "discountStatic": service.prior_discount,
+            "count": 1,
+            "total": 0
+        } for service in services}
     pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_id).select_related('contracts__price').first()
     price_id = pay_fin_source.contracts.price.pk
     if price_id:
         coasts = sql_func.get_service_coasts(service_ids_tuple, price_id)
 
-    services_coast = {service.id: {"id": service.id, "title": service.title, "coast": 0, "count": 1, "amount": 0} for service in services}
-
     for coast in coasts:
         services_coast[coast.research_id]["coast"] = coast.coast
-        services_coast[coast.research_id]["amount"] = coast.coast
         summ += coast.coast
 
     if len(coasts) < len(service_ids):
