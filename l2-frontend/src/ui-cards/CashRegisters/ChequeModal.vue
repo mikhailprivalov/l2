@@ -80,7 +80,9 @@
                     type="number"
                     :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
-                    @change="changeDiscountRelative(idx, service.discountStatic)"
+                    min="0"
+                    max="100"
+                    @input="changeDiscountRelative(idx, service.discountStatic)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -89,7 +91,8 @@
                     type="number"
                     :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
-                    @change="changeDiscountAbsolute(idx, service.discountStatic)"
+                    min="0"
+                    @input="changeDiscountAbsolute(idx, service.discountStatic)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -102,7 +105,7 @@
                     type="number"
                     :disabled="loading"
                     class="form-control nbr count-item"
-                    @change="changeServiceCount(idx)"
+                    @input="changeServiceCount(idx)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -350,6 +353,12 @@ const changeDiscountRelativeAll = () => {
     for (const service of servicesCoasts.value) {
       if (!service.discountStatic) {
         service.discountRelative = discount.value;
+        const discountAbsolute = (service.coast * service.discountRelative) / 100;
+        service.discountAbsolute = Number(discountAbsolute.toFixed(2));
+        const discountedCoast = service.coast - service.discountAbsolute;
+        service.discountedCoast = Number(discountedCoast.toFixed(2));
+        const total = service.count * service.discountedCoast;
+        service.total = Number(total.toFixed(2));
       }
     }
   }
