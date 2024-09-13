@@ -92,6 +92,7 @@
                     :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
                     min="0"
+                    :max="service.coast"
                     @input="changeDiscountAbsolute(idx, service.discountStatic)"
                   >
                 </td>
@@ -293,31 +294,37 @@ const servicesCoasts = ref<serviceCoast[]>([]);
 const changeDiscountRelative = (index: number, discountStatic: boolean) => {
   if (!loading.value && !discountStatic) {
     const service = servicesCoasts.value[index];
-    const discountAbsolute = (service.coast * service.discountRelative) / 100;
-    service.discountAbsolute = Number(discountAbsolute.toFixed(2));
-    const discountedCoast = service.coast - service.discountAbsolute;
-    service.discountedCoast = Number(discountedCoast.toFixed(2));
-    const total = service.count * service.discountedCoast;
-    service.total = Number(total.toFixed(2));
+    if (service.discountRelative >= 0 && service.discountRelative <= 100) {
+      const discountAbsolute = (service.coast * service.discountRelative) / 100;
+      service.discountAbsolute = Number(discountAbsolute.toFixed(2));
+      const discountedCoast = service.coast - service.discountAbsolute;
+      service.discountedCoast = Number(discountedCoast.toFixed(2));
+      const total = service.count * service.discountedCoast;
+      service.total = Number(total.toFixed(2));
+    }
   }
 };
 
 const changeDiscountAbsolute = (index: number, discountStatic: boolean) => {
   if (!loading.value && !discountStatic) {
     const service = servicesCoasts.value[index];
-    const discountRelative = (service.discountAbsolute / service.coast) * 100;
-    service.discountRelative = Number(discountRelative.toFixed(2));
-    const discountedCoast = service.coast - service.discountAbsolute;
-    service.discountedCoast = Number(discountedCoast.toFixed(2));
-    const total = service.count * service.discountedCoast;
-    service.total = Number(total.toFixed(2));
+    if (service.discountAbsolute >= 0 && service.discountAbsolute <= service.coast) {
+      const discountRelative = (service.discountAbsolute / service.coast) * 100;
+      service.discountRelative = Number(discountRelative.toFixed(2));
+      const discountedCoast = service.coast - service.discountAbsolute;
+      service.discountedCoast = Number(discountedCoast.toFixed(2));
+      const total = service.count * service.discountedCoast;
+      service.total = Number(total.toFixed(2));
+    }
   }
 };
 
 const changeServiceCount = (index) => {
   if (!loading.value) {
     const service = servicesCoasts.value[index];
-    service.total = service.count * service.discountedCoast;
+    if (service.total >= 1) {
+      service.total = service.count * service.discountedCoast;
+    }
   }
 };
 
@@ -326,7 +333,6 @@ const totalServiceCoasts = computed(() => {
   for (const service of servicesCoasts.value) {
     result += Number(service.total);
   }
-  console.log(result);
   return Number(result.toFixed(2));
 });
 const noCoast = ref(true);
