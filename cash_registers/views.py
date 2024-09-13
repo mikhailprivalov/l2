@@ -91,7 +91,7 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
     summ = 0
     coasts = []
     services = sql_func.get_services(service_ids_tuple)
-    services_coast = {
+    services_coasts = {
         service.id: {
             "id": service.id,
             "title": service.title,
@@ -109,13 +109,15 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
         coasts = sql_func.get_service_coasts(service_ids_tuple, price_id)
 
     for coast in coasts:
-        services_coast[coast.research_id]["coast"] = coast.coast
+        services_coasts[coast.research_id]["coast"] = coast.coast
         summ += coast.coast
 
     if len(coasts) < len(service_ids):
         service_without_coast = True
 
-    result = {"coasts": [i for i in services_coast.values()], "serviceWithoutCoast": service_without_coast}
+    service_coasts = [i for i in services_coasts.values()]
+
+    result = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast}
 
     return result
 
