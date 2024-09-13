@@ -80,7 +80,7 @@
                     type="number"
                     :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
-                    @input="changeDiscountRelative(idx, service.discountStatic)"
+                    @change="changeDiscountRelative(idx, service.discountStatic)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -89,7 +89,7 @@
                     type="number"
                     :disabled="loading || service.discountStatic"
                     class="form-control nbr count-item"
-                    @input="changeDiscountAbsolute(idx, service.discountStatic)"
+                    @change="changeDiscountAbsolute(idx, service.discountStatic)"
                   >
                 </td>
                 <td class="text-center border padding">
@@ -102,7 +102,7 @@
                     type="number"
                     :disabled="loading"
                     class="form-control nbr count-item"
-                    @input="changeServiceCount(idx)"
+                    @change="changeServiceCount(idx)"
                   >
                 </td>
                 <td class="text-center border padding">
