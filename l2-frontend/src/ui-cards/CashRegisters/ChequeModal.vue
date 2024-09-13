@@ -31,12 +31,12 @@
             <table class="table">
               <colgroup>
                 <col>
-                <col style="width: 100px">
-                <col style="width: 100px">
-                <col style="width: 100px">
-                <col style="width: 100px">
-                <col style="width: 100px">
-                <col style="width: 100px">
+                <col style="width: 90px">
+                <col style="width: 90px">
+                <col style="width: 90px">
+                <col style="width: 90px">
+                <col style="width: 80px">
+                <col style="width: 90px">
               </colgroup>
               <thead class="sticky">
                 <tr>
@@ -71,45 +71,45 @@
                   class="text-left padding service-title border"
                   :text="service.title"
                 />
-                <td class="text-center border padding">
+                <td class="text-center border">
                   {{ service.coast }}
                 </td>
-                <td class="text-center border padding">
+                <td class="text-center border">
                   <input
-                    v-model="service.discountRelative"
+                    v-model.number="service.discountRelative"
                     type="number"
                     :disabled="loading || service.discountStatic"
-                    class="form-control nbr count-item"
+                    class="form-control nbr input-item"
                     min="0"
                     max="100"
                     @input="changeDiscountRelative(idx, service.discountStatic)"
                   >
                 </td>
-                <td class="text-center border padding">
+                <td class="text-center border">
                   <input
-                    v-model="service.discountAbsolute"
+                    v-model.number="service.discountAbsolute"
                     type="number"
                     :disabled="loading || service.discountStatic"
-                    class="form-control nbr count-item"
+                    class="form-control nbr input-item"
                     min="0"
                     :max="service.coast"
                     @input="changeDiscountAbsolute(idx, service.discountStatic)"
                   >
                 </td>
-                <td class="text-center border padding">
+                <td class="text-center border">
                   {{ service.discountedCoast }}
                 </td>
                 <td class="text-center border">
                   <input
-                    v-model="service.count"
+                    v-model.number="service.count"
                     min="1"
                     type="number"
                     :disabled="loading"
-                    class="form-control nbr count-item"
+                    class="form-control nbr input-item"
                     @input="changeServiceCount(idx)"
                   >
                 </td>
-                <td class="text-center border padding">
+                <td class="text-center border">
                   {{ service.total }}
                 </td>
               </tr>
@@ -291,9 +291,14 @@ interface serviceCoast {
 
 const servicesCoasts = ref<serviceCoast[]>([]);
 
-const changeDiscountRelative = (index: number, discountStatic: boolean) => {
+const changeDiscountRelative = (index: number, discountStatic: boolean, serviceObj: object = null) => {
   if (!loading.value && !discountStatic) {
-    const service = servicesCoasts.value[index];
+    let service;
+    if (serviceObj) {
+      service = serviceObj;
+    } else {
+      service = servicesCoasts.value[index];
+    }
     if (service.discountRelative >= 0 && service.discountRelative <= 100) {
       const discountAbsolute = (service.coast * service.discountRelative) / 100;
       service.discountAbsolute = Number(discountAbsolute.toFixed(2));
@@ -359,12 +364,7 @@ const changeDiscountRelativeAll = () => {
     for (const service of servicesCoasts.value) {
       if (!service.discountStatic) {
         service.discountRelative = discount.value;
-        const discountAbsolute = (service.coast * service.discountRelative) / 100;
-        service.discountAbsolute = Number(discountAbsolute.toFixed(2));
-        const discountedCoast = service.coast - service.discountAbsolute;
-        service.discountedCoast = Number(discountedCoast.toFixed(2));
-        const total = service.count * service.discountedCoast;
-        service.total = Number(total.toFixed(2));
+        changeDiscountRelative(null, service.discountStatic, service);
       }
     }
   }
@@ -533,10 +533,11 @@ const payment = async () => {
 .no-border {
   border: none;
 }
-.count-item {
+.input-item {
   border: 1px solid transparent;
+  padding: 6px;
 }
-.count-item:focus {
+.input-item:focus {
   border: 1px solid #3bafda;
 }
 </style>
