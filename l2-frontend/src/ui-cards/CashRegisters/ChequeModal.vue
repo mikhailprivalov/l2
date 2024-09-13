@@ -321,8 +321,9 @@ const changeServiceCount = (index) => {
 const totalServiceCoasts = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
-    result += service.total;
+    result += Number(service.total);
   }
+  console.log(result);
   return Number(result.toFixed(2));
 });
 const noCoast = ref(true);
