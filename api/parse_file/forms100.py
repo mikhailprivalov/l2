@@ -92,7 +92,6 @@ def form_02(request_data):
                 is_travma_idx = cells.index("Это травма")
                 starts = True
         else:
-            print('мы идем')
             tmp_data = {
                 "card_number": row[card_number_idx],
                 "head_department": row[head_department_idx],
@@ -110,4 +109,6 @@ def form_02(request_data):
             file_data.append(tmp_data)
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдена колонка 'номер карты' "}
+
+
     return {"ok": True, "result": [], "message": ""}

@@ -213,8 +213,6 @@ const handleFileUpload = () => {
   const input = fileInput.value as HTMLInputElement;
   const re = /(?:\.([^.]+))?$/;
   const fileExtension = re.exec(input.value)[1];
-  console.log(fileExtension);
-  console.log(fileFilter.value);
   if (fileFilter.value.includes(fileExtension.toLowerCase())) {
     [file.value] = input.files;
     fileIsSelected.value = true;
