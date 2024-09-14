@@ -60,6 +60,7 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Не найдены колонка 'Код по прайсу' "}
     return {"ok": True, "result": [], "message": ""}
 
+
 def form_02(request_data):
     """
     Загрузка посещений по файлу
@@ -113,6 +114,6 @@ def form_02(request_data):
         return {"ok": False, "result": [], "message": "Не найдена колонка 'номер карты' "}
 
     response = requests.post(ECP_MIDDLE_SERVER_ADDRESS, json=file_data)
-    print(response.json())
+    result = response.json()
 
-    return {"ok": True, "result": [], "message": ""}
+    return {"ok": True, "result": [], "message": f"{result}"}
