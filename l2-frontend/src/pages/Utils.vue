@@ -43,6 +43,12 @@
               :title-button="loadResultService"
             />
           </ul>
+          <ui class="nav navbar-nav">
+            <UploadFileModal
+              tag="li"
+              :forms-file="['100.02']"
+            />
+          </ui>
         </button>
       </div>
     </div>
@@ -52,10 +58,11 @@
 <script lang="ts">
 import * as actions from '@/store/action-types';
 import LoadFile from '@/ui-cards/LoadFile.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 export default {
   name: 'Utils',
-  components: { LoadFile },
+  components: { UploadFileModal, LoadFile },
   data() {
     return {
       totalLogs: 0,

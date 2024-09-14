@@ -13,6 +13,10 @@ export default function typesAndForms() {
     XLSX: { id: 'XLSX', label: 'XLSX' },
   });
   // todo - сделать соотношение - расширение файла - и все виды accept фильтров {xlsx: '.xlx, .xlsx, ws-excel'}
+  const fileFilters = {
+    XLSX: '.xlx, .xls, .xlsx, ws-excel',
+  };
+  const getFileFilters = (types) => fileFilters[types.toUpperCase()];
   const getTypes = (types: string[]): typesFile[] => {
     let result: typesFile[] = [];
     if (types && types.length > 0) {
@@ -33,6 +37,7 @@ export default function typesAndForms() {
   const fileForms = ref({
     XLSX: {
       100.01: { id: '100.01', label: 'Загрузка цен по прайсу' },
+      100.02: { id: '100.02', label: 'Загрузка посещений' },
     },
   });
   const addForms = (type: string, forms = null, allowedForms: string[] = null) => {
@@ -61,5 +66,5 @@ export default function typesAndForms() {
     }
     return result;
   };
-  return { getTypes, getForms };
+  return { getTypes, getForms, getFileFilters };
 }
