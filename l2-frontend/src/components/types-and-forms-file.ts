@@ -12,7 +12,6 @@ export default function typesAndForms() {
   const fileTypes = ref({
     XLSX: { id: 'XLSX', label: 'XLSX' },
   });
-  // todo - сделать соотношение - расширение файла - и все виды accept фильтров {xlsx: '.xlx, .xlsx, ws-excel'}
   const fileFilters = {
     XLSX: '.xlx, .xls, .xlsx, ws-excel',
   };
