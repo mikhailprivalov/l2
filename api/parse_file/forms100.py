@@ -1,7 +1,9 @@
+import requests
 from openpyxl.reader.excel import load_workbook
 
 from contracts.models import PriceName, PriceCoast
 from directory.models import Researches
+from laboratory.settings import ECP_MIDDLE_SERVER_ADDRESS
 
 
 def form_01(request_data):
@@ -110,5 +112,6 @@ def form_02(request_data):
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдена колонка 'номер карты' "}
 
+    response = requests.post(ECP_MIDDLE_SERVER_ADDRESS, json=file_data)
 
     return {"ok": True, "result": [], "message": ""}
