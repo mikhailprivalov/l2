@@ -95,23 +95,24 @@ def form_02(request_data):
                 starts = True
         else:
             tmp_data = {
-                "card_number": row[card_number_idx],
-                "head_department": row[head_department_idx],
-                "department": row[department_idx],
-                "service": row[service_idx],
-                "family": row[family_idx],
-                "name": row[name_idx],
-                "patronymic": row[patronymic_idx],
-                "birthday": row[birthday_idx],
-                "snils": row[snils_idx],
-                "diagnos": row[diagnos_idx],
-                "service_date": row[service_date_idx],
-                "is_travma": row[is_travma_idx]
+                "card_number": cells[card_number_idx],
+                "head_department": cells[head_department_idx],
+                "department": cells[department_idx],
+                "service": cells[service_idx],
+                "family": cells[family_idx],
+                "name": cells[name_idx],
+                "patronymic": cells[patronymic_idx],
+                "birthday": cells[birthday_idx],
+                "snils": cells[snils_idx],
+                "diagnos": cells[diagnos_idx],
+                "service_date": cells[service_date_idx],
+                "is_travma": cells[is_travma_idx]
             }
             file_data.append(tmp_data)
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдена колонка 'номер карты' "}
 
     response = requests.post(ECP_MIDDLE_SERVER_ADDRESS, json=file_data)
+    print(response.json())
 
     return {"ok": True, "result": [], "message": ""}
