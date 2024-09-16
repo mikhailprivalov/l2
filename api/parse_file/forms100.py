@@ -77,7 +77,19 @@ def form_02(request_data):
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
     card_number_idx, head_department_idx, department_idx, service_idx, family_idx, name_idx, patronymic_idx, birthday_idx, snils_idx, diagnos_idx, service_date_idx, is_travma_idx = (
-        '', '', '', '', '', '', '', '', '', '', '', '')
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+    )
     starts = False
     file_data = []
     for row in ws.rows:
@@ -110,7 +122,7 @@ def form_02(request_data):
                 "snils": cells[snils_idx],
                 "diagnos": cells[diagnos_idx],
                 "serviceDate": cells[service_date_idx],
-                "isTravma": cells[is_travma_idx]
+                "isTravma": cells[is_travma_idx],
             }
             file_data.append(tmp_data)
     if not starts:
