@@ -1,9 +1,12 @@
+import base64
+import json
+
 import requests
 from openpyxl.reader.excel import load_workbook
 
 from contracts.models import PriceName, PriceCoast
 from directory.models import Researches
-from laboratory.settings import ECP_MIDDLE_SERVER_ADDRESS
+from laboratory.settings import ECP_MIDDLE_SERVER_ADDRESS, ECP_MIDDLE_SERVER_TOKEN
 
 
 def form_01(request_data):
@@ -96,8 +99,8 @@ def form_02(request_data):
                 starts = True
         else:
             tmp_data = {
-                "card_number": cells[card_number_idx],
-                "head_department": cells[head_department_idx],
+                "cardNumber": cells[card_number_idx],
+                "headDepartment": cells[head_department_idx],
                 "department": cells[department_idx],
                 "service": cells[service_idx],
                 "family": cells[family_idx],
@@ -106,14 +109,19 @@ def form_02(request_data):
                 "birthday": cells[birthday_idx],
                 "snils": cells[snils_idx],
                 "diagnos": cells[diagnos_idx],
-                "service_date": cells[service_date_idx],
-                "is_travma": cells[is_travma_idx]
+                "serviceDate": cells[service_date_idx],
+                "isTravma": cells[is_travma_idx]
             }
             file_data.append(tmp_data)
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдена колонка 'номер карты' "}
 
-    response = requests.post(f"{ECP_MIDDLE_SERVER_ADDRESS}send-lab-result-ecp", json=file_data)
+    json_str = json.dumps(file_data)
+    base64_data = base64.b64encode(json_str.encode())
+    json_data = {"directions": base64_data}
+    headers = {"authorization": f"Bearer {ECP_MIDDLE_SERVER_TOKEN}"}
+
+    response = requests.post(f"{ECP_MIDDLE_SERVER_ADDRESS}send-lab-result-ecp", json=json_data, headers=headers)
     result = response.json()
 
     return {"ok": True, "result": [], "message": f"{result}"}
