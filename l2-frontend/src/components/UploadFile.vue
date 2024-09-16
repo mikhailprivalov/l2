@@ -90,7 +90,7 @@ import api from '@/api';
 
 import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 
-const { getTypes, getForms } = typesAndForms();
+const { getTypes, getForms, getFileFilters } = typesAndForms();
 
 const store = useStore();
 
@@ -149,7 +149,7 @@ onMounted(async () => {
 });
 
 const changeType = () => {
-  fileFilter.value = `.${selectedType.value}`;
+  fileFilter.value = getFileFilters(selectedType.value);
   currentFileForms.value = getForms(
     String(selectedType.value),
     props.formsFile,
@@ -213,13 +213,13 @@ const handleFileUpload = () => {
   const input = fileInput.value as HTMLInputElement;
   const re = /(?:\.([^.]+))?$/;
   const fileExtension = re.exec(input.value)[1];
-  if (fileExtension.toLowerCase() !== String(selectedType.value).toLowerCase()) {
+  if (fileFilter.value.includes(fileExtension.toLowerCase())) {
+    [file.value] = input.files;
+    fileIsSelected.value = true;
+  } else {
     input.value = '';
     fileIsSelected.value = false;
     root.$emit('msg', 'error', `Файл не ${selectedType.value}`);
-  } else {
-    [file.value] = input.files;
-    fileIsSelected.value = true;
   }
 };
 
