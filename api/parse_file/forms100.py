@@ -6,7 +6,7 @@ from openpyxl.reader.excel import load_workbook
 
 from contracts.models import PriceName, PriceCoast
 from directory.models import Researches
-from laboratory.settings import ECP_MIDDLE_SERVER_ADDRESS, ECP_MIDDLE_SERVER_TOKEN
+from laboratory.settings import RMIS_MIDDLE_SERVER_ADDRESS, RMIS_MIDDLE_SERVER_TOKEN
 
 
 def form_01(request_data):
@@ -119,9 +119,9 @@ def form_02(request_data):
     json_str = json.dumps(file_data)
     base64_data = base64.b64encode(json_str.encode())
     json_data = {"data": base64_data}
-    headers = {"authorization": f"Bearer {ECP_MIDDLE_SERVER_TOKEN}"}
+    headers = {"authorization": f"Bearer {RMIS_MIDDLE_SERVER_TOKEN}"}
 
-    response = requests.post(f"{ECP_MIDDLE_SERVER_ADDRESS}send-lab-result-ecp", json=json_data, headers=headers)
+    response = requests.post(f"{RMIS_MIDDLE_SERVER_ADDRESS}send-case-visit", json=json_data, headers=headers)
     result = response.json()
 
     return {"ok": True, "result": [], "message": f"{result}"}
