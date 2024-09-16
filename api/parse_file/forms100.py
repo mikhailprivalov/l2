@@ -122,7 +122,7 @@ def form_02(request_data):
                 "snils": cells[snils_idx],
                 "diagnos": cells[diagnos_idx],
                 "serviceDate": cells[service_date_idx],
-                "isTravma": cells[is_travma_idx]
+                "isTravma": cells[is_travma_idx],
             }
             file_data.append(tmp_data)
     if not starts:
