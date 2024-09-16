@@ -204,7 +204,7 @@ class Cheque(models.Model):
             new_cheque = Cheque(shift_id=shift_id, type=type_operations, uuid=uuid_data, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
             new_cheque.save()
             for item in items:
-                new_items = ChequeItems(cheque_id=new_cheque.pk, research_id=item["id"], coast=item["price"], count=item["quantity"], amount=item["amount"])
+                new_items = ChequeItems(cheque_id=new_cheque.pk, research_id=item["id"], coast=item["price"], discount=item["discount"], count=item["quantity"], amount=item["amount"])
                 new_items.save()
             row_data = {
                 "shift_id": shift_id,
