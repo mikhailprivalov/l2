@@ -143,6 +143,11 @@ class Shift(models.Model):
             result = "Закрыта"
         return result
 
+    @staticmethod
+    def create_job_json(cash_register_data, uuid_data, operator, type_operations="openShift"):
+        body = {"cashRegister": cash_register_data, "uuid": uuid_data, "job": [{"type": type_operations, "operator": operator}]}
+        return body
+
 
 class Cheque(models.Model):
     SELL = "sell"
