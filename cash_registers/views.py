@@ -1,7 +1,5 @@
 import uuid
-
 import pytz
-
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
