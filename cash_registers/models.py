@@ -249,7 +249,7 @@ class ChequeItems(models.Model):
                 "price": float(item["coast"]),
                 "discount": item["discountRelative"],
                 "quantity": int(item["count"]),
-                "amount": float(item["amount"]),
+                "amount": float(item["total"]),
                 "tax": {"type": "none"},
                 "paymentMethod": "fullPayment",
                 "paymentObject": "service",
