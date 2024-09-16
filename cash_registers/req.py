@@ -11,7 +11,7 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
     headers = get_authorization_header()
     body = {"cashRegister": cash_register_data}
     try:
-        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/get-cash-register-status", json=body, headers=headers, timeout=30)
+        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/get-cash-register-status", json=body, headers=headers, timeout=20)
         response_data = response.json()
     except Exception as e:
         return {
@@ -45,7 +45,7 @@ def check_cash_register(cash_register_data: dict):
 def send_job(body: dict):
     headers = get_authorization_header()
     try:
-        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/push-job", json=body, headers=headers, timeout=5)
+        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/push-job", json=body, headers=headers, timeout=60)
         response_data = response.json()
     except Exception as e:
         return {"ok": False, "message": "Ошибка", "data": f"{e}", "connection_middle_server_error": True}
@@ -56,7 +56,7 @@ def get_job_status(uuid: str, cash_register: dict):
     body = {"cashRegister": cash_register, "uuid": uuid}
     headers = get_authorization_header()
     try:
-        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/get-job-status", json=body, headers=headers, timeout=5)
+        response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/get-job-status", json=body, headers=headers, timeout=60)
         response_data = response.json()
     except Exception as e:
         return {"ok": False, "message": "Ошибка", "data": f"{e}", "connection_middle_server_error": True}
