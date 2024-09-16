@@ -113,7 +113,7 @@ def form_02(request_data):
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдена колонка 'номер карты' "}
 
-    response = requests.post(ECP_MIDDLE_SERVER_ADDRESS, json=file_data)
+    response = requests.post(f"{ECP_MIDDLE_SERVER_ADDRESS}send-lab-result-ecp", json=file_data)
     result = response.json()
 
     return {"ok": True, "result": [], "message": f"{result}"}
