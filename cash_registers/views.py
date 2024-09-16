@@ -5,8 +5,6 @@ import pytz
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
-from clients.models import Card, CardBase
-from contracts.sql_func import get_researches_and_coasts_in_price
 from directions.models import IstochnikiFinansirovaniya
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import current_time
