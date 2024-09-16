@@ -30,7 +30,9 @@ class ChequeAdmin(admin.ModelAdmin):
 class ChequeItemsAdmin(admin.ModelAdmin):
     list_display = ['pk', 'cheque', 'research', 'coast', 'count', 'amount']
     list_filter = ('cheque',)
-    raw_id_fields = ['research',]
+    raw_id_fields = [
+        'research',
+    ]
 
 
 admin.site.register(CashRegister, CashRegisterAdmin)
