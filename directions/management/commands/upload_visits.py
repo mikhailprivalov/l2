@@ -22,5 +22,3 @@ class Command(BaseCommand):
             self.stdout.write('Файл выгружен')
         else:
             self.stdout.write("Ошибка выгрузки файла")
-
-
