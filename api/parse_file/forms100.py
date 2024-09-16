@@ -121,7 +121,7 @@ def form_02(request_data):
     json_data = {"data": base64_data}
     headers = {"authorization": f"Bearer {RMIS_MIDDLE_SERVER_TOKEN}"}
 
-    response = requests.post(f"{RMIS_MIDDLE_SERVER_ADDRESS}send-case-visit", json=json_data, headers=headers)
+    response = requests.post(f"{RMIS_MIDDLE_SERVER_ADDRESS}/send-case-visit", json=json_data, headers=headers)
     result = response.json()
 
     return {"ok": True, "result": [], "message": f"{result}"}
