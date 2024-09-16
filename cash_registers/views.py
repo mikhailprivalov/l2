@@ -167,7 +167,7 @@ def get_cheque_data(cheq_id):
                     time = current_time()
                     cheque.status = True
                     cheque.payment_at = time
-                    cheque.row_data["status"] = True,
+                    cheque.row_data["status"] = True
                     cheque.row_data["payment_at"] = time
                     cheque.save()
                     result["chequeReady"] = True
