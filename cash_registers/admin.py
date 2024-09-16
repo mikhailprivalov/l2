@@ -21,7 +21,10 @@ class ShiftAdmin(admin.ModelAdmin):
 class ChequeAdmin(admin.ModelAdmin):
     list_display = ['pk', 'shift', 'type', 'status', 'payment_cash', 'payment_electronic']
     list_filter = ('status',)
-    raw_id_fields = ['shift', 'card',]
+    raw_id_fields = [
+        'shift',
+        'card',
+    ]
 
 
 class ChequeItemsAdmin(admin.ModelAdmin):
