@@ -8,7 +8,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         """
-         Загрузка посещений из файла
+        Загрузка посещений из файла
 
          На входе:
          Файл XLSX с посещениями
