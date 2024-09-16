@@ -241,6 +241,7 @@ class ChequeItems(models.Model):
                 "type": "position",
                 "name": item["title"],
                 "price": float(item["coast"]),
+                "discount": item["discountRelative"],
                 "quantity": int(item["count"]),
                 "amount": float(item["amount"]),
                 "tax": {"type": "none"},

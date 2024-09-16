@@ -47,14 +47,12 @@ def payment(request):
     request_data = json.loads(request.body)
     shift_id = request_data["shiftId"]
     coasts = request_data["serviceCoasts"]
-    sum_coasts = request_data["sumCoasts"]
-    discount = request_data["discount"]
+    total_coast = request_data["totalCoast"]
     cash = request_data["cash"]
     received_cash = request_data["receivedCash"]
     electronic = request_data["electronic"]
-    for_pay = request_data["forPay"]
     card_id = request_data["cardId"]
-    result = cash_register_views.payment(shift_id, coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id)
+    result = cash_register_views.payment(shift_id, coasts, total_coast, cash, received_cash, electronic, card_id)
     return JsonResponse(result)
 
 

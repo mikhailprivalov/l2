@@ -128,7 +128,7 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
     return result
 
 
-def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash, electronic, for_pay, card_id):
+def payment(shift_id, service_coasts, total_coast, cash, received_cash, electronic, card_id):
     result = {"ok": True, "message": "", "cheqId": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
@@ -136,7 +136,7 @@ def payment(shift_id, service_coasts, sum_coasts, discount, cash, received_cash,
     type_operations = Cheque.SELL
     items = ChequeItems.create_items(service_coasts)
     payments = Cheque.create_payments(cash, received_cash, electronic)
-    total = for_pay
+    total = total_coast
     job_body = Cheque.create_job_json(cash_register_data, uuid_data, type_operations, items, payments, total)
     check_cash_register = cash_req.check_cash_register(cash_register_data)
     if check_cash_register["ok"]:

@@ -127,7 +127,7 @@
                   </td>
                   <td class="text-center">
                     <strong>
-                      {{ totalServiceCoasts }}
+                      {{ totalServicesCoast }}
                     </strong>
                   </td>
                 </tr>
@@ -146,7 +146,7 @@
                     class="form-control nbr"
                     step="0.01"
                     min="0"
-                    :max="totalServiceCoasts"
+                    :max="totalServicesCoast"
                     @input="changeElectronic"
                   >
                 </div>
@@ -159,7 +159,7 @@
                     class="form-control nbr"
                     step="0.01"
                     min="0"
-                    :max="totalServiceCoasts"
+                    :max="totalServicesCoast"
                     @input="changeCash"
                   >
                 </div>
@@ -179,7 +179,7 @@
               </div>
             </div>
             <div class="flex-space">
-              <h5>К оплате {{ totalServiceCoasts }}</h5>
+              <h5>К оплате {{ totalServicesCoast }}</h5>
               <button
                 class="btn btn-blue-nb nbr pay-button"
                 :disabled="loading"
@@ -333,7 +333,7 @@ const changeServiceCount = (index) => {
   }
 };
 
-const totalServiceCoasts = computed(() => {
+const totalServicesCoast = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
     result += Number(service.total);
@@ -374,7 +374,7 @@ const changeElectronic = () => {
   if (paymentCash.value < 0) {
     paymentCash.value = 0.00;
   }
-  const result = totalServiceCoasts.value - paymentCash.value;
+  const result = totalServicesCoast.value - paymentCash.value;
   if (result >= 0) {
     paymentElectronic.value = Number(result.toFixed(2));
   } else {
@@ -385,7 +385,7 @@ const changeCash = () => {
   if (paymentElectronic.value < 0) {
     paymentElectronic.value = 0.00;
   }
-  const result = totalServiceCoasts.value - paymentElectronic.value;
+  const result = totalServicesCoast.value - paymentElectronic.value;
   if (result >= 0) {
     paymentCash.value = Number(result.toFixed(2));
   } else {
@@ -393,9 +393,9 @@ const changeCash = () => {
   }
 };
 
-watch([totalServiceCoasts], () => {
-  if (totalServiceCoasts.value) {
-    paymentElectronic.value = Number((totalServiceCoasts.value - paymentCash.value).toFixed(2));
+watch([totalServicesCoast], () => {
+  if (totalServicesCoast.value) {
+    paymentElectronic.value = Number((totalServicesCoast.value - paymentCash.value).toFixed(2));
   } else {
     paymentElectronic.value = 0;
     paymentCash.value = 0;
@@ -438,8 +438,7 @@ const payment = async () => {
     const { ok, message, cheqId } = await api('cash-register/payment', {
       shiftId: cashRegister.value.shiftId,
       serviceCoasts: servicesCoasts.value,
-      sumCoasts: totalServiceCoasts.value,
-      discount: discount.value,
+      totalCoast: totalServicesCoast.value,
       cash: paymentCash.value,
       receivedCash: receivedCash.value,
       electronic: paymentElectronic.value,
