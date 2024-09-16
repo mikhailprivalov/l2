@@ -118,7 +118,7 @@ def form_02(request_data):
 
     json_str = json.dumps(file_data)
     base64_data = base64.b64encode(json_str.encode())
-    json_data = {"directions": base64_data}
+    json_data = {"data": base64_data}
     headers = {"authorization": f"Bearer {ECP_MIDDLE_SERVER_TOKEN}"}
 
     response = requests.post(f"{ECP_MIDDLE_SERVER_ADDRESS}send-lab-result-ecp", json=json_data, headers=headers)
