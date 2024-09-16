@@ -217,7 +217,7 @@ class Cheque(models.Model):
                 "payment_electronic": electronic,
                 "payment_at": None,
                 "card_id": card_id,
-                "items": items
+                "items": items,
             }
             new_cheque.row_data = row_data
             new_cheque.save()

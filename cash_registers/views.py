@@ -101,8 +101,10 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
             "discountedCoast": 0,
             "discountStatic": service.prior_discount,
             "count": 1,
-            "total": 0
-        } for service in services}
+            "total": 0,
+        }
+        for service in services
+    }
     pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_id).select_related('contracts__price').first()
     price_id = pay_fin_source.contracts.price.pk
     if price_id:
