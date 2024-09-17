@@ -1,7 +1,9 @@
 import uuid
-from django.db import models
+from django.db import models, transaction
 from jsonfield import JSONField
 from cash_registers import sql_func
+from clients.models import Card
+from directory.models import Researches
 from laboratory.utils import current_time
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
@@ -39,9 +41,12 @@ class CashRegister(models.Model):
         return result
 
     @staticmethod
-    def get_meta_data(cash_register_id):
-        cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
-        cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
+    def get_meta_data(cash_register_id=None, cash_register_obj=None):
+        if cash_register_obj:
+            cash_register_data = {"address": cash_register_obj.ip_address, "port": cash_register_obj.port, "login": cash_register_obj.login, "password": cash_register_obj.password}
+        else:
+            cash_register: CashRegister = CashRegister.objects.get(pk=cash_register_id)
+            cash_register_data = {"address": cash_register.ip_address, "port": cash_register.port, "login": cash_register.login, "password": cash_register.password}
         return cash_register_data
 
 
@@ -136,4 +141,119 @@ class Shift(models.Model):
         else:
             shift.confirm_close_shift()
             result = "Закрыта"
+        return result
+
+    @staticmethod
+    def create_job_json(cash_register_data, uuid_data, operator, type_operations="openShift"):
+        body = {"cashRegister": cash_register_data, "uuid": uuid_data, "job": [{"type": type_operations, "operator": operator}]}
+        return body
+
+
+class Cheque(models.Model):
+    SELL = "sell"
+    BUY = "buy"
+    SELL_RETURN = "sell-return"
+    BUY_RETURN = "buy-return"
+    CASH_IN = "cash-in"
+    CASH_OUT = "cash-out"
+    TYPES = (
+        (SELL, "Приход"),
+        (BUY, "Расход"),
+        (SELL_RETURN, "Возврат прихода"),
+        (BUY_RETURN, "Возврат расхода"),
+        (CASH_IN, "Внесение"),
+        (CASH_OUT, "Выплата"),
+    )
+
+    shift = models.ForeignKey(Shift, verbose_name='Смена', help_text='1', null=True, on_delete=models.CASCADE, db_index=True)
+    type = models.CharField(max_length=20, choices=TYPES, verbose_name='Тип операции', help_text='sell, buy и т.д', db_index=True)
+    uuid = models.UUIDField(verbose_name='UUID', help_text='abbfg-45fsd2')
+    status = models.BooleanField(verbose_name='Проведен', default=False, db_index=True)
+    cancelled = models.BooleanField(verbose_name='Аннулирован', default=False, db_index=True)
+    payment_cash = models.DecimalField(max_digits=10, verbose_name='Оплата наличными', default=0, decimal_places=2)
+    received_cash = models.DecimalField(max_digits=10, verbose_name='Получено наличными', default=0, decimal_places=2)
+    payment_electronic = models.DecimalField(max_digits=10, verbose_name='Оплата электронно', default=0, decimal_places=2)
+    payment_at = models.DateTimeField(verbose_name='Время оплаты', help_text='2024-07-28 16:00', null=True, blank=True, db_index=True)
+    card = models.ForeignKey(Card, verbose_name='Карта пациента/клиента', help_text='1', null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
+    row_data = JSONField(blank=True, null=True, verbose_name="Json чек-документ")
+
+    class Meta:
+        verbose_name = "Чек"
+        verbose_name_plural = "Чеки"
+
+    def __str__(self):
+        return f"{self.type} - {self.shift} - {self.payment_at} - {self.card_id}"
+
+    @staticmethod
+    def create_payments(cash, received_cash, electronic):
+        result = []
+        if cash:
+            result.append({"type": "cash", "sum": received_cash})
+        if electronic:
+            result.append({"type": "electronically", "sum": electronic})
+        return result
+
+    @staticmethod
+    def create_job_json(cash_register_data, uuid_data, type_operations, items, payments, total):
+        body = {"cashRegister": cash_register_data, "uuid": uuid_data, "job": [{"type": type_operations, "items": items, "payments": payments, "total": total}]}
+        return body
+
+    @staticmethod
+    def create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items):
+        with transaction.atomic():
+            new_cheque = Cheque(shift_id=shift_id, type=type_operations, uuid=uuid_data, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
+            new_cheque.save()
+            for item in items:
+                new_items = ChequeItems(cheque_id=new_cheque.pk, research_id=item["id"], coast=item["price"], discount=item["discount"], count=item["quantity"], amount=item["amount"])
+                new_items.save()
+            row_data = {
+                "shift_id": shift_id,
+                "type": type_operations,
+                "uuid": uuid_data,
+                "status": False,
+                "cancelled": False,
+                "payment_cash": cash,
+                "received_cash": received_cash,
+                "payment_electronic": electronic,
+                "payment_at": None,
+                "card_id": card_id,
+                "items": items,
+            }
+            new_cheque.row_data = row_data
+            new_cheque.save()
+        return new_cheque.pk
+
+
+class ChequeItems(models.Model):
+    cheque = models.ForeignKey(Cheque, verbose_name='Чек', on_delete=models.CASCADE, db_index=True)
+    research = models.ForeignKey(Researches, verbose_name='Услуга', null=True, on_delete=models.SET_NULL, db_index=True)
+    coast = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена за шт')
+    discount = models.PositiveIntegerField(default=0, verbose_name='Скидка (%)')
+    count = models.PositiveIntegerField(default=1, verbose_name='Количество')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сумма позиции')
+
+    class Meta:
+        verbose_name = "Элемент чека"
+        verbose_name_plural = "Элементы чека"
+
+    def __str__(self):
+        return f"{self.cheque} - {self.research_id} - {self.count} - {self.amount}"
+
+    @staticmethod
+    def create_items(items):
+        result = [
+            {
+                "id": item["id"],
+                "type": "position",
+                "name": item["title"],
+                "price": float(item["discountedCoast"]),
+                "discount": item["discountRelative"],
+                "quantity": int(item["count"]),
+                "amount": float(item["total"]),
+                "tax": {"type": "none"},
+                "paymentMethod": "fullPayment",
+                "paymentObject": "service",
+            }
+            for item in items
+        ]
         return result
