@@ -801,7 +801,7 @@ def directive_from(request):
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
                     .distinct("fio", "pk")
-                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
+                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True), dismissed=False)
                     .order_by("fio")
                 ),
             )
@@ -1464,6 +1464,7 @@ def user_view(request):
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
             "additionalInfo": "{}",
+            "dismissed": False,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1522,6 +1523,7 @@ def user_view(request):
             "replace_doctor_cda": doc.replace_doctor_cda_id if doc.replace_doctor_cda_id else -1,
             "department_doctors": [{"id": x.pk, "label": f"{x.get_fio()}"} for x in department_doctors],
             "additionalInfo": doc.additional_info,
+            "dismissed": doc.dismissed,
         }
 
     return JsonResponse({"user": data})
@@ -1556,6 +1558,7 @@ def user_save_view(request):
     not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
     additional_info = ud.get("additionalInfo", "{}")
+    dismissed = ud.get("dismissed", False)
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1673,6 +1676,7 @@ def user_save_view(request):
             doc.date_stop_certificate = date_stop_certificate
             doc.replace_doctor_cda_id = replace_doctor_cda
             doc.additional_info = additional_info
+            doc.dismissed = dismissed
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:

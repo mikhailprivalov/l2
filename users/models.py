@@ -121,6 +121,7 @@ class DoctorProfile(models.Model):
         verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны",
         on_delete=models.CASCADE,
     )
+    dismissed = models.BooleanField(default=False, help_text="Уволен")
 
     @staticmethod
     def get_system_profile():
