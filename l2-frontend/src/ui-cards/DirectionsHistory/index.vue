@@ -446,6 +446,11 @@
       :active_type="active_type"
       :kk="kk"
     />
+    <ChequeModal
+      v-if="showChequeModal"
+      :service-ids="checked"
+      @closeModal="closeChequeModal"
+    />
   </div>
 </template>
 
@@ -458,6 +463,7 @@ import { Research } from '@/types/research';
 import AuxResearch from '@/ui-cards/AuxResearch.vue';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
+import ChequeModal from '@/ui-cards/CashRegisters/ChequeModal.vue';
 
 import SelectPickerM from '../../fields/SelectPickerM.vue';
 import DateRange from '../DateRange.vue';
@@ -477,7 +483,11 @@ function truncate(s, n, useWordBoundary) {
 export default {
   name: 'DirectionsHistory',
   components: {
-    SelectPickerM, DateRange, Bottom, AuxResearch,
+    ChequeModal,
+    SelectPickerM,
+    DateRange,
+    Bottom,
+    AuxResearch,
   },
   props: {
     patient_pk: {
@@ -544,6 +554,7 @@ export default {
         1: 'Материал в лаборатории',
         2: 'Результаты подтверждены',
       },
+      showChequeModal: false,
     };
   },
   computed: {
@@ -642,6 +653,7 @@ export default {
     }
     this.$root.$on(`researches-picker:directions_created${this.kk}`, () => this.load_history_debounced());
     this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe_fast);
+    this.$root.$on('cheque:open_form', this.openChequeModal);
   },
   methods: {
     async serachDicom(pk) {
@@ -808,6 +820,14 @@ export default {
     },
     getTubes(directionId) {
       window.open(`/ui/biomaterial/get#{%22pk%22:${directionId}}`, '_blank');
+    },
+    openChequeModal() {
+      console.log('ща откроем');
+      this.showChequeModal = true;
+    },
+    closeChequeModal() {
+      console.log('за закроем');
+      this.showChequeModal = false;
     },
   },
 };

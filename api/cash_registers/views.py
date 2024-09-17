@@ -38,7 +38,8 @@ def get_shift_data(request):
 @login_required
 def get_services_coasts(request):
     request_data = json.loads(request.body)
-    result = cash_register_views.get_service_coasts(request_data["serviceIds"], request_data["finSourceId"])
+    # result = cash_register_views.get_service_coasts(request_data["serviceIds"])
+    result = {"coasts": [], "serviceWithoutCoast": False}
     return JsonResponse(result)
 
 

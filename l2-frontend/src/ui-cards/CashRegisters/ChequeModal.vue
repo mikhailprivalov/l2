@@ -134,7 +134,7 @@
               </tfoot>
             </table>
           </div>
-          <div v-if="cardIsSelected && !noCoast">
+          <div v-if="!noCoast">
             <div class="flex-space">
               <div class="flex">
                 <div class="input-width">
@@ -201,11 +201,6 @@
               <h5>Сдача: {{ cashReturn }}</h5>
             </div>
           </div>
-          <div v-if="!cardIsSelected">
-            <h4 class="text-red text-center">
-              Пациент не выбран
-            </h4>
-          </div>
           <div v-if="noCoast">
             <h4 class="text-red text-center">
               Не все услуги имеют цену
@@ -256,19 +251,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-  cardId: {
-    type: Number,
-    required: true,
-  },
-  finSourceId: {
-    type: Number,
-    required: true,
-  },
 });
 
 const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
-const cardIsSelected = computed(() => props.cardId !== -1);
 const loading = ref(false);
 
 const closeModal = () => {
@@ -345,7 +331,6 @@ const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', {
     serviceIds: props.serviceIds,
-    finSourceId: props.finSourceId,
   });
   await store.dispatch(actions.DEC_LOADING);
   servicesCoasts.value = coasts;
@@ -442,7 +427,6 @@ const payment = async () => {
       cash: paymentCash.value,
       receivedCash: receivedCash.value,
       electronic: paymentElectronic.value,
-      cardId: props.cardId,
     });
     await store.dispatch(actions.DEC_LOADING);
     chequeId.value = cheqId;
