@@ -487,7 +487,7 @@
               </div>
             </div>
             <div
-              class="col-xs-4 left-padding right-padding"
+              class="col-xs-3 left-padding right-padding"
             >
               <div
                 class="input-group"
@@ -501,6 +501,24 @@
                     v-model="user.notControlAnketa"
                     type="checkbox"
                   > Не контролировать АНКЕТУ
+                </label>
+              </div>
+            </div>
+            <div
+              class="col-xs-1 left-padding right-padding"
+            >
+              <div
+                class="input-group"
+                style="width: 100%"
+              >
+                <label
+                  class="input-group-addon"
+                  style="height: 34px; text-align: left"
+                >
+                  <input
+                    v-model="user.dismissed"
+                    type="checkbox"
+                  > Уволен
                 </label>
               </div>
             </div>
@@ -1052,6 +1070,7 @@ export default {
         replace_doctor_cda: -1,
         department_doctors: [],
         additionalInfo: '{}',
+        dismissed: false,
       },
       selected_hospital: -1,
       open_pk: -2,

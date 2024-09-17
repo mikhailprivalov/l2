@@ -1464,6 +1464,7 @@ def user_view(request):
             "resource_schedule": resource_researches,
             "notControlAnketa": False,
             "additionalInfo": "{}",
+            "dismissed": False,
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1522,6 +1523,7 @@ def user_view(request):
             "replace_doctor_cda": doc.replace_doctor_cda_id if doc.replace_doctor_cda_id else -1,
             "department_doctors": [{"id": x.pk, "label": f"{x.get_fio()}"} for x in department_doctors],
             "additionalInfo": doc.additional_info,
+            "dismissed": doc.dismissed,
         }
 
     return JsonResponse({"user": data})
