@@ -801,7 +801,7 @@ def directive_from(request):
                 queryset=(
                     users.DoctorProfile.objects.filter(user__groups__name__in=["Лечащий врач", "Врач параклиники"])
                     .distinct("fio", "pk")
-                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True))
+                    .filter(Q(hospital=hospital) | Q(hospital__isnull=True), dismissed=False)
                     .order_by("fio")
                 ),
             )
