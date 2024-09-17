@@ -1558,6 +1558,7 @@ def user_save_view(request):
     not_control_anketa = ud.get("notControlAnketa", False)
     date_stop_external_access = ud.get("date_stop_external_access")
     additional_info = ud.get("additionalInfo", "{}")
+    dismissed = ud.get("dismissed", False)
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1675,6 +1676,7 @@ def user_save_view(request):
             doc.date_stop_certificate = date_stop_certificate
             doc.replace_doctor_cda_id = replace_doctor_cda
             doc.additional_info = additional_info
+            doc.dismissed = dismissed
             if rmis_login:
                 doc.rmis_login = rmis_login
                 if rmis_password:
