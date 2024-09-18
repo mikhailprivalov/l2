@@ -1211,13 +1211,13 @@ class ParaclinicInputField(models.Model):
 
 
 class ParaclinicFieldTemplateDepartment(models.Model):
-        """
-        Шаблоны подразделений на поля
-        """
-        paraclinic_field = models.ForeignKey(ParaclinicInputField, verbose_name="Поле в кротоколе", on_delete=models.CASCADE)
-        research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE, db_index=True)
-        department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
-        value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
+    """
+    Шаблоны подразделений на поля
+    """
+    paraclinic_field = models.ForeignKey(ParaclinicInputField, verbose_name="Поле в кротоколе", on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE, db_index=True)
+    department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+    value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
 
     class Meta:
         verbose_name = "Шаблон на поле для подразделения"
