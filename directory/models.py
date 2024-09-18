@@ -1267,7 +1267,7 @@ class ParaclinicUserInputTemplateField(models.Model):
         return f"{self.field}, {self.value}"
 
 
-class ParaclinicTemplateDepartment(models.Model):
+class ParaclinicTemplateNameDepartment(models.Model):
     """
     Шаблоны подразделений на услуги
     """
