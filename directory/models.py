@@ -1219,12 +1219,12 @@ class ParaclinicFieldTemplateDepartment(models.Model):
         department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
         value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
 
-        class Meta:
-            verbose_name = "Шаблон на поле для подразделения"
-            verbose_name_plural = "Шаблоны на поля для подразделений"
+    class Meta:
+        verbose_name = "Шаблон на поле для подразделения"
+        verbose_name_plural = "Шаблоны на поля для подразделений"
 
-        def __str__(self):
-            return f"{self.paraclinic_field.title} - {self.research.title} {self.department_id}"
+    def __str__(self):
+        return f"{self.paraclinic_field.title} - {self.research.title} {self.department_id}"
 
 
 class ParaclinicTemplateName(models.Model):
@@ -1271,6 +1271,7 @@ class ParaclinicTemplateDepartment(models.Model):
     """
     Шаблоны подразделений на услуги
     """
+
     template_name = models.ForeignKey(ParaclinicTemplateName, verbose_name="Шаблон на услугу", on_delete=models.CASCADE)
     department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
 

@@ -108,7 +108,9 @@ from .sql_func import (
     get_directions_by_user,
     get_confirm_direction_by_hospital,
     get_directions_meta_info,
-    get_patient_open_case_data, get_template_research_by_department, get_template_field_by_department,
+    get_patient_open_case_data,
+    get_template_research_by_department,
+    get_template_field_by_department,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -1874,10 +1876,12 @@ def directions_paraclinic_form(request):
                 if i.research.is_template_by_department:
                     templates_by_department = get_template_research_by_department(i.research_id, doc_department_id)
                     templates_data = [{"pk": template.id, "title": template.title} for template in templates_by_department]
-                    iss["templates"].append({
-                        "pk": default_template.pk,
-                        "title": default_template.title,
-                    })
+                    iss["templates"].append(
+                        {
+                            "pk": default_template.pk,
+                            "title": default_template.title,
+                        }
+                    )
                     iss["templates"].extend(templates_data)
 
                 else:
