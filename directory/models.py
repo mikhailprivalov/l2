@@ -385,6 +385,7 @@ class Researches(models.Model):
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
     count_volume_material_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
+    is_template_by_department = models.BooleanField(default=False, help_text="Искать шаблон заполнения по подразделению")
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -1209,6 +1210,24 @@ class ParaclinicInputField(models.Model):
         verbose_name_plural = "Поля описательного протокола"
 
 
+class ParaclinicFieldTemplateDepartment(models.Model):
+    """
+    Шаблоны подразделений на поля
+    """
+
+    paraclinic_field = models.ForeignKey(ParaclinicInputField, verbose_name="Поле в кротоколе", on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE, db_index=True)
+    department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+    value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
+
+    class Meta:
+        verbose_name = "Шаблон на поле для подразделения"
+        verbose_name_plural = "Шаблоны на поля для подразделений"
+
+    def __str__(self):
+        return f"{self.paraclinic_field.title} - {self.research.title} {self.department_id}"
+
+
 class ParaclinicTemplateName(models.Model):
     DEFAULT_TEMPLATE_TITLE = "По умолчанию"
 
@@ -1247,6 +1266,22 @@ class ParaclinicUserInputTemplateField(models.Model):
 
     def __str__(self):
         return f"{self.field}, {self.value}"
+
+
+class ParaclinicTemplateNameDepartment(models.Model):
+    """
+    Шаблоны подразделений на услуги
+    """
+
+    template_name = models.ForeignKey(ParaclinicTemplateName, verbose_name="Шаблон на услугу", on_delete=models.CASCADE)
+    department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+
+    class Meta:
+        verbose_name = "Шаблон на услугу для подразделения"
+        verbose_name_plural = "Шаблоны на услуги для подразделений"
+
+    def __str__(self):
+        return f"{self.template_name.title} - {self.department_id}"
 
 
 class AutoAdd(models.Model):
