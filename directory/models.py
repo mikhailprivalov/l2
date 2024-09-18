@@ -1262,7 +1262,7 @@ class ParaclinicTemplateDepartment(models.Model):
         verbose_name_plural = "Шаблон на услугу для подразделения"
 
     def __str__(self):
-        return f"{self.template_name.title} - {self.research.title} - {self.department_id}"
+        return f"{self.template_name.title} - {self.department_id}"
 
 
 class AutoAdd(models.Model):

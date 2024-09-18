@@ -1516,7 +1516,7 @@ def directions_paraclinic_form(request):
         pk //= 10
     add_fr = {}
     f = False
-    doctor_profile = request.user.doctorprofile
+    doc_department_id = request.user.doctorprofile.podrazdeleniye_id
     user_groups = [str(x) for x in request.user.groups.all()]
     is_without_limit_paraclinic = "Параклиника без ограничений" in user_groups
     if not request.user.is_superuser and not is_without_limit_paraclinic:
@@ -1869,12 +1869,17 @@ def directions_paraclinic_form(request):
                                 }
                             )
 
-                ParaclinicTemplateName.make_default(i.research)
+                default_template = ParaclinicTemplateName.make_default(i.research)
 
                 if i.research.is_template_by_department:
-                    templates = get_template_research_by_department(i.research_id, doctor_profile.id)
-                    templates_data = [{"pk": template.id, "title": templates.title} for template in templates]
-                    iss["templated"].extend(templates_data)
+                    templates_by_department = get_template_research_by_department(i.research_id, doc_department_id)
+                    templates_data = [{"pk": template.id, "title": template.title} for template in templates_by_department]
+                    iss["templates"].append({
+                        "pk": default_template.pk,
+                        "title": default_template.title,
+                    })
+                    iss["templates"].extend(templates_data)
+
                 else:
                     rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
 
