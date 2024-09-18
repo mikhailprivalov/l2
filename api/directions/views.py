@@ -108,7 +108,7 @@ from .sql_func import (
     get_directions_by_user,
     get_confirm_direction_by_hospital,
     get_directions_meta_info,
-    get_patient_open_case_data,
+    get_patient_open_case_data, get_template_research_by_department,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -1516,6 +1516,7 @@ def directions_paraclinic_form(request):
         pk //= 10
     add_fr = {}
     f = False
+    doctor_profile = request.user.doctorprofile
     user_groups = [str(x) for x in request.user.groups.all()]
     is_without_limit_paraclinic = "Параклиника без ограничений" in user_groups
     if not request.user.is_superuser and not is_without_limit_paraclinic:
@@ -1869,15 +1870,21 @@ def directions_paraclinic_form(request):
                             )
 
                 ParaclinicTemplateName.make_default(i.research)
-                rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
 
-                for rt in rts.order_by('title'):
-                    iss["templates"].append(
-                        {
-                            "pk": rt.pk,
-                            "title": rt.title,
-                        }
-                    )
+                if i.research.is_template_by_department:
+                    templates = get_template_research_by_department(i.research_id, doctor_profile.id)
+                    templates_data = [{"pk": template.id, "title": templates.title} for template in templates]
+                    iss["templated"].extend(templates_data)
+                else:
+                    rts = ParaclinicTemplateName.objects.filter(research=i.research, hide=False)
+
+                    for rt in rts.order_by('title'):
+                        iss["templates"].append(
+                            {
+                                "pk": rt.pk,
+                                "title": rt.title,
+                            }
+                        )
 
                 result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i)}
                 for group in i.research.paraclinicinputgroups_set.all():

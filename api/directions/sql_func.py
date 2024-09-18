@@ -606,3 +606,28 @@ def get_total_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_template_research_by_department(research_id, department_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT directory_paraclinictemplatename.id, directory_paraclinictemplatename.title
+                FROM directory_paraclinictemplatedepartment
+                INNER JOIN directory_paraclinictemplatename ON 
+                directory_paraclinictemplatedepartment.template_name_id = directory_paraclinictemplatename.id
+                WHERE 
+                directory_paraclinictemplatename.research_id = %(research_id)s AND
+                directory_paraclinictemplatedepartment.department_id = %(department_id)s
+                
+                ORDER BY directory_paraclinictemplatename.title
+                
+                
+            """,
+            params={
+                'research_id': research_id,
+                'department_id': department_id,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
