@@ -1211,20 +1211,21 @@ class ParaclinicInputField(models.Model):
 
 
 class ParaclinicFieldTemplateDepartment(models.Model):
-        """
-        Шаблоны подразделений на поля
-        """
-        paraclinic_field = models.ForeignKey(ParaclinicInputField, verbose_name="Поле в кротоколе", on_delete=models.CASCADE)
-        research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE)
-        department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
-        value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
+    """
+    Шаблоны подразделений на поля
+    """
 
-        class Meta:
-            verbose_name = "Шаблон на поле для подразделения"
-            verbose_name_plural = "Шаблоны на поля для подразделений"
+    paraclinic_field = models.ForeignKey(ParaclinicInputField, verbose_name="Поле в кротоколе", on_delete=models.CASCADE)
+    research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE)
+    department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+    value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
 
-        def __str__(self):
-            return f"{self.paraclinic_field.title} - {self.research.title} {self.department_id}"
+    class Meta:
+        verbose_name = "Шаблон на поле для подразделения"
+        verbose_name_plural = "Шаблоны на поля для подразделений"
+
+    def __str__(self):
+        return f"{self.paraclinic_field.title} - {self.research.title} {self.department_id}"
 
 
 class ParaclinicTemplateName(models.Model):
