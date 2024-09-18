@@ -173,6 +173,17 @@ class ResParaclinicInputField(admin.ModelAdmin):
     )
 
 
+class ResParaclinicTemplateDepartment(admin.ModelAdmin):
+    list_display = (
+        'template_name',
+        'department',
+    )
+    list_display_links = (
+        'template_name',
+        'department'
+    )
+
+
 class ResParaclinicInputGroups(admin.ModelAdmin):
     list_display = (
         'title',
@@ -315,6 +326,7 @@ admin.site.register(models.SetResearch, SetResearchAdmin)
 admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
 admin.site.register(models.AuxService, SetAuxService)
 admin.site.register(models.ComplexService, SetComplexService)
+admin.site.register(models.ParaclinicTemplateDepartment, ResParaclinicTemplateDepartment)
 admin.site.register(models.LaboratoryMaterial)
 admin.site.register(models.SubGroupDirectory)
 admin.site.register(models.SubGroupPadrazdeleniye)

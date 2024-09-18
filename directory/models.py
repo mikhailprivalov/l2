@@ -1249,6 +1249,21 @@ class ParaclinicUserInputTemplateField(models.Model):
         return f"{self.field}, {self.value}"
 
 
+class ParaclinicTemplateDepartment(models.Model):
+    """
+    Шаблоны подразделений на услуги
+    """
+    template_name = models.ForeignKey(ParaclinicTemplateName, verbose_name="Шаблон на услугу", on_delete=models.CASCADE)
+    department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+
+    class Meta:
+        verbose_name = "Шаблон на услугу для подразделения"
+        verbose_name_plural = "Шаблон на услугу для подразделения"
+
+    def __str__(self):
+        return f"{self.template_name.title} - {self.research.title} - {self.department_id}"
+
+
 class AutoAdd(models.Model):
     """
     Перечисление связей исследований, которые могут быть назначены только вместе (A только с B)
