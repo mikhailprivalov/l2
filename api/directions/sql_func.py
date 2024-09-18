@@ -613,12 +613,12 @@ def get_template_research_by_department(research_id, department_id):
         cursor.execute(
             """
                 SELECT directory_paraclinictemplatename.id, directory_paraclinictemplatename.title
-                FROM directory_paraclinictemplatedepartment
+                FROM public.directory_paraclinictemplatenamedepartment
                 INNER JOIN directory_paraclinictemplatename ON 
-                directory_paraclinictemplatedepartment.template_name_id = directory_paraclinictemplatename.id
+                directory_paraclinictemplatenamedepartment.template_name_id = directory_paraclinictemplatename.id
                 WHERE 
                 directory_paraclinictemplatename.research_id = %(research_id)s AND
-                directory_paraclinictemplatedepartment.department_id = %(department_id)s
+                directory_paraclinictemplatenamedepartment.department_id = %(department_id)s
                 
                 ORDER BY directory_paraclinictemplatename.title
                 
