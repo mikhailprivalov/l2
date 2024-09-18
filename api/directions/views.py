@@ -1874,10 +1874,12 @@ def directions_paraclinic_form(request):
                 if i.research.is_template_by_department:
                     templates_by_department = get_template_research_by_department(i.research_id, doc_department_id)
                     templates_data = [{"pk": template.id, "title": template.title} for template in templates_by_department]
-                    iss["templates"].append({
-                        "pk": default_template.pk,
-                        "title": default_template.title,
-                    })
+                    iss["templates"].append(
+                        {
+                            "pk": default_template.pk,
+                            "title": default_template.title,
+                        }
+                    )
                     iss["templates"].extend(templates_data)
 
                 else:
