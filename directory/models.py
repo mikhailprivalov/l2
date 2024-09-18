@@ -1271,6 +1271,7 @@ class ParaclinicTemplateDepartment(models.Model):
     """
     Шаблоны подразделений на услуги
     """
+
     template_name = models.ForeignKey(ParaclinicTemplateName, verbose_name="Шаблон на услугу", on_delete=models.CASCADE)
     department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
 
