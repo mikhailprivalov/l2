@@ -108,7 +108,7 @@ from .sql_func import (
     get_directions_by_user,
     get_confirm_direction_by_hospital,
     get_directions_meta_info,
-    get_patient_open_case_data, get_template_research_by_department,
+    get_patient_open_case_data, get_template_research_by_department, get_template_field_by_department,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
 from forms.forms_func import hosp_get_operation_data
@@ -1892,6 +1892,12 @@ def directions_paraclinic_form(request):
                         )
 
                 result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i)}
+
+                fields_templates_by_department_data = None
+                if i.research.is_template_by_department:
+                    fields_templates_by_department = get_template_field_by_department(i.research_id, doc_department_id)
+                    fields_templates_by_department_data = {field_template.field_id: field_template.value for field_template in fields_templates_by_department}
+
                 for group in i.research.paraclinicinputgroups_set.all():
                     g = {
                         "pk": group.pk,
@@ -1912,6 +1918,11 @@ def directions_paraclinic_form(request):
                         values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + (
                             [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
                         )
+                        if fields_templates_by_department_data:
+                            values_to_input_by_department = fields_templates_by_department_data.get(field.pk)
+                            if values_to_input_by_department:
+                                values_to_input = json.loads(values_to_input_by_department)
+
                         value = (
                             ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]

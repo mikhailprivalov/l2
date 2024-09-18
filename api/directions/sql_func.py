@@ -631,3 +631,25 @@ def get_template_research_by_department(research_id, department_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_template_field_by_department(research_id, department_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                directory_paraclinicfieldtemplatedepartment.paraclinic_field_id as field_id,
+                directory_paraclinicfieldtemplatedepartment.value  
+                FROM directory_paraclinicfieldtemplatedepartment
+                WHERE
+                directory_paraclinicfieldtemplatedepartment.department_id = %(department_id)s AND
+                directory_paraclinicfieldtemplatedepartment.research_id = %(research_id)s
+
+            """,
+            params={
+                'research_id': research_id,
+                'department_id': department_id,
+            },
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
