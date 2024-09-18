@@ -173,6 +173,19 @@ class ResParaclinicInputField(admin.ModelAdmin):
     )
 
 
+class ResParaclinicFieldTemplateDepartment(admin.ModelAdmin):
+    list_display = (
+        'paraclinic_field',
+        'research',
+        'department',
+    )
+    list_display_links = (
+        'paraclinic_field',
+        'research',
+        'department',
+    )
+
+
 class ResParaclinicTemplateDepartment(admin.ModelAdmin):
     list_display = (
         'template_name',
@@ -298,6 +311,7 @@ admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
 admin.site.register(models.ParaclinicInputGroups, ResParaclinicInputGroups)
 admin.site.register(models.ParaclinicInputField, ResParaclinicInputField)
+admin.site.register(models.ParaclinicFieldTemplateDepartment, ResParaclinicFieldTemplateDepartment)
 admin.site.register(models.References, RefAdmin)
 admin.site.register(models.ResultVariants)
 admin.site.register(models.MaterialVariants)

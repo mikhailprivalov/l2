@@ -1210,6 +1210,23 @@ class ParaclinicInputField(models.Model):
         verbose_name_plural = "Поля описательного протокола"
 
 
+class ParaclinicFieldTemplateDepartment(models.Model):
+        """
+        Шаблоны подразделений на поля
+        """
+        paraclinic_field = models.ForeignKey(ParaclinicInputField, verbose_name="Поле в кротоколе", on_delete=models.CASCADE)
+        research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE)
+        department = models.ForeignKey(Podrazdeleniya, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+        value = models.TextField(verbose_name="Значение", help_text="Список значений ['', '']")
+
+        class Meta:
+            verbose_name = "Шаблон на поле для подразделения"
+            verbose_name_plural = "Шаблоны на поля для подразделений"
+
+        def __str__(self):
+            return f"{self.paraclinic_field.title} - {self.research.title} {self.department_id}"
+
+
 class ParaclinicTemplateName(models.Model):
     DEFAULT_TEMPLATE_TITLE = "По умолчанию"
 
@@ -1259,7 +1276,7 @@ class ParaclinicTemplateDepartment(models.Model):
 
     class Meta:
         verbose_name = "Шаблон на услугу для подразделения"
-        verbose_name_plural = "Шаблон на услугу для подразделения"
+        verbose_name_plural = "Шаблоны на услуги для подразделений"
 
     def __str__(self):
         return f"{self.template_name.title} - {self.department_id}"
