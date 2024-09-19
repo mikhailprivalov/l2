@@ -145,6 +145,32 @@ def get_tube_registration(d_start, d_end, doctorprofile_id):
     return rows
 
 
+def get_tube_by_number(tube_number):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_tubesregistration.id as tube_id,
+            directions_tubesregistration.number as tube_number,
+            di.napravleniye_id as direction_number,
+            dr.id as research_id,
+            dr.internal_code as research_internal_code,
+            di.id as issledovaniye_id          
+            FROM directions_tubesregistration
+            LEFT JOIN directions_issledovaniya_tubes dit on directions_tubesregistration.id = dit.tubesregistration_id
+            LEFT JOIN directory_releationsft drft on drft.id = directions_tubesregistration.type_id
+            LEFT JOIN researches_tubes restubes on drft.tube_id = restubes.id 
+            LEFT JOIN directions_issledovaniya di on dit.issledovaniya_id = di.id
+            LEFT JOIN directions_napravleniya dn on di.napravleniye_id = dn.id
+            LEFT JOIN directory_researches dr on di.research_id = dr.id
+            WHERE directions_tubesregistration.number = %(tube_number)s
+            """,
+            params={'tube_number': tube_number},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def get_data_by_directions_id(direction_ids):
     with connection.cursor() as cursor:
         cursor.execute(
