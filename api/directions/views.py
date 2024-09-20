@@ -1873,7 +1873,7 @@ def directions_paraclinic_form(request):
 
                 default_template = ParaclinicTemplateName.make_default(i.research)
 
-                if i.research.is_template_by_department:
+                if i.research.template_by_department:
                     templates_by_department = get_template_research_by_department(i.research_id, doc_department_id)
                     templates_data = [{"pk": template.id, "title": template.title} for template in templates_by_department]
                     iss["templates"].append(
@@ -1898,7 +1898,7 @@ def directions_paraclinic_form(request):
                 result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i)}
 
                 fields_templates_by_department_data = None
-                if i.research.is_template_by_department:
+                if i.research.template_by_department:
                     fields_templates_by_department = get_template_field_by_department(i.research_id, doc_department_id)
                     fields_templates_by_department_data = {field_template.field_id: field_template.value for field_template in fields_templates_by_department}
 
