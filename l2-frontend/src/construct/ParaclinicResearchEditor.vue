@@ -61,7 +61,7 @@
             class="input-group-addon"
           >
             <input
-              v-model="templates_by_department"
+              v-model="templatesByDepartment"
               type="checkbox"
             >
             По подразделению
@@ -266,7 +266,7 @@
             class="input-group-addon"
           >
             <input
-              v-model="templates_by_department"
+              v-model="templatesByDepartment"
               type="checkbox"
             >
             По подразделению
@@ -1225,7 +1225,7 @@ export default {
       result_current_form: 0,
       info: '',
       hide: false,
-      templates_by_department: false,
+      templatesByDepartment: false,
       cancel_do: false,
       loaded_pk: -2,
       site_type: null,
@@ -1600,6 +1600,7 @@ export default {
       this.code = '';
       this.info = '';
       this.hide = false;
+      this.templatesByDepartment = false;
       this.site_type = null;
       this.groups = [];
       this.direction_current_form = '';
@@ -1632,6 +1633,7 @@ export default {
             this.hospital_research_department_pk = data.department;
             this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
             this.hide = data.hide;
+            this.templatesByDepartment = data.templatesByDepartment;
             this.site_type = data.site_type;
             this.loaded_pk = this.pk;
             this.groups = data.groups;
@@ -1679,7 +1681,7 @@ export default {
         'is_global_direction_params',
         'code',
         'hide',
-        'templates_by_department',
+        'templatesByDepartment',
         'groups',
         'site_type',
         'internal_code',
