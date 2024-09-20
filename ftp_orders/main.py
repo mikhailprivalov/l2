@@ -436,6 +436,7 @@ class FTPConnection:
                 file_name_internal_code = internal_code.replace(".", "_")
                 iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
                 iss_file.save()
+                continue
             elif (obx.OBX.obx_3.obx_3_1.value).lower() == "jpg":
                 tmp_fractions["jpg"] = obx.OBX.obx_5.obx_5_5.value
                 result.append(tmp_fractions.copy())
