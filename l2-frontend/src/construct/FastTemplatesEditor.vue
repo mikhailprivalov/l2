@@ -283,9 +283,9 @@ export default {
       });
     },
     async loadDepartment() {
-      this.$store.dispatch(actions.INC_LOADING);
+      await this.$store.dispatch(actions.INC_LOADING);
       const { data } = await api('get-departments-with-exclude');
-      this.$store.dispatch(actions.DEC_LOADING);
+      await this.$store.dispatch(actions.DEC_LOADING);
       this.departments.push(...data);
     },
     select_template(pk) {
