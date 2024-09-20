@@ -608,7 +608,7 @@ def get_total_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=
     return rows
 
 
-def get_template_research_by_department(research_id, department_id, hide=True):
+def get_template_research_by_department(research_id, department_id, hide="true"):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -616,11 +616,10 @@ def get_template_research_by_department(research_id, department_id, hide=True):
                 FROM public.directory_paraclinictemplatenamedepartment
                 INNER JOIN directory_paraclinictemplatename ON 
                 directory_paraclinictemplatenamedepartment.template_name_id = directory_paraclinictemplatename.id
-                WHERE 
+                WHERE
                 directory_paraclinictemplatename.research_id = %(research_id)s AND
-                directory_paraclinictemplatenamedepartment.department_id = %(department_id)s
-                directory_paraclinictemplatename.hide = %(hide)s or directory_paraclinictemplatename.hide = false
-                
+                directory_paraclinictemplatenamedepartment.department_id = %(department_id)s AND
+                (directory_paraclinictemplatename.hide = %(hide)s or directory_paraclinictemplatename.hide = false)
                 
                 ORDER BY directory_paraclinictemplatename.title
                 
