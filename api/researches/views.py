@@ -445,6 +445,7 @@ def researches_update(request):
         own_form_result = result_current_form > 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
+        templates_by_department = request_data.get("templates_by_department")
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups", [])
         tube = request_data.get("tube", -1)
@@ -477,6 +478,7 @@ def researches_update(request):
                     is_paraclinic=not desc and department.p_type == 3,
                     paraclinic_info=info,
                     hide=hide,
+                    templates_by_department=templates_by_department,
                     is_doc_refferal=department_pk == -2,
                     is_treatment=department_pk == -3,
                     is_stom=department_pk == -4,
@@ -539,6 +541,7 @@ def researches_update(request):
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide
+                res.templates_by_department = templates_by_department
                 res.site_type_id = site_type
                 res.internal_code = internal_code
                 res.uet_refferal_doc = uet_refferal_doc

@@ -57,6 +57,15 @@
               Шаблоны быстрого ввода
             </button>
           </span>
+          <label
+            class="input-group-addon"
+          >
+            <input
+              v-model="templates_by_department"
+              type="checkbox"
+            >
+            По подразделению
+          </label>
         </div>
         <div
           v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14 && ex_dep !== 15"
@@ -81,15 +90,6 @@
               {{ d.title }}
             </option>
           </select>
-          <label
-            v-if="fte"
-            class="input-group-addon"
-          >
-            <input
-              type="checkbox"
-            >
-            Шаблоны по подразделению
-          </label>
         </div>
       </div>
       <div
@@ -262,6 +262,15 @@
               Шаблоны быстрого ввода
             </button>
           </span>
+          <label
+            class="input-group-addon"
+          >
+            <input
+              v-model="templates_by_department"
+              type="checkbox"
+            >
+            По подразделению
+          </label>
         </div>
       </div>
       <div
@@ -1216,7 +1225,7 @@ export default {
       result_current_form: 0,
       info: '',
       hide: false,
-      template_by_department: false,
+      templates_by_department: false,
       cancel_do: false,
       loaded_pk: -2,
       site_type: null,
@@ -1670,6 +1679,7 @@ export default {
         'is_global_direction_params',
         'code',
         'hide',
+        'templates_by_department',
         'groups',
         'site_type',
         'internal_code',
