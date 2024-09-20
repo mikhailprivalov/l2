@@ -29,7 +29,7 @@ from directory.models import (
     Localization,
     ServiceLocation,
     ResearchGroup,
-    ReleationsFT,
+    ReleationsFT, ParaclinicTemplateNameDepartment,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
@@ -742,11 +742,13 @@ def fast_templates(request):
 def fast_template_data(request):
     request_data = json.loads(request.body)
     p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
+    template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk)
     data = {
         "readonly": p.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
         "hide": p.hide,
         "title": p.title,
         "fields": {},
+        "templateDepartmentsIds": template_departments_ids,
     }
 
     for pi in ParaclinicTemplateField.objects.filter(template_name=p).order_by('pk'):
@@ -760,14 +762,25 @@ def fast_template_data(request):
 def fast_template_save(request):
     request_data = json.loads(request.body)
     data = request_data["data"]
+    for_departments = data.get("templateDepartmentsIds", [])
     if request_data["pk"] == -1:
         p = ParaclinicTemplateName(research=DResearches.objects.get(pk=request_data["research_pk"]), title=data["title"], hide=data["hide"])
         p.save()
+        for department in for_departments:
+            new_template_depart = ParaclinicTemplateNameDepartment(template_name_id=p.pk, department_id=department)
+            new_template_depart.save()
     else:
         p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
         p.title = data["title"]
         p.hide = data["hide"]
         p.save()
+
+        template_department = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=p.pk)
+        template_department.delete()
+        for department in for_departments:
+            new_template_depart = ParaclinicTemplateNameDepartment(template_name_id=p.pk, department_id=department)
+            new_template_depart.save()
+
     to_delete = []
     has = []
     for pi in ParaclinicTemplateField.objects.filter(template_name=p):

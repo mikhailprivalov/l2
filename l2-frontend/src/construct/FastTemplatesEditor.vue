@@ -58,15 +58,26 @@
       >
         <div class="direction-data">
           <div class="results-top">
-            <div>
-              <label>
-                Название: <input
+            <div class="flex-display">
+              <div class="flex-display margin-right">
+                <label class="name-label">
+                  Название:
+                </label>
+                <input
                   v-model="template_data.title"
                   placeholder="Название"
+                  class="flex-align-center"
                   :readonly="template_data.readonly"
                 >
-              </label>
-              <strong v-if="selected_template === -1">(новый шаблон)</strong>
+                <strong v-if="selected_template === -1">(новый шаблон)</strong>
+              </div>
+              <Treeselect
+                v-model="template_data.templateDepartmentsIds"
+                class="treeselect-nbr treeselect-wide"
+                :options="departments."
+                placeholder="Выберите подразделение"
+                :multiple="true"
+              />
             </div>
             <div>
               <label>Скрыть: <input
@@ -217,6 +228,8 @@ export default {
       template_data: {},
       department: null,
       departments: [{ id: 'all', label: 'Все' }],
+      departmentsForTemplate: [],
+      forDepartments: [],
     };
   },
   watch: {
@@ -287,6 +300,7 @@ export default {
       const { data } = await api('get-departments-with-exclude');
       await this.$store.dispatch(actions.DEC_LOADING);
       this.departments.push(...data);
+      this.departmentsForTemplate = data;
     },
     select_template(pk) {
       if (pk === this.selected_template) return;
@@ -879,4 +893,16 @@ export default {
       padding: 2px 10px;
     }
   }
+.flex-display {
+  display: flex;
+}
+.name-label {
+  margin: auto 2px;
+}
+.margin-right {
+  margin-right: 5px;
+}
+.flex-align-center {
+  align-self: center;
+}
 </style>
