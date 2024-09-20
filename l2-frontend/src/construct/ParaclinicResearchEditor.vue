@@ -81,6 +81,15 @@
               {{ d.title }}
             </option>
           </select>
+          <label
+            v-if="fte"
+            class="input-group-addon"
+          >
+            <input
+              type="checkbox"
+            >
+            Шаблоны по подразделению
+          </label>
         </div>
       </div>
       <div
@@ -1207,6 +1216,7 @@ export default {
       result_current_form: 0,
       info: '',
       hide: false,
+      template_by_department: false,
       cancel_do: false,
       loaded_pk: -2,
       site_type: null,
