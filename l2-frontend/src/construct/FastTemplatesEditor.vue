@@ -9,17 +9,17 @@
   >
     <span slot="header">Настройка шаблонов быстрого ввода ({{ title }})</span>
     <div
-      v-if="loaded"
       slot="body"
       style="min-height: 200px"
       class="directions-manage"
     >
       <div class="directions-sidebar">
-        <div v-if="byDepartment">
+        <div>
           <Treeselect
             v-model="department"
             class="treeselect-nbr treeselect-wide"
             :options="departments"
+            :clearable="false"
             placeholder="Выберите подразделение"
           />
         </div>
@@ -160,13 +160,6 @@
         </div>
       </div>
     </div>
-    <div
-      v-else
-      slot="body"
-      style="line-height: 200px;text-align: center"
-    >
-      Загрузка данных...
-    </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-8" />
@@ -223,7 +216,7 @@ export default {
       selected_template: -2,
       template_data: {},
       department: null,
-      departments: [],
+      departments: [{ id: 'all', label: 'Все' }],
     };
   },
   watch: {
@@ -239,9 +232,12 @@ export default {
         this.checked = true;
       }
     },
+    department() {
+      this.load_data();
+    },
   },
   created() {
-    this.load_data();
+    this.department = 'all';
     if (this.byDepartment) {
       this.loadDepartment();
     }
@@ -271,8 +267,12 @@ export default {
     load_data(selectAfter) {
       this.loaded = false;
       this.clear();
+      let department = null;
+      if (this.department !== 'all') {
+        department = this.department;
+      }
       this.$store.dispatch(actions.INC_LOADING);
-      researchesPoint.getFastTemplates({ pk: this.research_pk, all: true }).then(({ data }) => {
+      researchesPoint.getFastTemplates({ pk: this.research_pk, all: true, department }).then(({ data }) => {
         this.rows = data;
         if (selectAfter) {
           this.select_template(selectAfter);
@@ -286,7 +286,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       const { data } = await api('get-departments-with-exclude');
       this.$store.dispatch(actions.DEC_LOADING);
-      this.departments = data;
+      this.departments.push(...data);
     },
     select_template(pk) {
       if (pk === this.selected_template) return;

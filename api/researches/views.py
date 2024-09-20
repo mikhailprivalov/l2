@@ -9,6 +9,7 @@ from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 
+from api.directions.sql_func import get_template_research_by_department
 from api.researches.help_files.constructor_help import constructor_help_message
 from appconf.manager import SettingManager
 from directions.models import FrequencyOfUseResearches
@@ -712,28 +713,30 @@ def paraclinic_details(request):
 
 
 def fast_templates(request):
-    data = []
     request_data = json.loads(request.body)
+    research_id = request_data["pk"]
     is_all = request_data.get('all', False)
+    department_id = request_data.get('department')
 
-    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=request_data["pk"]))
+    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
 
-    rts = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"])
+    if department_id and is_all:
+        templates = get_template_research_by_department(research_id, department_id)
+    elif department_id and not is_all:
+        templates = get_template_research_by_department(research_id, department_id, hide=False)
+    else:
+        templates = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"])
+        if not is_all:
+            rts = templates.filter(hide=False)
 
-    if not is_all:
-        rts = rts.filter(hide=False)
+    result = [{
+        "pk": template.id,
+        "title": template.title,
+        "hide": template.hide,
+        "readonly": not is_all or template.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+    } for template in templates]
 
-    for rt in rts.order_by('pk'):
-        data.append(
-            {
-                "pk": rt.pk,
-                "title": rt.title,
-                "hide": rt.hide,
-                "readonly": not is_all or rt.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
-            }
-        )
-
-    return JsonResponse({"data": data})
+    return JsonResponse({"data": result})
 
 
 def fast_template_data(request):
