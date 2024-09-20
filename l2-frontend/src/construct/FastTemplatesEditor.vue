@@ -74,7 +74,7 @@
               <Treeselect
                 v-model="template_data.templateDepartmentsIds"
                 class="treeselect-nbr treeselect-wide"
-                :options="departments."
+                :options="departmentsForTemplate"
                 placeholder="Выберите подразделение"
                 :multiple="true"
               />
