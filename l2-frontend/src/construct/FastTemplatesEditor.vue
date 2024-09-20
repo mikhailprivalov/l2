@@ -297,7 +297,7 @@ export default {
     },
     async loadDepartment() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { data } = await api('get-departments-with-exclude');
+      const { data } = await api('get-departments-with-exclude', { exclude_type: [2] });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.departments.push(...data);
       this.departmentsForTemplate = data;

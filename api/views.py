@@ -3398,5 +3398,6 @@ def get_date_medical_examination(request):
 
 @login_required
 def get_departments_with_exclude(request):
-    departments = Podrazdeleniya.get_all_departments([2])
+    request_data = json.loads(request.body)
+    departments = Podrazdeleniya.get_all_departments(request_data.get("exclude"))
     return JsonResponse({"data": departments})
