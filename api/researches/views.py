@@ -717,6 +717,8 @@ def fast_templates(request):
     research_id = request_data["pk"]
     is_all = request_data.get('all', False)
     department_id = request_data.get('department')
+    if department_id == 'all':
+        department_id = None
 
     ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
 
@@ -727,7 +729,7 @@ def fast_templates(request):
     else:
         templates = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"])
         if not is_all:
-            rts = templates.filter(hide=False)
+            templates = templates.filter(hide=False)
 
     result = [{
         "pk": template.id,
