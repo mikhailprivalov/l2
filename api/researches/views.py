@@ -445,7 +445,7 @@ def researches_update(request):
         own_form_result = result_current_form > 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
-        templates_by_department = request_data.get("templates_by_department")
+        templates_by_department = request_data.get("templatesByDepartment")
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups", [])
         tube = request_data.get("tube", -1)

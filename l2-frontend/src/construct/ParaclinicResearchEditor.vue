@@ -58,6 +58,7 @@
             </button>
           </span>
           <label
+            v-if="(ex_dep === 12 || simple) && fte && ex_dep !== 14"
             class="input-group-addon"
           >
             <input
@@ -263,6 +264,7 @@
             </button>
           </span>
           <label
+            v-if="fte"
             class="input-group-addon"
           >
             <input
