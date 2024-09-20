@@ -1112,6 +1112,7 @@
       :title="title"
       :research_pk="loaded_pk"
       :groups="groups"
+      :by-department="templatesByDepartment"
     />
     <Localizations
       v-if="show_localization"

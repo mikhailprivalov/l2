@@ -15,6 +15,14 @@
       class="directions-manage"
     >
       <div class="directions-sidebar">
+        <div v-if="byDepartment">
+          <Treeselect
+            v-model="department"
+            class="treeselect-nbr treeselect-wide"
+            :options="departments"
+            placeholder="Выберите подразделение"
+          />
+        </div>
         <div class="inner">
           <div
             v-for="d in rows"
@@ -177,14 +185,18 @@
 </template>
 
 <script lang="ts">
+import Treeselect from '@riophae/vue-treeselect';
+
 import Modal from '@/ui-cards/Modal.vue';
 import MKBField from '@/fields/MKBField.vue';
 import researchesPoint from '@/api/researches-point';
 import * as actions from '@/store/action-types';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import api from '@/api';
 
 export default {
   name: 'FastTemplatesEditor',
-  components: { Modal, MKBField },
+  components: { Modal, MKBField, Treeselect },
   props: {
     research_pk: {
       type: Number,
@@ -198,6 +210,10 @@ export default {
       type: Array,
       required: true,
     },
+    byDepartment: {
+      type: Boolean,
+      required: false,
+    },
   },
   data() {
     return {
@@ -206,6 +222,8 @@ export default {
       checked: false,
       selected_template: -2,
       template_data: {},
+      department: null,
+      departments: [],
     };
   },
   watch: {
@@ -224,6 +242,9 @@ export default {
   },
   created() {
     this.load_data();
+    if (this.byDepartment) {
+      this.loadDepartment();
+    }
   },
   methods: {
     hide_modal() {
@@ -260,6 +281,12 @@ export default {
         this.$store.dispatch(actions.DEC_LOADING);
         this.loaded = true;
       });
+    },
+    async loadDepartment() {
+      this.$store.dispatch(actions.INC_LOADING);
+      const { data } = await api('get-departments-with-exclude');
+      this.$store.dispatch(actions.DEC_LOADING);
+      this.departments = data;
     },
     select_template(pk) {
       if (pk === this.selected_template) return;
@@ -341,7 +368,7 @@ export default {
     background: rgba(0, 0, 0, .04);
     border-right: 1px solid rgba(0, 0, 0, .16);
     position: relative;
-    padding-bottom: 34px;
+    padding-bottom: 36px;
     .inner {
       height: 100%;
       width: 100%;
