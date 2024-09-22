@@ -82,13 +82,16 @@ def get_shift_data(doctor_profile_id: int):
 
 
 def get_service_coasts(directions_ids: list):
-    if not directions_ids:
-        return []
+    result = {"ok": True, "message": "", "data": {}}
     directions_ids_typle = tuple(directions_ids)
     service_without_coast = False
     summ = 0
     coasts = []
+    if not PAY_FIN_SOURCE_ID:
+        result = {"ok": False, "message": "Не указан источник финансирования по умолчанию для оплаты", "data": {}}
     services = sql_func.get_services_by_directions(directions_ids_typle, PAY_FIN_SOURCE_ID)
+    if not services:
+        result = {"ok": False, "message": "Выбранные направления нельзя оплатить", "data": {}}
     services_ids = tuple([service.id for service in services])
     services_coasts = {
         service.id: {
@@ -126,7 +129,7 @@ def get_service_coasts(directions_ids: list):
 
     service_coasts = [i for i in services_coasts.values()]
 
-    result = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast}
+    result["data"] = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast}
 
     return result
 

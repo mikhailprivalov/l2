@@ -333,12 +333,17 @@ const totalServicesCoast = computed(() => {
 const noCoast = ref(true);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', {
+  const { ok, message, data } = await api('cash-register/get-services-coasts', {
     directionsIds: props.directionsIds,
   });
   await store.dispatch(actions.DEC_LOADING);
-  servicesCoasts.value = coasts;
-  noCoast.value = serviceWithoutCoast;
+  if (ok) {
+    const { coasts, serviceWithoutCoast } = data;
+    servicesCoasts.value = coasts;
+    noCoast.value = serviceWithoutCoast;
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 onMounted(async () => {
   await getServicesCoasts();
