@@ -69,6 +69,7 @@ def get_services_by_directions(directions_ids, fin_source_id):
         cursor.execute(
             """
             SELECT 
+            directions_napravleniya.id as direction_id,
             directory_researches.id,
             directory_researches.title,
             directory_researches.def_discount,

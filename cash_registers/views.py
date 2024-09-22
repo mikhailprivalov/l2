@@ -3,7 +3,7 @@ import pytz
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
-from directions.models import IstochnikiFinansirovaniya
+from directions.models import IstochnikiFinansirovaniya, Napravleniya
 from laboratory.settings import TIME_ZONE, PAY_FIN_SOURCE_ID
 from laboratory.utils import current_time
 
@@ -94,6 +94,7 @@ def get_service_coasts(directions_ids: list):
     if not services:
         result = {"ok": False, "message": "Выбранные направления нельзя оплатить", "data": {}}
         return result
+    paid_directions_ids = [service.id for service in services]
     services_ids = tuple([service.id for service in services])
     services_coasts = {
         service.id: {
@@ -131,14 +132,16 @@ def get_service_coasts(directions_ids: list):
 
     service_coasts = [i for i in services_coasts.values()]
 
-    result["data"] = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast}
+    result["data"] = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast, "paidDirectionsIds": paid_directions_ids}
 
     return result
 
 
-def payment(shift_id, service_coasts, total_coast, cash, received_cash, electronic, card_id):
+def payment(shift_id, service_coasts, total_coast, cash, received_cash, electronic, directions_ids):
     result = {"ok": True, "message": "", "cheqId": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
+    first_direction: Napravleniya = Napravleniya.objects.filter(pk=directions_ids[0]).first()
+    card_id = first_direction.client_id
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
     type_operations = Cheque.SELL

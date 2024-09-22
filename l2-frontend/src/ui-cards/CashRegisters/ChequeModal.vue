@@ -280,6 +280,7 @@ interface serviceCoast {
 }
 
 const servicesCoasts = ref<serviceCoast[]>([]);
+const paidDirections = ref([]);
 
 const changeDiscountRelative = (index: number, discountStatic: boolean, serviceObj: object = null) => {
   if (!loading.value && !discountStatic) {
@@ -338,9 +339,10 @@ const getServicesCoasts = async () => {
   });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    const { coasts, serviceWithoutCoast } = data;
+    const { coasts, serviceWithoutCoast, paidDirectionsIds } = data;
     servicesCoasts.value = coasts;
     noCoast.value = serviceWithoutCoast;
+    paidDirections.value = paidDirectionsIds;
   } else {
     root.$emit('msg', 'error', message);
   }
@@ -436,6 +438,7 @@ const payment = async () => {
       cash: paymentCash.value,
       receivedCash: receivedCash.value,
       electronic: paymentElectronic.value,
+      directionsIds: paidDirections.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     chequeId.value = cheqId;
