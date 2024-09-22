@@ -729,12 +729,15 @@ def fast_templates(request):
         templates = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"]).order_by('title')
         if not is_all:
             templates = templates.filter(hide=False)
-    result = [{
-        "pk": template.id,
-        "title": template.title,
-        "hide": template.hide,
-        "readonly": not is_all or template.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
-    } for template in templates]
+    result = [
+        {
+            "pk": template.id,
+            "title": template.title,
+            "hide": template.hide,
+            "readonly": not is_all or template.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+        }
+        for template in templates
+    ]
 
     return JsonResponse({"data": result})
 
