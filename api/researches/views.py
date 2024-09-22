@@ -718,7 +718,7 @@ def fast_templates(request):
     is_all = request_data.get('all', False)
     department_id = request_data.get('department')
 
-    default_temlate = ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
+    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
 
     if department_id and is_all:
         templates = get_template_research_by_department(research_id, department_id)
@@ -734,13 +734,6 @@ def fast_templates(request):
         "hide": template.hide,
         "readonly": not is_all or template.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
     } for template in templates]
-
-    result.insert(0, {
-        "pk": default_temlate.id,
-        "title": default_temlate.title,
-        "hide": default_temlate.hide,
-        "readonly": not is_all or default_temlate.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
-    })
 
     return JsonResponse({"data": result})
 
