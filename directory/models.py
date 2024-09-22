@@ -385,7 +385,7 @@ class Researches(models.Model):
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
     count_volume_material_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
-    is_template_by_department = models.BooleanField(default=False, help_text="Искать шаблон заполнения по подразделению")
+    templates_by_department = models.BooleanField(default=False, help_text="Искать шаблоны заполнения по подразделению")
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -1282,6 +1282,15 @@ class ParaclinicTemplateNameDepartment(models.Model):
 
     def __str__(self):
         return f"{self.template_name.title} - {self.department_id}"
+
+    @staticmethod
+    def get_departments_ids(template_name_id, all_departments, user_department_id):
+        if all_departments:
+            department_ids = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=template_name_id).values_list('department_id', flat=True)
+        else:
+            department_ids = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=template_name_id, department_id=user_department_id).values_list('department_id', flat=True)
+        result = list(department_ids)
+        return result
 
 
 class AutoAdd(models.Model):

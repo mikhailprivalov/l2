@@ -57,6 +57,16 @@
               Шаблоны быстрого ввода
             </button>
           </span>
+          <label
+            v-if="(ex_dep === 12 || simple) && fte && ex_dep !== 14"
+            class="input-group-addon"
+          >
+            <input
+              v-model="templatesByDepartment"
+              type="checkbox"
+            >
+            По подразделению
+          </label>
         </div>
         <div
           v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14 && ex_dep !== 15"
@@ -253,6 +263,16 @@
               Шаблоны быстрого ввода
             </button>
           </span>
+          <label
+            v-if="fte"
+            class="input-group-addon"
+          >
+            <input
+              v-model="templatesByDepartment"
+              type="checkbox"
+            >
+            По подразделению
+          </label>
         </div>
       </div>
       <div
@@ -1092,6 +1112,7 @@
       :title="title"
       :research_pk="loaded_pk"
       :groups="groups"
+      :by-department="templatesByDepartment"
     />
     <Localizations
       v-if="show_localization"
@@ -1207,6 +1228,7 @@ export default {
       result_current_form: 0,
       info: '',
       hide: false,
+      templatesByDepartment: false,
       cancel_do: false,
       loaded_pk: -2,
       site_type: null,
@@ -1581,6 +1603,7 @@ export default {
       this.code = '';
       this.info = '';
       this.hide = false;
+      this.templatesByDepartment = false;
       this.site_type = null;
       this.groups = [];
       this.direction_current_form = '';
@@ -1613,6 +1636,7 @@ export default {
             this.hospital_research_department_pk = data.department;
             this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
             this.hide = data.hide;
+            this.templatesByDepartment = data.templatesByDepartment;
             this.site_type = data.site_type;
             this.loaded_pk = this.pk;
             this.groups = data.groups;
@@ -1660,6 +1684,7 @@ export default {
         'is_global_direction_params',
         'code',
         'hide',
+        'templatesByDepartment',
         'groups',
         'site_type',
         'internal_code',

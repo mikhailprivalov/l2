@@ -9,6 +9,7 @@ from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 
+from api.directions.sql_func import get_template_research_by_department
 from api.researches.help_files.constructor_help import constructor_help_message
 from appconf.manager import SettingManager
 from directions.models import FrequencyOfUseResearches
@@ -29,6 +30,7 @@ from directory.models import (
     ServiceLocation,
     ResearchGroup,
     ReleationsFT,
+    ParaclinicTemplateNameDepartment,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
@@ -445,6 +447,7 @@ def researches_update(request):
         own_form_result = result_current_form > 0
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
+        templates_by_department = request_data.get("templatesByDepartment")
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups", [])
         tube = request_data.get("tube", -1)
@@ -477,6 +480,7 @@ def researches_update(request):
                     is_paraclinic=not desc and department.p_type == 3,
                     paraclinic_info=info,
                     hide=hide,
+                    templates_by_department=templates_by_department,
                     is_doc_refferal=department_pk == -2,
                     is_treatment=department_pk == -3,
                     is_stom=department_pk == -4,
@@ -539,6 +543,7 @@ def researches_update(request):
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide
+                res.templates_by_department = templates_by_department
                 res.site_type_id = site_type
                 res.internal_code = internal_code
                 res.uet_refferal_doc = uet_refferal_doc
@@ -709,38 +714,50 @@ def paraclinic_details(request):
 
 
 def fast_templates(request):
-    data = []
     request_data = json.loads(request.body)
+    research_id = request_data["pk"]
     is_all = request_data.get('all', False)
+    department_id = request_data.get('department')
 
-    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=request_data["pk"]))
+    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
 
-    rts = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"])
+    if department_id and is_all:
+        templates = get_template_research_by_department(research_id, department_id)
+    elif department_id and not is_all:
+        templates = get_template_research_by_department(research_id, department_id, hide="false")
+    else:
+        templates = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"]).order_by('title')
+        if not is_all:
+            templates = templates.filter(hide=False)
+    result = [
+        {
+            "pk": template.id,
+            "title": template.title,
+            "hide": template.hide,
+            "readonly": not is_all or template.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+        }
+        for template in templates
+    ]
 
-    if not is_all:
-        rts = rts.filter(hide=False)
-
-    for rt in rts.order_by('pk'):
-        data.append(
-            {
-                "pk": rt.pk,
-                "title": rt.title,
-                "hide": rt.hide,
-                "readonly": not is_all or rt.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
-            }
-        )
-
-    return JsonResponse({"data": data})
+    return JsonResponse({"data": result})
 
 
 def fast_template_data(request):
     request_data = json.loads(request.body)
-    p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
+    template_pk = request_data["pk"]
+    need_template_department = request_data.get("needTemplateDepartment")
+    all_departments = request_data.get("allDepartments")
+    user_department_id = request.user.doctorprofile.podrazdeleniye.pk
+    p = ParaclinicTemplateName.objects.get(pk=template_pk)
+    template_departments_ids = []
+    if need_template_department:
+        template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk, all_departments, user_department_id)
     data = {
         "readonly": p.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
         "hide": p.hide,
         "title": p.title,
         "fields": {},
+        "templateDepartmentsIds": template_departments_ids,
     }
 
     for pi in ParaclinicTemplateField.objects.filter(template_name=p).order_by('pk'):
@@ -754,14 +771,25 @@ def fast_template_data(request):
 def fast_template_save(request):
     request_data = json.loads(request.body)
     data = request_data["data"]
+    template_departments_ids = data.get("templateDepartmentsIds", [])
     if request_data["pk"] == -1:
         p = ParaclinicTemplateName(research=DResearches.objects.get(pk=request_data["research_pk"]), title=data["title"], hide=data["hide"])
         p.save()
+        for department in template_departments_ids:
+            new_template_depart = ParaclinicTemplateNameDepartment(template_name_id=p.pk, department_id=department)
+            new_template_depart.save()
     else:
         p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
         p.title = data["title"]
         p.hide = data["hide"]
         p.save()
+
+        template_department = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=p.pk)
+        template_department.delete()
+        for department in template_departments_ids:
+            new_template_depart = ParaclinicTemplateNameDepartment(template_name_id=p.pk, department_id=department)
+            new_template_depart.save()
+
     to_delete = []
     has = []
     for pi in ParaclinicTemplateField.objects.filter(template_name=p):
