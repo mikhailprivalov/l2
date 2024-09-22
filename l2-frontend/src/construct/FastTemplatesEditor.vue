@@ -72,6 +72,7 @@
                 <strong v-if="selected_template === -1">(новый шаблон)</strong>
               </div>
               <Treeselect
+                v-if="byDepartment"
                 v-model="template_data.templateDepartmentsIds"
                 class="treeselect-nbr treeselect-wide"
                 :options="departmentsForTemplate"

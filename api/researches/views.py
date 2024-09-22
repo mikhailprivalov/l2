@@ -721,7 +721,6 @@ def fast_templates(request):
     ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
 
     if department_id and is_all:
-        print('fdsfsd')
         templates = get_template_research_by_department(research_id, department_id)
     elif department_id and not is_all:
         templates = get_template_research_by_department(research_id, department_id, hide="false")
