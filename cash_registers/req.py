@@ -39,7 +39,7 @@ def check_cash_register(cash_register_data: dict, job_open_shift=False, job_clos
             if job_open_shift:
                 result = {"ok": False, "message": "Смена уже открыта на кассе и превышает 24 часа"}
             elif not job_close_shift:
-                result = {"ok": False, "message": "Смена уже открыта на кассе и превышает 24 часа"}
+                result = {"ok": False, "message": "Смена на кассе превышает 24 часа, необходимо закрыть смену"}
         if not device_status["paperPresent"]:
             result = {"ok": False, "message": "В кассе нет бумаги"}
         elif device_status["blocked"]:
