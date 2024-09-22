@@ -3,7 +3,7 @@
     ref="modal"
     show-footer="true"
     white-bg="true"
-    min-width="85%"
+    min-width="95%"
     margin-top
     @close="hide_modal"
   >
@@ -278,9 +278,10 @@ export default {
       };
       this.selected_template = -1;
     },
-    load_data(selectAfter) {
-      this.loaded = false;
-      this.clear();
+    load_data(selectAfter, clear = true) {
+      if (clear) {
+        this.clear();
+      }
       let department = null;
       if (this.department !== 'all') {
         department = this.department;
@@ -293,7 +294,6 @@ export default {
         }
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
-        this.loaded = true;
       });
     },
     async loadDepartment() {
@@ -305,7 +305,6 @@ export default {
     },
     select_template(pk) {
       if (pk === this.selected_template) return;
-      this.clear();
       this.$store.dispatch(actions.INC_LOADING);
       researchesPoint.getTemplateData({ pk }).then(({ data }) => {
         this.template_data = data;
@@ -327,17 +326,16 @@ export default {
       });
     },
     save() {
-      this.loaded = false;
       this.$store.dispatch(actions.INC_LOADING);
       researchesPoint.saveFastTemplate({
         pk: this.selected_template,
         data: this.template_data,
         research_pk: this.research_pk,
       }).then(({ pk }) => {
-        this.load_data(pk);
+        this.load_data(pk, false);
+        this.$root.$emit('msg', 'ok', 'Сохранено');
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
-        this.loaded = true;
       });
     },
   },
