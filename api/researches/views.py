@@ -29,7 +29,8 @@ from directory.models import (
     Localization,
     ServiceLocation,
     ResearchGroup,
-    ReleationsFT, ParaclinicTemplateNameDepartment,
+    ReleationsFT,
+    ParaclinicTemplateNameDepartment,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
