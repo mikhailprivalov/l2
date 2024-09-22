@@ -3,7 +3,7 @@ import pytz
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
-from directions.models import IstochnikiFinansirovaniya, Napravleniya
+from directions.models import IstochnikiFinansirovaniya
 from laboratory.settings import TIME_ZONE, PAY_FIN_SOURCE_ID
 from laboratory.utils import current_time
 
