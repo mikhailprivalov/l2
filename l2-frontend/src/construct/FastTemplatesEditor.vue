@@ -227,9 +227,10 @@ export default {
       selected_template: -2,
       template_data: {},
       department: null,
-      departments: [{ id: 'all', label: 'Все' }],
+      departments: [],
       departmentsForTemplate: [],
-      forDepartments: [],
+      showAllTemplate: false,
+      userDepartmentId: null,
     };
   },
   watch: {
@@ -250,9 +251,12 @@ export default {
     },
   },
   created() {
-    this.department = 'all';
     if (this.byDepartment) {
+      this.checkAdmin();
       this.loadDepartment();
+    } else {
+      this.departments.push({ id: 'all', label: 'Все' });
+      this.department = 'all';
     }
   },
   methods: {
@@ -299,13 +303,26 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { data } = await api('get-departments-with-exclude', { exclude_type: [2] });
       await this.$store.dispatch(actions.DEC_LOADING);
-      this.departments.push(...data);
-      this.departmentsForTemplate = data;
+      if (this.showAllTemplate) {
+        this.departments.push({ id: 'all', label: 'Все' });
+        this.departments.push(...data);
+        this.departmentsForTemplate = data;
+        this.department = 'all';
+      } else {
+        const userDepartment = data.find((department) => department.id === this.userDepartmentId);
+        this.departments.push(userDepartment);
+        this.departmentsForTemplate = userDepartment;
+        this.department = userDepartment.id;
+      }
     },
     select_template(pk) {
       if (pk === this.selected_template) return;
       this.$store.dispatch(actions.INC_LOADING);
-      researchesPoint.getTemplateData({ pk }).then(({ data }) => {
+      researchesPoint.getTemplateData({
+        pk,
+        allTemplate: this.showAllTemplate,
+        needTemplateDepartment: this.byDepartment,
+      }).then(({ data }) => {
         this.template_data = data;
         this.selected_template = pk;
       }).finally(() => {
@@ -336,6 +353,14 @@ export default {
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
       });
+    },
+    checkAdmin() {
+      this.userDepartmentId = this.$store.getters.user_data.department.pk;
+      const { groups } = this.$store.getters.user_data;
+      if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
+        || groups.includes('Admin')) {
+        this.showAllTemplate = true;
+      }
     },
   },
 };

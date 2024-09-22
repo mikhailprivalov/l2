@@ -741,8 +741,14 @@ def fast_templates(request):
 
 def fast_template_data(request):
     request_data = json.loads(request.body)
+    template_pk = request_data["pk"]
+    need_template_department = request_data.get("needTemplateDepartment")
+    all_template = request_data.get("allTemplate")
+    user_department_id = request.user.doctorprofile.podrazdeleniye.pk
     p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
-    template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk)
+    template_departments_ids = []
+    if need_template_department:
+        template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk, all_template, user_department_id)
     data = {
         "readonly": p.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
         "hide": p.hide,

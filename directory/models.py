@@ -1284,8 +1284,11 @@ class ParaclinicTemplateNameDepartment(models.Model):
         return f"{self.template_name.title} - {self.department_id}"
 
     @staticmethod
-    def get_departments_ids(template_name_id):
-        department_ids = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=template_name_id).values_list('department_id', flat=True)
+    def get_departments_ids(template_name_id, need_all, user_department_id):
+        if need_all:
+            department_ids = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=template_name_id).values_list('department_id', flat=True)
+        else:
+            department_ids = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=template_name_id, department_id=user_department_id).values_list('department_id', flat=True)
         result = list(department_ids)
         return result
 
