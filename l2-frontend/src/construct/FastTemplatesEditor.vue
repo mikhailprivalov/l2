@@ -72,7 +72,7 @@
                 <strong v-if="selected_template === -1">(новый шаблон)</strong>
               </div>
               <Treeselect
-                v-if="byDepartment"
+                v-if="byDepartment && !template_data.readonly && showAllDepartments"
                 v-model="template_data.templateDepartmentsIds"
                 class="treeselect-nbr treeselect-wide"
                 :options="departmentsForTemplate"
@@ -229,7 +229,7 @@ export default {
       department: null,
       departments: [],
       departmentsForTemplate: [],
-      showAllTemplate: false,
+      showAllDepartments: false,
       userDepartmentId: null,
     };
   },
@@ -278,8 +278,12 @@ export default {
         hide: false,
         readonly: false,
         fields: {},
+        templateDepartmentsIds: [],
       };
       this.selected_template = -1;
+      if (this.department !== 'all') {
+        this.template_data.templateDepartmentsIds.push(this.department);
+      }
     },
     load_data(selectAfter, clear = true) {
       if (clear) {
@@ -303,7 +307,7 @@ export default {
       await this.$store.dispatch(actions.INC_LOADING);
       const { data } = await api('get-departments-with-exclude', { exclude_type: [2] });
       await this.$store.dispatch(actions.DEC_LOADING);
-      if (this.showAllTemplate) {
+      if (this.showAllDepartments) {
         this.departments.push({ id: 'all', label: 'Все' });
         this.departments.push(...data);
         this.departmentsForTemplate = data;
@@ -311,7 +315,7 @@ export default {
       } else {
         const userDepartment = data.find((department) => department.id === this.userDepartmentId);
         this.departments.push(userDepartment);
-        this.departmentsForTemplate = userDepartment;
+        this.departmentsForTemplate.push(userDepartment);
         this.department = userDepartment.id;
       }
     },
@@ -320,7 +324,7 @@ export default {
       this.$store.dispatch(actions.INC_LOADING);
       researchesPoint.getTemplateData({
         pk,
-        allTemplate: this.showAllTemplate,
+        allDepartments: this.showAllDepartments,
         needTemplateDepartment: this.byDepartment,
       }).then(({ data }) => {
         this.template_data = data;
@@ -332,7 +336,11 @@ export default {
     copy_template(pk) {
       this.clear();
       this.$store.dispatch(actions.INC_LOADING);
-      researchesPoint.getTemplateData({ pk }).then(({ data }) => {
+      researchesPoint.getTemplateData({
+        pk,
+        allDepartments: this.showAllDepartments,
+        needTemplateDepartment: this.byDepartment,
+      }).then(({ data }) => {
         this.template_data = {
           ...data, title: '', hide: false, readonly: false,
         };
@@ -359,7 +367,7 @@ export default {
       const { groups } = this.$store.getters.user_data;
       if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
         || groups.includes('Admin')) {
-        this.showAllTemplate = true;
+        this.showAllDepartments = true;
       }
     },
   },

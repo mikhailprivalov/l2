@@ -718,7 +718,7 @@ def fast_templates(request):
     is_all = request_data.get('all', False)
     department_id = request_data.get('department')
 
-    ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
+    default_temlate = ParaclinicTemplateName.make_default(DResearches.objects.get(pk=research_id))
 
     if department_id and is_all:
         templates = get_template_research_by_department(research_id, department_id)
@@ -728,13 +728,19 @@ def fast_templates(request):
         templates = ParaclinicTemplateName.objects.filter(research__pk=request_data["pk"]).order_by('title')
         if not is_all:
             templates = templates.filter(hide=False)
-
     result = [{
         "pk": template.id,
         "title": template.title,
         "hide": template.hide,
         "readonly": not is_all or template.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
     } for template in templates]
+
+    result.insert(0, {
+        "pk": default_temlate.id,
+        "title": default_temlate.title,
+        "hide": default_temlate.hide,
+        "readonly": not is_all or default_temlate.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
+    })
 
     return JsonResponse({"data": result})
 
@@ -743,12 +749,12 @@ def fast_template_data(request):
     request_data = json.loads(request.body)
     template_pk = request_data["pk"]
     need_template_department = request_data.get("needTemplateDepartment")
-    all_template = request_data.get("allTemplate")
+    all_departments = request_data.get("allDepartments")
     user_department_id = request.user.doctorprofile.podrazdeleniye.pk
     p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
     template_departments_ids = []
     if need_template_department:
-        template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk, all_template, user_department_id)
+        template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk, all_departments, user_department_id)
     data = {
         "readonly": p.title == ParaclinicTemplateName.DEFAULT_TEMPLATE_TITLE,
         "hide": p.hide,
