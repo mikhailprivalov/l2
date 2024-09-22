@@ -30,6 +30,7 @@ from directions.models import (
     Result,
     IssledovaniyaFiles,
 )
+from directions.sql_func import get_tube_by_number
 from directory.sql_func import get_fsli_fractions_by_research_id
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
@@ -377,20 +378,21 @@ class FTPConnection:
 
         self.log("HL7 parsed")
         obr = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.OBR
-        external_add_order, iss_id = None, None
         is_confirm = False
-        if "L2" not in obr.OBR_2.OBR_2_1.value:
-            external_add_order = obr.OBR_2.OBR_2_1.value
-        else:
-            iss_id = (obr.OBR_2.OBR_2_1.value).split("_")[1]
+
         tube_number = obr.OBR_3.OBR_3_1.value
         internal_code = obr.OBR_4.OBR_4_4.value
         research_title = obr.OBR_4.OBR_4_5.value
 
-        if external_add_order:
-            iss = Issledovaniya.objects.filter(external_add_order__external_add_order=external_add_order).first()
-        else:
-            iss = Issledovaniya.objects.filter(id=iss_id).first()
+        tubes_sql = get_tube_by_number(tube_number)
+        iss = None
+        research_id = None
+        for i in tubes_sql:
+            if internal_code == i.research_internal_code:
+                iss = Issledovaniya.objects.filter(id=i.issledovaniye_id).first()
+                research_id = i.research_id
+                break
+
         if not iss:
             Log.log(
                 key=tube_number,
@@ -401,7 +403,7 @@ class FTPConnection:
             self.copy_file(file, FTP_PATH_TO_SAVE)
             self.delete_file(file)
             return
-        fractions_data = get_fsli_fractions_by_research_id(iss.research_id)
+        fractions_data = get_fsli_fractions_by_research_id(research_id)
         fractions_fsl = [i.fraction_fsli for i in fractions_data]
 
         doctor_family_confirm = obr.OBR_32.OBR_32_2.value
@@ -434,6 +436,7 @@ class FTPConnection:
                 file_name_internal_code = internal_code.replace(".", "_")
                 iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
                 iss_file.save()
+                continue
             elif (obx.OBX.obx_3.obx_3_1.value).lower() == "jpg":
                 tmp_fractions["jpg"] = obx.OBX.obx_5.obx_5_5.value
                 result.append(tmp_fractions.copy())

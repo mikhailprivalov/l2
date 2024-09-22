@@ -173,6 +173,27 @@ class ResParaclinicInputField(admin.ModelAdmin):
     )
 
 
+class ResParaclinicFieldTemplateDepartment(admin.ModelAdmin):
+    list_display = (
+        'paraclinic_field',
+        'research',
+        'department',
+    )
+    list_display_links = (
+        'paraclinic_field',
+        'research',
+        'department',
+    )
+
+
+class ResParaclinicTemplateDepartment(admin.ModelAdmin):
+    list_display = (
+        'template_name',
+        'department',
+    )
+    list_display_links = ('template_name', 'department')
+
+
 class ResParaclinicInputGroups(admin.ModelAdmin):
     list_display = (
         'title',
@@ -287,6 +308,7 @@ admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
 admin.site.register(models.ParaclinicInputGroups, ResParaclinicInputGroups)
 admin.site.register(models.ParaclinicInputField, ResParaclinicInputField)
+admin.site.register(models.ParaclinicFieldTemplateDepartment, ResParaclinicFieldTemplateDepartment)
 admin.site.register(models.References, RefAdmin)
 admin.site.register(models.ResultVariants)
 admin.site.register(models.MaterialVariants)
@@ -315,6 +337,7 @@ admin.site.register(models.SetResearch, SetResearchAdmin)
 admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
 admin.site.register(models.AuxService, SetAuxService)
 admin.site.register(models.ComplexService, SetComplexService)
+admin.site.register(models.ParaclinicTemplateNameDepartment, ResParaclinicTemplateDepartment)
 admin.site.register(models.LaboratoryMaterial)
 admin.site.register(models.SubGroupDirectory)
 admin.site.register(models.SubGroupPadrazdeleniye)
