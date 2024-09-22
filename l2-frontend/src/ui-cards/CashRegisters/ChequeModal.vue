@@ -447,6 +447,7 @@ const payment = async () => {
       await getChequeData();
     } else {
       root.$emit('msg', 'error', message);
+      loading.value = false;
     }
   }
 };
