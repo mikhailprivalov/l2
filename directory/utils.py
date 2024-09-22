@@ -44,6 +44,7 @@ def get_researches_details(pk):
         response["code"] = res.code
         response["info"] = res.paraclinic_info or ""
         response["hide"] = res.hide
+        response["templatesByDepartment"] = res.templates_by_department
         response["tube"] = res.microbiology_tube_id or -1
         response["site_type"] = res.site_type_id
         response["internal_code"] = res.internal_code

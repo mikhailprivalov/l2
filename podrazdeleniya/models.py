@@ -76,6 +76,14 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         result = [{"id": podrazdelenie.pk, "label": podrazdelenie.title} for podrazdelenie in Podrazdeleniya.objects.filter(p_type=p_type).order_by('title')]
         return result
 
+    @staticmethod
+    def get_all_departments(exclude=None):
+        type_exclude = [0]
+        if exclude:
+            type_exclude.extend(exclude)
+        result = [{"id": podrazdelenie.pk, "label": podrazdelenie.title} for podrazdelenie in Podrazdeleniya.objects.all().exclude(p_type__in=type_exclude).order_by('title')]
+        return result
+
     def __str__(self):
         return self.title
 
