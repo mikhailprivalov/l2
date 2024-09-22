@@ -296,21 +296,6 @@
           </tr>
         </tbody>
       </table>
-      <div v-if="show_additions && l2CashEnabled && pay_source">
-        <button
-          class="btn btn-blue-nb nbr"
-          @click="openChequeModal"
-        >
-          Оплата
-        </button>
-        <ChequeModal
-          v-if="showChequeModal"
-          :service-ids="researches"
-          :card-id="card_pk"
-          :fin-source-id="fin"
-          @closeModal="closeChequeModal"
-        />
-      </div>
     </div>
     <div
       v-if="pay_source && !create_and_open"
@@ -636,7 +621,6 @@ import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 import MKBField from '@/fields/MKBField.vue';
 import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
-import ChequeModal from '@/ui-cards/CashRegisters/ChequeModal.vue';
 
 import ResearchDisplay from './ResearchDisplay.vue';
 import Modal from './Modal.vue';
@@ -646,7 +630,6 @@ import SelectedResearchesParams from './SelectedResearchesParams.vue';
 export default {
   name: 'SelectedResearches',
   components: {
-    ChequeModal,
     SelectFieldTitled,
     ResearchDisplay,
     Modal,

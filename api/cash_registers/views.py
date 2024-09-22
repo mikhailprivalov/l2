@@ -51,7 +51,6 @@ def payment(request):
     cash = request_data["cash"]
     received_cash = request_data["receivedCash"]
     electronic = request_data["electronic"]
-    # card_id = request_data["cardId"]
     directions_ids = request_data["directionsIds"]
     result = cash_register_views.payment(shift_id, coasts, total_coast, cash, received_cash, electronic, directions_ids)
     return JsonResponse(result)
