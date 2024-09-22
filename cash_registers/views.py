@@ -87,6 +87,7 @@ def get_shift_data(doctor_profile_id: int):
                     result = job_result
             else:
                 result = check_cash_register
+                result["data"] = data
     return result
 
 
