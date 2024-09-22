@@ -62,3 +62,24 @@ def get_services(services_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_services_by_directions(directions_ids, fin_source_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            directory_researches.id,
+            directory_researches.title,
+            directory_researches.def_discount,
+            directory_researches.prior_discount
+            FROM directions_napravleniya
+            INNER JOIN directions_issledovaniya on directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+            INNER JOIN directory_researches on directions_issledovaniya.research_id = directory_researches.id
+            WHERE directions_napravleniya.id in %(directions_ids)s AND
+            directions_napravleniya.istochnik_f_id = %(fin_source_id)s
+            """,
+            params={"directions_ids": directions_ids, "fin_source_id": fin_source_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

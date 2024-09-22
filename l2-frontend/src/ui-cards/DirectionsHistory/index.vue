@@ -448,7 +448,7 @@
     />
     <ChequeModal
       v-if="showChequeModal"
-      :service-ids="checked"
+      :directions-ids="checked"
       @closeModal="closeChequeModal"
     />
   </div>
@@ -822,11 +822,9 @@ export default {
       window.open(`/ui/biomaterial/get#{%22pk%22:${directionId}}`, '_blank');
     },
     openChequeModal() {
-      console.log('ща откроем');
       this.showChequeModal = true;
     },
     closeChequeModal() {
-      console.log('за закроем');
       this.showChequeModal = false;
     },
   },

@@ -4,7 +4,7 @@
       show-footer="true"
       ignore-body
       white-bg="true"
-      max-width="710px"
+      max-width="810px"
       width="100%"
       margin-left-right="auto"
       @close="closeModal"
@@ -249,7 +249,11 @@ const emit = defineEmits(['closeModal']);
 const props = defineProps({
   serviceIds: {
     type: Array,
-    required: true,
+    required: false,
+  },
+  directionsIds: {
+    type: Array,
+    required: false,
   },
 });
 
@@ -330,7 +334,7 @@ const noCoast = ref(true);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', {
-    serviceIds: props.serviceIds,
+    directionsIds: props.directionsIds,
   });
   await store.dispatch(actions.DEC_LOADING);
   servicesCoasts.value = coasts;

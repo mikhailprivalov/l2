@@ -3,8 +3,8 @@ import pytz
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
-from directions.models import IstochnikiFinansirovaniya
-from laboratory.settings import TIME_ZONE
+from directions.models import IstochnikiFinansirovaniya, Napravleniya
+from laboratory.settings import TIME_ZONE, PAY_FIN_SOURCE_ID
 from laboratory.utils import current_time
 
 
@@ -81,14 +81,15 @@ def get_shift_data(doctor_profile_id: int):
     return result
 
 
-def get_service_coasts(service_ids: list, fin_source_id: int):
-    if not service_ids:
-        return
-    service_ids_tuple = tuple(service_ids)
+def get_service_coasts(directions_ids: list):
+    if not directions_ids:
+        return []
+    directions_ids_typle = tuple(directions_ids)
     service_without_coast = False
     summ = 0
     coasts = []
-    services = sql_func.get_services(service_ids_tuple)
+    services = sql_func.get_services_by_directions(directions_ids_typle, PAY_FIN_SOURCE_ID)
+    services_ids = tuple([service.id for service in services])
     services_coasts = {
         service.id: {
             "id": service.id,
@@ -103,10 +104,12 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
         }
         for service in services
     }
-    pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_id).select_related('contracts__price').first()
-    price_id = pay_fin_source.contracts.price.pk
-    if price_id:
-        coasts = sql_func.get_service_coasts(service_ids_tuple, price_id)
+
+    pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=PAY_FIN_SOURCE_ID).select_related('contracts').first()
+    if pay_fin_source:
+        price_id = pay_fin_source.contracts.price_id
+        if price_id:
+            coasts = sql_func.get_service_coasts(services_ids, price_id)
 
     for coast in coasts:
         service_coast = coast.coast
@@ -118,7 +121,7 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
         services_coasts[coast.research_id]["total"] = discounted_coast
         summ += coast.coast
 
-    if len(coasts) < len(service_ids):
+    if len(coasts) < len(services):
         service_without_coast = True
 
     service_coasts = [i for i in services_coasts.values()]
