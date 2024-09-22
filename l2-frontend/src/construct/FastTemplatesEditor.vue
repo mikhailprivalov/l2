@@ -223,7 +223,6 @@ export default {
   data() {
     return {
       rows: [],
-      loaded: false,
       checked: false,
       selected_template: -2,
       template_data: {},
