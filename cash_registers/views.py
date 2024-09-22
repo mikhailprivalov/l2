@@ -89,9 +89,11 @@ def get_service_coasts(directions_ids: list):
     coasts = []
     if not PAY_FIN_SOURCE_ID:
         result = {"ok": False, "message": "Не указан источник финансирования по умолчанию для оплаты", "data": {}}
+        return result
     services = sql_func.get_services_by_directions(directions_ids_typle, PAY_FIN_SOURCE_ID)
     if not services:
         result = {"ok": False, "message": "Выбранные направления нельзя оплатить", "data": {}}
+        return result
     services_ids = tuple([service.id for service in services])
     services_coasts = {
         service.id: {
