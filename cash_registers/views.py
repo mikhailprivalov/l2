@@ -63,7 +63,10 @@ def get_shift_data(doctor_profile_id: int):
 
         if uuid_data:
             cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
-            check_cash_register = cash_req.check_cash_register(cash_register_data)
+            if current_status == "Открывается":
+                check_cash_register = cash_req.check_cash_register(cash_register_data, job_open_shift=True)
+            else:
+                check_cash_register = cash_req.check_cash_register(cash_register_data, job_close_shift=True)
             if check_cash_register["ok"]:
                 job_result = cash_req.get_job_status(str(uuid_data), cash_register_data)
                 if job_result["ok"]:
