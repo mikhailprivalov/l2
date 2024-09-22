@@ -22,7 +22,8 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
     return response_data
 
 
-def check_cash_register(cash_register_data: dict, job_open_shift=False, job_close_shift=False):
+def check_cash_register(cash_register_data: dict, job_open_shift=False, job_close_shift=False, check=False):
+    # TODO, проверка на смену сложная, надо упростить, есть задача открытия сменя, закрытия, проверка статуса смен, чеки
     result = {"ok": True, "message": ""}
     cash_register_check = check_cash_register_status(cash_register_data)
     if cash_register_check["ok"]:
@@ -33,7 +34,7 @@ def check_cash_register(cash_register_data: dict, job_open_shift=False, job_clos
         elif device_status["shift"] == 'closed':
             if job_close_shift:
                 result = {"ok": False, "message": "На кассе смена закрыта"}
-            elif not job_open_shift:
+            elif not job_open_shift and not check:
                 result = {"ok": False, "message": "На кассе смена закрыта"}
         elif device_status["shift"] == 'expired':
             if job_open_shift:
