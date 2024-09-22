@@ -744,7 +744,7 @@ def fast_template_data(request):
     need_template_department = request_data.get("needTemplateDepartment")
     all_departments = request_data.get("allDepartments")
     user_department_id = request.user.doctorprofile.podrazdeleniye.pk
-    p = ParaclinicTemplateName.objects.get(pk=request_data["pk"])
+    p = ParaclinicTemplateName.objects.get(pk=template_pk)
     template_departments_ids = []
     if need_template_department:
         template_departments_ids = ParaclinicTemplateNameDepartment.get_departments_ids(p.pk, all_departments, user_department_id)
@@ -767,11 +767,11 @@ def fast_template_data(request):
 def fast_template_save(request):
     request_data = json.loads(request.body)
     data = request_data["data"]
-    for_departments = data.get("templateDepartmentsIds", [])
+    template_departments_ids = data.get("templateDepartmentsIds", [])
     if request_data["pk"] == -1:
         p = ParaclinicTemplateName(research=DResearches.objects.get(pk=request_data["research_pk"]), title=data["title"], hide=data["hide"])
         p.save()
-        for department in for_departments:
+        for department in template_departments_ids:
             new_template_depart = ParaclinicTemplateNameDepartment(template_name_id=p.pk, department_id=department)
             new_template_depart.save()
     else:
@@ -782,7 +782,7 @@ def fast_template_save(request):
 
         template_department = ParaclinicTemplateNameDepartment.objects.filter(template_name_id=p.pk)
         template_department.delete()
-        for department in for_departments:
+        for department in template_departments_ids:
             new_template_depart = ParaclinicTemplateNameDepartment(template_name_id=p.pk, department_id=department)
             new_template_depart.save()
 
