@@ -19,7 +19,6 @@ def open_shift(cash_register_id: int, doctor_profile_id: int):
         shift_job_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
         operator_data, cash_register_data, uuid_data = shift_job_data["operator_data"], shift_job_data["cash_register_data"], shift_job_data["uuid_data"]
         job_body = Shift.create_job_json(cash_register_data, uuid_data, operator_data)
-        print('начали открывать')
         check_cash_register = cash_req.check_cash_register(cash_register_data, job_open_shift=True)
         if check_cash_register["ok"]:
             job_result = cash_req.send_job(job_body)
