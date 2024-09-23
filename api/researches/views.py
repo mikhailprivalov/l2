@@ -673,7 +673,6 @@ def researches_details(request):
     pk = request_data.get("pk")
     templates_department_pk = request_data.get("departmentForTemplatesField")
     response = get_researches_details(pk, templates_department_pk)
-
     return JsonResponse(response)
 
 

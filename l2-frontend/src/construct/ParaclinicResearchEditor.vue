@@ -94,7 +94,7 @@
           </select>
         </div>
         <div
-          v-if="templatesByDepartment && !has_unsaved && loaded_pk > 0"
+          v-if="templatesByDepartment && loaded_pk > 0"
           class="input-group"
         >
           <span class="input-group-addon">Подразделения для шаблонов</span>
@@ -102,7 +102,7 @@
             v-model="departmentForTemplatesField"
             class="treeselect-nbr treeselect-wide"
             :options="departmentsForTemplatesField"
-            :clearable="false"
+            :clearable="true"
             placeholder="Выберите подразделение"
             @input="changeTemplateField"
           />
@@ -1631,7 +1631,6 @@ export default {
       this.code = '';
       this.info = '';
       this.hide = false;
-      this.templatesByDepartment = false;
       this.site_type = null;
       this.groups = [];
       this.direction_current_form = '';
@@ -1643,7 +1642,7 @@ export default {
       this.type_period = null;
       if (this.pk >= 0) {
         await this.$store.dispatch(actions.INC_LOADING);
-        const data = await constructPoint.researchDetails(this, 'pk', 'departmentForTemplatesField');
+        const data = await constructPoint.researchDetails(this, ['pk', 'departmentForTemplatesField']);
         await this.$store.dispatch(actions.DEC_LOADING);
         this.title = data.title;
         this.short_title = data.short_title;

@@ -66,11 +66,10 @@ def get_researches_details(pk, templates_department_pk=None):
         if res.is_direction_params:
             response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
 
-        templates_fields_data = None
+        templates_fields_data = {}
         if res.templates_by_department and templates_department_pk:
             templates_fields = get_template_field_by_department(res.pk, templates_department_pk)
             templates_fields_data = {template.field_id: template.value for template in templates_fields}
-
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {
                 "pk": group.pk,
@@ -97,7 +96,7 @@ def get_researches_details(pk, templates_department_pk=None):
                         "default": field.default_value,
                         "visibility": field.visibility,
                         "hide": field.hide,
-                        "values_to_input": json.loads(field.input_templates) if not templates_fields_data else json.loads(templates_fields_data.get(field.pk)),
+                        "values_to_input": json.loads(field.input_templates) if not templates_department_pk else json.loads(templates_fields_data.get(field.pk, '[]')),
                         "field_type": field.field_type,
                         "can_edit": field.can_edit_computed,
                         "required": field.required,
