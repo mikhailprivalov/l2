@@ -1707,6 +1707,7 @@ export default {
         'code',
         'hide',
         'templatesByDepartment',
+        'departmentForTemplatesField',
         'groups',
         'site_type',
         'internal_code',

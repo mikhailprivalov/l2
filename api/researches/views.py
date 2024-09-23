@@ -30,7 +30,7 @@ from directory.models import (
     ServiceLocation,
     ResearchGroup,
     ReleationsFT,
-    ParaclinicTemplateNameDepartment,
+    ParaclinicTemplateNameDepartment, ParaclinicFieldTemplateDepartment,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
@@ -448,6 +448,7 @@ def researches_update(request):
         info = request_data.get("info", "").strip()
         hide = request_data.get("hide")
         templates_by_department = request_data.get("templatesByDepartment")
+        department_template_pk = request_data.get("departmentForTemplatesField")
         site_type = request_data.get("site_type", None)
         groups = request_data.get("groups", [])
         tube = request_data.get("tube", -1)
@@ -601,6 +602,8 @@ def researches_update(request):
                         g.fields_inline = group.get("fieldsInline", False)
                     if g:
                         g.save()
+
+                        department_template_field = None
                         for field in group["fields"]:
                             f = None
                             pk = field["pk"]
@@ -617,7 +620,7 @@ def researches_update(request):
                                     hide=field["hide"],
                                     default_value=field["default"],
                                     visibility=field.get("visibility", ""),
-                                    input_templates=json.dumps(field["values_to_input"]),
+                                    input_templates=json.dumps(field["values_to_input"]) if not department_template_pk else json.dumps([]),
                                     field_type=field.get("field_type", 0),
                                     can_edit_computed=field.get("can_edit", False),
                                     helper=field.get("helper", ''),
@@ -629,6 +632,13 @@ def researches_update(request):
                                     cda_option_id=field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None,
                                     patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None,
                                 )
+                                if department_template_pk:
+                                    department_template_field = ParaclinicFieldTemplateDepartment(
+                                        paraclinic_field_id=f.pk,
+                                        research_id=res.pk,
+                                        department_id=department_template_pk,
+                                        value=json.dumps(field["values_to_input"])
+                                    )
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
@@ -641,7 +651,7 @@ def researches_update(request):
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.visibility = field.get("visibility", "")
-                                f.input_templates = json.dumps(field["values_to_input"])
+                                f.input_templates = json.dumps(field["values_to_input"]) if not department_template_pk else json.dumps('[]')
                                 f.field_type = field.get("field_type", 0)
                                 f.can_edit_computed = field.get("can_edit", False)
                                 f.required = field.get("required", False)
@@ -654,8 +664,22 @@ def researches_update(request):
                                 f.control_param = field.get("controlParam", '')
                                 f.patient_control_param_id = field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None
                                 f.cda_option_id = field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None
+
+                                if department_template_pk:
+                                    department_template_field: ParaclinicFieldTemplateDepartment = ParaclinicFieldTemplateDepartment.objects.filter(pk=f.pk).first()
+                                    if department_template_field:
+                                        department_template_field.value = json.dumps(field["values_to_input"])
+                                    else:
+                                        department_template_field = ParaclinicFieldTemplateDepartment(
+                                            paraclinic_field_id=f.pk,
+                                            research_id=res.pk,
+                                            department_id=department_template_pk,
+                                            value=json.dumps(field["values_to_input"])
+                                        )
                             if f:
                                 f.save()
+                                if department_template_field:
+                                    department_template_field.save()
 
                             if f.default_value == '':
                                 continue
