@@ -19,7 +19,7 @@
             v-model="department"
             class="treeselect-nbr treeselect-wide"
             :options="departments"
-            :clearable="false"
+            :clearable="true"
             placeholder="Выберите подразделение"
           />
         </div>
@@ -259,12 +259,11 @@ export default {
     },
   },
   created() {
-    this.department = this.departments[0].id;
+    this.load_data();
     if (this.byDepartment) {
-      if (this.showAllDepartments) {
-        this.departmentsForTemplate = this.departments;
-      } else {
-        this.departmentsForTemplate = this.departments.slice(1);
+      this.departmentsForTemplate = this.departments;
+      if (!this.showAllDepartments) {
+        this.department = this.departments[0].id;
       }
     }
   },
@@ -299,7 +298,7 @@ export default {
         this.clear();
       }
       let department = null;
-      if (this.department !== -1) {
+      if (this.department) {
         department = this.department;
       }
       this.$store.dispatch(actions.INC_LOADING);

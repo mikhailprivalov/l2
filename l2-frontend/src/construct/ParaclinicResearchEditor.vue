@@ -103,6 +103,7 @@
             :options="departmentsForTemplatesField"
             :clearable="false"
             placeholder="Выберите подразделение"
+            @input="changeTemplateField"
           />
         </div>
       </div>
@@ -1376,8 +1377,8 @@ export default {
       await this.checkShowAllTemplates();
       await this.loadDepartmentsForTemplate();
     } else {
-      this.departmentsForTemplatesField = [{ id: -1, label: 'Не выбрано' }];
-      this.departmentForTemplatesField = -1;
+      this.departmentsForTemplatesField = [];
+      // this.departmentForTemplatesField = null;
     }
     await this.load_deparments();
     await this.loadDynamicDirectories();
@@ -1759,9 +1760,8 @@ export default {
       const { data } = await this.$api('get-departments-with-exclude', { exclude_type: [2] });
       await this.$store.dispatch(actions.DEC_LOADING);
       if (this.showAllDepartmentForTemplateField) {
-        this.departmentsForTemplatesField.push({ id: -1, label: 'Не выбрано' });
         this.departmentsForTemplatesField.push(...data);
-        this.departmentForTemplatesField = -1;
+        // this.departmentForTemplatesField = null;
       } else {
         const userDepartment = data.find((department) => department.id === this.userDepartmentId);
         this.departmentsForTemplatesField.push(userDepartment);
@@ -1775,6 +1775,9 @@ export default {
         || groups.includes('Admin')) {
         this.showAllDepartmentForTemplateField = true;
       }
+    },
+    changeTemplateField() {
+      console.log('мы вызвали смену шаблонов');
     },
   },
 };
