@@ -4,7 +4,7 @@
       show-footer="true"
       ignore-body
       white-bg="true"
-      max-width="710px"
+      max-width="810px"
       width="100%"
       margin-left-right="auto"
       @close="closeModal"
@@ -134,7 +134,7 @@
               </tfoot>
             </table>
           </div>
-          <div v-if="cardIsSelected && !noCoast">
+          <div v-if="!noCoast">
             <div class="flex-space">
               <div class="flex">
                 <div class="input-width">
@@ -201,11 +201,6 @@
               <h5>Сдача: {{ cashReturn }}</h5>
             </div>
           </div>
-          <div v-if="!cardIsSelected">
-            <h4 class="text-red text-center">
-              Пациент не выбран
-            </h4>
-          </div>
           <div v-if="noCoast">
             <h4 class="text-red text-center">
               Не все услуги имеют цену
@@ -254,21 +249,16 @@ const emit = defineEmits(['closeModal']);
 const props = defineProps({
   serviceIds: {
     type: Array,
-    required: true,
+    required: false,
   },
-  cardId: {
-    type: Number,
-    required: true,
-  },
-  finSourceId: {
-    type: Number,
-    required: true,
+  directionsIds: {
+    type: Array,
+    required: false,
   },
 });
 
 const cashRegister = computed(() => store.getters.cashRegisterShift);
 const shiftIsOpen = computed(() => !!cashRegister.value?.cashRegisterId);
-const cardIsSelected = computed(() => props.cardId !== -1);
 const loading = ref(false);
 
 const closeModal = () => {
@@ -290,6 +280,7 @@ interface serviceCoast {
 }
 
 const servicesCoasts = ref<serviceCoast[]>([]);
+const paidDirections = ref([]);
 
 const changeDiscountRelative = (index: number, discountStatic: boolean, serviceObj: object = null) => {
   if (!loading.value && !discountStatic) {
@@ -343,13 +334,18 @@ const totalServicesCoast = computed(() => {
 const noCoast = ref(true);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { coasts, serviceWithoutCoast } = await api('cash-register/get-services-coasts', {
-    serviceIds: props.serviceIds,
-    finSourceId: props.finSourceId,
+  const { ok, message, data } = await api('cash-register/get-services-coasts', {
+    directionsIds: props.directionsIds,
   });
   await store.dispatch(actions.DEC_LOADING);
-  servicesCoasts.value = coasts;
-  noCoast.value = serviceWithoutCoast;
+  if (ok) {
+    const { coasts, serviceWithoutCoast, paidDirectionsIds } = data;
+    servicesCoasts.value = coasts;
+    noCoast.value = serviceWithoutCoast;
+    paidDirections.value = paidDirectionsIds;
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 onMounted(async () => {
   await getServicesCoasts();
@@ -442,7 +438,7 @@ const payment = async () => {
       cash: paymentCash.value,
       receivedCash: receivedCash.value,
       electronic: paymentElectronic.value,
-      cardId: props.cardId,
+      directionsIds: paidDirections.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     chequeId.value = cheqId;
@@ -451,6 +447,7 @@ const payment = async () => {
       await getChequeData();
     } else {
       root.$emit('msg', 'error', message);
+      loading.value = false;
     }
   }
 };

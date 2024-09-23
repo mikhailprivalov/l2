@@ -81,6 +81,13 @@ const menuItems = [
       this.$root.$emit('directions:need_order_redirection', this.checked);
     },
   },
+  {
+    title: 'Оплатить',
+    requiredModule: 'l2_cash',
+    handler() {
+      this.$root.$emit('cheque:open_form', this.checked);
+    },
+  },
 ];
 
 export default {

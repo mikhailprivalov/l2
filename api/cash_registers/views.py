@@ -38,7 +38,7 @@ def get_shift_data(request):
 @login_required
 def get_services_coasts(request):
     request_data = json.loads(request.body)
-    result = cash_register_views.get_service_coasts(request_data["serviceIds"], request_data["finSourceId"])
+    result = cash_register_views.get_service_coasts(request_data["directionsIds"])
     return JsonResponse(result)
 
 
@@ -51,8 +51,8 @@ def payment(request):
     cash = request_data["cash"]
     received_cash = request_data["receivedCash"]
     electronic = request_data["electronic"]
-    card_id = request_data["cardId"]
-    result = cash_register_views.payment(shift_id, coasts, total_coast, cash, received_cash, electronic, card_id)
+    directions_ids = request_data["directionsIds"]
+    result = cash_register_views.payment(shift_id, coasts, total_coast, cash, received_cash, electronic, directions_ids)
     return JsonResponse(result)
 
 

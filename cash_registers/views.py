@@ -3,8 +3,8 @@ import pytz
 from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
 import cash_registers.req as cash_req
 import cash_registers.sql_func as sql_func
-from directions.models import IstochnikiFinansirovaniya
-from laboratory.settings import TIME_ZONE
+from directions.models import IstochnikiFinansirovaniya, Napravleniya
+from laboratory.settings import TIME_ZONE, PAY_FIN_SOURCE_ID
 from laboratory.utils import current_time
 
 
@@ -15,35 +15,41 @@ def get_cash_registers():
 
 def open_shift(cash_register_id: int, doctor_profile_id: int):
     result = {"ok": True, "message": ""}
-    shift_job_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
-    operator_data, cash_register_data, uuid_data = shift_job_data["operator_data"], shift_job_data["cash_register_data"], shift_job_data["uuid_data"]
-    job_body = Shift.create_job_json(cash_register_data, uuid_data, operator_data)
-    check_cash_register = cash_req.check_cash_register(cash_register_data)
-    if check_cash_register["ok"]:
-        job_result = cash_req.send_job(job_body)
-        if job_result["ok"]:
-            Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
+    if cash_register_id:
+        shift_job_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
+        operator_data, cash_register_data, uuid_data = shift_job_data["operator_data"], shift_job_data["cash_register_data"], shift_job_data["uuid_data"]
+        job_body = Shift.create_job_json(cash_register_data, uuid_data, operator_data)
+        check_cash_register = cash_req.check_cash_register(cash_register_data, job_open_shift=True)
+        if check_cash_register["ok"]:
+            job_result = cash_req.send_job(job_body)
+            if job_result["ok"]:
+                Shift.open_shift(str(uuid_data), cash_register_id, doctor_profile_id)
+            else:
+                result = job_result
         else:
-            result = job_result
+            result = check_cash_register
     else:
-        result = check_cash_register
+        result = {"ok": False, "message": "Не выбрана касса"}
     return result
 
 
 def close_shift(cash_register_id: int, doctor_profile_id: int):
     result = {"ok": True, "message": ""}
-    shift_job_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
-    operator_data, cash_register_data, uuid_data = shift_job_data["operator_data"], shift_job_data["cash_register_data"], shift_job_data["uuid_data"]
-    job_body = Shift.create_job_json(cash_register_data, uuid_data, operator_data, "closeShift")
-    check_cash_register = cash_req.check_cash_register(cash_register_data)
-    if check_cash_register["ok"]:
-        job_result = cash_req.send_job(job_body)
-        if job_result["ok"]:
-            Shift.close_shift(uuid_data, cash_register_id, doctor_profile_id)
+    if cash_register_id:
+        shift_job_data = Shift.get_shift_job_data(doctor_profile_id, cash_register_id)
+        operator_data, cash_register_data, uuid_data = shift_job_data["operator_data"], shift_job_data["cash_register_data"], shift_job_data["uuid_data"]
+        job_body = Shift.create_job_json(cash_register_data, uuid_data, operator_data, "closeShift")
+        check_cash_register = cash_req.check_cash_register(cash_register_data, job_close_shift=True)
+        if check_cash_register["ok"]:
+            job_result = cash_req.send_job(job_body)
+            if job_result["ok"]:
+                Shift.close_shift(uuid_data, cash_register_id, doctor_profile_id)
+            else:
+                result = job_result
         else:
-            result = job_result
+            result = check_cash_register
     else:
-        result = check_cash_register
+        result = {"ok": False, "message": "Не выбрана касса"}
     return result
 
 
@@ -63,7 +69,10 @@ def get_shift_data(doctor_profile_id: int):
 
         if uuid_data:
             cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
-            check_cash_register = cash_req.check_cash_register(cash_register_data)
+            if current_status == "Открывается":
+                check_cash_register = cash_req.check_cash_register(cash_register_data, check=True)
+            else:
+                check_cash_register = cash_req.check_cash_register(cash_register_data, check=True)
             if check_cash_register["ok"]:
                 job_result = cash_req.get_job_status(str(uuid_data), cash_register_data)
                 if job_result["ok"]:
@@ -78,17 +87,25 @@ def get_shift_data(doctor_profile_id: int):
                     result = job_result
             else:
                 result = check_cash_register
+                result["data"] = data
     return result
 
 
-def get_service_coasts(service_ids: list, fin_source_id: int):
-    if not service_ids:
-        return
-    service_ids_tuple = tuple(service_ids)
+def get_service_coasts(directions_ids: list):
+    result = {"ok": True, "message": "", "data": {}}
+    directions_ids_typle = tuple(directions_ids)
     service_without_coast = False
     summ = 0
     coasts = []
-    services = sql_func.get_services(service_ids_tuple)
+    if not PAY_FIN_SOURCE_ID:
+        result = {"ok": False, "message": "Не указан источник финансирования для оплаты", "data": {}}
+        return result
+    services = sql_func.get_services_by_directions(directions_ids_typle, PAY_FIN_SOURCE_ID)
+    if not services:
+        result = {"ok": False, "message": "Выбранные направления нельзя оплатить", "data": {}}
+        return result
+    paid_directions_ids = [service.id for service in services]
+    services_ids = tuple([service.id for service in services])
     services_coasts = {
         service.id: {
             "id": service.id,
@@ -103,10 +120,12 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
         }
         for service in services
     }
-    pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_id).select_related('contracts__price').first()
-    price_id = pay_fin_source.contracts.price.pk
-    if price_id:
-        coasts = sql_func.get_service_coasts(service_ids_tuple, price_id)
+
+    pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=PAY_FIN_SOURCE_ID).select_related('contracts').first()
+    if pay_fin_source:
+        price_id = pay_fin_source.contracts.price_id
+        if price_id:
+            coasts = sql_func.get_service_coasts(services_ids, price_id)
 
     for coast in coasts:
         service_coast = coast.coast
@@ -118,19 +137,21 @@ def get_service_coasts(service_ids: list, fin_source_id: int):
         services_coasts[coast.research_id]["total"] = discounted_coast
         summ += coast.coast
 
-    if len(coasts) < len(service_ids):
+    if len(coasts) < len(services):
         service_without_coast = True
 
     service_coasts = [i for i in services_coasts.values()]
 
-    result = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast}
+    result["data"] = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast, "paidDirectionsIds": paid_directions_ids}
 
     return result
 
 
-def payment(shift_id, service_coasts, total_coast, cash, received_cash, electronic, card_id):
+def payment(shift_id, service_coasts, total_coast, cash, received_cash, electronic, directions_ids):
     result = {"ok": True, "message": "", "cheqId": None}
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
+    first_direction: Napravleniya = Napravleniya.objects.filter(pk=directions_ids[0]).first()
+    card_id = first_direction.client_id
     cash_register_data = CashRegister.get_meta_data(cash_register_obj=shift.cash_register)
     uuid_data = str(uuid.uuid4())
     type_operations = Cheque.SELL

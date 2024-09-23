@@ -22,11 +22,25 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
     return response_data
 
 
-def check_cash_register(cash_register_data: dict):
+def check_cash_register(cash_register_data: dict, job_open_shift=False, job_close_shift=False, check=False):
+    # TODO, проверка на смену сложная, надо упростить, есть задача открытия сменя, закрытия, проверка статуса смен, чеки
     result = {"ok": True, "message": ""}
     cash_register_check = check_cash_register_status(cash_register_data)
     if cash_register_check["ok"]:
         device_status = cash_register_check["data"]["deviceStatus"]
+        if device_status["shift"] == 'opened':
+            if job_open_shift:
+                result = {"ok": False, "message": "На кассе уже открыта смена"}
+        elif device_status["shift"] == 'closed':
+            if job_close_shift:
+                result = {"ok": False, "message": "На кассе смена закрыта"}
+            elif not job_open_shift and not check:
+                result = {"ok": False, "message": "На кассе смена закрыта"}
+        elif device_status["shift"] == 'expired':
+            if job_open_shift:
+                result = {"ok": False, "message": "Смена уже открыта на кассе и превышает 24 часа"}
+            elif not job_close_shift:
+                result = {"ok": False, "message": "Смена на кассе превышает 24 часа, необходимо закрыть смену"}
         if not device_status["paperPresent"]:
             result = {"ok": False, "message": "В кассе нет бумаги"}
         elif device_status["blocked"]:
