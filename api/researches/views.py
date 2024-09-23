@@ -677,7 +677,7 @@ def researches_update(request):
                                             value=json.dumps(field["values_to_input"])
                                         )
                                 else:
-                                    f.input_templates = json.dumps(field["values_to_input"]),
+                                    f.input_templates = json.dumps(field["values_to_input"])
                             if f:
                                 f.save()
                                 if department_template_field:
