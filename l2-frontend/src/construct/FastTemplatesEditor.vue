@@ -292,7 +292,7 @@ export default {
         this.clear();
       }
       let department = null;
-      if (this.department !== '-1') {
+      if (this.department !== -1) {
         department = this.department;
       }
       this.$store.dispatch(actions.INC_LOADING);
