@@ -621,7 +621,7 @@ def get_template_research_by_department(research_id, department_id, hide="true")
                 directory_paraclinictemplatenamedepartment.department_id = %(department_id)s AND
                 (directory_paraclinictemplatename.hide = %(hide)s or directory_paraclinictemplatename.hide = false)
                 
-                ORDER BY directory_paraclinictemplatename.title
+                ORDER BY directory_paraclinictemplatename.id
                 
                 
             """,
