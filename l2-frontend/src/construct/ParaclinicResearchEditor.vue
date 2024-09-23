@@ -64,6 +64,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
+              :disabled="has_unsaved || loaded_pk < 0"
             >
             По подразделению
           </label>
@@ -93,7 +94,7 @@
           </select>
         </div>
         <div
-          v-if="templatesByDepartment"
+          v-if="templatesByDepartment && !has_unsaved && loaded_pk > 0"
           class="input-group"
         >
           <span class="input-group-addon">Подразделения для шаблонов</span>
@@ -1378,7 +1379,6 @@ export default {
       await this.loadDepartmentsForTemplate();
     } else {
       this.departmentsForTemplatesField = [];
-      // this.departmentForTemplatesField = null;
     }
     await this.load_deparments();
     await this.loadDynamicDirectories();
@@ -1643,7 +1643,7 @@ export default {
       this.type_period = null;
       if (this.pk >= 0) {
         await this.$store.dispatch(actions.INC_LOADING);
-        const data = await constructPoint.researchDetails(this, 'pk');
+        const data = await constructPoint.researchDetails(this, 'pk', 'departmentForTemplatesField');
         await this.$store.dispatch(actions.DEC_LOADING);
         this.title = data.title;
         this.short_title = data.short_title;
@@ -1761,7 +1761,6 @@ export default {
       await this.$store.dispatch(actions.DEC_LOADING);
       if (this.showAllDepartmentForTemplateField) {
         this.departmentsForTemplatesField.push(...data);
-        // this.departmentForTemplatesField = null;
       } else {
         const userDepartment = data.find((department) => department.id === this.userDepartmentId);
         this.departmentsForTemplatesField.push(userDepartment);
@@ -1776,8 +1775,9 @@ export default {
         this.showAllDepartmentForTemplateField = true;
       }
     },
-    changeTemplateField() {
+    async changeTemplateField() {
       console.log('мы вызвали смену шаблонов');
+      await this.load();
     },
   },
 };

@@ -671,7 +671,8 @@ def researches_update(request):
 def researches_details(request):
     request_data = json.loads(request.body)
     pk = request_data.get("pk")
-    response = get_researches_details(pk)
+    templates_department_pk = request_data.get("departmentForTemplatesField")
+    response = get_researches_details(pk, templates_department_pk)
 
     return JsonResponse(response)
 
