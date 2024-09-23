@@ -261,7 +261,7 @@ export default {
   created() {
     this.department = this.departments[0].id;
     if (this.byDepartment) {
-      if (this.userDepartmentId) {
+      if (this.showAllDepartments) {
         this.departmentsForTemplate = this.departments;
       } else {
         this.departmentsForTemplate = this.departments.slice(1);
@@ -400,7 +400,7 @@ export default {
     position: relative;
     padding-bottom: 36px;
     .inner {
-      height: 100%;
+      height: calc(100% - 36px);
       width: 100%;
       overflow-y: auto;
       overflow-x: hidden;
