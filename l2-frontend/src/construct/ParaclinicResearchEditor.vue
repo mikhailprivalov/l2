@@ -1126,6 +1126,9 @@
       :research_pk="loaded_pk"
       :groups="groups"
       :by-department="templatesByDepartment"
+      :departments="departmentsForTemplatesField"
+      :show-all-departments="showAllDepartmentForTemplateField"
+      :user-department-id="userDepartmentId"
     />
     <Localizations
       v-if="show_localization"
@@ -1372,6 +1375,9 @@ export default {
     if (this.templatesByDepartment) {
       await this.checkShowAllTemplates();
       await this.loadDepartmentsForTemplate();
+    } else {
+      this.departmentsForTemplatesField = [{ id: -1, label: 'Не выбрано' }];
+      this.departmentForTemplatesField = -1;
     }
     await this.load_deparments();
     await this.loadDynamicDirectories();
