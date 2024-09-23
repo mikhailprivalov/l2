@@ -620,7 +620,6 @@ def researches_update(request):
                                     hide=field["hide"],
                                     default_value=field["default"],
                                     visibility=field.get("visibility", ""),
-                                    input_templates=json.dumps(field["values_to_input"]) if not department_template_pk else json.dumps([]),
                                     field_type=field.get("field_type", 0),
                                     can_edit_computed=field.get("can_edit", False),
                                     helper=field.get("helper", ''),
@@ -639,6 +638,8 @@ def researches_update(request):
                                         department_id=department_template_pk,
                                         value=json.dumps(field["values_to_input"])
                                     )
+                                else:
+                                    f.input_templates = json.dumps(field["values_to_input"])
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
@@ -651,7 +652,6 @@ def researches_update(request):
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.visibility = field.get("visibility", "")
-                                f.input_templates = json.dumps(field["values_to_input"]) if not department_template_pk else json.dumps('[]')
                                 f.field_type = field.get("field_type", 0)
                                 f.can_edit_computed = field.get("can_edit", False)
                                 f.required = field.get("required", False)
@@ -676,6 +676,8 @@ def researches_update(request):
                                             department_id=department_template_pk,
                                             value=json.dumps(field["values_to_input"])
                                         )
+                                else:
+                                    f.input_templates = json.dumps(field["values_to_input"]),
                             if f:
                                 f.save()
                                 if department_template_field:
