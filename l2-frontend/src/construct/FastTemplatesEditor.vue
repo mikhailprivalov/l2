@@ -260,6 +260,13 @@ export default {
   },
   created() {
     this.department = this.departments[0].id;
+    if (this.byDepartment) {
+      if (this.userDepartmentId) {
+        this.departmentsForTemplate = this.departments;
+      } else {
+        this.departmentsForTemplate = this.departments.slice(1);
+      }
+    }
   },
   methods: {
     hide_modal() {
