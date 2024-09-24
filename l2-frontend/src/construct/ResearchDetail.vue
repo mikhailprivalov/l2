@@ -3,7 +3,9 @@
     <div class="margin-root">
       <div class="flex">
         <h4
+          v-tippy
           class="header"
+          :title="researchShortTitle"
         >
           Редактирование анализа ({{ research.pk }}) - {{ researchShortTitle }}
         </h4>
@@ -679,6 +681,9 @@ const deleteRef = (idx: number, refKey: string) => {
 }
 .header {
   margin: 10px 5px 10px 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .flex-right {
   display: flex;
