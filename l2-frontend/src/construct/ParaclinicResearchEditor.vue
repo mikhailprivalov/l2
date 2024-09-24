@@ -51,7 +51,7 @@
               class="btn btn-blue-nb"
               type="button"
               style="border-radius: 0;width: 100%;"
-              :disabled="has_unsaved || loaded_pk < 0"
+              :disabled="loaded_pk < 0"
               @click="f_templates()"
             >
               Шаблоны быстрого ввода
@@ -64,7 +64,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
-              :disabled="has_unsaved || loaded_pk < 0"
+              :disabled="has_unsaved ||loaded_pk < 0"
             >
             По подразделению
           </label>
@@ -102,7 +102,7 @@
             v-model="departmentForTemplatesField"
             class="treeselect-nbr treeselect-wide"
             :options="departmentsForTemplatesField"
-            :clearable="true"
+            :clearable="showAllDepartmentForTemplateField"
             placeholder="Выберите подразделение"
             @input="changeTemplateField"
           />
