@@ -19,7 +19,7 @@
             v-model="department"
             class="treeselect-nbr treeselect-wide"
             :options="departments"
-            :clearable="false"
+            :clearable="showAllDepartments"
             placeholder="Выберите подразделение"
           />
         </div>
@@ -197,7 +197,6 @@ import MKBField from '@/fields/MKBField.vue';
 import researchesPoint from '@/api/researches-point';
 import * as actions from '@/store/action-types';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import api from '@/api';
 
 export default {
   name: 'FastTemplatesEditor',
@@ -219,6 +218,18 @@ export default {
       type: Boolean,
       required: false,
     },
+    departments: {
+      type: Array,
+      required: false,
+    },
+    showAllDepartments: {
+      type: Boolean,
+      required: false,
+    },
+    userDepartmentId: {
+      type: Number,
+      required: false,
+    },
   },
   data() {
     return {
@@ -227,10 +238,7 @@ export default {
       selected_template: -2,
       template_data: {},
       department: null,
-      departments: [],
       departmentsForTemplate: [],
-      showAllDepartments: false,
-      userDepartmentId: null,
     };
   },
   watch: {
@@ -251,12 +259,12 @@ export default {
     },
   },
   created() {
+    this.load_data();
     if (this.byDepartment) {
-      this.checkAdmin();
-      this.loadDepartment();
-    } else {
-      this.departments.push({ id: 'all', label: 'Все' });
-      this.department = 'all';
+      this.departmentsForTemplate = this.departments;
+      if (!this.showAllDepartments) {
+        this.department = this.departments[0].id;
+      }
     }
   },
   methods: {
@@ -290,7 +298,7 @@ export default {
         this.clear();
       }
       let department = null;
-      if (this.department !== 'all') {
+      if (this.department) {
         department = this.department;
       }
       this.$store.dispatch(actions.INC_LOADING);
@@ -302,22 +310,6 @@ export default {
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
       });
-    },
-    async loadDepartment() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { data } = await api('get-departments-with-exclude', { exclude_type: [2] });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (this.showAllDepartments) {
-        this.departments.push({ id: 'all', label: 'Все' });
-        this.departments.push(...data);
-        this.departmentsForTemplate = data;
-        this.department = 'all';
-      } else {
-        const userDepartment = data.find((department) => department.id === this.userDepartmentId);
-        this.departments.push(userDepartment);
-        this.departmentsForTemplate.push(userDepartment);
-        this.department = userDepartment.id;
-      }
     },
     select_template(pk) {
       if (pk === this.selected_template) return;
@@ -361,14 +353,6 @@ export default {
       }).finally(() => {
         this.$store.dispatch(actions.DEC_LOADING);
       });
-    },
-    checkAdmin() {
-      this.userDepartmentId = this.$store.getters.user_data.department.pk;
-      const { groups } = this.$store.getters.user_data;
-      if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
-        || groups.includes('Admin')) {
-        this.showAllDepartments = true;
-      }
     },
   },
 };
@@ -415,7 +399,7 @@ export default {
     position: relative;
     padding-bottom: 36px;
     .inner {
-      height: 100%;
+      height: calc(100% - 36px);
       width: 100%;
       overflow-y: auto;
       overflow-x: hidden;
