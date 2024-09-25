@@ -30,7 +30,8 @@ from directory.models import (
     ServiceLocation,
     ResearchGroup,
     ReleationsFT,
-    ParaclinicTemplateNameDepartment, ParaclinicFieldTemplateDepartment,
+    ParaclinicTemplateNameDepartment,
+    ParaclinicFieldTemplateDepartment,
 )
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
