@@ -677,10 +677,7 @@ def researches_update(request):
                                         department_template_field.value = json.dumps(field["values_to_input"])
                                     else:
                                         department_template_field = ParaclinicFieldTemplateDepartment(
-                                            paraclinic_field_id=f.pk,
-                                            research_id=res.pk,
-                                            department_id=department_template_pk,
-                                            value=json.dumps(field["values_to_input"])
+                                            paraclinic_field_id=f.pk, research_id=res.pk, department_id=department_template_pk, value=json.dumps(field["values_to_input"])
                                         )
                                 else:
                                     f.input_templates = json.dumps(field["values_to_input"])
