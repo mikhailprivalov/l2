@@ -64,7 +64,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
-              :disabled="has_unsaved ||loaded_pk < 0"
+              :disabled="has_unsaved ||loaded_pk < 0 || !showAllDepartmentForTemplateField"
             >
             По подразделению
           </label>
@@ -285,6 +285,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
+              :disabled="has_unsaved ||loaded_pk < 0 || !showAllDepartmentForTemplateField"
             >
             По подразделению
           </label>
