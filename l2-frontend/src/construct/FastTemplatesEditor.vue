@@ -19,7 +19,7 @@
             v-model="department"
             class="treeselect-nbr treeselect-wide"
             :options="departments"
-            :clearable="true"
+            :clearable="showAllDepartments"
             placeholder="Выберите подразделение"
           />
         </div>
