@@ -64,7 +64,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
-              :disabled="has_unsaved ||loaded_pk < 0 || !showAllDepartmentForTemplateField"
+              :disabled="!showAllDepartmentForTemplateField"
             >
             По подразделению
           </label>
@@ -285,7 +285,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
-              :disabled="has_unsaved ||loaded_pk < 0 || !showAllDepartmentForTemplateField"
+              :disabled="!showAllDepartmentForTemplateField"
             >
             По подразделению
           </label>
@@ -1374,9 +1374,9 @@ export default {
     },
   },
   async created() {
+    this.checkShowAllTemplates();
     await this.load();
     if (this.templatesByDepartment) {
-      await this.checkShowAllTemplates();
       await this.loadDepartmentsForTemplate();
     } else {
       this.departmentsForTemplatesField = [];
@@ -1771,6 +1771,8 @@ export default {
     checkShowAllTemplates() {
       this.userDepartmentId = this.$store.getters.user_data.department.pk;
       const { groups } = this.$store.getters.user_data;
+      console.log(groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям'));
+      console.log(groups.includes('Admin'));
       if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
         || groups.includes('Admin')) {
         this.showAllDepartmentForTemplateField = true;

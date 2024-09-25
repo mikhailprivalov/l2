@@ -461,6 +461,10 @@ def researches_update(request):
         show_more_services = request_data.get("show_more_services", True)
         hospital_research_department_pk = request_data.get("hospital_research_department_pk", -1)
         current_nsi_research_code = request_data.get("currentNsiResearchCode", -1)
+        user = request.user
+        can_change_template_department = user.doctorprofile.has_group("Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям")
+        if not can_change_template_department:
+            can_change_template_department = user.is_superuser
         if tube == -1:
             tube = None
         stationar_slave = is_simple and -500 >= department_pk > -600 and main_service_pk != 1
@@ -481,7 +485,6 @@ def researches_update(request):
                     is_paraclinic=not desc and department.p_type == 3,
                     paraclinic_info=info,
                     hide=hide,
-                    templates_by_department=templates_by_department,
                     is_doc_refferal=department_pk == -2,
                     is_treatment=department_pk == -3,
                     is_stom=department_pk == -4,
@@ -515,6 +518,8 @@ def researches_update(request):
                     show_more_services=show_more_services,
                     nsi_id=current_nsi_research_code,
                 )
+                if can_change_template_department:
+                    res.templates_by_department = templates_by_department
             elif DResearches.objects.filter(pk=pk).exists():
                 res = DResearches.objects.filter(pk=pk)[0]
                 if res == researche_direction_current_params:
@@ -544,7 +549,6 @@ def researches_update(request):
                 res.microbiology_tube_id = tube if department_pk == -6 else None
                 res.paraclinic_info = info
                 res.hide = hide
-                res.templates_by_department = templates_by_department
                 res.site_type_id = site_type
                 res.internal_code = internal_code
                 res.uet_refferal_doc = uet_refferal_doc
@@ -561,6 +565,8 @@ def researches_update(request):
                 res.has_own_form_result = own_form_result
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
                 res.nsi_id = current_nsi_research_code
+                if can_change_template_department:
+                    res.templates_by_department = templates_by_department
             if res:
                 res.save()
                 if main_service_pk != 1 and stationar_slave:
