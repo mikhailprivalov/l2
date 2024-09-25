@@ -46,7 +46,7 @@ import Modal from '@/ui-cards/Modal.vue';
 
 const props = defineProps({
   editRelationId: {
-    type: Number,
+    type: [Number, null],
     required: true,
   },
 });
