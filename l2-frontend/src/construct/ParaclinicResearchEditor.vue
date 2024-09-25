@@ -1771,15 +1771,12 @@ export default {
     checkShowAllTemplates() {
       this.userDepartmentId = this.$store.getters.user_data.department.pk;
       const { groups } = this.$store.getters.user_data;
-      console.log(groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям'));
-      console.log(groups.includes('Admin'));
       if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
         || groups.includes('Admin')) {
         this.showAllDepartmentForTemplateField = true;
       }
     },
     async changeTemplateField() {
-      console.log('мы вызвали смену шаблонов');
       await this.load();
     },
   },
