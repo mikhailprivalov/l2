@@ -51,7 +51,7 @@
               class="btn btn-blue-nb"
               type="button"
               style="border-radius: 0;width: 100%;"
-              :disabled="loaded_pk < 0"
+              :disabled="has_unsaved || loaded_pk < 0"
               @click="f_templates()"
             >
               Шаблоны быстрого ввода
