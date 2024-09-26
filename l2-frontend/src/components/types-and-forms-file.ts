@@ -48,6 +48,10 @@ export default function typesAndForms() {
     }
     return result;
   };
+  const unsupportedFileForms = (type: string, forms: string[]) => {
+    const result = forms.filter(form => form === fileForms.value[type][form]);
+    return result.length === 0;
+  };
 
   const getForms = (type: string, forms: string[] = null, onlyResult = false, allowedForms: string[] = null): formsFile[] => {
     let result: formsFile[] = [];
@@ -65,5 +69,5 @@ export default function typesAndForms() {
     }
     return result;
   };
-  return { getTypes, getForms, getFileFilters };
+  return { getTypes, getForms, getFileFilters, unsupportedFileForms };
 }

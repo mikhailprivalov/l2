@@ -26,10 +26,15 @@
           placeholder="Выберите структуру файла"
         />
         <h5
+          v-else-if="noSupportedFileForms"
+        >
+          Такие структуры файла не поддерживаются
+        </h5>
+        <h5
           v-else
           class="text-center"
         >
-          Такие структуры файла не поддерживаются
+          Нет разрешенных форм
         </h5>
       </div>
       <div
@@ -90,7 +95,7 @@ import api from '@/api';
 
 import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 
-const { getTypes, getForms, getFileFilters } = typesAndForms();
+const { getTypes, getForms, getFileFilters, unsupportedFileForms } = typesAndForms();
 
 const store = useStore();
 
@@ -140,12 +145,15 @@ const allowedFormsForOrganization = async () => {
   allowedForms.value = result;
 };
 
+const noSupportedFileForms = ref(false);
+
 onMounted(async () => {
   await allowedFormsForOrganization();
   currentFileTypes.value = getTypes(props.typesFile);
   if (props.simpleMode && currentFileTypes.value.length > 0) {
     selectedType.value = currentFileTypes.value[0].id;
   }
+  noSupportedFileForms.value = unsupportedFileForms(selectedType.value, props.formsFile);
 });
 
 const changeType = () => {
