@@ -318,7 +318,7 @@ const changeDiscountAbsolute = (index: number, discountStatic: boolean) => {
 const changeServiceCount = (index) => {
   if (!loading.value) {
     const service = servicesCoasts.value[index];
-    if (service.total >= 1) {
+    if (service.count > 0) {
       service.total = service.count * service.discountedCoast;
     }
   }
