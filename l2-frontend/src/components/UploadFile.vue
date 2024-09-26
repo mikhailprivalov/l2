@@ -27,6 +27,7 @@
         />
         <h5
           v-else-if="noSupportedFileForms"
+          class="text-center"
         >
           Такие структуры файла не поддерживаются
         </h5>
@@ -155,7 +156,6 @@ onMounted(async () => {
   if (props.simpleMode && currentFileTypes.value.length > 0) {
     selectedType.value = currentFileTypes.value[0].id;
   }
-  noSupportedFileForms.value = unsupportedFileForms(selectedType.value, props.formsFile);
 });
 
 const changeType = () => {
@@ -171,6 +171,7 @@ const changeType = () => {
   } else {
     selectedForm.value = null;
   }
+  noSupportedFileForms.value = unsupportedFileForms(selectedType.value, props.formsFile);
 };
 
 watch(selectedType, () => {

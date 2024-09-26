@@ -49,7 +49,13 @@ export default function typesAndForms() {
     return result;
   };
   const unsupportedFileForms = (type: string, forms: string[]) => {
-    const result = forms.filter(form => form === fileForms.value[type][form]);
+    const result = forms.filter(form => {
+      const supportedForm = fileForms.value[type][form];
+      if (supportedForm) {
+        return supportedForm.id === form;
+      }
+      return false;
+    });
     return result.length === 0;
   };
 
