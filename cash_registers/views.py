@@ -101,25 +101,30 @@ def get_service_coasts(directions_ids: list):
         result = {"ok": False, "message": "Не указан источник финансирования для оплаты", "data": {}}
         return result
     services = sql_func.get_services_by_directions(directions_ids_typle, PAY_FIN_SOURCE_ID)
+    print(services)
     if not services:
         result = {"ok": False, "message": "Выбранные направления нельзя оплатить", "data": {}}
         return result
     paid_directions_ids = [service.id for service in services]
     services_ids = tuple([service.id for service in services])
-    services_coasts = {
-        service.id: {
-            "id": service.id,
-            "title": service.title,
-            "coast": 0,
-            "discountRelative": service.def_discount,
-            "discountAbsolute": 0,
-            "discountedCoast": 0,
-            "discountStatic": service.prior_discount,
-            "count": 1,
-            "total": 0,
-        }
-        for service in services
-    }
+    services_coasts = {}
+    for service in services:
+        if services_coasts.get(service.id):
+            service_coast = services_coasts[service.id]
+            count = service_coast["count"] + 1
+            service_coast["count"] = count
+        else:
+            services_coasts[service.id] = {
+                "id": service.id,
+                "title": service.title,
+                "coast": 0,
+                "discountRelative": service.def_discount,
+                "discountAbsolute": 0,
+                "discountedCoast": 0,
+                "discountStatic": service.prior_discount,
+                "count": 1,
+                "total": 0,
+            }
 
     pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=PAY_FIN_SOURCE_ID).select_related('contracts').first()
     if pay_fin_source:
@@ -134,10 +139,11 @@ def get_service_coasts(directions_ids: list):
         services_coasts[coast.research_id]["coast"] = service_coast
         services_coasts[coast.research_id]["discountAbsolute"] = discount_absolute
         services_coasts[coast.research_id]["discountedCoast"] = discounted_coast
-        services_coasts[coast.research_id]["total"] = discounted_coast
+        total = services_coasts[coast.research_id]["count"] * discounted_coast
+        services_coasts[coast.research_id]["total"] = total
         summ += coast.coast
 
-    if len(coasts) < len(services):
+    if len(coasts) < len(services_coasts):
         service_without_coast = True
 
     service_coasts = [i for i in services_coasts.values()]
