@@ -152,8 +152,26 @@ def get_service_coasts(directions_ids: list):
     return result
 
 
+def check_count_items(directions_ids, service_coasts):
+    """
+    Проверка совпадения кол-ва услуг в чеке и кол-ва исследований в направлениях
+    """
+    total_items_count = 0
+    for service in service_coasts:
+        total_items_count += int(service["count"])
+    total_issledovaniya_count = sql_func.get_total_count_issledovania(directions_ids)
+    if total_items_count != total_issledovaniya_count:
+        return False
+    return True
+
+
 def payment(shift_id, service_coasts, total_coast, cash, received_cash, electronic, directions_ids):
     result = {"ok": True, "message": "", "cheqId": None}
+    result_check_count = check_count_items(directions_ids, service_coasts)
+    if not result_check_count:
+        result = {"ok": False, "message": "Количество исследований и количество позиций в чеке не совпадает", "cheqId": None}
+        return result
+
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()
     first_direction: Napravleniya = Napravleniya.objects.filter(pk=directions_ids[0]).first()
     card_id = first_direction.client_id

@@ -186,6 +186,9 @@ class Cheque(models.Model):
 
     @staticmethod
     def create_payments(cash, received_cash, electronic):
+        """
+        Создание видов оплаты в чеке
+        """
         result = []
         if cash:
             result.append({"type": "cash", "sum": received_cash})
@@ -195,11 +198,17 @@ class Cheque(models.Model):
 
     @staticmethod
     def create_job_json(cash_register_data, uuid_data, type_operations, items, payments, total):
+        """
+        Создания тела запроса для middle server
+        """
         body = {"cashRegister": cash_register_data, "uuid": uuid_data, "job": [{"type": type_operations, "items": items, "payments": payments, "total": total}]}
         return body
 
     @staticmethod
     def create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items):
+        """
+        Создание чека в базе
+        """
         with transaction.atomic():
             new_cheque = Cheque(shift_id=shift_id, type=type_operations, uuid=uuid_data, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
             new_cheque.save()
@@ -241,6 +250,9 @@ class ChequeItems(models.Model):
 
     @staticmethod
     def create_items(items):
+        """
+        Создание списка элементов чека
+        """
         result = [
             {
                 "id": item["id"],
