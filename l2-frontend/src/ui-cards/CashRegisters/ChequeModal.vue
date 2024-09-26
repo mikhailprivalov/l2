@@ -100,14 +100,7 @@
                   {{ service.discountedCoast }}
                 </td>
                 <td class="text-center border">
-                  <input
-                    v-model.number="service.count"
-                    min="1"
-                    type="number"
-                    :disabled="loading"
-                    class="form-control nbr input-item"
-                    @input="changeServiceCount(idx)"
-                  >
+                  {{ service.count }}
                 </td>
                 <td class="text-center border">
                   {{ service.total }}
@@ -311,15 +304,6 @@ const changeDiscountAbsolute = (index: number, discountStatic: boolean) => {
       service.discountedCoast = Number(discountedCoast.toFixed(2));
       const total = service.count * service.discountedCoast;
       service.total = Number(total.toFixed(2));
-    }
-  }
-};
-
-const changeServiceCount = (index) => {
-  if (!loading.value) {
-    const service = servicesCoasts.value[index];
-    if (service.count > 0) {
-      service.total = service.count * service.discountedCoast;
     }
   }
 };
