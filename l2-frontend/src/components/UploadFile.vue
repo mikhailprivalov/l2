@@ -95,7 +95,9 @@ import api from '@/api';
 
 import typesAndForms, { formsFile, typesFile } from './types-and-forms-file';
 
-const { getTypes, getForms, getFileFilters, unsupportedFileForms } = typesAndForms();
+const {
+  getTypes, getForms, getFileFilters, unsupportedFileForms,
+} = typesAndForms();
 
 const store = useStore();
 

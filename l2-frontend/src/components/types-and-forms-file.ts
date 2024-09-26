@@ -69,5 +69,7 @@ export default function typesAndForms() {
     }
     return result;
   };
-  return { getTypes, getForms, getFileFilters, unsupportedFileForms };
+  return {
+    getTypes, getForms, getFileFilters, unsupportedFileForms,
+  };
 }
