@@ -2669,13 +2669,14 @@ def results_by_direction(request):
     request_data = json.loads(request.body)
     token = request.headers.get("Authorization").split(" ")[1]
     token_obj = Application.objects.filter(key=token).first()
-    if not hasattr(request.user, "hospitals"):
-        return Response({"ok": False, "message": "Некорректный auth токен"})
-    oid_org = request_data.get(("oid") or "")
-    check_result = check_correct_hosp(request, oid_org)
-    if not check_result["OK"]:
-        return Response({"ok": False, "message": check_result["message"]})
-    hospital = check_result["hospital"]
+    if not token_obj.unlimited_access:
+        if not hasattr(request.user, "hospitals"):
+            return Response({"ok": False, "message": "Некорректный auth токен"})
+        oid_org = request_data.get(("oid") or "")
+        check_result = check_correct_hosp(request, oid_org)
+        if not check_result["OK"]:
+            return Response({"ok": False, "message": check_result["message"]})
+        hospital = check_result["hospital"]
     mode = request_data.get("mode")
     is_lab = request_data.get("isLab", mode == "laboratory")
     is_paraclinic = request_data.get("isParaclinic", mode == "paraclinic")
@@ -2728,15 +2729,29 @@ def results_by_direction(request):
     if is_paraclinic or is_doc_refferal or is_user_forms:
         results = desc_to_data(directions_data, force_all_fields=True)
         for i in results:
+            additional_data_confirm_direction = None
             direction_data = i["result"][0]["date"].split(" ")
             if direction_data[1] not in objs_result:
                 objs_result[direction_data[1]] = {"pk": direction_data[1], "confirmedAt": direction_data[0], "services": {}}
             if i["result"][0]["iss_id"] not in objs_result[direction_data[1]]["services"]:
+                iss = Issledovaniya.objects.filter(pk=i["result"][0]["iss_id"]).first()
+                doctor_additional_info = iss.doc_confirmation.additional_info
+                if doctor_additional_info:
+                    if "{" in doctor_additional_info and "}" in doctor_additional_info:
+                        try:
+                            additional_data_confirm_direction = json.loads(doctor_additional_info)
+                            if not additional_data_confirm_direction or not isinstance(additional_data_confirm_direction, dict):
+                                additional_data_confirm_direction = {}
+                        except Exception:
+                            additional_data_confirm_direction = None
+
                 objs_result[direction_data[1]]["services"][i["result"][0]["iss_id"]] = {
                     "title": i["title_research"],
                     "fio": short_fio_dots(i["result"][0]["docConfirm"]),
                     "confirmedAt": direction_data[0],
                     "fractions": [],
+                    "directionId": i["result"][0]["direction_id"],
+                    "additionalDataConfirmDirection": additional_data_confirm_direction
                 }
 
             values = values_as_structure_data(i["result"][0]["data"])

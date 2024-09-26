@@ -112,11 +112,17 @@ class SettingManager:
         SettingManager.set_value("dynamic_directory_version", str(current_version + 1), default_type='i')
 
     @staticmethod
+    def rmis_upload_hours_interval():
+        return SettingManager.get("rmis_upload_hours_interval", default='1', default_type='i')
+
+    @staticmethod
     def l2_modules() -> dict:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
+            print("return")
             return simplejson.loads(cv)
+        print("new set params")
         result = {
             **{
                 'l2_{}'.format(x): SettingManager.l2(x)
@@ -213,6 +219,7 @@ class SettingManager:
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
+        print(result)
         return result
 
     @staticmethod
