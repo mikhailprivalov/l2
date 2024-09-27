@@ -409,6 +409,7 @@ def desc_to_data(num_dirs: List[int], force_all_fields: bool = False):
                 new_date_data['date'] = date
                 new_date_data['link_dicom'] = link_dicom if link_dicom else ''
                 new_date_data['iss_id'] = i[6]
+                new_date_data['direction_id'] = i[2]
                 new_date_data['docConfirm'] = i[7]
                 new_date_data['data'] = [{'group_title': group, 'fields': [fields.copy()]}]
                 last_date = date
