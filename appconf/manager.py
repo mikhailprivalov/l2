@@ -112,6 +112,10 @@ class SettingManager:
         SettingManager.set_value("dynamic_directory_version", str(current_version + 1), default_type='i')
 
     @staticmethod
+    def rmis_upload_hours_interval():
+        return SettingManager.get("rmis_upload_hours_interval", default='1', default_type='i')
+
+    @staticmethod
     def l2_modules() -> dict:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)

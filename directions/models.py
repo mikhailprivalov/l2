@@ -489,6 +489,7 @@ class Napravleniya(models.Model):
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_who_create", help_text='Создатель направления', on_delete=models.SET_NULL)
     cancel = models.BooleanField(default=False, blank=True, help_text='Отмена направления')
     rmis_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='ID направления в РМИС')
+    rmis_direction_date = models.DateTimeField(help_text='Дата рмис-направлению', db_index=True, default=None, blank=True, null=True)
     result_rmis_send = models.BooleanField(default=False, blank=True, help_text='Результат отправлен в РМИС?', db_index=True)
     imported_from_rmis = models.BooleanField(default=False, blank=True, db_index=True, help_text='Направление создано на основе направления из РМИС?')
     imported_org = models.ForeignKey(RMISOrgs, default=None, blank=True, null=True, on_delete=models.SET_NULL)
