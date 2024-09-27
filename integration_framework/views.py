@@ -2751,7 +2751,7 @@ def results_by_direction(request):
                     "confirmedAt": direction_data[0],
                     "fractions": [],
                     "directionId": i["result"][0]["direction_id"],
-                    "additionalDataConfirmDirection": additional_data_confirm_direction
+                    "additionalDataConfirmDirection": additional_data_confirm_direction,
                 }
 
             values = values_as_structure_data(i["result"][0]["data"])
