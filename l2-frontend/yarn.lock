@@ -2287,10 +2287,10 @@ anymatch@~3.1.2:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-apexcharts@^3.39.0:
-  version "3.44.0"
-  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.44.0.tgz#b52f95b0d0c2a5357b4614fa42faac956b69a4a9"
-  integrity sha512-u7Xzrbcxc2yWznN78Jh5NMCYVAsWDfBjRl5ea++rVzFAqjU2hLz4RgKIFwYOBDRQtW1e/Qz8azJTqIJ1+Vu9Qg==
+apexcharts@^3.53.0:
+  version "3.53.0"
+  resolved "https://registry.yarnpkg.com/apexcharts/-/apexcharts-3.53.0.tgz#9ea2b4d837d9faf2c0bff79d228db48e75b2220a"
+  integrity sha512-QESZHZY3w9LPQ64PGh1gEdfjYjJ5Jp+Dfy0D/CLjsLOPTpXzdxwlNMqRj+vPbTcP0nAHgjWv1maDqcEq6u5olw==
   dependencies:
     "@yr/monotone-cubic-spline" "^1.0.3"
     svg.draggable.js "^2.2.2"
