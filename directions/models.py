@@ -2437,6 +2437,7 @@ class Issledovaniya(models.Model):
     complex_research_account = models.ForeignKey(
         ComplexResearchAccountPerson, db_index=True, blank=True, null=True, default=None, help_text="Принадлежит комплексу", on_delete=models.SET_NULL
     )
+    cancel = models.BooleanField(default=False, help_text="Отменено")
 
     @staticmethod
     def save_billing(billing_id, iss_ids):
