@@ -64,6 +64,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
+              :disabled="!showAllDepartmentForTemplateField"
             >
             По подразделению
           </label>
@@ -91,6 +92,20 @@
               {{ d.title }}
             </option>
           </select>
+        </div>
+        <div
+          v-if="templatesByDepartment && loaded_pk > 0"
+          class="input-group"
+        >
+          <span class="input-group-addon">Подразделения для шаблонов</span>
+          <Treeselect
+            v-model="departmentForTemplatesField"
+            class="treeselect-nbr treeselect-wide"
+            :options="departmentsForTemplatesField"
+            :clearable="showAllDepartmentForTemplateField"
+            placeholder="Выберите подразделение"
+            @input="changeTemplateField"
+          />
         </div>
       </div>
       <div
@@ -270,6 +285,7 @@
             <input
               v-model="templatesByDepartment"
               type="checkbox"
+              :disabled="!showAllDepartmentForTemplateField"
             >
             По подразделению
           </label>
@@ -1113,6 +1129,9 @@
       :research_pk="loaded_pk"
       :groups="groups"
       :by-department="templatesByDepartment"
+      :departments="departmentsForTemplatesField"
+      :show-all-departments="showAllDepartmentForTemplateField"
+      :user-department-id="userDepartmentId"
     />
     <Localizations
       v-if="show_localization"
@@ -1264,6 +1283,10 @@ export default {
       cda_options: [],
       dynamicDirectories: [],
       autoRegisterRmisLocation: '',
+      departmentForTemplatesField: null,
+      departmentsForTemplatesField: [],
+      showAllDepartmentForTemplateField: false,
+      userDepartmentId: null,
     };
   },
   computed: {
@@ -1350,10 +1373,16 @@ export default {
       deep: true,
     },
   },
-  created() {
-    this.load();
-    this.load_deparments();
-    this.loadDynamicDirectories();
+  async created() {
+    this.checkShowAllTemplates();
+    await this.load();
+    if (this.templatesByDepartment) {
+      await this.loadDepartmentsForTemplate();
+    } else {
+      this.departmentsForTemplatesField = [];
+    }
+    await this.load_deparments();
+    await this.loadDynamicDirectories();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1594,7 +1623,7 @@ export default {
       }
       this.groups.push(g);
     },
-    load() {
+    async load() {
       this.title = '';
       this.short_title = '';
       this.autoRegisterRmisLocation = '';
@@ -1603,7 +1632,6 @@ export default {
       this.code = '';
       this.info = '';
       this.hide = false;
-      this.templatesByDepartment = false;
       this.site_type = null;
       this.groups = [];
       this.direction_current_form = '';
@@ -1614,49 +1642,44 @@ export default {
       this.hospital_research_department_pk = -1;
       this.type_period = null;
       if (this.pk >= 0) {
-        this.$store.dispatch(actions.INC_LOADING);
-        constructPoint
-          .researchDetails(this, 'pk')
-          .then(data => {
-            this.title = data.title;
-            this.short_title = data.short_title;
-            this.autoRegisterRmisLocation = data.autoRegisterRmisLocation;
-            this.schedule_title = data.schedule_title;
-            this.is_global_direction_params = data.is_global_direction_params;
-            this.code = data.code;
-            this.internal_code = data.internal_code;
-            this.uet_refferal_doc = data.uet_refferal_doc;
-            this.uet_refferal_co_executor_1 = data.uet_refferal_co_executor_1;
-            this.direction_current_form = data.direction_current_form;
-            this.result_current_form = data.result_current_form;
-            this.currentNsiResearchCode = data.currentNsiResearchCode;
-            this.collectNsiResearchCode = data.collectNsiResearchCode;
-            this.collectMethods = data.collectMethods;
-            this.speciality = data.speciality;
-            this.hospital_research_department_pk = data.department;
-            this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
-            this.hide = data.hide;
-            this.templatesByDepartment = data.templatesByDepartment;
-            this.site_type = data.site_type;
-            this.loaded_pk = this.pk;
-            this.groups = data.groups;
-            this.direction_params_all = data.direction_params_all;
-            this.patient_control_param_all = data.patient_control_param_all;
-            this.cda_options = data.cda_options;
-            this.direction_current_params = data.direction_current_params;
-            this.direction_expertise_all = data.direction_expertise_all;
-            this.direction_current_expertise = data.direction_current_expertise;
-            this.assigned_to_params = data.assigned_to_params;
-            this.show_more_services = data.show_more_services;
-            this.is_paraclinic = data.is_paraclinic;
-            this.type_period = data.type_period;
-            if (this.groups.length === 0) {
-              this.add_group();
-            }
-          })
-          .finally(() => {
-            this.$store.dispatch(actions.DEC_LOADING);
-          });
+        await this.$store.dispatch(actions.INC_LOADING);
+        const data = await constructPoint.researchDetails(this, ['pk', 'departmentForTemplatesField']);
+        await this.$store.dispatch(actions.DEC_LOADING);
+        this.title = data.title;
+        this.short_title = data.short_title;
+        this.autoRegisterRmisLocation = data.autoRegisterRmisLocation;
+        this.schedule_title = data.schedule_title;
+        this.is_global_direction_params = data.is_global_direction_params;
+        this.code = data.code;
+        this.internal_code = data.internal_code;
+        this.uet_refferal_doc = data.uet_refferal_doc;
+        this.uet_refferal_co_executor_1 = data.uet_refferal_co_executor_1;
+        this.direction_current_form = data.direction_current_form;
+        this.result_current_form = data.result_current_form;
+        this.currentNsiResearchCode = data.currentNsiResearchCode;
+        this.collectNsiResearchCode = data.collectNsiResearchCode;
+        this.collectMethods = data.collectMethods;
+        this.speciality = data.speciality;
+        this.hospital_research_department_pk = data.department;
+        this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
+        this.hide = data.hide;
+        this.templatesByDepartment = data.templatesByDepartment;
+        this.site_type = data.site_type;
+        this.loaded_pk = this.pk;
+        this.groups = data.groups;
+        this.direction_params_all = data.direction_params_all;
+        this.patient_control_param_all = data.patient_control_param_all;
+        this.cda_options = data.cda_options;
+        this.direction_current_params = data.direction_current_params;
+        this.direction_expertise_all = data.direction_expertise_all;
+        this.direction_current_expertise = data.direction_current_expertise;
+        this.assigned_to_params = data.assigned_to_params;
+        this.show_more_services = data.show_more_services;
+        this.is_paraclinic = data.is_paraclinic;
+        this.type_period = data.type_period;
+        if (this.groups.length === 0) {
+          this.add_group();
+        }
       } else {
         this.add_group();
       }
@@ -1685,6 +1708,7 @@ export default {
         'code',
         'hide',
         'templatesByDepartment',
+        'departmentForTemplatesField',
         'groups',
         'site_type',
         'internal_code',
@@ -1731,6 +1755,29 @@ export default {
     async loadcollectNsiCode() {
       const { rows } = await this.$api('external-system/fsidi-by-method', { method: this.currentMethod });
       this.collectNsiResearchCode = rows;
+    },
+    async loadDepartmentsForTemplate() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { data } = await this.$api('get-departments-with-exclude', { exclude_type: [2] });
+      await this.$store.dispatch(actions.DEC_LOADING);
+      if (this.showAllDepartmentForTemplateField) {
+        this.departmentsForTemplatesField.push(...data);
+      } else {
+        const userDepartment = data.find((department) => department.id === this.userDepartmentId);
+        this.departmentsForTemplatesField.push(userDepartment);
+        this.departmentForTemplatesField = userDepartment.id;
+      }
+    },
+    checkShowAllTemplates() {
+      this.userDepartmentId = this.$store.getters.user_data.department.pk;
+      const { groups } = this.$store.getters.user_data;
+      if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
+        || groups.includes('Admin')) {
+        this.showAllDepartmentForTemplateField = true;
+      }
+    },
+    async changeTemplateField() {
+      await this.load();
     },
   },
 };

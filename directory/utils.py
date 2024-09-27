@@ -1,3 +1,4 @@
+from api.directions.sql_func import get_template_field_by_department
 from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
@@ -10,7 +11,7 @@ from external_system.models import InstrumentalResearchRefbook, CdaFields
 from external_system.sql_func import get_unique_method_instrumental_diagnostic
 
 
-def get_researches_details(pk):
+def get_researches_details(pk, templates_department_pk=None):
     response = {"pk": -1, "department": -1, "title": '', "short_title": '', "code": '', "info": '', "hide": False, "groups": []}
     direction_params_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_direction_params=True).order_by("title")]]
     response["direction_params_all"] = direction_params_all
@@ -65,6 +66,10 @@ def get_researches_details(pk):
         if res.is_direction_params:
             response["assigned_to_params"] = [f'{x.pk} – {x.get_full_short_title()}' for x in DResearches.objects.filter(direction_params=res)]
 
+        templates_fields_data = {}
+        if res.templates_by_department and templates_department_pk:
+            templates_fields = get_template_field_by_department(res.pk, templates_department_pk)
+            templates_fields_data = {template.field_id: template.value for template in templates_fields}
         for group in ParaclinicInputGroups.objects.filter(research__pk=pk).order_by("order"):
             g = {
                 "pk": group.pk,
@@ -77,6 +82,7 @@ def get_researches_details(pk):
                 "fieldsInline": group.fields_inline,
                 "cdaOption": group.cda_option_id if group.cda_option else -1,
             }
+
             for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
                 g["fields"].append(
                     {
@@ -90,7 +96,7 @@ def get_researches_details(pk):
                         "default": field.default_value,
                         "visibility": field.visibility,
                         "hide": field.hide,
-                        "values_to_input": json.loads(field.input_templates),
+                        "values_to_input": json.loads(field.input_templates) if not templates_department_pk else json.loads(templates_fields_data.get(field.pk, '[]')),
                         "field_type": field.field_type,
                         "can_edit": field.can_edit_computed,
                         "required": field.required,
