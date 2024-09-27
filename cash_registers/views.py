@@ -169,7 +169,7 @@ def payment(shift_id, service_coasts, total_coast, cash, received_cash, electron
     result = {"ok": True, "message": "", "cheqId": None}
     result_check_count = check_count_items(directions_ids, service_coasts)
     if not result_check_count:
-        result = {"ok": False, "message": "Количество исследований и количество позиций в чеке не совпадает", "cheqId": None}
+        result = {"ok": False, "message": "Количество исследований в направлениях меньше чем кол-во услуг в чеке", "cheqId": None}
         return result
 
     shift = Shift.objects.filter(pk=shift_id).select_related('cash_register').first()

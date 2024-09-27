@@ -37,6 +37,7 @@
                 <col style="width: 90px">
                 <col style="width: 80px">
                 <col style="width: 90px">
+                <col style="width: 50px">
               </colgroup>
               <thead class="sticky">
                 <tr>
@@ -104,6 +105,18 @@
                 </td>
                 <td class="text-center border">
                   {{ service.total }}
+                </td>
+                <td class="text-center border">
+                  <div class="button">
+                    <button
+                      v-tippy
+                      class="btn last btn-blue-nb nbr"
+                      title="Удалить позицию"
+                      @click="deleteItem(idx)"
+                    >
+                      <i class="fa fa-times" />
+                    </button>
+                  </div>
                 </td>
               </tr>
               <tfoot class="sticky-footer">
@@ -436,6 +449,10 @@ const payment = async () => {
   }
 };
 
+const deleteItem = (idx) => {
+  servicesCoasts.value.splice(idx, 1);
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -519,5 +536,18 @@ const payment = async () => {
 }
 .input-item:focus {
   border: 1px solid #3bafda;
+}
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
 }
 </style>
