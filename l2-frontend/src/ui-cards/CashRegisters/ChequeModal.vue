@@ -30,6 +30,7 @@
           >
             <table class="table">
               <colgroup>
+                <col style="width: 35px">
                 <col>
                 <col style="width: 90px">
                 <col style="width: 90px">
@@ -37,10 +38,10 @@
                 <col style="width: 90px">
                 <col style="width: 80px">
                 <col style="width: 90px">
-                <col style="width: 50px">
               </colgroup>
               <thead class="sticky">
                 <tr>
+                  <th />
                   <th class="text-center">
                     <strong>Услуга</strong>
                   </th>
@@ -68,6 +69,18 @@
                 v-for="(service, idx) in servicesCoasts"
                 :key="service.id"
               >
+                <td class="text-center border">
+                  <div class="button">
+                    <button
+                      v-tippy
+                      class="btn last btn-blue-nb nbr"
+                      title="Удалить позицию"
+                      @click="deleteItem(idx)"
+                    >
+                      <i class="fa fa-times" />
+                    </button>
+                  </div>
+                </td>
                 <VueTippyTd
                   class="text-left padding service-title border"
                   :text="service.title"
@@ -106,21 +119,10 @@
                 <td class="text-center border">
                   {{ service.total }}
                 </td>
-                <td class="text-center border">
-                  <div class="button">
-                    <button
-                      v-tippy
-                      class="btn last btn-blue-nb nbr"
-                      title="Удалить позицию"
-                      @click="deleteItem(idx)"
-                    >
-                      <i class="fa fa-times" />
-                    </button>
-                  </div>
-                </td>
               </tr>
               <tfoot class="sticky-footer">
                 <tr>
+                  <td />
                   <td class="text-right" />
                   <td class="text-center" />
                   <td class="text-center" />
@@ -464,7 +466,7 @@ const deleteItem = (idx) => {
 }
 .scroll {
   min-height: 106px;
-  height: calc(100% - 200px);
+  height: calc(100% - 222px);
   overflow-y: auto;
   background-color: #FFF;
 }
