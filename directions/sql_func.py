@@ -276,13 +276,16 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
             """
             SELECT
             directions_napravleniya.id as napravleniye_id,
-            di.id as iss_id  
+            di.id as iss_id,
+            to_char(directions_napravleniya.rmis_direction_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as rmis_direction_date,
+            rmis_number
             FROM directions_napravleniya
             LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
             WHERE 
             directions_napravleniya.total_confirmed = true
-            AND directions_napravleniya.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+            AND (directions_napravleniya.last_confirmed_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s) 
             AND directions_napravleniya.rmis_resend_services = false
+            AND directions_napravleniya.rmis_direction_date is not Null
             AND di.research_id in %(researches)s 
             """,
             params={'researches': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},

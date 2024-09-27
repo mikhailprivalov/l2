@@ -1618,6 +1618,7 @@ def external_list_direction_create(request):
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
     body_directions = json.loads(request.body)
+    print(body_directions)
     for body in body_directions:
         result = create_direction_by_param(body, request)
         if not result.get("ok"):
@@ -1710,7 +1711,6 @@ def create_direction_by_param(body, request):
                 individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
             individual = individuals.first()
-
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
