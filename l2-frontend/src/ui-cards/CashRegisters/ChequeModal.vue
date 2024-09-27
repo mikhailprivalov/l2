@@ -323,6 +323,11 @@ const changeDiscountAbsolute = (index: number, discountStatic: boolean) => {
   }
 };
 
+const noCoast = computed(() => {
+  const result = servicesCoasts.value.find(service => service.coast === 0);
+  return !!result;
+});
+
 const totalServicesCoast = computed(() => {
   let result = 0;
   for (const service of servicesCoasts.value) {
@@ -330,7 +335,6 @@ const totalServicesCoast = computed(() => {
   }
   return Number(result.toFixed(2));
 });
-const noCoast = ref(true);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message, data } = await api('cash-register/get-services-coasts', {
@@ -338,9 +342,8 @@ const getServicesCoasts = async () => {
   });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    const { coasts, serviceWithoutCoast, paidDirectionsIds } = data;
+    const { coasts, paidDirectionsIds } = data;
     servicesCoasts.value = coasts;
-    noCoast.value = serviceWithoutCoast;
     paidDirections.value = paidDirectionsIds;
   } else {
     root.$emit('msg', 'error', message);

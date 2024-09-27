@@ -94,7 +94,6 @@ def get_shift_data(doctor_profile_id: int):
 def get_service_coasts(directions_ids: list):
     result = {"ok": True, "message": "", "data": {}}
     directions_ids_typle = tuple(directions_ids)
-    service_without_coast = False
     summ = 0
     coasts = []
     if not PAY_FIN_SOURCE_ID:
@@ -142,12 +141,9 @@ def get_service_coasts(directions_ids: list):
         services_coasts[coast.research_id]["total"] = total
         summ += coast.coast
 
-    if len(coasts) < len(services_coasts):
-        service_without_coast = True
-
     service_coasts = [i for i in services_coasts.values()]
 
-    result["data"] = {"coasts": service_coasts, "serviceWithoutCoast": service_without_coast, "paidDirectionsIds": paid_directions_ids}
+    result["data"] = {"coasts": service_coasts, "paidDirectionsIds": paid_directions_ids}
 
     return result
 
