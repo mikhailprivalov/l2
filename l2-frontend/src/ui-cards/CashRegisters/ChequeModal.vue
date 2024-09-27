@@ -33,34 +33,34 @@
                 <col style="width: 35px">
                 <col>
                 <col style="width: 90px">
+                <col style="width: 75px">
                 <col style="width: 90px">
                 <col style="width: 90px">
-                <col style="width: 90px">
-                <col style="width: 80px">
+                <col style="width: 60px">
                 <col style="width: 90px">
               </colgroup>
               <thead class="sticky">
                 <tr>
                   <th />
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Услуга</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Цена</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Скидка %</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Скидка Р</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Цена со скидкой</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Кол-во</strong>
                   </th>
-                  <th>
+                  <th class="text-center tbl-header-footer">
                     <strong>Сумма</strong>
                   </th>
                 </tr>
@@ -123,17 +123,17 @@
               <tfoot class="sticky-footer">
                 <tr>
                   <td />
-                  <td class="text-right" />
-                  <td class="text-center" />
-                  <td class="text-center" />
-                  <td class="text-center" />
-                  <td class="text-center" />
-                  <td class="text-center">
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="text-right tbl-header-footer">
                     <strong>
                       Итого:
                     </strong>
                   </td>
-                  <td class="text-center">
+                  <td class="text-center tbl-header-footer">
                     <strong>
                       {{ totalServicesCoast }}
                     </strong>
@@ -469,7 +469,7 @@ const deleteItem = (idx) => {
 }
 .scroll {
   min-height: 106px;
-  height: calc(100% - 222px);
+  height: calc(100% - 217px);
   overflow-y: auto;
   background-color: #FFF;
 }
@@ -496,7 +496,7 @@ const deleteItem = (idx) => {
   border-top: 0;
 }
 .padding {
-  padding: 2px 0 2px 6px
+  padding: 0 4px 0 6px
 }
 .service-title {
   white-space: nowrap;
@@ -537,7 +537,7 @@ const deleteItem = (idx) => {
 }
 .input-item {
   border: 1px solid transparent;
-  padding: 6px;
+  padding: 0 4px 0 6px;
 }
 .input-item:focus {
   border: 1px solid #3bafda;
@@ -552,7 +552,10 @@ const deleteItem = (idx) => {
   .btn {
     align-self: stretch;
     flex: 1;
-    padding: 7px 0;
+    padding: 6px 0;
   }
+}
+.tbl-header-footer {
+  padding: 3px 0;
 }
 </style>
