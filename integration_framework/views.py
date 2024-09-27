@@ -1759,6 +1759,9 @@ def create_direction_by_param(body, request):
     message = None
 
     id_in_hospital = body.get("internalId", "")
+    ecp_direction_date = body.get("ecp_direction_date", None)
+    if ecp_direction_date:
+        ecp_direction_date = datetime.datetime.strptime(ecp_direction_date, '%d.%m.%Y')
     if id_in_hospital is not None:
         id_in_hospital = limit_str(id_in_hospital, 15)
 
@@ -1832,6 +1835,7 @@ def create_direction_by_param(body, request):
                 id_in_hospital=id_in_hospital,
                 price_category=price_category,
                 rmis_number=id_in_hospital if body.get("isRMIS") else None,
+                rmis_direction_date=ecp_direction_date if body.get("isRMIS") else None
             )
 
             time_get = str(body.get("dateTimeGet", "") or "") or None
