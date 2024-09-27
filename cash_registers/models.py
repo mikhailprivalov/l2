@@ -3,6 +3,7 @@ from django.db import models, transaction
 from jsonfield import JSONField
 from cash_registers import sql_func
 from clients.models import Card
+from directions.models import Napravleniya
 from directory.models import Researches
 from laboratory.utils import current_time
 from podrazdeleniya.models import Podrazdeleniya
@@ -269,3 +270,15 @@ class ChequeItems(models.Model):
             for item in items
         ]
         return result
+
+
+class ChequeForDirection(models.Model):
+    cheque = models.ForeignKey(Cheque, verbose_name='Чек', null=True, on_delete=models.SET_NULL, db_index=True)
+    direction = models.ForeignKey(Napravleniya, verbose_name='Направления', null=True, on_delete=models.SET_NULL, db_index=True)
+
+    class Meta:
+        verbose_name = "Чек для направления"
+        verbose_name_plural = "Чеки для направлений"
+
+    def __str__(self):
+        return f"{self.cheque} - {self.cheque_id} - {self.direction_id}"

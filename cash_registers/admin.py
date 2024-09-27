@@ -1,5 +1,5 @@
 from django.contrib import admin
-from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems
+from cash_registers.models import CashRegister, Shift, Cheque, ChequeItems, ChequeForDirection
 
 
 class CashRegisterAdmin(admin.ModelAdmin):
@@ -35,7 +35,17 @@ class ChequeItemsAdmin(admin.ModelAdmin):
     ]
 
 
+class ChequeForDirectionAdmin(admin.ModelAdmin):
+    list_display = ['pk', 'cheque', 'direction']
+    raw_id_fields = [
+        'cheque',
+        'direction',
+    ]
+    list_display_links = ('cheque', 'direction')
+
+
 admin.site.register(CashRegister, CashRegisterAdmin)
 admin.site.register(Shift, ShiftAdmin)
 admin.site.register(Cheque, ChequeAdmin)
 admin.site.register(ChequeItems, ChequeItemsAdmin)
+admin.site.register(ChequeForDirection, ChequeForDirectionAdmin)
