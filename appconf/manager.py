@@ -120,9 +120,7 @@ class SettingManager:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
         if cv:
-            print("return")
             return simplejson.loads(cv)
-        print("new set params")
         result = {
             **{
                 'l2_{}'.format(x): SettingManager.l2(x)
@@ -219,7 +217,6 @@ class SettingManager:
             "forms_url": SettingManager.forms_url(),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
-        print(result)
         return result
 
     @staticmethod

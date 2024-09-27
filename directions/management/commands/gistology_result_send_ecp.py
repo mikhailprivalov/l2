@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from api.dicom import check_server_port
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
-from l2vi.integration import send_lab_direction_to_ecp, send_gistology_direction_to_ecp
+from l2vi.integration import send_gistology_direction_to_ecp
 
 
 class Command(BaseCommand):
