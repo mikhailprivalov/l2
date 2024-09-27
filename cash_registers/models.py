@@ -66,7 +66,7 @@ class Shift(models.Model):
         verbose_name_plural = "Кассовые смены"
 
     def __str__(self):
-        return f"{self.cash_register.title} - {self.open_at} - {self.close_at} - {self.operator}"
+        return f"{self.cash_register_id} - {self.open_at} - {self.close_at} - {self.operator}"
 
     @staticmethod
     def open_shift(uuid_data: str, cash_register_id: int, operator_id: int):
@@ -281,4 +281,4 @@ class ChequeForDirection(models.Model):
         verbose_name_plural = "Чеки для направлений"
 
     def __str__(self):
-        return f"{self.cheque} - {self.cheque_id} - {self.direction_id}"
+        return f"{self.cheque} - {self.direction_id}"
