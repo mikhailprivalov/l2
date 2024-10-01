@@ -159,38 +159,36 @@
         </table>
       </div>
       <div class="room-beds-waiting">
+        <h5
+          class="heading"
+        >
+          Ожидающие
+        </h5>
         <div class="panel-content-waiting">
-          <h5
-            class="heading"
+          <draggable
+            v-model="withOutBeds"
+            :group="{
+              name: 'Patients',
+              pull: 'Patients',
+              put: 'Patients'}"
+            class="draggable-block-waiting"
+            chosen-class="dragClass"
+            animation="500"
+            @change="PatientWaitBed"
           >
-            Ожидающие
-          </h5>
-          <div class="draggable-wrapper">
-            <draggable
-              v-model="withOutBeds"
-              :group="{
-                name: 'Patients',
-                pull: 'Patients',
-                put: 'Patients'}"
-              class="draggable-block-waiting"
-              chosen-class="dragClass"
-              animation="500"
-              @change="PatientWaitBed"
+            <div
+              v-for="patient in withOutBeds"
+              :key="patient.pk"
+              class="draggable-item"
             >
-              <div
-                v-for="patient in withOutBeds"
-                :key="patient.pk"
-                class="draggable-item"
-              >
-                {{ patient.short_fio }}
-                <i
-                  class="fa-solid fa-child-reaching icon"
-                  :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-                />
-                {{ patient.age }}л.
-              </div>
-            </draggable>
-          </div>
+              {{ patient.short_fio }}
+              <i
+                class="fa-solid fa-child-reaching icon"
+                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+              />
+              {{ patient.age }}л.
+            </div>
+          </draggable>
         </div>
       </div>
     </div>
@@ -745,6 +743,9 @@ onMounted(init);
   background-color: hsla(30, 3%, 97%, 1);
   padding-bottom: 5px;
 }
+.draggable-block {
+  min-height: calc(100% - 20px);
+}
 .draggable-item {
   margin: 10px 5px;
   background-color: #fff;
@@ -780,14 +781,17 @@ onMounted(init);
 .room-beds-waiting {
   flex: 0.5 0.5 100px;
   background-color: hsla(30, 3%, 97%, 1);
+  display: flex;
+  flex-direction: column;
 }
 //.draggable-block-waiting {
 //  height: calc(100% - 46px);
 //  overflow-y: auto;
 //}
 .panel-content-waiting {
-  height: calc(100% - 15px);
-  background-color: hsla(30, 3%, 97%, 1);
+  flex: 1;
+  max-height: 150px;
+  overflow-y: auto;
 }
 .draggable-wrapper {
   height: calc(100% - 35px);
