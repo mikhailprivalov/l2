@@ -102,4 +102,3 @@ def get_total_count_issledovania(directions_ids):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
