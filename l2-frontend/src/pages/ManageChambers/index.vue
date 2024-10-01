@@ -37,7 +37,7 @@
     </div>
     <div class="central-panel">
       <div class="room-beds">
-        <table class="table table-bordered table-responsive table-condensed chamber-table">
+        <table class="table-beds table-bordered table-responsive table-condensed chamber-table">
           <colgroup>
             <col width="80">
             <col>
@@ -158,7 +158,7 @@
           </tbody>
         </table>
       </div>
-      <div class="await-room-beds">
+      <div class="room-beds-waiting">
         <div class="panel-content-waiting">
           <h5
             class="heading"
@@ -745,9 +745,6 @@ onMounted(init);
   background-color: hsla(30, 3%, 97%, 1);
   padding-bottom: 5px;
 }
-.draggable-block {
-  flex: 1;
-}
 .draggable-item {
   margin: 10px 5px;
   background-color: #fff;
@@ -771,17 +768,18 @@ onMounted(init);
 .room-beds {
   flex: 1 1 192px;
   overflow-y: auto;
-
-  //background-color: hsla(30, 3%, 97%, 1);
+  background-color: hsla(30, 3%, 97%, 1);
 }
 
-.table {
+.table-beds {
   width: 100%;
   table-layout: fixed;
+  margin-bottom: 0;
 }
 
-.await-room-beds {
+.room-beds-waiting {
   flex: 0.5 0.5 100px;
+  background-color: hsla(30, 3%, 97%, 1);
 }
 //.draggable-block-waiting {
 //  height: calc(100% - 46px);
