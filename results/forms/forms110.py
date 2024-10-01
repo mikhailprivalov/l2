@@ -58,7 +58,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     protocol_data = title_fields(iss)
 
-    date_zero = datetime.datetime.strptime(protocol_data["Дата осмотра"], "%d.%m.%Y")
+    date_zero = datetime.datetime.strptime(protocol_data["5. Дата укуса, оцарапания, ослюнения"], "%d.%m.%Y")
     normal_date_zero = ".".join(str(date_zero).split()[0].split('-')[::-1])
     date_three = date_zero + datetime.timedelta(days=3)
     date_three = ".".join(str(date_three).split()[0].split('-')[::-1])
