@@ -84,3 +84,21 @@ def get_services_by_directions(directions_ids, fin_source_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_total_count_issledovania(directions_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            count(*)
+            
+            FROM directions_napravleniya
+            INNER JOIN directions_issledovaniya on directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+            
+            WHERE directions_napravleniya.id in %(directions_ids)s
+            """,
+            params={"directions_ids": directions_ids},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

@@ -30,35 +30,37 @@
           >
             <table class="table">
               <colgroup>
+                <col style="width: 35px">
                 <col>
                 <col style="width: 90px">
+                <col style="width: 75px">
                 <col style="width: 90px">
                 <col style="width: 90px">
-                <col style="width: 90px">
-                <col style="width: 80px">
+                <col style="width: 60px">
                 <col style="width: 90px">
               </colgroup>
               <thead class="sticky">
                 <tr>
-                  <th class="text-center">
+                  <th />
+                  <th class="text-center tbl-header-footer">
                     <strong>Услуга</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Цена</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Скидка %</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Скидка Р</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Цена со скидкой</strong>
                   </th>
-                  <th class="text-center">
+                  <th class="text-center tbl-header-footer">
                     <strong>Кол-во</strong>
                   </th>
-                  <th>
+                  <th class="text-center tbl-header-footer">
                     <strong>Сумма</strong>
                   </th>
                 </tr>
@@ -67,6 +69,18 @@
                 v-for="(service, idx) in servicesCoasts"
                 :key="service.id"
               >
+                <td class="text-center border">
+                  <div class="button">
+                    <button
+                      v-tippy
+                      class="btn last btn-blue-nb nbr"
+                      title="Удалить позицию"
+                      @click="deleteItem(idx)"
+                    >
+                      <i class="fa fa-times" />
+                    </button>
+                  </div>
+                </td>
                 <VueTippyTd
                   class="text-left padding service-title border"
                   :text="service.title"
@@ -100,14 +114,7 @@
                   {{ service.discountedCoast }}
                 </td>
                 <td class="text-center border">
-                  <input
-                    v-model.number="service.count"
-                    min="1"
-                    type="number"
-                    :disabled="loading"
-                    class="form-control nbr input-item"
-                    @input="changeServiceCount(idx)"
-                  >
+                  {{ service.count }}
                 </td>
                 <td class="text-center border">
                   {{ service.total }}
@@ -115,17 +122,18 @@
               </tr>
               <tfoot class="sticky-footer">
                 <tr>
-                  <td class="text-right" />
-                  <td class="text-center" />
-                  <td class="text-center" />
-                  <td class="text-center" />
-                  <td class="text-center" />
-                  <td class="text-center">
+                  <td />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="tbl-header-footer" />
+                  <td class="text-right tbl-header-footer">
                     <strong>
                       Итого:
                     </strong>
                   </td>
-                  <td class="text-center">
+                  <td class="text-center tbl-header-footer">
                     <strong>
                       {{ totalServicesCoast }}
                     </strong>
@@ -315,14 +323,10 @@ const changeDiscountAbsolute = (index: number, discountStatic: boolean) => {
   }
 };
 
-const changeServiceCount = (index) => {
-  if (!loading.value) {
-    const service = servicesCoasts.value[index];
-    if (service.total >= 1) {
-      service.total = service.count * service.discountedCoast;
-    }
-  }
-};
+const noCoast = computed(() => {
+  const result = servicesCoasts.value.find(service => service.coast === 0);
+  return !!result;
+});
 
 const totalServicesCoast = computed(() => {
   let result = 0;
@@ -331,7 +335,6 @@ const totalServicesCoast = computed(() => {
   }
   return Number(result.toFixed(2));
 });
-const noCoast = ref(true);
 const getServicesCoasts = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message, data } = await api('cash-register/get-services-coasts', {
@@ -339,9 +342,8 @@ const getServicesCoasts = async () => {
   });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    const { coasts, serviceWithoutCoast, paidDirectionsIds } = data;
+    const { coasts, paidDirectionsIds } = data;
     servicesCoasts.value = coasts;
-    noCoast.value = serviceWithoutCoast;
     paidDirections.value = paidDirectionsIds;
   } else {
     root.$emit('msg', 'error', message);
@@ -452,6 +454,10 @@ const payment = async () => {
   }
 };
 
+const deleteItem = (idx) => {
+  servicesCoasts.value.splice(idx, 1);
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -463,7 +469,7 @@ const payment = async () => {
 }
 .scroll {
   min-height: 106px;
-  height: calc(100% - 200px);
+  height: calc(100% - 217px);
   overflow-y: auto;
   background-color: #FFF;
 }
@@ -490,7 +496,7 @@ const payment = async () => {
   border-top: 0;
 }
 .padding {
-  padding: 2px 0 2px 6px
+  padding: 0 4px 0 6px
 }
 .service-title {
   white-space: nowrap;
@@ -531,9 +537,25 @@ const payment = async () => {
 }
 .input-item {
   border: 1px solid transparent;
-  padding: 6px;
+  padding: 0 4px 0 6px;
 }
 .input-item:focus {
   border: 1px solid #3bafda;
+}
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 6px 0;
+  }
+}
+.tbl-header-footer {
+  padding: 3px 0;
 }
 </style>

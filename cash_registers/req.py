@@ -23,6 +23,9 @@ def check_cash_register_status(cash_register_data: dict) -> dict:
 
 
 def check_cash_register(cash_register_data: dict, job_open_shift=False, job_close_shift=False, check=False):
+    """
+    Проверка состояния кассы
+    """
     # TODO, проверка на смену сложная, надо упростить, есть задача открытия сменя, закрытия, проверка статуса смен, чеки
     result = {"ok": True, "message": ""}
     cash_register_check = check_cash_register_status(cash_register_data)
@@ -57,6 +60,9 @@ def check_cash_register(cash_register_data: dict, job_open_shift=False, job_clos
 
 
 def send_job(body: dict):
+    """
+    Запрос к middle server на отправку задачи
+    """
     headers = get_authorization_header()
     try:
         response = requests.post(f"{CASH_REGISTER_SERVER_ADDRESS}/push-job", json=body, headers=headers, timeout=60)
