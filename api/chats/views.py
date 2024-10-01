@@ -38,6 +38,7 @@ def get_users_for_hospital(request):
         doctorprofiles: List[DoctorProfile] = hospital.doctorprofile_set.filter(
             hospital=hospital,
             user__is_active=True,
+            dismissed=False,
         ).select_related("podrazdeleniye", "position", "specialities")
 
         departments = {}
