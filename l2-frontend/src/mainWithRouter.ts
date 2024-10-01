@@ -53,7 +53,6 @@ const router = new Router({
         ],
         showCardReader: true,
         showExtendedPatientSearch: true,
-        showShiftModal: true,
       },
     },
     {
@@ -96,16 +95,6 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/construct/laboratory',
-      name: 'construct_laboratory',
-      component: () => import('@/construct/ConstructLaboratory.vue'),
-      meta: {
-        title: 'Лабораторные исследования',
-        fullPageLayout: true,
-        groups: ['Конструктор: Лабораторные исследования'],
-      },
-    },
-    {
       path: '/ui/construct/screening',
       name: 'construct_screening',
       component: () => import('@/construct/ConstructScreening.vue'),
@@ -131,7 +120,6 @@ const router = new Router({
       meta: {
         title: 'Управление сотрудниками',
         groups: ['Конструктор: Настройка организации'],
-        fullPageLayout: true,
       },
     },
     {
@@ -180,26 +168,6 @@ const router = new Router({
       meta: {
         title: 'Контролируемые параметры пациентов',
         groups: ['Конструктор: Контролируемые параметры пациентов'],
-        narrowLayout: true,
-      },
-    },
-    {
-      path: '/ui/construct/route-perform-service',
-      name: 'construct_route_perform_service',
-      component: () => import('@/construct/ConstructRoutePerformService.vue'),
-      meta: {
-        title: 'Маршрут исследований',
-        groups: ['Конструктор: Маршрут исследований'],
-        narrowLayout: true,
-      },
-    },
-    {
-      path: '/ui/construct/complex-services',
-      name: 'construct_complex',
-      component: () => import('@/construct/ConstructComplexServices.vue'),
-      meta: {
-        title: 'Комплексные услуги',
-        groups: ['Конструктор: Комплексные услуги'],
         narrowLayout: true,
       },
     },
@@ -265,18 +233,6 @@ const router = new Router({
         showCreateDirection: true,
         showEcpSchedule: true,
         showExpertiseStatus: true,
-      },
-    },
-    {
-      path: '/ui/case-control',
-      name: 'cases-control',
-      component: () => import('@/pages/CaseControl/index.vue'),
-      meta: {
-        title: 'Случаи обслуживания',
-        fullPageLayout: true,
-        showPrintQueue: true,
-        groups: ['Врач параклиники', 'Врач консультаций'],
-        module: 'l2_case',
       },
     },
     {
@@ -349,19 +305,6 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/upload-directions',
-      name: 'upload_directions',
-      component: () => import('@/pages/UploadDirections.vue'),
-      meta: {
-        title: 'Выгрузка',
-        groups: [
-          'Врач параклиники',
-          'Врач консультаций',
-          'Врач-лаборант',
-        ],
-      },
-    },
-    {
       path: '/ui/plan-hospitalization',
       name: 'plan_hospitalization',
       component: () => import('@/pages/PlanHospitalization/index.vue'),
@@ -410,7 +353,6 @@ const router = new Router({
         ],
       },
     },
-    // DEPRECATED
     {
       path: '/ui/cases',
       name: 'cases',
@@ -725,15 +667,6 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/directions/preview',
-      name: 'directions-preview',
-      component: () => import('@/pages/DirectionsPreview.vue'),
-      meta: {
-        emptyLayout: true,
-        title: 'Предварительный просмотр бланков направлений',
-      },
-    },
-    {
       path: '/ui/analyzers',
       name: 'ManageAnalyzer',
       component: () => import('@/pages/ManageAnalyzers/index.vue'),
@@ -744,41 +677,13 @@ const router = new Router({
       },
     },
     {
-      path: '/ui/turnovers',
-      name: 'Turnovers',
-      component: () => import('@/pages/Turnovers/Turnovers.vue'),
+      path: '/ui/chambers',
+      name: 'ManageChamber',
+      component: () => import('@/pages/ManageChambers/index.vue'),
       meta: {
-        title: 'Обороты',
-        groups: ['Обороты'],
-      },
-    },
-    {
-      path: '/ui/billing',
-      name: 'Billing',
-      component: () => import('@/pages/Billing/index.vue'),
-      meta: {
-        title: 'Счет на оплату',
-        groups: ['Счет: проект'],
-      },
-    },
-    {
-      path: '/ui/document-manager',
-      name: 'document-manager',
-      component: () => import('@/pages/DocumentManagement/DocumentManager.vue'),
-      meta: {
-        title: 'ДОУ',
-        fullPageLayout: true,
-        groups: ['ДОУ: просмотр документов'],
-      },
-    },
-    {
-      path: '/ui/construct/related-tube/:id',
-      name: 'construct-related-tube',
-      component: () => import('@/construct/ConstructRelatedTube.vue'),
-      meta: {
-        emptyLayout: true,
-        title: 'Управление ёмкостями фракций',
-        groups: ['Оператор', 'Конструктор: Лабораторные исследования'],
+        narrowLayout: true,
+        title: 'Палаты',
+        groups: ['Палаты'],
       },
     },
     {
