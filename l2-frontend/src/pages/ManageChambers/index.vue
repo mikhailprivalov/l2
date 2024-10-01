@@ -1,8 +1,6 @@
 <template>
   <div>
-    <div
-      class="construct-root"
-    >
+    <div class="construct-root">
       <div class="construct-sidebar">
         <Filters
           :departments="departments"
