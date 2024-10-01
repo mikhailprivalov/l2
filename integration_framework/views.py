@@ -1620,7 +1620,6 @@ def external_list_direction_create(request):
     body_directions = json.loads(request.body)
     for body in body_directions:
         result = create_direction_by_param(body, request)
-        print(result)
         if not result.get("ok"):
             try:
                 Log.log(
