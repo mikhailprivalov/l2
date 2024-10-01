@@ -1,232 +1,222 @@
 <template>
-  <div>
-    <div class="construct-root">
-      <div class="construct-sidebar">
-        <Filters
-          :departments="departments"
-          @input="setDepartPatientId($event)"
-        />
-        <div
-          class="sidebar-content"
-        >
-          <h5
-            class="heading"
-          >
-            Пациенты
-          </h5>
-          <draggable
-            v-model="unallocatedPatients"
-            :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
-            class="draggable-element"
-            chosen-class="dragClass"
-            animation="500"
-          >
-            <div
-              v-for="patient in unallocatedPatients"
-              :key="patient.pk"
-              class="content-research"
-            >
-              {{ patient.fio }}
-              <i
-                class="fa-solid fa-child-reaching icon"
-                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-              />
-              {{ patient.age }}л.
-            </div>
-          </draggable>
-        </div>
-      </div>
-    </div>
-    <div class="construct-bottom-root">
-      <div class="construct-bottom-bar">
-        <div class="bottom-bar-content-home">
-          <h5
-            class="heading"
-          >
-            Ожидающие
-          </h5>
-          <draggable
-            v-model="withOutBeds"
-            :group="{
-              name: 'Patients',
-              pull: 'Patients',
-              put: 'Patients'}"
-            class="draggable-element-home"
-            chosen-class="dragClass"
-            animation="500"
-            @change="PatientWaitBed"
-          >
-            <div
-              v-for="patient in withOutBeds"
-              :key="patient.pk"
-              class="content-research-waiting"
-            >
-              {{ patient.short_fio }}
-              <i
-                class="fa-solid fa-child-reaching icon"
-                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-              />
-              {{ patient.age }}л.
-            </div>
-          </draggable>
-        </div>
-      </div>
-    </div>
-    <div class="scroll-div">
-      <table class="table table-fixed table-bordered table-responsive table-condensed chamber-table">
-        <colgroup>
-          <col width="80">
-          <col width="855">
-        </colgroup>
-        <thead class="sticky">
-          <tr>
-            <th
-              class="header-alignment"
-            >
-              Номер палаты
-            </th>
-            <th>
-              Управление койками
-              (Кол.коек: {{ bedInformationCounter.bed }},
-              Занятых: {{ bedInformationCounter.occupied }},
-              М: {{ bedInformationCounter.man }},
-              Ж: {{ bedInformationCounter.women }})
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="chamber in chambers"
-            :key="chamber.pk"
-            class="chamber"
-          >
-            <td
-              class="string-alignment"
-            >
-              {{ chamber.label }}
-            </td>
-            <td class="margins">
-              <div
-                v-for="bed in chamber.beds"
-                :key="bed.pk"
-                class="element"
-                :class="{ 'padding-element': bed.patient.length < 1}"
-              >
-                <draggable
-                  v-model="bed.doctor"
-                  :group="{
-                    name: 'doctor',
-                    put: conditionsDragDoc(bed),
-                    pull: 'attendingDoctor'}"
-                  animation="500"
-                  class="drag-and-drop"
-                  @change="changeDoctor($event, bed);"
-                >
-                  <i
-                    v-if="bed.doctor.length > 0"
-                    class="fa-solid fa-user-doctor icon"
-                    :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
-                  />
-                  <span
-                    v-if="bed.doctor.length < 1"
-                    class="withoutDoctor"
-                  >
-                    Б/В
-                  </span>
-                </draggable>
-                <draggable
-                  v-model="bed.patient"
-                  :group="{
-                    name: 'Patients',
-                    put: conditionsDragBed(bed),
-                    pull: 'Patients'
-                  }"
-                  animation="500"
-                  class="drag-and-drop-patient"
-                  @change="changePatientBed($event, bed)"
-                  @remove="clearArrayDoctor(bed)"
-                >
-                  <div
-                    class="element"
-                  >
-                    <div
-                      v-if="bed.patient.length > 0"
-                      class="element-content"
-                    >
-                      {{ bed.patient[0].age }}л.
-                    </div>
-                    <i
-                      class="fa fa-bed bedMin"
-                      :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
-                    />
-                  </div>
-                </draggable>
-                <div
-                  v-if="bed.patient.length > 0 || bed.doctor.length > 0"
-                  class="info"
-                >
-                  <div
-                    v-if="bed.patient.length > 0"
-                    class="text-size"
-                  >
-                    {{ bed.patient[0].short_fio }}
-                  </div>
-                  <hr
-                    v-if="bed.doctor.length > 0"
-                    class="line"
-                  >
-                  <div
-                    v-if="bed.doctor.length > 0"
-                    class="text-size"
-                    :class="{'changeColorDoc': bed.doctor[0].highlight}"
-                  >
-                    {{ bed.doctor[0].short_fio }}
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          <tr v-if="chambers.length === 0">
-            <td colspan="2">
-              Нет палат
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <div class="construct-right">
+  <div class="three-col">
+    <div class="left-panel">
+      <Filters
+        :departments="departments"
+        @input="setDepartPatientId($event)"
+      />
       <div
-        class="construct-sidebar"
+        class="panel-content"
       >
-        <Filters
-          :departments="departments"
-          @input="setDepartDocId($event)"
-        />
-        <div
-          class="sidebar-content size"
+        <h5
+          class="heading"
         >
-          <h5
-            class="heading"
+          Пациенты
+        </h5>
+        <draggable
+          v-model="unallocatedPatients"
+          :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
+          class="draggable-block"
+          chosen-class="dragClass"
+          animation="500"
+        >
+          <div
+            v-for="patient in unallocatedPatients"
+            :key="patient.pk"
+            class="draggable-item"
           >
-            Врачи
-          </h5>
-          <draggable
-            v-model="attendingDoctor"
-            :group="{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}"
-            class="draggable-element"
-            chosen-class="dragClass"
-            animation="500"
-          >
-            <div
-              v-for="doctor in attendingDoctor"
-              :key="doctor.pk"
-              class="content-research"
-              @click="highlight(doctor)"
-            >
-              {{ doctor.fio }} ({{ countPatientAtDoctor(doctor) }})
-            </div>
-          </draggable>
+            {{ patient.fio }}
+            <i
+              class="fa-solid fa-child-reaching icon"
+              :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+            />
+            {{ patient.age }}л.
+          </div>
+        </draggable>
+      </div>
+    </div>
+    <div class="central-panel">
+      <div class="room-beds">
+        <div class="scroll">
+          <table class="table table-bordered table-responsive table-condensed chamber-table">
+            <colgroup>
+              <col width="80">
+              <col width="855">
+            </colgroup>
+            <thead class="sticky">
+              <tr>
+                <th
+                  class="header-alignment"
+                >
+                  Номер палаты
+                </th>
+                <th>
+                  Управление койками
+                  (Кол.коек: {{ bedInformationCounter.bed }},
+                  Занятых: {{ bedInformationCounter.occupied }},
+                  М: {{ bedInformationCounter.man }},
+                  Ж: {{ bedInformationCounter.women }})
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="chamber in chambers"
+                :key="chamber.pk"
+                class="chamber"
+              >
+                <td
+                  class="string-alignment"
+                >
+                  {{ chamber.label }}
+                </td>
+                <td class="margins">
+                  <div
+                    v-for="bed in chamber.beds"
+                    :key="bed.pk"
+                    class="element"
+                    :class="{ 'padding-element': bed.patient.length < 1}"
+                  >
+                    <draggable
+                      v-model="bed.doctor"
+                      :group="{
+                        name: 'doctor',
+                        put: conditionsDragDoc(bed),
+                        pull: 'attendingDoctor'}"
+                      animation="500"
+                      class="drag-and-drop"
+                      @change="changeDoctor($event, bed);"
+                    >
+                      <i
+                        v-if="bed.doctor.length > 0"
+                        class="fa-solid fa-user-doctor icon"
+                        :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
+                      />
+                      <span
+                        v-if="bed.doctor.length < 1"
+                        class="withoutDoctor"
+                      >
+                        Б/В
+                      </span>
+                    </draggable>
+                    <draggable
+                      v-model="bed.patient"
+                      :group="{
+                        name: 'Patients',
+                        put: conditionsDragBed(bed),
+                        pull: 'Patients'
+                      }"
+                      animation="500"
+                      class="drag-and-drop-patient"
+                      @change="changePatientBed($event, bed)"
+                      @remove="clearArrayDoctor(bed)"
+                    >
+                      <div
+                        class="element"
+                      >
+                        <div
+                          v-if="bed.patient.length > 0"
+                          class="element-content"
+                        >
+                          {{ bed.patient[0].age }}л.
+                        </div>
+                        <i
+                          class="fa fa-bed bedMin"
+                          :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
+                        />
+                      </div>
+                    </draggable>
+                    <div
+                      v-if="bed.patient.length > 0 || bed.doctor.length > 0"
+                      class="info"
+                    >
+                      <div
+                        v-if="bed.patient.length > 0"
+                        class="text-size"
+                      >
+                        {{ bed.patient[0].short_fio }}
+                      </div>
+                      <hr
+                        v-if="bed.doctor.length > 0"
+                        class="line"
+                      >
+                      <div
+                        v-if="bed.doctor.length > 0"
+                        class="text-size"
+                        :class="{'changeColorDoc': bed.doctor[0].highlight}"
+                      >
+                        {{ bed.doctor[0].short_fio }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="chambers.length === 0">
+                <td colspan="2">
+                  Нет палат
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
+      </div>
+      <div class="await-room-beds">
+        <h5
+          class="heading"
+        >
+          Ожидающие
+        </h5>
+        <draggable
+          v-model="withOutBeds"
+          :group="{
+            name: 'Patients',
+            pull: 'Patients',
+            put: 'Patients'}"
+          class="draggable-block-waiting"
+          chosen-class="dragClass"
+          animation="500"
+          @change="PatientWaitBed"
+        >
+          <div
+            v-for="patient in withOutBeds"
+            :key="patient.pk"
+            class="draggable-item"
+          >
+            {{ patient.short_fio }}
+            <i
+              class="fa-solid fa-child-reaching icon"
+              :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+            />
+            {{ patient.age }}л.
+          </div>
+        </draggable>
+      </div>
+    </div>
+    <div class="right-panel">
+      <Filters
+        :departments="departments"
+        @input="setDepartDocId($event)"
+      />
+      <div class="panel-content">
+        <h5 class="heading">
+          Врачи
+        </h5>
+        <draggable
+          v-model="attendingDoctor"
+          :group="{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}"
+          class="draggable-block"
+          chosen-class="dragClass"
+          animation="500"
+        >
+          <div
+            v-for="doctor in attendingDoctor"
+            :key="doctor.pk"
+            class="draggable-item"
+            @click="highlight(doctor)"
+          >
+            {{ doctor.fio }} ({{ countPatientAtDoctor(doctor) }})
+          </div>
+        </draggable>
       </div>
     </div>
   </div>
@@ -477,15 +467,7 @@ onMounted(init);
   width: 935px;
   height: 500px;
 }
-.construct-right {
-  position: absolute;
-  top: 35px;
-  right: 0;
-  bottom: 0;
-  left: 1235px;
-  width: 282px;
-  border-left: 1px solid #b1b1b1;
-}
+
 .construct-bottom-root {
   position: absolute;
   top: 535px;
@@ -514,23 +496,6 @@ onMounted(init);
   height: calc(100vh - 564.5px);
   overflow-y: auto;
 }
-.construct-root {
-  position: absolute;
-  top: 35px;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  border-right: 1px solid #b1b1b1;
-  display: inline-block;
-  align-items: stretch;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-content: stretch;
-
-  & > div {
-    align-self: stretch;
-  }
-}
 .construct-sidebar {
   width: 300px;
   border-right: 1px solid #b1b1b1;
@@ -553,7 +518,7 @@ onMounted(init);
   height: 120px;
 }
 .chamber-table {
-  height: 500px;
+  height: 100px;
 }
 .chamber-table tr:nth-child(2n) {
   background-color: #F5F5F5;
@@ -746,4 +711,81 @@ onMounted(init);
 .text-size {
   font-size: 13px;
 }
+
+.three-col {
+  display: grid;
+  grid-template-columns: 300px 1fr 282px;
+  //margin-bottom: 5px;
+  height: 100%;
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  //background-color: #f8f7f7;
+  border-right: 1px solid #b1b1b1;
+}
+.central-panel {
+  display: flex;
+  flex-direction: column;
+  //background-color: #f8f7f7;
+  //border-right: 1px solid #b1b1b1;
+}
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  //background-color: #f8f7f7;
+  border-left: 1px solid #b1b1b1;
+}
+.panel-content {
+  height: 100%;
+  overflow-y: auto;
+  background-color: hsla(30, 3%, 97%, 1);
+}
+.draggable-block {
+  height: calc(100% - 60px);
+}
+.draggable-item {
+  margin: 10px 5px;
+  background-color: #fff;
+  padding: 5px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &.rhide {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
+  }
+
+  &:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  z-index: 1;
+  transform: scale(1.008);
+  }
+}
+.room-beds {
+  height: 65%;
+  overflow-y: auto;
+  //background-color: hsla(30, 3%, 97%, 1);
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+}
+.scroll {
+  max-height: 65%;
+  overflow-y: auto;
+}
+
+.await-room-beds {
+  height: 35%;
+}
+.draggable-block-waiting {
+  height: calc(100% - 50px);
+  overflow-y: auto;
+}
+
 </style>

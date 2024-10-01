@@ -751,6 +751,7 @@ const router = new Router({
         narrowLayout: true,
         title: 'Палаты',
         groups: ['Палаты'],
+        fullPageLayout: true,
       },
     },
     {
