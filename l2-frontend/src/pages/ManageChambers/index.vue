@@ -741,7 +741,7 @@ onMounted(init);
   background-color: hsla(30, 3%, 97%, 1);
 }
 .draggable-block {
-  height: calc(100% - 60px);
+  height: calc(100% - 50px);
 }
 .draggable-item {
   margin: 10px 5px;
@@ -764,7 +764,7 @@ onMounted(init);
   }
 }
 .room-beds {
-  min-height: 300px;
+  min-height: 192px;
   max-height: calc(100vh - 192px);
   overflow-y: auto;
   //background-color: hsla(30, 3%, 97%, 1);
@@ -774,10 +774,6 @@ onMounted(init);
   width: 100%;
   table-layout: fixed;
 }
-//.scroll {
-//  height: 100%;
-//  overflow-y: auto;
-//}
 
 .await-room-beds {
   height: 35%;
