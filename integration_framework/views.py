@@ -1640,9 +1640,10 @@ def create_direction_by_param(body, request):
     if not code_tfoms and not oid_org:
         return {"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"}
 
+    hospital = None
     if code_tfoms:
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
-    else:
+    if not hospital:
         hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
@@ -1710,7 +1711,6 @@ def create_direction_by_param(body, request):
                 individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
             individual = individuals.first()
-
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
