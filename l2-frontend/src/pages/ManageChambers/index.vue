@@ -159,35 +159,37 @@
         </table>
       </div>
       <div class="await-room-beds">
-        <h5
-          class="heading"
-        >
-          Ожидающие
-        </h5>
-        <draggable
-          v-model="withOutBeds"
-          :group="{
-            name: 'Patients',
-            pull: 'Patients',
-            put: 'Patients'}"
-          class="draggable-block-waiting"
-          chosen-class="dragClass"
-          animation="500"
-          @change="PatientWaitBed"
-        >
-          <div
-            v-for="patient in withOutBeds"
-            :key="patient.pk"
-            class="draggable-item"
+        <div class="panel-content">
+          <h5
+            class="heading"
           >
-            {{ patient.short_fio }}
-            <i
-              class="fa-solid fa-child-reaching icon"
-              :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-            />
-            {{ patient.age }}л.
-          </div>
-        </draggable>
+            Ожидающие
+          </h5>
+          <draggable
+            v-model="withOutBeds"
+            :group="{
+              name: 'Patients',
+              pull: 'Patients',
+              put: 'Patients'}"
+            class="draggable-block-waiting"
+            chosen-class="dragClass"
+            animation="500"
+            @change="PatientWaitBed"
+          >
+            <div
+              v-for="patient in withOutBeds"
+              :key="patient.pk"
+              class="draggable-item"
+            >
+              {{ patient.short_fio }}
+              <i
+                class="fa-solid fa-child-reaching icon"
+                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+              />
+              {{ patient.age }}л.
+            </div>
+          </draggable>
+        </div>
       </div>
     </div>
     <div class="right-panel">
@@ -741,7 +743,7 @@ onMounted(init);
   background-color: hsla(30, 3%, 97%, 1);
 }
 .draggable-block {
-  height: calc(100% - 50px);
+  height: calc(100% - 60px);
 }
 .draggable-item {
   margin: 10px 5px;
@@ -764,9 +766,9 @@ onMounted(init);
   }
 }
 .room-beds {
-  min-height: 192px;
-  max-height: calc(100vh - 192px);
+  flex: 1 1 192px;
   overflow-y: auto;
+
   //background-color: hsla(30, 3%, 97%, 1);
 }
 
@@ -776,10 +778,10 @@ onMounted(init);
 }
 
 .await-room-beds {
-  height: 35%;
+  flex: 0.5 0.5 100px;
 }
 .draggable-block-waiting {
-  height: calc(100% - 50px);
+  height: calc(100% - 46px);
   overflow-y: auto;
 }
 
