@@ -16,5 +16,5 @@ def find_patient(snils, enp):
     if not individual:
         return None
 
-    card = Card.objects.filter(individual=individual, base__internal_type=True).first()
+    card = Card.objects.filter(individual=individual, base__internal_type=True, is_archive=False).first()
     return card

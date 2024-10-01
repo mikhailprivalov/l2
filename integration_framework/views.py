@@ -1618,9 +1618,9 @@ def external_list_direction_create(request):
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
     body_directions = json.loads(request.body)
-    print(body_directions)
     for body in body_directions:
         result = create_direction_by_param(body, request)
+        print(result)
         if not result.get("ok"):
             try:
                 Log.log(
@@ -1641,9 +1641,10 @@ def create_direction_by_param(body, request):
     if not code_tfoms and not oid_org:
         return {"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"}
 
+    hospital = None
     if code_tfoms:
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
-    else:
+    if not hospital:
         hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
