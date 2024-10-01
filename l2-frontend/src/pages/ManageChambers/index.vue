@@ -5,14 +5,14 @@
         :departments="departments"
         @input="setDepartPatientId($event)"
       />
+      <h5
+        class="heading"
+      >
+        Пациенты
+      </h5>
       <div
         class="panel-content"
       >
-        <h5
-          class="heading"
-        >
-          Пациенты
-        </h5>
         <draggable
           v-model="unallocatedPatients"
           :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
@@ -159,36 +159,38 @@
         </table>
       </div>
       <div class="await-room-beds">
-        <div class="panel-content">
+        <div class="panel-content-waiting">
           <h5
             class="heading"
           >
             Ожидающие
           </h5>
-          <draggable
-            v-model="withOutBeds"
-            :group="{
-              name: 'Patients',
-              pull: 'Patients',
-              put: 'Patients'}"
-            class="draggable-block-waiting"
-            chosen-class="dragClass"
-            animation="500"
-            @change="PatientWaitBed"
-          >
-            <div
-              v-for="patient in withOutBeds"
-              :key="patient.pk"
-              class="draggable-item"
+          <div class="draggable-wrapper">
+            <draggable
+              v-model="withOutBeds"
+              :group="{
+                name: 'Patients',
+                pull: 'Patients',
+                put: 'Patients'}"
+              class="draggable-block-waiting"
+              chosen-class="dragClass"
+              animation="500"
+              @change="PatientWaitBed"
             >
-              {{ patient.short_fio }}
-              <i
-                class="fa-solid fa-child-reaching icon"
-                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
-              />
-              {{ patient.age }}л.
-            </div>
-          </draggable>
+              <div
+                v-for="patient in withOutBeds"
+                :key="patient.pk"
+                class="draggable-item"
+              >
+                {{ patient.short_fio }}
+                <i
+                  class="fa-solid fa-child-reaching icon"
+                  :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+                />
+                {{ patient.age }}л.
+              </div>
+            </draggable>
+          </div>
         </div>
       </div>
     </div>
@@ -197,10 +199,10 @@
         :departments="departments"
         @input="setDepartDocId($event)"
       />
+      <h5 class="heading">
+        Врачи
+      </h5>
       <div class="panel-content">
-        <h5 class="heading">
-          Врачи
-        </h5>
         <draggable
           v-model="attendingDoctor"
           :group="{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}"
@@ -723,6 +725,7 @@ onMounted(init);
   display: flex;
   flex-direction: column;
   //background-color: #f8f7f7;
+  background-color: hsla(30, 3%, 97%, 1);
   border-right: 1px solid #b1b1b1;
 }
 .central-panel {
@@ -738,12 +741,13 @@ onMounted(init);
   border-left: 1px solid #b1b1b1;
 }
 .panel-content {
-  height: 100%;
+  flex: 1;
+  max-height: calc(100vh - 122px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
 .draggable-block {
-  height: calc(100% - 60px);
+  flex: 1;
 }
 .draggable-item {
   margin: 10px 5px;
@@ -780,9 +784,16 @@ onMounted(init);
 .await-room-beds {
   flex: 0.5 0.5 100px;
 }
-.draggable-block-waiting {
-  height: calc(100% - 46px);
+//.draggable-block-waiting {
+//  height: calc(100% - 46px);
+//  overflow-y: auto;
+//}
+.panel-content-waiting {
+  height: calc(100% - 15px);
+  background-color: hsla(30, 3%, 97%, 1);
+}
+.draggable-wrapper {
+  height: calc(100% - 35px);
   overflow-y: auto;
 }
-
 </style>
