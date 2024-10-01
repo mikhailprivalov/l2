@@ -40,7 +40,7 @@
         <table class="table table-bordered table-responsive table-condensed chamber-table">
           <colgroup>
             <col width="80">
-            <col width="855">
+            <col>
           </colgroup>
           <thead class="sticky">
             <tr>
@@ -686,6 +686,7 @@ onMounted(init);
 }
 .heading {
   text-align: center;
+  margin: 5px 0;
 }
 .icon {
   font-size: 20px;
@@ -724,27 +725,25 @@ onMounted(init);
 .left-panel {
   display: flex;
   flex-direction: column;
-  //background-color: #f8f7f7;
   background-color: hsla(30, 3%, 97%, 1);
   border-right: 1px solid #b1b1b1;
 }
 .central-panel {
   display: flex;
   flex-direction: column;
-  //background-color: #f8f7f7;
-  //border-right: 1px solid #b1b1b1;
 }
 .right-panel {
   display: flex;
   flex-direction: column;
-  //background-color: #f8f7f7;
+  background-color: hsla(30, 3%, 97%, 1);
   border-left: 1px solid #b1b1b1;
 }
 .panel-content {
   flex: 1;
-  max-height: calc(100vh - 122px);
+  max-height: calc(100vh - 102px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
+  padding-bottom: 5px;
 }
 .draggable-block {
   flex: 1;
