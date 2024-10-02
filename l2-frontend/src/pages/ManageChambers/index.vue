@@ -106,21 +106,19 @@
                         pull: 'Patients'
                       }"
                       animation="500"
-                      class="drag-and-drop-patient"
+                      class="draggable-patient"
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
-                      <div
-                        class="element"
-                      >
+                      <div class="patient-row">
                         <div
                           v-if="bed.patient.length > 0"
-                          class="element-content"
+                          class="age"
                         >
                           {{ bed.patient[0].age }}л.
                         </div>
                         <i
-                          class="fa fa-bed bedMin"
+                          class="fa fa-bed beds-icon"
                           :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
                         />
                       </div>
@@ -473,59 +471,6 @@ onMounted(init);
   margin-bottom: 10px;
   padding: 10px;
 }
-.drag-and-drop {
-  display: inline-block;
-  overflow: hidden;
-  background-color: #fff;
-  margin-left: 20px;
-  margin-bottom: 10px;
-  text-align: center;
-  padding: 5px;
-  height: 30px;
-  width: 30px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &.rhide {
-  background-image: linear-gradient(#6c7a89, #56616c);
-  color: #fff;
-  }
-
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
-  }
-}
-.drag-and-drop-patient {
-  display: inline-block;
-  overflow: hidden;
-  background-color: #fff;
-  margin-left: 5px;
-  margin-top: 4px;
-  margin-bottom: 10px;
-  text-align: right;
-  padding: 5px;
-  height: 30px;
-  width: 68px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &.rhide {
-  background-image: linear-gradient(#6c7a89, #56616c);
-  color: #fff;
-  }
-
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
-  }
-}
 .bedMin {
   font-size: 20px;
   overflow: hidden;
@@ -732,5 +677,42 @@ onMounted(init);
 }
 .without-doctor {
   font-size: 12px;
+}
+
+.draggable-patient {
+  display: inline-block;
+  overflow: hidden;
+  background-color: #fff;
+  margin-left: 5px;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  text-align: right;
+  height: 30px;
+  width: 68px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &.rhide {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
+  }
+
+  &:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  z-index: 1;
+  transform: scale(1.008);
+  }
+}
+.patient-row {
+  display: flex;
+}
+.age {
+  margin: 5px auto;
+}
+.beds-icon {
+  font-size: 20px;
+  margin: 5px auto;
 }
 </style>
