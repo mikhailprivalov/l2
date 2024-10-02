@@ -619,8 +619,9 @@ onMounted(init);
   &-left,
   &-center,
   &-right {
-     display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 10px;
   }
   &-left {
     background-color: hsla(30, 3%, 97%, 1);
@@ -634,10 +635,9 @@ onMounted(init);
 
 .panel-content {
   flex: 1;
-  max-height: calc(100vh - 102px);
+  max-height: calc(100vh - 112px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
-  padding-bottom: 5px;
 }
 .draggable-block {
   min-height: calc(100% - 20px);
