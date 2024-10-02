@@ -610,7 +610,7 @@ onMounted(init);
 .three-panel {
   display: grid;
   grid-template-columns: 300px 1fr 282px;
-  height: 100%;
+  height: calc(100vh - 36px);
   background-color: hsla(30, 3%, 97%, 1);
 }
 
@@ -620,7 +620,7 @@ onMounted(init);
   &-right {
     display: flex;
     flex-direction: column;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
   }
   &-left {
     background-color: hsla(30, 3%, 97%, 1);
@@ -680,10 +680,10 @@ onMounted(init);
 }
 
 .waiting-content {
-  height: calc(100% - 30px);
+  height: 120px;
   overflow-y: auto;
 }
 .draggable-block-waiting {
-  min-height: 100%;
+  min-height: 110px;
 }
 </style>
