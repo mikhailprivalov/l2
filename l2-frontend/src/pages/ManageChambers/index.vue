@@ -456,67 +456,6 @@ onMounted(init);
 </script>
 
 <style scoped lang="scss">
-.scroll-div {
-  overflow-y: auto;
-  overflow-x: hidden;
-  position: absolute;
-  top: 35px;
-  right: 0;
-  bottom: 0;
-  left: 300px;
-  width: 935px;
-  height: 500px;
-}
-
-.construct-bottom-root {
-  position: absolute;
-  top: 535px;
-  right: 0;
-  bottom: 0;
-  left: 300px;
-  border-right: 1px solid #b1b1b1;
-  border-left: 1px solid #b1b1b1;
-  border-top: 1px solid #b1b1b1;
-  display: inline-block;
-  align-items: stretch;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-content: stretch;
-
-  & > div {
-    align-self: stretch;
-  }
-}
-.construct-bottom-bar {
-  width: 936px;
-  display: flex;
-  flex-direction: column;
-}
-.bottom-bar-content-home {
-  height: calc(100vh - 564.5px);
-  overflow-y: auto;
-}
-.construct-sidebar {
-  width: 300px;
-  border-right: 1px solid #b1b1b1;
-  display: flex;
-  flex-direction: column;
-}
-.sidebar-content {
-  height: calc(100vh - 72px);
-  overflow-y: auto;
-  background-color: hsla(30, 3%, 97%, 1);
-}
-.draggable-element {
-  padding: 5px;
-  margin: 10px;
-  height: 600px;
-}
-.draggable-element-home {
-  padding: 5px;
-  margin: 10px;
-  height: 120px;
-}
 .chamber-table {
   height: 100px;
 }
@@ -596,51 +535,6 @@ onMounted(init);
 .currentDoctor {
   color:  #00bfff;
 }
-.content-research-waiting{
-  margin-top: 10px;
-  max-width: 250px;
-  display: inline-block;
-  margin-left: 10px;
-  margin-bottom: 10px;
-  background-color: #fff;
-  padding: 5px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &.rhide {
-  background-image: linear-gradient(#6c7a89, #56616c);
-  color: #fff;
-  }
-
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
-  }
-}
-.content-research {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  background-color: #fff;
-  padding: 5px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &.rhide {
-  background-image: linear-gradient(#6c7a89, #56616c);
-  color: #fff;
-  }
-
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
-  }
-}
 .element {
   display: inline-block;
 }
@@ -662,17 +556,17 @@ onMounted(init);
   vertical-align: middle;
 }
 .dragClass {
-  opacity: 0;
+  opacity: 0.5;
 }
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-}
-::-webkit-scrollbar-thumb {
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-}
+//::-webkit-scrollbar {
+//  width: 6px;
+//}
+//::-webkit-scrollbar-track {
+//  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+//}
+//::-webkit-scrollbar-thumb {
+//  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+//}
 .sticky {
   position: sticky;
   top: 0;
