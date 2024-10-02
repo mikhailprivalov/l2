@@ -62,10 +62,9 @@
             <tr
               v-for="chamber in chambers"
               :key="chamber.pk"
-              class="chamber"
             >
               <td
-                class="string-alignment"
+                class="room-number"
               >
                 {{ chamber.label }}
               </td>
@@ -546,11 +545,6 @@ onMounted(init);
   margin-right: 1px;
   margin-bottom: 10px;
 }
-.string-alignment {
-  font-weight: bold;
-  text-align: center;
-  vertical-align: middle;
-}
 .header-alignment {
   text-align: center;
   vertical-align: middle;
@@ -689,5 +683,11 @@ onMounted(init);
 }
 .draggable-block-waiting {
   min-height: 110px;
+}
+
+.room-number {
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
 }
 </style>
