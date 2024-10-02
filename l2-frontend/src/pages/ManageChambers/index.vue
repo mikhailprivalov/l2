@@ -611,6 +611,8 @@ onMounted(init);
   display: grid;
   grid-template-columns: 300px 1fr 282px;
   height: 100%;
+  background-color: hsla(30, 3%, 97%, 1);
+  padding-bottom: 5px;
 }
 
 .panel {
