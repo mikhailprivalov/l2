@@ -17,7 +17,7 @@
           v-model="unallocatedPatients"
           :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
           class="draggable-block"
-          chosen-class="dragClass"
+          chosen-class="drag-class"
           animation="500"
         >
           <div
@@ -182,7 +182,7 @@
               :key="patient.pk"
               class="draggable-item"
             >
-              {{ patient.short_fio }}patient-icon
+              {{ patient.short_fio }}
               <i
                 class="fa-solid fa-child-reaching patient-icon"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
@@ -476,7 +476,7 @@ onMounted(init);
   text-align: center;
   vertical-align: middle;
 }
-.dragClass {
+.drag-class {
   opacity: 0.5;
 }
 .sticky {
