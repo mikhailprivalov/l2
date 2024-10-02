@@ -106,7 +106,7 @@
                         pull: 'Patients'
                       }"
                       animation="500"
-                      class="draggable-patient"
+                      class="draggable-beds"
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
@@ -467,26 +467,15 @@ onMounted(init);
 .chamber-table tr:nth-child(2n-1) {
   background-color: #FFFAFA;
 }
-.margins {
-  margin-bottom: 10px;
-  padding: 10px;
-}
-.bedMin {
-  font-size: 20px;
-  overflow: hidden;
-}
 .women {
   color: #ffb9ea;
 }
 .man {
   color: #00bfff;
 }
-.currentDoctor {
-  color:  #00bfff;
-}
-.element {
-  display: inline-block;
-}
+//.currentDoctor {
+//  color:  #00bfff;
+//}
 .padding-element {
   padding-right: 140px;
 }
@@ -642,15 +631,16 @@ onMounted(init);
   flex-wrap: wrap;
 }
 .beds-item {
-  flex: 0 0 33.3333%;
+  flex: 1 1 33.3333%;
+  display: flex;
+  flex-wrap: nowrap;
+  margin: 10px 0;
 }
 
 .draggable-doctor {
-  display: inline-block;
+  margin: 5px;
   overflow: hidden;
   background-color: #fff;
-  margin-left: 20px;
-  margin-bottom: 10px;
   text-align: center;
   height: 30px;
   width: 30px;
@@ -679,13 +669,10 @@ onMounted(init);
   font-size: 12px;
 }
 
-.draggable-patient {
-  display: inline-block;
+.draggable-beds {
+  margin: 5px;
   overflow: hidden;
   background-color: #fff;
-  margin-left: 5px;
-  margin-top: 4px;
-  margin-bottom: 10px;
   text-align: right;
   height: 30px;
   width: 68px;
