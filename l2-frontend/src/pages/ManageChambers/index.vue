@@ -171,7 +171,7 @@
               name: 'Patients',
               pull: 'Patients',
               put: 'Patients'}"
-            class="draggable-block"
+            class="draggable-block-waiting"
             chosen-class="dragClass"
             animation="500"
             @change="PatientWaitBed"
@@ -679,11 +679,10 @@ onMounted(init);
 }
 
 .waiting-content {
-  max-height: 100%;
+  height: calc(100% - 30px);
   overflow-y: auto;
 }
-//.draggable-block-waiting {
-//  height: calc(100% - 46px);
-//  overflow-y: auto;
-//}
+.draggable-block-waiting {
+  min-height: 100%;
+}
 </style>
