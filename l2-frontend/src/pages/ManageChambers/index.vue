@@ -612,7 +612,6 @@ onMounted(init);
   grid-template-columns: 300px 1fr 282px;
   height: 100%;
   background-color: hsla(30, 3%, 97%, 1);
-  padding-bottom: 5px;
 }
 
 .panel {
@@ -621,7 +620,7 @@ onMounted(init);
   &-right {
     display: flex;
     flex-direction: column;
-    padding-bottom: 10px;
+    margin-bottom: 5px;
   }
   &-left {
     background-color: hsla(30, 3%, 97%, 1);
