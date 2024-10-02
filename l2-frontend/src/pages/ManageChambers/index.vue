@@ -1,6 +1,6 @@
 <template>
-  <div class="three-col">
-    <div class="left-panel">
+  <div class="three-panel">
+    <div class="panel-left">
       <Filters
         :departments="departments"
         @input="setDepartPatientId($event)"
@@ -35,7 +35,7 @@
         </draggable>
       </div>
     </div>
-    <div class="central-panel">
+    <div class="panel-center">
       <div class="room-beds">
         <table class="table-beds table-bordered table-responsive table-condensed chamber-table">
           <colgroup>
@@ -158,20 +158,20 @@
           </tbody>
         </table>
       </div>
-      <div class="room-beds-waiting">
+      <div class="waiting">
         <h5
           class="heading"
         >
           Ожидающие
         </h5>
-        <div class="panel-content-waiting">
+        <div class="waiting-content">
           <draggable
             v-model="withOutBeds"
             :group="{
               name: 'Patients',
               pull: 'Patients',
               put: 'Patients'}"
-            class="draggable-block-waiting"
+            class="draggable-block"
             chosen-class="dragClass"
             animation="500"
             @change="PatientWaitBed"
@@ -192,7 +192,7 @@
         </div>
       </div>
     </div>
-    <div class="right-panel">
+    <div class="panel-right">
       <Filters
         :departments="departments"
         @input="setDepartDocId($event)"
@@ -569,7 +569,7 @@ onMounted(init);
 //}
 .sticky {
   position: sticky;
-  top: 0;
+  top: -1px;
   z-index: 1;
   background-color: white;
 }
@@ -607,29 +607,29 @@ onMounted(init);
   font-size: 13px;
 }
 
-.three-col {
+.three-panel {
   display: grid;
   grid-template-columns: 300px 1fr 282px;
-  //margin-bottom: 5px;
   height: 100%;
 }
 
-.left-panel {
-  display: flex;
+.panel {
+  &-left,
+  &-center,
+  &-right {
+     display: flex;
   flex-direction: column;
-  background-color: hsla(30, 3%, 97%, 1);
-  border-right: 1px solid #b1b1b1;
+  }
+  &-left {
+    background-color: hsla(30, 3%, 97%, 1);
+    border-right: 1px solid #b1b1b1;
+  }
+  &-right {
+    background-color: hsla(30, 3%, 97%, 1);
+    border-left: 1px solid #b1b1b1;
+  }
 }
-.central-panel {
-  display: flex;
-  flex-direction: column;
-}
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  background-color: hsla(30, 3%, 97%, 1);
-  border-left: 1px solid #b1b1b1;
-}
+
 .panel-content {
   flex: 1;
   max-height: calc(100vh - 102px);
@@ -660,6 +660,7 @@ onMounted(init);
   transform: scale(1.008);
   }
 }
+
 .room-beds {
   flex: 1 1 192px;
   overflow-y: auto;
@@ -672,23 +673,17 @@ onMounted(init);
   margin-bottom: 0;
 }
 
-.room-beds-waiting {
-  flex: 0.5 0.5 100px;
+.waiting {
+  height: 150px;
   background-color: hsla(30, 3%, 97%, 1);
-  display: flex;
-  flex-direction: column;
+}
+
+.waiting-content {
+  max-height: 100%;
+  overflow-y: auto;
 }
 //.draggable-block-waiting {
 //  height: calc(100% - 46px);
 //  overflow-y: auto;
 //}
-.panel-content-waiting {
-  flex: 1;
-  max-height: 150px;
-  overflow-y: auto;
-}
-.draggable-wrapper {
-  height: calc(100% - 35px);
-  overflow-y: auto;
-}
 </style>
