@@ -630,6 +630,9 @@ onMounted(init);
     background-color: hsla(30, 3%, 97%, 1);
     border-left: 1px solid #b1b1b1;
   }
+  &-center {
+    overflow-y: auto;
+  }
 }
 
 .panel-content {
@@ -664,6 +667,7 @@ onMounted(init);
 
 .room-beds {
   flex: 1 1 192px;
+  min-height: 192px;
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
