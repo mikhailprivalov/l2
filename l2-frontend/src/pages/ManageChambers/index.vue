@@ -27,7 +27,7 @@
           >
             {{ patient.fio }}
             <i
-              class="fa-solid fa-child-reaching icon"
+              class="fa-solid fa-child-reaching patient-icon"
               :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
             />
             {{ patient.age }}л.
@@ -74,7 +74,6 @@
                     v-for="bed in chamber.beds"
                     :key="bed.pk"
                     class="beds-item"
-                    :class="{ 'padding-element': bed.patient.length < 1}"
                   >
                     <draggable
                       v-model="bed.doctor"
@@ -140,7 +139,7 @@
                       <div
                         v-if="bed.doctor.length > 0"
                         class="text-size"
-                        :class="{'changeColorDoc': bed.doctor[0].highlight}"
+                        :class="{'change-color-doc': bed.doctor[0].highlight}"
                       >
                         {{ bed.doctor[0].short_fio }}
                       </div>
@@ -183,9 +182,9 @@
               :key="patient.pk"
               class="draggable-item"
             >
-              {{ patient.short_fio }}
+              {{ patient.short_fio }}patient-icon
               <i
-                class="fa-solid fa-child-reaching icon"
+                class="fa-solid fa-child-reaching patient-icon"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
               />
               {{ patient.age }}л.
@@ -473,17 +472,6 @@ onMounted(init);
 .man {
   color: #00bfff;
 }
-//.currentDoctor {
-//  color:  #00bfff;
-//}
-.padding-element {
-  padding-right: 140px;
-}
-.element-content {
-  display: inline-block;
-  margin-right: 1px;
-  margin-bottom: 10px;
-}
 .header-alignment {
   text-align: center;
   vertical-align: middle;
@@ -497,23 +485,16 @@ onMounted(init);
   z-index: 1;
   background-color: white;
 }
-.changeColorDoc {
+.change-color-doc {
   background-color: #BCD2DD;
 }
 .heading {
   text-align: center;
   margin: 5px 0;
 }
-.icon {
+.patient-icon {
   font-size: 20px;
   margin: auto;
-}
-.chamber {
-  max-height: 61px;
-  height: 61px;
-}
-.withoutDoctor {
-  font-size: 12px;
 }
 .info {
   display: inline-block;
@@ -524,9 +505,6 @@ onMounted(init);
   border-top: 1px solid #ddd;
   margin-bottom: 0;
   margin-top: 0;
-}
-.size {
-  width: 297px;
 }
 .text-size {
   font-size: 13px;
