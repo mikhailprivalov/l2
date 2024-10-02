@@ -68,89 +68,94 @@
               >
                 {{ chamber.label }}
               </td>
-              <td class="margins">
-                <div
-                  v-for="bed in chamber.beds"
-                  :key="bed.pk"
-                  class="element"
-                  :class="{ 'padding-element': bed.patient.length < 1}"
-                >
-                  <draggable
-                    v-model="bed.doctor"
-                    :group="{
-                      name: 'doctor',
-                      put: conditionsDragDoc(bed),
-                      pull: 'attendingDoctor'}"
-                    animation="500"
-                    class="drag-and-drop"
-                    @change="changeDoctor($event, bed);"
+              <td>
+                <div class="beds">
+                  <div
+                    v-for="bed in chamber.beds"
+                    :key="bed.pk"
+                    class="beds-item"
+                    :class="{ 'padding-element': bed.patient.length < 1}"
                   >
-                    <i
-                      v-if="bed.doctor.length > 0"
-                      class="fa-solid fa-user-doctor icon"
-                      :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
-                    />
-                    <span
-                      v-if="bed.doctor.length < 1"
-                      class="withoutDoctor"
+                    <draggable
+                      v-model="bed.doctor"
+                      :group="{
+                        name: 'doctor',
+                        put: conditionsDragDoc(bed),
+                        pull: 'attendingDoctor'}"
+                      animation="500"
+                      class="drag-and-drop"
+                      @change="changeDoctor($event, bed);"
                     >
-                      Б/В
-                    </span>
-                  </draggable>
-                  <draggable
-                    v-model="bed.patient"
-                    :group="{
-                      name: 'Patients',
-                      put: conditionsDragBed(bed),
-                      pull: 'Patients'
-                    }"
-                    animation="500"
-                    class="drag-and-drop-patient"
-                    @change="changePatientBed($event, bed)"
-                    @remove="clearArrayDoctor(bed)"
-                  >
+                      <i
+                        v-if="bed.doctor.length > 0"
+                        class="fa-solid fa-user-doctor icon"
+                        :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
+                      />
+                      <span
+                        v-if="bed.doctor.length < 1"
+                        class="withoutDoctor"
+                      >
+                        Б/В
+                      </span>
+                    </draggable>
+                    <draggable
+                      v-model="bed.patient"
+                      :group="{
+                        name: 'Patients',
+                        put: conditionsDragBed(bed),
+                        pull: 'Patients'
+                      }"
+                      animation="500"
+                      class="drag-and-drop-patient"
+                      @change="changePatientBed($event, bed)"
+                      @remove="clearArrayDoctor(bed)"
+                    >
+                      <div
+                        class="element"
+                      >
+                        <div
+                          v-if="bed.patient.length > 0"
+                          class="element-content"
+                        >
+                          {{ bed.patient[0].age }}л.
+                        </div>
+                        <i
+                          class="fa fa-bed bedMin"
+                          :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
+                        />
+                      </div>
+                    </draggable>
                     <div
-                      class="element"
+                      v-if="bed.patient.length > 0 || bed.doctor.length > 0"
+                      class="info"
                     >
                       <div
                         v-if="bed.patient.length > 0"
-                        class="element-content"
+                        class="text-size"
                       >
-                        {{ bed.patient[0].age }}л.
+                        {{ bed.patient[0].short_fio }}
                       </div>
-                      <i
-                        class="fa fa-bed bedMin"
-                        :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
-                      />
-                    </div>
-                  </draggable>
-                  <div
-                    v-if="bed.patient.length > 0 || bed.doctor.length > 0"
-                    class="info"
-                  >
-                    <div
-                      v-if="bed.patient.length > 0"
-                      class="text-size"
-                    >
-                      {{ bed.patient[0].short_fio }}
-                    </div>
-                    <hr
-                      v-if="bed.doctor.length > 0"
-                      class="line"
-                    >
-                    <div
-                      v-if="bed.doctor.length > 0"
-                      class="text-size"
-                      :class="{'changeColorDoc': bed.doctor[0].highlight}"
-                    >
-                      {{ bed.doctor[0].short_fio }}
+                      <hr
+                        v-if="bed.doctor.length > 0"
+                        class="line"
+                      >
+                      <div
+                        v-if="bed.doctor.length > 0"
+                        class="text-size"
+                        :class="{'changeColorDoc': bed.doctor[0].highlight}"
+                      >
+                        {{ bed.doctor[0].short_fio }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </td>
             </tr>
             <tr v-if="chambers.length === 0">
-              <td colspan="2">
+              <td
+                class="no-rooms"
+                colspan="2"
+              >
                 Нет палат
               </td>
             </tr>
@@ -670,6 +675,7 @@ onMounted(init);
   width: 100%;
   table-layout: fixed;
   margin-bottom: 0;
+  height: 100%;
 }
 
 .waiting {
@@ -685,9 +691,20 @@ onMounted(init);
   min-height: 110px;
 }
 
+.no-rooms {
+  text-align: center;
+  font-weight: bold;
+}
 .room-number {
   font-weight: bold;
   text-align: center;
   vertical-align: middle;
+}
+.beds {
+  display: flex;
+  flex-wrap: wrap;
+}
+.beds-item {
+  flex: 0 0 33.3333%;
 }
 </style>
