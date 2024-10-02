@@ -83,17 +83,17 @@
                         put: conditionsDragDoc(bed),
                         pull: 'attendingDoctor'}"
                       animation="500"
-                      class="drag-and-drop"
+                      class="draggable-doctor"
                       @change="changeDoctor($event, bed);"
                     >
                       <i
                         v-if="bed.doctor.length > 0"
-                        class="fa-solid fa-user-doctor icon"
+                        class="fa-solid fa-user-doctor doctor-icon"
                         :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
                       />
                       <span
                         v-if="bed.doctor.length < 1"
-                        class="withoutDoctor"
+                        class="without-doctor"
                       >
                         Б/В
                       </span>
@@ -557,15 +557,6 @@ onMounted(init);
 .dragClass {
   opacity: 0.5;
 }
-//::-webkit-scrollbar {
-//  width: 6px;
-//}
-//::-webkit-scrollbar-track {
-//  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-//}
-//::-webkit-scrollbar-thumb {
-//  box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-//}
 .sticky {
   position: sticky;
   top: -1px;
@@ -581,6 +572,7 @@ onMounted(init);
 }
 .icon {
   font-size: 20px;
+  margin: auto;
 }
 .chamber {
   max-height: 61px;
@@ -706,5 +698,39 @@ onMounted(init);
 }
 .beds-item {
   flex: 0 0 33.3333%;
+}
+
+.draggable-doctor {
+  display: inline-block;
+  overflow: hidden;
+  background-color: #fff;
+  margin-left: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+  height: 30px;
+  width: 30px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  &.rhide {
+  background-image: linear-gradient(#6c7a89, #56616c);
+  color: #fff;
+  }
+
+  &:hover {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+  z-index: 1;
+  transform: scale(1.008);
+  }
+}
+
+.doctor-icon {
+  font-size: 20px;
+  margin: 5px auto;
+}
+.without-doctor {
+  font-size: 12px;
 }
 </style>
