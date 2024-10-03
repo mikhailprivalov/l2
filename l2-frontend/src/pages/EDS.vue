@@ -583,7 +583,7 @@ export default class EDS extends Vue {
       if (this.filters.mode === 'my') {
         return snilsCert === this.snilsUser;
       }
-      return !!(certObj.ORGN || certObj['ОГРН']);
+      return !!(certObj.OGRN || certObj['ОГРН']);
     });
     if (filteredCertificates.length === 0) {
       this.selectedCertificate = null;
