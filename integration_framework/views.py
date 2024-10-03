@@ -2748,7 +2748,7 @@ def results_by_direction(request):
                                 additional_data_confirm_direction = {}
                         except Exception:
                             additional_data_confirm_direction = None
-
+                data_time = current_time()
                 objs_result[direction_data[1]]["services"][i["result"][0]["iss_id"]] = {
                     "title": i["title_research"],
                     "fio": short_fio_dots(i["result"][0]["docConfirm"]),
@@ -2756,6 +2756,9 @@ def results_by_direction(request):
                     "fractions": [],
                     "directionId": i["result"][0]["direction_id"],
                     "additionalDataConfirmDirection": additional_data_confirm_direction,
+                    "rowAdditionalData": doctor_additional_info,
+                    "currentDate": datetime.datetime.strftime(data_time, '%H:%M'),
+                    "currentTime": datetime.datetime.strftime(data_time, '%d.%m%Y'),
                 }
 
             values = values_as_structure_data(i["result"][0]["data"])
