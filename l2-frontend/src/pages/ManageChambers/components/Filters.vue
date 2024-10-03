@@ -6,6 +6,7 @@
     :options="props.departments"
     placeholder="Отделение не выбрано"
     :append-to-body="true"
+    :class="{'treeselect-noborder': props.noBorder}"
     @input="$emit('input', departId)"
   />
 </template>

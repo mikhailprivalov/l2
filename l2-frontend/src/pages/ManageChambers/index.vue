@@ -3,10 +3,11 @@
     <div class="panel-left">
       <Filters
         :departments="departments"
+        :no-border="true"
         @input="setDepartPatientId($event)"
       />
       <h5
-        class="heading"
+        class="heading top-border"
       >
         Пациенты
       </h5>
@@ -44,11 +45,11 @@
             <col>
           </colgroup>
           <thead class="sticky">
-            <tr>
+            <tr class="height36">
               <th
                 class="header-alignment"
               >
-                Номер палаты
+                Палата
               </th>
               <th>
                 Управление койками
@@ -190,7 +191,7 @@
             <div
               v-for="patient in withOutBeds"
               :key="patient.pk"
-              class="draggable-item"
+              class="draggable-item waiting-item"
             >
               {{ patient.short_fio }}
               <i
@@ -206,9 +207,10 @@
     <div class="panel-right">
       <Filters
         :departments="departments"
+        :no-border="true"
         @input="setDepartDocId($event)"
       />
-      <h5 class="heading">
+      <h5 class="heading top-border">
         Врачи
       </h5>
       <div class="panel-content">
@@ -490,6 +492,9 @@ onMounted(init);
 .man {
   color: #00bfff;
 }
+.height36 {
+  height: 36px;
+}
 .header-alignment {
   text-align: center;
   vertical-align: middle;
@@ -500,12 +505,18 @@ onMounted(init);
   z-index: 1;
   background-color: white;
 }
+.table-bordered > thead > tr > th {
+  border-bottom-width: 0;
+}
 .change-color-doc {
   background-color: #BCD2DD;
 }
 .heading {
   text-align: center;
-  margin: 5px 0;
+  margin: 0 0 5px 0;
+}
+.top-border {
+  border-top: 1px solid #b1b1b1;
 }
 .flex {
   display: flex;
@@ -522,18 +533,6 @@ onMounted(init);
     margin: auto;
   }
 }
-//.icon-patient {
-//  font-size: 20px;
-//  margin: auto;
-//}
-//.icon-doctor {
-//  font-size: 20px;
-//  margin: 5px auto;
-//}
-//.icon-beds {
-//  font-size: 20px;
-//  margin: 5px auto;
-//}
 .info {
   display: inline-block;
   vertical-align: top;
@@ -576,7 +575,7 @@ onMounted(init);
 }
 .panel-content {
   flex: 1;
-  max-height: calc(100vh - 112px);
+  max-height: calc(100vh - 107px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
@@ -632,11 +631,17 @@ onMounted(init);
   background-color: hsla(30, 3%, 97%, 1);
 }
 .waiting-content {
-  height: 120px;
+  height: 125px;
   overflow-y: auto;
 }
 .draggable-block-waiting {
+  display: flex;
+  flex-wrap: wrap;
   min-height: 110px;
+}
+.waiting-item {
+  align-self: flex-start;
+  flex: 0 1 142px;
 }
 .no-rooms {
   text-align: center;
@@ -668,54 +673,32 @@ onMounted(init);
 .age {
   margin: 5px auto;
 }
-.chosen-unallocated-patient {
-  background-color: transparent;
-}
-.ghost-unallocated-patient {
-  margin: 10px 5px;
-  opacity: 0.5;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  border-radius: 4px;
-}
 
-.chosen-doctor {
-  background-color: transparent;
+.chosen {
+  &-unallocated-patient,
+  &-doctor,
+  &-attending-doctor,
+  &-beds,
+  &-patient-without-bed {
+    background-color: transparent;
+  }
 }
-.ghost-doctor {
-  background-color: #039372 !important;
-  opacity: 0.5;
-  margin: 0;
-}
-
-.chosen-attending-doctor {
-  background-color: transparent;
-}
-.ghost-attending-doctor {
-  margin: 10px 5px;
-  opacity: 0.5;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  border-radius: 4px;
-}
-
-.chosen-beds {
-  background-color: transparent;
-}
-.ghost-beds {
-  background-color: #039372;
-  opacity: 0.5;
-  margin: 0;
-}
-
-.chosen-patient-without-bed {
-  background-color: transparent;
-}
-.ghost-patient-without-bed {
-  margin: 10px 5px;
-  background-color: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  opacity: 0.5;
-  border-radius: 4px;
+.ghost {
+  &-unallocated-patient,
+  &-doctor,
+  &-attending-doctor,
+  &-beds,
+  &-patient-without-bed {
+    margin: 10px 5px;
+    opacity: 0.5;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    border-radius: 4px;
+  }
+  &-beds,
+  &-doctor {
+    background-color: #039372 !important;
+    margin: 0
+  }
 }
 </style>
