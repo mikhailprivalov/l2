@@ -26,7 +26,8 @@ def get_unallocated_patients(request):
             "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else None}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
-        } for patient in patients_stationar_unallocated_sql(department_pk)
+        }
+        for patient in patients_stationar_unallocated_sql(department_pk)
     ]
     return JsonResponse({"data": patients})
 
