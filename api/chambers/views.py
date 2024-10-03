@@ -50,13 +50,9 @@ def get_chambers_and_beds(request):
                 direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
                 ind_card = direction_obj.client
                 patient_data = ind_card.get_data_individual()
-                chamber["beds"][-1]["patient"] = [{
-                    "fio": patient_data["fio"],
-                    "short_fio": patient_data["short_fio"],
-                    "age": patient_data["age"],
-                    "sex": patient_data["sex"],
-                    "direction_pk": history.direction_id
-                }]
+                chamber["beds"][-1]["patient"] = [
+                    {"fio": patient_data["fio"], "short_fio": patient_data["short_fio"], "age": patient_data["age"], "sex": patient_data["sex"], "direction_pk": history.direction_id}
+                ]
                 if history.doctor:
                     chamber["beds"][-1]["doctor"] = [{
                         "fio": history.doctor.get_full_fio(),
