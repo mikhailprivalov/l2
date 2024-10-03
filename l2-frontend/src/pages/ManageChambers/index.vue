@@ -84,19 +84,23 @@
                         pull: 'attendingDoctor'}"
                       animation="500"
                       class="draggable-doctor"
+                      chosen-class="chosen-doctor"
+                      ghost-class="ghost-doctor"
                       @change="changeDoctor($event, bed);"
                     >
-                      <i
-                        v-if="bed.doctor.length > 0"
-                        class="fa-solid fa-user-doctor doctor-icon"
-                        :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
-                      />
-                      <span
-                        v-if="bed.doctor.length < 1"
-                        class="without-doctor"
-                      >
-                        Б/В
-                      </span>
+                      <div>
+                        <i
+                          v-if="bed.doctor.length > 0"
+                          class="fa-solid fa-user-doctor doctor-icon"
+                          :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
+                        />
+                        <span
+                          v-if="bed.doctor.length < 1"
+                          class="without-doctor"
+                        >
+                          Б/В
+                        </span>
+                      </div>
                     </draggable>
                     <draggable
                       v-model="bed.patient"
@@ -211,6 +215,8 @@
           v-model="attendingDoctor"
           :group="{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}"
           class="draggable-block"
+          chosen-class="chosen-attending-doctor"
+          ghost-class="ghost-attending-doctor"
           animation="500"
         >
           <div
@@ -702,11 +708,31 @@ onMounted(init);
   border-radius: 4px;
 }
 
+.chosen-doctor {
+  background-color: transparent;
+}
+.ghost-doctor {
+  background-color: #039372 !important;
+  opacity: 0.5;
+  margin: 0;
+}
+
+.chosen-attending-doctor {
+  background-color: transparent;
+}
+.ghost-attending-doctor {
+  margin: 10px 5px;
+  opacity: 0.5;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  border-radius: 4px;
+}
+
 .chosen-beds {
   background-color: transparent;
 }
 .ghost-beds {
-  background-color: green;
+  background-color: #039372;
   opacity: 0.5;
   margin: 0;
 }
