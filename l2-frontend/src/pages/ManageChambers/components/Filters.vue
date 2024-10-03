@@ -17,7 +17,16 @@ import { defineProps, ref } from 'vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-const props = defineProps(['departments']);
+const props = defineProps({
+  departments: {
+    type: Array,
+    required: true,
+  },
+  noBorder: {
+    type: Boolean,
+    required: false,
+  },
+});
 const departId = ref(-1);
 
 </script>
