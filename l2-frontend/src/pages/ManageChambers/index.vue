@@ -694,6 +694,7 @@ onMounted(init);
 }
 .chosen-unallocated-patient {
   background-color: transparent;
+  margin: 0;
 }
 .ghost-unallocated-patient {
   background-color: blue;
