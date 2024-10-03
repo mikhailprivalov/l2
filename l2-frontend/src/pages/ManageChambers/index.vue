@@ -177,6 +177,7 @@
               put: ['PatientWithoutBeds', 'Patients', 'Beds']
             }"
             class="draggable-block-waiting"
+            chosen-class="chosen-patient-without-bed"
             ghost-class="ghost-patient-without-bed"
             animation="500"
             @change="PatientWaitBed"
@@ -559,7 +560,7 @@ onMounted(init);
 }
 .draggable-item {
   margin: 10px 5px;
-  //background-color: #fff;
+  background-color: #fff;
   padding: 5px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -690,9 +691,9 @@ onMounted(init);
   font-size: 20px;
   margin: 5px auto;
 }
-//.chosen-unallocated-patient {
-//  ma;
-//}
+.chosen-unallocated-patient {
+  background-color: transparent;
+}
 .ghost-unallocated-patient {
   margin: 10px 5px;
   opacity: 0.5;
@@ -701,17 +702,18 @@ onMounted(init);
   border-radius: 4px;
 }
 
-//.chosen-beds {
-//  background-color: red;
-//  border-radius: 4px;
-//  //margin: 0 5px;
-//}
+.chosen-beds {
+  background-color: transparent;
+}
 .ghost-beds {
   background-color: green;
   opacity: 0.5;
   margin: 0;
 }
 
+.chosen-patient-without-bed {
+  background-color: transparent;
+}
 .ghost-patient-without-bed {
   margin: 10px 5px;
   background-color: #fff;
