@@ -15,7 +15,7 @@
       >
         <draggable
           v-model="unallocatedPatients"
-          :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
+          :group="{ name: 'Patients', put: ['PatientWithoutBeds', 'Beds'], pull: ['PatientWithoutBeds', 'Beds']}"
           class="draggable-block"
           animation="500"
           chosen-class="chosen-unallocated-patient"
@@ -102,9 +102,9 @@
                     <draggable
                       v-model="bed.patient"
                       :group="{
-                        name: 'Patients',
-                        put: conditionsDragBed(bed),
-                        pull: 'Patients'
+                        name: 'Beds',
+                        put: conditionsPutBed(bed),
+                        pull: conditionsPullBed(bed)
                       }"
                       animation="500"
                       class="draggable-beds"
@@ -174,9 +174,10 @@
           <draggable
             v-model="withOutBeds"
             :group="{
-              name: 'Patients',
-              pull: 'Patients',
-              put: 'Patients'}"
+              name: 'PatientWithoutBeds',
+              pull: ['PatientWithoutBeds', 'Patients', 'Beds'],
+              put: ['PatientWithoutBeds', 'Patients', 'Beds']
+            }"
             class="draggable-block-waiting"
             animation="500"
             @change="PatientWaitBed"
@@ -392,9 +393,16 @@ const conditionsDragDoc = (bed) => {
   return false;
 };
 
-const conditionsDragBed = (bed) => {
-  if (bed.patient < 1) {
-    return 'Patients';
+const conditionsPutBed = (bed) => {
+  if (bed.patient.length < 1) {
+    return ['Patients', 'PatientWithoutBeds'];
+  }
+  return false;
+};
+
+const conditionsPullBed = (bed) => {
+  if (bed.patient.length > 0) {
+    return ['Patients', 'PatientWithoutBeds'];
   }
   return false;
 };
