@@ -28,6 +28,6 @@ const props = defineProps({
     required: false,
   },
 });
-const departId = ref(-1);
+const departId = ref(null);
 
 </script>
