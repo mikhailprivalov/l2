@@ -17,8 +17,10 @@
           v-model="unallocatedPatients"
           :group="{ name: 'Patients', put: 'Patients', pull: 'Patients'}"
           class="draggable-block"
-          chosen-class="drag-class"
           animation="500"
+          chosen-class="chosen-unallocated-patient"
+          ghost-class="ghost-unallocated-patient"
+          drag-class="drag-unallocated-patient"
         >
           <div
             v-for="patient in unallocatedPatients"
@@ -106,6 +108,9 @@
                       }"
                       animation="500"
                       class="draggable-beds"
+                      chosen-class="chosen-beds"
+                      ghost-class="ghost-beds"
+                      drag-class="drag-beds"
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
@@ -173,7 +178,6 @@
               pull: 'Patients',
               put: 'Patients'}"
             class="draggable-block-waiting"
-            chosen-class="dragClass"
             animation="500"
             @change="PatientWaitBed"
           >
@@ -477,7 +481,7 @@ onMounted(init);
   vertical-align: middle;
 }
 .drag-class {
-  opacity: 0.5;
+  opacity: 0;
 }
 .sticky {
   position: sticky;
@@ -549,7 +553,7 @@ onMounted(init);
 }
 .draggable-item {
   margin: 10px 5px;
-  background-color: #fff;
+  //background-color: #fff;
   padding: 5px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -679,5 +683,24 @@ onMounted(init);
 .beds-icon {
   font-size: 20px;
   margin: 5px auto;
+}
+.chosen-unallocated-patient {
+  background-color: transparent;
+}
+.ghost-unallocated-patient {
+  background-color: blue;
+}
+.drag-unallocated-patient {
+  background-color: yellow;
+}
+
+.chosen-beds {
+  background-color: red;
+}
+.ghost-beds {
+  background-color: black;
+}
+.drag-beds {
+  background-color: #4c4c4c;
 }
 </style>
