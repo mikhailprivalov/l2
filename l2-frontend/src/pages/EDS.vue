@@ -583,7 +583,7 @@ export default class EDS extends Vue {
       if (this.filters.mode === 'my') {
         return snilsCert === this.snilsUser;
       }
-      return !!(certObj.ORGN || certObj['ОГРН']);
+      return !!(certObj.OGRN || certObj['ОГРН']);
     });
     if (filteredCertificates.length === 0) {
       this.selectedCertificate = null;
@@ -641,7 +641,7 @@ export default class EDS extends Vue {
         this.certificates = await getUserCertificates();
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.log('getCertificates error');
+        console.log('getCertificates error ');
         // eslint-disable-next-line no-console
         console.error(e);
         this.checked = false;

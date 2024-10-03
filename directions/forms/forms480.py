@@ -289,7 +289,11 @@ def form_01(c: Canvas, dir: Napravleniya):
         if not doc_get_material:
             doc_get_material = dir.doc.get_fio()
         objs.append(Paragraph(f'19. Фамилия, инициалы врача: {doc_get_material} {space_symbol * 5} подпись _________', style))
-        objs.append(Paragraph(f'20. Дата направления:  {strdate(dir.data_sozdaniya)}', style))
+        if dir.rmis_direction_date:
+            dir_create = strdate(dir.rmis_direction_date)
+        else:
+            dir_create = strdate(dir.data_sozdaniya)
+        objs.append(Paragraph(f'20. Дата направления:  {dir_create}', style))
 
         gistology_frame = Frame(0 * mm, 0 * mm, 210 * mm, 297 * mm, leftPadding=15 * mm, bottomPadding=16 * mm, rightPadding=7 * mm, topPadding=10 * mm, showBoundary=1)
         gistology_inframe = KeepInFrame(210 * mm, 297 * mm, objs, hAlign='LEFT', vAlign='TOP', fakeWidth=False)

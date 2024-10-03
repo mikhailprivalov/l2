@@ -1640,9 +1640,10 @@ def create_direction_by_param(body, request):
     if not code_tfoms and not oid_org:
         return {"ok": False, "message": "Должно быть указано хотя бы одно значение из org.codeTFOMS или org.oid"}
 
+    hospital = None
     if code_tfoms:
         hospital = Hospitals.objects.filter(code_tfoms=code_tfoms).first()
-    else:
+    if not hospital:
         hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
@@ -1710,7 +1711,6 @@ def create_direction_by_param(body, request):
                 individuals = Individual.import_from_tfoms(tfoms_data, need_return_individual=True)
 
             individual = individuals.first()
-
     if not individual and lastname:
         tfoms_data = match_patient(lastname, firstname, patronymic, birthdate)
         if tfoms_data:
@@ -2748,7 +2748,7 @@ def results_by_direction(request):
                                 additional_data_confirm_direction = {}
                         except Exception:
                             additional_data_confirm_direction = None
-
+                data_time = current_time()
                 objs_result[direction_data[1]]["services"][i["result"][0]["iss_id"]] = {
                     "title": i["title_research"],
                     "fio": short_fio_dots(i["result"][0]["docConfirm"]),
@@ -2756,6 +2756,9 @@ def results_by_direction(request):
                     "fractions": [],
                     "directionId": i["result"][0]["direction_id"],
                     "additionalDataConfirmDirection": additional_data_confirm_direction,
+                    "rowAdditionalData": doctor_additional_info,
+                    "currentTime": datetime.datetime.strftime(data_time, '%H:%M'),
+                    "currentDate": datetime.datetime.strftime(data_time, '%d.%m.%Y'),
                 }
 
             values = values_as_structure_data(i["result"][0]["data"])

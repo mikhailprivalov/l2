@@ -3,6 +3,7 @@ from django.db import models, transaction
 from jsonfield import JSONField
 from cash_registers import sql_func
 from clients.models import Card
+from directions.models import Napravleniya
 from directory.models import Researches
 from laboratory.utils import current_time
 from podrazdeleniya.models import Podrazdeleniya
@@ -65,7 +66,7 @@ class Shift(models.Model):
         verbose_name_plural = "Кассовые смены"
 
     def __str__(self):
-        return f"{self.cash_register.title} - {self.open_at} - {self.close_at} - {self.operator}"
+        return f"{self.cash_register_id} - {self.open_at} - {self.close_at} - {self.operator}"
 
     @staticmethod
     def open_shift(uuid_data: str, cash_register_id: int, operator_id: int):
@@ -186,6 +187,9 @@ class Cheque(models.Model):
 
     @staticmethod
     def create_payments(cash, received_cash, electronic):
+        """
+        Создание видов оплаты в чеке
+        """
         result = []
         if cash:
             result.append({"type": "cash", "sum": received_cash})
@@ -195,11 +199,17 @@ class Cheque(models.Model):
 
     @staticmethod
     def create_job_json(cash_register_data, uuid_data, type_operations, items, payments, total):
+        """
+        Создания тела запроса для middle server
+        """
         body = {"cashRegister": cash_register_data, "uuid": uuid_data, "job": [{"type": type_operations, "items": items, "payments": payments, "total": total}]}
         return body
 
     @staticmethod
     def create_cheque(shift_id, type_operations, uuid_data, cash, received_cash, electronic, card_id, items):
+        """
+        Создание чека в базе
+        """
         with transaction.atomic():
             new_cheque = Cheque(shift_id=shift_id, type=type_operations, uuid=uuid_data, payment_cash=cash, received_cash=received_cash, payment_electronic=electronic, card_id=card_id)
             new_cheque.save()
@@ -241,6 +251,9 @@ class ChequeItems(models.Model):
 
     @staticmethod
     def create_items(items):
+        """
+        Создание списка элементов чека
+        """
         result = [
             {
                 "id": item["id"],
@@ -257,3 +270,15 @@ class ChequeItems(models.Model):
             for item in items
         ]
         return result
+
+
+class ChequeForDirection(models.Model):
+    cheque = models.ForeignKey(Cheque, verbose_name='Чек', null=True, on_delete=models.SET_NULL, db_index=True)
+    direction = models.ForeignKey(Napravleniya, verbose_name='Направления', null=True, on_delete=models.SET_NULL, db_index=True)
+
+    class Meta:
+        verbose_name = "Чек для направления"
+        verbose_name_plural = "Чеки для направлений"
+
+    def __str__(self):
+        return f"{self.cheque} - {self.direction_id}"
