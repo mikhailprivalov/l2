@@ -81,7 +81,8 @@
                       :group="{
                         name: 'doctor',
                         put: conditionsDragDoc(bed),
-                        pull: 'attendingDoctor'}"
+                        pull: 'attendingDoctor'
+                      }"
                       animation="500"
                       class="draggable-doctor"
                       chosen-class="chosen-doctor"
@@ -94,12 +95,12 @@
                           class="fa-solid fa-user-doctor doctor-icon"
                           :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
                         />
-                        <span
+                        <div
                           v-if="bed.doctor.length < 1"
                           class="without-doctor"
                         >
                           Б/В
-                        </span>
+                        </div>
                       </div>
                     </draggable>
                     <draggable
@@ -661,6 +662,7 @@ onMounted(init);
   margin: 5px auto;
 }
 .without-doctor {
+  margin: 7px auto;
   font-size: 12px;
 }
 
