@@ -44,14 +44,7 @@ def get_chambers_and_beds(request):
             "beds": [],
         }
         for bed in Bed.objects.filter(chamber_id=ward.pk).prefetch_related('chamber'):
-            chamber["beds"].append(
-                {
-                    "pk": bed.pk,
-                    "bed_number": bed.bed_number,
-                    "doctor": [],
-                    "patient": []
-                }
-            )
+            chamber["beds"].append({"pk": bed.pk, "bed_number": bed.bed_number, "doctor": [], "patient": []})
             history = PatientToBed.objects.filter(bed_id=bed.pk, date_out__isnull=True).last()
             if history:
                 direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
