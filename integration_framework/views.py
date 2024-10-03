@@ -2757,8 +2757,8 @@ def results_by_direction(request):
                     "directionId": i["result"][0]["direction_id"],
                     "additionalDataConfirmDirection": additional_data_confirm_direction,
                     "rowAdditionalData": doctor_additional_info,
-                    "currentDate": datetime.datetime.strftime(data_time, '%H:%M'),
-                    "currentTime": datetime.datetime.strftime(data_time, '%d.%m%Y'),
+                    "currentTime": datetime.datetime.strftime(data_time, '%H:%M'),
+                    "currentDate": datetime.datetime.strftime(data_time, '%d.%m.%Y'),
                 }
 
             values = values_as_structure_data(i["result"][0]["data"])
