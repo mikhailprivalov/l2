@@ -4,7 +4,7 @@
       <Filters
         :departments="departments"
         :no-border="true"
-        @input="setDepartPatientId($event)"
+        @input="setDepartPatientId"
       />
       <h5
         class="heading top-border"
@@ -208,7 +208,7 @@
       <Filters
         :departments="departments"
         :no-border="true"
-        @input="setDepartDocId($event)"
+        @input="setDepartDocId"
       />
       <h5 class="heading top-border">
         Врачи
@@ -256,8 +256,8 @@ const departments = ref([]);
 const unallocatedPatients = ref([]);
 const withOutBeds = ref([]);
 const attendingDoctor = ref([]);
-const departmentPatientPk = ref(-1);
-const departmentDocPk = ref(-1);
+const departmentPatientPk = ref(null);
+const departmentDocPk = ref(null);
 const store = useStore();
 const bedInformationCounter = computed(() => {
   let women = 0;
@@ -286,17 +286,17 @@ const bedInformationCounter = computed(() => {
   };
 });
 
-const setDepartDocId = async (data) => {
-  departmentDocPk.value = data;
+const setDepartDocId = async (departmentPk) => {
+  departmentDocPk.value = departmentPk;
 };
-const setDepartPatientId = async (data) => {
-  departmentPatientPk.value = data;
+const setDepartPatientId = async (departmentPk) => {
+  departmentPatientPk.value = departmentPk;
 };
 
 const init = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { data } = await api('procedural-list/suitable-departments');
-  departments.value = [{ id: -1, label: 'Отделение не выбрано' }, ...data];
+  departments.value = data;
   await store.dispatch(actions.DEC_LOADING);
 };
 
