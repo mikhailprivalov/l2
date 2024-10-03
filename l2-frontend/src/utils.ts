@@ -376,10 +376,10 @@ export const convertSubjectNameToTitle = (object: any, subjectName: string | nul
 export const subjectNameHasOGRN = (object: any, subjectName: string | null) => {
   const obj = object || convertSubjectNameToCertObject(subjectName);
 
-  let ogrn = obj['ОГРН'] || null;
+  let ogrn = obj['ОГРН'] || obj.OGRN || null;
 
   if (!ogrn) {
-    ogrn = Object.entries(obj).find(([, v]) => v === 'ОГРН')?.[0] || null;
+    ogrn = Object.entries(obj).find(([, v]) => v === 'ОГРН' || v === 'OGRN')?.[0] || null;
   }
 
   return String(ogrn || '').length === 13;
