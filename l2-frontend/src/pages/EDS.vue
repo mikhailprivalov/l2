@@ -641,7 +641,7 @@ export default class EDS extends Vue {
         this.certificates = await getUserCertificates();
       } catch (e) {
         // eslint-disable-next-line no-console
-        console.log('getCertificates error');
+        console.log('getCertificates error ');
         // eslint-disable-next-line no-console
         console.error(e);
         this.checked = false;
