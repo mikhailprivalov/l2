@@ -20,7 +20,6 @@
           animation="500"
           chosen-class="chosen-unallocated-patient"
           ghost-class="ghost-unallocated-patient"
-          drag-class="drag-unallocated-patient"
         >
           <div
             v-for="patient in unallocatedPatients"
@@ -110,7 +109,6 @@
                       class="draggable-beds"
                       chosen-class="chosen-beds"
                       ghost-class="ghost-beds"
-                      drag-class="drag-beds"
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
@@ -179,6 +177,7 @@
               put: ['PatientWithoutBeds', 'Patients', 'Beds']
             }"
             class="draggable-block-waiting"
+            ghost-class="ghost-patient-without-bed"
             animation="500"
             @change="PatientWaitBed"
           >
@@ -211,7 +210,6 @@
           v-model="attendingDoctor"
           :group="{ name: 'attendingDoctor', pull: 'clone', put: 'doctor'}"
           class="draggable-block"
-          chosen-class="dragClass"
           animation="500"
         >
           <div
@@ -395,14 +393,14 @@ const conditionsDragDoc = (bed) => {
 
 const conditionsPutBed = (bed) => {
   if (bed.patient.length < 1) {
-    return ['Patients', 'PatientWithoutBeds'];
+    return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
 };
 
 const conditionsPullBed = (bed) => {
   if (bed.patient.length > 0) {
-    return ['Patients', 'PatientWithoutBeds'];
+    return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
 };
@@ -692,24 +690,33 @@ onMounted(init);
   font-size: 20px;
   margin: 5px auto;
 }
-.chosen-unallocated-patient {
-  background-color: transparent;
-  margin: 0;
-}
+//.chosen-unallocated-patient {
+//  ma;
+//}
 .ghost-unallocated-patient {
-  background-color: blue;
-}
-.drag-unallocated-patient {
-  background-color: yellow;
+  margin: 10px 5px;
+  opacity: 0.5;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  border-radius: 4px;
 }
 
-.chosen-beds {
-  background-color: red;
-}
+//.chosen-beds {
+//  background-color: red;
+//  border-radius: 4px;
+//  //margin: 0 5px;
+//}
 .ghost-beds {
-  background-color: black;
+  background-color: green;
+  opacity: 0.5;
+  margin: 0;
 }
-.drag-beds {
-  background-color: #4c4c4c;
+
+.ghost-patient-without-bed {
+  margin: 10px 5px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  opacity: 0.5;
+  border-radius: 4px;
 }
 </style>
