@@ -54,12 +54,14 @@ def get_chambers_and_beds(request):
                     {"fio": patient_data["fio"], "short_fio": patient_data["short_fio"], "age": patient_data["age"], "sex": patient_data["sex"], "direction_pk": history.direction_id}
                 ]
                 if history.doctor:
-                    chamber["beds"][-1]["doctor"] = [{
-                        "fio": history.doctor.get_full_fio(),
-                        "pk": history.doctor.pk,
-                        "highlight": False,
-                        "short_fio": history.doctor.get_fio(),
-                    }]
+                    chamber["beds"][-1]["doctor"] = [
+                        {
+                            "fio": history.doctor.get_full_fio(),
+                            "pk": history.doctor.pk,
+                            "highlight": False,
+                            "short_fio": history.doctor.get_fio(),
+                        }
+                    ]
         chambers.append(chamber)
     return JsonResponse({"data": chambers})
 
