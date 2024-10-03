@@ -28,7 +28,7 @@
           >
             {{ patient.fio }}
             <i
-              class="fa-solid fa-child-reaching patient-icon"
+              class="fa-solid fa-child-reaching icon-patient"
               :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
             />
             {{ patient.age }}л.
@@ -89,10 +89,10 @@
                       ghost-class="ghost-doctor"
                       @change="changeDoctor($event, bed);"
                     >
-                      <div>
+                      <div class="flex">
                         <i
                           v-if="bed.doctor.length > 0"
-                          class="fa-solid fa-user-doctor doctor-icon"
+                          class="fa-solid fa-user-doctor icon-doctor"
                           :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
                         />
                         <div
@@ -125,7 +125,7 @@
                           {{ bed.patient[0].age }}л.
                         </div>
                         <i
-                          class="fa fa-bed beds-icon"
+                          class="fa fa-bed icon-beds"
                           :class="{ 'women': colorWomen(bed), 'man': colorMan(bed) }"
                         />
                       </div>
@@ -194,7 +194,7 @@
             >
               {{ patient.short_fio }}
               <i
-                class="fa-solid fa-child-reaching patient-icon"
+                class="fa-solid fa-child-reaching icon-patient"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
               />
               {{ patient.age }}л.
@@ -494,9 +494,6 @@ onMounted(init);
   text-align: center;
   vertical-align: middle;
 }
-.drag-class {
-  opacity: 0;
-}
 .sticky {
   position: sticky;
   top: -1px;
@@ -510,10 +507,33 @@ onMounted(init);
   text-align: center;
   margin: 5px 0;
 }
-.patient-icon {
-  font-size: 20px;
-  margin: auto;
+.flex {
+  display: flex;
 }
+
+.icon {
+  &-patient,
+  &-doctor,
+  &-beds {
+    font-size: 20px;
+    margin: 5px auto;
+  }
+  &-patient {
+    margin: auto;
+  }
+}
+//.icon-patient {
+//  font-size: 20px;
+//  margin: auto;
+//}
+//.icon-doctor {
+//  font-size: 20px;
+//  margin: 5px auto;
+//}
+//.icon-beds {
+//  font-size: 20px;
+//  margin: 5px auto;
+//}
 .info {
   display: inline-block;
   vertical-align: top;
@@ -534,7 +554,6 @@ onMounted(init);
   height: calc(100vh - 36px);
   background-color: hsla(30, 3%, 97%, 1);
 }
-
 .panel {
   &-left,
   &-center,
@@ -555,7 +574,6 @@ onMounted(init);
     overflow-y: auto;
   }
 }
-
 .panel-content {
   flex: 1;
   max-height: calc(100vh - 112px);
@@ -565,41 +583,54 @@ onMounted(init);
 .draggable-block {
   min-height: calc(100% - 20px);
 }
-.draggable-item {
-  margin: 10px 5px;
-  background-color: #fff;
-  padding: 5px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+.draggable {
+  &-item,
+  &-beds,
+  &-doctor {
+    margin: 5px;
+    overflow: hidden;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
 
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
+    &:hover {
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      z-index: 1;
+      transform: scale(1.008);
+    }
+  }
+  &-item {
+    margin: 10px 5px;
+    padding: 5px;
+  }
+  &-doctor {
+    height: 30px;
+    width: 30px;
+  }
+  &-beds {
+    text-align: right;
+    height: 30px;
+    width: 68px;
   }
 }
-
 .room-beds {
   flex: 1 1 192px;
   min-height: 192px;
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
-
 .table-beds {
   width: 100%;
   table-layout: fixed;
   margin-bottom: 0;
   height: 100%;
 }
-
 .waiting {
   height: 150px;
   background-color: hsla(30, 3%, 97%, 1);
 }
-
 .waiting-content {
   height: 120px;
   overflow-y: auto;
@@ -607,7 +638,6 @@ onMounted(init);
 .draggable-block-waiting {
   min-height: 110px;
 }
-
 .no-rooms {
   text-align: center;
   font-weight: bold;
@@ -628,60 +658,14 @@ onMounted(init);
   margin: 10px 0;
 }
 
-.draggable-doctor {
-  margin: 5px;
-  overflow: hidden;
-  background-color: #fff;
-  text-align: center;
-  height: 30px;
-  width: 30px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
-  }
-}
-
-.doctor-icon {
-  font-size: 20px;
-  margin: 5px auto;
-}
 .without-doctor {
   margin: 7px auto;
   font-size: 12px;
-}
-
-.draggable-beds {
-  margin: 5px;
-  overflow: hidden;
-  background-color: #fff;
-  text-align: right;
-  height: 30px;
-  width: 68px;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-  &:hover {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
-  z-index: 1;
-  transform: scale(1.008);
-  }
 }
 .patient-row {
   display: flex;
 }
 .age {
-  margin: 5px auto;
-}
-.beds-icon {
-  font-size: 20px;
   margin: 5px auto;
 }
 .chosen-unallocated-patient {
