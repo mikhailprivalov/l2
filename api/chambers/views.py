@@ -116,15 +116,7 @@ def get_patients_without_bed(request):
         direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
         ind_card = direction_obj.client
         patient_data = ind_card.get_data_individual()
-        patients.append(
-            {
-                "fio": patient_data["fio"],
-                "short_fio": patient_data["short_fio"],
-                "age": patient_data["age"],
-                "sex": patient_data["sex"],
-                "direction_pk": patient.direction_id
-            }
-        )
+        patients.append({"fio": patient_data["fio"], "short_fio": patient_data["short_fio"], "age": patient_data["age"], "sex": patient_data["sex"], "direction_pk": patient.direction_id})
     return JsonResponse({"data": patients})
 
 
