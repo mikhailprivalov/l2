@@ -81,8 +81,8 @@
                       v-model="bed.doctor"
                       :group="{
                         name: 'doctor',
-                        put: checkConditionsPutDoc(bed),
-                        pull: checkConditionsPullDoc(bed)
+                        put: checkConditionsPutDoc(bed.patient, bed.doctor),
+                        pull: checkConditionsPullDoc(bed.doctor)
                       }"
                       animation="500"
                       class="draggable-doctor"
@@ -108,8 +108,8 @@
                       v-model="bed.patient"
                       :group="{
                         name: 'Beds',
-                        put: checkConditionsPutBed(bed),
-                        pull: checkConditionsPullBed(bed)
+                        put: checkConditionsPutBed(bed.patient),
+                        pull: checkConditionsPullBed(bed.patient)
                       }"
                       animation="500"
                       class="draggable-beds"
@@ -251,7 +251,32 @@ import { useStore } from '@/store';
 
 import Filters from './components/Filters.vue';
 
-const chambers = ref([]);
+
+interface patientData {
+  age: number
+  direction_pk: number
+  fio: string
+  sex: string
+  short_fio: string
+}
+interface doctorData {
+  fio: string
+  highlight: boolean
+  pk: number
+  short_fio: string
+}
+interface bedData {
+  bed_number: number
+  doctor: doctorData[]
+  patient: patientData[]
+  pk: number
+}
+interface chamberData {
+  beds: bedData[]
+  label: string
+  pk: number
+}
+const chambers = ref<chamberData[]>([]);
 const departments = ref([]);
 const unallocatedPatients = ref([]);
 const withOutBeds = ref([]);
@@ -394,29 +419,29 @@ const changeDoctor = async ({ added, removed }, bed) => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const checkConditionsPutDoc = (bed) => {
-  if (bed.patient.length > 0 && bed.doctor.length < 1) {
+const checkConditionsPutDoc = (patient: patientData[], doctor: doctorData[]) => {
+  if (patient.length > 0 && doctor.length < 1) {
     return 'attendingDoctor';
   }
   return false;
 };
 
-const checkConditionsPullDoc = (bed) => {
-  if (bed.doctor.length > 0) {
+const checkConditionsPullDoc = (doctor: doctorData[]) => {
+  if (doctor.length > 0) {
     return 'attendingDoctor';
   }
   return false;
 };
 
-const checkConditionsPutBed = (bed) => {
-  if (bed.patient.length < 1) {
+const checkConditionsPutBed = (patient: patientData[]) => {
+  if (patient.length < 1) {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
 };
 
-const checkConditionsPullBed = (bed) => {
-  if (bed.patient.length > 0) {
+const checkConditionsPullBed = (patient: patientData[]) => {
+  if (patient.length > 0) {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
