@@ -2,7 +2,7 @@ from django.db import connection
 from utils.db import namedtuplefetchall
 
 
-def patients_stationar_unallocated_sql(department_id):
+def load_patients_stationar_unallocated_sql(department_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """

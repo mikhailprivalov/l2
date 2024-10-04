@@ -6,12 +6,11 @@ from django.http import JsonResponse
 
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 from directions.models import Napravleniya
-from users.models import DoctorProfile
 
 from utils.response import status_response
 
 import datetime
-from .sql_func import patients_stationar_unallocated_sql, load_patient_without_bed_by_department, load_attending_doctor_by_department
+from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql
 
 
 @login_required
@@ -27,7 +26,7 @@ def get_unallocated_patients(request):
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
         }
-        for patient in patients_stationar_unallocated_sql(department_pk)
+        for patient in load_patients_stationar_unallocated_sql(department_pk)
     ]
     return JsonResponse({"data": patients})
 
