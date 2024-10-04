@@ -81,8 +81,8 @@
                       v-model="bed.doctor"
                       :group="{
                         name: 'doctor',
-                        put: conditionsDragDoc(bed),
-                        pull: conditionsPullDoc(bed)
+                        put: checkConditionsPutDoc(bed),
+                        pull: checkConditionsPullDoc(bed)
                       }"
                       animation="500"
                       class="draggable-doctor"
@@ -108,8 +108,8 @@
                       v-model="bed.patient"
                       :group="{
                         name: 'Beds',
-                        put: conditionsPutBed(bed),
-                        pull: conditionsPullBed(bed)
+                        put: checkConditionsPutBed(bed),
+                        pull: checkConditionsPullBed(bed)
                       }"
                       animation="500"
                       class="draggable-beds"
@@ -394,28 +394,28 @@ const changeDoctor = async ({ added, removed }, bed) => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const conditionsDragDoc = (bed) => {
+const checkConditionsPutDoc = (bed) => {
   if (bed.patient.length > 0 && bed.doctor.length < 1) {
     return 'attendingDoctor';
   }
   return false;
 };
 
-const conditionsPullDoc = (bed) => {
+const checkConditionsPullDoc = (bed) => {
   if (bed.doctor.length > 0) {
     return 'attendingDoctor';
   }
   return false;
 };
 
-const conditionsPutBed = (bed) => {
+const checkConditionsPutBed = (bed) => {
   if (bed.patient.length < 1) {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
 };
 
-const conditionsPullBed = (bed) => {
+const checkConditionsPullBed = (bed) => {
   if (bed.patient.length > 0) {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
