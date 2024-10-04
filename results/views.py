@@ -56,7 +56,8 @@ from laboratory.settings import (
     GISTOLOGY_RESEARCH_PK,
     RESEARCHES_NOT_PRINT_FOOTERS,
     RESULT_LABORATORY_FORM,
-    SELF_WATERMARKS, DISABLE_PATIENT_CANVAS_MARKER,
+    SELF_WATERMARKS,
+    DISABLE_PATIENT_CANVAS_MARKER,
 )
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
