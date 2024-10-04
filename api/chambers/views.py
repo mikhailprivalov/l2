@@ -11,7 +11,7 @@ from users.models import DoctorProfile
 from utils.response import status_response
 
 import datetime
-from .sql_func import patients_stationar_unallocated_sql
+from .sql_func import patients_stationar_unallocated_sql, load_patient_without_bed_by_department
 
 
 @login_required
@@ -111,12 +111,18 @@ def update_doctor_to_bed(request):
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    patients = []
-    for patient in PatientStationarWithoutBeds.objects.filter(department_id=department_pk):
-        direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
-        ind_card = direction_obj.client
-        patient_data = ind_card.get_data_individual()
-        patients.append({"fio": patient_data["fio"], "short_fio": patient_data["short_fio"], "age": patient_data["age"], "sex": patient_data["sex"], "direction_pk": patient.direction_id})
+    patient_to_bed = load_patient_without_bed_by_department(department_pk)
+
+    patients = [
+        {
+            "fio": f"{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ''}",
+            "short_fio": f"{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else '.'}",
+            "age": patient.age,
+            "sex": patient.sex,
+            "direction_pk": patient.direction_id,
+        }
+        for patient in patient_to_bed
+    ]
     return JsonResponse({"data": patients})
 
 

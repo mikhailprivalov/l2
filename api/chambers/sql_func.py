@@ -28,3 +28,29 @@ def patients_stationar_unallocated_sql(department_id):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def load_patient_without_bed_by_department(department_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            family,
+            name,
+            patronymic,
+            date_part('year', age(birthday))::int AS age,
+            sex,
+            direction_id
+            FROM podrazdeleniya_patientstationarwithoutbeds
+            LEFT JOIN directions_napravleniya ON podrazdeleniya_patientstationarwithoutbeds.direction_id = directions_napravleniya.id
+            LEFT JOIN clients_card ON directions_napravleniya.client_id = clients_card.id
+            LEFT JOIN clients_individual ON clients_card.individual_id = clients_individual.id
+            
+            WHERE
+            podrazdeleniya_patientstationarwithoutbeds.department_id = %(department_id)s
+            """,
+            params={"department_id": department_id},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
