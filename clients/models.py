@@ -1289,6 +1289,7 @@ class Card(models.Model):
                 docs.append(Document.objects.filter(pk=cd[d])[0])
         ind_data['doc'] = docs if not full_empty else []
         ind_data['fio'] = self.individual.fio()
+        ind_data['short_fio'] = self.individual.fio(short=True, dots=True)
         ind_data['sex'] = self.individual.sex
         ind_data['family'] = self.individual.family
         ind_data['name'] = self.individual.name

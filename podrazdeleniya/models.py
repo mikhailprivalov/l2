@@ -116,3 +116,66 @@ class Room(models.Model):
         verbose_name = 'Кабинет'
         verbose_name_plural = 'Кабинеты'
         ordering = ['-id']
+
+
+class Chamber(models.Model):
+    podrazdelenie = models.ForeignKey(Podrazdeleniya, on_delete=models.CASCADE)
+    title = models.CharField(max_length=64, help_text='Название палаты')
+
+    def __str__(self):
+        return f'{self.podrazdelenie} {self.title}'
+
+    class Meta:
+        verbose_name = 'Палата'
+        verbose_name_plural = 'Палаты'
+
+
+class Bed(models.Model):
+    chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
+    bed_number = models.PositiveSmallIntegerField(help_text="Номер койки")
+
+    def __str__(self):
+        return f'{self.chamber} - {self.bed_number}'
+
+    class Meta:
+        verbose_name = 'Койка'
+        verbose_name_plural = 'Койки'
+
+
+class PatientToBed(models.Model):
+    direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
+    doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
+    bed = models.ForeignKey(Bed, db_index=True, on_delete=models.CASCADE)
+    date_in = models.DateField(auto_now_add=True)
+    date_out = models.DateField(null=True)
+
+    def __str__(self):
+        return f'{self.direction.client.individual.fio()}'
+
+    @staticmethod
+    def update_doctor(doctor_obj):
+        if doctor_obj["is_assign"]:
+            doctor = PatientToBed.objects.filter(direction_id=doctor_obj["direction_id"], doctor=None, date_out=None).first()
+            doctor.doctor_id = doctor_obj["doctor_pk"]
+            doctor.save()
+        else:
+            doctor = PatientToBed.objects.filter(doctor_id=doctor_obj["doctor_pk"], direction_id=doctor_obj["direction_id"], date_out=None).first()
+            doctor.doctor = None
+            doctor.save()
+        return True
+
+    class Meta:
+        verbose_name = 'Историю коек'
+        verbose_name_plural = 'История коек'
+
+
+class PatientStationarWithoutBeds(models.Model):
+    direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
+    department = models.ForeignKey(Podrazdeleniya, db_index=True, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return f'{self.direction.client.individual.fio()}'
+
+    class Meta:
+        verbose_name = 'Пациент без койки'
+        verbose_name_plural = 'Пациенты без коек'

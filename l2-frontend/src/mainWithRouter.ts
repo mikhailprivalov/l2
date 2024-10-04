@@ -744,6 +744,17 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/chambers',
+      name: 'ManageChamber',
+      component: () => import('@/pages/ManageChambers/index.vue'),
+      meta: {
+        narrowLayout: true,
+        title: 'Палаты',
+        groups: ['Палаты'],
+        fullPageLayout: true,
+      },
+    },
+    {
       path: '/ui/turnovers',
       name: 'Turnovers',
       component: () => import('@/pages/Turnovers/Turnovers.vue'),
