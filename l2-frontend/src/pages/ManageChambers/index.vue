@@ -24,7 +24,7 @@
         >
           <div
             v-for="patient in unallocatedPatients"
-            :key="patient.pk"
+            :key="patient.direction_pk"
             class="draggable-item"
           >
             {{ patient.fio }}
@@ -190,7 +190,7 @@
           >
             <div
               v-for="patient in withOutBeds"
-              :key="patient.pk"
+              :key="patient.direction_pk"
               class="draggable-item waiting-item"
             >
               {{ patient.short_fio }}
