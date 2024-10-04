@@ -82,7 +82,7 @@
                       :group="{
                         name: 'doctor',
                         put: conditionsDragDoc(bed),
-                        pull: 'attendingDoctor'
+                        pull: conditionsPullDoc(bed)
                       }"
                       animation="500"
                       class="draggable-doctor"
@@ -396,6 +396,13 @@ const changeDoctor = async ({ added, removed }, bed) => {
 
 const conditionsDragDoc = (bed) => {
   if (bed.patient.length > 0 && bed.doctor.length < 1) {
+    return 'attendingDoctor';
+  }
+  return false;
+};
+
+const conditionsPullDoc = (bed) => {
+  if (bed.doctor.length > 0) {
     return 'attendingDoctor';
   }
   return false;
