@@ -41,7 +41,7 @@
       <div class="room-beds">
         <table class="table-beds table-bordered table-responsive table-condensed chamber-table">
           <colgroup>
-            <col width="80">
+            <col class="width80">
             <col>
           </colgroup>
           <thead class="sticky">
@@ -251,7 +251,6 @@ import { useStore } from '@/store';
 
 import Filters from './components/Filters.vue';
 
-
 interface patientData {
   age: number
   direction_pk: number
@@ -278,9 +277,9 @@ interface chamberData {
 }
 const chambers = ref<chamberData[]>([]);
 const departments = ref([]);
-const unallocatedPatients = ref([]);
-const withOutBeds = ref([]);
-const attendingDoctor = ref([]);
+const unallocatedPatients = ref<patientData[]>([]);
+const withOutBeds = ref<patientData[]>([]);
+const attendingDoctor = ref<doctorData[]>([]);
 const departmentPatientPk = ref(null);
 const departmentDocPk = ref(null);
 const store = useStore();
@@ -732,5 +731,9 @@ onMounted(init);
     background-color: #039372 !important;
     margin: 0
   }
+}
+
+.width80 {
+  width: 80px;
 }
 </style>
