@@ -57,6 +57,7 @@ from laboratory.settings import (
     RESEARCHES_NOT_PRINT_FOOTERS,
     RESULT_LABORATORY_FORM,
     SELF_WATERMARKS,
+    DISABLE_PATIENT_CANVAS_MARKER,
 )
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
@@ -368,7 +369,7 @@ def result_print(request):
             canvas_mark.drawString(155 * mm, 285 * mm, '{}'.format(" НЕ ПОДТВЕРЖДЕНО "))
             canvas_mark.setFont('FreeSans', 12)
             canvas_mark.drawString(175 * mm, 281 * mm, '{}'.format("( образец )"))
-        if not watermarks and not DEATH_RESEARCH_PK and not GISTOLOGY_RESEARCH_PK and not SELF_WATERMARKS:
+        if not watermarks and not DEATH_RESEARCH_PK and not GISTOLOGY_RESEARCH_PK and not SELF_WATERMARKS and not DISABLE_PATIENT_CANVAS_MARKER:
             if direction.hospital:
                 canvas_mark.drawString(55 * mm, 13 * mm, direction.hospital.safe_short_title)
             else:
@@ -379,8 +380,9 @@ def result_print(request):
                 canvas_mark.drawString(
                     55 * mm, 9.6 * mm, '№ карты: {}; Номер: {} {}; Направление № {}'.format(direction.client.number_with_type(), num_card, number_poliklinika, direction.pk)
                 )
-            canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
-            canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
+            if not DISABLE_PATIENT_CANVAS_MARKER:
+                canvas_mark.drawString(55 * mm, 7.1 * mm, 'Пациент: {} {}'.format(direction.client.individual.fio(), individual_birthday))
+                canvas_mark.line(55 * mm, 12.7 * mm, 181 * mm, 11.5 * mm)
             if qr_data:
                 qr_code = qr.QrCodeWidget(qr_data)
                 qr_code.barWidth = 15 * mm
