@@ -11,7 +11,7 @@ from users.models import DoctorProfile
 from utils.response import status_response
 
 import datetime
-from .sql_func import patients_stationar_unallocated_sql, load_patient_without_bed_by_department
+from .sql_func import patients_stationar_unallocated_sql, load_patient_without_bed_by_department, load_attending_doctor_by_department
 
 
 @login_required
@@ -21,9 +21,9 @@ def get_unallocated_patients(request):
     department_pk = request_data.get('department_pk', -1)
     patients = [
         {
-            "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else None}',
+            "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ""}',
             "age": patient.age,
-            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else None}.',
+            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ""}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
         }
@@ -93,7 +93,16 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    doctors = [{'fio': doctor.get_full_fio(), 'pk': doctor.pk, 'highlight': False, 'short_fio': doctor.get_fio()} for doctor in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
+    attending_doctors = load_attending_doctor_by_department(department_pk)
+    doctors = [
+        {
+            "pk": doctor.id,
+            "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
+            "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else " "}.',
+            "highlight": False
+        }
+        for doctor in attending_doctors
+    ]
     return JsonResponse({"data": doctors})
 
 

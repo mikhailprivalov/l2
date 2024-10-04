@@ -22,6 +22,8 @@ def patients_stationar_unallocated_sql(department_id):
                 AND data_sozdaniya > now() - INTERVAL '2 months'
                 AND NOT EXISTS (SELECT direction_id FROM podrazdeleniya_patienttobed WHERE date_out IS NULL AND napravleniye_id = direction_id)
                 AND NOT EXISTS (SELECT direction_id FROM podrazdeleniya_patientstationarwithoutbeds WHERE napravleniye_id = direction_id)
+                
+                ORDER BY family
                 """,
             params={"department_id": department_id},
         )
@@ -48,6 +50,32 @@ def load_patient_without_bed_by_department(department_id):
             
             WHERE
             podrazdeleniya_patientstationarwithoutbeds.department_id = %(department_id)s
+            
+            ORDER BY family
+            """,
+            params={"department_id": department_id},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def load_attending_doctor_by_department(department_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            id,
+            family,
+            name,
+            patronymic
+            
+            FROM users_doctorprofile
+            WHERE
+            users_doctorprofile.podrazdeleniye_id = %(department_id)s
+            AND users_doctorprofile.dismissed = false
+            
+            ORDER BY family
             """,
             params={"department_id": department_id},
         )
