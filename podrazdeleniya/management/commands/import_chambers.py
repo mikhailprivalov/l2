@@ -29,7 +29,7 @@ class Command(BaseCommand):
                 current_chamber_title = cells[chamber_title_idx].strip()
                 current_bed_number = cells[bed_number_idx].strip()
                 if not current_department_title or not current_chamber_title or not current_bed_number:
-                    self.stdout.write(f'Пустая строка')
+                    self.stdout.write('Пустая строка')
                     continue
                 department = Podrazdeleniya.objects.filter(title__iexact=current_department_title).first()
                 if not department:
