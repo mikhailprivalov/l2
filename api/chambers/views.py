@@ -48,9 +48,7 @@ def get_chambers_and_beds(request):
                 if chamber.direction_id:
                     chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(PatientToBed.patient_to_json(chamber))
                 if chamber.doctor_id:
-                    chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
-                        PatientToBed.doctor_to_json(chamber)
-                    )
+                    chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(PatientToBed.doctor_to_json(chamber))
     result = []
     for chamber in chambers.values():
         chamber["beds"] = [val for val in chamber["beds"].values()]
