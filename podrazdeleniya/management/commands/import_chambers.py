@@ -40,7 +40,6 @@ class Command(BaseCommand):
                     chamber = Chamber(title=current_chamber_title, podrazdelenie_id=department.pk)
                     chamber.save()
                     self.stdout.write(f'Палата с названием {current_chamber_title} - добавлена')
-
                 bed = Bed.objects.filter(chamber_id=chamber.pk, bed_number=current_bed_number).first()
                 if not bed:
                     bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
