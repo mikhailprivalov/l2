@@ -28,23 +28,24 @@ class Command(BaseCommand):
                 current_department_title = cells[department_title_idx].strip()
                 current_chamber_title = cells[chamber_title_idx].strip()
                 current_bed_number = cells[bed_number_idx].strip()
+                if not current_department_title or not current_chamber_title or not current_bed_number:
+                    self.stdout.write(f'Пустая строка')
+                    continue
                 department = Podrazdeleniya.objects.filter(title__iexact=current_department_title).first()
-                if department:
-                    chamber = Chamber.objects.filter(title__iexact=current_chamber_title).first()
-                    if chamber:
-                        bed = Bed.objects.filter(chamber_id=chamber.pk, bed_number=current_bed_number).first()
-                        if bed:
-                            self.stdout.write(f'Кровать с номером {current_bed_number} - есть')
-                        else:
-                            bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
-                            bed.save()
-                            self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
-                    else:
-                        chamber = Chamber(title=current_chamber_title, podrazdelenie_id=department.pk)
-                        chamber.save()
-                        self.stdout.write(f'Палата с названием {current_chamber_title} - добавлена')
+                if not department:
+                    self.stdout.write(f' Подразделения {current_department_title} - нет')
+                    continue
+                chamber = Chamber.objects.filter(title__iexact=current_chamber_title).first()
+                if chamber:
+                    bed = Bed.objects.filter(chamber_id=chamber.pk, bed_number=current_bed_number).first()
+                    if not bed:
                         bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
                         bed.save()
                         self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
                 else:
-                    self.stdout.write(f'Подразделения {current_department_title} - нет')
+                    chamber = Chamber(title=current_chamber_title, podrazdelenie_id=department.pk)
+                    chamber.save()
+                    self.stdout.write(f'Палата с названием {current_chamber_title} - добавлена')
+                    bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
+                    bed.save()
+                    self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
