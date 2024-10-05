@@ -118,7 +118,11 @@
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
-                      <div class="patient-row">
+                      <div
+                        v-tippy
+                        class="patient-row"
+                        :title="bed.bed_number"
+                      >
                         <div
                           v-if="bed.patient.length > 0"
                           class="age"
