@@ -24,7 +24,7 @@
         >
           <div
             v-for="patient in unallocatedPatients"
-            :key="patient.pk"
+            :key="patient.direction_pk"
             class="draggable-item"
           >
             {{ patient.fio }}
@@ -41,7 +41,7 @@
       <div class="room-beds">
         <table class="table-beds table-bordered table-responsive table-condensed chamber-table">
           <colgroup>
-            <col width="80">
+            <col class="width80">
             <col>
           </colgroup>
           <thead class="sticky">
@@ -81,8 +81,8 @@
                       v-model="bed.doctor"
                       :group="{
                         name: 'doctor',
-                        put: conditionsDragDoc(bed),
-                        pull: 'attendingDoctor'
+                        put: checkConditionsPutDoc(bed.patient, bed.doctor),
+                        pull: checkConditionsPullDoc(bed.doctor)
                       }"
                       animation="500"
                       class="draggable-doctor"
@@ -108,8 +108,8 @@
                       v-model="bed.patient"
                       :group="{
                         name: 'Beds',
-                        put: conditionsPutBed(bed),
-                        pull: conditionsPullBed(bed)
+                        put: checkConditionsPutBed(bed.patient),
+                        pull: checkConditionsPullBed(bed.patient)
                       }"
                       animation="500"
                       class="draggable-beds"
@@ -118,7 +118,11 @@
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
-                      <div class="patient-row">
+                      <div
+                        v-tippy
+                        class="patient-row"
+                        :title="bed.bed_number"
+                      >
                         <div
                           v-if="bed.patient.length > 0"
                           class="age"
@@ -190,7 +194,7 @@
           >
             <div
               v-for="patient in withOutBeds"
-              :key="patient.pk"
+              :key="patient.direction_pk"
               class="draggable-item waiting-item"
             >
               {{ patient.short_fio }}
@@ -251,11 +255,35 @@ import { useStore } from '@/store';
 
 import Filters from './components/Filters.vue';
 
-const chambers = ref([]);
+interface patientData {
+  age: number
+  direction_pk: number
+  fio: string
+  sex: string
+  short_fio: string
+}
+interface doctorData {
+  fio: string
+  highlight: boolean
+  pk: number
+  short_fio: string
+}
+interface bedData {
+  bed_number: number
+  doctor: doctorData[]
+  patient: patientData[]
+  pk: number
+}
+interface chamberData {
+  beds: bedData[]
+  label: string
+  pk: number
+}
+const chambers = ref<chamberData[]>([]);
 const departments = ref([]);
-const unallocatedPatients = ref([]);
-const withOutBeds = ref([]);
-const attendingDoctor = ref([]);
+const unallocatedPatients = ref<patientData[]>([]);
+const withOutBeds = ref<patientData[]>([]);
+const attendingDoctor = ref<doctorData[]>([]);
 const departmentPatientPk = ref(null);
 const departmentDocPk = ref(null);
 const store = useStore();
@@ -394,22 +422,29 @@ const changeDoctor = async ({ added, removed }, bed) => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const conditionsDragDoc = (bed) => {
-  if (bed.patient.length > 0 && bed.doctor.length < 1) {
+const checkConditionsPutDoc = (patient: patientData[], doctor: doctorData[]) => {
+  if (patient.length > 0 && doctor.length < 1) {
     return 'attendingDoctor';
   }
   return false;
 };
 
-const conditionsPutBed = (bed) => {
-  if (bed.patient.length < 1) {
+const checkConditionsPullDoc = (doctor: doctorData[]) => {
+  if (doctor.length > 0) {
+    return 'attendingDoctor';
+  }
+  return false;
+};
+
+const checkConditionsPutBed = (patient: patientData[]) => {
+  if (patient.length < 1) {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
 };
 
-const conditionsPullBed = (bed) => {
-  if (bed.patient.length > 0) {
+const checkConditionsPullBed = (patient: patientData[]) => {
+  if (patient.length > 0) {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
@@ -700,5 +735,9 @@ onMounted(init);
     background-color: #039372 !important;
     margin: 0
   }
+}
+
+.width80 {
+  width: 80px;
 }
 </style>

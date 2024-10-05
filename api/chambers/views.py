@@ -1,17 +1,11 @@
 from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
-
 import simplejson as json
 from django.http import JsonResponse
-
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
-from directions.models import Napravleniya
-from users.models import DoctorProfile
-
 from utils.response import status_response
-
 import datetime
-from .sql_func import patients_stationar_unallocated_sql
+from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
 
 
 @login_required
@@ -21,13 +15,13 @@ def get_unallocated_patients(request):
     department_pk = request_data.get('department_pk', -1)
     patients = [
         {
-            "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else None}',
+            "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ""}',
             "age": patient.age,
-            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else None}.',
+            "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ""}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
         }
-        for patient in patients_stationar_unallocated_sql(department_pk)
+        for patient in load_patients_stationar_unallocated_sql(department_pk)
     ]
     return JsonResponse({"data": patients})
 
@@ -36,34 +30,50 @@ def get_unallocated_patients(request):
 @group_required("Управления палатами")
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
-    chambers = []
-    for ward in Chamber.objects.filter(podrazdelenie_id=request_data.get('department_pk', -1)):
-        chamber = {
-            "pk": ward.pk,
-            "label": ward.title,
-            "beds": [],
+    department_id = request_data.get('department_pk', -1)
+    chambers = {}
+    chambers_beds = load_chambers_and_beds_by_department(department_id)
+    for chamber in chambers_beds:
+        if not chambers.get(chamber.chamber_id):
+            chambers[chamber.chamber_id] = {
+                "pk": chamber.chamber_id,
+                "label": chamber.chamber_title,
+                "beds": {},
+            }
+        if not chamber.bed_id:
+            continue
+        chambers[chamber.chamber_id]["beds"][chamber.bed_id] = {
+            "pk": chamber.bed_id,
+            "bed_number": chamber.bed_number,
+            "doctor": [],
+            "patient": [],
         }
-        for bed in Bed.objects.filter(chamber_id=ward.pk).prefetch_related('chamber'):
-            chamber["beds"].append({"pk": bed.pk, "bed_number": bed.bed_number, "doctor": [], "patient": []})
-            history = PatientToBed.objects.filter(bed_id=bed.pk, date_out__isnull=True).last()
-            if history:
-                direction_obj = Napravleniya.objects.get(pk=history.direction.pk)
-                ind_card = direction_obj.client
-                patient_data = ind_card.get_data_individual()
-                chamber["beds"][-1]["patient"] = [
-                    {"fio": patient_data["fio"], "short_fio": patient_data["short_fio"], "age": patient_data["age"], "sex": patient_data["sex"], "direction_pk": history.direction_id}
-                ]
-                if history.doctor:
-                    chamber["beds"][-1]["doctor"] = [
-                        {
-                            "fio": history.doctor.get_full_fio(),
-                            "pk": history.doctor.pk,
-                            "highlight": False,
-                            "short_fio": history.doctor.get_fio(),
-                        }
-                    ]
-        chambers.append(chamber)
-    return JsonResponse({"data": chambers})
+        if chamber.direction_id:
+            chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
+                {
+                    "direction_pk": chamber.direction_id,
+                    "fio": f"{chamber.patient_family} {chamber.patient_name} {chamber.patient_patronymic if chamber.patient_patronymic else ''}",
+                    "short_fio": f"{chamber.patient_family} {chamber.patient_name[0]}. {chamber.patient_patronymic[0] if chamber.patient_patronymic else ''}.",
+                    "age": chamber.patient_age,
+                    "sex": chamber.patient_sex,
+                }
+            )
+        if chamber.doctor_id:
+            chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
+                {
+                    "pk": chamber.doctor_id,
+                    "fio": f"{chamber.doctor_family} {chamber.doctor_name} {chamber.doctor_patronymic if chamber.doctor_patronymic else ''}",
+                    "short_fio": f"{chamber.doctor_family} {chamber.doctor_name[0]}. {chamber.doctor_patronymic[0] if chamber.doctor_patronymic else ''}.",
+                    "highlight": False,
+                }
+            )
+
+    result = []
+    for chamber in chambers.values():
+        chamber["beds"] = [val for val in chamber["beds"].values()]
+        result.append(chamber)
+
+    return JsonResponse({"data": result})
 
 
 @login_required
@@ -93,7 +103,16 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    doctors = [{'fio': doctor.get_full_fio(), 'pk': doctor.pk, 'highlight': False, 'short_fio': doctor.get_fio()} for doctor in DoctorProfile.objects.filter(podrazdeleniye_id=department_pk)]
+    attending_doctors = load_attending_doctor_by_department(department_pk)
+    doctors = [
+        {
+            "pk": doctor.id,
+            "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
+            "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
+            "highlight": False,
+        }
+        for doctor in attending_doctors
+    ]
     return JsonResponse({"data": doctors})
 
 
@@ -111,12 +130,18 @@ def update_doctor_to_bed(request):
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    patients = []
-    for patient in PatientStationarWithoutBeds.objects.filter(department_id=department_pk):
-        direction_obj = Napravleniya.objects.get(pk=patient.direction.pk)
-        ind_card = direction_obj.client
-        patient_data = ind_card.get_data_individual()
-        patients.append({"fio": patient_data["fio"], "short_fio": patient_data["short_fio"], "age": patient_data["age"], "sex": patient_data["sex"], "direction_pk": patient.direction_id})
+    patient_to_bed = load_patient_without_bed_by_department(department_pk)
+
+    patients = [
+        {
+            "fio": f"{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ''}",
+            "short_fio": f"{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ''}.",
+            "age": patient.age,
+            "sex": patient.sex,
+            "direction_pk": patient.direction_id,
+        }
+        for patient in patient_to_bed
+    ]
     return JsonResponse({"data": patients})
 
 
