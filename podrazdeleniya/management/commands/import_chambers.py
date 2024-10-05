@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
-from podrazdeleniya.models import Podrazdeleniya
+from podrazdeleniya.models import Podrazdeleniya, Chamber, Bed
 
 
 class Command(BaseCommand):
@@ -16,7 +16,6 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         starts = False
         department_title_idx, chamber_title_idx, bed_number_idx = '', '', ''
-        department_title = None
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -27,11 +26,25 @@ class Command(BaseCommand):
                     starts = True
             else:
                 current_department_title = cells[department_title_idx].strip()
-                if current_department_title != department_title:
-                    department = Podrazdeleniya.objects.filter(title__iexact=cells[department_title_idx]).first()
-                    department_title = department.title
-
-                podrazdeleniye_obj = Podrazdeleniya.objects.filter(title=cells[title].strip()).first()
-                if not podrazdeleniye_obj:
-                    Podrazdeleniya(title=cells[title], p_type=int(cells[type_podr].strip())).save()
-                    self.stdout.write(f'Подразделение добавлено - {cells[title]}')
+                current_chamber_title = cells[chamber_title_idx].strip()
+                current_bed_number = cells[bed_number_idx].strip()
+                department = Podrazdeleniya.objects.filter(title__iexact=current_department_title).first()
+                if department:
+                    chamber = Chamber.objects.filter(title__iexact=current_chamber_title).first()
+                    if chamber:
+                        bed = Bed.objects.filter(bed_number=current_bed_number).first()
+                        if bed:
+                            self.stdout.write(f'Кровать с номером {current_bed_number} - есть')
+                        else:
+                            bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
+                            bed.save()
+                            self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
+                    else:
+                        chamber = Chamber(title=current_chamber_title, podrazdelenie_id=department.pk)
+                        chamber.save()
+                        self.stdout.write(f'Палата с названием {current_chamber_title} - добавлена')
+                        bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
+                        bed.save()
+                        self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
+                else:
+                    self.stdout.write(f'Подразделения {current_department_title} - нет')
