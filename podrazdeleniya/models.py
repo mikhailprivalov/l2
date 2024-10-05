@@ -130,6 +130,19 @@ class Chamber(models.Model):
         verbose_name_plural = 'Палаты'
 
 
+    @staticmethod
+    def to_json(chamber):
+        result = {
+                "pk": chamber.chamber_id,
+                "label": chamber.chamber_title,
+                "beds": {},
+            }
+        if chamber.bed_id:
+            result["beds"][chamber.bed_id] = {}
+        return result
+
+
+
 class Bed(models.Model):
     chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
     bed_number = models.PositiveSmallIntegerField(help_text="Номер койки")
@@ -140,6 +153,16 @@ class Bed(models.Model):
     class Meta:
         verbose_name = 'Койка'
         verbose_name_plural = 'Койки'
+
+    @staticmethod
+    def to_json(bed):
+        result = {
+            "pk": bed.bed_id,
+            "bed_number": bed.bed_number,
+            "doctor": [],
+            "patient": [],
+        }
+        return result
 
 
 class PatientToBed(models.Model):
@@ -167,6 +190,27 @@ class PatientToBed(models.Model):
     class Meta:
         verbose_name = 'Историю коек'
         verbose_name_plural = 'История коек'
+
+    @staticmethod
+    def doctor_to_json(doctor):
+        result = {
+            "pk": doctor.doctor_id,
+            "fio": f"{doctor.doctor_family} {doctor.doctor_name} {doctor.doctor_patronymic if doctor.doctor_patronymic else ''}",
+            "short_fio": f"{doctor.doctor_family} {doctor.doctor_name[0]}. {doctor.doctor_patronymic[0] if doctor.doctor_patronymic else ''}.",
+            "highlight": False,
+        }
+        return result
+
+    @staticmethod
+    def patient_to_json(patient):
+        result = {
+            "direction_pk": patient.direction_id,
+            "fio": f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}",
+            "short_fio": f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}.",
+            "age": patient.patient_age,
+            "sex": patient.patient_sex,
+        }
+        return result
 
 
 class PatientStationarWithoutBeds(models.Model):

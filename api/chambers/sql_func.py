@@ -119,6 +119,8 @@ def load_chambers_and_beds_by_department(department_id):
              
              WHERE
              podrazdeleniya_chamber.podrazdelenie_id = %(department_id)s
+             
+             ORDER BY podrazdeleniya_chamber.id, bed_number
 
                 """,
             params={"department_id": department_id},
