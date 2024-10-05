@@ -97,7 +97,7 @@ def get_attending_doctors(request):
         {
             "pk": doctor.id,
             "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
-            "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else " "}.',
+            "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
             "highlight": False
         }
         for doctor in attending_doctors
@@ -124,7 +124,7 @@ def get_patients_without_bed(request):
     patients = [
         {
             "fio": f"{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ''}",
-            "short_fio": f"{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else '.'}",
+            "short_fio": f"{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ''}.",
             "age": patient.age,
             "sex": patient.sex,
             "direction_pk": patient.direction_id,
