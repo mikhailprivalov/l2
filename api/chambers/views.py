@@ -32,31 +32,42 @@ def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     department_id = request_data.get('department_pk', -1)
     chambers = {}
-
     chambers_beds = load_chambers_and_beds_by_department(department_id)
     for chamber in chambers_beds:
-        if chambers.get(chamber.chamber_id):
-            chambers[chamber.chamber_id]["beds"][chamber.bed_id] = Bed.to_json(chamber)
-            if chamber.direction_id:
-                chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
-                    PatientToBed.patient_to_json(chamber)
-                )
-            if chamber.doctor_id:
-                chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
-                    PatientToBed.doctor_to_json(chamber)
-                )
-        else:
-            chambers[chamber.chamber_id] = Chamber.to_json(chamber)
-            if chamber.bed_id:
-                chambers[chamber.chamber_id]["beds"][chamber.bed_id] = Bed.to_json(chamber)
-                if chamber.direction_id:
-                    chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
-                        PatientToBed.patient_to_json(chamber)
-                    )
-                if chamber.doctor_id:
-                    chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
-                        PatientToBed.doctor_to_json(chamber)
-                    )
+        if not chambers.get(chamber.chamber_id):
+            chambers[chamber.chamber_id] = {
+                "pk": chamber.chamber_id,
+                "label": chamber.chamber_title,
+                "beds": {},
+            }
+        if not chamber.bed_id:
+            continue
+        chambers[chamber.chamber_id]["beds"][chamber.bed_id] = {
+            "pk": chamber.bed_id,
+            "bed_number": chamber.bed_number,
+            "doctor": [],
+            "patient": [],
+        }
+        if chamber.direction_id:
+            chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
+                {
+                    "direction_pk": chamber.direction_id,
+                    "fio": f"{chamber.patient_family} {chamber.patient_name} {chamber.patient_patronymic if chamber.patient_patronymic else ''}",
+                    "short_fio": f"{chamber.patient_family} {chamber.patient_name[0]}. {chamber.patient_patronymic[0] if chamber.patient_patronymic else ''}.",
+                    "age": chamber.patient_age,
+                    "sex": chamber.patient_sex,
+                }
+            )
+        if chamber.doctor_id:
+            chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
+                {
+                    "pk": chamber.doctor_id,
+                    "fio": f"{chamber.doctor_family} {chamber.doctor_name} {chamber.doctor_patronymic if chamber.doctor_patronymic else ''}",
+                    "short_fio": f"{chamber.doctor_family} {chamber.doctor_name[0]}. {chamber.doctor_patronymic[0] if chamber.doctor_patronymic else ''}.",
+                    "highlight": False,
+                }
+            )
+
     result = []
     for chamber in chambers.values():
         chamber["beds"] = [val for val in chamber["beds"].values()]
