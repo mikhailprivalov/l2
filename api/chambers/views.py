@@ -1,14 +1,9 @@
 from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
-
 import simplejson as json
 from django.http import JsonResponse
-
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
-from directions.models import Napravleniya
-
 from utils.response import status_response
-
 import datetime
 from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
 
@@ -36,35 +31,34 @@ def get_unallocated_patients(request):
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     department_id = request_data.get('department_pk', -1)
-    chambers = []
-    chambers_v2 = {}
+    chambers = {}
 
     chambers_beds = load_chambers_and_beds_by_department(department_id)
     for chamber in chambers_beds:
-        if chambers_v2.get(chamber.chamber_id):
-            chambers_v2[chamber.chamber_id]["beds"][chamber.bed_id] = Bed.to_json(chamber)
+        if chambers.get(chamber.chamber_id):
+            chambers[chamber.chamber_id]["beds"][chamber.bed_id] = Bed.to_json(chamber)
             if chamber.direction_id:
-                chambers_v2[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
+                chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
                     PatientToBed.patient_to_json(chamber)
                 )
             if chamber.doctor_id:
-                chambers_v2[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
+                chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
                     PatientToBed.doctor_to_json(chamber)
                 )
         else:
-            chambers_v2[chamber.chamber_id] = Chamber.to_json(chamber)
+            chambers[chamber.chamber_id] = Chamber.to_json(chamber)
             if chamber.bed_id:
-                chambers_v2[chamber.chamber_id]["beds"][chamber.bed_id] = Bed.to_json(chamber)
+                chambers[chamber.chamber_id]["beds"][chamber.bed_id] = Bed.to_json(chamber)
                 if chamber.direction_id:
-                    chambers_v2[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
+                    chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
                         PatientToBed.patient_to_json(chamber)
                     )
                 if chamber.doctor_id:
-                    chambers_v2[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
+                    chambers[chamber.chamber_id]["beds"][chamber.bed_id]["doctor"].append(
                         PatientToBed.doctor_to_json(chamber)
                     )
     result = []
-    for chamber in chambers_v2.values():
+    for chamber in chambers.values():
         chamber["beds"] = [val for val in chamber["beds"].values()]
         result.append(chamber)
 
