@@ -32,7 +32,7 @@ class Command(BaseCommand):
                 if department:
                     chamber = Chamber.objects.filter(title__iexact=current_chamber_title).first()
                     if chamber:
-                        bed = Bed.objects.filter(bed_number=current_bed_number).first()
+                        bed = Bed.objects.filter(chamber_id=chamber.pk, bed_number=current_bed_number).first()
                         if bed:
                             self.stdout.write(f'Кровать с номером {current_bed_number} - есть')
                         else:
