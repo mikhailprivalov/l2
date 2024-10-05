@@ -36,16 +36,13 @@ class Command(BaseCommand):
                     self.stdout.write(f' Подразделения {current_department_title} - нет')
                     continue
                 chamber = Chamber.objects.filter(title__iexact=current_chamber_title).first()
-                if chamber:
-                    bed = Bed.objects.filter(chamber_id=chamber.pk, bed_number=current_bed_number).first()
-                    if not bed:
-                        bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
-                        bed.save()
-                        self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
-                else:
+                if not chamber:
                     chamber = Chamber(title=current_chamber_title, podrazdelenie_id=department.pk)
                     chamber.save()
                     self.stdout.write(f'Палата с названием {current_chamber_title} - добавлена')
+
+                bed = Bed.objects.filter(chamber_id=chamber.pk, bed_number=current_bed_number).first()
+                if not bed:
                     bed = Bed(chamber_id=chamber.pk, bed_number=current_bed_number)
                     bed.save()
                     self.stdout.write(f'Кровать с номером {current_bed_number} - добавлена')
