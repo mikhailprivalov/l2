@@ -90,7 +90,7 @@ def get_attending_doctors(request):
             "pk": doctor.id,
             "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
             "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
-            "highlight": False
+            "highlight": False,
         }
         for doctor in attending_doctors
     ]
