@@ -129,18 +129,16 @@ class Chamber(models.Model):
         verbose_name = 'Палата'
         verbose_name_plural = 'Палаты'
 
-
     @staticmethod
     def to_json(chamber):
         result = {
-                "pk": chamber.chamber_id,
-                "label": chamber.chamber_title,
-                "beds": {},
-            }
+            "pk": chamber.chamber_id,
+            "label": chamber.chamber_title,
+            "beds": {},
+        }
         if chamber.bed_id:
             result["beds"][chamber.bed_id] = {}
         return result
-
 
 
 class Bed(models.Model):
