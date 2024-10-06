@@ -1055,6 +1055,44 @@ class ComplexService(models.Model):
         return {"ok": True, "hide": service_in_complex.hide}
 
 
+class StatisticPattern(models.Model):
+    title = models.CharField(max_length=400, unique=True, help_text="Название стастической модели данных")
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие модели", db_index=True)
+
+    def __str__(self):
+        return f"{self.title}"
+
+    class Meta:
+        verbose_name = "Статистическая модель данных"
+        verbose_name_plural = "Статистические модели"
+
+
+class PatternParam(models.Model):
+    title = models.CharField(max_length=400, unique=True, help_text="Название название стастического параметра параметра")
+    code = models.CharField(max_length=400, help_text="Код параметра")
+    is_dynamic_param = models.BooleanField(default=False, blank=True, help_text="Динамический параметр", db_index=True)
+    order = models.IntegerField(default=-1)
+
+    def __str__(self):
+        return f"{self.title} - {self.code}"
+
+    class Meta:
+        verbose_name = "Статистическая модель - параметр"
+        verbose_name_plural = "Статистическая модель - параметры "
+
+
+class StatisticPatternParamSet(models.Model):
+    statistic_pattern = models.ForeignKey(StatisticPattern, default=None, null=True, blank=True, help_text="Статистическая модель", on_delete=models.CASCADE)
+    statistic_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Параметр статистическая модель отчет", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.statistic_pattern} - {self.statistic_param}"
+
+    class Meta:
+        verbose_name = "Статистическая модель - связь с параметром"
+        verbose_name_plural = "Статистическая модель - связи с параметром"
+
+
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")
     show_title = models.BooleanField()
@@ -1064,6 +1102,7 @@ class ParaclinicInputGroups(models.Model):
     visibility = models.TextField(default="", blank=True)
     fields_inline = models.BooleanField(default=False, blank=True)
     cda_option = models.ForeignKey("external_system.CdaFields", default=None, null=True, blank=True, help_text="CDA-поле для всей группы", on_delete=models.SET_NULL)
+    statistic_pattern_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Статистический параметр", on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.research.title} – {self.title}"
@@ -1158,6 +1197,7 @@ class ParaclinicInputField(models.Model):
     short_title = models.CharField(max_length=400, default="", blank=True, help_text="Синоним-короткое название поля ввода")
     group = models.ForeignKey(ParaclinicInputGroups, on_delete=models.CASCADE)
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text="Контролируемый параметр", on_delete=models.SET_NULL)
+    statistic_pattern_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Статистический параметр", on_delete=models.SET_NULL)
     order = models.IntegerField()
     default_value = models.TextField(blank=True, default="")
     input_templates = models.TextField()

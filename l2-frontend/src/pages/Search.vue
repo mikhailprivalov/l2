@@ -288,6 +288,30 @@
           Сформировать отчёт
         </button>
       </div>
+      <div
+        v-if="hasParam && count > 0"
+        class="inner"
+      >
+        <h5>Модель отчета</h5>
+        <Treeselect
+          v-model="statisticPattern"
+          :multiple="false"
+          :disable-branch-nodes="true"
+          class="treeselect-noborder treeselect-wide"
+          :options="statisticPatterns"
+          :append-to-body="true"
+          placeholder="Не выбрано"
+          :clearable="false"
+        />
+        <button
+          v-if="statisticPattern !== -1"
+          class="btn btn-blue-nb btn-block"
+          type="button"
+          @click="genPatternReport"
+        >
+          Сформировать модель
+        </button>
+      </div>
     </div>
     <div class="right-content">
       <div class="inner">
@@ -437,9 +461,12 @@ const formatDate = (d: string) => moment(d, 'DD.MM.YYYY').format('YYYY-MM-DD');
       hospital_ids: [{ id: -1, label: 'По умолчанию' }],
       hospitalId: -1,
       statisticParams: [{ id: -1, label: 'Не выбрано' }],
+      statisticPatterns: [{ id: -1, label: 'Не выбрано' }],
       statisticParam: -1,
+      statisticPattern: -1,
       hasParam: false,
       directionsReport: [],
+      link: null,
     };
   },
   async mounted() {
@@ -494,6 +521,8 @@ export default class SearchPage extends Vue {
 
   statisticParam: number;
 
+  statisticPattern: number;
+
   count: number;
 
   researches: any[];
@@ -531,6 +560,10 @@ export default class SearchPage extends Vue {
   dateReceive: string | null;
 
   statisticParams: any[];
+
+  statisticPatterns: any[];
+
+  link: string | null;
 
   get isValid() {
     return this.searchStationar || (!!this.year && !!this.research && this.research !== -1)
@@ -580,6 +613,7 @@ export default class SearchPage extends Vue {
     this.count = dataRows.count || 0;
     if (this.count > 0) {
       this.statisticParamsSerch();
+      this.statisticPatternsSearch();
       this.directionsReport = [];
       for (const element of this.results) {
         this.directionsReport.push(element.direction_number);
@@ -593,6 +627,13 @@ export default class SearchPage extends Vue {
     const dataRows = await this.$api('/statistic-params-search');
     this.statisticParams = [{ id: -1, label: 'Не выбрано' }, ...dataRows.rows];
     this.hasParam = dataRows.hasParam;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async statisticPatternsSearch() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const dataRows = await this.$api('/statistic-pattern-search');
+    this.statisticPatterns = [{ id: -1, label: 'Не выбрано' }, ...dataRows.rows];
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -635,6 +676,17 @@ export default class SearchPage extends Vue {
         console.error(error);
         this.$root.$emit('msg', 'error', 'Сохранить данные в виде XLSX не удалось');
       });
+  }
+
+  async genPatternReport() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const directions = this.results.map(el => (el.direction_number));
+    const data = await this.$api('reports/xlsx-model', { directions, idModel: this.statisticPattern });
+    this.link = data.link;
+    if (this.link) {
+      window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');
+    }
+    await this.$store.dispatch(actions.DEC_LOADING);
   }
 
   print(pk) {

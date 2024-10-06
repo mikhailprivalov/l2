@@ -5,8 +5,9 @@ import openpyxl
 from api.reports import structure_sheet
 from api.reports import sql_func
 from api.reports import handle_func
-
 from laboratory.settings import SEARCH_PAGE_STATISTIC_PARAMS
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
 
 
 def statistic_params_search(request):
@@ -67,3 +68,11 @@ def statistic_params_search(request):
         response['Content-Disposition'] = str.translate(f"attachment; filename=\"{title}.xlsx\"", tr)
         wb.save(response)
         return response
+
+
+@login_required
+def xlsx_model(request):
+    req_data = dict(request.POST)
+    request_data = json.loads(request.body)
+
+    return JsonResponse({'results': "file-xls-model", 'link': 'open-xls'})
