@@ -243,7 +243,7 @@
 <script setup lang="ts">
 import draggable from 'vuedraggable';
 import {
-  computed,
+  computed, getCurrentInstance,
   onMounted,
   ref,
   watch,
@@ -287,6 +287,8 @@ const attendingDoctor = ref<doctorData[]>([]);
 const departmentPatientPk = ref(null);
 const departmentDocPk = ref(null);
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
+
 const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
@@ -367,17 +369,27 @@ const loadChamberAndBed = async () => {
 const changePatientBed = async ({ added, removed }, bed) => {
   if (added) {
     await store.dispatch(actions.INC_LOADING);
-    await api('chambers/entrance-patient-to-bed', {
+    const { ok, message } = await api('chambers/entrance-patient-to-bed', {
       bed_id: bed.pk,
       direction_id: bed.patient[0].direction_pk,
     });
+    if (ok) {
+      root.$emit('msg', 'ok', 'Успешно');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
     await store.dispatch(actions.DEC_LOADING);
   }
   if (removed) {
     await store.dispatch(actions.INC_LOADING);
-    await api('chambers/extract-patient-bed', {
+    const { ok, message } = await api('chambers/extract-patient-bed', {
       patient: removed.element.direction_pk,
     });
+    if (ok) {
+      root.$emit('msg', 'ok', 'Успешно');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
     await store.dispatch(actions.DEC_LOADING);
   }
 };
@@ -385,19 +397,29 @@ const changePatientBed = async ({ added, removed }, bed) => {
 const PatientWaitBed = async ({ added, removed }) => {
   if (added) {
     await store.dispatch(actions.INC_LOADING);
-    await api('chambers/save-patient-without-bed', {
+    const { ok, message } = await api('chambers/save-patient-without-bed', {
       patient_obj: added.element,
       department_pk: departmentPatientPk.value,
     });
     await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Успешно');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
   }
   if (removed) {
     await store.dispatch(actions.INC_LOADING);
-    await api('chambers/delete-patient-without-bed', {
+    const { ok, message } = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPatientPk.value,
       patient_obj: removed.element,
     });
     await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Успешно');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
   }
 };
 
@@ -419,8 +441,13 @@ const changeDoctor = async ({ added, removed }, bed) => {
     };
   }
   await store.dispatch(actions.INC_LOADING);
-  await api('chambers/update-doctor-to-bed', { doctor });
+  const { ok, message } = await api('chambers/update-doctor-to-bed', { doctor });
   await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Успешно');
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 
 const checkConditionsPutDoc = (patient: patientData[], doctor: doctorData[]) => {
