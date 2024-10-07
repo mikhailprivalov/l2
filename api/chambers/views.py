@@ -106,7 +106,7 @@ def extract_patient_bed(request):
         return status_response(False, "ID истории болезни обязателен")
     bed_department_id = patient.bed.chamber.podrazdelenie_id
     user_can_edit = Chamber.check_user(user, bed_department_id)
-    if user_can_edit:
+    if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient.date_out = datetime.datetime.today()
     patient.save()
@@ -135,7 +135,7 @@ def get_attending_doctors(request):
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def update_doctor_to_bed(request):
     request_data = json.loads(request.body)
-    user_department_id = request.user
+    user = request.user
     doctor_obj = request_data.get('doctor')
     doctor_id = doctor_obj.get('doctor_pk')
     direction_id = doctor_obj.get('direction_id')

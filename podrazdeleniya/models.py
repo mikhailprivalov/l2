@@ -132,7 +132,7 @@ class Chamber(models.Model):
     @staticmethod
     def check_user(user, need_department_id):
         has_group = user.doctorprofile.has_group("Палаты: все подразделения")
-        if user.doctorprofile.podrazdelenie_id == need_department_id:
+        if user.doctorprofile.podrazdeleniye_id == need_department_id:
             result = True
         elif has_group:
             result = True
