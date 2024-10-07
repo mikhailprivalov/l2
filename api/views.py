@@ -10,7 +10,7 @@ import pytz_deprecation_shim as pytz
 from api.models import ManageDoctorProfileAnalyzer, Analyzer
 from cash_registers.models import Shift
 from directions.views import create_case_by_cards
-from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam
+from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam, StatisticPattern
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 from laboratory.settings import (
@@ -28,7 +28,6 @@ from laboratory.settings import (
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
     MEDEXAM_FIN_SOURCE_TITLE,
-    EXCLUDE_TYPE_RESEARCH,
 )
 from utils.response import status_response
 
@@ -2657,6 +2656,23 @@ def statistic_params_search(request):
     if len(result) > 0:
         has_param = True
     return JsonResponse({"rows": result, "hasParam": has_param})
+
+
+def statistic_pattern_search(request):
+    user_groups = [str(x) for x in request.user.groups.all()]
+    result = []
+    su = request.user.is_superuser
+
+    statistic_pattern = StatisticPattern.objects.filter(hide=False)
+    statistic_pattern_result = [{"id": i.pk, "label": i.title} for i in statistic_pattern]
+    if su:
+        result.extend(statistic_pattern_result)
+    else:
+        for el in statistic_pattern_result:
+            if el.get("title") in user_groups:
+                result.extend(el)
+
+    return JsonResponse({"rows": result})
 
 
 @login_required
