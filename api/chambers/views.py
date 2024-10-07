@@ -94,7 +94,7 @@ def entrance_patient_to_bed(request):
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id)
         patient_to_bed.save()
-        Log.log(direction_id, 230000, user, {
+        Log.log(direction_id, 230000, user.doctorprofile, {
             "direction_id": direction_id,
             "bed_id": bed_id,
             "department_id": bed_department_id,
@@ -118,7 +118,7 @@ def extract_patient_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient.date_out = datetime.datetime.today()
     patient.save()
-    Log.log(direction_pk, 230001, user, {
+    Log.log(direction_pk, 230001, user.doctorprofile, {
         "direction_id": direction_pk,
         "bed_id": patient.bed_id,
         "department_id": bed_department_id,
@@ -165,7 +165,7 @@ def update_doctor_to_bed(request):
             type_log = 230002
         else:
             type_log = 230003
-        Log.log(direction_id, type_log, user, {
+        Log.log(direction_id, type_log, user.doctorprofile, {
             "direction_id": direction_id,
             "bed_id": patient_to_bed.bed_id,
             "department_id": bed_department_id,
@@ -205,7 +205,7 @@ def save_patient_without_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk)
     patient_without_bed.save()
-    Log.log(patient_obj["direction_pk"], 230004, user, {
+    Log.log(patient_obj["direction_pk"], 230004, user.doctorprofile, {
         "direction_id": patient_obj["direction_pk"],
         "department_id": department_pk,
     })
@@ -224,7 +224,7 @@ def delete_patient_without_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient_without_bed = PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"])
     patient_without_bed.delete()
-    Log.log(patient_obj["direction_pk"], 230005, user, {
+    Log.log(patient_obj["direction_pk"], 230005, user.doctorprofile, {
         "direction_id": patient_obj["direction_pk"],
         "department_id": department_pk,
     })
