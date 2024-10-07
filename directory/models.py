@@ -1092,6 +1092,11 @@ class StatisticPatternParamSet(models.Model):
         verbose_name = "Статистическая модель - связь с параметром"
         verbose_name_plural = "Статистическая модель - связи с параметром"
 
+    @staticmethod
+    def get_statistic_param(statistic_pattern_id):
+        params = StatisticPatternParamSet.objects.filter(statistic_pattern_id=statistic_pattern_id)
+        return {p.statistic_param_id: {"title": p.statistic_param.title, "isDynamic": p.statistic_param.is_dynamic_param} for p in params}
+
 
 class ParaclinicInputGroups(models.Model):
     title = models.CharField(max_length=255, help_text="Название группы")
@@ -1241,6 +1246,11 @@ class ParaclinicInputField(models.Model):
                     titles[-1] = titles[-1] + " – " + ft
         title = ", ".join([t for t in titles if t])
         return title
+
+    @staticmethod
+    def get_field_input_by_pattern_param(pattern_params):
+        return list(ParaclinicInputField.objects.filter(statistic_pattern_param_id__in=pattern_params).values_list("pk", flat=True))
+
 
     def __str__(self):
         return f"{self.group.research.title} - {self.group.title} - {self.title}"
@@ -1469,6 +1479,7 @@ class Fractions(models.Model):
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
     external_code = models.CharField(max_length=255, default="", help_text="Внешний код теста", blank=True, db_index=True)
+    statistic_pattern_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Статистический параметр модели", on_delete=models.SET_NULL)
 
     def get_unit(self):
         if self.unit:
@@ -1583,6 +1594,10 @@ class Fractions(models.Model):
             f.relation_id = new_tube_relation
             f.save()
         return True
+
+    @staticmethod
+    def get_fraction_id_by_pattern_param(pattern_params):
+        return list(Fractions.objects.filter(statistic_pattern_param_id__in=pattern_params).values_list("pk", flat=True))
 
 
 class Absorption(models.Model):

@@ -2587,6 +2587,10 @@ class Issledovaniya(models.Model):
             ctime - ctp < rt and (current_doc_confirmation == user.doctorprofile or (executor_confirmation is not None and executor_confirmation == user.doctorprofile))
         ) or "Сброс подтверждений результатов" in groups
 
+    @staticmethod
+    def get_iss_id_by_directions(directions):
+        return list(Issledovaniya.objects.filter(napravleniye_id__in=directions).values_list("pk", flat=True))
+
     class Meta:
         verbose_name = 'Назначение на исследование'
         verbose_name_plural = 'Назначения на исследования'

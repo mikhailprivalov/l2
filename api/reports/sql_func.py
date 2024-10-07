@@ -40,3 +40,75 @@ def report_buh_gistology(directions):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_pair_direction_iss(directions):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+        SELECT
+        directions_issledovaniya.napravleniye_id as direction_id,
+        directions_issledovaniya.id as iss_id
+
+        FROM directions_issledovaniya
+        WHERE directions_issledovaniya.napravleniye_id in %(directions)s
+        ORDER BY directions_issledovaniya.napravleniye_id
+        """,
+            params={'directions': directions},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_simple_directions_for_hosp_stationar(iss_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+        SELECT
+        directions_napravleniya.id as directionn_id
+        FROM directions_napravleniya
+        WHERE directions_napravleniya.parent_id in %(iss_id)s
+        """,
+            params={'iss_id': iss_id},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_field_results(directions, input_field, fraction_field):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+        SELECT
+        dn.id as direction_id,
+        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH24:MI') AS time_confirm,
+        dp.value as input_value, 
+        dpif.title as field_title,
+        dpif.statistic_pattern_param_id as input_static_param,
+        dr.value as fraction_value,
+        df.statistic_pattern_param_id as fraction_static_param
+        
+        FROM directions_issledovaniya
+        LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id 
+        LEFT JOIN directions_paraclinicresult dp on directions_issledovaniya.id = dp.issledovaniye_id
+        LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
+        LEFT JOIN directions_result dr on directions_issledovaniya.id = dr.issledovaniye_id
+        LEFT JOIN directory_fractions df on dr.fraction_id = df.id 
+        
+        WHERE directions_issledovaniya.napravleniye_id in %(directions)s 
+        AND directions_issledovaniya.time_confirmation is not Null
+        AND ( dpif.id in %(input_field)s OR  df.id in %(fraction_field)s
+        )
+        ORDER BY time_confirm
+
+        """,
+            params={'directions': directions, 'input_field': input_field, 'fraction_field': fraction_field, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+

@@ -5,6 +5,9 @@ import openpyxl
 from api.reports import structure_sheet
 from api.reports import sql_func
 from api.reports import handle_func
+from api.reports.sql_func import get_pair_direction_iss, get_simple_directions_for_hosp_stationar, get_field_results
+from directions.models import Issledovaniya
+from directory.models import StatisticPatternParamSet, ParaclinicInputField, Fractions
 from laboratory.settings import SEARCH_PAGE_STATISTIC_PARAMS
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -72,7 +75,17 @@ def statistic_params_search(request):
 
 @login_required
 def xlsx_model(request):
-    req_data = dict(request.POST)
-    request_data = json.loads(request.body)
+    if request.method == "POST":
+        data = json.loads(request.body)
+        directions = data.get('directions')
+        id_model = data.get('idModel')
+
+        sql_pair_direction_iss = {i.iss_id: i.direction_id for i in get_pair_direction_iss(tuple(directions))}
+        sql_simple_directions = [i.direction_id for i in get_simple_directions_for_hosp_stationar (tuple(sql_pair_direction_iss.keys()))]
+
+        statistic_param_data = StatisticPatternParamSet.get_statistic_param(id_model)
+        input_field_statistic_param = ParaclinicInputField.get_field_input_by_pattern_param(list(statistic_param_data.keys()))
+        laboratory_fractions_statistic_param = Fractions.get_fraction_id_by_pattern_param(list(statistic_param_data.keys()))
+        result_directions = get_field_results(tuple(sql_simple_directions), tuple(input_field_statistic_param), tuple(laboratory_fractions_statistic_param) )
 
     return JsonResponse({'results': "file-xls-model", 'link': 'open-xls'})
