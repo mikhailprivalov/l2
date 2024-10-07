@@ -165,11 +165,16 @@ def update_doctor_to_bed(request):
             type_log = 230002
         else:
             type_log = 230003
-        Log.log(direction_id, type_log, user.doctorprofile, {
-            "direction_id": direction_id,
-            "bed_id": patient_to_bed.bed_id,
-            "department_id": bed_department_id,
-        })
+        Log.log(
+            direction_id,
+            type_log,
+            user.doctorprofile,
+            {
+                "direction_id": direction_id,
+                "bed_id": patient_to_bed.bed_id,
+                "department_id": bed_department_id,
+            },
+        )
     return JsonResponse({"ok": result, "message": ""})
 
 
