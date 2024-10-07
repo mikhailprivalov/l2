@@ -22,6 +22,7 @@
           chosen-class="chosen-unallocated-patient"
           ghost-class="ghost-unallocated-patient"
           :disabled="!userCanEdit"
+          @change="changeUnallocatedPatient"
         >
           <div
             v-for="patient in unallocatedPatients"
@@ -379,6 +380,11 @@ const loadChamberAndBed = async () => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
+const changeUnallocatedPatient = async ({ added, removed }) => {
+  if (added) {
+    await getUnallocatedPatients();
+  }
+};
 const changePatientBed = async ({ added, removed }, bed) => {
   if (added) {
     await store.dispatch(actions.INC_LOADING);
