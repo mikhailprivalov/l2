@@ -129,6 +129,17 @@ class Chamber(models.Model):
         verbose_name = 'Палата'
         verbose_name_plural = 'Палаты'
 
+    @staticmethod
+    def check_user(user, need_department_id):
+        has_group = user.doctorprofile.has_group("Палаты: все подразделения")
+        if user.doctorprofile.podrazdelenie_id == need_department_id:
+            result = True
+        elif has_group:
+            result = True
+        else:
+            result = user.is_superuser
+        return result
+
 
 class Bed(models.Model):
     chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
@@ -153,13 +164,12 @@ class PatientToBed(models.Model):
         return f'{self.direction.client.individual.fio()}'
 
     @staticmethod
-    def update_doctor(doctor_id, direction_id, is_assign, user_department_id):
+    def update_doctor(doctor_id, direction_id, is_assign, user):
         result = {"ok": True, "message": ""}
         patient_to_bed = PatientToBed.objects.filter(direction_id=direction_id, date_out=None).select_related('bed__chamber').first()
         bed_department_id = patient_to_bed.bed.chamber.podrazdelenie_id
-        print(bed_department_id)
-        print(user_department_id)
-        if bed_department_id != user_department_id:
+        user_can_edit = Chamber.check_user(user, bed_department_id)
+        if not user_can_edit:
             result = {"ok": False, "message": "Пользователь не принадлежит к данному подразделению"}
             return result
         if is_assign:
