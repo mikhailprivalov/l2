@@ -1,10 +1,5 @@
-import re
-
 from django.core.management.base import BaseCommand
-from openpyxl import load_workbook
-
 from directions.models import Napravleniya, Issledovaniya
-from researches.models import Tubes
 
 
 class Command(BaseCommand):
