@@ -153,11 +153,13 @@ class PatientToBed(models.Model):
         return f'{self.direction.client.individual.fio()}'
 
     @staticmethod
-    def update_doctor(doctor_id, direction_id, is_assign, user_deparment_id):
+    def update_doctor(doctor_id, direction_id, is_assign, user_department_id):
         result = {"ok": True, "message": ""}
         patient_to_bed = PatientToBed.objects.filter(direction_id=direction_id, date_out=None).select_related('bed__chamber').first()
         bed_department_id = patient_to_bed.bed.chamber.podrazdelenie_id
-        if bed_department_id != user_deparment_id:
+        print(bed_department_id)
+        print(user_department_id)
+        if bed_department_id != user_department_id:
             result = {"ok": False, "message": "Пользователь не принадлежит к данному подразделению"}
             return result
         if is_assign:

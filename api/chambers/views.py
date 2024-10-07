@@ -139,7 +139,7 @@ def update_doctor_to_bed(request):
     direction_id = doctor_obj.get('direction_id')
     is_assign = doctor_obj.get('is_assign')
     result = PatientToBed.update_doctor(doctor_id, direction_id, is_assign, user_department_id)
-    return status_response(result)
+    return JsonResponse(result)
 
 
 @login_required
