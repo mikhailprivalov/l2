@@ -9,7 +9,7 @@ from .sql_func import load_patient_without_bed_by_department, load_attending_doc
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Лечащий врач")
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -27,7 +27,7 @@ def get_unallocated_patients(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Лечащий врач")
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     department_id = request_data.get('department_pk', -1)
@@ -99,7 +99,7 @@ def extract_patient_bed(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Лечащий врач")
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -126,7 +126,7 @@ def update_doctor_to_bed(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Лечащий врач")
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
