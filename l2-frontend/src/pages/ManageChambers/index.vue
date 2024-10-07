@@ -386,25 +386,26 @@ const changePatientBed = async ({ added, removed }, bed) => {
       bed_id: bed.pk,
       direction_id: bed.patient[0].direction_pk,
     });
+    await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Успешно');
     } else {
       root.$emit('msg', 'error', message);
     }
-    await store.dispatch(actions.DEC_LOADING);
   }
   if (removed) {
     await store.dispatch(actions.INC_LOADING);
     const { ok, message } = await api('chambers/extract-patient-bed', {
       patient: removed.element.direction_pk,
     });
+    await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Успешно');
     } else {
       root.$emit('msg', 'error', message);
     }
-    await store.dispatch(actions.DEC_LOADING);
   }
+  await loadChamberAndBed();
 };
 
 const PatientWaitBed = async ({ added, removed }) => {
@@ -434,6 +435,7 @@ const PatientWaitBed = async ({ added, removed }) => {
       root.$emit('msg', 'error', message);
     }
   }
+  await getPatientWithoutBed();
 };
 
 const changeDoctor = async ({ added, removed }, bed) => {
@@ -461,6 +463,7 @@ const changeDoctor = async ({ added, removed }, bed) => {
   } else {
     root.$emit('msg', 'error', message);
   }
+  await loadChamberAndBed();
 };
 
 const checkConditionsPutDoc = (patient: patientData[], doctor: doctorData[]) => {
