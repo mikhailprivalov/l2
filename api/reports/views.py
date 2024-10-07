@@ -74,6 +74,7 @@ def statistic_params_search(request):
 
 @login_required
 def xlsx_model(request):
+    result_directions = None
     if request.method == "POST":
         data = json.loads(request.body)
         directions = data.get("directions")
