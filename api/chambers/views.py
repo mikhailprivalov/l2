@@ -113,11 +113,16 @@ def extract_patient_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient.date_out = datetime.datetime.today()
     patient.save()
-    Log.log(direction_pk, 230001, user.doctorprofile, {
-        "direction_id": direction_pk,
-        "bed_id": patient.bed_id,
-        "department_id": bed_department_id,
-    })
+    Log.log(
+        direction_pk,
+        230001,
+        user.doctorprofile,
+        {
+            "direction_id": direction_pk,
+            "bed_id": patient.bed_id,
+            "department_id": bed_department_id,
+        },
+    )
     return status_response(True)
 
 
