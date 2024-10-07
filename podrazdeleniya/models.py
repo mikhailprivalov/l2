@@ -164,21 +164,14 @@ class PatientToBed(models.Model):
         return f'{self.direction.client.individual.fio()}'
 
     @staticmethod
-    def update_doctor(doctor_id, direction_id, is_assign, user):
-        result = {"ok": True, "message": ""}
-        patient_to_bed = PatientToBed.objects.filter(direction_id=direction_id, date_out=None).select_related('bed__chamber').first()
-        bed_department_id = patient_to_bed.bed.chamber.podrazdelenie_id
-        user_can_edit = Chamber.check_user(user, bed_department_id)
-        if not user_can_edit:
-            result = {"ok": False, "message": "Пользователь не принадлежит к данному подразделению"}
-            return result
+    def update_doctor(doctor_id, patient_to_bed, is_assign):
         if is_assign:
             patient_to_bed.doctor_id = doctor_id
             patient_to_bed.save()
         else:
             patient_to_bed.doctor = None
             patient_to_bed.save()
-        return result
+        return True
 
     class Meta:
         verbose_name = 'Историю коек'

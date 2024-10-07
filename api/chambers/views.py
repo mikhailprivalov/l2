@@ -92,12 +92,14 @@ def entrance_patient_to_bed(request):
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
-        PatientToBed(direction_id=direction_id, bed_id=bed_id).save()
-    Log.log(direction_id, 230000, user, {
-        "direction_id": direction_id,
-        "bed_id": bed_id,
-        "department_id": bed_department_id,
-    })
+        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id)
+        patient_to_bed.save()
+        Log.log(direction_id, 230000, user, {
+            "direction_id": direction_id,
+            "bed_id": bed_id,
+            "department_id": bed_department_id,
+            "patient_to_bed": patient_to_bed.pk
+        })
     return status_response(True)
 
 
@@ -116,6 +118,11 @@ def extract_patient_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient.date_out = datetime.datetime.today()
     patient.save()
+    Log.log(direction_pk, 230001, user, {
+        "direction_id": direction_pk,
+        "bed_id": patient.bed_id,
+        "department_id": bed_department_id,
+    })
     return status_response(True)
 
 
@@ -146,8 +153,24 @@ def update_doctor_to_bed(request):
     doctor_id = doctor_obj.get('doctor_pk')
     direction_id = doctor_obj.get('direction_id')
     is_assign = doctor_obj.get('is_assign')
-    result = PatientToBed.update_doctor(doctor_id, direction_id, is_assign, user)
-    return JsonResponse(result)
+    patient_to_bed = PatientToBed.objects.filter(direction_id=direction_id, date_out=None).select_related('bed__chamber').first()
+    bed_department_id = patient_to_bed.bed.chamber.podrazdelenie_id
+    user_can_edit = Chamber.check_user(user, bed_department_id)
+    if not user_can_edit:
+        result = {"ok": False, "message": "Пользователь не принадлежит к данному подразделению"}
+        return result
+    result = PatientToBed.update_doctor(doctor_id, patient_to_bed, is_assign)
+    if result:
+        if is_assign:
+            type_log = 230002
+        else:
+            type_log = 230003
+        Log.log(direction_id, type_log, user, {
+            "direction_id": direction_id,
+            "bed_id": patient_to_bed.bed_id,
+            "department_id": bed_department_id,
+        })
+    return JsonResponse({"ok": result, "message": ""})
 
 
 @login_required
@@ -180,7 +203,12 @@ def save_patient_without_bed(request):
     user_can_edit = Chamber.check_user(user, department_pk)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk).save()
+    patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk)
+    patient_without_bed.save()
+    Log.log(patient_obj["direction_pk"], 230004, user, {
+        "direction_id": patient_obj["direction_pk"],
+        "department_id": department_pk,
+    })
     return status_response(True)
 
 
@@ -194,5 +222,10 @@ def delete_patient_without_bed(request):
     user_can_edit = Chamber.check_user(user, department_pk)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"]).delete()
+    patient_without_bed = PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"])
+    patient_without_bed.delete()
+    Log.log(patient_obj["direction_pk"], 230005, user, {
+        "direction_id": patient_obj["direction_pk"],
+        "department_id": department_pk,
+    })
     return status_response(True)
