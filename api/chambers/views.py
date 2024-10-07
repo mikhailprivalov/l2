@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 import simplejson as json
 from django.http import JsonResponse
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
+from slog.models import Log
 from utils.response import status_response
 import datetime
 from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
@@ -92,6 +93,11 @@ def entrance_patient_to_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         PatientToBed(direction_id=direction_id, bed_id=bed_id).save()
+    Log.log(direction_id, 230000, user, {
+        "direction_id": direction_id,
+        "bed_id": bed_id,
+        "department_id": bed_department_id,
+    })
     return status_response(True)
 
 
