@@ -210,10 +210,15 @@ def save_patient_without_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk)
     patient_without_bed.save()
-    Log.log(patient_obj["direction_pk"], 230004, user.doctorprofile, {
-        "direction_id": patient_obj["direction_pk"],
-        "department_id": department_pk,
-    })
+    Log.log(
+        patient_obj["direction_pk"],
+        230004,
+        user.doctorprofile,
+        {
+            "direction_id": patient_obj["direction_pk"],
+            "department_id": department_pk,
+        },
+    )
     return status_response(True)
 
 
