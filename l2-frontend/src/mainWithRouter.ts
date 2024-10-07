@@ -749,7 +749,10 @@ const router = new Router({
       component: () => import('@/pages/ManageChambers/index.vue'),
       meta: {
         title: 'Палаты',
-        groups: ['Лечащий врач'],
+        groups: [
+          'Оператор лечащего врача',
+          'Лечащий врач',
+        ],
         module: 'l2_hosp',
         fullPageLayout: true,
       },
