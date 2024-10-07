@@ -21,6 +21,7 @@
           animation="500"
           chosen-class="chosen-unallocated-patient"
           ghost-class="ghost-unallocated-patient"
+          :disabled="!userCanEdit"
         >
           <div
             v-for="patient in unallocatedPatients"
@@ -88,6 +89,7 @@
                       class="draggable-doctor"
                       chosen-class="chosen-doctor"
                       ghost-class="ghost-doctor"
+                      :disabled="!userCanEdit"
                       @change="changeDoctor($event, bed);"
                     >
                       <div class="flex">
@@ -115,6 +117,7 @@
                       class="draggable-beds"
                       chosen-class="chosen-beds"
                       ghost-class="ghost-beds"
+                      :disabled="!userCanEdit"
                       @change="changePatientBed($event, bed)"
                       @remove="clearArrayDoctor(bed)"
                     >
@@ -190,6 +193,7 @@
             chosen-class="chosen-patient-without-bed"
             ghost-class="ghost-patient-without-bed"
             animation="500"
+            :disabled="!userCanEdit"
             @change="PatientWaitBed"
           >
             <div
@@ -224,6 +228,7 @@
           class="draggable-block"
           chosen-class="chosen-attending-doctor"
           ghost-class="ghost-attending-doctor"
+          :disabled="!userCanEdit"
           animation="500"
         >
           <div
@@ -288,7 +293,15 @@ const departmentPatientPk = ref(null);
 const departmentDocPk = ref(null);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
+const userDepartmentId = store.getters.user_data.department.pk;
 
+const userCanEdit = computed(() => {
+  const { groups } = store.getters.user_data;
+  if (departmentPatientPk.value === userDepartmentId) {
+    return true;
+  }
+  return groups.includes('Палаты: все подразделения') || groups.includes('Admin');
+});
 const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
