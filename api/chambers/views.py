@@ -94,12 +94,7 @@ def entrance_patient_to_bed(request):
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id)
         patient_to_bed.save()
-        Log.log(direction_id, 230000, user.doctorprofile, {
-            "direction_id": direction_id,
-            "bed_id": bed_id,
-            "department_id": bed_department_id,
-            "patient_to_bed": patient_to_bed.pk
-        })
+        Log.log(direction_id, 230000, user.doctorprofile, {"direction_id": direction_id, "bed_id": bed_id, "department_id": bed_department_id, "patient_to_bed": patient_to_bed.pk})
     return status_response(True)
 
 
