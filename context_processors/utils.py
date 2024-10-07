@@ -144,7 +144,7 @@ def menu(request):
                     "nt": False,
                     "access": ["Управление анализаторами"],
                 },
-                {"url": "/ui/chambers", "title": "Палаты", "nt": False, "access": ["Лечащий врач"]},
+                {"url": "/ui/chambers", "title": "Палаты", "nt": False, "access": ["Лечащий врач"], "module": "l2_hosp"},
                 {"url": '/ui/list-wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/ui/doc-call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
                 {
