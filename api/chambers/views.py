@@ -82,6 +82,13 @@ def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
     direction_id = request_data.get('direction_id')
+    user_department_id = request.user.doctorprofile.podrazdeleniye_id
+    bed: Bed = Bed.objects.filter(pk=bed_id).select_related('chamber').first()
+    if not bed:
+        return status_response(False, "ID кровати обязателен")
+    bed_department_id = bed.chamber.podrazdelenie_id
+    if not user_department_id == bed_department_id:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         PatientToBed(direction_id=direction_id, bed_id=bed_id).save()
     return status_response(True)
@@ -92,7 +99,13 @@ def entrance_patient_to_bed(request):
 def extract_patient_bed(request):
     request_data = json.loads(request.body)
     direction_pk = request_data.get('patient')
-    patient = PatientToBed.objects.filter(direction_id=direction_pk, date_out=None).first()
+    user_department_id = request.user.doctorprofile.podrazdeleniye_id
+    patient: PatientToBed = PatientToBed.objects.filter(direction_id=direction_pk, date_out=None).select_related('bed__chamber').first()
+    if not patient:
+        return status_response(False, "ID истории болезни обязателен")
+    bed_department_id = patient.bed.chamber.podrazdelenie_id
+    if not user_department_id == bed_department_id:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient.date_out = datetime.datetime.today()
     patient.save()
     return status_response(True)
@@ -120,8 +133,12 @@ def get_attending_doctors(request):
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def update_doctor_to_bed(request):
     request_data = json.loads(request.body)
+    user_department_id = request.user.doctorprofile.podrazdeleniye_id
     doctor_obj = request_data.get('doctor')
-    result = PatientToBed.update_doctor(doctor_obj)
+    doctor_id = doctor_obj.get('doctor_pk')
+    direction_id = doctor_obj.get('direction_id')
+    is_assign = doctor_obj.get('is_assign')
+    result = PatientToBed.update_doctor(doctor_id, direction_id, is_assign, user_department_id)
     return status_response(result)
 
 
@@ -151,6 +168,9 @@ def save_patient_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk')
     patient_obj = request_data.get('patient_obj')
+    user_department_id = request.user.doctorprofile.podrazdeleniye_id
+    if user_department_id != department_pk:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
     PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk).save()
     return status_response(True)
 
@@ -159,6 +179,10 @@ def save_patient_without_bed(request):
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def delete_patient_without_bed(request):
     request_data = json.loads(request.body)
+    department_pk = request_data.get('department_pk')
     patient_obj = request_data.get('patient_obj')
+    user_department_id = request.user.doctorprofile.podrazdeleniye_id
+    if user_department_id != department_pk:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
     PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"]).delete()
     return status_response(True)

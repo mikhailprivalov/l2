@@ -394,6 +394,7 @@ const PatientWaitBed = async ({ added, removed }) => {
   if (removed) {
     await store.dispatch(actions.INC_LOADING);
     await api('chambers/delete-patient-without-bed', {
+      department_pk: departmentPatientPk.value,
       patient_obj: removed.element,
     });
     await store.dispatch(actions.DEC_LOADING);
