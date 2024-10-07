@@ -109,6 +109,3 @@ def get_field_results(directions, input_field, fraction_field):
 
         rows = namedtuplefetchall(cursor)
     return rows
-
-
-
