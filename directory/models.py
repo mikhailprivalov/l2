@@ -1251,7 +1251,6 @@ class ParaclinicInputField(models.Model):
     def get_field_input_by_pattern_param(pattern_params):
         return list(ParaclinicInputField.objects.filter(statistic_pattern_param_id__in=pattern_params).values_list("pk", flat=True))
 
-
     def __str__(self):
         return f"{self.group.research.title} - {self.group.title} - {self.title}"
 
