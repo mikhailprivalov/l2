@@ -234,8 +234,13 @@ def delete_patient_without_bed(request):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient_without_bed = PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"])
     patient_without_bed.delete()
-    Log.log(patient_obj["direction_pk"], 230005, user.doctorprofile, {
-        "direction_id": patient_obj["direction_pk"],
-        "department_id": department_pk,
-    })
+    Log.log(
+        patient_obj["direction_pk"],
+        230005,
+        user.doctorprofile,
+        {
+            "direction_id": patient_obj["direction_pk"],
+            "department_id": department_pk,
+        },
+    )
     return status_response(True)
