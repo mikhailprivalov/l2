@@ -31,5 +31,4 @@ class Command(BaseCommand):
             slave_direction_issledovanie: Issledovaniya = Issledovaniya.objects.filter(napravleniye_id=slave_direction.pk).select_related('research').first()
             if slave_direction_issledovanie.research.is_hospital:
                 need_change_history_ids.add(slave_direction.pk)
-        self.stdout.write(f'Следующие направления - истории болезни (при необходимости повторите скрипт с этими направлениями) \n'
-                          f'{need_change_history_ids}')
+        self.stdout.write(f'Следующие направления - истории болезни (при необходимости повторите скрипт с этими направлениями) \n' f'{need_change_history_ids}')
