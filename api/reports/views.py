@@ -6,7 +6,6 @@ from api.reports import structure_sheet
 from api.reports import sql_func
 from api.reports import handle_func
 from api.reports.sql_func import get_pair_direction_iss, get_simple_directions_for_hosp_stationar, get_field_results
-from directions.models import Issledovaniya
 from directory.models import StatisticPatternParamSet, ParaclinicInputField, Fractions
 from laboratory.settings import SEARCH_PAGE_STATISTIC_PARAMS
 from django.http import JsonResponse
@@ -88,4 +87,4 @@ def xlsx_model(request):
         laboratory_fractions_statistic_param = Fractions.get_fraction_id_by_pattern_param(list(statistic_param_data.keys()))
         result_directions = get_field_results(tuple(sql_simple_directions), tuple(input_field_statistic_param), tuple(laboratory_fractions_statistic_param) )
 
-    return JsonResponse({'results': "file-xls-model", 'link': 'open-xls'})
+    return JsonResponse({'results': "file-xls-model", 'link': 'open-xls', 'result':result_directions})
