@@ -750,7 +750,7 @@ const router = new Router({
       meta: {
         narrowLayout: true,
         title: 'Палаты',
-        groups: ['Палаты'],
+        groups: ['Лечащий врач'],
         fullPageLayout: true,
       },
     },
