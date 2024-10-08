@@ -35,7 +35,7 @@ from .models import (
     ExternalAdditionalOrder,
     NapravleniyaHL7LinkFiles,
     ComplexResearchAccountPerson,
-    StatementDocument
+    StatementDocument,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
