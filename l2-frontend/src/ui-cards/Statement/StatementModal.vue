@@ -239,7 +239,6 @@ export default {
       this.all_checked = false;
       this.tubes = data.rows || [];
       this.checked = [];
-      console.log(data);
     },
     async printStatement(tubes) {
       window.open(`/forms/pdf?type=114.01&&filter=[${tubes}]`, '_blank');
