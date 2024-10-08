@@ -135,8 +135,8 @@ def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
     if CHAMBER_DOCTOR_GROUP_ID:
-        group_ids = (CHAMBER_DOCTOR_GROUP_ID,)
-        attending_doctors = load_attending_doctor_by_department(department_pk, group_ids)
+        group_id = CHAMBER_DOCTOR_GROUP_ID
+        attending_doctors = load_attending_doctor_by_department(department_pk, group_id)
         doctors = [
             {
                 "pk": doctor.id,

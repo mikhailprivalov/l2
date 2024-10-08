@@ -60,7 +60,7 @@ def load_patient_without_bed_by_department(department_id):
     return rows
 
 
-def load_attending_doctor_by_department(department_id, group_ids):
+def load_attending_doctor_by_department(department_id, group_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -75,13 +75,13 @@ def load_attending_doctor_by_department(department_id, group_ids):
             LEFT JOIN auth_user_groups ON auth_user.id = auth_user_groups.user_id
             LEFT JOIN auth_group ON auth_user_groups.group_id = auth_group.id
             WHERE 
-            auth_group.id = %(group_ids)s
+            auth_group.id = %(group_id)s
             AND users_doctorprofile.podrazdeleniye_id = %(department_id)s
             AND users_doctorprofile.dismissed = false
             
             ORDER BY family
             """,
-            params={"department_id": department_id, "group_ids": group_ids},
+            params={"department_id": department_id, "group_id": group_id},
         )
 
         rows = namedtuplefetchall(cursor)
