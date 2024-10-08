@@ -366,11 +366,15 @@ const init = async () => {
 
 const getAttendingDoctors = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const row = await api('chambers/get-attending-doctors', {
+  const { ok, message, data } = await api('chambers/get-attending-doctors', {
     department_pk: departmentDocPk.value,
   });
-  attendingDoctor.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    attendingDoctor.value = data;
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 
 const getUnallocatedPatients = async () => {

@@ -2,10 +2,13 @@ from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
 import simplejson as json
 from django.http import JsonResponse
+
+from laboratory.settings import CHAMBER_DOCTOR_GROUP_ID
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 from slog.models import Log
 from utils.response import status_response
 import datetime
+from django.contrib.auth.models import Group
 from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
 
 
@@ -131,17 +134,22 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    attending_doctors = load_attending_doctor_by_department(department_pk)
-    doctors = [
-        {
-            "pk": doctor.id,
-            "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
-            "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
-            "highlight": False,
-        }
-        for doctor in attending_doctors
-    ]
-    return JsonResponse({"data": doctors})
+    if CHAMBER_DOCTOR_GROUP_ID:
+        group_ids = (CHAMBER_DOCTOR_GROUP_ID,)
+        attending_doctors = load_attending_doctor_by_department(department_pk, group_ids)
+        doctors = [
+            {
+                "pk": doctor.id,
+                "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
+                "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
+                "highlight": False,
+            }
+            for doctor in attending_doctors
+        ]
+        result = {"ok": True, "message": "", "data": doctors}
+    else:
+        result = {"ok": False, "message": "Группа прав для врачей не настроена", "data": []}
+    return JsonResponse(result)
 
 
 @login_required
