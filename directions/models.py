@@ -139,7 +139,6 @@ class TubesRegistration(models.Model):
     defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
     statement_document = models.ForeignKey(StatementDocument, default=None, null=True, blank=True, db_index=True, help_text='Ведомость документов', on_delete=models.SET_NULL)
 
-
     @staticmethod
     def make_default_external_tube(number: int):
         external_tube = directory.ReleationsFT.get_default_external_tube()
