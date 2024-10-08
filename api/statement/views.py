@@ -18,9 +18,9 @@ from django.db import transaction
 def select_tubes_statement(request):
     data = json.loads(request.body)
     user = request.user.doctorprofile.pk
-    data_start = normalize_dots_date(data.get('date_from'))
+    data_start = normalize_dots_date(data.get("date_from"))
     data_start = f"{data_start} 00:00:01"
-    data_end = normalize_dots_date(data.get('date_to'))
+    data_end = normalize_dots_date(data.get("date_to"))
     data_end = f"{data_end} 23:59:59"
     directions = list(Napravleniya.objects.filter(data_sozdaniya__gte=data_start, data_sozdaniya__lte=data_end).values_list("pk", flat=True))
     sql_data = get_tubes_without_statement(tuple(directions), user)
@@ -30,8 +30,9 @@ def select_tubes_statement(request):
             "fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}- {i.patient_birthday} ({i.card_number})",
             "direction": i.direction_id,
             "tubeNumber": i.tube_number,
-            "checked": False
-        } for i in sql_data
+            "checked": False,
+        }
+        for i in sql_data
     ]
 
     return JsonResponse({"rows": result})
@@ -41,9 +42,8 @@ def select_tubes_statement(request):
 def save_tubes_statement(request):
     data = json.loads(request.body)
     user_id = request.user.doctorprofile.pk
-    print(data)
-    directions = [d.get('direction') for d in data]
-    tube_numbers = [d.get('tubeNumber') for d in data]
+    directions = [d.get("direction") for d in data]
+    tube_numbers = [d.get("tubeNumber") for d in data]
     result = True
     message = ""
 
@@ -73,7 +73,7 @@ def save_tubes_statement(request):
 @login_required
 def show_history(request):
     user_id = request.user.doctorprofile.pk
-    statement_document =list(StatementDocument.objects.filter(person_who_create_id=user_id).values_list("pk", flat=True))
+    statement_document = list(StatementDocument.objects.filter(person_who_create_id=user_id).values_list("pk", flat=True))
     end_date = current_time(only_date=True)
     start_date = end_date + relativedelta(days=-60)
     start_date = datetime.datetime.strftime(start_date, "%Y-%m-%d")
@@ -103,6 +103,3 @@ def show_history(request):
     dtime_tz = old_create_at.astimezone(pytz.timezone(TIME_ZONE)).strftime("%d.%m.%Y -%H:%M:%S")
     result.append({"pk": old_statement_id, "date": dtime_tz, "tubes": str_current_set_tubes})
     return JsonResponse({"rows": result})
-
-
-
