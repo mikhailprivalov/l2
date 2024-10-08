@@ -109,6 +109,15 @@ class NoGenerator(Exception):
     pass
 
 
+class StatementDocument(models.Model):
+    create_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания ведомости', db_index=True)
+    person_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Создатель ведомости', on_delete=models.SET_NULL)
+
+    class Meta:
+        verbose_name = 'Ведомость документов передачи'
+        verbose_name_plural = 'Ведомости документов передачи'
+
+
 class TubesRegistration(models.Model):
     """
     Таблица с пробирками для исследований
@@ -128,6 +137,7 @@ class TubesRegistration(models.Model):
     daynum = models.IntegerField(default=0, blank=True, null=True, help_text='Номер принятия ёмкости среди дня в лаборатории')
     is_defect = models.BooleanField(default=False, blank=True, verbose_name='Дефект')
     defect_text = models.CharField(max_length=50, default="", blank=True, help_text='Замечания')
+    statement_document = models.ForeignKey(StatementDocument, default=None, null=True, blank=True, db_index=True, help_text='Ведомость документов', on_delete=models.SET_NULL)
 
     @staticmethod
     def make_default_external_tube(number: int):
