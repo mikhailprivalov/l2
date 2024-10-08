@@ -748,9 +748,12 @@ const router = new Router({
       name: 'ManageChamber',
       component: () => import('@/pages/ManageChambers/index.vue'),
       meta: {
-        narrowLayout: true,
         title: 'Палаты',
-        groups: ['Палаты'],
+        groups: [
+          'Оператор лечащего врача',
+          'Лечащий врач',
+        ],
+        module: 'l2_hosp',
         fullPageLayout: true,
       },
     },
