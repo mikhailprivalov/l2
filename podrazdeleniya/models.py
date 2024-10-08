@@ -129,6 +129,17 @@ class Chamber(models.Model):
         verbose_name = 'Палата'
         verbose_name_plural = 'Палаты'
 
+    @staticmethod
+    def check_user(user, need_department_id):
+        has_group = user.doctorprofile.has_group("Палаты: все подразделения")
+        if user.doctorprofile.podrazdeleniye_id == need_department_id:
+            result = True
+        elif has_group:
+            result = True
+        else:
+            result = user.is_superuser
+        return result
+
 
 class Bed(models.Model):
     chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
@@ -153,15 +164,13 @@ class PatientToBed(models.Model):
         return f'{self.direction.client.individual.fio()}'
 
     @staticmethod
-    def update_doctor(doctor_obj):
-        if doctor_obj["is_assign"]:
-            doctor = PatientToBed.objects.filter(direction_id=doctor_obj["direction_id"], doctor=None, date_out=None).first()
-            doctor.doctor_id = doctor_obj["doctor_pk"]
-            doctor.save()
+    def update_doctor(doctor_id, patient_to_bed, is_assign):
+        if is_assign:
+            patient_to_bed.doctor_id = doctor_id
+            patient_to_bed.save()
         else:
-            doctor = PatientToBed.objects.filter(doctor_id=doctor_obj["doctor_pk"], direction_id=doctor_obj["direction_id"], date_out=None).first()
-            doctor.doctor = None
-            doctor.save()
+            patient_to_bed.doctor = None
+            patient_to_bed.save()
         return True
 
     class Meta:

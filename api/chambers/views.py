@@ -3,13 +3,14 @@ from django.contrib.auth.decorators import login_required
 import simplejson as json
 from django.http import JsonResponse
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
+from slog.models import Log
 from utils.response import status_response
 import datetime
 from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -27,7 +28,7 @@ def get_unallocated_patients(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     department_id = request_data.get('department_pk', -1)
@@ -77,29 +78,56 @@ def get_chambers_and_beds(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
     direction_id = request_data.get('direction_id')
+    user = request.user
+    bed: Bed = Bed.objects.filter(pk=bed_id).select_related('chamber').first()
+    if not bed:
+        return status_response(False, "ID кровати обязателен")
+    bed_department_id = bed.chamber.podrazdelenie_id
+    user_can_edit = Chamber.check_user(user, bed_department_id)
+    if not user_can_edit:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
-        PatientToBed(direction_id=direction_id, bed_id=bed_id).save()
+        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id)
+        patient_to_bed.save()
+        Log.log(direction_id, 230000, user.doctorprofile, {"direction_id": direction_id, "bed_id": bed_id, "department_id": bed_department_id, "patient_to_bed": patient_to_bed.pk})
     return status_response(True)
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def extract_patient_bed(request):
     request_data = json.loads(request.body)
     direction_pk = request_data.get('patient')
-    patient = PatientToBed.objects.filter(direction_id=direction_pk, date_out=None).first()
+    user = request.user
+    patient: PatientToBed = PatientToBed.objects.filter(direction_id=direction_pk, date_out=None).select_related('bed__chamber').first()
+    if not patient:
+        return status_response(False, "ID истории болезни обязателен")
+    bed_department_id = patient.bed.chamber.podrazdelenie_id
+    user_can_edit = Chamber.check_user(user, bed_department_id)
+    if not user_can_edit:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
     patient.date_out = datetime.datetime.today()
     patient.save()
+    Log.log(
+        direction_pk,
+        230001,
+        user.doctorprofile,
+        {
+            "direction_id": direction_pk,
+            "bed_id": patient.bed_id,
+            "department_id": bed_department_id,
+        },
+    )
     return status_response(True)
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -117,16 +145,41 @@ def get_attending_doctors(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def update_doctor_to_bed(request):
     request_data = json.loads(request.body)
+    user = request.user
     doctor_obj = request_data.get('doctor')
-    result = PatientToBed.update_doctor(doctor_obj)
-    return status_response(result)
+    doctor_id = doctor_obj.get('doctor_pk')
+    direction_id = doctor_obj.get('direction_id')
+    is_assign = doctor_obj.get('is_assign')
+    patient_to_bed = PatientToBed.objects.filter(direction_id=direction_id, date_out=None).select_related('bed__chamber').first()
+    bed_department_id = patient_to_bed.bed.chamber.podrazdelenie_id
+    user_can_edit = Chamber.check_user(user, bed_department_id)
+    if not user_can_edit:
+        result = {"ok": False, "message": "Пользователь не принадлежит к данному подразделению"}
+        return result
+    result = PatientToBed.update_doctor(doctor_id, patient_to_bed, is_assign)
+    if result:
+        if is_assign:
+            type_log = 230002
+        else:
+            type_log = 230003
+        Log.log(
+            direction_id,
+            type_log,
+            user.doctorprofile,
+            {
+                "direction_id": direction_id,
+                "bed_id": patient_to_bed.bed_id,
+                "department_id": bed_department_id,
+            },
+        )
+    return JsonResponse({"ok": result, "message": ""})
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
@@ -146,19 +199,48 @@ def get_patients_without_bed(request):
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def save_patient_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk')
     patient_obj = request_data.get('patient_obj')
-    PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk).save()
+    user = request.user
+    user_can_edit = Chamber.check_user(user, department_pk)
+    if not user_can_edit:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk)
+    patient_without_bed.save()
+    Log.log(
+        patient_obj["direction_pk"],
+        230004,
+        user.doctorprofile,
+        {
+            "direction_id": patient_obj["direction_pk"],
+            "department_id": department_pk,
+        },
+    )
     return status_response(True)
 
 
 @login_required
-@group_required("Управления палатами")
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def delete_patient_without_bed(request):
     request_data = json.loads(request.body)
+    department_pk = request_data.get('department_pk')
     patient_obj = request_data.get('patient_obj')
-    PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"]).delete()
+    user = request.user
+    user_can_edit = Chamber.check_user(user, department_pk)
+    if not user_can_edit:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    patient_without_bed = PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"])
+    patient_without_bed.delete()
+    Log.log(
+        patient_obj["direction_pk"],
+        230005,
+        user.doctorprofile,
+        {
+            "direction_id": patient_obj["direction_pk"],
+            "department_id": department_pk,
+        },
+    )
     return status_response(True)
