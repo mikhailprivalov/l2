@@ -340,6 +340,13 @@ class ResultAdmin(admin.ModelAdmin):
     )
 
 
+class ResStatementDocument(admin.ModelAdmin):
+    list_display = (
+        'person_who_create',
+        'create_at',
+    )
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(FrequencyOfUseResearches)
@@ -367,4 +374,4 @@ admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
 admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)
 admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
-admin.site.register(StatementDocument)
+admin.site.register(StatementDocument, ResStatementDocument)

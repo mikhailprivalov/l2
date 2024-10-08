@@ -1,8 +1,9 @@
 from django.urls import path
 
-from api.reports import views
+from api.statement import views
 
 urlpatterns = [
-    path('select-tubes', views.select_tubes_statemen),
-    path('save-tubes-statement', views.select_tubes_statement),
+    path('select-tubes', views.select_tubes_statement),
+    path('save-tubes-statement', views.save_tubes_statement),
+    path('show-history', views.show_history),
 ]

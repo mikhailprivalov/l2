@@ -60,16 +60,16 @@
           </ul>
         </div>
         <button
-          v-if="modules.showBarcodeButtonInDirectionHistory"
+          v-if="modules.showStatement"
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
           title="Передать курьеру"
-          @click="showModalStatement"
+          @click="openStatementModal"
         >
           <i class="fa-regular fa-paper-plane" />
         </button>
         <button
-          v-if="false"
+          v-if="modules.showBarcodeButtonInDirectionHistory"
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
           title="Акт"
@@ -460,6 +460,9 @@
       :directions-ids="checked"
       @closeModal="closeChequeModal"
     />
+    <StatementModal
+      v-if="showStatementModal"
+    />
   </div>
 </template>
 
@@ -473,6 +476,7 @@ import AuxResearch from '@/ui-cards/AuxResearch.vue';
 import directionsPoint from '@/api/directions-point';
 import * as actions from '@/store/action-types';
 import ChequeModal from '@/ui-cards/CashRegisters/ChequeModal.vue';
+import StatementModal from '@/ui-cards/Statement/StatementModal.vue';
 
 import SelectPickerM from '../../fields/SelectPickerM.vue';
 import DateRange from '../DateRange.vue';
@@ -497,6 +501,7 @@ export default {
     DateRange,
     Bottom,
     AuxResearch,
+    StatementModal,
   },
   props: {
     patient_pk: {
@@ -564,6 +569,7 @@ export default {
         2: 'Результаты подтверждены',
       },
       showChequeModal: false,
+      showStatementModal: false,
     };
   },
   computed: {
@@ -613,6 +619,7 @@ export default {
       return {
         rmisQueue: this.$store.getters.modules.l2_rmis_queue,
         showBarcodeButtonInDirectionHistory: this.$store.getters.modules.l2_show_barcode_button_in_direction_history,
+        showStatement: this.$store.getters.modules.l2_show_statement,
         showCancelButton: this.$store.getters.modules.show_cancel_button,
       };
     },
@@ -663,6 +670,9 @@ export default {
     this.$root.$on(`researches-picker:directions_created${this.kk}`, () => this.load_history_debounced());
     this.$root.$on(`researches-picker:refresh${this.kk}`, this.load_history_safe_fast);
     this.$root.$on('cheque:open_form', this.openChequeModal);
+    this.$root.$on('hide_statement_data', () => {
+      this.showStatementModal = false;
+    });
   },
   methods: {
     async serachDicom(pk) {
@@ -840,6 +850,9 @@ export default {
     },
     closeChequeModal() {
       this.showChequeModal = false;
+    },
+    openStatementModal() {
+      this.showStatementModal = true;
     },
   },
 };

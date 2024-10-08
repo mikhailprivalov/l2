@@ -119,6 +119,7 @@ class SettingManager:
     def l2_modules() -> dict:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
+        cv = False
         if cv:
             return simplejson.loads(cv)
         result = {
@@ -195,6 +196,7 @@ class SettingManager:
                     "code_price",
                     "all_service",
                     "show_barcode_button_in_direction_history",
+                    "show_statement",
                     "cash",
                 ]
             },
@@ -216,6 +218,7 @@ class SettingManager:
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
             "forms_url": SettingManager.forms_url(),
         }
+        print(result)
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
         return result
 
