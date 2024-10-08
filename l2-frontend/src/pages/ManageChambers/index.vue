@@ -349,7 +349,7 @@ const setDepartPatientId = async (departmentPk) => {
   departmentPatientPk.value = departmentPk;
 };
 
-const getUserDepartment = () => {
+const setUserDepartment = () => {
   const userDepartment = departments.value.find(department => department.id === userDepartmentId);
   if (userDepartment) {
     setDepartDocId(userDepartment.id);
@@ -361,7 +361,7 @@ const init = async () => {
   const { data } = await api('procedural-list/suitable-departments');
   departments.value = data;
   await store.dispatch(actions.DEC_LOADING);
-  getUserDepartment();
+  setUserDepartment();
 };
 
 const getAttendingDoctors = async () => {
