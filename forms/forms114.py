@@ -153,10 +153,6 @@ def form_01(request_data):
         ]
     ]
 
-
-
-
-
     directions_data = get_data_by_directions_id(tuple(sorted(directions)))
     old_tube_number = ""
     old_type_material = ""
