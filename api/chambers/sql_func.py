@@ -34,7 +34,7 @@ def load_patients_stationar_unallocated_sql(department_id):
     return rows
 
 
-def get_closed_histories(issledovaniye_ids, titles):
+def get_closing_protocols(issledovaniye_ids, titles):
     with connection.cursor() as cursor:
         cursor.execute(
             """
