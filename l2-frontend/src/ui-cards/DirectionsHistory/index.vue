@@ -63,6 +63,15 @@
           v-if="modules.showBarcodeButtonInDirectionHistory"
           v-tippy
           class="btn btn-blue-nb btn-ell nbr"
+          title="Передать курьеру"
+          @click="showModalStatement"
+        >
+          <i class="fa-regular fa-paper-plane" />
+        </button>
+        <button
+          v-if="false"
+          v-tippy
+          class="btn btn-blue-nb btn-ell nbr"
           title="Акт"
           @click="printAct"
         >
@@ -813,6 +822,11 @@ export default {
     },
     printAct() {
       const dateStart = moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY');
+      window.open(`/forms/pdf?type=114.01&date=${dateStart}`, '_blank');
+    },
+    async selectForCourier() {
+      const dateStart = moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY');
+      const dataRowsStatementDocument = await this.$api('/statement/select', { dateStart });
       window.open(`/forms/pdf?type=114.01&date=${dateStart}`, '_blank');
     },
     printCurrentBarcodes(pk) {

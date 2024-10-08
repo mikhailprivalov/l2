@@ -35,6 +35,7 @@ from .models import (
     ExternalAdditionalOrder,
     NapravleniyaHL7LinkFiles,
     ComplexResearchAccountPerson,
+    StatementDocument
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -366,3 +367,4 @@ admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
 admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)
 admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
+admin.site.register(StatementDocument)
