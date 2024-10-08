@@ -1,10 +1,14 @@
 <template>
   <div class="three-panel">
     <div class="panel-left">
-      <Filters
-        :departments="departments"
-        :no-border="true"
-        @input="setDepartPatientId"
+      <Treeselect
+        v-model="departmentPatientPk"
+        :multiple="false"
+        :disable-branch-nodes="true"
+        :options="departments"
+        placeholder="Отделение не выбрано"
+        :append-to-body="true"
+        class="treeselect-noborder"
       />
       <h5
         class="heading top-border"
@@ -212,10 +216,14 @@
       </div>
     </div>
     <div class="panel-right">
-      <Filters
-        :departments="departments"
-        :no-border="true"
-        @input="setDepartDocId"
+      <Treeselect
+        v-model="departmentDocPk"
+        :multiple="false"
+        :disable-branch-nodes="true"
+        :options="departments"
+        placeholder="Отделение не выбрано"
+        :append-to-body="true"
+        class="treeselect-noborder"
       />
       <h5 class="heading top-border">
         Врачи
@@ -252,13 +260,14 @@ import {
   ref,
   watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
 
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 
-import Filters from './components/Filters.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 interface patientData {
   age: number
@@ -284,8 +293,12 @@ interface chamberData {
   label: string
   pk: number
 }
+interface departmentsData {
+  id: number,
+  label: string,
+}
 const chambers = ref<chamberData[]>([]);
-const departments = ref([]);
+const departments = ref<departmentsData[]>([]);
 const unallocatedPatients = ref<patientData[]>([]);
 const withOutBeds = ref<patientData[]>([]);
 const attendingDoctor = ref<doctorData[]>([]);
@@ -336,11 +349,19 @@ const setDepartPatientId = async (departmentPk) => {
   departmentPatientPk.value = departmentPk;
 };
 
+const getUserDepartment = () => {
+  const userDepartment = departments.value.find(department => department.id === userDepartmentId);
+  if (userDepartment) {
+    setDepartDocId(userDepartment.id);
+    setDepartPatientId(userDepartment.id);
+  }
+};
 const init = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { data } = await api('procedural-list/suitable-departments');
   departments.value = data;
   await store.dispatch(actions.DEC_LOADING);
+  getUserDepartment();
 };
 
 const getAttendingDoctors = async () => {
