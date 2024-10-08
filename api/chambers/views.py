@@ -8,8 +8,7 @@ from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWi
 from slog.models import Log
 from utils.response import status_response
 import datetime
-from django.contrib.auth.models import Group
-from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
+from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department, load_closed_histories
 
 
 @login_required
@@ -17,6 +16,14 @@ from .sql_func import load_patient_without_bed_by_department, load_attending_doc
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
+    perevodnoi_title = ('переводной эпикриз', 'Переводной эпикриз', 'ПЕРЕВОДНОЙ ЭПИКРИЗ', 'переводной', 'Переводной', 'ПЕРЕВОДНОЙ')
+    all_histories = load_patients_stationar_unallocated_sql(department_pk)
+    all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
+    all_issledovaniya_ids = tuple(all_issledovaniya_ids)
+    closed_histories = load_closed_histories(all_issledovaniya_ids, perevodnoi_title)
+    closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
+    closed_issledovaniya_ids = set(closed_issledovaniya_ids)
+
     patients = [
         {
             "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ""}',
@@ -25,8 +32,9 @@ def get_unallocated_patients(request):
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
         }
-        for patient in load_patients_stationar_unallocated_sql(department_pk)
+        for patient in load_patients_stationar_unallocated_sql(department_pk) if patient.issledovanie_id not in closed_issledovaniya_ids
     ]
+
     return JsonResponse({"data": patients})
 
 
