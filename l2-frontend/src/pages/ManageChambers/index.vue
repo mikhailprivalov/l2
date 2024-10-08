@@ -143,23 +143,21 @@
                       v-if="bed.patient.length > 0 || bed.doctor.length > 0"
                       class="info"
                     >
-                      <div
+                      <VueTippyDiv
                         v-if="bed.patient.length > 0"
+                        :text="bed.patient[0].short_fio"
                         class="text-size"
-                      >
-                        {{ bed.patient[0].short_fio }}
-                      </div>
+                      />
                       <hr
                         v-if="bed.doctor.length > 0"
                         class="line"
                       >
-                      <div
+                      <VueTippyDiv
                         v-if="bed.doctor.length > 0"
                         class="text-size"
+                        :text="bed.doctor[0].short_fio"
                         :class="{'change-color-doc': bed.doctor[0].highlight}"
-                      >
-                        {{ bed.doctor[0].short_fio }}
-                      </div>
+                      />
                     </div>
                   </div>
                 </div>
@@ -258,6 +256,7 @@ import {
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
+import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 
 import Filters from './components/Filters.vue';
 
@@ -380,7 +379,7 @@ const loadChamberAndBed = async () => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const changeUnallocatedPatient = async ({ added, removed }) => {
+const changeUnallocatedPatient = async ({ added }) => {
   if (added) {
     await getUnallocatedPatients();
   }
@@ -630,6 +629,9 @@ onMounted(init);
 }
 .text-size {
   font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .three-panel {
