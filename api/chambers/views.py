@@ -8,7 +8,7 @@ from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWi
 from slog.models import Log
 from utils.response import status_response
 import datetime
-from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department, load_closed_histories
+from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department, get_closed_histories
 
 
 @login_required
@@ -20,7 +20,7 @@ def get_unallocated_patients(request):
     all_histories = load_patients_stationar_unallocated_sql(department_pk)
     all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
     all_issledovaniya_ids = tuple(all_issledovaniya_ids)
-    closed_histories = load_closed_histories(all_issledovaniya_ids, perevodnoi_title)
+    closed_histories = get_closed_histories(all_issledovaniya_ids, perevodnoi_title)
     closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
     closed_issledovaniya_ids = set(closed_issledovaniya_ids)
 
