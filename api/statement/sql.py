@@ -75,20 +75,21 @@ def get_directions_by_tube_regitration_number(tube_numbers):
         return rows
 
 
-def get_statement_document_data(statement_ids):
+def get_statement_document_data(statement_ids, start_date, end_date):
         with connection.cursor() as cursor:
             cursor.execute(
                 """ 
             SELECT
             directions_tubesregistration.number as tube_number,
-            to_char(ds.create_at, 'DD.MM.YYYY HH:MM:SS') AS date_create,
-            ds.create_at
+            ds.create_at,
+            directions_tubesregistration.statement_document_id as statement_id
             FROM directions_tubesregistration
             LEFT JOIN directions_statementdocument ds on directions_tubesregistration.statement_document_id = ds.id
             WHERE directions_tubesregistration.statement_document_id in %(statement_ids)s
+            AND ds.create_at AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             ORDER BY ds.create_at DESC 
             """,
-                params={'statement_ids': statement_ids},
+                params={'statement_ids': statement_ids, 'd_start': start_date, 'd_end': end_date, 'tz': TIME_ZONE},
             )
 
             rows = namedtuplefetchall(cursor)

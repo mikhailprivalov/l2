@@ -20,7 +20,6 @@
     >
       <div
         v-tippy="{ placement: 'right', arrow: true }"
-        style="width: 120px"
         class="direct-date"
         title="Дата направления"
       >
@@ -86,8 +85,8 @@
           <table class="table table-bordered table-condensed table-sm-pd layout">
             <colgroup>
               <col width="150">
-              <col width="380">
-              <col width="100">
+              <col width="430">
+              <col width="50">
             </colgroup>
             <thead>
               <tr>
@@ -98,12 +97,22 @@
             </thead>
             <tbody>
               <tr
-                v-for="r in rows_history"
-                :key="r.date"
+                v-for="r in rowsHistory"
+                :key="r.pk"
               >
                 <td>{{ r.date }}</td>
-                <td>{{ r.data }}</td>
-                <td>{{ r.date }}</td>
+                <td>{{ r.tubes }}</td>
+                <td>
+                  <button
+                    v-tippy="{ placement: 'bottom', arrow: true }"
+                    class="btn last btn-blue-nb nbr ml-1"
+                    type="button"
+                    title="Печать ведомости"
+                    @click="printStatement(r.tubes)"
+                  >
+                    <i class="fa fa-print" />
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -183,7 +192,7 @@ export default {
         data: '',
       },
       show_history_statement: false,
-      rows_history: [],
+      rowsHistory: [],
       date_range: [
         moment()
           .subtract(this.daysSubtract, 'day')
@@ -199,9 +208,10 @@ export default {
     this.load_data();
   },
   methods: {
-    show_history_statement_data() {
+    async show_history_statement_data() {
       this.show_history_statement = true;
       const data = await this.$api('statement/show-history');
+      this.rowsHistory = data.rows || [];
     },
     hide_modal() {
       if (this.$refs.modal) {
@@ -215,6 +225,7 @@ export default {
       }
       this.edit_pk = -2;
       this.show_history_statement = false;
+      this.rowsHistory = [];
     },
     async load_data() {
       // eslint-disable-next-line max-len
@@ -230,22 +241,25 @@ export default {
       this.checked = [];
       console.log(data);
     },
+    async printStatement(tubes) {
+      window.open(`/forms/pdf?type=114.01&&filter=[${tubes}]`, '_blank');
+    },
     async save() {
       await this.$store.dispatch(actions.INC_LOADING);
       const data = await this.$api('statement/save-tubes-statement', this.checked);
       await this.$store.dispatch(actions.DEC_LOADING);
       if (data.ok) {
         this.$root.$emit('msg', 'ok', 'Сохранено');
+        this.printStatement(data.tubes);
       } else {
         this.$root.$emit('msg', 'error', data.message);
       }
       this.checked = [];
+      this.rowsHistory = [];
       this.hide_edit();
       this.load_data();
     },
-    async load_history(safe) {
-      console.log('1');
-    },
+
   },
   // eslint-disable-next-line vue/order-in-components
   watch: {
@@ -282,10 +296,6 @@ export default {
   font-size: 12px;
 }
 
-.date {
-  width: 200px;
-}
-
 .modal-mask {
   align-items: stretch !important;
   justify-content: stretch !important;
@@ -305,4 +315,9 @@ export default {
   height: calc(100% - 91px);
   min-height: 200px;
 }
+
+.direct-date {
+  width: 126px;
+}
+
 </style>

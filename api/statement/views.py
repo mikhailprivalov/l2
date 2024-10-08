@@ -1,9 +1,15 @@
+import datetime
+
+import pytz
+from dateutil.relativedelta import relativedelta
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 import simplejson as json
 
 from api.statement.sql import get_tubes_without_statement, get_who_create_directions, get_directions_by_tube_regitration_number, get_statement_document_data
 from directions.models import Napravleniya, StatementDocument, TubesRegistration
+from laboratory.settings import TIME_ZONE
+from laboratory.utils import current_time
 from utils.dates import normalize_dots_date
 from django.db import transaction
 
@@ -35,6 +41,7 @@ def select_tubes_statement(request):
 def save_tubes_statement(request):
     data = json.loads(request.body)
     user_id = request.user.doctorprofile.pk
+    print(data)
     directions = [d.get('direction') for d in data]
     tube_numbers = [d.get('tubeNumber') for d in data]
     result = True
@@ -60,24 +67,41 @@ def save_tubes_statement(request):
                 t.statement_document = statement_document
                 t.save()
 
-    return JsonResponse({"ok": result, "message": message})
+    return JsonResponse({"ok": result, "message": message, "tubes": ",".join([str(elem) for elem in tube_numbers])})
 
 
 @login_required
 def show_history(request):
     user_id = request.user.doctorprofile.pk
     statement_document =list(StatementDocument.objects.filter(person_who_create_id=user_id).values_list("pk", flat=True))
-    sql_statemnt = get_statement_document_data(tuple(statement_document))
+    end_date = current_time(only_date=True)
+    start_date = end_date + relativedelta(days=-60)
+    start_date = datetime.datetime.strftime(start_date, "%Y-%m-%d")
+    start_date = f"{start_date} 00:00:00"
 
-    result = [
-        {
-            "date": i.date_create,
-            "direction": i.direction_id,
-            "tubeNumber": i.tube_number,
-            "checked": False
-        } for i in sql_statemnt
-    ]
+    end_date = datetime.datetime.strftime(end_date, "%Y-%m-%d")
+    end_date = f"{end_date} 23:59:59"
 
+    sql_statemnt = get_statement_document_data(tuple(statement_document), start_date, end_date)
+
+    result = []
+    old_create_at = None
+    old_statement_id = None
+    step = 0
+    current_set_tubes = []
+    for i in sql_statemnt:
+        if (i.create_at != old_create_at) and step != 0:
+            str_current_set_tubes = ",".join([str(elem) for elem in current_set_tubes])
+            dtime_tz = old_create_at.astimezone(pytz.timezone(TIME_ZONE)).strftime("%d.%m.%Y - %H:%M:%S")
+            result.append({"pk": old_statement_id, "date": dtime_tz, "tubes": str_current_set_tubes})
+            current_set_tubes = []
+        current_set_tubes.append(i.tube_number)
+        old_create_at = i.create_at
+        old_statement_id = i.statement_id
+        step += 1
+    str_current_set_tubes = ",".join([str(elem) for elem in current_set_tubes])
+    dtime_tz = old_create_at.astimezone(pytz.timezone(TIME_ZONE)).strftime("%d.%m.%Y -%H:%M:%S")
+    result.append({"pk": old_statement_id, "date": dtime_tz, "tubes": str_current_set_tubes})
     return JsonResponse({"rows": result})
 
 
