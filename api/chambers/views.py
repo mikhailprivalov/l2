@@ -16,11 +16,11 @@ from .sql_func import load_patient_without_bed_by_department, load_attending_doc
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    perevodnoi_title = ('переводной эпикриз', 'Переводной эпикриз', 'ПЕРЕВОДНОЙ ЭПИКРИЗ', 'переводной', 'Переводной', 'ПЕРЕВОДНОЙ')
+    transferable_epicrisis_titles = ('переводной эпикриз', 'Переводной эпикриз', 'ПЕРЕВОДНОЙ ЭПИКРИЗ', 'переводной', 'Переводной', 'ПЕРЕВОДНОЙ')
     all_histories = load_patients_stationar_unallocated_sql(department_pk)
     all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
     all_issledovaniya_ids = tuple(all_issledovaniya_ids)
-    closed_histories = get_closing_protocols(all_issledovaniya_ids, perevodnoi_title)
+    closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
     closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
     closed_issledovaniya_ids = set(closed_issledovaniya_ids)
 
