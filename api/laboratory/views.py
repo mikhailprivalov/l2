@@ -957,9 +957,25 @@ def receive_history(request):
 def save_defect_tube(request):
     request_data = json.loads(request.body)
     data_row = request_data.get('row')
-    t = TubesRegistration.objects.filter(pk=int(data_row['pk'])).first()
+    t = TubesRegistration.objects.filter(number=int(data_row['pk'])).first()
     t.is_defect = data_row['is_defect']
     t.defect_text = data_row['defect_text']
     t.save()
+    message = {"ok": "ok"}
+    return JsonResponse(message)
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def cancel_receive(request):
+    request_data = json.loads(request.body)
+    data_row = request_data.get('row')
+    t = TubesRegistration.objects.filter(number=int(data_row['pk'])).first()
+    t.time_recive = None
+    t.doc_recive = None
+    t.is_defect = False
+    t.defect_text = ""
+    t.save()
+    Log.log(t.number, 4001, request.user.doctorprofile, {"tubeNumber": t.number, "id": t.pk, "docId": request.user.doctorprofile.pk, "docFio": request.user.doctorprofile.get_fio()})
     message = {"ok": "ok"}
     return JsonResponse(message)
