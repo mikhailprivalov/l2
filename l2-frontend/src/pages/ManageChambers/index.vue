@@ -68,6 +68,12 @@
                 Занятых: {{ bedInformationCounter.occupied }},
                 М: {{ bedInformationCounter.man }},
                 Ж: {{ bedInformationCounter.women }})
+                <input
+                  id="onlyUserPatient"
+                  v-model="onlyUserPatient"
+                  type="checkbox"
+                >
+                <label for="onlyUserPatient">Только мои</label>
               </th>
             </tr>
           </thead>
@@ -87,6 +93,7 @@
                     v-for="bed in chamber.beds"
                     :key="bed.pk"
                     class="beds-item"
+                    :class="{'opacity': checkConditionsOpacity(bed.doctor) }"
                   >
                     <draggable
                       v-model="bed.doctor"
@@ -316,9 +323,11 @@ const departmentPatientPk = ref(null);
 const departmentDocPk = ref(null);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
-const userDepartmentId = store.getters.user_data.department.pk;
+const user = store.getters.user_data;
+const userDepartmentId = user.department.pk;
 const patientSearch = ref('');
 const doctorSearch = ref('');
+const onlyUserPatient = ref(false);
 
 const transferDoctor = ref<doctorData>({
   fio: '',
@@ -572,6 +581,16 @@ const checkConditionsPullBed = (patient: patientData[]) => {
   return false;
 };
 
+const checkConditionsOpacity = (doctor: doctorData[]) => {
+  if (onlyUserPatient.value) {
+    if (doctor.length > 0) {
+      const [userData] = doctor;
+      return userData.pk !== user.doc_pk;
+    }
+    return true;
+  }
+  return false;
+};
 const changeColorWomen = (patient) => (patient.sex === 'ж');
 
 const changeColorMan = (patient) => (patient.sex === 'м');
@@ -875,5 +894,8 @@ onMounted(init);
 }
 .search:active {
    border: 1px solid #3bafda !important;
+}
+.opacity {
+  opacity: 0;
 }
 </style>
