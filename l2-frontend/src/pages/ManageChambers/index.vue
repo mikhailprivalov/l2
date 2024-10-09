@@ -63,17 +63,23 @@
                 Палата
               </th>
               <th>
-                Управление койками
-                (Кол.коек: {{ bedInformationCounter.bed }},
-                Занятых: {{ bedInformationCounter.occupied }},
-                М: {{ bedInformationCounter.man }},
-                Ж: {{ bedInformationCounter.women }})
-                <input
-                  id="onlyUserPatient"
-                  v-model="onlyUserPatient"
-                  type="checkbox"
-                >
-                <label for="onlyUserPatient">Только мои</label>
+                <div class="flex-space">
+                  <div>
+                    Управление койками
+                    (Кол.коек: {{ bedInformationCounter.bed }},
+                    Занятых: {{ bedInformationCounter.occupied }},
+                    М: {{ bedInformationCounter.man }},
+                    Ж: {{ bedInformationCounter.women }})
+                  </div>
+                  <div>
+                    <input
+                      id="onlyUserPatient"
+                      v-model="onlyUserPatient"
+                      type="checkbox"
+                    >
+                    <label for="onlyUserPatient">Только мои</label>
+                  </div>
+                </div>
               </th>
             </tr>
           </thead>
@@ -897,5 +903,9 @@ onMounted(init);
 }
 .opacity {
   opacity: 0;
+}
+.flex-space {
+  display: flex;
+  justify-content: space-between;
 }
 </style>
