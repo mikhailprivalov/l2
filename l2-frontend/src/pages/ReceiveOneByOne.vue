@@ -96,13 +96,13 @@
     <table class="table table-bordered table-responsive table-condensed">
       <colgroup>
         <col width="87">
-        <col width="245">
-        <col width="92">
+        <col width="155">
+        <col width="147">
         <col width="180">
         <col>
         <col width="50">
         <col width="50">
-        <col width="195">
+        <col width="235">
       </colgroup>
       <thead>
         <tr>
@@ -189,6 +189,18 @@
                   <i class="fa fa-save" />
                 </button>
               </span>
+            </div>
+            <div
+              style="float: left; padding-top: 20px"
+            >
+              <button
+                class="btn btn-blue-nb"
+
+                type="button"
+                @click="cancelReceive(r)"
+              >
+                Отменить прием
+              </button>
             </div>
           </td>
         </tr>
@@ -354,6 +366,15 @@ export default class ReceiveOneByOne extends Vue {
   async saveDefect(row) {
     await this.$store.dispatch(actions.INC_LOADING);
     await this.$api('/laboratory/save-defect-tube', { row });
+    this.loadHistory();
+    await this.$store.dispatch(actions.DEC_LOADING);
+    this.focus();
+  }
+
+  async cancelReceive(row) {
+    await this.$store.dispatch(actions.INC_LOADING);
+    await this.$api('/laboratory/cancel-receive', { row });
+    await this.loadNextN();
     this.loadHistory();
     await this.$store.dispatch(actions.DEC_LOADING);
     this.focus();
