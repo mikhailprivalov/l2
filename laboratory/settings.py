@@ -459,6 +459,7 @@ CASH_REGISTER_SERVER_TOKEN = 'token'
 PAY_FIN_SOURCE_ID = None
 
 CHAMBER_DOCTOR_GROUP_ID = None
+DEFECT_VARIANTS = []
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

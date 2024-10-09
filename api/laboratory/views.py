@@ -19,7 +19,7 @@ from directions.sql_func import get_tube_registration
 from directory.models import Fractions, Researches, Unit
 from ftp_orders.main import push_result
 from laboratory.decorators import group_required
-from laboratory.settings import FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
+from laboratory.settings import FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, DEFECT_VARIANTS
 from laboratory.utils import strdate, strfdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from rmis_integration.client import Client
@@ -977,3 +977,9 @@ def cancel_receive(request):
     Log.log(t.number, 4001, request.user.doctorprofile, {"tubeNumber": t.number, "id": t.pk, "docId": request.user.doctorprofile.pk, "docFio": request.user.doctorprofile.get_fio()})
     message = {"ok": "ok"}
     return JsonResponse(message)
+
+
+@login_required
+@group_required("Получатель биоматериала")
+def defect_variants(request):
+    return JsonResponse({"defectVariants": DEFECT_VARIANTS})
