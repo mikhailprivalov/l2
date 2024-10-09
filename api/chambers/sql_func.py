@@ -58,6 +58,7 @@ def get_closing_protocols(issledovaniye_ids, titles):
         rows = namedtuplefetchall(cursor)
     return rows
 
+
 def load_patient_without_bed_by_department(department_id):
     with connection.cursor() as cursor:
         cursor.execute(
