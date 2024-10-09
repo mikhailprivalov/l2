@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 if not department:
                     self.stdout.write(f' Подразделения {current_department_title} - нет')
                     continue
-                chamber = Chamber.objects.filter(title__iexact=current_chamber_title).first()
+                chamber = Chamber.objects.filter(title__iexact=current_chamber_title, podrazdelenie_id=department.pk).first()
                 if not chamber:
                     chamber = Chamber(title=current_chamber_title, podrazdelenie_id=department.pk)
                     chamber.save()

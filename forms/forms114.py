@@ -4,6 +4,8 @@ import sys
 from copy import deepcopy
 from io import BytesIO
 from typing import List, Union
+
+import pytz
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.lib.styles import getSampleStyleSheet
@@ -15,7 +17,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from directions.models import TubesRegistration, Issledovaniya
 from directions.sql_func import get_data_by_directions_id, get_directions_by_who_create
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, TIME_ZONE
 from reportlab.graphics.barcode import createBarcodeDrawing
 from reportlab.lib.pagesizes import A4
 from laboratory.utils import current_time, strdate, strdatetimeru
@@ -119,6 +121,23 @@ def form_01(request_data):
     objs.append(Paragraph(f'За дату: {date_act}', style))
     objs.append(Paragraph(f'Время формирования: {time_now} ', style))
     objs.append(Spacer(1, 3 * mm))
+    tubes = []
+    directions = []
+    if "filter" in request_data.keys():
+        filterArray = json.loads(request_data.get("filter"))
+        for v in filterArray:
+            tube_registration = TubesRegistration.objects.get(number=int(v))
+            tubes.append(tube_registration)
+            date_act = tube_registration.statement_document.create_at.astimezone(pytz.timezone(TIME_ZONE)).strftime("%d.%m.%Y (%H:%M:%S)")
+
+        for v in tubes:  # Перебор пробирок
+            iss: Issledovaniya = Issledovaniya.objects.filter(tubes__number=v.number).first()
+            directions.append(iss.napravleniye_id)
+        directions = list(set(directions))
+    else:
+        directions = get_directions_by_who_create(tuple([user_data.doctorprofile.pk]), f"{normalize_date_act} 00:00:00", f"{normalize_date_act} 23:59:59")
+        directions = [i.napravleniye_id for i in directions]
+
     objs.append(Paragraph(f'Сопроводительная ведомость от {date_act}', styleCenterTitle))
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph('Контейнеры', style))
@@ -132,19 +151,7 @@ def form_01(request_data):
             Paragraph('Примечание', styleT),
         ]
     ]
-    tubes = []
-    directions = []
-    if "filter" in request_data.keys():
-        filterArray = json.loads(request_data.get("filter"))
-        for v in filterArray:
-            tubes.append(TubesRegistration.objects.get(number=v))
-        for v in tubes:  # Перебор пробирок
-            iss: Issledovaniya = Issledovaniya.objects.filter(tubes__number=v.number).first()
-            directions.append(iss.napravleniye_id)
-        directions = list(set(directions))
-    else:
-        directions = get_directions_by_who_create(tuple([user_data.doctorprofile.pk]), f"{normalize_date_act} 00:00:00", f"{normalize_date_act} 23:59:59")
-        directions = [i.napravleniye_id for i in directions]
+
     directions_data = get_data_by_directions_id(tuple(sorted(directions)))
     old_tube_number = ""
     old_type_material = ""

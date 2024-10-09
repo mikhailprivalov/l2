@@ -195,6 +195,7 @@ class SettingManager:
                     "code_price",
                     "all_service",
                     "show_barcode_button_in_direction_history",
+                    "show_statement",
                     "cash",
                 ]
             },
