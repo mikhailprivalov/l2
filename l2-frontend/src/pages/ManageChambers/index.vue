@@ -471,7 +471,6 @@ const changeUnallocatedPatient = async ({ added }) => {
 };
 const changePatientBed = async ({ added, removed }, bed) => {
   if (added) {
-    console.log(transferDoctor.value);
     await store.dispatch(actions.INC_LOADING);
     const { ok, message } = await api('chambers/entrance-patient-to-bed', {
       bed_id: bed.pk,
@@ -648,7 +647,6 @@ const countPatientAtDoctor = (doctor) => {
 const copyWaitDoctor = (event) => {
   const index = event.oldIndex;
   const outBeds = withOutBeds.value[index];
-  console.log(outBeds);
   if (outBeds.doctor_pk) {
     transferDoctor.value = outBeds.doctor_pk;
   }
