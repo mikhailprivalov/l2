@@ -63,6 +63,7 @@ class Hospitals(models.Model):
     title_stamp_customer = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Закачика - клеше")
     acronym_title = models.CharField(max_length=128, blank=True, default='', help_text="Акроним (Аббревиатура) наименование", db_index=True)
     send_result_after_time_min = models.PositiveSmallIntegerField(default=0, blank=True, null=True, verbose_name="Время (мин) отправки результатов")
+    use_self_generate_tube = models.BooleanField(default=False, blank=True, help_text='Приоритет собственного генератора')
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
