@@ -38,7 +38,8 @@ def get_unallocated_patients(request):
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
         }
-        for patient in load_patients_stationar_unallocated_sql(department_pk) if patient.issledovanie_id not in closed_issledovaniya_ids
+        for patient in load_patients_stationar_unallocated_sql(department_pk)
+        if patient.issledovanie_id not in closed_issledovaniya_ids
     ]
 
     return JsonResponse({"data": patients})
