@@ -16,7 +16,7 @@ import { ref } from 'vue';
 
 const props = defineProps({
   text: {
-    type: String,
+    type: [String, undefined, null],
     required: true,
   },
   tippyMaxWidth: {
