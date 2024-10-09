@@ -686,9 +686,7 @@ def reset_confirm(request):
 def last_received_daynum(request):
     request_data = json.loads(request.body)
     pk = request_data["pk"]
-
     last_daynum = 0
-
     date1 = datetime_safe.datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
     date2 = datetime_safe.datetime.now()
 
