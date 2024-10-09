@@ -168,6 +168,8 @@
                       <VueTippyDiv
                         v-if="bed.patient.length > 0"
                         :text="bed.patient[0].short_fio"
+                        :history-id="bed.patient[0].direction_pk"
+                        :show-link="userCanGoHistory"
                         class="text-size"
                       />
                       <hr
@@ -331,7 +333,9 @@ const departmentDocPk = ref(null);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const user = store.getters.user_data;
+const userGroup = user.groups;
 const userDepartmentId = user.department.pk;
+const userCanGoHistory = ref(false);
 const patientSearch = ref('');
 const doctorSearch = ref('');
 const onlyUserPatient = ref(false);
@@ -343,12 +347,18 @@ const copyBedDoctor = (bed) => {
   }
 };
 const userCanEdit = computed(() => {
-  const { groups } = store.getters.user_data;
   if (departmentPatientPk.value === userDepartmentId) {
     return true;
   }
-  return groups.includes('Палаты: все подразделения') || groups.includes('Admin');
+  return userGroup.includes('Палаты: все подразделения') || userGroup.includes('Admin');
 });
+
+const checkUserCanGoHistory = () => {
+  if (userGroup.includes('Врач стационара') || userGroup.includes('t, ad, p') || userGroup.includes('Admin')) {
+    userCanGoHistory.value = true;
+  }
+};
+
 const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
@@ -652,7 +662,10 @@ watch(departmentPatientPk, () => {
 watch(departmentDocPk, () => {
   getAttendingDoctors();
 });
-onMounted(init);
+onMounted(() => {
+  init();
+  checkUserCanGoHistory();
+});
 
 </script>
 
