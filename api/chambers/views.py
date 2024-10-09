@@ -94,6 +94,7 @@ def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
     direction_id = request_data.get('direction_id')
+    doctor_id = request_data.get('doctor_id')
     user = request.user
     bed: Bed = Bed.objects.filter(pk=bed_id).select_related('chamber').first()
     if not bed:
@@ -103,7 +104,7 @@ def entrance_patient_to_bed(request):
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
-        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id)
+        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id, doctor_id=doctor_id)
         patient_to_bed.save()
         Log.log(direction_id, 230000, user.doctorprofile, {"direction_id": direction_id, "bed_id": bed_id, "department_id": bed_department_id, "patient_to_bed": patient_to_bed.pk})
     return status_response(True)

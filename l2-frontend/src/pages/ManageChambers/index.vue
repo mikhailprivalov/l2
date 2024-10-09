@@ -123,8 +123,8 @@
                       chosen-class="chosen-beds"
                       ghost-class="ghost-beds"
                       :disabled="!userCanEdit"
+                      @start="copyBedDoctor(bed)"
                       @change="changePatientBed($event, bed)"
-                      @remove="clearArrayDoctor(bed)"
                     >
                       <div
                         v-tippy
@@ -308,6 +308,17 @@ const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const userDepartmentId = store.getters.user_data.department.pk;
 
+const transferDoctor = ref<doctorData>({
+  fio: '',
+  highlight: false,
+  pk: null,
+  short_fio: '',
+});
+const copyBedDoctor = (bed) => {
+  if (bed.doctor.length > 0) {
+    [transferDoctor.value] = bed.doctor;
+  }
+};
 const userCanEdit = computed(() => {
   const { groups } = store.getters.user_data;
   if (departmentPatientPk.value === userDepartmentId) {
@@ -415,10 +426,17 @@ const changePatientBed = async ({ added, removed }, bed) => {
     const { ok, message } = await api('chambers/entrance-patient-to-bed', {
       bed_id: bed.pk,
       direction_id: bed.patient[0].direction_pk,
+      doctor_id: transferDoctor.value.pk,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
+      root.$emit('msg', 'ok', `Записан на кровать №${bed.bed_number}`);
+      transferDoctor.value = {
+        fio: '',
+        highlight: false,
+        pk: null,
+        short_fio: '',
+      };
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -430,7 +448,7 @@ const changePatientBed = async ({ added, removed }, bed) => {
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
+      root.$emit('msg', 'ok', `Выписан c кровати №${bed.bed_number}`);
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -447,7 +465,7 @@ const PatientWaitBed = async ({ added, removed }) => {
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
+      root.$emit('msg', 'ok', 'Пациент переводен в ожидающие');
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -459,9 +477,7 @@ const PatientWaitBed = async ({ added, removed }) => {
       patient_obj: removed.element,
     });
     await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
-    } else {
+    if (!ok) {
       root.$emit('msg', 'error', message);
     }
   }
@@ -489,7 +505,7 @@ const changeDoctor = async ({ added, removed }, bed) => {
   const { ok, message } = await api('chambers/update-doctor-to-bed', { doctor });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    root.$emit('msg', 'ok', 'Успешно');
+    root.$emit('msg', 'ok', 'Пациенту назначен врач');
   } else {
     root.$emit('msg', 'error', message);
   }
@@ -522,11 +538,6 @@ const checkConditionsPullBed = (patient: patientData[]) => {
     return ['Beds', 'Patients', 'PatientWithoutBeds'];
   }
   return false;
-};
-
-const clearArrayDoctor = (bed) => {
-  // eslint-disable-next-line no-param-reassign
-  bed.doctor = bed.doctor.filter(doctor => !bed.doctor.includes(doctor));
 };
 
 const changeColorWomen = (patient) => (patient.sex === 'ж');
