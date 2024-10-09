@@ -1,16 +1,25 @@
 <template>
   <div class="three-panel">
     <div class="panel-left">
-      <Filters
-        :departments="departments"
-        :no-border="true"
-        @input="setDepartPatientId"
+      <Treeselect
+        v-model="departmentPatientPk"
+        :multiple="false"
+        :disable-branch-nodes="true"
+        :options="departments"
+        placeholder="Отделение не выбрано"
+        :append-to-body="true"
+        class="treeselect-noborder"
       />
       <h5
         class="heading top-border"
       >
         Пациенты
       </h5>
+      <input
+        v-model.trim="patientSearch"
+        class="search"
+        type="text"
+      >
       <div
         class="panel-content"
       >
@@ -25,7 +34,7 @@
           @change="changeUnallocatedPatient"
         >
           <div
-            v-for="patient in unallocatedPatients"
+            v-for="patient in unallocatedPatientsFiltered"
             :key="patient.direction_pk"
             class="draggable-item"
           >
@@ -59,6 +68,12 @@
                 Занятых: {{ bedInformationCounter.occupied }},
                 М: {{ bedInformationCounter.man }},
                 Ж: {{ bedInformationCounter.women }})
+                <input
+                  id="onlyUserPatient"
+                  v-model="onlyUserPatient"
+                  type="checkbox"
+                >
+                <label for="onlyUserPatient">Только мои</label>
               </th>
             </tr>
           </thead>
@@ -78,6 +93,7 @@
                     v-for="bed in chamber.beds"
                     :key="bed.pk"
                     class="beds-item"
+                    :class="{'opacity': checkConditionsOpacity(bed.doctor) }"
                   >
                     <draggable
                       v-model="bed.doctor"
@@ -119,8 +135,8 @@
                       chosen-class="chosen-beds"
                       ghost-class="ghost-beds"
                       :disabled="!userCanEdit"
+                      @start="copyBedDoctor(bed)"
                       @change="changePatientBed($event, bed)"
-                      @remove="clearArrayDoctor(bed)"
                     >
                       <div
                         v-tippy
@@ -143,23 +159,21 @@
                       v-if="bed.patient.length > 0 || bed.doctor.length > 0"
                       class="info"
                     >
-                      <div
+                      <VueTippyDiv
                         v-if="bed.patient.length > 0"
+                        :text="bed.patient[0].short_fio"
                         class="text-size"
-                      >
-                        {{ bed.patient[0].short_fio }}
-                      </div>
+                      />
                       <hr
                         v-if="bed.doctor.length > 0"
                         class="line"
                       >
-                      <div
+                      <VueTippyDiv
                         v-if="bed.doctor.length > 0"
                         class="text-size"
+                        :text="bed.doctor[0].short_fio"
                         :class="{'change-color-doc': bed.doctor[0].highlight}"
-                      >
-                        {{ bed.doctor[0].short_fio }}
-                      </div>
+                      />
                     </div>
                   </div>
                 </div>
@@ -214,14 +228,23 @@
       </div>
     </div>
     <div class="panel-right">
-      <Filters
-        :departments="departments"
-        :no-border="true"
-        @input="setDepartDocId"
+      <Treeselect
+        v-model="departmentDocPk"
+        :multiple="false"
+        :disable-branch-nodes="true"
+        :options="departments"
+        placeholder="Отделение не выбрано"
+        :append-to-body="true"
+        class="treeselect-noborder"
       />
       <h5 class="heading top-border">
         Врачи
       </h5>
+      <input
+        v-model.trim="doctorSearch"
+        class="search"
+        type="text"
+      >
       <div class="panel-content">
         <draggable
           v-model="attendingDoctor"
@@ -233,7 +256,7 @@
           animation="500"
         >
           <div
-            v-for="doctor in attendingDoctor"
+            v-for="doctor in attendingDoctorsFiltered"
             :key="doctor.pk"
             class="draggable-item"
             @click="highlight(doctor)"
@@ -254,12 +277,14 @@ import {
   ref,
   watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
 
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
+import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 
-import Filters from './components/Filters.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 interface patientData {
   age: number
@@ -285,8 +310,12 @@ interface chamberData {
   label: string
   pk: number
 }
+interface departmentsData {
+  id: number,
+  label: string,
+}
 const chambers = ref<chamberData[]>([]);
-const departments = ref([]);
+const departments = ref<departmentsData[]>([]);
 const unallocatedPatients = ref<patientData[]>([]);
 const withOutBeds = ref<patientData[]>([]);
 const attendingDoctor = ref<doctorData[]>([]);
@@ -294,8 +323,23 @@ const departmentPatientPk = ref(null);
 const departmentDocPk = ref(null);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
-const userDepartmentId = store.getters.user_data.department.pk;
+const user = store.getters.user_data;
+const userDepartmentId = user.department.pk;
+const patientSearch = ref('');
+const doctorSearch = ref('');
+const onlyUserPatient = ref(false);
 
+const transferDoctor = ref<doctorData>({
+  fio: '',
+  highlight: false,
+  pk: null,
+  short_fio: '',
+});
+const copyBedDoctor = (bed) => {
+  if (bed.doctor.length > 0) {
+    [transferDoctor.value] = bed.doctor;
+  }
+};
 const userCanEdit = computed(() => {
   const { groups } = store.getters.user_data;
   if (departmentPatientPk.value === userDepartmentId) {
@@ -337,21 +381,41 @@ const setDepartPatientId = async (departmentPk) => {
   departmentPatientPk.value = departmentPk;
 };
 
+const setUserDepartment = () => {
+  const userDepartment = departments.value.find(department => department.id === userDepartmentId);
+  if (userDepartment) {
+    setDepartDocId(userDepartment.id);
+    setDepartPatientId(userDepartment.id);
+  }
+};
 const init = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { data } = await api('procedural-list/suitable-departments');
   departments.value = data;
   await store.dispatch(actions.DEC_LOADING);
+  setUserDepartment();
 };
 
 const getAttendingDoctors = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const row = await api('chambers/get-attending-doctors', {
+  const { ok, message, data } = await api('chambers/get-attending-doctors', {
     department_pk: departmentDocPk.value,
   });
-  attendingDoctor.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    attendingDoctor.value = data;
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
+
+const attendingDoctorsFiltered = computed(() => {
+  const searchText = doctorSearch.value.toLowerCase();
+  return attendingDoctor.value.filter(doctor => {
+    const doctorName = doctor.fio.toLowerCase();
+    return doctorName.includes(searchText);
+  });
+});
 
 const getUnallocatedPatients = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -361,6 +425,14 @@ const getUnallocatedPatients = async () => {
   unallocatedPatients.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
 };
+
+const unallocatedPatientsFiltered = computed(() => {
+  const searchText = patientSearch.value.toLowerCase();
+  return unallocatedPatients.value.filter(patient => {
+    const patientName = patient.fio.toLowerCase();
+    return patientName.includes(searchText);
+  });
+});
 
 const getPatientWithoutBed = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -380,7 +452,7 @@ const loadChamberAndBed = async () => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const changeUnallocatedPatient = async ({ added, removed }) => {
+const changeUnallocatedPatient = async ({ added }) => {
   if (added) {
     await getUnallocatedPatients();
   }
@@ -391,10 +463,17 @@ const changePatientBed = async ({ added, removed }, bed) => {
     const { ok, message } = await api('chambers/entrance-patient-to-bed', {
       bed_id: bed.pk,
       direction_id: bed.patient[0].direction_pk,
+      doctor_id: transferDoctor.value.pk,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
+      root.$emit('msg', 'ok', `Записан на кровать №${bed.bed_number}`);
+      transferDoctor.value = {
+        fio: '',
+        highlight: false,
+        pk: null,
+        short_fio: '',
+      };
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -406,7 +485,7 @@ const changePatientBed = async ({ added, removed }, bed) => {
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
+      root.$emit('msg', 'ok', `Выписан c кровати №${bed.bed_number}`);
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -423,7 +502,7 @@ const PatientWaitBed = async ({ added, removed }) => {
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
+      root.$emit('msg', 'ok', 'Пациент переводен в ожидающие');
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -435,9 +514,7 @@ const PatientWaitBed = async ({ added, removed }) => {
       patient_obj: removed.element,
     });
     await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      root.$emit('msg', 'ok', 'Успешно');
-    } else {
+    if (!ok) {
       root.$emit('msg', 'error', message);
     }
   }
@@ -465,7 +542,11 @@ const changeDoctor = async ({ added, removed }, bed) => {
   const { ok, message } = await api('chambers/update-doctor-to-bed', { doctor });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    root.$emit('msg', 'ok', 'Успешно');
+    if (added) {
+      root.$emit('msg', 'ok', 'Пациенту назначен врач');
+    } else {
+      root.$emit('msg', 'ok', 'Пациенту отменен врач');
+    }
   } else {
     root.$emit('msg', 'error', message);
   }
@@ -500,11 +581,16 @@ const checkConditionsPullBed = (patient: patientData[]) => {
   return false;
 };
 
-const clearArrayDoctor = (bed) => {
-  // eslint-disable-next-line no-param-reassign
-  bed.doctor = bed.doctor.filter(doctor => !bed.doctor.includes(doctor));
+const checkConditionsOpacity = (doctor: doctorData[]) => {
+  if (onlyUserPatient.value) {
+    if (doctor.length > 0) {
+      const [userData] = doctor;
+      return userData.pk !== user.doc_pk;
+    }
+    return true;
+  }
+  return false;
 };
-
 const changeColorWomen = (patient) => (patient.sex === 'ж');
 
 const changeColorMan = (patient) => (patient.sex === 'м');
@@ -630,6 +716,9 @@ onMounted(init);
 }
 .text-size {
   font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .three-panel {
@@ -660,7 +749,7 @@ onMounted(init);
 }
 .panel-content {
   flex: 1;
-  max-height: calc(100vh - 107px);
+  max-height: calc(100vh - 139px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
@@ -779,6 +868,7 @@ onMounted(init);
     background-color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
     border-radius: 4px;
+    align-self: flex-start;
   }
   &-beds,
   &-doctor {
@@ -789,5 +879,23 @@ onMounted(init);
 
 .width80 {
   width: 80px;
+}
+.search {
+  height: 32px;
+  margin: 0 5px;
+  border: 1px solid #b1b1b1;
+  border-radius: 4px;
+  padding: 6px 12px;
+  background-color: #fff;
+  outline: 0;
+}
+.search:focus {
+   border: 1px solid #3bafda !important;
+}
+.search:active {
+   border: 1px solid #3bafda !important;
+}
+.opacity {
+  opacity: 0;
 }
 </style>

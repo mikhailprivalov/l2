@@ -2,11 +2,19 @@ from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
 import simplejson as json
 from django.http import JsonResponse
+
+from laboratory.settings import CHAMBER_DOCTOR_GROUP_ID
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 from slog.models import Log
 from utils.response import status_response
 import datetime
-from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department
+from .sql_func import (
+    load_patient_without_bed_by_department,
+    load_attending_doctor_by_department,
+    load_patients_stationar_unallocated_sql,
+    load_chambers_and_beds_by_department,
+    get_closing_protocols,
+)
 
 
 @login_required
@@ -14,6 +22,14 @@ from .sql_func import load_patient_without_bed_by_department, load_attending_doc
 def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
+    transferable_epicrisis_titles = ('переводной эпикриз', 'Переводной эпикриз', 'ПЕРЕВОДНОЙ ЭПИКРИЗ', 'переводной', 'Переводной', 'ПЕРЕВОДНОЙ')
+    all_histories = load_patients_stationar_unallocated_sql(department_pk)
+    all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
+    all_issledovaniya_ids = tuple(all_issledovaniya_ids)
+    closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
+    closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
+    closed_issledovaniya_ids = set(closed_issledovaniya_ids)
+
     patients = [
         {
             "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ""}',
@@ -23,7 +39,9 @@ def get_unallocated_patients(request):
             "direction_pk": patient.napravleniye_id,
         }
         for patient in load_patients_stationar_unallocated_sql(department_pk)
+        if patient.issledovanie_id not in closed_issledovaniya_ids
     ]
+
     return JsonResponse({"data": patients})
 
 
@@ -83,6 +101,7 @@ def entrance_patient_to_bed(request):
     request_data = json.loads(request.body)
     bed_id = request_data.get('bed_id')
     direction_id = request_data.get('direction_id')
+    doctor_id = request_data.get('doctor_id')
     user = request.user
     bed: Bed = Bed.objects.filter(pk=bed_id).select_related('chamber').first()
     if not bed:
@@ -92,7 +111,7 @@ def entrance_patient_to_bed(request):
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
-        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id)
+        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id, doctor_id=doctor_id)
         patient_to_bed.save()
         Log.log(direction_id, 230000, user.doctorprofile, {"direction_id": direction_id, "bed_id": bed_id, "department_id": bed_department_id, "patient_to_bed": patient_to_bed.pk})
     return status_response(True)
@@ -131,17 +150,22 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    attending_doctors = load_attending_doctor_by_department(department_pk)
-    doctors = [
-        {
-            "pk": doctor.id,
-            "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
-            "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
-            "highlight": False,
-        }
-        for doctor in attending_doctors
-    ]
-    return JsonResponse({"data": doctors})
+    if CHAMBER_DOCTOR_GROUP_ID:
+        group_id = CHAMBER_DOCTOR_GROUP_ID
+        attending_doctors = load_attending_doctor_by_department(department_pk, group_id)
+        doctors = [
+            {
+                "pk": doctor.id,
+                "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
+                "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
+                "highlight": False,
+            }
+            for doctor in attending_doctors
+        ]
+        result = {"ok": True, "message": "", "data": doctors}
+    else:
+        result = {"ok": False, "message": "Группа прав для врачей не настроена", "data": []}
+    return JsonResponse(result)
 
 
 @login_required
