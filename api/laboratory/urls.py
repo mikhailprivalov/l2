@@ -20,4 +20,5 @@ urlpatterns = [
     path('receive-history', views.receive_history),
     path('save-defect-tube', views.save_defect_tube),
     path('cancel-receive', views.cancel_receive),
+    path('defect-variants', views.defect_variants),
 ]
