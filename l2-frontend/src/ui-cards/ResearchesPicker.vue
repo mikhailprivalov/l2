@@ -218,7 +218,7 @@
         <input
           id="fndsrc"
           ref="fndsrc"
-          v-model="search"
+          v-model.trim="search"
           v-tippy="{
             html: '#founded-n',
             trigger: 'mouseenter focus input',
