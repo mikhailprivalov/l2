@@ -26,9 +26,10 @@ def get_unallocated_patients(request):
     all_histories = load_patients_stationar_unallocated_sql(department_pk)
     all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
     all_issledovaniya_ids = tuple(all_issledovaniya_ids)
-    closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
-    closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
-    closed_issledovaniya_ids = set(closed_issledovaniya_ids)
+    if all_issledovaniya_ids:
+        closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
+        closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
+        closed_issledovaniya_ids = set(closed_issledovaniya_ids)
 
     patients = [
         {
@@ -197,6 +198,7 @@ def update_doctor_to_bed(request):
                 "direction_id": direction_id,
                 "bed_id": patient_to_bed.bed_id,
                 "department_id": bed_department_id,
+                "doctor_id": doctor_id,
             },
         )
     return JsonResponse({"ok": result, "message": ""})
@@ -211,11 +213,12 @@ def get_patients_without_bed(request):
 
     patients = [
         {
-            "fio": f"{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ''}",
-            "short_fio": f"{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ''}.",
-            "age": patient.age,
-            "sex": patient.sex,
+            "fio": f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}",
+            "short_fio": f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}.",
+            "age": patient.patient_age,
+            "sex": patient.patient_sex,
             "direction_pk": patient.direction_id,
+            "doctor_pk": patient.doctor_id,
         }
         for patient in patient_to_bed
     ]
@@ -228,11 +231,12 @@ def save_patient_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk')
     patient_obj = request_data.get('patient_obj')
+    doctor_id = request_data.get('doctor_id')
     user = request.user
     user_can_edit = Chamber.check_user(user, department_pk)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk)
+    patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk, doctor_id=doctor_id)
     patient_without_bed.save()
     Log.log(
         patient_obj["direction_pk"],
@@ -241,6 +245,7 @@ def save_patient_without_bed(request):
         {
             "direction_id": patient_obj["direction_pk"],
             "department_id": department_pk,
+            "doctor_id": doctor_id,
         },
     )
     return status_response(True)

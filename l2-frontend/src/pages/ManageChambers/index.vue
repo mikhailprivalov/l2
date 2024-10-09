@@ -63,17 +63,23 @@
                 Палата
               </th>
               <th>
-                Управление койками
-                (Кол.коек: {{ bedInformationCounter.bed }},
-                Занятых: {{ bedInformationCounter.occupied }},
-                М: {{ bedInformationCounter.man }},
-                Ж: {{ bedInformationCounter.women }})
-                <input
-                  id="onlyUserPatient"
-                  v-model="onlyUserPatient"
-                  type="checkbox"
-                >
-                <label for="onlyUserPatient">Только мои</label>
+                <div class="flex-space">
+                  <div>
+                    Управление койками
+                    (Кол.коек: {{ bedInformationCounter.bed }},
+                    Занятых: {{ bedInformationCounter.occupied }},
+                    М: {{ bedInformationCounter.man }},
+                    Ж: {{ bedInformationCounter.women }})
+                  </div>
+                  <div>
+                    <input
+                      id="onlyUserPatient"
+                      v-model="onlyUserPatient"
+                      type="checkbox"
+                    >
+                    <label for="onlyUserPatient">Только мои</label>
+                  </div>
+                </div>
               </th>
             </tr>
           </thead>
@@ -162,6 +168,8 @@
                       <VueTippyDiv
                         v-if="bed.patient.length > 0"
                         :text="bed.patient[0].short_fio"
+                        :history-id="bed.patient[0].direction_pk"
+                        :show-link="userCanGoHistory"
                         class="text-size"
                       />
                       <hr
@@ -209,6 +217,7 @@
             ghost-class="ghost-patient-without-bed"
             animation="500"
             :disabled="!userCanEdit"
+            @start="copyWaitDoctor"
             @change="PatientWaitBed"
           >
             <div
@@ -324,29 +333,32 @@ const departmentDocPk = ref(null);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const user = store.getters.user_data;
+const userGroup = user.groups;
 const userDepartmentId = user.department.pk;
+const userCanGoHistory = ref(false);
 const patientSearch = ref('');
 const doctorSearch = ref('');
 const onlyUserPatient = ref(false);
 
-const transferDoctor = ref<doctorData>({
-  fio: '',
-  highlight: false,
-  pk: null,
-  short_fio: '',
-});
+const transferDoctor = ref(null);
 const copyBedDoctor = (bed) => {
   if (bed.doctor.length > 0) {
-    [transferDoctor.value] = bed.doctor;
+    transferDoctor.value = bed.doctor[0].pk;
   }
 };
 const userCanEdit = computed(() => {
-  const { groups } = store.getters.user_data;
   if (departmentPatientPk.value === userDepartmentId) {
     return true;
   }
-  return groups.includes('Палаты: все подразделения') || groups.includes('Admin');
+  return userGroup.includes('Палаты: все подразделения') || userGroup.includes('Admin');
 });
+
+const checkUserCanGoHistory = () => {
+  if (userGroup.includes('Врач стационара') || userGroup.includes('t, ad, p') || userGroup.includes('Admin')) {
+    userCanGoHistory.value = true;
+  }
+};
+
 const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
@@ -463,17 +475,12 @@ const changePatientBed = async ({ added, removed }, bed) => {
     const { ok, message } = await api('chambers/entrance-patient-to-bed', {
       bed_id: bed.pk,
       direction_id: bed.patient[0].direction_pk,
-      doctor_id: transferDoctor.value.pk,
+      doctor_id: transferDoctor.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', `Записан на кровать №${bed.bed_number}`);
-      transferDoctor.value = {
-        fio: '',
-        highlight: false,
-        pk: null,
-        short_fio: '',
-      };
+      transferDoctor.value = null;
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -499,10 +506,12 @@ const PatientWaitBed = async ({ added, removed }) => {
     const { ok, message } = await api('chambers/save-patient-without-bed', {
       patient_obj: added.element,
       department_pk: departmentPatientPk.value,
+      doctor_id: transferDoctor.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Пациент переводен в ожидающие');
+      transferDoctor.value = null;
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -635,6 +644,14 @@ const countPatientAtDoctor = (doctor) => {
   return patient;
 };
 
+const copyWaitDoctor = (event) => {
+  const index = event.oldIndex;
+  const outBeds = withOutBeds.value[index];
+  if (outBeds.doctor_pk) {
+    transferDoctor.value = outBeds.doctor_pk;
+  }
+};
+
 watch(departmentPatientPk, () => {
   getUnallocatedPatients();
   loadChamberAndBed();
@@ -643,7 +660,10 @@ watch(departmentPatientPk, () => {
 watch(departmentDocPk, () => {
   getAttendingDoctors();
 });
-onMounted(init);
+onMounted(() => {
+  init();
+  checkUserCanGoHistory();
+});
 
 </script>
 
@@ -897,5 +917,9 @@ onMounted(init);
 }
 .opacity {
   opacity: 0;
+}
+.flex-space {
+  display: flex;
+  justify-content: space-between;
 }
 </style>
