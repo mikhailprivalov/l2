@@ -15,6 +15,11 @@
       >
         Пациенты
       </h5>
+      <input
+        v-model.trim="patientSearch"
+        class="search"
+        type="text"
+      >
       <div
         class="panel-content"
       >
@@ -29,7 +34,7 @@
           @change="changeUnallocatedPatient"
         >
           <div
-            v-for="patient in unallocatedPatients"
+            v-for="patient in unallocatedPatientsFiltered"
             :key="patient.direction_pk"
             class="draggable-item"
           >
@@ -228,6 +233,11 @@
       <h5 class="heading top-border">
         Врачи
       </h5>
+      <input
+        v-model.trim="doctorSearch"
+        class="search"
+        type="text"
+      >
       <div class="panel-content">
         <draggable
           v-model="attendingDoctor"
@@ -239,7 +249,7 @@
           animation="500"
         >
           <div
-            v-for="doctor in attendingDoctor"
+            v-for="doctor in attendingDoctorsFiltered"
             :key="doctor.pk"
             class="draggable-item"
             @click="highlight(doctor)"
@@ -307,6 +317,8 @@ const departmentDocPk = ref(null);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const userDepartmentId = store.getters.user_data.department.pk;
+const patientSearch = ref('');
+const doctorSearch = ref('');
 
 const transferDoctor = ref<doctorData>({
   fio: '',
@@ -388,6 +400,14 @@ const getAttendingDoctors = async () => {
   }
 };
 
+const attendingDoctorsFiltered = computed(() => {
+  const searchText = doctorSearch.value.toLowerCase();
+  return attendingDoctor.value.filter(doctor => {
+    const doctorName = doctor.fio.toLowerCase();
+    return doctorName.includes(searchText);
+  });
+});
+
 const getUnallocatedPatients = async () => {
   await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-unallocated-patients', {
@@ -396,6 +416,14 @@ const getUnallocatedPatients = async () => {
   unallocatedPatients.value = row.data;
   await store.dispatch(actions.DEC_LOADING);
 };
+
+const unallocatedPatientsFiltered = computed(() => {
+  const searchText = patientSearch.value.toLowerCase();
+  return unallocatedPatients.value.filter(patient => {
+    const patientName = patient.fio.toLowerCase();
+    return patientName.includes(searchText);
+  });
+});
 
 const getPatientWithoutBed = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -505,7 +533,11 @@ const changeDoctor = async ({ added, removed }, bed) => {
   const { ok, message } = await api('chambers/update-doctor-to-bed', { doctor });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
-    root.$emit('msg', 'ok', 'Пациенту назначен врач');
+    if (added) {
+      root.$emit('msg', 'ok', 'Пациенту назначен врач');
+    } else {
+      root.$emit('msg', 'ok', 'Пациенту отменен врач');
+    }
   } else {
     root.$emit('msg', 'error', message);
   }
@@ -698,7 +730,7 @@ onMounted(init);
 }
 .panel-content {
   flex: 1;
-  max-height: calc(100vh - 107px);
+  max-height: calc(100vh - 139px);
   overflow-y: auto;
   background-color: hsla(30, 3%, 97%, 1);
 }
@@ -828,5 +860,20 @@ onMounted(init);
 
 .width80 {
   width: 80px;
+}
+.search {
+  height: 32px;
+  margin: 0 5px;
+  border: 1px solid #b1b1b1;
+  border-radius: 4px;
+  padding: 6px 12px;
+  background-color: #fff;
+  outline: 0;
+}
+.search:focus {
+   border: 1px solid #3bafda !important;
+}
+.search:active {
+   border: 1px solid #3bafda !important;
 }
 </style>
