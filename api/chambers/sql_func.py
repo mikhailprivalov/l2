@@ -64,21 +64,25 @@ def load_patient_without_bed_by_department(department_id):
         cursor.execute(
             """
             SELECT
-            family,
-            name,
-            patronymic,
-            date_part('year', age(birthday))::int AS age,
-            sex,
-            direction_id
+            clients_individual.family as patient_family,
+            clients_individual.name as patient_name,
+            clients_individual.patronymic as patient_patronymic,
+            date_part('year', age(clients_individual.birthday))::int AS patient_age,
+            clients_individual.sex as patient_sex,
+            direction_id,
+            
+            users_doctorprofile.id as doctor_id
+            
             FROM podrazdeleniya_patientstationarwithoutbeds
             LEFT JOIN directions_napravleniya ON podrazdeleniya_patientstationarwithoutbeds.direction_id = directions_napravleniya.id
             LEFT JOIN clients_card ON directions_napravleniya.client_id = clients_card.id
             LEFT JOIN clients_individual ON clients_card.individual_id = clients_individual.id
+            LEFT JOIN users_doctorprofile ON podrazdeleniya_patientstationarwithoutbeds.doctor_id = users_doctorprofile.id
             
             WHERE
             podrazdeleniya_patientstationarwithoutbeds.department_id = %(department_id)s
             
-            ORDER BY family
+            ORDER BY clients_individual.family
             """,
             params={"department_id": department_id},
         )

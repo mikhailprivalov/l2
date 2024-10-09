@@ -336,15 +336,10 @@ const patientSearch = ref('');
 const doctorSearch = ref('');
 const onlyUserPatient = ref(false);
 
-const transferDoctor = ref<doctorData>({
-  fio: '',
-  highlight: false,
-  pk: null,
-  short_fio: '',
-});
+const transferDoctor = ref(null);
 const copyBedDoctor = (bed) => {
   if (bed.doctor.length > 0) {
-    [transferDoctor.value] = bed.doctor;
+    transferDoctor.value = bed.doctor[0].pk;
   }
 };
 const userCanEdit = computed(() => {
@@ -466,21 +461,17 @@ const changeUnallocatedPatient = async ({ added }) => {
 };
 const changePatientBed = async ({ added, removed }, bed) => {
   if (added) {
+    console.log(transferDoctor.value);
     await store.dispatch(actions.INC_LOADING);
     const { ok, message } = await api('chambers/entrance-patient-to-bed', {
       bed_id: bed.pk,
       direction_id: bed.patient[0].direction_pk,
-      doctor_id: transferDoctor.value.pk,
+      doctor_id: transferDoctor.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', `Записан на кровать №${bed.bed_number}`);
-      transferDoctor.value = {
-        fio: '',
-        highlight: false,
-        pk: null,
-        short_fio: '',
-      };
+      transferDoctor.value = null;
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -506,10 +497,12 @@ const PatientWaitBed = async ({ added, removed }) => {
     const { ok, message } = await api('chambers/save-patient-without-bed', {
       patient_obj: added.element,
       department_pk: departmentPatientPk.value,
+      doctor_id: transferDoctor.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       root.$emit('msg', 'ok', 'Пациент переводен в ожидающие');
+      transferDoctor.value = null;
     } else {
       root.$emit('msg', 'error', message);
     }
@@ -645,8 +638,9 @@ const countPatientAtDoctor = (doctor) => {
 const copyWaitDoctor = (event) => {
   const index = event.oldIndex;
   const outBeds = withOutBeds.value[index];
-  if (outBeds.doctor) {
-    transferDoctor.value = outBeds.doctor;
+  console.log(outBeds);
+  if (outBeds.doctor_pk) {
+    transferDoctor.value = outBeds.doctor_pk;
   }
 };
 
