@@ -3665,7 +3665,9 @@ def tubes_for_get(request):
                 if vrpk not in has_rels:
                     with transaction.atomic():
                         try:
-                            if direction.hospital and not direction.external_executor_hospital:
+                            if direction.hospital and direction.hospital.use_self_generate_tube:
+                                hospital_for_generator_tube = direction.hospital
+                            elif direction.hospital and not direction.external_executor_hospital:
                                 hospital_for_generator_tube = direction.hospital
                             elif direction.external_executor_hospital:
                                 hospital_for_generator_tube = direction.external_executor_hospital
