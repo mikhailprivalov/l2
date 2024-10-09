@@ -8,7 +8,13 @@ from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWi
 from slog.models import Log
 from utils.response import status_response
 import datetime
-from .sql_func import load_patient_without_bed_by_department, load_attending_doctor_by_department, load_patients_stationar_unallocated_sql, load_chambers_and_beds_by_department, get_closing_protocols
+from .sql_func import (
+    load_patient_without_bed_by_department,
+    load_attending_doctor_by_department,
+    load_patients_stationar_unallocated_sql,
+    load_chambers_and_beds_by_department,
+    get_closing_protocols,
+)
 
 
 @login_required
