@@ -216,6 +216,12 @@ def get_patients_without_bed(request):
             "age": patient.age,
             "sex": patient.sex,
             "direction_pk": patient.direction_id,
+            "doctor": {
+                "pk": 1,
+                "fio": "АГ",
+                "short_fio": "АГИ",
+                "highlight": False,
+            }
         }
         for patient in patient_to_bed
     ]

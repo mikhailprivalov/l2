@@ -215,6 +215,7 @@
             ghost-class="ghost-patient-without-bed"
             animation="500"
             :disabled="!userCanEdit"
+            @start="copyWaitDoctor"
             @change="PatientWaitBed"
           >
             <div
@@ -639,6 +640,14 @@ const countPatientAtDoctor = (doctor) => {
     }
   }
   return patient;
+};
+
+const copyWaitDoctor = (event) => {
+  const index = event.oldIndex;
+  const outBeds = withOutBeds.value[index];
+  if (outBeds.doctor) {
+    transferDoctor.value = outBeds.doctor;
+  }
 };
 
 watch(departmentPatientPk, () => {
