@@ -124,3 +124,37 @@ def get_lab_research_data(department_id, lab_podr=None):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_constructor_edit_access_by_research_id(research_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                department_id,
+                doctor_id
+                FROM directory_constructoreditaccesresearch
+                WHERE directory_constructoreditaccesresearch.research_id = %(research_id)s
+        """,
+            params={'research_id': research_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_constructor_edit_access_by_department_or_doctor(department_id, doctor_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                department_id,
+                research_id,
+                doctor_id
+                FROM directory_constructoreditaccesresearch
+                WHERE directory_constructoreditaccesresearch.doctor_id = %(doctor_ids)s OR 
+                directory_constructoreditaccesresearch.department_id = %(department_id)s
+        """,
+            params={'doctor_ids': doctor_id, 'department_id': department_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

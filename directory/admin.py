@@ -327,6 +327,27 @@ class ResStatisticPattern(admin.ModelAdmin):
     )
 
 
+class ResConstructorResearchAccessDepartment(admin.ModelAdmin):
+    list_display = (
+        'research',
+        'department',
+        'master_research_hospital',
+    )
+    list_display_links = (
+        'research',
+        'department',
+    )
+    autocomplete_fields = ('research',)
+    list_filter = ('department',)
+
+    def master_research_hospital(self, obj):
+        if obj.research.is_slave_hospital:
+            hs = models.HospitalService.objects.filter(slave_research=obj.research).first()
+            return hs.main_research.title
+        else:
+            return ""
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -368,3 +389,4 @@ admin.site.register(models.StatisticPatternParamSet)
 admin.site.register(models.LaboratoryMaterial)
 admin.site.register(models.SubGroupDirectory)
 admin.site.register(models.SubGroupPadrazdeleniye)
+admin.site.register(models.ConstructorEditAccesResearch, ResConstructorResearchAccessDepartment)

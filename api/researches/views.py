@@ -32,7 +32,9 @@ from directory.models import (
     ReleationsFT,
     ParaclinicTemplateNameDepartment,
     ParaclinicFieldTemplateDepartment,
+    ConstructorEditAccesResearch,
 )
+from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
 from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS
@@ -320,7 +322,7 @@ def localization_save(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Врач стационара", "Конструктор: Редактировать свои услуги")
 def researches_by_department(request):
     direction_form = DResearches.DIRECTION_FORMS
     result_form = [i for i in DResearches.RESULT_FORMS if i[0] not in DISABLED_RESULT_FORMS]
@@ -330,18 +332,34 @@ def researches_by_department(request):
     response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": NSI, "period_types": period_types}
     request_data = json.loads(request.body)
     department_pk = int(request_data["department"])
+
+    user_groups = [str(x) for x in request.user.groups.all()]
+    check_self_access_edit_research = False
+    access_edit_research_ids = []
+    doctor_id = request.user.doctorprofile.pk
+    if "Конструктор: Редактировать свои услуги" in user_groups:
+        check_self_access_edit_research = True
+        doctor_department = request.user.doctorprofile.podrazdeleniye_id
+        research_sql_data = get_constructor_edit_access_by_department_or_doctor(int(doctor_department), int(doctor_id))
+        access_edit_research_ids = [i.research_id for i in research_sql_data]
+
     if -500 >= department_pk > -600:
         for hospital_service in HospitalService.objects.filter(site_type=-department_pk - 500):
-            response["researches"].append(
-                {
-                    "pk": hospital_service.pk,
-                    "slave_research_id": hospital_service.slave_research_id,
-                    "main_research_id": hospital_service.main_research_id,
-                    "is_hospital_service": True,
-                    "title": hospital_service.get_title(),
-                    "hide": hospital_service.hide,
-                }
-            )
+            is_check_research_access = hospital_service.slave_research_id in access_edit_research_ids and hospital_service.main_research_id in access_edit_research_ids
+            if check_self_access_edit_research and not is_check_research_access:
+                continue
+            else:
+                response["researches"].append(
+                    {
+                        "pk": hospital_service.pk,
+                        "slave_research_id": hospital_service.slave_research_id,
+                        "main_research_id": hospital_service.main_research_id,
+                        "is_hospital_service": True,
+                        "title": hospital_service.get_title(),
+                        "hide": hospital_service.hide,
+                    }
+                )
+
     elif department_pk != -1:
         if department_pk == -2:
             q = DResearches.objects.filter(is_doc_refferal=True).order_by("title")
@@ -373,6 +391,9 @@ def researches_by_department(request):
             q = DResearches.objects.filter(podrazdeleniye__pk=department_pk).order_by("title")
 
         for research in q:
+            is_check_research_access = research.pk in access_edit_research_ids
+            if check_self_access_edit_research and not is_check_research_access:
+                continue
             response["researches"].append(
                 {
                     "pk": research.pk,
@@ -408,12 +429,13 @@ def researches_params(request):
 
 
 @login_required
-@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги")
 @transaction.atomic
 def researches_update(request):
     response = {"ok": False}
     request_data = json.loads(request.body)
     pk = request_data.get("pk", -2)
+    user_groups = [str(x) for x in request.user.groups.all()]
     if pk > -2:
         department_pk = request_data.get("department")
         title = request_data.get("title", "").strip()
@@ -475,7 +497,7 @@ def researches_update(request):
             res = None
             if int(hospital_research_department_pk) > -1:
                 department = Podrazdeleniya.objects.filter(pk=int(hospital_research_department_pk))[0]
-            if pk == -1:
+            if pk == -1 and "Конструктор: Параклинические (описательные) исследования" in user_groups:
                 res = DResearches(
                     title=title,
                     short_title=short_title,
@@ -522,6 +544,13 @@ def researches_update(request):
                 if can_change_template_department:
                     res.templates_by_department = templates_by_department
             elif DResearches.objects.filter(pk=pk).exists():
+                access_edit_research = get_constructor_edit_access_by_research_id(pk)
+                doc_ids = [i.doctor_id for i in access_edit_research]
+                department_ids = [i.department_id for i in access_edit_research]
+                if "Конструктор: Редактировать свои услуги" in user_groups and not (
+                    request.user.doctorprofile.pk in doc_ids or request.user.doctorprofile.podrazdeleniye_id in department_ids
+                ):
+                    return JsonResponse(response)
                 res = DResearches.objects.filter(pk=pk)[0]
                 if res == researche_direction_current_params:
                     return JsonResponse(response)
