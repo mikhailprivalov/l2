@@ -170,11 +170,8 @@
 
 <script lang="ts">
 import moment from 'moment';
-import _ from 'lodash';
 
-import { valuesToString } from '@/utils';
 import Modal from '@/ui-cards/Modal.vue';
-import patientsPoint from '@/api/patients-point';
 import * as actions from '@/store/action-types';
 
 import DateRange from '../DateRange.vue';

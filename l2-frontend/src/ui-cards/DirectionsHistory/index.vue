@@ -834,11 +834,6 @@ export default {
       const dateStart = moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY');
       window.open(`/forms/pdf?type=114.01&date=${dateStart}`, '_blank');
     },
-    async selectForCourier() {
-      const dateStart = moment(this.date_range[0], 'DD.MM.YY').format('DD.MM.YYYY');
-      const dataRowsStatementDocument = await this.$api('/statement/select', { dateStart });
-      window.open(`/forms/pdf?type=114.01&date=${dateStart}`, '_blank');
-    },
     printCurrentBarcodes(pk) {
       this.$root.$emit('print:barcodes', [pk]);
     },
