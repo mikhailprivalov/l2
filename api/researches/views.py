@@ -31,7 +31,8 @@ from directory.models import (
     ResearchGroup,
     ReleationsFT,
     ParaclinicTemplateNameDepartment,
-    ParaclinicFieldTemplateDepartment, ConstructorEditAccesResearch,
+    ParaclinicFieldTemplateDepartment,
+    ConstructorEditAccesResearch,
 )
 from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor
 from directory.utils import get_researches_details
