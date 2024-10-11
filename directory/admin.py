@@ -194,7 +194,6 @@ class ResParaclinicTemplateDepartment(admin.ModelAdmin):
     list_display_links = ('template_name', 'department')
 
 
-
 class ResParaclinicInputGroups(admin.ModelAdmin):
     list_display = (
         'title',
