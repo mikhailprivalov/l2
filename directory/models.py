@@ -1272,7 +1272,6 @@ class ConstructorEditAccesResearch(models.Model):
         verbose_name_plural = "Доступы подразделений к изменению услуги(не создание)"
 
 
-
 class ParaclinicFieldTemplateDepartment(models.Model):
     """
     Шаблоны подразделений на поля
