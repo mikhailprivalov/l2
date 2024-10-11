@@ -547,7 +547,9 @@ def researches_update(request):
                 access_edit_research = get_constructor_edit_access_by_research_id(pk)
                 doc_ids = [i.doctor_id for i in access_edit_research]
                 department_ids = [i.department_id for i in access_edit_research]
-                if "Конструктор: Редактировать свои услуги" in user_groups and not (request.user.doctorprofile.pk in doc_ids or request.user.doctorprofile.podrazdeleniye_id in department_ids):
+                if "Конструктор: Редактировать свои услуги" in user_groups and not (
+                    request.user.doctorprofile.pk in doc_ids or request.user.doctorprofile.podrazdeleniye_id in department_ids
+                ):
                     return JsonResponse(response)
                 res = DResearches.objects.filter(pk=pk)[0]
                 if res == researche_direction_current_params:
