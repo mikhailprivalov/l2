@@ -1259,6 +1259,20 @@ class ParaclinicInputField(models.Model):
         verbose_name_plural = "Поля описательного протокола"
 
 
+class ConstructorEditAccesResearch(models.Model):
+    research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE)
+    department = models.ForeignKey(Podrazdeleniya, default=None, null=True, blank=True, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
+    doctor = models.ForeignKey(DoctorProfile, default=None, null=True, blank=True, verbose_name="Пользователь", on_delete=models.CASCADE, db_index=True)
+
+    def __str__(self):
+        return f"{self.research.title} - {self.department.title}"
+
+    class Meta:
+        verbose_name = "Доступ подразделений к изменению услуги(не создание)"
+        verbose_name_plural = "Доступы подразделений к изменению услуги(не создание)"
+
+
+
 class ParaclinicFieldTemplateDepartment(models.Model):
     """
     Шаблоны подразделений на поля
