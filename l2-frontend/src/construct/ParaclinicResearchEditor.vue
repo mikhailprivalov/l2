@@ -96,20 +96,6 @@
             </option>
           </select>
         </div>
-        <div
-          v-if="templatesByDepartment && loaded_pk > 0"
-          class="input-group"
-        >
-          <span class="input-group-addon">Подразделения для шаблонов</span>
-          <Treeselect
-            v-model="departmentForTemplatesField"
-            class="treeselect-nbr treeselect-wide"
-            :options="departmentsForTemplatesField"
-            :clearable="showAllDepartmentForTemplateField"
-            placeholder="Выберите подразделение"
-            @input="changeTemplateField"
-          />
-        </div>
       </div>
       <div
         v-if="!simple && ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 15"
@@ -1133,10 +1119,6 @@
       :title="title"
       :research_pk="loaded_pk"
       :groups="groups"
-      :by-department="templatesByDepartment"
-      :departments="departmentsForTemplatesField"
-      :show-all-departments="showAllDepartmentForTemplateField"
-      :user-department-id="userDepartmentId"
     />
     <Localizations
       v-if="show_localization"
@@ -1147,6 +1129,7 @@
     <ResearchPermissionsModal
       v-if="showPermissionsModal"
       :research-id="loaded_pk"
+      :departments="departmentsForPermissions"
       @hide="closePermissionsModal"
     />
   </div>
@@ -1296,7 +1279,7 @@ export default {
       dynamicDirectories: [],
       autoRegisterRmisLocation: '',
       departmentForTemplatesField: null,
-      departmentsForTemplatesField: [],
+      departmentsForPermissions: [],
       showAllDepartmentForTemplateField: false,
       userDepartmentId: null,
       showPermissionsModal: false,
@@ -1389,11 +1372,7 @@ export default {
   async created() {
     this.checkShowAllTemplates();
     await this.load();
-    if (this.templatesByDepartment) {
-      await this.loadDepartmentsForTemplate();
-    } else {
-      this.departmentsForTemplatesField = [];
-    }
+    await this.loadDepartmentsForPermissions();
     await this.load_deparments();
     await this.loadDynamicDirectories();
   },
@@ -1769,17 +1748,11 @@ export default {
       const { rows } = await this.$api('external-system/fsidi-by-method', { method: this.currentMethod });
       this.collectNsiResearchCode = rows;
     },
-    async loadDepartmentsForTemplate() {
+    async loadDepartmentsForPermissions() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { data } = await this.$api('get-departments-with-exclude', { exclude_type: [2] });
       await this.$store.dispatch(actions.DEC_LOADING);
-      if (this.showAllDepartmentForTemplateField) {
-        this.departmentsForTemplatesField.push(...data);
-      } else {
-        const userDepartment = data.find((department) => department.id === this.userDepartmentId);
-        this.departmentsForTemplatesField.push(userDepartment);
-        this.departmentForTemplatesField = userDepartment.id;
-      }
+      this.departmentsForPermissions = data;
     },
     checkShowAllTemplates() {
       this.userDepartmentId = this.$store.getters.user_data.department.pk;
