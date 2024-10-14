@@ -1237,8 +1237,19 @@ def get_research_performer(request):
 
 @login_required
 @group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
-def get_permissions_by_research(request):
+def get_research_permissions(request):
     request_data = json.loads(request.body)
-    research_id = request_data.get('research_id')
+    research_id = request_data.get('researchId')
     result = ConstructorEditAccessResearch.get_by_research(research_id)
-    return JsonResponse({"data": []})
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+def save_research_permissions(request):
+    request_data = json.loads(request.body)
+    research_id = request_data.get('researchId')
+    department_id = request_data.get('departmentId')
+    user_ids = request_data.get('userIds')
+    result = ConstructorEditAccessResearch.save_permissions(research_id, department_id, user_ids)
+    return JsonResponse(result)

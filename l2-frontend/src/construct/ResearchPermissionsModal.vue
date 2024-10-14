@@ -87,12 +87,6 @@ const hide = () => {
   emit('hide');
 };
 
-const initial = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { users } = await api('researches/get-research-permissions', { researchId: props.researchId });
-  await store.dispatch(actions.DEC_LOADING);
-}
-
 const selectedDepartment = ref(null);
 
 const selectedUsers = ref(null);
@@ -107,11 +101,28 @@ onMounted(async () => {
   await getUsers();
 });
 
-// const save = async () => {
-//   await store.dispatch(actions.INC_LOADING);
-//   const { users } = await api('save-research-permissions');
-//   await store.dispatch(actions.DEC_LOADING);
-// };
+const getPermissions = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { departmentId, userIds } = await api('researches/get-research-permissions', { researchId: props.researchId });
+  await store.dispatch(actions.DEC_LOADING);
+  console.log(departmentId);
+  console.log(userIds);
+  selectedDepartment.value = departmentId;
+  selectedUsers.value = userIds;
+};
+onMounted(async () => {
+  await getPermissions();
+});
+const save = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('researches/save-research-permissions', {
+    researchId: props.researchId,
+    userIds: selectedUsers.value,
+    departmentId: selectedDepartment.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  console.log('fdf');
+};
 </script>
 
 <style scoped lang="scss">

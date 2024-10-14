@@ -1274,13 +1274,23 @@ class ConstructorEditAccessResearch(models.Model):
 
     @staticmethod
     def get_by_research(research_id):
-        result = {"department_id": None, "users": []}
+        result = {"departmentId": None, "userIds": []}
         access = get_constructor_edit_access_by_research_id(research_id)
         for i in access:
-            result["users"].append(i.doctor_id)
-            if result["department"] is None and i.department_id:
-                result["department"] = i.department_id
+            result["userIds"].append(i.doctor_id)
+            if result["departmentId"] is None and i.department_id:
+                result["departmentId"] = i.department_id
         return result
+
+    @staticmethod
+    def save_permissions(research_id, department_id, user_ids):
+        access = ConstructorEditAccessResearch.objects.filter(research_id=research_id)
+        if access.exists():
+            access.delete()
+        for user in user_ids:
+            print(user)
+        return {"ok": True, "message": ""}
+
 
 
 class ParaclinicFieldTemplateDepartment(models.Model):
