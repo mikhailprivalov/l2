@@ -1277,7 +1277,8 @@ class ConstructorEditAccessResearch(models.Model):
         result = {"departmentId": None, "userIds": []}
         access = get_constructor_edit_access_by_research_id(research_id)
         for i in access:
-            result["userIds"].append(i.doctor_id)
+            if i.doctor_id:
+                result["userIds"].append(i.doctor_id)
             if result["departmentId"] is None and i.department_id:
                 result["departmentId"] = i.department_id
         return result
@@ -1287,10 +1288,13 @@ class ConstructorEditAccessResearch(models.Model):
         access = ConstructorEditAccessResearch.objects.filter(research_id=research_id)
         if access.exists():
             access.delete()
+        if department_id:
+            new_access_department = ConstructorEditAccessResearch(research_id=research_id, department_id=department_id)
+            new_access_department.save()
         for user in user_ids:
-            print(user)
+            new_access_user = ConstructorEditAccessResearch(research_id=research_id, doctor_id=user)
+            new_access_user.save()
         return {"ok": True, "message": ""}
-
 
 
 class ParaclinicFieldTemplateDepartment(models.Model):
