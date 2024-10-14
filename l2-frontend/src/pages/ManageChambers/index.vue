@@ -98,7 +98,7 @@
                     v-for="bed in chamber.beds"
                     :key="bed.pk"
                     class="beds-item"
-                    :class="{'opacity': checkConditionsOpacity(bed.doctor) }"
+                    :class="{'opacity': checkConditionsOpacity(bed) }"
                   >
                     <draggable
                       v-model="bed.doctor"
@@ -299,6 +299,7 @@ interface patientData {
   fio: string
   sex: string
   short_fio: string
+  operationNextDay: boolean,
 }
 interface doctorData {
   fio: string
@@ -339,8 +340,8 @@ const doctorSearch = ref('');
 const bedFilter = ref(null);
 const bedsFilters = ref([
   { id: 'my', label: 'Только мои' },
+  { id: 'operation', label: 'На операцию' },
 ]);
-const onlyUserPatient = ref(false);
 
 const transferDoctor = ref(null);
 const copyBedDoctor = (bed) => {
@@ -592,7 +593,7 @@ const checkConditionsPullBed = (patient: patientData[]) => {
   return false;
 };
 
-const checkUserBed = (doctor: doctorData[]) => {
+const checkByDoctor = (doctor: doctorData[]) => {
   if (doctor.length > 0) {
     const [userData] = doctor;
     return userData.pk !== user.doc_pk;
@@ -600,10 +601,20 @@ const checkUserBed = (doctor: doctorData[]) => {
   return true;
 };
 
-const checkConditionsOpacity = (doctor: doctorData[]) => {
+const checkByOperation = (patient: patientData[]) => {
+  if (patient.length > 0) {
+    const [dataPatient] = patient;
+    return !dataPatient.operationNextDay;
+  }
+  return true;
+};
+
+const checkConditionsOpacity = (bed: bedData) => {
   if (bedFilter.value) {
     if (bedFilter.value === 'my') {
-      return checkUserBed(doctor);
+      return checkByDoctor(bed.doctor);
+    } if (bedFilter.value === 'operation') {
+      return checkByOperation(bed.patient);
     }
   }
   return false;
