@@ -29,12 +29,16 @@
             class="treeselect-noborder"
             placeholder="Выберите пользователей..."
             :multiple="true"
-            :options="users"
+            :disable-branch-nodes="true"
+            :options="usersData"
           />
         </div>
       </div>
       <div class="save-button">
-        <button class="btn btn-blue-nb nbr">
+        <button
+          class="btn btn-blue-nb nbr"
+          @click="save"
+        >
           Сохранить
         </button>
       </div>
@@ -57,12 +61,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
+import { useStore } from '@/store';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
+const store = useStore();
 const emit = defineEmits(['hide']);
 const props = defineProps({
   researchId: {
@@ -79,10 +87,31 @@ const hide = () => {
   emit('hide');
 };
 
+const initial = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { users } = await api('researches/get-research-permissions', { researchId: props.researchId });
+  await store.dispatch(actions.DEC_LOADING);
+}
+
 const selectedDepartment = ref(null);
 
 const selectedUsers = ref(null);
-const users = ref([]);
+const usersData = ref([]);
+const getUsers = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { users } = await api('load-users-by-group', { group: '*' });
+  await store.dispatch(actions.DEC_LOADING);
+  usersData.value = users;
+};
+onMounted(async () => {
+  await getUsers();
+});
+
+// const save = async () => {
+//   await store.dispatch(actions.INC_LOADING);
+//   const { users } = await api('save-research-permissions');
+//   await store.dispatch(actions.DEC_LOADING);
+// };
 </script>
 
 <style scoped lang="scss">

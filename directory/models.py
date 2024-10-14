@@ -4,6 +4,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from jsonfield import JSONField
 
+from directory.sql_func import get_constructor_edit_access_by_research_id
 from laboratory.settings import DEATH_RESEARCH_PK, EXCLUDE_TYPE_RESEARCH
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -1259,7 +1260,7 @@ class ParaclinicInputField(models.Model):
         verbose_name_plural = "Поля описательного протокола"
 
 
-class ConstructorEditAccesResearch(models.Model):
+class ConstructorEditAccessResearch(models.Model):
     research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE)
     department = models.ForeignKey(Podrazdeleniya, default=None, null=True, blank=True, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
     doctor = models.ForeignKey(DoctorProfile, default=None, null=True, blank=True, verbose_name="Пользователь", on_delete=models.CASCADE, db_index=True)
@@ -1270,6 +1271,16 @@ class ConstructorEditAccesResearch(models.Model):
     class Meta:
         verbose_name = "Доступ подразделений к изменению услуги(не создание)"
         verbose_name_plural = "Доступы подразделений к изменению услуги(не создание)"
+
+    @staticmethod
+    def get_by_research(research_id):
+        result = {"department_id": None, "users": []}
+        access = get_constructor_edit_access_by_research_id(research_id)
+        for i in access:
+            result["users"].append(i.doctor_id)
+            if result["department"] is None and i.department_id:
+                result["department"] = i.department_id
+        return result
 
 
 class ParaclinicFieldTemplateDepartment(models.Model):

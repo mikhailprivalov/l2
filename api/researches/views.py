@@ -32,7 +32,7 @@ from directory.models import (
     ReleationsFT,
     ParaclinicTemplateNameDepartment,
     ParaclinicFieldTemplateDepartment,
-    ConstructorEditAccesResearch,
+    ConstructorEditAccessResearch,
 )
 from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor
 from directory.utils import get_researches_details
@@ -1233,3 +1233,12 @@ def research_performer_save(request):
 def get_research_performer(request):
     rows = DResearches.get_plan_performer()
     return JsonResponse(rows, safe=False)
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования")
+def get_permissions_by_research(request):
+    request_data = json.loads(request.body)
+    research_id = request_data.get('research_id')
+    result = ConstructorEditAccessResearch.get_by_research(research_id)
+    return JsonResponse({"data": []})
