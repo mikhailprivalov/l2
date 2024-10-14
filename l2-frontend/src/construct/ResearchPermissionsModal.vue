@@ -107,7 +107,6 @@ const getPermissions = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { departmentId, userIds } = await api('researches/get-research-permissions', { researchId: props.researchId });
   await store.dispatch(actions.DEC_LOADING);
-  console.log(departmentId);
   selectedDepartment.value = departmentId;
   selectedUsers.value = userIds;
 };
