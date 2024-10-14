@@ -82,7 +82,7 @@
                     <Treeselect
                       v-model="bedFilter"
                       :options="bedsFilters"
-                      placeholder="Фильтр кроватей"
+                      placeholder="Фильтр"
                     />
                   </div>
                 </div>
