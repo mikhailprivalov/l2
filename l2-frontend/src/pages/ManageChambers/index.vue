@@ -834,7 +834,7 @@ onMounted(() => {
 }
 .waiting-item {
   align-self: flex-start;
-  flex: 0 1 143px;
+  flex: 0 1 176px;
 }
 .no-rooms {
   text-align: center;
