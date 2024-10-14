@@ -57,17 +57,19 @@
               Шаблоны быстрого ввода
             </button>
           </span>
-          <label
+          <span
             v-if="(ex_dep === 12 || simple) && fte && ex_dep !== 14"
-            class="input-group-addon"
+            class="input-group-btn"
           >
-            <input
-              v-model="templatesByDepartment"
-              type="checkbox"
-              :disabled="!showAllDepartmentForTemplateField"
+            <button
+              class="btn btn-blue-nb no-margin-left"
+              type="button"
+              style="border-radius: 0;width: 100%;"
+              :disabled="has_unsaved || loaded_pk < 0"
             >
-            По подразделению
-          </label>
+              Права
+            </button>
+          </span>
         </div>
         <div
           v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14 && ex_dep !== 15"
@@ -278,17 +280,18 @@
               Шаблоны быстрого ввода
             </button>
           </span>
-          <label
-            v-if="fte"
-            class="input-group-addon"
+          <span
+            class="input-group-btn"
           >
-            <input
-              v-model="templatesByDepartment"
-              type="checkbox"
-              :disabled="!showAllDepartmentForTemplateField"
+            <button
+              class="btn btn-blue-nb no-margin-left"
+              type="button"
+              style="border-radius: 0;width: 100%;"
+              :disabled="has_unsaved || loaded_pk < 0"
             >
-            По подразделению
-          </label>
+              Права
+            </button>
+          </span>
         </div>
       </div>
       <div
@@ -1988,5 +1991,8 @@ export default {
   display: flex;
   flex-direction: row;
   gap: 10px;
+}
+.no-margin-left {
+  margin-left: 0 !important;
 }
 </style>
