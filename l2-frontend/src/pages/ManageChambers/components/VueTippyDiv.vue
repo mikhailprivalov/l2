@@ -12,6 +12,7 @@
       class="a-under"
       target="_blank"
       :href="props.link"
+      :class="props.gender === 'ж' ? 'women' : 'men'"
     >
       {{ props.text }}
     </a>
@@ -50,6 +51,10 @@ const props = defineProps({
     type: String,
     required: false,
   },
+  gender: {
+    type: String,
+    required: false,
+  },
 });
 
 const show = ref(false);
@@ -69,5 +74,11 @@ const showTitle = (event) => {
 <style scoped lang="scss">
 .text {
   margin: 0;
+}
+.women {
+  color: #ffb9ea;
+}
+.man {
+  color: #00bfff;
 }
 </style>

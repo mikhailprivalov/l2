@@ -38,7 +38,14 @@
             :key="patient.direction_pk"
             class="draggable-item"
           >
-            {{ patient.fio }}
+            <a
+              class="a-under"
+              target="_blank"
+              :href="stationarLink(patient.direction_pk)"
+              :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+            >
+              {{ patient.short_fio }}
+            </a>
             <i
               class="fa-solid fa-child-reaching icon-patient"
               :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
@@ -167,6 +174,7 @@
                         v-if="bed.patient.length > 0"
                         :text="bed.patient[0].short_fio"
                         :show-link="userCanGoHistory"
+                        :gender="bed.patient[0].sex"
                         :link="stationarLink(bed.patient[0].direction_pk)"
                         class="text-size"
                       />
@@ -227,6 +235,7 @@
                 class="a-under"
                 target="_blank"
                 :href="stationarLink(patient.direction_pk)"
+                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
               >
                 {{ patient.short_fio }}
               </a>
