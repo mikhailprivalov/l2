@@ -15,7 +15,10 @@
     >
       {{ props.text }}
     </a>
-    <p v-else>
+    <p
+      v-else
+      class="text"
+    >
       {{ props.text }}
     </p>
   </component>
@@ -65,5 +68,7 @@ const stationarLink = (historyId) => `/ui/stationar#{%22pk%22:${historyId},%22op
 </script>
 
 <style scoped lang="scss">
-
+.text {
+  margin: 0;
+}
 </style>
