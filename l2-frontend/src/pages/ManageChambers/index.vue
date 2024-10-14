@@ -166,8 +166,8 @@
                       <VueTippyDiv
                         v-if="bed.patient.length > 0"
                         :text="bed.patient[0].short_fio"
-                        :history-id="bed.patient[0].direction_pk"
                         :show-link="userCanGoHistory"
+                        :link="stationarLink(bed.patient[0].direction_pk)"
                         class="text-size"
                       />
                       <hr
@@ -223,7 +223,13 @@
               :key="patient.direction_pk"
               class="draggable-item waiting-item"
             >
-              {{ patient.short_fio }}
+              <a
+                class="a-under"
+                target="_blank"
+                :href="stationarLink(patient.direction_pk)"
+              >
+                {{ patient.short_fio }}
+              </a>
               <i
                 class="fa-solid fa-child-reaching icon-patient"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
@@ -683,6 +689,9 @@ onMounted(() => {
   init();
   checkUserCanGoHistory();
 });
+
+// eslint-disable-next-line max-len
+const stationarLink = (historyId) => `/ui/stationar#{%22pk%22:${historyId},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
 
 </script>
 
