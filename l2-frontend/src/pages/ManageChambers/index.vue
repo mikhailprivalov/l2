@@ -183,6 +183,10 @@
                         :class="{'change-color-doc': bed.doctor[0].highlight}"
                       />
                     </div>
+                    <div
+                      v-else
+                      class="info"
+                    />
                   </div>
                 </div>
               </td>
@@ -851,7 +855,7 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .beds-item {
-  flex: 1 1 33.3333%;
+  flex: 0 1 33.3333%;
   display: flex;
   flex-wrap: nowrap;
   margin: 10px 0;
