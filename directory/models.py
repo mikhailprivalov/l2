@@ -1275,21 +1275,21 @@ class ConstructorEditAccessResearch(models.Model):
     @staticmethod
     def get_by_research(research_id):
         access = get_constructor_edit_access_by_research_id(research_id)
-        user_ids = [i.doctor_id for i in access if i.doctor_id]
-        department_id = {"department_id": i.department_id for i in access if i.department_id}
-        result = {"departmentId": department_id.get("department_id"), "userIds": user_ids}
+        user_ids = [i.doctor_id for i in access if i.doctor_id if i.doctor_id]
+        department_ids = [i.department_id for i in access if i.department_id]
+        result = {"departmentIds": department_ids, "userIds": user_ids}
         return result
 
     @staticmethod
-    def save_permissions(research_id, department_id, user_ids):
+    def save_permissions(research_id, department_ids, user_ids):
         access = ConstructorEditAccessResearch.objects.filter(research_id=research_id)
         if access.exists():
             access.delete()
-        if department_id:
+        for department_id in department_ids:
             new_access_department = ConstructorEditAccessResearch(research_id=research_id, department_id=department_id)
             new_access_department.save()
-        for user in user_ids:
-            new_access_user = ConstructorEditAccessResearch(research_id=research_id, doctor_id=user)
+        for user_id in user_ids:
+            new_access_user = ConstructorEditAccessResearch(research_id=research_id, doctor_id=user_id)
             new_access_user.save()
         return {"ok": True, "message": ""}
 

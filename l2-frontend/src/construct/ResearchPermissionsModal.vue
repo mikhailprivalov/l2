@@ -19,6 +19,7 @@
             v-model="selectedDepartment"
             class="treeselect-noborder"
             placeholder="Выберите подразделение..."
+            :multiple="true"
             :options="props.departments"
           />
         </div>
@@ -105,9 +106,9 @@ onMounted(async () => {
 
 const getPermissions = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { departmentId, userIds } = await api('researches/get-research-permissions', { researchId: props.researchId });
+  const { departmentIds, userIds } = await api('researches/get-research-permissions', { researchId: props.researchId });
   await store.dispatch(actions.DEC_LOADING);
-  selectedDepartment.value = departmentId;
+  selectedDepartment.value = departmentIds;
   selectedUsers.value = userIds;
 };
 onMounted(async () => {
