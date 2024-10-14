@@ -71,13 +71,12 @@
                     М: {{ bedInformationCounter.man }},
                     Ж: {{ bedInformationCounter.women }})
                   </div>
-                  <div>
-                    <input
-                      id="onlyUserPatient"
-                      v-model="onlyUserPatient"
-                      type="checkbox"
-                    >
-                    <label for="onlyUserPatient">Только мои</label>
+                  <div class="filter-width">
+                    <Treeselect
+                      v-model="bedFilter"
+                      :options="bedsFilters"
+                      placeholder="Фильтр кроватей"
+                    />
                   </div>
                 </div>
               </th>
@@ -337,6 +336,10 @@ const userDepartmentId = user.department.pk;
 const userCanGoHistory = ref(false);
 const patientSearch = ref('');
 const doctorSearch = ref('');
+const bedFilter = ref(null);
+const bedsFilters = ref([
+  { id: 'my', label: 'Только мои' },
+]);
 const onlyUserPatient = ref(false);
 
 const transferDoctor = ref(null);
@@ -589,13 +592,19 @@ const checkConditionsPullBed = (patient: patientData[]) => {
   return false;
 };
 
+const checkUserBed = (doctor: doctorData[]) => {
+  if (doctor.length > 0) {
+    const [userData] = doctor;
+    return userData.pk !== user.doc_pk;
+  }
+  return true;
+};
+
 const checkConditionsOpacity = (doctor: doctorData[]) => {
-  if (onlyUserPatient.value) {
-    if (doctor.length > 0) {
-      const [userData] = doctor;
-      return userData.pk !== user.doc_pk;
+  if (bedFilter.value) {
+    if (bedFilter.value === 'my') {
+      return checkUserBed(doctor);
     }
-    return true;
   }
   return false;
 };
@@ -921,5 +930,8 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.filter-width {
+  width: 150px;
 }
 </style>
