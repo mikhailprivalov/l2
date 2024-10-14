@@ -4,6 +4,7 @@ import simplejson as json
 from django.http import JsonResponse
 
 from laboratory.settings import CHAMBER_DOCTOR_GROUP_ID
+from laboratory.utils import current_time
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 from slog.models import Log
 from utils.response import status_response
@@ -52,7 +53,11 @@ def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     department_id = request_data.get('department_pk', -1)
     chambers = {}
-    chambers_beds = load_chambers_and_beds_by_department(department_id)
+    current_date = current_time(True)
+    next_date = current_date + datetime.timedelta(days=1)
+    start_time = f"{next_date.year}-{next_date.month}-{next_date.day} 00:00"
+    end_time = f"{next_date.year}-{next_date.month}-{next_date.day} 23:59"
+    chambers_beds = load_chambers_and_beds_by_department(department_id, start_time, end_time)
     for chamber in chambers_beds:
         if not chambers.get(chamber.chamber_id):
             chambers[chamber.chamber_id] = {
@@ -69,6 +74,8 @@ def get_chambers_and_beds(request):
             "patient": [],
         }
         if chamber.direction_id:
+            if chamber.plan_id:
+                print('завтра операция')
             chambers[chamber.chamber_id]["beds"][chamber.bed_id]["patient"].append(
                 {
                     "direction_pk": chamber.direction_id,
@@ -76,6 +83,7 @@ def get_chambers_and_beds(request):
                     "short_fio": f"{chamber.patient_family} {chamber.patient_name[0]}. {chamber.patient_patronymic[0] if chamber.patient_patronymic else ''}.",
                     "age": chamber.patient_age,
                     "sex": chamber.patient_sex,
+                    "operationTomorrow": chamber.plan_id,
                 }
             )
         if chamber.doctor_id:
