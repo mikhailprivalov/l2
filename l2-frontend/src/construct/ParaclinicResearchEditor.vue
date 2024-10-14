@@ -66,6 +66,7 @@
               type="button"
               style="border-radius: 0;width: 100%;"
               :disabled="has_unsaved || loaded_pk < 0"
+              @click="openPermissionsModal"
             >
               Права
             </button>
@@ -288,6 +289,7 @@
               type="button"
               style="border-radius: 0;width: 100%;"
               :disabled="has_unsaved || loaded_pk < 0"
+              @click="openPermissionsModal"
             >
               Права
             </button>
@@ -1142,6 +1144,11 @@
       :research_pk="loaded_pk"
       @hide="hide_localization"
     />
+    <ResearchPermissionsModal
+      v-if="showPermissionsModal"
+      :research-id="loaded_pk"
+      @hide="closePermissionsModal"
+    />
   </div>
 </template>
 
@@ -1160,6 +1167,7 @@ import FieldHelper from '@/ui-cards/FieldHelper.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
+import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1168,6 +1176,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    ResearchPermissionsModal,
     LoadFile,
     PermanentDirectories,
     FieldHelper,
@@ -1290,6 +1299,7 @@ export default {
       departmentsForTemplatesField: [],
       showAllDepartmentForTemplateField: false,
       userDepartmentId: null,
+      showPermissionsModal: false,
     };
   },
   computed: {
@@ -1781,6 +1791,12 @@ export default {
     },
     async changeTemplateField() {
       await this.load();
+    },
+    openPermissionsModal() {
+      this.showPermissionsModal = true;
+    },
+    closePermissionsModal() {
+      this.showPermissionsModal = false;
     },
   },
 };
