@@ -1274,13 +1274,10 @@ class ConstructorEditAccessResearch(models.Model):
 
     @staticmethod
     def get_by_research(research_id):
-        result = {"departmentId": None, "userIds": []}
         access = get_constructor_edit_access_by_research_id(research_id)
-        for i in access:
-            if i.doctor_id:
-                result["userIds"].append(i.doctor_id)
-            if result["departmentId"] is None and i.department_id:
-                result["departmentId"] = i.department_id
+        user_ids = [i.doctor_id for i in access if i.doctor_id]
+        department_id = {"department_id": i.department_id for i in access if i.department_id}
+        result = {"departmentId": department_id.get("department_id"), "userIds": user_ids}
         return result
 
     @staticmethod
