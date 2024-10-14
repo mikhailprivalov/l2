@@ -1,4 +1,6 @@
 from django.db import connection
+
+from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
@@ -163,3 +165,20 @@ def load_chambers_and_beds_by_department(department_id):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def load_plan_operations_next_day(start_time, end_time):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            direction
+            FROM plans_planoperations
+            WHERE date AT TIME ZONE %(tz)s BETWEEN %(start_time)s AND %(end_time)s
+            """,
+            params={"tz": TIME_ZONE, "start_time": start_time, "end_time": end_time},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
