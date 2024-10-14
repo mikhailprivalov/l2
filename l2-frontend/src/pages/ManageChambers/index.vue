@@ -162,7 +162,6 @@
                       </div>
                     </draggable>
                     <div
-                      v-if="bed.patient.length > 0 || bed.doctor.length > 0"
                       class="info"
                     >
                       <VueTippyDiv
@@ -183,10 +182,6 @@
                         :class="{'change-color-doc': bed.doctor[0].highlight}"
                       />
                     </div>
-                    <div
-                      v-else
-                      class="info"
-                    />
                   </div>
                 </div>
               </td>
