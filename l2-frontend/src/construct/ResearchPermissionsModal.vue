@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { getCurrentInstance, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -82,6 +82,8 @@ const props = defineProps({
     required: true,
   },
 });
+
+const root = getCurrentInstance().proxy.$root;
 
 const hide = () => {
   emit('hide');
@@ -121,7 +123,12 @@ const save = async () => {
     departmentId: selectedDepartment.value,
   });
   await store.dispatch(actions.DEC_LOADING);
-  console.log('fdf');
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getPermissions();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 </script>
 
