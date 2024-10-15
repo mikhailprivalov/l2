@@ -85,6 +85,7 @@
                       v-model="bedFilter"
                       :options="bedsFilters"
                       placeholder="Фильтр"
+                      class="treeselect-25px"
                     />
                   </div>
                 </div>
@@ -965,5 +966,15 @@ const stationarLink = (historyId) => `/ui/stationar#{%22pk%22:${historyId},%22op
 }
 .filter-width {
   width: 150px;
+}
+::v-deep .treeselect-25px .vue-treeselect {
+  &__control {
+    height: 25px !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 25px !important;
+  }
 }
 </style>
