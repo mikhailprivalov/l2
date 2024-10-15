@@ -36,9 +36,18 @@
           <div
             v-for="patient in unallocatedPatientsFiltered"
             :key="patient.direction_pk"
+            v-tippy="{ placement: 'top', arrow: true }"
             class="draggable-item"
+            :title="`${patient.direction_pk} ${patient.service_title}`"
           >
-            {{ patient.fio }}
+            <a
+              class="a-under"
+              target="_blank"
+              :href="stationarLink(patient.direction_pk)"
+              :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+            >
+              {{ patient.short_fio }}
+            </a>
             <i
               class="fa-solid fa-child-reaching icon-patient"
               :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
@@ -65,19 +74,19 @@
               <th>
                 <div class="flex-space">
                   <div>
-                    Управление койками
-                    (Кол.коек: {{ bedInformationCounter.bed }},
+                    Койки
+                    (Кол-во: {{ bedInformationCounter.bed }},
                     Занятых: {{ bedInformationCounter.occupied }},
                     М: {{ bedInformationCounter.man }},
                     Ж: {{ bedInformationCounter.women }})
                   </div>
-                  <div>
-                    <input
-                      id="onlyUserPatient"
-                      v-model="onlyUserPatient"
-                      type="checkbox"
-                    >
-                    <label for="onlyUserPatient">Только мои</label>
+                  <div class="filter-width">
+                    <Treeselect
+                      v-model="bedFilter"
+                      :options="bedsFilters"
+                      placeholder="Фильтр"
+                      class="treeselect-25px"
+                    />
                   </div>
                 </div>
               </th>
@@ -99,7 +108,7 @@
                     v-for="bed in chamber.beds"
                     :key="bed.pk"
                     class="beds-item"
-                    :class="{'opacity': checkConditionsOpacity(bed.doctor) }"
+                    :class="{'opacity': checkConditionsOpacity(bed) }"
                   >
                     <draggable
                       v-model="bed.doctor"
@@ -162,14 +171,14 @@
                       </div>
                     </draggable>
                     <div
-                      v-if="bed.patient.length > 0 || bed.doctor.length > 0"
                       class="info"
                     >
                       <VueTippyDiv
                         v-if="bed.patient.length > 0"
                         :text="bed.patient[0].short_fio"
-                        :history-id="bed.patient[0].direction_pk"
                         :show-link="userCanGoHistory"
+                        :gender="bed.patient[0].sex"
+                        :link="stationarLink(bed.patient[0].direction_pk)"
                         class="text-size"
                       />
                       <hr
@@ -225,7 +234,14 @@
               :key="patient.direction_pk"
               class="draggable-item waiting-item"
             >
-              {{ patient.short_fio }}
+              <a
+                class="a-under"
+                target="_blank"
+                :href="stationarLink(patient.direction_pk)"
+                :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
+              >
+                {{ patient.short_fio }}
+              </a>
               <i
                 class="fa-solid fa-child-reaching icon-patient"
                 :class="{ 'women': changeColorWomen(patient), 'man': changeColorMan(patient) }"
@@ -301,6 +317,8 @@ interface patientData {
   fio: string
   sex: string
   short_fio: string
+  operationNextDay?: boolean,
+  service_title?: string,
 }
 interface doctorData {
   fio: string
@@ -338,7 +356,11 @@ const userDepartmentId = user.department.pk;
 const userCanGoHistory = ref(false);
 const patientSearch = ref('');
 const doctorSearch = ref('');
-const onlyUserPatient = ref(false);
+const bedFilter = ref(null);
+const bedsFilters = ref([
+  { id: 'my', label: 'Только мои' },
+  { id: 'operation', label: 'На операцию' },
+]);
 
 const transferDoctor = ref(null);
 const copyBedDoctor = (bed) => {
@@ -590,13 +612,29 @@ const checkConditionsPullBed = (patient: patientData[]) => {
   return false;
 };
 
-const checkConditionsOpacity = (doctor: doctorData[]) => {
-  if (onlyUserPatient.value) {
-    if (doctor.length > 0) {
-      const [userData] = doctor;
-      return userData.pk !== user.doc_pk;
+const checkByDoctor = (doctor: doctorData[]) => {
+  if (doctor.length > 0) {
+    const [userData] = doctor;
+    return userData.pk !== user.doc_pk;
+  }
+  return true;
+};
+
+const checkByOperation = (patient: patientData[]) => {
+  if (patient.length > 0) {
+    const [dataPatient] = patient;
+    return !dataPatient.operationNextDay;
+  }
+  return true;
+};
+
+const checkConditionsOpacity = (bed: bedData) => {
+  if (bedFilter.value) {
+    if (bedFilter.value === 'my') {
+      return checkByDoctor(bed.doctor);
+    } if (bedFilter.value === 'operation') {
+      return checkByOperation(bed.patient);
     }
-    return true;
   }
   return false;
 };
@@ -665,6 +703,9 @@ onMounted(() => {
   checkUserCanGoHistory();
 });
 
+// eslint-disable-next-line max-len
+const stationarLink = (historyId) => `/ui/stationar#{%22pk%22:${historyId},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
+
 </script>
 
 <style scoped lang="scss">
@@ -678,7 +719,7 @@ onMounted(() => {
   background-color: #FFFAFA;
 }
 .women {
-  color: #ffb9ea;
+  color: #ff73ea;
 }
 .man {
   color: #00bfff;
@@ -835,7 +876,7 @@ onMounted(() => {
 }
 .waiting-item {
   align-self: flex-start;
-  flex: 0 1 143px;
+  flex: 0 1 176px;
 }
 .no-rooms {
   text-align: center;
@@ -851,7 +892,7 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 .beds-item {
-  flex: 1 1 33.3333%;
+  flex: 0 1 33.3333%;
   display: flex;
   flex-wrap: nowrap;
   margin: 10px 0;
@@ -921,5 +962,19 @@ onMounted(() => {
 .flex-space {
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+.filter-width {
+  width: 150px;
+}
+::v-deep .treeselect-25px .vue-treeselect {
+  &__control {
+    height: 25px !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 25px !important;
+  }
 }
 </style>

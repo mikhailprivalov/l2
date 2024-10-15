@@ -8,14 +8,18 @@
     @mouseenter="showTitle"
   >
     <a
-      v-if="props.historyId && showLink"
+      v-if="props.link && props.showLink"
       class="a-under"
       target="_blank"
-      :href="stationarLink(props.historyId)"
+      :href="props.link"
+      :class="props.gender === 'ж' ? 'women' : 'men'"
     >
       {{ props.text }}
     </a>
-    <p v-else>
+    <p
+      v-else
+      class="text"
+    >
       {{ props.text }}
     </p>
   </component>
@@ -39,12 +43,16 @@ const props = defineProps({
     required: false,
     default: 'div',
   },
-  historyId: {
-    type: Number,
-    required: false,
-  },
   showLink: {
     type: Boolean,
+    required: false,
+  },
+  link: {
+    type: String,
+    required: false,
+  },
+  gender: {
+    type: String,
     required: false,
   },
 });
@@ -61,9 +69,16 @@ const showTitle = (event) => {
 };
 
 // eslint-disable-next-line max-len
-const stationarLink = (historyId) => `/ui/stationar#{%22pk%22:${historyId},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`;
 </script>
 
 <style scoped lang="scss">
-
+.text {
+  margin: 0;
+}
+.women {
+  color: #ff73ea;
+}
+.man {
+  color: #00bfff;
+}
 </style>

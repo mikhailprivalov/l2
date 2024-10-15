@@ -4,6 +4,7 @@ import simplejson as json
 from django.http import JsonResponse
 
 from laboratory.settings import CHAMBER_DOCTOR_GROUP_ID
+from laboratory.utils import current_time
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
 from slog.models import Log
 from utils.response import status_response
@@ -14,6 +15,7 @@ from .sql_func import (
     load_patients_stationar_unallocated_sql,
     load_chambers_and_beds_by_department,
     get_closing_protocols,
+    load_plan_operations_next_day,
 )
 
 
@@ -26,6 +28,7 @@ def get_unallocated_patients(request):
     all_histories = load_patients_stationar_unallocated_sql(department_pk)
     all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
     all_issledovaniya_ids = tuple(all_issledovaniya_ids)
+    closed_issledovaniya_ids = []
     if all_issledovaniya_ids:
         closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
         closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
@@ -38,6 +41,7 @@ def get_unallocated_patients(request):
             "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ""}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
+            "service_title": patient.service_title,
         }
         for patient in load_patients_stationar_unallocated_sql(department_pk)
         if patient.issledovanie_id not in closed_issledovaniya_ids
@@ -52,6 +56,12 @@ def get_chambers_and_beds(request):
     request_data = json.loads(request.body)
     department_id = request_data.get('department_pk', -1)
     chambers = {}
+    current_date = current_time(True)
+    next_date = current_date + datetime.timedelta(days=1)
+    start_time = f"{next_date.year}-{next_date.month}-{next_date.day} 00:00"
+    end_time = f"{next_date.year}-{next_date.month}-{next_date.day} 23:59"
+    operation_plan = load_plan_operations_next_day(start_time, end_time)
+    directions_ids_operation = [int(operation.direction) for operation in operation_plan]
     chambers_beds = load_chambers_and_beds_by_department(department_id)
     for chamber in chambers_beds:
         if not chambers.get(chamber.chamber_id):
@@ -76,6 +86,7 @@ def get_chambers_and_beds(request):
                     "short_fio": f"{chamber.patient_family} {chamber.patient_name[0]}. {chamber.patient_patronymic[0] if chamber.patient_patronymic else ''}.",
                     "age": chamber.patient_age,
                     "sex": chamber.patient_sex,
+                    "operationNextDay": chamber.direction_id in directions_ids_operation,
                 }
             )
         if chamber.doctor_id:
