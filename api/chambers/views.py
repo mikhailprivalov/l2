@@ -27,6 +27,7 @@ def get_unallocated_patients(request):
     all_histories = load_patients_stationar_unallocated_sql(department_pk)
     all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
     all_issledovaniya_ids = tuple(all_issledovaniya_ids)
+    closed_issledovaniya_ids = []
     if all_issledovaniya_ids:
         closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
         closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
