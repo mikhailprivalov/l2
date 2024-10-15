@@ -40,6 +40,7 @@ def get_unallocated_patients(request):
             "short_fio": f'{patient.family} {patient.name[0]}. {patient.patronymic[0] if patient.patronymic else ""}.',
             "sex": patient.sex,
             "direction_pk": patient.napravleniye_id,
+            "service_title": patient.service_title
         }
         for patient in load_patients_stationar_unallocated_sql(department_pk)
         if patient.issledovanie_id not in closed_issledovaniya_ids

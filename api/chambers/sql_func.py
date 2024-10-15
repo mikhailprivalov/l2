@@ -9,15 +9,17 @@ def load_patients_stationar_unallocated_sql(department_id):
         cursor.execute(
             """
             SELECT 
-                family, 
-                name, 
-                patronymic, 
-                sex, 
+                family,
+                name,
+                patronymic,
+                sex,
                 napravleniye_id,
+                directory_researches.title as service_title,
                 directions_issledovaniya.id as issledovanie_id,
                 birthday,
                 date_part('year', age(birthday))::int AS age
-                FROM directions_issledovaniya 
+                FROM directions_issledovaniya
+                INNER JOIN directory_researches ON directions_issledovaniya.research_id = directory_researches.id
                 INNER JOIN directions_napravleniya ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
                 INNER JOIN clients_card ON directions_napravleniya.client_id=clients_card.id
                 INNER JOIN public.clients_individual ON clients_card.individual_id = public.clients_individual.id

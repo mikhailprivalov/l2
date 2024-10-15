@@ -36,7 +36,9 @@
           <div
             v-for="patient in unallocatedPatientsFiltered"
             :key="patient.direction_pk"
+            v-tippy="{ placement: 'top', arrow: true }"
             class="draggable-item"
+            :title="`${patient.direction_pk} ${patient.service_title}`"
           >
             <a
               class="a-under"
@@ -314,7 +316,8 @@ interface patientData {
   fio: string
   sex: string
   short_fio: string
-  operationNextDay: boolean,
+  operationNextDay?: boolean,
+  service_title?: string,
 }
 interface doctorData {
   fio: string
