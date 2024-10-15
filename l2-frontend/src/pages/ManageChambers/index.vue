@@ -74,8 +74,8 @@
               <th>
                 <div class="flex-space">
                   <div>
-                    Управление койками
-                    (Кол.коек: {{ bedInformationCounter.bed }},
+                    Койки
+                    (Кол-во: {{ bedInformationCounter.bed }},
                     Занятых: {{ bedInformationCounter.occupied }},
                     М: {{ bedInformationCounter.man }},
                     Ж: {{ bedInformationCounter.women }})
