@@ -76,7 +76,7 @@ const showTitle = (event) => {
   margin: 0;
 }
 .women {
-  color: #ffb9ea;
+  color: #ff73ea;
 }
 .man {
   color: #00bfff;

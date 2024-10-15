@@ -715,7 +715,7 @@ const stationarLink = (historyId) => `/ui/stationar#{%22pk%22:${historyId},%22op
   background-color: #FFFAFA;
 }
 .women {
-  color: #ffb9ea;
+  color: #ff73ea;
 }
 .man {
   color: #00bfff;
