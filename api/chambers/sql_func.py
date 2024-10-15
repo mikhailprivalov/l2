@@ -183,4 +183,3 @@ def load_plan_operations_next_day(start_time, end_time):
 
         rows = namedtuplefetchall(cursor)
     return rows
-
