@@ -61,7 +61,7 @@ def get_chambers_and_beds(request):
     start_time = f"{next_date.year}-{next_date.month}-{next_date.day} 00:00"
     end_time = f"{next_date.year}-{next_date.month}-{next_date.day} 23:59"
     operation_plan = load_plan_operations_next_day(start_time, end_time)
-    directions_ids_operation = {int(operation.direction): True for operation in operation_plan}
+    directions_ids_operation = [int(operation.direction) for operation in operation_plan]
     chambers_beds = load_chambers_and_beds_by_department(department_id)
     for chamber in chambers_beds:
         if not chambers.get(chamber.chamber_id):
@@ -86,7 +86,7 @@ def get_chambers_and_beds(request):
                     "short_fio": f"{chamber.patient_family} {chamber.patient_name[0]}. {chamber.patient_patronymic[0] if chamber.patient_patronymic else ''}.",
                     "age": chamber.patient_age,
                     "sex": chamber.patient_sex,
-                    "operationNextDay": directions_ids_operation.get(chamber.direction_id),
+                    "operationNextDay": chamber.direction_id in directions_ids_operation,
                 }
             )
         if chamber.doctor_id:
