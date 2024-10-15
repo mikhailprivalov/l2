@@ -4,6 +4,7 @@ from django.db import models, transaction
 from django.db.models import Q
 from jsonfield import JSONField
 
+from directory.sql_func import get_constructor_edit_access_by_research_id
 from laboratory.settings import DEATH_RESEARCH_PK, EXCLUDE_TYPE_RESEARCH
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
@@ -385,7 +386,7 @@ class Researches(models.Model):
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
     count_volume_material_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
-    templates_by_department = models.BooleanField(default=False, help_text="Искать шаблоны заполнения по подразделению")
+    templates_by_department = models.BooleanField(default=None, help_text="Искать шаблоны заполнения по подразделению", null=True, blank=True)
 
     @staticmethod
     def save_plan_performer(tb_data):
@@ -1259,7 +1260,7 @@ class ParaclinicInputField(models.Model):
         verbose_name_plural = "Поля описательного протокола"
 
 
-class ConstructorEditAccesResearch(models.Model):
+class ConstructorEditAccessResearch(models.Model):
     research = models.ForeignKey(Researches, verbose_name="Услуга", on_delete=models.CASCADE)
     department = models.ForeignKey(Podrazdeleniya, default=None, null=True, blank=True, verbose_name="Подразделение", on_delete=models.CASCADE, db_index=True)
     doctor = models.ForeignKey(DoctorProfile, default=None, null=True, blank=True, verbose_name="Пользователь", on_delete=models.CASCADE, db_index=True)
@@ -1270,6 +1271,27 @@ class ConstructorEditAccesResearch(models.Model):
     class Meta:
         verbose_name = "Доступ подразделений к изменению услуги(не создание)"
         verbose_name_plural = "Доступы подразделений к изменению услуги(не создание)"
+
+    @staticmethod
+    def get_by_research(research_id):
+        access = get_constructor_edit_access_by_research_id(research_id)
+        user_ids = [i.doctor_id for i in access if i.doctor_id if i.doctor_id]
+        department_ids = [i.department_id for i in access if i.department_id]
+        result = {"departmentIds": department_ids, "userIds": user_ids}
+        return result
+
+    @staticmethod
+    def save_permissions(research_id, department_ids, user_ids):
+        access = ConstructorEditAccessResearch.objects.filter(research_id=research_id)
+        if access.exists():
+            access.delete()
+        for department_id in department_ids:
+            new_access_department = ConstructorEditAccessResearch(research_id=research_id, department_id=department_id)
+            new_access_department.save()
+        for user_id in user_ids:
+            new_access_user = ConstructorEditAccessResearch(research_id=research_id, doctor_id=user_id)
+            new_access_user.save()
+        return {"ok": True, "message": ""}
 
 
 class ParaclinicFieldTemplateDepartment(models.Model):

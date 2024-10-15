@@ -57,17 +57,20 @@
               Шаблоны быстрого ввода
             </button>
           </span>
-          <label
+          <span
             v-if="(ex_dep === 12 || simple) && fte && ex_dep !== 14"
-            class="input-group-addon"
+            class="input-group-btn"
           >
-            <input
-              v-model="templatesByDepartment"
-              type="checkbox"
-              :disabled="!showAllDepartmentForTemplateField"
+            <button
+              class="btn btn-blue-nb no-margin-left"
+              type="button"
+              style="border-radius: 0;width: 100%;"
+              :disabled="has_unsaved || loaded_pk < 0"
+              @click="openPermissionsModal"
             >
-            По подразделению
-          </label>
+              Права
+            </button>
+          </span>
         </div>
         <div
           v-if="ex_dep !== 12 && ex_dep !== 13 && ex_dep !== 14 && ex_dep !== 15"
@@ -92,20 +95,6 @@
               {{ d.title }}
             </option>
           </select>
-        </div>
-        <div
-          v-if="templatesByDepartment && loaded_pk > 0"
-          class="input-group"
-        >
-          <span class="input-group-addon">Подразделения для шаблонов</span>
-          <Treeselect
-            v-model="departmentForTemplatesField"
-            class="treeselect-nbr treeselect-wide"
-            :options="departmentsForTemplatesField"
-            :clearable="showAllDepartmentForTemplateField"
-            placeholder="Выберите подразделение"
-            @input="changeTemplateField"
-          />
         </div>
       </div>
       <div
@@ -278,17 +267,19 @@
               Шаблоны быстрого ввода
             </button>
           </span>
-          <label
-            v-if="fte"
-            class="input-group-addon"
+          <span
+            class="input-group-btn"
           >
-            <input
-              v-model="templatesByDepartment"
-              type="checkbox"
-              :disabled="!showAllDepartmentForTemplateField"
+            <button
+              class="btn btn-blue-nb no-margin-left"
+              type="button"
+              style="border-radius: 0;width: 100%;"
+              :disabled="has_unsaved || loaded_pk < 0"
+              @click="openPermissionsModal"
             >
-            По подразделению
-          </label>
+              Права
+            </button>
+          </span>
         </div>
       </div>
       <div
@@ -1128,16 +1119,18 @@
       :title="title"
       :research_pk="loaded_pk"
       :groups="groups"
-      :by-department="templatesByDepartment"
-      :departments="departmentsForTemplatesField"
-      :show-all-departments="showAllDepartmentForTemplateField"
-      :user-department-id="userDepartmentId"
     />
     <Localizations
       v-if="show_localization"
       :title="title"
       :research_pk="loaded_pk"
       @hide="hide_localization"
+    />
+    <ResearchPermissionsModal
+      v-if="showPermissionsModal"
+      :research-id="loaded_pk"
+      :departments="departmentsForPermissions"
+      @hide="closePermissionsModal"
     />
   </div>
 </template>
@@ -1157,6 +1150,7 @@ import FieldHelper from '@/ui-cards/FieldHelper.vue';
 import Localizations from '@/construct/Localizations.vue';
 import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
+import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1165,6 +1159,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    ResearchPermissionsModal,
     LoadFile,
     PermanentDirectories,
     FieldHelper,
@@ -1284,9 +1279,10 @@ export default {
       dynamicDirectories: [],
       autoRegisterRmisLocation: '',
       departmentForTemplatesField: null,
-      departmentsForTemplatesField: [],
+      departmentsForPermissions: [],
       showAllDepartmentForTemplateField: false,
       userDepartmentId: null,
+      showPermissionsModal: false,
     };
   },
   computed: {
@@ -1376,11 +1372,7 @@ export default {
   async created() {
     this.checkShowAllTemplates();
     await this.load();
-    if (this.templatesByDepartment) {
-      await this.loadDepartmentsForTemplate();
-    } else {
-      this.departmentsForTemplatesField = [];
-    }
+    await this.loadDepartmentsForPermissions();
     await this.load_deparments();
     await this.loadDynamicDirectories();
   },
@@ -1756,17 +1748,11 @@ export default {
       const { rows } = await this.$api('external-system/fsidi-by-method', { method: this.currentMethod });
       this.collectNsiResearchCode = rows;
     },
-    async loadDepartmentsForTemplate() {
+    async loadDepartmentsForPermissions() {
       await this.$store.dispatch(actions.INC_LOADING);
       const { data } = await this.$api('get-departments-with-exclude', { exclude_type: [2] });
       await this.$store.dispatch(actions.DEC_LOADING);
-      if (this.showAllDepartmentForTemplateField) {
-        this.departmentsForTemplatesField.push(...data);
-      } else {
-        const userDepartment = data.find((department) => department.id === this.userDepartmentId);
-        this.departmentsForTemplatesField.push(userDepartment);
-        this.departmentForTemplatesField = userDepartment.id;
-      }
+      this.departmentsForPermissions = data;
     },
     checkShowAllTemplates() {
       this.userDepartmentId = this.$store.getters.user_data.department.pk;
@@ -1778,6 +1764,12 @@ export default {
     },
     async changeTemplateField() {
       await this.load();
+    },
+    openPermissionsModal() {
+      this.showPermissionsModal = true;
+    },
+    closePermissionsModal() {
+      this.showPermissionsModal = false;
     },
   },
 };
@@ -1988,5 +1980,8 @@ export default {
   display: flex;
   flex-direction: row;
   gap: 10px;
+}
+.no-margin-left {
+  margin-left: 0 !important;
 }
 </style>

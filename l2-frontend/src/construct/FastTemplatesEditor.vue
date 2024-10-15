@@ -226,10 +226,6 @@ export default {
       type: Boolean,
       required: false,
     },
-    userDepartmentId: {
-      type: Number,
-      required: false,
-    },
   },
   data() {
     return {

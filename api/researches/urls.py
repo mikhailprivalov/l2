@@ -37,4 +37,6 @@ urlpatterns = [
     path('tube-related-data/update', views.tube_related_data_update),
     path('research-performer-save', views.research_performer_save),
     path('get-research-performer', views.get_research_performer),
+    path('get-research-permissions', views.get_research_permissions),
+    path('save-research-permissions', views.save_research_permissions),
 ]
