@@ -14,7 +14,8 @@ from .sql_func import (
     load_attending_doctor_by_department,
     load_patients_stationar_unallocated_sql,
     load_chambers_and_beds_by_department,
-    get_closing_protocols, load_plan_operations_next_day,
+    get_closing_protocols,
+    load_plan_operations_next_day,
 )
 
 
