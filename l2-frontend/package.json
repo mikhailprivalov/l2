@@ -16,7 +16,7 @@
   "dependencies": {
     "@braid/vue-formulate": "^2.5.3",
     "@braid/vue-formulate-i18n": "^1.16.0",
-    "@fortawesome/fontawesome-free": "^6.2.0",
+    "@fortawesome/fontawesome-free": "^6.6.0",
     "@openfonts/open-sans_all": "^1.44.2",
     "@popperjs/core": "^2.11.6",
     "@riophae/vue-treeselect": "^0.4.0",
