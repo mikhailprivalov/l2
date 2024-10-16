@@ -7807,7 +7807,7 @@ schema-utils@^3.0.0, schema-utils@^3.1.0, schema-utils@^3.1.1:
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
 
-schema-utils@^4.0.0, schema-utils@^4.0.1:
+schema-utils@^4.0.0, schema-utils@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/schema-utils/-/schema-utils-4.2.0.tgz#70d7c93e153a273a805801882ebd3bff20d89c8b"
   integrity sha512-L0jRsrPpjdckP3oPug3/VxNKt2trR8TcabrM6FOAAlvC/9Phcmm+cuAgTlxBqdBR1WJx7Naj9WHw+aOmheSVbw==
@@ -8572,15 +8572,15 @@ thread-loader@^3.0.0:
     neo-async "^2.6.2"
     schema-utils "^3.0.0"
 
-thread-loader@^4.0.1:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/thread-loader/-/thread-loader-4.0.2.tgz#f7b4484beab1f928818d8ecd96ef20c618d1fadc"
-  integrity sha512-UOk/KBydsQjh4Ja5kocxDUzhv11KYptHN/h8gdSwo6/MBkYrWqQua6K2qwlpXnCXS9c/uLs8F/JF8rpveF0+fA==
+thread-loader@^4.0.4:
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/thread-loader/-/thread-loader-4.0.4.tgz#954141f6ce6c472b513737252b4729ecad2e4902"
+  integrity sha512-tXagu6Hivd03wB2tiS1bqvw345sc7mKei32EgpYpq31ZLes9FN0mEK2nKzXLRFgwt3PsBB0E/MZDp159rDoqwg==
   dependencies:
     json-parse-better-errors "^1.0.2"
     loader-runner "^4.1.0"
     neo-async "^2.6.2"
-    schema-utils "^4.0.1"
+    schema-utils "^4.2.0"
 
 through2@^2.0.0:
   version "2.0.5"
