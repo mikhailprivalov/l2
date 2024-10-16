@@ -78,7 +78,7 @@
                     (Кол-во: {{ bedInformationCounter.bed }},
                     Занято: {{ bedInformationCounter.occupied }},
                     М-{{ bedInformationCounter.man }},
-                    Ж-{{ bedInformationCounter.women }}
+                    Ж-{{ bedInformationCounter.women }},
                     О-{{ bedInformationCounter.waiting }})
                   </div>
                   <div class="filter-width">
