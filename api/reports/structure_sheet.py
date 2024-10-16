@@ -26,6 +26,7 @@ def patologistology_buh_base(ws1):
         ('Код мед услуги и категория сложности', 35),
         ('Направление', 30),
         ('Врач', 30),
+        ('Подтверждено', 30),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -77,6 +78,7 @@ def patologistology_buh_data(ws1, data):
         ws1.cell(row=r, column=11).value = f"{service_code} - {service_title}"
         ws1.cell(row=r, column=12).value = res["direction"]
         ws1.cell(row=r, column=13).value = res["doctor_fio"]
+        ws1.cell(row=r, column=14).value = res["date_confirm"]
 
         rows = ws1[f'A{r}:L{r}']
         for row in rows:

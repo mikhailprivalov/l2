@@ -24,7 +24,8 @@ def report_buh_gistology(directions):
         dpif.title as field_title,
         udpf.family as doctor_family,
         udpf.name as doctor_name,
-        udpf.patronymic as doctor_patronymic
+        udpf.patronymic as doctor_patronymic,
+        to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm
         FROM directions_issledovaniya
         LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
         LEFT JOIN hospitals_hospitals hh on dn.hospital_id = hh.id
