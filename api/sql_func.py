@@ -310,7 +310,7 @@ def search_data_by_param(
                          WHEN (%(hospital_id)s)::int = -1 THEN directions_napravleniya.cancel is not Null 
                 END
                 AND CASE WHEN %(date_examination_start)s != '1900-01-01' THEN 
-                     (directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_examination_start)s AND %(date_examination_end)s)
+                     (directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_examination_start)s AND %(date_examination_end)s)
                      and directions_issledovaniya.time_confirmation is NOT NULL
                      WHEN %(date_examination_start)s = '1900-01-01' THEN directions_napravleniya.cancel is not Null
                 END

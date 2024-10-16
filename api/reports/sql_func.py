@@ -21,8 +21,10 @@ def report_buh_gistology(directions):
         
         dp.value, 
         dp.field_id as field_id,
-        dpif.title as field_title    
-        
+        dpif.title as field_title,
+        udpf.family as doctor_family,
+        udpf.name as doctor_name,
+        udpf.patronymic as doctor_patronymic
         FROM directions_issledovaniya
         LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
         LEFT JOIN hospitals_hospitals hh on dn.hospital_id = hh.id
@@ -30,6 +32,7 @@ def report_buh_gistology(directions):
         LEFT JOIN contracts_pricecategory cp on directions_issledovaniya.price_category_id = cp.id 
         LEFT JOIN directions_paraclinicresult dp on directions_issledovaniya.id = dp.issledovaniye_id
         LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
+        LEFT JOIN users_doctorprofile udpf on directions_issledovaniya.doc_confirmation_id = udpf.id
         
         WHERE directions_issledovaniya.napravleniye_id in %(directions)s
         ORDER BY hh.title, dn.visit_date, dn.id

@@ -15,6 +15,7 @@ def patologistology_buh(data):
         "price_category": "",
         "purpose": "",
         "service_code": "",
+        "doctor_fio": "",
     }
     match_keys = {
         "Полис ОМС": "polis",
@@ -32,6 +33,7 @@ def patologistology_buh(data):
             tmp_data = tmp_dict_data.copy()
         tmp_data["direction"] = i.direction_id
         tmp_data["fin_source"] = i.iss_finsource_title
+        tmp_data["doctor_fio"] = f"{i.doctor_family} {i.doctor_name} {i.doctor_patronymic}"
         tmp_data["price_category"] = i.iss_price_category
         tmp_data["hospital"] = i.hosp_title
         tmp_data["visit_date"] = i.char_visit_date
