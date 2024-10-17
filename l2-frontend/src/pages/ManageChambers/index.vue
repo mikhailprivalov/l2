@@ -76,9 +76,10 @@
                   <div>
                     Койки
                     (Кол-во: {{ bedInformationCounter.bed }},
-                    Занятых: {{ bedInformationCounter.occupied }},
-                    М: {{ bedInformationCounter.man }},
-                    Ж: {{ bedInformationCounter.women }})
+                    Занято: {{ bedInformationCounter.occupied }},
+                    М-{{ bedInformationCounter.man }},
+                    Ж-{{ bedInformationCounter.women }},
+                    О-{{ bedInformationCounter.waiting }})
                   </div>
                   <div class="filter-width">
                     <Treeselect
@@ -385,6 +386,7 @@ const bedInformationCounter = computed(() => {
   let women = 0;
   let man = 0;
   let occupied = 0;
+  let waiting = 0;
   let bed = 0;
   for (let i = 0; i < chambers.value.length; i++) {
     for (let j = 0; j < chambers.value[i].beds.length; j++) {
@@ -400,10 +402,13 @@ const bedInformationCounter = computed(() => {
       }
     }
   }
+  waiting = withOutBeds.value.length;
+
   return {
     women,
     man,
     occupied,
+    waiting,
     bed,
   };
 });
