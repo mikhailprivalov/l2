@@ -72,7 +72,7 @@ beren = "0.7.1"
 transliterate = "1.10.2"
 imgkit = "1.2.3"
 astm = {git = "https://github.com/mikhailprivalov/python-astm.git", rev = "v0.6"}
-psycopg2-binary = "^2.9.5"
+psycopg2-binary = "^2.9.10"
 boto3 = "^1.29.3"
 prompt-toolkit = "^3.0.36"
 pdf2docx = "^0.5.6"
