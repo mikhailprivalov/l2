@@ -46,7 +46,9 @@ class Command(BaseCommand):
                 "issId": d.iss_id,
                 "dateRmis": d.rmis_direction_date,
                 "rmis_number": d.rmis_number,
-                "markBiopsy": result_params.get(d.napravleniye_id)
+                "markBiopsy": result_params.get(d.napravleniye_id),
+                "rmis_login": d.rmis_login,
+                "rmis_password": d.rmis_password,
             }
             for d in d_qs if result_params.get(d.napravleniye_id)
         ]
