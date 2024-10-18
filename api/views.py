@@ -2550,7 +2550,8 @@ def search_param(request):
     direction_number = int(data.get("directionNumber") or -1)
 
     date_examination_start = data.get("dateExaminationStart") or "1900-01-01"
-    date_examination_start = f"{date_examination_start} 00:00:00"
+    if date_examination_start != "1900-01-01":
+        date_examination_start = f"{date_examination_start} 00:00:00"
 
     date_examination_end = data.get("dateExaminationEnd") or "1900-01-01"
     date_examination_end = f"{date_examination_end} 23:59:59"

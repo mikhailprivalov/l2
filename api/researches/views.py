@@ -674,6 +674,7 @@ def researches_update(request):
                                 else:
                                     f.input_templates = json.dumps(field["values_to_input"])
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():
+                                field_data = ParaclinicInputField.objects.filter(pk=pk).first()
                                 f = ParaclinicInputField.objects.get(pk=pk)
                                 f.title = field["title"]
                                 f.short_title = field["short_title"]
@@ -685,6 +686,8 @@ def researches_update(request):
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.visibility = field.get("visibility", "")
+                                if field_data.field_type != field.get("field_type", 0):
+                                    return JsonResponse(response)
                                 f.field_type = field.get("field_type", 0)
                                 f.can_edit_computed = field.get("can_edit", False)
                                 f.required = field.get("required", False)

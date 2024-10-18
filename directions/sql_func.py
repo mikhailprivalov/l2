@@ -278,9 +278,12 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
             directions_napravleniya.id as napravleniye_id,
             di.id as iss_id,
             to_char(directions_napravleniya.rmis_direction_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as rmis_direction_date,
-            rmis_number
+            rmis_number,
+            ud.rmis_login as rmis_login,
+            ud.rmis_password as rmis_password
             FROM directions_napravleniya
             LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
+            LEFT JOIN users_doctorprofile ud on di.doc_confirmation_id=ud.id
             WHERE 
             di.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             AND directions_napravleniya.result_rmis_send = false
