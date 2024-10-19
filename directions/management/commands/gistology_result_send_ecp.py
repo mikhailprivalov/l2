@@ -38,7 +38,6 @@ class Command(BaseCommand):
         dirs = dirs.split(",")
         if len(dirs) > 0:
             dirs = [int(i) for i in dirs]
-            print(dirs)
             d_qs = get_directions_for_send_ecp_by_dirs(tuple(REMD_ONLY_RESEARCH), tuple(dirs))
         else:
             d_qs = get_directions_for_send_ecp_by_researches(tuple(REMD_ONLY_RESEARCH), date_start, date_end)
