@@ -1057,7 +1057,7 @@ class ComplexService(models.Model):
 
 
 class StatisticPattern(models.Model):
-    title = models.CharField(max_length=400, unique=True, help_text="Название стастической модели данных")
+    title = models.CharField(max_length=400, unique=True, help_text="Название статистической модели данных")
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие модели", db_index=True)
 
     def __str__(self):
@@ -1069,7 +1069,7 @@ class StatisticPattern(models.Model):
 
 
 class PatternParam(models.Model):
-    title = models.CharField(max_length=400, unique=True, help_text="Название название стастического параметра параметра")
+    title = models.CharField(max_length=400, unique=True, help_text="Название статистического параметра")
     code = models.CharField(max_length=400, help_text="Код параметра")
     is_dynamic_param = models.BooleanField(default=False, blank=True, help_text="Динамический параметр", db_index=True)
     order = models.IntegerField(default=-1)
@@ -1080,6 +1080,12 @@ class PatternParam(models.Model):
     class Meta:
         verbose_name = "Статистическая модель - параметр"
         verbose_name_plural = "Статистическая модель - параметры "
+
+    @staticmethod
+    def get_pattern_params():
+        params = PatternParam.objects.all().order_by("title").values("title", "pk")
+        result = [{"label": p["title"], "id": p["pk"]} for p in params]
+        return result
 
 
 class StatisticPatternParamSet(models.Model):

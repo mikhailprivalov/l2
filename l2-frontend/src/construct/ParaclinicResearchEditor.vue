@@ -646,7 +646,7 @@
                     >
                   </div>
                   <div class="row">
-                    <div class="col-xs-6">
+                    <div class="col-xs-4">
                       <strong>Контролируемый параметр:</strong>
                       <Treeselect
                         v-model="row.patientControlParam"
@@ -659,7 +659,7 @@
                         :clearable="false"
                       />
                     </div>
-                    <div class="col-xs-6">
+                    <div class="col-xs-4">
                       <strong>CDA-отношение:</strong>
                       <Treeselect
                         v-model="row.cdaOption"
@@ -667,6 +667,19 @@
                         :multiple="false"
                         :disable-branch-nodes="true"
                         :options="cda_options"
+                        placeholder="CDA-отношение"
+                        :append-to-body="true"
+                        :clearable="false"
+                      />
+                    </div>
+                    <div class="col-xs-4">
+                      <strong>Параметр статистики:</strong>
+                      <Treeselect
+                        v-model="row.patternParam"
+                        class="treeselect treeselect-26px"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="patternParams"
                         placeholder="CDA-отношение"
                         :append-to-body="true"
                         :clearable="false"
@@ -1276,6 +1289,7 @@ export default {
       assigned_to_params: [],
       type_period: null,
       cda_options: [],
+      patternParams: [],
       dynamicDirectories: [],
       autoRegisterRmisLocation: '',
       departmentForTemplatesField: null,
@@ -1587,6 +1601,7 @@ export default {
         attached: field.attached ?? '',
         patientControlParam: field.patientControlParam ?? -1,
         cdaOption: field.cdaOption ?? -1,
+        patternParam: field.patternParam ?? -1,
       });
     },
     add_group(groupSettings: any = {}) {
@@ -1662,6 +1677,7 @@ export default {
         this.direction_params_all = data.direction_params_all;
         this.patient_control_param_all = data.patient_control_param_all;
         this.cda_options = data.cda_options;
+        this.patternParams = data.patternParams;
         this.direction_current_params = data.direction_current_params;
         this.direction_expertise_all = data.direction_expertise_all;
         this.direction_current_expertise = data.direction_current_expertise;

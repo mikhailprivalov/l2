@@ -666,6 +666,7 @@ def researches_update(request):
                                     control_param=field.get("controlParam", ""),
                                     cda_option_id=field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None,
                                     patient_control_param_id=field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None,
+                                    statistic_pattern_param_id=field.get("patternParam") if field.get("patternParam") != -1 else None,
                                 )
                                 if department_template_pk:
                                     department_template_field = ParaclinicFieldTemplateDepartment(
@@ -700,6 +701,7 @@ def researches_update(request):
                                 f.control_param = field.get("controlParam", '')
                                 f.patient_control_param_id = field.get("patientControlParam", -1) if field.get("patientControlParam", -1) != -1 else None
                                 f.cda_option_id = field.get("cdaOption", -1) if field.get("cdaOption", -1) != -1 else None
+                                f.statistic_pattern_param_id = field.get("patternParam") if field.get("patternParam") != -1 else None
 
                                 if department_template_pk:
                                     department_template_field: ParaclinicFieldTemplateDepartment = ParaclinicFieldTemplateDepartment.objects.filter(pk=f.pk).first()

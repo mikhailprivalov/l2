@@ -79,10 +79,8 @@ def xlsx_model(request):
         data = json.loads(request.body)
         directions = data.get("directions")
         id_model = data.get("idModel")
-
         sql_pair_direction_iss = {i.iss_id: i.direction_id for i in get_pair_direction_iss(tuple(directions))}
         sql_simple_directions = [i.direction_id for i in get_simple_directions_for_hosp_stationar(tuple(sql_pair_direction_iss.keys()))]
-
         statistic_param_data = StatisticPatternParamSet.get_statistic_param(id_model)
         input_field_statistic_param = ParaclinicInputField.get_field_input_by_pattern_param(list(statistic_param_data.keys()))
         laboratory_fractions_statistic_param = Fractions.get_fraction_id_by_pattern_param(list(statistic_param_data.keys()))
