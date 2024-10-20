@@ -1087,6 +1087,7 @@ class PatternParam(models.Model):
         result = [{"label": p["title"], "id": p["pk"]} for p in params]
         return result
 
+
 class StatisticPatternParamSet(models.Model):
     statistic_pattern = models.ForeignKey(StatisticPattern, default=None, null=True, blank=True, help_text="Статистическая модель", on_delete=models.CASCADE)
     statistic_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Параметр статистическая модель отчет", on_delete=models.CASCADE)
