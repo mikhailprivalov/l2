@@ -3,7 +3,7 @@ from directory.models import (
     Researches as DResearches,
     ParaclinicInputGroups,
     ParaclinicInputField,
-    PatientControlParam,
+    PatientControlParam, PatternParam,
 )
 import simplejson as json
 
@@ -18,6 +18,7 @@ def get_researches_details(pk, templates_department_pk=None):
     response["patient_control_param_all"] = PatientControlParam.get_patient_control_params()
     research = DResearches.objects.filter(pk=pk).first()
     response["cda_options"] = CdaFields.get_cda_params(research.is_doc_refferal, research.is_treatment, research.is_form, research.is_extract)
+    response["patternParams"] = PatternParam.get_pattern_params()
     direction_expertise_all = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": x.title} for x in DResearches.objects.filter(is_expertise=True).order_by("title")]]
     response["direction_expertise_all"] = direction_expertise_all
     if DResearches.objects.filter(pk=pk).exists():
@@ -110,6 +111,7 @@ def get_researches_details(pk, templates_department_pk=None):
                         "controlParam": field.control_param,
                         "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1,
                         "cdaOption": field.cda_option_id if field.cda_option else -1,
+                        "patternParam": field.statistic_pattern_param_id if field.statistic_pattern_param else -1,
                     }
                 )
             response["groups"].append(g)

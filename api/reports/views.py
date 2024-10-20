@@ -77,15 +77,30 @@ def xlsx_model(request):
     result_directions = None
     if request.method == "POST":
         data = json.loads(request.body)
+        print(data)
         directions = data.get("directions")
         id_model = data.get("idModel")
 
         sql_pair_direction_iss = {i.iss_id: i.direction_id for i in get_pair_direction_iss(tuple(directions))}
+        print("sql_pair_direction_iss")
+        print(sql_pair_direction_iss)
+
         sql_simple_directions = [i.direction_id for i in get_simple_directions_for_hosp_stationar(tuple(sql_pair_direction_iss.keys()))]
+        print("sql_simple_directions")
+        print(sql_simple_directions)
 
         statistic_param_data = StatisticPatternParamSet.get_statistic_param(id_model)
+        print("statistic_param_data")
+        print(statistic_param_data)
+
         input_field_statistic_param = ParaclinicInputField.get_field_input_by_pattern_param(list(statistic_param_data.keys()))
+        print("input_field_statistic_param")
+        print(input_field_statistic_param)
+
         laboratory_fractions_statistic_param = Fractions.get_fraction_id_by_pattern_param(list(statistic_param_data.keys()))
+        print("laboratory_fractions_statistic_param")
+        print(laboratory_fractions_statistic_param)
+
         result_directions = get_field_results(tuple(sql_simple_directions), tuple(input_field_statistic_param), tuple(laboratory_fractions_statistic_param))
 
     return JsonResponse({"results": "file-xls-model", "link": "open-xls", "result": result_directions})
