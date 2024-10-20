@@ -294,3 +294,28 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_directions_for_send_ecp_by_dirs(researches, dirs):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_napravleniya.id as napravleniye_id,
+            di.id as iss_id,
+            to_char(directions_napravleniya.rmis_direction_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as rmis_direction_date,
+            rmis_number,
+            ud.rmis_login as rmis_login,
+            ud.rmis_password as rmis_password
+            FROM directions_napravleniya
+            LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
+            LEFT JOIN users_doctorprofile ud on di.doc_confirmation_id=ud.id
+            WHERE 
+            directions_napravleniya.id in %(dirs)s            
+            AND directions_napravleniya.rmis_direction_date is not Null
+            AND di.research_id in %(researches)s 
+            """,
+            params={'researches': researches, 'dirs': dirs, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

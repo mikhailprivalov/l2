@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 import simplejson as json
 
-from directions.sql_func import get_directions_for_send_ecp_by_researches
+from directions.sql_func import get_directions_for_send_ecp_by_researches, get_directions_for_send_ecp_by_dirs
 from laboratory.settings import REMD_ONLY_RESEARCH
 from laboratory.utils import current_time
 from django.core.management.base import BaseCommand
@@ -14,6 +14,12 @@ from l2vi.integration import send_gistology_direction_to_ecp
 
 class Command(BaseCommand):
     help = "Отправить гистологические результаты в ЕЦП"
+
+    def add_arguments(self, parser):
+        """
+        :param path - файл с картами пациентов + диагноз Д-учета
+        """
+        parser.add_argument('dirs', type=str)
 
     def handle(self, *args, **kwargs):
         base = SettingManager.get_api_ecp_base_url()
@@ -28,7 +34,13 @@ class Command(BaseCommand):
         date_end = current_time(only_date=False) + relativedelta(hours=-current_time_ecp_upload)
         date_end = date_end.strftime('%Y%m%d %H:%M:%S')
 
-        d_qs = get_directions_for_send_ecp_by_researches(tuple(REMD_ONLY_RESEARCH), date_start, date_end)
+        dirs = kwargs["dirs"]
+        dirs = dirs.split(",")
+        if len(dirs) > 0:
+            dirs = [int(i) for i in dirs]
+            d_qs = get_directions_for_send_ecp_by_dirs(tuple(REMD_ONLY_RESEARCH), tuple(dirs))
+        else:
+            d_qs = get_directions_for_send_ecp_by_researches(tuple(REMD_ONLY_RESEARCH), date_start, date_end)
         directions = [i.napravleniye_id for i in d_qs]
         dir_params = DirectionParamsResult.objects.filter(napravleniye_id__in=directions)
         result_params = {}
