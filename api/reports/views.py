@@ -91,6 +91,5 @@ def xlsx_model(request):
         if len(laboratory_fractions_statistic_param) == 0:
             laboratory_fractions_statistic_param = [-1]
         result_directions = get_field_results(tuple(res_dir), tuple(input_field_statistic_param), tuple(laboratory_fractions_statistic_param))
-        print(result_directions)
 
     return JsonResponse({"results": "file-xls-model", "link": "open-xls", "result": result_directions})

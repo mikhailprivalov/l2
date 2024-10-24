@@ -331,13 +331,15 @@ def researches_by_department(request):
 
     response = {"researches": [], "direction_forms": direction_form, "result_forms": result_form, "specialities": spec_data, "permanent_directories": NSI, "period_types": period_types}
     request_data = json.loads(request.body)
+    is_constructor = request_data.get('isConstructor')
     department_pk = int(request_data["department"])
 
     user_groups = [str(x) for x in request.user.groups.all()]
     check_self_access_edit_research = False
     access_edit_research_ids = []
     doctor_id = request.user.doctorprofile.pk
-    if "Конструктор: Редактировать свои услуги" in user_groups:
+    if is_constructor and "Конструктор: Редактировать свои услуги" in user_groups:
+        print("and is_constructor")
         check_self_access_edit_research = True
         doctor_department = request.user.doctorprofile.podrazdeleniye_id
         research_sql_data = get_constructor_edit_access_by_department_or_doctor(int(doctor_department), int(doctor_id))
@@ -687,7 +689,8 @@ def researches_update(request):
                                 f.hide = field["hide"]
                                 f.default_value = field["default"]
                                 f.visibility = field.get("visibility", "")
-                                if field_data.field_type != field.get("field_type", 0):
+                                su = request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control
+                                if field_data.field_type != field.get("field_type", 0) and not su:
                                     return JsonResponse(response)
                                 f.field_type = field.get("field_type", 0)
                                 f.can_edit_computed = field.get("can_edit", False)

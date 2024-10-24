@@ -109,7 +109,7 @@ def get_field_results(directions, input_field, fraction_field):
         LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
         LEFT JOIN directions_result dr on directions_issledovaniya.id = dr.issledovaniye_id
         LEFT JOIN directory_fractions df on dr.fraction_id = df.id
-        LEFT JOIN directions_issledovaniya pd  on pd.id = dn.parent_id
+        LEFT JOIN directions_issledovaniya pd on pd.id = dn.parent_id
         
         
         WHERE directions_issledovaniya.napravleniye_id in %(directions)s 
