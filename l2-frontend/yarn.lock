@@ -1288,10 +1288,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/jquery@^3.5.27":
-  version "3.5.27"
-  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.5.27.tgz#d9d67a003d0292a36fe35868a618c82f8fd12b19"
-  integrity sha512-TR28Y8ezIGgfyA02UOh9x+Fy16/1qWYAnvtRd2gTBJuccX/vmddyti0MezLkTv7f+OLofVc2T961VPyKv1tXJQ==
+"@types/jquery@^3.5.32":
+  version "3.5.32"
+  resolved "https://registry.yarnpkg.com/@types/jquery/-/jquery-3.5.32.tgz#3eb0da20611b92c7c49ebed6163b52a4fdc57def"
+  integrity sha512-b9Xbf4CkMqS02YH8zACqN1xzdxc3cO735Qe5AbSUFmyOiaWAbcpqh9Wna+Uk0vgACvoQHpWDg2rGdHkYPLmCiQ==
   dependencies:
     "@types/sizzle" "*"
 
