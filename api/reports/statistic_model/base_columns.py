@@ -16,7 +16,7 @@ def custom_research_data(query_sql):
             "Возраст": "",
             "Адрес": "",
         },
-        "custom_field": {}
+        "custom_field": {},
     }
     custom_fields = []
     for i in query_sql:
