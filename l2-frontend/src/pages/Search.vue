@@ -681,7 +681,8 @@ export default class SearchPage extends Vue {
   async genPatternReport() {
     await this.$store.dispatch(actions.INC_LOADING);
     const directions = this.results.map(el => (el.direction_number));
-    const data = await this.$api('reports/xlsx-model', { directions, idModel: this.statisticPattern });
+    const hospDirections = this.results.map(el => (el.history_num));
+    const data = await this.$api('reports/xlsx-model', { directions, hospDirections, idModel: this.statisticPattern });
     this.link = data.link;
     if (this.link) {
       window.open(`/statistic/${this.link}?file=${encodeURIComponent(JSON.stringify(data.results))}`, '_blank');

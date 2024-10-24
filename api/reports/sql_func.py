@@ -70,7 +70,7 @@ def get_simple_directions_for_hosp_stationar(iss_id):
         cursor.execute(
             """ 
         SELECT
-        directions_napravleniya.id as directionn_id
+        directions_napravleniya.id as direction_id
         FROM directions_napravleniya
         WHERE directions_napravleniya.parent_id in %(iss_id)s
         """,
@@ -92,21 +92,30 @@ def get_field_results(directions, input_field, fraction_field):
         dpif.title as field_title,
         dpif.statistic_pattern_param_id as input_static_param,
         dr.value as fraction_value,
-        df.statistic_pattern_param_id as fraction_static_param
+        df.statistic_pattern_param_id as fraction_static_param,
+        dn.parent_id as parrent_iss,
+        pd.napravleniye_id as hosp_direction,
+        ci.family,
+        ci.name,
+        ci.patronymic,
+        to_char(ci.birthday, 'DD.MM.YYYY') as born,
+        to_char(EXTRACT(YEAR from age(directions_issledovaniya.time_confirmation, ci.birthday)), '999') as ind_age
         
         FROM directions_issledovaniya
         LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id 
         LEFT JOIN directions_paraclinicresult dp on directions_issledovaniya.id = dp.issledovaniye_id
+        LEFT JOIN clients_card cc on dn.client_id = cc.id
+        LEFT JOIN clients_individual ci on cc.individual_id = ci.id
         LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
         LEFT JOIN directions_result dr on directions_issledovaniya.id = dr.issledovaniye_id
-        LEFT JOIN directory_fractions df on dr.fraction_id = df.id 
+        LEFT JOIN directory_fractions df on dr.fraction_id = df.id
+        LEFT JOIN directions_issledovaniya pd on pd.id = dn.parent_id
+        
         
         WHERE directions_issledovaniya.napravleniye_id in %(directions)s 
         AND directions_issledovaniya.time_confirmation is not Null
-        AND ( dpif.id in %(input_field)s OR  df.id in %(fraction_field)s
-        )
-        ORDER BY time_confirm
-
+        AND ( dpif.id in %(input_field)s OR df.id in %(fraction_field)s)
+        ORDER BY pd.napravleniye_id
         """,
             params={'directions': directions, 'input_field': input_field, 'fraction_field': fraction_field, 'tz': TIME_ZONE},
         )

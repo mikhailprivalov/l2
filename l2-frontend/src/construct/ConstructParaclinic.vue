@@ -193,7 +193,7 @@ export default {
     load_researches() {
       this.$store.dispatch(actions.INC_LOADING);
       researchesPoint
-        .getResearchesByDepartment(this, 'department')
+        .getResearchesByDepartment(this, 'department', { isConstructor: true })
         .then((data) => {
           this.researches_list = data.researches;
           this.direction_forms = data.direction_forms;
