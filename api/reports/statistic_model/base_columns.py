@@ -1,6 +1,5 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils.cell import get_column_letter
-import json
 
 
 def custom_research_data(query_sql):

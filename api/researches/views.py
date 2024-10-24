@@ -339,7 +339,6 @@ def researches_by_department(request):
     access_edit_research_ids = []
     doctor_id = request.user.doctorprofile.pk
     if is_constructor and "Конструктор: Редактировать свои услуги" in user_groups:
-        print("and is_constructor")
         check_self_access_edit_research = True
         doctor_department = request.user.doctorprofile.podrazdeleniye_id
         research_sql_data = get_constructor_edit_access_by_department_or_doctor(int(doctor_department), int(doctor_id))
