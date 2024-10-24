@@ -44,7 +44,7 @@ pdfrw = "0.4"
 pdfminer = "20191125"
 petrovna = "1.0.2"
 Pillow = "9.2.0"
-psycopg2 = {version="^2.9.4", optional=true}
+psycopg2 = {version="^2.9.10", optional=true}
 PyPDF2 = "1.28.6"
 python-dateutil = "2.8.2"
 pymemcache = "4.0.0"
