@@ -40,5 +40,4 @@ urlpatterns = [
     path('get-research-permissions', views.get_research_permissions),
     path('save-research-permissions', views.save_research_permissions),
     path('change-group-field', views.change_group_field),
-
 ]
