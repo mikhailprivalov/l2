@@ -19,7 +19,7 @@ urlpatterns = [
     path('complex/get-complexes', views.get_complexes),
     path('complex/check-hidden', views.check_complex_hidden),
     path('complex/get-services', views.get_services_in_complex),
-    path('complex/add-service', views.add_service_in_complex),
+    path('complex/add-services', views.add_services_in_complex),
     path('complex/change-complex-hidden', views.change_complex_hidden),
     path('complex/update-complex', views.update_complex),
     path('complex/change-service-hidden', views.change_service_hidden),

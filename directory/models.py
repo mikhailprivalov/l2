@@ -214,6 +214,7 @@ class SubGroupPadrazdeleniye(models.Model):
 def get_file_path_to_schemas(instance: 'Researches', filename):
     return os.path.join('schemas-pdf', str(instance.pk), str(uuid.uuid4()), filename)
 
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -1001,9 +1002,20 @@ class ComplexService(models.Model):
             result = [{"id": service.slave_research.pk, "label": service.slave_research.title, "hide": service.hide} for service in services]
         return result
 
+    @staticmethod
+    def add_services(complex_id: int, service_ids: list):
+        errors_reason = []
+        errors_ids = set()
+        for service_id in service_ids:
+            result_add = ComplexService.add_service(complex_id, service_id)
+            if not result_add["ok"]:
+                errors_reason.append({"service_id": service_id, "reason": result_add["message"]})
+                errors_ids.add(service_id)
+        result = {"ok": True, "message": "", "errors_reason": errors_reason, "errors_ids": errors_ids}
+        return result
 
     @staticmethod
-    def add_service(complex_id: int, service_id: int, ):
+    def add_service(complex_id: int, service_id: int):
         if not complex_id or not service_id:
             return {"ok": False, "message": "Комплекс или услуга не переданы"}
         if complex_id == service_id:
@@ -1016,7 +1028,7 @@ class ComplexService(models.Model):
             return {"ok": False, "message": "Услуга является комплексом"}
         complex_service = ComplexService(main_research_id=complex_id, slave_research_id=service_id)
         complex_service.save()
-        return {"ok": True, "message": "", "result": complex_service.main_research_id}
+        return {"ok": True, "message": ""}
 
     @staticmethod
     def change_hidden_complex(complex_id: int):

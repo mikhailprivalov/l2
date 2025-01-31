@@ -114,10 +114,11 @@
     >
       <div class="flex">
         <Treeselect
-          v-model="selectedService"
+          v-model="selectedServices"
           :options="services"
           :disable-branch-nodes="true"
           class="add-treeselect"
+          :multiple="true"
           placeholder="Выберите исследование..."
         />
         <div class="flex">
@@ -125,7 +126,7 @@
             v-tippy
             class="btn btn-blue-nb nbr save-button right-radius"
             title="Добавить услугу"
-            :disabled="!selectedService"
+            :disabled="!selectedServices"
             @click="addService"
           >
             Добавить
@@ -171,7 +172,7 @@ onMounted(() => {
 });
 
 const services = ref([]);
-const selectedService = ref(null);
+const selectedServices = ref([]);
 const getServices = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { data } = await api('get-research-list');
@@ -273,24 +274,24 @@ watch(selectedComplex, () => {
 });
 
 const addService = async () => {
-  const serviceExists = servicesInComplex.value.find((service) => service.id === selectedService.value);
-  if (!serviceExists && selectedService.value !== selectedComplex.value.id) {
+  const serviceExists = servicesInComplex.value.find((service) => selectedServices.value.includes(service.id));
+  if (!serviceExists && !selectedServices.value.includes(selectedComplex.value.id)) {
     await store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('construct/complex/add-service', {
+    const { ok, message } = await api('construct/complex/add-services', {
       complexId: selectedComplex.value.id,
-      serviceId: selectedService.value,
+      serviceIds: selectedServices.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       await getServicesInComplex();
-      selectedService.value = null;
+      selectedServices.value = [];
       root.$emit('msg', 'ok', 'Услуга добавлена');
     } else {
       root.$emit('msg', 'error', message);
     }
   } else if (serviceExists) {
-    root.$emit('msg', 'error', 'Услуга уже добавлена');
-  } else if (selectedService.value === selectedComplex.value.id) {
+    root.$emit('msg', 'error', 'Услуги пересекаются');
+  } else if (selectedServices.value.includes(selectedComplex.value.id)) {
     root.$emit('msg', 'error', 'Нельзя добавить в комплекс этот же комплекс');
   }
 };

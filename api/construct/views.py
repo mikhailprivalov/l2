@@ -192,12 +192,14 @@ def get_services_in_complex(request):
 
 @login_required
 @group_required("Конструктор: Комплексные услуги")
-def add_service_in_complex(request):
+def add_services_in_complex(request):
     request_data = json.loads(request.body)
     complex_id = request_data.get("complexId")
-    service_id = request_data.get("serviceId")
-    result = ComplexService.add_service(complex_id, service_id)
-    Log.log(result["result"], 210003, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id})
+    service_ids = request_data.get("serviceIds")
+    # result = ComplexService.add_service(complex_id, service_id)
+    result = ComplexService.add_services(complex_id, service_ids)
+    success_add = set(service_ids) - result["errors_ids"]
+    Log.log(complex_id, 210003, request.user.doctorprofile, {"complex_id": complex_id, "services_id": success_add})
     return status_response(result["ok"])
 
 
