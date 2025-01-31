@@ -14,6 +14,7 @@
           class="form-control nbr left-radius complex-title"
           :class="complexIsHidden ? 'hide-background hide-border' : ''"
           :disabled="complexIsHidden"
+          placeholder="Введите наименование комплекса"
         >
         <div class="flex">
           <button
@@ -47,6 +48,7 @@
       <input
         v-model="search"
         class="form-control left-radius right-radius"
+        placeholder="Поиск"
       >
     </div>
     <div
