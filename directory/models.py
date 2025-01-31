@@ -1004,6 +1004,8 @@ class ComplexService(models.Model):
 
     @staticmethod
     def add_services(complex_id: int, service_ids: list):
+        if not service_ids:
+            return {"ok": False, "message": "Услуги не переданы"}
         errors_reason = []
         errors_ids = set()
         for service_id in service_ids:
