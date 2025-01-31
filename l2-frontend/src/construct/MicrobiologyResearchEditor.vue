@@ -309,6 +309,9 @@ export default {
     this.$root.$on('hide_fte', () => this.f_templates_hide());
     this.$store.dispatch(actions.GET_RESEARCHES);
   },
+  unmounted() {
+    this.$root.$off('hide_fte');
+  },
   methods: {
     f_templates() {
       this.f_templates_open = true;
