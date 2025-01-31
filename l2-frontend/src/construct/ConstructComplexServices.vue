@@ -14,7 +14,7 @@
           class="form-control nbr left-radius complex-title"
           :class="complexIsHidden ? 'hide-background hide-border' : ''"
           :disabled="complexIsHidden"
-          placeholder="Введите наименование комплекса"
+          placeholder="Введите наименование комплексной услуги"
         >
         <div class="flex">
           <button
@@ -110,7 +110,7 @@
           :options="services"
           :disable-branch-nodes="true"
           class="add-treeselect"
-          placeholder="Выберите услугу..."
+          placeholder="Выберите исследование..."
         />
         <div class="flex">
           <button
