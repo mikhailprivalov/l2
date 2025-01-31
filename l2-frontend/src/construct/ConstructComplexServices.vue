@@ -64,6 +64,13 @@
               width="35"
             >
           </colgroup>
+          <thead>
+            <tr>
+              <th class="text-center">
+                <strong>Наименование исследования</strong>
+              </th>
+            </tr>
+          </thead>
           <tr
             v-for="service in filteredService"
             :key="service.id"
