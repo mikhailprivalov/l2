@@ -275,7 +275,7 @@ watch(selectedComplex, () => {
 
 const addService = async () => {
   const serviceExists = servicesInComplex.value.find((service) => selectedServices.value.includes(service.id));
-  if (!serviceExists && !selectedServices.value.includes(selectedComplex.value.id)) {
+  if (!serviceExists) {
     await store.dispatch(actions.INC_LOADING);
     const { ok, message, errors } = await api('construct/complex/add-services', {
       complexId: selectedComplex.value.id,
@@ -295,8 +295,6 @@ const addService = async () => {
     }
   } else if (serviceExists) {
     root.$emit('msg', 'error', 'Услуги пересекаются');
-  } else if (selectedServices.value.includes(selectedComplex.value.id)) {
-    root.$emit('msg', 'error', 'Нельзя добавить в комплекс этот же комплекс');
   }
 };
 
