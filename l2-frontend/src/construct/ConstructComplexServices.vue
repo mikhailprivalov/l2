@@ -64,11 +64,12 @@
               width="35"
             >
           </colgroup>
-          <thead>
-            <tr>
+          <thead class="sticky">
+            <tr class="border-no-top">
               <th class="text-center">
                 <strong>Наименование исследования</strong>
               </th>
+              <th />
             </tr>
           </thead>
           <tr
@@ -378,5 +379,11 @@ onMounted(() => {
 .empty-list {
   width: 85px;
   margin: 20px auto;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
 }
 </style>
