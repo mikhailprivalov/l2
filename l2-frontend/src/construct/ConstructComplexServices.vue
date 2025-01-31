@@ -126,7 +126,7 @@
             v-tippy
             class="btn btn-blue-nb nbr save-button right-radius"
             title="Добавить услугу"
-            :disabled="!selectedServices"
+            :disabled="selectedServices.length < 1"
             @click="addService"
           >
             Добавить
@@ -285,7 +285,7 @@ const addService = async () => {
     if (ok) {
       await getServicesInComplex();
       selectedServices.value = [];
-      if (errors) {
+      if (errors.length > 0) {
         root.$emit('msg', 'warning', 'Не все услуги добавлены');
       } else {
         root.$emit('msg', 'ok', 'Услуги добавлены');
