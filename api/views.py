@@ -2832,7 +2832,7 @@ def update_coast_research_in_price(request):
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
     request_data = json.loads(request.body)
-    exclude_categories = request_data.get("exclude_cateries")
+    exclude_categories = request_data.get("exclude_categories")
     researches = Researches.objects.all().order_by("title")
     res_list = Researches.gen_non_excluded_categories(exclude_categories)
     lab_podr = get_lab_podr()

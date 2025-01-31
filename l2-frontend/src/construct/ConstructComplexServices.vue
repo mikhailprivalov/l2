@@ -175,7 +175,7 @@ const services = ref([]);
 const selectedServices = ref([]);
 const getServices = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { data } = await api('get-research-list', { exclude_caterories: ['is_complex'] });
+  const { data } = await api('get-research-list', { exclude_categories: ['is_complex'] });
   await store.dispatch(actions.DEC_LOADING);
   services.value = data;
 };
