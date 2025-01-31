@@ -200,7 +200,7 @@ def add_services_in_complex(request):
     if result["ok"]:
         success_add = set(service_ids) - result["errors_ids"]
         Log.log(complex_id, 210003, request.user.doctorprofile, {"complex_id": complex_id, "services_id": list(success_add)})
-    return JsonResponse({"ok": result["ok"], "errors": result["errors_reason"]})
+    return JsonResponse({"ok": result["ok"], "message": result["message"], "errors": result.get("errors_reason")})
 
 
 @login_required
