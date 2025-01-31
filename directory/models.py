@@ -1011,7 +1011,6 @@ class ComplexService(models.Model):
         current_service: ComplexService = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).first()
         if current_service:
             return {"ok": False, "message": "Услуга уже есть"}
-        slave_complex_service = ComplexService.objects.filter(main_research_id=service_id).select_related('slave_research')
         service_is_complex = Researches.objects.filter(pk=service_id).first().is_complex
         if service_is_complex:
             return {"ok": False, "message": "Услуга является комплексом"}
