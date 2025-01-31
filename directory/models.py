@@ -1018,8 +1018,6 @@ class ComplexService(models.Model):
 
     @staticmethod
     def add_service(complex_id: int, service_id: int):
-        if not complex_id or not service_id:
-            return {"ok": False, "message": "Комплекс или услуга не переданы"}
         if complex_id == service_id:
             return {"ok": False, "message": "Нельзя добавить в комплекс этот же комплекс"}
         current_service: ComplexService = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).first()
