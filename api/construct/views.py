@@ -198,9 +198,10 @@ def add_services_in_complex(request):
     service_ids = request_data.get("serviceIds")
     # result = ComplexService.add_service(complex_id, service_id)
     result = ComplexService.add_services(complex_id, service_ids)
-    success_add = set(service_ids) - result["errors_ids"]
-    Log.log(complex_id, 210003, request.user.doctorprofile, {"complex_id": complex_id, "services_id": success_add})
-    return status_response(result["ok"])
+    if result["ok"]:
+        success_add = set(service_ids) - result["errors_ids"]
+        Log.log(complex_id, 210003, request.user.doctorprofile, {"complex_id": complex_id, "services_id": success_add})
+    return JsonResponse({"ok": result["ok"], "errors": result["errors_reason"]})
 
 
 @login_required
