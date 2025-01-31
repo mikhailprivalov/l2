@@ -835,67 +835,74 @@ class Researches(models.Model):
         return result
 
     @staticmethod
-    def check_exclude(research):
+    def check_exclude(research, exclude_categories: list = None):
         """Проверка на исключенные типы услуг, на входе либо SQL namedtuple, либо объект researches"""
         result = True
-        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
+        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH["is_paraclinic"] or (exclude_categories and "is_paraclinic" in exclude_categories):
             result = False
-        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
+        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH["is_doc_refferal"] or (exclude_categories and "is_doc_refferal" in exclude_categories):
             result = False
-        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH["is_treatment"]:
+        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH["is_treatment"] or (exclude_categories and "is_treatment" in exclude_categories):
             result = False
-        elif research.is_stom and EXCLUDE_TYPE_RESEARCH["is_stom"]:
+        elif research.is_stom and EXCLUDE_TYPE_RESEARCH["is_stom"] or (exclude_categories and "is_stom" in exclude_categories):
             result = False
-        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH["is_hospital"]:
+        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH["is_hospital"] or (exclude_categories and "is_hospital" in exclude_categories):
             result = False
-        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH["is_slave_hospital"]:
+        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH["is_slave_hospital"] or (exclude_categories and "is_slave_hospital" in exclude_categories):
             result = False
-        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH["is_microbiology"]:
+        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH["is_microbiology"] or (exclude_categories and "is_microbiology" in exclude_categories):
             result = False
-        elif research.is_citology and EXCLUDE_TYPE_RESEARCH["is_citology"]:
+        elif research.is_citology and EXCLUDE_TYPE_RESEARCH["is_citology"] or (exclude_categories and "is_citology" in exclude_categories):
             result = False
-        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH["is_gistology"]:
+        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH["is_gistology"] or (exclude_categories and "is_gistology" in exclude_categories):
             result = False
-        elif research.is_form and EXCLUDE_TYPE_RESEARCH["is_form"]:
+        elif research.is_form and EXCLUDE_TYPE_RESEARCH["is_form"] or (exclude_categories and "is_form" in exclude_categories):
             result = False
-        elif research.is_application and EXCLUDE_TYPE_RESEARCH["is_application"]:
+        elif research.is_application and EXCLUDE_TYPE_RESEARCH["is_application"] or (exclude_categories and "is_application" in exclude_categories):
             result = False
-        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH["is_direction_params"]:
+        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH["is_direction_params"] or (exclude_categories and "is_direction_params" in exclude_categories):
             result = False
-        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH["is_global_direction_params"]:
+        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH["is_global_direction_params"] or (exclude_categories and "is_global_direction_params" in exclude_categories):
             result = False
-        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH["is_monitoring"]:
+        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH["is_monitoring"] or (exclude_categories and "is_monitoring" in exclude_categories):
             result = False
-        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH["is_expertise"]:
+        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH["is_expertise"] or (exclude_categories and "is_expertise" in exclude_categories):
             result = False
-        elif research.is_aux and EXCLUDE_TYPE_RESEARCH["is_aux"]:
+        elif research.is_aux and EXCLUDE_TYPE_RESEARCH["is_aux"] or (exclude_categories and "is_aux" in exclude_categories):
             result = False
-        elif research.is_case and EXCLUDE_TYPE_RESEARCH["is_case"]:
+        elif research.is_case and EXCLUDE_TYPE_RESEARCH["is_case"] or (exclude_categories and "is_case" in exclude_categories):
             result = False
-        elif research.is_complex and EXCLUDE_TYPE_RESEARCH["is_complex"]:
+        elif research.is_complex and EXCLUDE_TYPE_RESEARCH["is_complex"] or (exclude_categories and "is_complex" in exclude_categories):
             result = False
-        elif EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+        elif EXCLUDE_TYPE_RESEARCH["is_laboratory"] or (exclude_categories and "is_laboratory" in exclude_categories):
             result = False
         return result
 
     @staticmethod
-    def gen_non_excluded_categories():
+    def gen_non_excluded_categories(exclude_categories: list = None):
         res_list = {}
-        if not EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_laboratory"] and not exclude_categories or "is_laboratory" not in exclude_categories:
             res_list["Лаборатория"] = {}
-        if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"] and not exclude_categories or "is_paraclinic" not in exclude_categories:
             res_list["Параклиника"] = {}
-        if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"] and not exclude_categories or "is_doc_refferal" not in exclude_categories:
             res_list["Консультации"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_form"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_form"] and not exclude_categories or "is_form" not in exclude_categories:
             res_list["Формы"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_treatment"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_treatment"] and not exclude_categories or "is_treatment" not in exclude_categories:
             res_list["Лечение"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not EXCLUDE_TYPE_RESEARCH["is_citology"]:
-            res_list["Морфология"] = {"Микробиология": [], "Гистология": [], "Цитология": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_stom"]:
+        tmp_morfology = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not exclude_categories or "is_microbiology" not in exclude_categories:
+            tmp_morfology["Микробиология"] = []
+        if not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not exclude_categories or "is_gistology" not in exclude_categories:
+            tmp_morfology["Гистология"] = []
+        if not EXCLUDE_TYPE_RESEARCH["is_citology"] and not exclude_categories or "is_citology" not in exclude_categories:
+            tmp_morfology["Цитология"] = []
+        if len(tmp_morfology) > 0:
+            res_list["Морфология"] = tmp_morfology
+        if not EXCLUDE_TYPE_RESEARCH["is_stom"] and not exclude_categories or "is_stom" not in exclude_categories:
             res_list["Стоматология"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_complex"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_complex"] and not exclude_categories or "is_complex" not in exclude_categories:
             res_list["Комплексные услуги"] = {"Общие": []}
         return res_list
 
