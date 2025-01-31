@@ -291,7 +291,7 @@ const addService = async () => {
         root.$emit('msg', 'ok', 'Услуги добавлены');
       }
     } else {
-      root.$emit('msg', 'error', 'message');
+      root.$emit('msg', 'error', message);
     }
   } else if (serviceExists) {
     root.$emit('msg', 'error', 'Услуги пересекаются');
