@@ -322,7 +322,7 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 .scroll {
-  min-height: 112px;
+  min-height: 108px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
