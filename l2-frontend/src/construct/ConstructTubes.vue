@@ -35,15 +35,27 @@
               Нет данных
             </td>
           </tr>
-          <tr>
+          <tr
+            v-for="tube in tubes"
+            :key="tube.id"
+          >
             <td>
-              <input class="form-control nbr">
+              <input
+                v-model="tube.label"
+                class="form-control nbr"
+              >
             </td>
             <td>
-              <input class="form-control nbr">
+              <input
+                v-model="tube.shortLabel"
+                class="form-control nbr"
+              >
             </td>
             <td>
-              <input class="form-control nbr">
+              <input
+                v-model="tube.color"
+                class="form-control nbr"
+              >
             </td>
             <td>
               <div class="button">
@@ -74,13 +86,13 @@
         <tr>
           <td>
             <input
-              v-model="newTube.title"
+              v-model="newTube.label"
               class="form-control nbr"
             >
           </td>
           <td>
             <input
-              v-model="newTube.code"
+              v-model="newTube.shortLabel"
               class="form-control nbr"
             >
           </td>
@@ -108,12 +120,12 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from 'vue';
+import { onMounted, ref } from 'vue';
+import { afterWrite } from '@popperjs/core';
 
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
-import api from "@/api";
-import {afterWrite} from "@popperjs/core";
+import api from '@/api';
 
 interface tube {
   id: number,
@@ -130,6 +142,7 @@ const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('construct/tubes/get-tubes');
   tubes.value = result;
+  await store.dispatch(actions.DEC_LOADING);
 };
 
 onMounted(async () => {
