@@ -345,7 +345,7 @@
         <button
           v-if="research.pk !== -1"
           class="btn btn-blue-nb button-width"
-          :disabled="!research.title"
+          :disabled="!research.title || research.tubes.length === 0"
           @click="updateResearch"
         >
           Сохранить
@@ -353,7 +353,7 @@
         <button
           v-else
           class="btn btn-blue-nb button-width"
-          :disabled="!research.title"
+          :disabled="!research.title || research.tubes.length === 0"
           @click="createResearch"
         >
           Создать
