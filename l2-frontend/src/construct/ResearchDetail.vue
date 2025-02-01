@@ -208,7 +208,7 @@
               class="form-control"
               placeholder="Введите значение по умолчанию"
             >
-            <label>Варианты результатов</label>
+            <label>Варианты</label>
             <Treeselect
               v-model="currentFractionData.variantsId"
               :options="props.refBooks.variants"
