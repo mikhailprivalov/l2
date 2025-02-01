@@ -1348,7 +1348,7 @@ currentResourcePk.value = -1;
 resourceResearches.value = [];
 currentResourceTitle.value = '';
 
-watch(() => 'user.value.family', () => {
+watch(() => user.value.family, () => {
   user.value.family = user.value.family
     .replace(/\s\s+/g, ' ')
     .split(' ')
@@ -1362,7 +1362,7 @@ watch(() => 'user.value.family', () => {
   }
 });
 
-watch(() => 'user.value.name', () => {
+watch(() => user.value.name, () => {
   user.value.name = user.value.name
     .replace(/\s\s+/g, ' ')
     .split(' ')
@@ -1376,7 +1376,7 @@ watch(() => 'user.value.name', () => {
   }
 });
 
-watch(() => 'user.value.patronymic', () => {
+watch(() => user.value.patronymic, () => {
   user.value.patronymic = user.value.patronymic
     .replace(/\s\s+/g, ' ')
     .split(' ')
@@ -1390,7 +1390,7 @@ watch(() => 'user.value.patronymic', () => {
   }
 });
 
-watch(() => 'user.value.external_access', () => {
+watch(() => user.value.external_access, () => {
   if (!user.value.external_access) {
     user.value.date_stop_external_access = '';
   }
