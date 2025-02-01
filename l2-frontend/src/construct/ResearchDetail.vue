@@ -176,7 +176,7 @@
         <div class="fraction-group">
           <FractionsGroup
             v-for="(tube, idx) in research.tubes"
-            :key="tube.pk"
+            :key="tube.id"
             :tube="tube"
             :tubeidx="idx"
             :tubes-data="props.refBooks.relations"
@@ -404,6 +404,7 @@ interface fractionsData {
   hide: boolean,
   refM: reference[],
   refF: reference[],
+  defaultValue: string,
 }
 
 export interface tubeData {
@@ -465,6 +466,7 @@ const defaultFraction = ref<fractionsData>({
   hide: false,
   unitId: null,
   variantsId: null,
+  defaultValue: '',
 });
 
 const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });
