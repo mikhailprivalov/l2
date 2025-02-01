@@ -137,6 +137,7 @@
                 v-model="research.laboratoryDuration"
                 maxlength="3"
                 class="form-control"
+                placeholder="Введите время"
                 type="number"
               >
             </div>
