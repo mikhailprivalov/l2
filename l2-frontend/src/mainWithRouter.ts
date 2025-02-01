@@ -214,6 +214,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/construct/tubes',
+      name: 'construct_tubes',
+      component: () => import('@/construct/ConstructTubes.vue'),
+      meta: {
+        title: 'Ёмкости',
+        groups: ['Конструктор: Ёмкости для биоматериала'],
+        narrowLayout: true,
+      },
+    },
+    {
       path: '/ui/extra-notification',
       name: 'extra_notification',
       component: () => import('@/pages/ExtraNotification.vue'),
