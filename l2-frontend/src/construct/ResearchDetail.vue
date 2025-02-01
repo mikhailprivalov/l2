@@ -274,10 +274,12 @@
               <input
                 v-model="refF.age"
                 class="form-control reference-input-left"
+                placeholder="1-10"
               >
               <input
                 v-model="refF.value"
                 class="form-control reference-input-right"
+                placeholder="110-120"
               >
               <button
                 class="transparent-button reference-button-right ref-button"
