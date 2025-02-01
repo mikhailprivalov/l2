@@ -18,7 +18,7 @@ def get_lab_departments(request):
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def get_tubes(request):
+def get_tubes_group(request):
     request_data = json.loads(request.body)
     result = Researches.get_tubes(request_data["department_id"])
     return JsonResponse({"result": result})
@@ -234,3 +234,10 @@ def change_service_hidden(request):
     result = ComplexService.change_service_hidden(complex_id, service_id)
     Log.log(service_id, 210004, request.user.doctorprofile, {"complex_id": complex_id, "service_id": service_id, "hide": result["hide"]})
     return status_response(result["ok"])
+
+
+@login_required
+@group_required("Конструктор: Ёмкости для биоматериала")
+def get_tubes(request):
+    result = Tubes.get_all()
+    return JsonResponse({"result": result})

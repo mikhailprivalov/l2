@@ -4,7 +4,7 @@ from . import views
 
 urlpatterns = [
     path('laboratory/get-departments', views.get_lab_departments),
-    path('laboratory/get-tubes', views.get_tubes),
+    path('laboratory/get-tubes', views.get_tubes_group),
     path('laboratory/update-order-research', views.update_order_research),
     path('laboratory/change-visibility-research', views.change_visibility_research),
     path('laboratory/get-research', views.get_lab_research),
@@ -23,4 +23,5 @@ urlpatterns = [
     path('complex/change-complex-hidden', views.change_complex_hidden),
     path('complex/update-complex', views.update_complex),
     path('complex/change-service-hidden', views.change_service_hidden),
+    path('tubes/get-tubes', views.get_tubes),
 ]

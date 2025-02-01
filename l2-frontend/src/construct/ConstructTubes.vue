@@ -7,15 +7,21 @@
         <table class="table">
           <colgroup>
             <col>
-            <col>
-            <col>
-            <col style="width: 30px">
+            <col style="width: 230px">
+            <col style="width: 300px">
+            <col style="width: 120px">
           </colgroup>
           <thead>
             <tr>
-              <td><strong>Название</strong></td>
-              <td><strong>Код</strong></td>
-              <td><strong>Цвет</strong></td>
+              <td class="text-center">
+                <strong>Название</strong>
+              </td>
+              <td class="text-center">
+                <strong>Код</strong>
+              </td>
+              <td class="text-center">
+                <strong>Цвет</strong>
+              </td>
               <td />
             </tr>
           </thead>
@@ -30,23 +36,23 @@
             </td>
           </tr>
           <tr>
-            <td class="border">
-              <input class="form-control">
+            <td>
+              <input class="form-control nbr">
             </td>
-            <td class="border">
-              <input class="form-control">
+            <td>
+              <input class="form-control nbr">
             </td>
-            <td class="border">
-              <input class="form-control">
+            <td>
+              <input class="form-control nbr">
             </td>
-            <td class="border">
+            <td>
               <div class="button">
                 <button
                   v-tippy
                   class="btn last btn-blue-nb nbr"
-                  title="Редактировать"
+                  title="Сохранить"
                 >
-                  <i class="fa fa-pencil" />
+                  Сохранить
                 </button>
               </div>
             </td>
@@ -61,28 +67,37 @@
       <table class="table">
         <colgroup>
           <col>
-          <col>
-          <col>
-          <col style="width: 30px">
+          <col style="width: 230px">
+          <col style="width: 300px">
+          <col style="width: 120px">
         </colgroup>
         <tr>
-          <td class="border">
-            <input class="form-control">
+          <td>
+            <input
+              v-model="newTube.title"
+              class="form-control nbr"
+            >
           </td>
-          <td class="border">
-            <input class="form-control">
+          <td>
+            <input
+              v-model="newTube.code"
+              class="form-control nbr"
+            >
           </td>
-          <td class="border">
-            <input class="form-control">
+          <td>
+            <input
+              v-model="newTube.color"
+              class="form-control nbr"
+            >
           </td>
-          <td class="border">
+          <td>
             <div class="button">
               <button
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 title="Добавить"
               >
-                <i class="fa fa-plus" />
+                Добавить
               </button>
             </div>
           </td>
@@ -93,17 +108,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 
-// import * as actions from '@/store/action-types';
+import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
+import api from "@/api";
+import {afterWrite} from "@popperjs/core";
 
-const tubes = ref([]);
+interface tube {
+  id: number,
+  label: string,
+  shortLabel: string,
+  color: string,
+}
+
+const store = useStore();
+
+const tubes = ref<tube[]>([]);
+
+const getTubes = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('construct/tubes/get-tubes');
+  tubes.value = result;
+};
+
+onMounted(async () => {
+  await getTubes();
+});
+
+const newTube = ref<tube>({
+  id: null,
+  label: '',
+  shortLabel: '',
+  color: '',
+});
 </script>
 
 <style scoped>
-::v-deep .form-control {
-  border: 0;
-}
 ::v-deep .card {
   margin: 0;
 }
@@ -130,9 +171,9 @@ const tubes = ref([]);
   flex-direction: row;
   justify-content: stretch;
 }
-  .btn {
-    align-self: stretch;
-    flex: 1;
-    padding: 7px 0;
-  }
+.btn {
+  align-self: stretch;
+  flex: 1;
+  padding: 6px 0;
+}
 </style>
