@@ -1175,7 +1175,7 @@
           </button>
           <LoadFile
             is-load-group-for-protocol
-            title-button="Загрузить из файла"
+            title-button="Загрузить группу"
             file-filter="application/JSON"
             :research-id="pk"
             tag="div"
@@ -1184,7 +1184,7 @@
           <LoadFile
             v-if="pk === -1"
             is-load-group-for-protocol
-            title-button="Копировать услугу"
+            title-button="Загрузить услугу"
             file-filter="application/JSON"
             :research-id="pk"
             tag="div"
