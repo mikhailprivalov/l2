@@ -204,13 +204,17 @@
               >
             </div>
             <label>По умолчанию</label>
-            <input class="form-control">
-            <label>Варианты</label>
+            <input
+              class="form-control"
+              placeholder="Введите значение по умолчанию"
+            >
+            <label>Варианты результатов</label>
             <Treeselect
               v-model="currentFractionData.variantsId"
               :options="props.refBooks.variants"
               :clearable="false"
               :append-to-body="true"
+              placeholder="Выберите варианты"
             />
             <label>Формула <a><i
               v-tippy
@@ -220,6 +224,7 @@
             <input
               v-model="currentFractionData.formula"
               class="form-control"
+              placeholder="Введите формулы"
             >
             <label>Рефернсы М</label>
             <div class="ref-label-group">
