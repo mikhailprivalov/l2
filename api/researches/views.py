@@ -54,8 +54,8 @@ def get_researches_templates(request):
     templates = []
     for t in (
         users.AssignmentTemplates.objects.filter(global_template=True)
-            .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) | Q(doc=request.user.doctorprofile) | Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye))
-            .prefetch_related('assignmentresearches_set')
+        .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) | Q(doc=request.user.doctorprofile) | Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye))
+        .prefetch_related('assignmentresearches_set')
     ):
         templates.append(
             {
