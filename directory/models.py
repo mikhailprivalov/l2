@@ -1605,6 +1605,7 @@ class Fractions(models.Model):
             "hide": fraction.hide,
             "refM": fraction.ref_m,
             "refF": fraction.ref_f,
+            "defaultValue": fraction.default_value,
         }
         return result
 
