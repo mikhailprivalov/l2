@@ -224,7 +224,7 @@
             <input
               v-model="currentFractionData.formula"
               class="form-control"
-              placeholder="Введите формулы"
+              placeholder="Введите формулу"
             >
             <label>Рефернсы М</label>
             <div class="ref-label-group">
@@ -239,10 +239,12 @@
               <input
                 v-model="refM.age"
                 class="form-control reference-input-left"
+                placeholder="1-10"
               >
               <input
                 v-model="refM.value"
                 class="form-control reference-input-right"
+                placeholder="110-120"
               >
               <button
                 class="reference-button-right transparent-button ref-button"
