@@ -205,6 +205,7 @@
             </div>
             <label>По умолчанию</label>
             <input
+              v-model="currentFractionData.defaultValue"
               class="form-control"
               placeholder="Введите значение по умолчанию"
             >

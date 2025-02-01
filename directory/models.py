@@ -1641,6 +1641,7 @@ class Fractions(models.Model):
             "variants_id": fraction_data.get("variantsId", None),
             "formula": fraction_data["formula"],
             "hide": fraction_data["hide"],
+            "default_value": fraction_data["defaultValue"],
         }
 
     @staticmethod
@@ -1655,6 +1656,7 @@ class Fractions(models.Model):
         fraction.hide = fraction_data["hide"]
         fraction.ref_m = fraction_data["ref_m"]
         fraction.ref_f = fraction_data["ref_f"]
+        fraction.default_value = fraction_data["default_value"]
         fraction.save()
 
     @staticmethod
