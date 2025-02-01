@@ -208,6 +208,7 @@
               v-model="currentFractionData.defaultValue"
               class="form-control"
               placeholder="Введите значение по умолчанию"
+              maxlength="255"
             >
             <label>Варианты</label>
             <Treeselect
