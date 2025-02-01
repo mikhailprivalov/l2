@@ -589,6 +589,7 @@ class Researches(models.Model):
         result = {
             "pk": research.pk,
             "title": research.title if not pk_in_title else f"{research.title} ({research.pk})",
+            "shortTitle": research.short_title,
             "internalCode": research.internal_code,
             "code": research.code,
             "hide": research.hide,
