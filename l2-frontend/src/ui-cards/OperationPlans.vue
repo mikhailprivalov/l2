@@ -134,7 +134,6 @@ export default {
     this.$root.$on('current_history_direction', (data) => {
       this.current_direction_history_open = data.history_num;
       this.card_pk = data.patient.card_pk;
-      console.log(data.patient);
       // eslint-disable-next-line prefer-destructuring
       this.patient_fio = data.patient.fio_age?.split('+')[0];
       this.load();
