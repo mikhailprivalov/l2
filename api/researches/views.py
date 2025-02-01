@@ -54,8 +54,8 @@ def get_researches_templates(request):
     templates = []
     for t in (
         users.AssignmentTemplates.objects.filter(global_template=True)
-        .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) | Q(doc=request.user.doctorprofile) | Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye))
-        .prefetch_related('assignmentresearches_set')
+            .filter(Q(doc__isnull=True, podrazdeleniye__isnull=True) | Q(doc=request.user.doctorprofile) | Q(podrazdeleniye=request.user.doctorprofile.podrazdeleniye))
+            .prefetch_related('assignmentresearches_set')
     ):
         templates.append(
             {
@@ -1338,9 +1338,9 @@ def save_research_permissions(request):
     department_id = request_data.get('departmentId')
     user_ids = request_data.get('userIds')
     user_groups = [str(x) for x in request.user.groups.all()]
-    user_can_change = True
-    if "Конструктор: Редактировать свои услуги" in user_groups:
-        user_can_change = False
+    user_can_change = False
+    if "Конструктор: Редактировать свои услуги" not in user_groups or request.user.is_superuser:
+        user_can_change = True
     if user_can_change:
         result = ConstructorEditAccessResearch.save_permissions(research_id, department_id, user_ids)
     else:
