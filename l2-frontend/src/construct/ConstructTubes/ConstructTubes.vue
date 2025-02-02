@@ -41,18 +41,18 @@
           >
             <td>
               <input
-                v-model="tube.label"
+                v-model.trim="tube.label"
                 class="form-control nbr"
               >
             </td>
             <td>
               <input
-                v-model="tube.shortLabel"
+                v-model.trim="tube.shortLabel"
                 class="form-control nbr"
               >
             </td>
             <td>
-              <InputColorString v-model="tube.color" />
+              <InputColorString v-model.trim="tube.color" />
             </td>
             <td>
               <div class="button">
@@ -84,18 +84,18 @@
         <tr>
           <td>
             <input
-              v-model="newTube.label"
+              v-model.trim="newTube.label"
               class="form-control nbr"
             >
           </td>
           <td>
             <input
-              v-model="newTube.shortLabel"
+              v-model.trim="newTube.shortLabel"
               class="form-control nbr"
             >
           </td>
           <td>
-            <InputColorString v-model="newTube.color" />
+            <InputColorString v-model.trim="newTube.color" />
           </td>
           <td>
             <div class="button">
@@ -103,6 +103,7 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 title="Добавить"
+                @click="create"
               >
                 Добавить
               </button>
@@ -165,6 +166,20 @@ const newTube = ref<tubeData>({
   shortLabel: '',
   color: '',
 });
+
+const create = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('construct/tubes/create-tube', {
+    ...newTube,
+  });
+  if (ok) {
+    await getTubes();
+    root.$emit('msg', 'ok', 'Обновлено');
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+  await store.dispatch(actions.DEC_LOADING);
+};
 
 </script>
 

@@ -255,3 +255,16 @@ def update_tube(request):
     if result["ok"]:
         Log.log(tube_id, 250000, request.user.doctorprofile, {"tube_id": tube_id, "title": title, "short_title": short_title, "color": color})
     return JsonResponse(result)
+
+
+@login_required
+@group_required("Конструктор: Ёмкости для биоматериала")
+def update_tube(request):
+    request_data = json.loads(request.body)
+    title = request_data["label"]
+    short_title = request_data["shortLabel"]
+    color = request_data["color"]
+    result = Tubes.create_tube(title, short_title, color)
+    if result["ok"]:
+        Log.log(result["data"], 250001, request.user.doctorprofile, {"tube_id": result["data"], "title": title, "short_title": short_title, "color": color})
+    return JsonResponse(result)

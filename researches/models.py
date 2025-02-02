@@ -89,3 +89,9 @@ class Tubes(models.Model):
         tube.save()
         return {"ok": True, "message": ""}
 
+    @staticmethod
+    def create_tube(title: str, short_title: str, color: str):
+        tube = Tubes(title=title, short_title=short_title, color=color)
+        tube.save()
+        return {"ok": True, "message": "", "data": tube.pk}
+

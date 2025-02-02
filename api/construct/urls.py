@@ -25,4 +25,5 @@ urlpatterns = [
     path('complex/change-service-hidden', views.change_service_hidden),
     path('tubes/get-tubes', views.get_tubes),
     path('tubes/update-tube', views.update_tube),
+    path('tubes/create-tube', views.create_tube),
 ]
