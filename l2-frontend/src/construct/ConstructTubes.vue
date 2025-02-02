@@ -57,13 +57,9 @@
                   v-model="tube.color"
                   class="form-control nbr"
                 >
-                <div :style="`background-color: ${tube.color}`">
-                  <input
-                    v-model="tube.color"
-                    class="nbr color-input"
-                    type="color"
-                  >
-                </div>
+                <ColorInput
+                  v-model="tube.color"
+                />
               </div>
             </td>
             <td>
@@ -134,6 +130,7 @@ import { onMounted, ref } from 'vue';
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
 import api from '@/api';
+import ColorInput from '@/construct/ColorInput.vue';
 
 interface tubeData {
   id: number,
@@ -163,6 +160,7 @@ const newTube = ref<tubeData>({
   shortLabel: '',
   color: '',
 });
+
 </script>
 
 <style scoped>
@@ -199,13 +197,5 @@ const newTube = ref<tubeData>({
 }
 .flex {
   display: flex;
-}
-.color-input {
-  border: 0;
-  background: none;
-  padding: 0;
-  margin: 0;
-  height: 34px;
-  opacity: 0.5;
 }
 </style>
