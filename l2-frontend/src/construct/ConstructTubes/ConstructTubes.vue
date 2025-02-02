@@ -158,7 +158,7 @@ const newTube = ref<tubeData>({
   id: null,
   label: '',
   shortLabel: '',
-  color: '',
+  color: '#04b98f',
 });
 const checkBerofe = (tube: tubeData = null) :boolean => {
   if (!tube) {
@@ -202,7 +202,7 @@ const create = async () => {
       id: null,
       label: '',
       shortLabel: '',
-      color: '',
+      color: '#04b98f',
     };
     await getTubes();
     root.$emit('msg', 'ok', 'Обновлено');
