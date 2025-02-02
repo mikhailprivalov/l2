@@ -173,6 +173,12 @@ const create = async () => {
     ...newTube.value,
   });
   if (ok) {
+    newTube.value = {
+      id: null,
+      label: '',
+      shortLabel: '',
+      color: '',
+    };
     await getTubes();
     root.$emit('msg', 'ok', 'Обновлено');
   } else {
