@@ -259,7 +259,7 @@ def update_tube(request):
 
 @login_required
 @group_required("Конструктор: Ёмкости для биоматериала")
-def update_tube(request):
+def create_tube(request):
     request_data = json.loads(request.body)
     title = request_data["label"]
     short_title = request_data["shortLabel"]
