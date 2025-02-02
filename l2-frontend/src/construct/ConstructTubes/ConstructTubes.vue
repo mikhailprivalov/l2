@@ -60,6 +60,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Сохранить"
+                  @click="update(tube)"
                 >
                   Сохранить
                 </button>
@@ -114,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import {getCurrentInstance, onMounted, ref} from 'vue';
 
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
@@ -129,6 +130,7 @@ interface tubeData {
 }
 
 const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
 const tubes = ref<tubeData[]>([]);
 
@@ -142,6 +144,20 @@ const getTubes = async () => {
 onMounted(async () => {
   await getTubes();
 });
+
+const update = async (tube: tubeData) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('construct/tubes/update-tube', {
+    ...tube,
+  });
+  if (ok) {
+    await getTubes();
+    root.$emit('msg', 'ok', 'Обновлено');
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+  await store.dispatch(actions.DEC_LOADING);
+};
 
 const newTube = ref<tubeData>({
   id: null,
@@ -183,8 +199,5 @@ const newTube = ref<tubeData>({
   align-self: stretch;
   flex: 1;
   padding: 6px 0;
-}
-.flex {
-  display: flex;
 }
 </style>
