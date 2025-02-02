@@ -25,6 +25,8 @@
             :group="group"
             :groups="research.groups"
             :patient="patient"
+            :paid_fin_source="paid_fin_source"
+            :is_gistology="is_gistology"
           >
             <div
               v-if="field.title !== '' && (research.wide_headers || group.fieldsInline)"
