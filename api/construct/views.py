@@ -247,9 +247,10 @@ def get_tubes(request):
 @group_required("Конструктор: Ёмкости для биоматериала")
 def update_tube(request):
     request_data = json.loads(request.body)
+    print(request_data)
     tube_id = request_data["id"]
     title = request_data["label"]
-    short_title = request_data.get["shortLabel"]
+    short_title = request_data["shortLabel"]
     color = request_data["color"]
     result = Tubes.update_tube(tube_id, title, short_title, color)
     if result["ok"]:

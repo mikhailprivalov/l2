@@ -115,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import {getCurrentInstance, onMounted, ref} from 'vue';
+import { getCurrentInstance, onMounted, ref } from 'vue';
 
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
