@@ -108,7 +108,7 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 title="Добавить"
-                :disabled="!checkBerofeCreate()"
+                :disabled="!checkBerofe()"
                 @click="create"
               >
                 Добавить
@@ -123,7 +123,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref,
+  getCurrentInstance, onMounted, ref,
 } from 'vue';
 
 import * as actions from '@/store/action-types';
