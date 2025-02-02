@@ -15,6 +15,10 @@ export default {
       type: RegExp,
       required: true,
     },
+    reverseMode: {
+      type: Boolean,
+      reqired: false,
+    },
   },
   data() {
     return {
@@ -29,11 +33,20 @@ export default {
       immediate: true,
     },
     content() {
-      const newContent = this.content.replace(this.rules, '');
-      if (newContent === this.content) {
-        this.$emit('input', this.content);
+      if (!this.reverseMode) {
+        const newContent = this.content.replace(this.rules, '');
+        if (newContent === this.content) {
+          this.$emit('input', this.content);
+        } else {
+          this.content = newContent;
+        }
       } else {
-        this.content = newContent;
+        const newContentValid = this.rules.test(this.content);
+        if (!newContentValid) {
+          this.content = this.content.slice(0, -1);
+        } else {
+          this.$emit('input', this.content);
+        }
       }
     },
   },

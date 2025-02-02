@@ -1,10 +1,11 @@
 <template>
   <div class="flex">
-    <input
+    <RegexFormatInput
       v-model="localColor"
+      :rules="/^#[0-9A-Fa-f]{0,6}$/"
+      :reverse-mode="true"
       class="form-control nbr"
-      maxlength="7"
-    >
+    />
     <ColorInput
       v-model="localColor"
     />
@@ -16,6 +17,7 @@
 import { ref, watch } from 'vue';
 
 import ColorInput from '@/construct/ConstructTubes/ColorInput.vue';
+import RegexFormatInput from '@/construct/RegexFormatInput.vue';
 
 const props = defineProps({
   value: {
