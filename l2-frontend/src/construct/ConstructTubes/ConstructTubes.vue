@@ -170,7 +170,7 @@ const newTube = ref<tubeData>({
 const create = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('construct/tubes/create-tube', {
-    ...newTube,
+    ...newTube.value,
   });
   if (ok) {
     await getTubes();
@@ -195,10 +195,6 @@ const create = async () => {
   min-height: 112px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
-}
-.border {
-  border: 1px solid #ddd;
-  border-radius: 0;
 }
 .table > thead > tr > th {
   border-bottom: 0;
