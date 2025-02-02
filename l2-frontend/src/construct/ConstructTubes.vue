@@ -52,10 +52,19 @@
               >
             </td>
             <td>
-              <input
-                v-model="tube.color"
-                class="form-control nbr"
-              >
+              <div class="flex">
+                <input
+                  v-model="tube.color"
+                  class="form-control nbr"
+                >
+                <div :style="`background-color: ${tube.color}`">
+                  <input
+                    v-model="tube.color"
+                    class="nbr color-input"
+                    type="color"
+                  >
+                </div>
+              </div>
             </td>
             <td>
               <div class="button">
@@ -121,13 +130,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { afterWrite } from '@popperjs/core';
 
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
 import api from '@/api';
 
-interface tube {
+interface tubeData {
   id: number,
   label: string,
   shortLabel: string,
@@ -136,7 +144,7 @@ interface tube {
 
 const store = useStore();
 
-const tubes = ref<tube[]>([]);
+const tubes = ref<tubeData[]>([]);
 
 const getTubes = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -149,7 +157,7 @@ onMounted(async () => {
   await getTubes();
 });
 
-const newTube = ref<tube>({
+const newTube = ref<tubeData>({
   id: null,
   label: '',
   shortLabel: '',
@@ -188,5 +196,16 @@ const newTube = ref<tube>({
   align-self: stretch;
   flex: 1;
   padding: 6px 0;
+}
+.flex {
+  display: flex;
+}
+.color-input {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  height: 34px;
+  opacity: 0.5;
 }
 </style>
