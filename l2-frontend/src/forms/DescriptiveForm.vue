@@ -201,6 +201,7 @@
                   :raw="field.field_type === 14 || field.field_type === 23"
                   :not_autoload_result="field.field_type === 23"
                   :iss_pk="pk"
+                  :price_category="price_category"
                 />
               </div>
               <div
