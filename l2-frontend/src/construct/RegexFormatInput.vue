@@ -17,7 +17,7 @@ export default {
     },
     reverseMode: {
       type: Boolean,
-      reqired: false,
+      required: false,
     },
   },
   data() {
