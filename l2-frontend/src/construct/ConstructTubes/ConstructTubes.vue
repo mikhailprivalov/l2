@@ -52,15 +52,7 @@
               >
             </td>
             <td>
-              <div class="flex">
-                <input
-                  v-model="tube.color"
-                  class="form-control nbr"
-                >
-                <ColorInput
-                  v-model="tube.color"
-                />
-              </div>
+              <InputColorString v-model="tube.color" />
             </td>
             <td>
               <div class="button">
@@ -130,7 +122,7 @@ import { onMounted, ref } from 'vue';
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
 import api from '@/api';
-import ColorInput from '@/construct/ConstructTubes/ColorInput.vue';
+import InputColorString from '@/construct/ConstructTubes/InputColorString.vue';
 
 interface tubeData {
   id: number,
