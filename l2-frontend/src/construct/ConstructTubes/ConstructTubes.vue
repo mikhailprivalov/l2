@@ -43,12 +43,14 @@
               <input
                 v-model.trim="tube.label"
                 class="form-control nbr"
+                maxlength="255"
               >
             </td>
             <td>
               <input
                 v-model.trim="tube.shortLabel"
                 class="form-control nbr"
+                maxlength="16"
               >
             </td>
             <td>
@@ -60,6 +62,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Сохранить"
+                  :disabled="!checkBerofe(tube)"
                   @click="update(tube)"
                 >
                   Сохранить
@@ -151,7 +154,26 @@ onMounted(async () => {
   await getTubes();
 });
 
+const newTube = ref<tubeData>({
+  id: null,
+  label: '',
+  shortLabel: '',
+  color: '',
+});
+const checkBerofe = (tube: tubeData = null) :boolean => {
+  if (!tube) {
+    return newTube.value.label && newTube.value.label.length > 0 && newTube.value.color && newTube.value.color.length > 0
+       && newTube.value.color.length < 8;
+  }
+  return tube.label && tube.label.length > 0 && tube.color && tube.color.length > 0
+       && tube.color.length < 8;
+};
 const update = async (tube: tubeData) => {
+  const tubeValid = checkBerofe(tube);
+  if (!tubeValid) {
+    root.$emit('msg', 'error', 'Название или цвет не заполнены');
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('construct/tubes/update-tube', {
     ...tube,
@@ -165,18 +187,8 @@ const update = async (tube: tubeData) => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const newTube = ref<tubeData>({
-  id: null,
-  label: '',
-  shortLabel: '',
-  color: '',
-});
-
-const checkBerofeCreate = () :boolean => newTube.value.label && newTube.value.label.length > 0
-  && newTube.value.color && newTube.value.color.length > 0 && newTube.value.color.length < 8;
-
 const create = async () => {
-  const newTubeValid = checkBerofeCreate();
+  const newTubeValid = checkBerofe();
   if (!newTubeValid) {
     root.$emit('msg', 'error', 'Название или цвет не заполнены');
     return;
