@@ -94,10 +94,7 @@
             >
           </td>
           <td>
-            <input
-              v-model="newTube.color"
-              class="form-control nbr"
-            >
+            <InputColorString v-model="newTube.color" />
           </td>
           <td>
             <div class="button">
