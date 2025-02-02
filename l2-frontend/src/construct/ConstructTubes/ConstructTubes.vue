@@ -130,7 +130,7 @@ import { onMounted, ref } from 'vue';
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
 import api from '@/api';
-import ColorInput from '@/construct/ColorInput.vue';
+import ColorInput from '@/construct/ConstructTubes/ColorInput.vue';
 
 interface tubeData {
   id: number,

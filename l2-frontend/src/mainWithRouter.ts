@@ -216,7 +216,7 @@ const router = new Router({
     {
       path: '/ui/construct/tubes',
       name: 'construct_tubes',
-      component: () => import('@/construct/ConstructTubes.vue'),
+      component: () => import('@/construct/ConstructTubes/ConstructTubes.vue'),
       meta: {
         title: 'Ёмкости',
         groups: ['Конструктор: Ёмкости для биоматериала'],
