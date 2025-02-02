@@ -3,6 +3,7 @@
     <input
       v-model="localColor"
       class="form-control nbr"
+      maxlength="7"
     >
     <ColorInput
       v-model="localColor"

@@ -86,12 +86,14 @@
             <input
               v-model.trim="newTube.label"
               class="form-control nbr"
+              maxlength="255"
             >
           </td>
           <td>
             <input
               v-model.trim="newTube.shortLabel"
               class="form-control nbr"
+              maxlength="16"
             >
           </td>
           <td>
@@ -103,6 +105,7 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 title="Добавить"
+                :disabled="!checkBerofeCreate()"
                 @click="create"
               >
                 Добавить
@@ -116,7 +119,9 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, onMounted, ref } from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 
 import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
@@ -167,7 +172,15 @@ const newTube = ref<tubeData>({
   color: '',
 });
 
+const checkBerofeCreate = () :boolean => newTube.value.label && newTube.value.label.length > 0
+  && newTube.value.color && newTube.value.color.length > 0 && newTube.value.color.length < 8;
+
 const create = async () => {
+  const newTubeValid = checkBerofeCreate();
+  if (!newTubeValid) {
+    root.$emit('msg', 'error', 'Название или цвет не заполнены');
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('construct/tubes/create-tube', {
     ...newTube.value,
