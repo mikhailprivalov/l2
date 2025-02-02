@@ -241,3 +241,17 @@ def change_service_hidden(request):
 def get_tubes(request):
     result = Tubes.get_all()
     return JsonResponse({"result": result})
+
+
+@login_required
+@group_required("Конструктор: Ёмкости для биоматериала")
+def update_tube(request):
+    request_data = json.loads(request.body)
+    tube_id = request_data["id"]
+    title = request_data["label"]
+    short_title = request_data.get["shortLabel"]
+    color = request_data["color"]
+    result = Tubes.update_tube(tube_id, title, short_title, color)
+    if result["ok"]:
+        Log.log(tube_id, 250000, request.user.doctorprofile, {"tube_id": tube_id, "title": title, "short_title": short_title, "color": color})
+    return JsonResponse(result)

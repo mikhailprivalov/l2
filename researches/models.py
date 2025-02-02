@@ -77,3 +77,15 @@ class Tubes(models.Model):
     class Meta:
         verbose_name = 'Вид ёмкости'
         verbose_name_plural = 'Виды ёмкостей'
+
+    @staticmethod
+    def update_tube(id: int, title: str, short_title: str, color: str):
+        tube = Tubes.objects.filter(pk=id).first()
+        if not tube:
+            return {"ok": False, "message": "Такой ёмкости нет"}
+        tube.title = title
+        tube.short_title = short_title
+        tube.color = color
+        tube.save()
+        return {"ok": True, "message": ""}
+
