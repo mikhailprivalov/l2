@@ -223,8 +223,8 @@ const create = async () => {
   table-layout: fixed;
 }
 .scroll {
-  min-height: 112px;
-  max-height: calc(100vh - 400px);
+  min-height: 104px;
+  max-height: calc(100vh - 200px);
   overflow-y: auto;
 }
 .table > thead > tr > th {
