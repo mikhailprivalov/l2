@@ -98,17 +98,18 @@ def get_pdf_for_mail_send(request):
     directions_ids = body.get("directionsIds")
     is_person_send = body.get("isPersonSend", "0") == "1"
     client_id = body.get("clientId")
-
+    exclude_dirs = set()
     for direction_id in directions_ids:
         n = Napravleniya.objects.get(pk=direction_id)
         if not is_person_send and (n.hospital_id != hospital_id):
-            return Response(f"Направление №{n.pk} не принадлежит организации {hospital_id}")
+            exclude_dirs.add(direction_id)
+            continue
         if is_person_send and n.client_id != client_id:
-            return Response(f"Направление №{n.pk} не принадлежит карте пациента с id {client_id}")
+            exclude_dirs.add(direction_id)
+            continue
         if not n.total_confirmed:
-            return Response(f"Направление №{n.pk} не подтверждено")
-
-    directions_ids = list(set(directions_ids))
+            exclude_dirs.add(direction_id)
+    directions_ids = list((set(directions_ids) - exclude_dirs))
     directions_ids.sort(key=lambda x: Napravleniya.objects.get(pk=x).last_confirmed_at, reverse=True)
 
     if not directions_ids:
@@ -120,10 +121,10 @@ def get_pdf_for_mail_send(request):
         n = Napravleniya.objects.get(pk=direction_id)
         if is_person_send:
             n.email_with_results_sent_to_person = True
-            n.save(update_fields=["email_with_results_sent_to_person"])
+            n.save()
         else:
             n.email_with_results_sent = True
-            n.save(update_fields=["email_with_results_sent"])
+            n.save()
     result = {"b64File": pdf_b64, "filename": filename}
 
     return Response(result)
