@@ -589,6 +589,7 @@ class Researches(models.Model):
         result = {
             "pk": research.pk,
             "title": research.title if not pk_in_title else f"{research.title} ({research.pk})",
+            "shortTitle": research.short_title,
             "internalCode": research.internal_code,
             "code": research.code,
             "hide": research.hide,
@@ -1566,6 +1567,7 @@ class Fractions(models.Model):
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
     external_code = models.CharField(max_length=255, default="", help_text="Внешний код теста", blank=True, db_index=True)
     statistic_pattern_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Статистический параметр модели", on_delete=models.SET_NULL)
+    default_value = models.CharField(max_length=255, default="", blank=True, null=True, verbose_name="Значение по умолчанию", help_text="24, отрицательно и т.д")
 
     def get_unit(self):
         if self.unit:
@@ -1604,6 +1606,7 @@ class Fractions(models.Model):
             "hide": fraction.hide,
             "refM": fraction.ref_m,
             "refF": fraction.ref_f,
+            "defaultValue": fraction.default_value,
         }
         return result
 
@@ -1638,6 +1641,7 @@ class Fractions(models.Model):
             "variants_id": fraction_data.get("variantsId", None),
             "formula": fraction_data["formula"],
             "hide": fraction_data["hide"],
+            "default_value": fraction_data["defaultValue"],
         }
 
     @staticmethod
@@ -1652,6 +1656,7 @@ class Fractions(models.Model):
         fraction.hide = fraction_data["hide"]
         fraction.ref_m = fraction_data["ref_m"]
         fraction.ref_f = fraction_data["ref_f"]
+        fraction.default_value = fraction_data["default_value"]
         fraction.save()
 
     @staticmethod
