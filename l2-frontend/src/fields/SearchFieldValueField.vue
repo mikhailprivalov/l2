@@ -97,6 +97,10 @@ export default {
       required: false,
       default: false,
     },
+    price_category: {
+      type: [String, Number],
+      required: false,
+    },
   },
   data() {
     return {
