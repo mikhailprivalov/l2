@@ -137,6 +137,7 @@
                 v-model="research.laboratoryDuration"
                 maxlength="3"
                 class="form-control"
+                placeholder="Введите время"
                 type="number"
               >
             </div>
@@ -176,7 +177,7 @@
         <div class="fraction-group">
           <FractionsGroup
             v-for="(tube, idx) in research.tubes"
-            :key="tube.pk"
+            :key="tube.id"
             :tube="tube"
             :tubeidx="idx"
             :tubes-data="props.refBooks.relations"
@@ -203,13 +204,19 @@
               >
             </div>
             <label>По умолчанию</label>
-            <input class="form-control">
+            <input
+              v-model="currentFractionData.defaultValue"
+              class="form-control"
+              placeholder="Введите значение по умолчанию"
+              maxlength="255"
+            >
             <label>Варианты</label>
             <Treeselect
               v-model="currentFractionData.variantsId"
               :options="props.refBooks.variants"
               :clearable="false"
               :append-to-body="true"
+              placeholder="Выберите варианты"
             />
             <label>Формула <a><i
               v-tippy
@@ -219,6 +226,7 @@
             <input
               v-model="currentFractionData.formula"
               class="form-control"
+              placeholder="Введите формулу"
             >
             <label>Рефернсы М</label>
             <div class="ref-label-group">
@@ -233,10 +241,12 @@
               <input
                 v-model="refM.age"
                 class="form-control reference-input-left"
+                placeholder="1-10"
               >
               <input
                 v-model="refM.value"
                 class="form-control reference-input-right"
+                placeholder="110-120"
               >
               <button
                 class="reference-button-right transparent-button ref-button"
@@ -266,10 +276,12 @@
               <input
                 v-model="refF.age"
                 class="form-control reference-input-left"
+                placeholder="1-10"
               >
               <input
                 v-model="refF.value"
                 class="form-control reference-input-right"
+                placeholder="110-120"
               >
               <button
                 class="transparent-button reference-button-right ref-button"
@@ -335,7 +347,7 @@
         <button
           v-if="research.pk !== -1"
           class="btn btn-blue-nb button-width"
-          :disabled="!research.title"
+          :disabled="!research.title || research.tubes.length === 0"
           @click="updateResearch"
         >
           Сохранить
@@ -343,7 +355,7 @@
         <button
           v-else
           class="btn btn-blue-nb button-width"
-          :disabled="!research.title"
+          :disabled="!research.title || research.tubes.length === 0"
           @click="createResearch"
         >
           Создать
@@ -404,6 +416,7 @@ interface fractionsData {
   hide: boolean,
   refM: reference[],
   refF: reference[],
+  defaultValue: string,
 }
 
 export interface tubeData {
@@ -465,6 +478,7 @@ const defaultFraction = ref<fractionsData>({
   hide: false,
   unitId: null,
   variantsId: null,
+  defaultValue: '',
 });
 
 const currentFractionData = ref<fractionsData>({ ...defaultFraction.value });

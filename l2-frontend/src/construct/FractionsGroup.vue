@@ -112,6 +112,7 @@
             v-model="fraction.ecpId"
             :class="fraction.hide ? 'hide-background form-control fraction-input' : 'form-control fraction-input'"
             placeholder="Введите код"
+            maxlength="16"
             :disabled="fraction.hide"
           >
         </td>
