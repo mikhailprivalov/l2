@@ -161,12 +161,13 @@ const newTube = ref<tubeData>({
   color: '#04b98f',
 });
 const checkBerofe = (tube: tubeData = null) :boolean => {
+  const checkColor = /^#[0-9A-Fa-f]{0,6}$/;
   if (!tube) {
     return newTube.value.label && newTube.value.label.length > 0 && newTube.value.color && newTube.value.color.length > 0
-       && newTube.value.color.length < 8;
+       && checkColor.test(newTube.value.color) && (newTube.value.color.length === 4 || newTube.value.color.length === 7);
   }
   return tube.label && tube.label.length > 0 && tube.color && tube.color.length > 0
-       && tube.color.length < 8;
+       && checkColor.test(tube.color) && (tube.color.length === 4 || tube.color.length === 7);
 };
 const update = async (tube: tubeData) => {
   const tubeValid = checkBerofe(tube);
