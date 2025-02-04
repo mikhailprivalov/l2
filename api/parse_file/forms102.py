@@ -9,6 +9,7 @@ def check_need_col(cols: list, need_cols: set):
         return False
     return True
 
+
 def form_01(request_data):
     """
     Загрузка цен по прайсу
