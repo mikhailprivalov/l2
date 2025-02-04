@@ -786,6 +786,7 @@
             :pk="row.pk"
             :price_category="row.price_category"
             :is_gistology="row.research.is_gistology"
+            :paid_fin_source="paidFinSource(row.fin_source, row.fin_source_list)"
           />
           <div
             v-if="
@@ -962,8 +963,7 @@
             </div>
           </div>
           <div
-            v-if="(row.research.is_doc_refferal || row.research.is_gistology ||
-              row.research.is_paraclinic || row.research.is_form) && stat_btn && !is_operator_protocol"
+            v-if="(row.research.is_doc_refferal || row.research.is_gistology) && stat_btn && !is_operator_protocol"
             class="group"
           >
             <div class="group-title">
@@ -1138,8 +1138,7 @@
                 </div>
               </div>
               <div
-                v-if="(row.research.is_gistology || row.research.is_form || row.research.is_paraclinic) &&
-                  paidFinSource(row.fin_source, row.fin_source_list)"
+                v-if="row.research.is_gistology && paidFinSource(row.fin_source, row.fin_source_list)"
                 class="field"
               >
                 <div class="field-title">
