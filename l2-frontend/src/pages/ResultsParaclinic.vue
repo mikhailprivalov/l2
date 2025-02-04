@@ -784,7 +784,7 @@
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
             :pk="row.pk"
-            :price_category="row.price_category"
+            :price_category="row.price_category || -1"
             :is_gistology="row.research.is_gistology"
             :paid_fin_source="paidFinSource(row.fin_source, row.fin_source_list) || false"
           />
