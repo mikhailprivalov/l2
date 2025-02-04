@@ -218,7 +218,7 @@ const router = new Router({
       name: 'construct_tubes',
       component: () => import('@/construct/ConstructTubes/ConstructTubes.vue'),
       meta: {
-        title: 'Ёмкости',
+        title: 'Ёмкости для биоматериала (н)',
         groups: ['Конструктор: Ёмкости для биоматериала'],
         narrowLayout: true,
       },
