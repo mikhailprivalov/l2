@@ -15,6 +15,13 @@
         @uploadSuccess="getTubes"
       />
     </div>
+    <div>
+      <input
+        v-model="search"
+        class="form-control search nbr"
+        placeholder="Поиск ёмкости"
+      >
+    </div>
     <div
       class="card-no-hover card card-1"
     >
@@ -51,7 +58,7 @@
             </td>
           </tr>
           <tr
-            v-for="tube in tubes"
+            v-for="tube in filteredTubes"
             :key="tube.id"
           >
             <td>
@@ -138,6 +145,7 @@
 
 <script setup lang="ts">
 import {
+  computed,
   getCurrentInstance, onMounted, ref,
 } from 'vue';
 
@@ -233,6 +241,14 @@ const create = async () => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
+const search = ref('');
+
+const filteredTubes = computed(() => tubes.value.filter(tube => {
+  const tubeTitle = tube.label.toLowerCase();
+  const searchTerm = search.value.toLowerCase();
+  return tubeTitle.includes(searchTerm);
+}));
+
 </script>
 
 <style scoped>
@@ -245,7 +261,7 @@ const create = async () => {
 }
 .scroll {
   min-height: 104px;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
 }
 .table > thead > tr > th {
@@ -266,5 +282,8 @@ const create = async () => {
 .load-upload {
   display: flex;
   gap: 10px;
+}
+.search {
+  margin: 10px 0;
 }
 </style>
