@@ -8,7 +8,10 @@
       >
         XLSX
       </a>
-      <UploadFileModal />
+      <UploadFileModal
+        :types-file="['XLSX']"
+        :forms-file="['102.01']"
+      />
     </div>
     <div
       class="card-no-hover card card-1"
