@@ -571,6 +571,7 @@ export default {
       required: false,
     },
     paid_fin_source: {
+      default: false,
       type: Boolean,
       required: false,
     },
