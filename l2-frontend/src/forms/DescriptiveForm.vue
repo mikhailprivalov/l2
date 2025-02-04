@@ -25,6 +25,8 @@
             :group="group"
             :groups="research.groups"
             :patient="patient"
+            :paid_fin_source="paid_fin_source"
+            :is_gistology="is_gistology"
           >
             <div
               v-if="field.title !== '' && (research.wide_headers || group.fieldsInline)"
@@ -199,6 +201,7 @@
                   :raw="field.field_type === 14 || field.field_type === 23"
                   :not_autoload_result="field.field_type === 23"
                   :iss_pk="pk"
+                  :price_category="price_category"
                 />
               </div>
               <div

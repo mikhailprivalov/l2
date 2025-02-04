@@ -253,11 +253,11 @@ def menu(request):
                     sp = f"http://{sp}"
                 pages.append({"url": sp, "title": "Техническая поддержка", "nt": True, "access": ["*"]})
 
-            vp = SettingManager.get("vks", default="false")
+            vp = SettingManager.get("share_link", default="false")
             if vp not in ['', 'false']:
                 if not vp.startswith('http'):
                     vp = f"http://{vp}"
-                pages.append({"url": vp, "title": "ВКС", "nt": True, "access": ["*"]})
+                pages.append({"url": vp, "title": "Общие файлы", "nt": True, "access": ["*"]})
 
             data = make_menu(pages, groups, request.user.is_superuser, request.path)
             cache.set(k, simplejson.dumps(data), 300)

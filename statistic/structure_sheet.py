@@ -538,11 +538,13 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         direction_fin_source = issled[26]
         iss_fin_source = issled[27]
         parent_direction = " -"
+
         if issled[28]:
             parent_direction = result.get(issled[28], "-")
 
         direction_price_category = issled[29]
         iss_price_category = issled[30]
+        hosp_title = issled[31]
 
         # current_price = ''
 
@@ -606,6 +608,7 @@ def statistics_tickets_data(ws1, issl_obj, i_obj, style_border1):
         ws1.cell(row=r, column=22).value = parent_direction
         ws1.cell(row=r, column=23).value = direction_price_category
         ws1.cell(row=r, column=24).value = iss_price_category
+        ws1.cell(row=r, column=25).value = hosp_title
 
         rows = ws1[f'A{r}:X{r}']
         for row in rows:
