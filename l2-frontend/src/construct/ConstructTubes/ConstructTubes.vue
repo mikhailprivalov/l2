@@ -1,5 +1,12 @@
 <template>
   <div>
+    <a
+      class="a-under a-align"
+      href="#"
+      @click.prevent="downloadXlsx()"
+    >
+      XLSX
+    </a>
     <div
       class="card-no-hover card card-1"
     >
@@ -140,6 +147,10 @@ interface tubeData {
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
+
+const downloadXlsx = () => {
+  window.open('/forms/xlsx?type=103.01', '_blank');
+};
 
 const tubes = ref<tubeData[]>([]);
 
