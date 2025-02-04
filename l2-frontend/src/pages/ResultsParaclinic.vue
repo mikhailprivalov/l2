@@ -784,9 +784,9 @@
             :patient="data.patient"
             :change_mkb="change_mkb(row)"
             :pk="row.pk"
-            :price_category="row.price_category || -1"
+            :price_category="row.price_category"
             :is_gistology="row.research.is_gistology"
-            :paid_fin_source="paidFinSource(row.fin_source, row.fin_source_list) || false"
+            :paid_fin_source="paidFinSource(row.fin_source, row.fin_source_list)"
           />
           <div
             v-if="
@@ -963,7 +963,7 @@
             </div>
           </div>
           <div
-            v-if="(row.research.is_doc_refferal || row.research.is_gistology) && stat_btn && !is_operator_protocol"
+            v-if="(row.research.is_doc_refferal || row.research.is_gistology || row.research.is_paraclinic ) && stat_btn && !is_operator_protocol"
             class="group"
           >
             <div class="group-title">
