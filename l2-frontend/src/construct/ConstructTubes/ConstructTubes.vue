@@ -11,6 +11,7 @@
       <UploadFileModal
         :types-file="['XLSX']"
         :forms-file="['102.01']"
+        :show-results="true"
       />
     </div>
     <div
