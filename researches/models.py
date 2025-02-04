@@ -79,7 +79,19 @@ class Tubes(models.Model):
         verbose_name_plural = 'Виды ёмкостей'
 
     @staticmethod
+    def check_tube(title, short_title, color):
+        title_valid = 0 < len(title) < 256
+        short_title_valid = len(short_title) < 17
+        color_rules = '^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'
+        color_valid = bool(re.match(color_rules, color))
+        result = title_valid and short_title_valid and color_valid
+        return result
+
+    @staticmethod
     def update_tube(id: int, title: str, short_title: str, color: str):
+        tube_valid = Tubes.check_tube(title, short_title, color)
+        if not tube_valid:
+            return {"ok": False, "message": "Валидация не пройдена"}
         tube = Tubes.objects.filter(pk=id).first()
         if not tube:
             return {"ok": False, "message": "Такой ёмкости нет"}
@@ -91,7 +103,9 @@ class Tubes(models.Model):
 
     @staticmethod
     def create_tube(title: str, short_title: str, color: str):
+        tube_valid = Tubes.check_tube(title, short_title, color)
+        if not tube_valid:
+            return {"ok": False, "message": "Валидация не пройдена"}
         tube = Tubes(title=title, short_title=short_title, color=color)
         tube.save()
         return {"ok": True, "message": "", "data": tube.pk}
-
