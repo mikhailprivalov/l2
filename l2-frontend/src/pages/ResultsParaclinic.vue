@@ -964,7 +964,7 @@
           </div>
           <div
             v-if="(row.research.is_doc_refferal || row.research.is_gistology ||
-              row.research.is_paraclinic || row.research.is_form ) && stat_btn && !is_operator_protocol"
+              row.research.is_paraclinic || row.research.is_form) && stat_btn && !is_operator_protocol"
             class="group"
           >
             <div class="group-title">
@@ -1139,7 +1139,8 @@
                 </div>
               </div>
               <div
-                v-if="row.research.is_gistology && paidFinSource(row.fin_source, row.fin_source_list)"
+                v-if="(row.research.is_gistology || row.research.is_form || row.research.is_paraclinic) &&
+                  paidFinSource(row.fin_source, row.fin_source_list)"
                 class="field"
               >
                 <div class="field-title">
