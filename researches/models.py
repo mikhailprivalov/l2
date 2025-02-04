@@ -80,10 +80,10 @@ class Tubes(models.Model):
 
     @staticmethod
     def check_tube(title, short_title, color):
-        title_valid = 0 < len(title) < 256
-        short_title_valid = len(short_title) < 17
+        title_valid = title and 0 < len(title) < 256
+        short_title_valid = short_title and len(short_title) < 17
         color_rules = '^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'
-        color_valid = bool(re.match(color_rules, color))
+        color_valid = color and bool(re.match(color_rules, color))
         result = title_valid and short_title_valid and color_valid
         return result
 
