@@ -1337,7 +1337,14 @@ def save_research_permissions(request):
     research_id = request_data.get('researchId')
     department_id = request_data.get('departmentId')
     user_ids = request_data.get('userIds')
-    result = ConstructorEditAccessResearch.save_permissions(research_id, department_id, user_ids)
+    user_groups = [str(x) for x in request.user.groups.all()]
+    user_can_change = False
+    if "Конструктор: Редактировать свои услуги" not in user_groups or request.user.is_superuser:
+        user_can_change = True
+    if user_can_change:
+        result = ConstructorEditAccessResearch.save_permissions(research_id, department_id, user_ids)
+    else:
+        result = {"ok": False, "message": "Недостаточно прав"}
     return JsonResponse(result)
 
 

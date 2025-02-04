@@ -14,6 +14,7 @@
           class="form-control nbr left-radius complex-title"
           :class="complexIsHidden ? 'hide-background hide-border' : ''"
           :disabled="complexIsHidden"
+          placeholder="Введите наименование комплексной услуги"
         >
         <div class="flex">
           <button
@@ -47,6 +48,7 @@
       <input
         v-model="search"
         class="form-control left-radius right-radius"
+        placeholder="Поиск"
       >
     </div>
     <div
@@ -62,6 +64,14 @@
               width="35"
             >
           </colgroup>
+          <thead class="sticky">
+            <tr class="border-no-top">
+              <th class="text-center">
+                <strong>Наименование исследования</strong>
+              </th>
+              <th />
+            </tr>
+          </thead>
           <tr
             v-for="service in filteredService"
             :key="service.id"
@@ -104,18 +114,19 @@
     >
       <div class="flex">
         <Treeselect
-          v-model="selectedService"
+          v-model="selectedServices"
           :options="services"
           :disable-branch-nodes="true"
           class="add-treeselect"
-          placeholder="Выберите услугу..."
+          :multiple="true"
+          placeholder="Выберите исследование..."
         />
         <div class="flex">
           <button
             v-tippy
             class="btn btn-blue-nb nbr save-button right-radius"
             title="Добавить услугу"
-            :disabled="!selectedService"
+            :disabled="selectedServices.length < 1"
             @click="addService"
           >
             Добавить
@@ -161,10 +172,10 @@ onMounted(() => {
 });
 
 const services = ref([]);
-const selectedService = ref(null);
+const selectedServices = ref([]);
 const getServices = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { data } = await api('get-research-list');
+  const { data } = await api('get-research-list', { exclude_categories: ['is_complex'] });
   await store.dispatch(actions.DEC_LOADING);
   services.value = data;
 };
@@ -263,25 +274,27 @@ watch(selectedComplex, () => {
 });
 
 const addService = async () => {
-  const serviceExists = servicesInComplex.value.find((service) => service.id === selectedService.value);
-  if (!serviceExists && selectedService.value !== selectedComplex.value.id) {
+  const serviceExists = servicesInComplex.value.find((service) => selectedServices.value.includes(service.id));
+  if (!serviceExists) {
     await store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('construct/complex/add-service', {
+    const { ok, message, errors } = await api('construct/complex/add-services', {
       complexId: selectedComplex.value.id,
-      serviceId: selectedService.value,
+      serviceIds: selectedServices.value,
     });
     await store.dispatch(actions.DEC_LOADING);
     if (ok) {
       await getServicesInComplex();
-      selectedService.value = null;
-      root.$emit('msg', 'ok', 'Услуга добавлена');
+      selectedServices.value = [];
+      if (errors.length > 0) {
+        root.$emit('msg', 'warning', 'Не все услуги добавлены');
+      } else {
+        root.$emit('msg', 'ok', 'Услуги добавлены');
+      }
     } else {
       root.$emit('msg', 'error', message);
     }
   } else if (serviceExists) {
-    root.$emit('msg', 'error', 'Услуга уже добавлена');
-  } else if (selectedService.value === selectedComplex.value.id) {
-    root.$emit('msg', 'error', 'Нельзя добавить в комплекс этот же комплекс');
+    root.$emit('msg', 'error', 'Услуги пересекаются');
   }
 };
 
@@ -312,7 +325,7 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 .scroll {
-  min-height: 112px;
+  min-height: 108px;
   max-height: calc(100vh - 400px);
   overflow-y: auto;
 }
@@ -369,5 +382,11 @@ onMounted(() => {
 .empty-list {
   width: 85px;
   margin: 20px auto;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
 }
 </style>

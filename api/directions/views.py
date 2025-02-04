@@ -1741,6 +1741,7 @@ def directions_paraclinic_form(request):
                         "is_gistology": i.research.is_gistology,
                         "is_microbiology": i.research.is_microbiology,
                         "is_treatment": i.research.is_treatment,
+                        "is_form": i.research.is_form,
                         "is_stom": i.research.is_stom,
                         "isAux": i.research.is_aux,
                         "is_monitoring": i.research.is_monitoring,
@@ -1879,7 +1880,9 @@ def directions_paraclinic_form(request):
                         }
                     )
 
-                if not force_form and (iss["research"]["is_doc_refferal"] or iss["research"]["is_gistology"]):
+                if not force_form and (
+                    iss["research"]["is_doc_refferal"] or iss["research"]["is_gistology"] or iss["research"]["is_paraclinic"] or iss["research"]["is_form"] or iss["research"]["is_aux"]
+                ):
                     iss = {
                         **iss,
                         "purpose": i.purpose_id or -1,

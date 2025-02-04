@@ -39,7 +39,8 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             iss_fin.title as iss_finsource_title,
             directions_issledovaniya.parent_id as parent_iss_id,
             dirprice.title as dir_category_price,
-            issprice.title as iss_category_price
+            issprice.title as iss_category_price,
+            hospitals_hospitals.title as hosp_title
             FROM directions_issledovaniya 
             LEFT JOIN directory_researches
             ON directions_issledovaniya.research_id = directory_researches.id
@@ -62,6 +63,8 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
             LEFT JOIN contracts_pricecategory dirprice
             ON directions_napravleniya.price_category_id = dirprice.id
             
+            LEFT JOIN hospitals_hospitals
+            ON directions_napravleniya.hospital_id = hospitals_hospitals.id
             WHERE (%(d_confirms)s in (directions_issledovaniya.doc_confirmation_id, directions_issledovaniya.co_executor_id,
             directions_issledovaniya.co_executor2_id)) 
             AND time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
@@ -113,7 +116,8 @@ def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
         iss_finsource_title,
         parent_iss_id,
         dir_category_price,
-        iss_category_price
+        iss_category_price,
+        hosp_title
         FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id=t_card.id
         ORDER BY datetime_confirm""",

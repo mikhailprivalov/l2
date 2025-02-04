@@ -214,6 +214,7 @@ class SubGroupPadrazdeleniye(models.Model):
 def get_file_path_to_schemas(instance: 'Researches', filename):
     return os.path.join('schemas-pdf', str(instance.pk), str(uuid.uuid4()), filename)
 
+
 class Researches(models.Model):
     """
     Вид исследования
@@ -589,6 +590,7 @@ class Researches(models.Model):
         result = {
             "pk": research.pk,
             "title": research.title if not pk_in_title else f"{research.title} ({research.pk})",
+            "shortTitle": research.short_title,
             "internalCode": research.internal_code,
             "code": research.code,
             "hide": research.hide,
@@ -834,67 +836,92 @@ class Researches(models.Model):
         return result
 
     @staticmethod
-    def check_exclude(research):
+    def check_exclude(research, exclude_categories: list = None):
         """Проверка на исключенные типы услуг, на входе либо SQL namedtuple, либо объект researches"""
         result = True
-        if research.is_paraclinic and EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
-            result = False
-        elif research.is_doc_refferal and EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
-            result = False
-        elif research.is_treatment and EXCLUDE_TYPE_RESEARCH["is_treatment"]:
-            result = False
-        elif research.is_stom and EXCLUDE_TYPE_RESEARCH["is_stom"]:
-            result = False
-        elif research.is_hospital and EXCLUDE_TYPE_RESEARCH["is_hospital"]:
-            result = False
-        elif research.is_slave_hospital and EXCLUDE_TYPE_RESEARCH["is_slave_hospital"]:
-            result = False
-        elif research.is_microbiology and EXCLUDE_TYPE_RESEARCH["is_microbiology"]:
-            result = False
-        elif research.is_citology and EXCLUDE_TYPE_RESEARCH["is_citology"]:
-            result = False
-        elif research.is_gistology and EXCLUDE_TYPE_RESEARCH["is_gistology"]:
-            result = False
-        elif research.is_form and EXCLUDE_TYPE_RESEARCH["is_form"]:
-            result = False
-        elif research.is_application and EXCLUDE_TYPE_RESEARCH["is_application"]:
-            result = False
-        elif research.is_direction_params and EXCLUDE_TYPE_RESEARCH["is_direction_params"]:
-            result = False
-        elif research.is_global_direction_params and EXCLUDE_TYPE_RESEARCH["is_global_direction_params"]:
-            result = False
-        elif research.is_monitoring and EXCLUDE_TYPE_RESEARCH["is_monitoring"]:
-            result = False
-        elif research.is_expertise and EXCLUDE_TYPE_RESEARCH["is_expertise"]:
-            result = False
-        elif research.is_aux and EXCLUDE_TYPE_RESEARCH["is_aux"]:
-            result = False
-        elif research.is_case and EXCLUDE_TYPE_RESEARCH["is_case"]:
-            result = False
-        elif research.is_complex and EXCLUDE_TYPE_RESEARCH["is_complex"]:
-            result = False
-        elif EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+        if research.is_paraclinic:
+            if EXCLUDE_TYPE_RESEARCH["is_paraclinic"] or (exclude_categories and "is_paraclinic" in exclude_categories):
+                result = False
+        elif research.is_doc_refferal:
+            if EXCLUDE_TYPE_RESEARCH["is_doc_refferal"] or (exclude_categories and "is_doc_refferal" in exclude_categories):
+                result = False
+        elif research.is_treatment:
+            if EXCLUDE_TYPE_RESEARCH["is_treatment"] or (exclude_categories and "is_treatment" in exclude_categories):
+                result = False
+        elif research.is_stom:
+            if EXCLUDE_TYPE_RESEARCH["is_stom"] or (exclude_categories and "is_stom" in exclude_categories):
+                result = False
+        elif research.is_hospital:
+            if EXCLUDE_TYPE_RESEARCH["is_hospital"] or (exclude_categories and "is_hospital" in exclude_categories):
+                result = False
+        elif research.is_slave_hospital:
+            if EXCLUDE_TYPE_RESEARCH["is_slave_hospital"] or (exclude_categories and "is_slave_hospital" in exclude_categories):
+                result = False
+        elif research.is_microbiology:
+            if EXCLUDE_TYPE_RESEARCH["is_microbiology"] or (exclude_categories and "is_microbiology" in exclude_categories):
+                result = False
+        elif research.is_citology:
+            if EXCLUDE_TYPE_RESEARCH["is_citology"] or (exclude_categories and "is_citology" in exclude_categories):
+                result = False
+        elif research.is_gistology:
+            if EXCLUDE_TYPE_RESEARCH["is_gistology"] or (exclude_categories and "is_gistology" in exclude_categories):
+                result = False
+        elif research.is_form:
+            if EXCLUDE_TYPE_RESEARCH["is_form"] or (exclude_categories and "is_form" in exclude_categories):
+                result = False
+        elif research.is_application:
+            if EXCLUDE_TYPE_RESEARCH["is_application"] or (exclude_categories and "is_application" in exclude_categories):
+                result = False
+        elif research.is_direction_params:
+            if EXCLUDE_TYPE_RESEARCH["is_direction_params"] or (exclude_categories and "is_direction_params" in exclude_categories):
+                result = False
+        elif research.is_global_direction_params:
+            if EXCLUDE_TYPE_RESEARCH["is_global_direction_params"] or (exclude_categories and "is_global_direction_params" in exclude_categories):
+                result = False
+        elif research.is_monitoring:
+            if EXCLUDE_TYPE_RESEARCH["is_monitoring"] or (exclude_categories and "is_monitoring" in exclude_categories):
+                result = False
+        elif research.is_expertise:
+            if EXCLUDE_TYPE_RESEARCH["is_expertise"] or (exclude_categories and "is_expertise" in exclude_categories):
+                result = False
+        elif research.is_aux:
+            if EXCLUDE_TYPE_RESEARCH["is_aux"] or (exclude_categories and "is_aux" in exclude_categories):
+                result = False
+        elif research.is_case:
+            if EXCLUDE_TYPE_RESEARCH["is_case"] or (exclude_categories and "is_case" in exclude_categories):
+                result = False
+        elif research.is_complex:
+            if EXCLUDE_TYPE_RESEARCH["is_complex"] or (exclude_categories and "is_complex" in exclude_categories):
+                result = False
+        elif EXCLUDE_TYPE_RESEARCH["is_laboratory"] or (exclude_categories and "is_laboratory" in exclude_categories):
             result = False
         return result
 
     @staticmethod
-    def gen_non_excluded_categories():
+    def gen_non_excluded_categories(exclude_categories: list = None):
         res_list = {}
-        if not EXCLUDE_TYPE_RESEARCH["is_laboratory"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_laboratory"] and not exclude_categories or "is_laboratory" not in exclude_categories:
             res_list["Лаборатория"] = {}
-        if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_paraclinic"] and not exclude_categories or "is_paraclinic" not in exclude_categories:
             res_list["Параклиника"] = {}
-        if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_doc_refferal"] and not exclude_categories or "is_doc_refferal" not in exclude_categories:
             res_list["Консультации"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_form"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_form"] and not exclude_categories or "is_form" not in exclude_categories:
             res_list["Формы"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_treatment"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_treatment"] and not exclude_categories or "is_treatment" not in exclude_categories:
             res_list["Лечение"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not EXCLUDE_TYPE_RESEARCH["is_citology"]:
-            res_list["Морфология"] = {"Микробиология": [], "Гистология": [], "Цитология": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_stom"]:
+        tmp_morfology = {}
+        if not EXCLUDE_TYPE_RESEARCH["is_microbiology"] and not exclude_categories or "is_microbiology" not in exclude_categories:
+            tmp_morfology["Микробиология"] = []
+        if not EXCLUDE_TYPE_RESEARCH["is_gistology"] and not exclude_categories or "is_gistology" not in exclude_categories:
+            tmp_morfology["Гистология"] = []
+        if not EXCLUDE_TYPE_RESEARCH["is_citology"] and not exclude_categories or "is_citology" not in exclude_categories:
+            tmp_morfology["Цитология"] = []
+        if len(tmp_morfology) > 0:
+            res_list["Морфология"] = tmp_morfology
+        if not EXCLUDE_TYPE_RESEARCH["is_stom"] and not exclude_categories or "is_stom" not in exclude_categories:
             res_list["Стоматология"] = {"Общие": []}
-        if not EXCLUDE_TYPE_RESEARCH["is_complex"]:
+        if not EXCLUDE_TYPE_RESEARCH["is_complex"] and not exclude_categories or "is_complex" not in exclude_categories:
             res_list["Комплексные услуги"] = {"Общие": []}
         return res_list
 
@@ -1002,33 +1029,30 @@ class ComplexService(models.Model):
         return result
 
     @staticmethod
-    def check_complex(master_complex_id, slave_complex_services):
-        master_complex_services = ComplexService.objects.filter(main_research_id=master_complex_id).values_list("slave_research_id", flat=True)
-        master_complex_ids = set(master_complex_services)
-        for service in slave_complex_services:
-            if service.slave_research_id in master_complex_ids:
-                return {"ok": False, "message": "В добавляемом комплексе пересекаются услуги"}
-            if service.slave_research.is_complex:
-                return {"ok": False, "message": "Нельзя добавить комплекс с комплексами"}
-        return {"ok": True, "message": ""}
+    def add_services(complex_id: int, service_ids: list):
+        if not service_ids:
+            return {"ok": False, "message": "Услуги не переданы"}
+        errors_reason = []
+        errors_ids = set()
+        for service_id in service_ids:
+            result_add = ComplexService.add_service(complex_id, service_id)
+            if not result_add["ok"]:
+                errors_reason.append({"service_id": service_id, "reason": result_add["message"]})
+                errors_ids.add(service_id)
+        result = {"ok": True, "message": "", "errors_reason": errors_reason, "errors_ids": errors_ids}
+        return result
 
     @staticmethod
-    def add_service(complex_id: int, service_id: int, ):
-        if not complex_id or not service_id:
-            return {"ok": False, "message": "Комплекс или услуга не переданы"}
-        if complex_id == service_id:
-            return {"ok": False, "message": "Нельзя добавить в комплекс этот же комплекс"}
+    def add_service(complex_id: int, service_id: int):
         current_service: ComplexService = ComplexService.objects.filter(main_research_id=complex_id, slave_research_id=service_id).first()
         if current_service:
             return {"ok": False, "message": "Услуга уже есть"}
-        slave_complex_service = ComplexService.objects.filter(main_research_id=service_id).select_related('slave_research')
-        if slave_complex_service.exists():
-            check_result = ComplexService.check_complex(complex_id, slave_complex_service)
-            if not check_result["ok"]:
-                return check_result
+        service_is_complex = Researches.objects.filter(pk=service_id).first().is_complex
+        if service_is_complex:
+            return {"ok": False, "message": "Услуга является комплексом"}
         complex_service = ComplexService(main_research_id=complex_id, slave_research_id=service_id)
         complex_service.save()
-        return {"ok": True, "message": "", "result": complex_service.main_research_id}
+        return {"ok": True, "message": ""}
 
     @staticmethod
     def change_hidden_complex(complex_id: int):
@@ -1566,6 +1590,7 @@ class Fractions(models.Model):
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
     external_code = models.CharField(max_length=255, default="", help_text="Внешний код теста", blank=True, db_index=True)
     statistic_pattern_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Статистический параметр модели", on_delete=models.SET_NULL)
+    default_value = models.CharField(max_length=255, default="", blank=True, null=True, verbose_name="Значение по умолчанию", help_text="24, отрицательно и т.д")
 
     def get_unit(self):
         if self.unit:
@@ -1604,6 +1629,7 @@ class Fractions(models.Model):
             "hide": fraction.hide,
             "refM": fraction.ref_m,
             "refF": fraction.ref_f,
+            "defaultValue": fraction.default_value,
         }
         return result
 
@@ -1638,6 +1664,7 @@ class Fractions(models.Model):
             "variants_id": fraction_data.get("variantsId", None),
             "formula": fraction_data["formula"],
             "hide": fraction_data["hide"],
+            "default_value": fraction_data["defaultValue"],
         }
 
     @staticmethod
@@ -1652,6 +1679,7 @@ class Fractions(models.Model):
         fraction.hide = fraction_data["hide"]
         fraction.ref_m = fraction_data["ref_m"]
         fraction.ref_f = fraction_data["ref_f"]
+        fraction.default_value = fraction_data["default_value"]
         fraction.save()
 
     @staticmethod

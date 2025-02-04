@@ -1361,6 +1361,7 @@ def laborants(request):
 @login_required
 def load_docprofile_by_group(request):
     request_data = json.loads(request.body)
+    department_not_select = request_data.get("department_not_select")
     if request_data["group"] == "*":
         users_data = users_all(request.user.doctorprofile.get_hospital_id())
     else:
@@ -1380,7 +1381,7 @@ def load_docprofile_by_group(request):
         if control_position and row[5] not in positions_data:
             continue
         if row[2] not in users_grouped:
-            users_grouped[row[2]] = {"id": f"{row[2]}", "label": row[4] or row[3], "children": []}
+            users_grouped[row[2]] = {"id": f"{row[2] if not department_not_select else f'g{row[2]}'}", "label": row[4] or row[3], "children": []}
         users_grouped[row[2]]["children"].append({"id": str(row[0]), "label": row[1], "podr": row[4] or row[3]})
 
     return JsonResponse({"users": list(users_grouped.values())})
@@ -2832,13 +2833,14 @@ def update_coast_research_in_price(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
+    request_data = json.loads(request.body)
+    exclude_categories = request_data.get("exclude_categories")
     researches = Researches.objects.all().order_by("title")
-    res_list = Researches.gen_non_excluded_categories()
-
+    res_list = Researches.gen_non_excluded_categories(exclude_categories)
     lab_podr = get_lab_podr()
     lab_podr = [podr[0] for podr in lab_podr]
     for research in researches:
-        if not Researches.check_exclude(research):
+        if not Researches.check_exclude(research, exclude_categories):
             continue
         is_hide = ""
         if research.hide:

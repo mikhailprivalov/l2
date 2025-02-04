@@ -132,6 +132,9 @@ export default {
   created() {
     this.update_val(this.value);
   },
+  unmounted() {
+    this.$root.$off(`update-sp-m-${this.uid}`);
+  },
   methods: {
     update_val(v) {
       this.$emit('input', v);

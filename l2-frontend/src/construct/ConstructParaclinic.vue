@@ -189,6 +189,9 @@ export default {
     );
     this.update_deps();
   },
+  unmounted() {
+    this.$root.$off('research-editor:cancel');
+  },
   methods: {
     load_researches() {
       this.$store.dispatch(actions.INC_LOADING);
