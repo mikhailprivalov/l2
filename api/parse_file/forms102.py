@@ -29,7 +29,7 @@ def form_01(request_data):
         '',
         '',
     )
-    need_col_name = {"Наименование", "код", "цвет (rgb, hex)"}
+    need_col_name = {"наименование", "код", "цвет (rgb, hex)"}
     starts = False
     for row in ws.rows:
         cells = [str(x.value) for x in row]
