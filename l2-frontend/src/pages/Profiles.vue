@@ -2,13 +2,13 @@
   <div class="root">
     <div class="left">
       <Treeselect
-        v-model="selected_hospital"
+        v-model="selectedHospital"
         :multiple="false"
         :disable-branch-nodes="true"
-        :options="can_edit_any_organization ? hospitals : own_hospital"
+        :options="canEditAnyOrganization ? hospitals : ownHospital"
         placeholder="Больница не выбрана"
         :append-to-body="true"
-        :disabled="open_pk !== -2"
+        :disabled="openPk !== -2"
         :clearable="false"
       />
       <input
@@ -28,7 +28,7 @@
               <li
                 v-for="x in d.users"
                 :key="x.pk"
-                :class="{ selected: x.pk === open_pk }"
+                :class="{ selected: x.pk === openPk }"
               >
                 <a
                   class="user-link"
@@ -36,7 +36,7 @@
                   @click.prevent="open(x.pk)"
                 >{{ x.username }} – {{ x.fio }}</a>
               </li>
-              <li :class="{ selected: open_pk === -1 && user.department === d.pk }">
+              <li :class="{ selected: openPk === -1 && user.department === d.pk }">
                 <a
                   href="#"
                   @click.prevent="open(-1, d.pk)"
@@ -48,7 +48,7 @@
       </div>
     </div>
     <div
-      v-if="open_pk > -2"
+      v-if="openPk > -2"
       class="right"
     >
       <div class="right-wrapper">
@@ -107,7 +107,7 @@
                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
                     title="Генерация имени пользователя на основе ФИО"
                     type="button"
-                    @click="gen_username"
+                    @click="genUsername"
                   >
                     <i class="fa fa-dot-circle-o" />
                   </button>
@@ -135,7 +135,7 @@
                   key="passwd"
                   v-model="user.password"
                   :placeholder="
-                    'Минимальная длина пароля – 6 символов. ' + (open_pk === -1 ? '' : 'Для смены пароля введите новый')
+                    'Минимальная длина пароля – 6 символов. ' + (openPk === -1 ? '' : 'Для смены пароля введите новый')
                   "
                   class="form-control"
                   type="text"
@@ -149,7 +149,7 @@
                     class="btn btn-blue-nb btn-ell dropdown-toggle nbr"
                     title="Генерация пароля"
                     type="button"
-                    @click="gen_passwd"
+                    @click="genPasswd"
                   >
                     <i class="fa fa-dot-circle-o" />
                   </button>
@@ -224,7 +224,7 @@
         </div>
         <div class="more-data">
           <div
-            v-if="l2_user_data.rmis_enabled"
+            v-if="l2UserData.rmis_enabled"
             class="row"
           >
             <div
@@ -530,18 +530,18 @@
               style="font-size: 13px"
             >
               <i
-                v-if="setup_forbidden"
+                v-if="setupForbidden"
                 v-tippy="{ placement: 'bottom' }"
                 class="glyphicon glyphicon-circle-arrow-up"
                 title="Скрыть"
-                @click="change_setup_forbidden"
+                @click="changeSetupForbidden"
               />
               <i
                 v-else
                 v-tippy="{ placement: 'bottom' }"
                 class="glyphicon glyphicon-circle-arrow-down"
                 title="Редактировать"
-                @click="change_setup_forbidden"
+                @click="changeSetupForbidden"
               />
             </button>
             <button
@@ -560,7 +560,7 @@
             </button>
           </div>
           <div
-            v-if="setup_forbidden"
+            v-if="setupForbidden"
             class="row"
             style="margin-right: 0"
           >
@@ -623,23 +623,23 @@
               style="font-size: 13px"
             >
               <i
-                v-if="setup_resource"
+                v-if="setupResource"
                 v-tippy="{ placement: 'bottom' }"
                 class="glyphicon glyphicon-circle-arrow-up"
                 title="Скрыть"
-                @click="change_setup_resource"
+                @click="changeSetupResource"
               />
               <i
                 v-else
                 v-tippy="{ placement: 'bottom' }"
                 class="glyphicon glyphicon-circle-arrow-down"
                 title="Редактировать"
-                @click="change_setup_resource"
+                @click="changeSetupResource"
               />
             </button>
           </div>
           <div
-            v-if="setup_resource"
+            v-if="setupResource"
             class="row"
             style="height: 200px; border-right: 1px solid #eaeaea; padding-right: 0"
           >
@@ -648,7 +648,7 @@
               style="height: 100%"
             >
               <ResearchesPicker
-                v-model="resource_researches"
+                v-model="resourceResearches"
                 autoselect="none"
                 :hidetemplates="true"
               />
@@ -658,12 +658,12 @@
               style="height: 100%"
             >
               <SelectedResearches
-                :researches="resource_researches || []"
+                :researches="resourceResearches || []"
                 :simple="true"
               />
             </div>
             <div
-              :class="current_resource_pk !== -1 ? 'col-xs-9' : 'col-xs-10'"
+              :class="currentResourcePk !== -1 ? 'col-xs-9' : 'col-xs-10'"
               style="padding-right: 0"
             >
               <div
@@ -672,13 +672,13 @@
               >
                 <span class="input-group-addon">Наименование ресурса</span>
                 <input
-                  v-model="current_resource_title"
+                  v-model="currentResourceTitle"
                   class="form-control"
                 >
               </div>
             </div>
             <div
-              v-if="current_resource_pk !== -1"
+              v-if="currentResourcePk !== -1"
               style="padding-right: 0;text-align: right"
               class="col-xs-1"
             >
@@ -686,7 +686,7 @@
                 v-tippy
                 class="btn btn-blue-nb"
                 title="Отмена"
-                @click="current_resource_title = ''; resource_researches = []; current_resource_pk = -1;"
+                @click="currentResourceTitle = ''; resourceResearches = []; currentResourcePk = -1;"
               >
                 <i class="fa fa-times" />
               </button>
@@ -696,23 +696,23 @@
               class="col-xs-2"
             >
               <button
-                :disabled="!valid || resource_researches.length === 0 || current_resource_title.length === 0"
+                :disabled="!valid || resourceResearches.length === 0 || currentResourceTitle.length === 0"
                 class="btn btn-blue-nb"
-                @click="save_resource"
+                @click="saveResource"
               >
-                {{ current_resource_pk !== -1 ? 'Обновить ресурс' : 'Сохранить ресурс' }}
+                {{ currentResourcePk !== -1 ? 'Обновить ресурс' : 'Сохранить ресурс' }}
               </button>
             </div>
           </div>
           <div
-            v-if="setup_resource"
+            v-if="setupResource"
             style="padding-top: 30px"
           >
             <div
               v-for="row in rows"
               :key="row.pk"
               class="research"
-              :class="current_resource_pk === row.pk && 'research-active'"
+              :class="currentResourcePk === row.pk && 'research-active'"
             >
               <strong
                 v-if="row.title"
@@ -730,14 +730,14 @@
               <button
                 class="btn btn-blue-nb sidebar-btn"
                 style="font-size: 12px"
-                @click="current_resource_researches(row)"
+                @click="currentResourceResearches(row)"
               >
                 Редактировать
               </button>
               <button
                 class="btn btn-blue-nb sidebar-btn"
                 style="font-size: 12px"
-                @click="open_schedule(row.pk)"
+                @click="openSchedule(row.pk)"
               >
                 Расписание
               </button>
@@ -795,18 +795,18 @@
                 style="font-size: 13px"
               >
                 <i
-                  v-if="setup_analyzer"
+                  v-if="setupAnalyzer"
                   v-tippy="{ placement: 'bottom'}"
                   class="glyphicon glyphicon-circle-arrow-up"
                   title="Скрыть"
-                  @click="change_setup_analyzer"
+                  @click="changeSetupAnalyzer"
                 />
                 <i
                   v-else
                   v-tippy="{ placement: 'bottom' }"
                   class="glyphicon glyphicon-circle-arrow-down"
                   title="Выбрать"
-                  @click="change_setup_analyzer"
+                  @click="changeSetupAnalyzer"
                 />
               </button>
             </div>
@@ -815,7 +815,7 @@
             class="row left-padding-10"
           >
             <div
-              v-if="setup_analyzer"
+              v-if="setupAnalyzer"
               class="input-group"
               style="width: 100%"
             >
@@ -827,7 +827,7 @@
                 style="height: 136px"
               >
                 <option
-                  v-for="l in analyzers_list"
+                  v-for="l in analyzersList"
                   :key="l.pk"
                   :value="l.pk"
                 >
@@ -952,11 +952,13 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { debounce } from 'lodash';
-import { mapGetters } from 'vuex';
+import {
+  computed, getCurrentInstance, onMounted, ref, watch,
+} from 'vue';
 
 import { validateEmail, validateSnils } from '@/utils';
 import usersPoint from '@/api/user-point';
@@ -964,59 +966,61 @@ import * as actions from '@/store/action-types';
 import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import UrlData from '@/UrlData';
+import { useStore } from '@/store';
+import api from '@/api';
 
-const toTranslit = function (text) {
-  return text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
-    if (space || words) {
-      return space ? '-' : '';
-    }
-    const code = ch.charCodeAt(0);
-    let index;
-    if (code === 1025 || code === 1105) {
-      index = 0;
-    } else {
-      index = code > 1071 ? code - 1071 : code - 1039;
-    }
-    const t = [
-      'yo',
-      'a',
-      'b',
-      'v',
-      'g',
-      'd',
-      'e',
-      'zh',
-      'z',
-      'i',
-      'y',
-      'k',
-      'l',
-      'm',
-      'n',
-      'o',
-      'p',
-      'r',
-      's',
-      't',
-      'u',
-      'f',
-      'h',
-      'c',
-      'ch',
-      'sh',
-      'shch',
-      '',
-      'y',
-      '',
-      'e',
-      'yu',
-      'ya',
-    ];
-    return t[index];
-  });
-};
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
+const toTranslit = (text) => text.replace(/([а-яё])|([\s_-])|([^a-z\d])/gi, (all, ch, space, words) => {
+  if (space || words) {
+    return space ? '-' : '';
+  }
+  const code = ch.charCodeAt(0);
+  let index;
+  if (code === 1025 || code === 1105) {
+    index = 0;
+  } else {
+    index = code > 1071 ? code - 1071 : code - 1039;
+  }
+  const t = [
+    'yo',
+    'a',
+    'b',
+    'v',
+    'g',
+    'd',
+    'e',
+    'zh',
+    'z',
+    'i',
+    'y',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'r',
+    's',
+    't',
+    'u',
+    'f',
+    'h',
+    'c',
+    'ch',
+    'sh',
+    'shch',
+    '',
+    'y',
+    '',
+    'e',
+    'yu',
+    'ya',
+  ];
+  return t[index];
+});
 
-function strRand(l = 8, v = 1) {
+const strRand = (l = 8, v = 1) => {
   let result = '';
   const words = v === 1 ? '0123456789-qwertyuiopasdfghjklzxcvbnm01234567890123456789' : '000000000000123456789';
   const maxPosition = words.length - 1;
@@ -1025,364 +1029,396 @@ function strRand(l = 8, v = 1) {
     result += words.substring(position, position + 1);
   }
   return result;
-}
-
-export default {
-  name: 'Profiles',
-  components: { ResearchesPicker, SelectedResearches, Treeselect },
-  data() {
-    return {
-      filter: '',
-      departments: [],
-      analyzers: [],
-      analyzers_list: [],
-      specialities: [],
-      positions: [],
-      districts: [],
-      doctor_profiles: [],
-      resource_researches: [],
-      setup_analyzer: false,
-      setup_forbidden: false,
-      setup_resource: false,
-      resource_templates_list: [],
-      current_resource_pk: -1,
-      current_resource_title: '',
-      user: {
-        username: '',
-        password: '',
-        email: '',
-        rmis_location: '',
-        rmis_login: '',
-        rmis_password: '',
-        doc_pk: -1,
-        personal_code: -1,
-        cabinet: '',
-        rmis_resource_id: '',
-        rmis_employee_id: '',
-        rmis_service_id_time_table: '',
-        sendPassword: false,
-        external_access: false,
-        date_stop_external_access: '',
-        resource_schedule: [],
-        notControlAnketa: false,
-        date_extract_employee: '',
-        date_stop_certificate: '',
-        replace_doctor_cda: -1,
-        department_doctors: [],
-        additionalInfo: '{}',
-        dismissed: false,
-      },
-      selected_hospital: -1,
-      open_pk: -2,
-    };
-  },
-  computed: {
-    rows() {
-      return this.resource_templates_list.map((r) => ({
-        ...r,
-        researches: r.researches.map((rpk) => this.$store.getters.researches_obj[rpk]).filter(Boolean),
-      }));
-    },
-    snilsValid() {
-      return (
-        !this.user.snils || (!this.user.snils.includes('-') && !this.user.snils.includes(' ') && validateSnils(this.user.snils))
-      );
-    },
-    validEmail() {
-      return validateEmail(this.user?.email);
-    },
-    departmentFiltered() {
-      const r = [];
-      for (const x of this.departments) {
-        r.push({
-          ...x,
-          users: x.users.filter(
-            (y) => y.fio.toLowerCase().startsWith(this.filter.toLowerCase())
-              || y.username.toLowerCase().startsWith(this.filter.toLowerCase()),
-          ),
-        });
-      }
-      return r.filter((d) => this.filter === '' || d.users.length || d.title.toLowerCase().startsWith(this.filter.toLowerCase()));
-    },
-    valid() {
-      const p = (this.open_pk > -1
-          && (this.user.password.length === 0 || this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)))
-        || (this.open_pk === -1 && (this.user.password.length >= 3 || (this.user.sendPassword && this.validEmail)));
-      return p && this.user.username !== '' && this.user.family !== '' && this.user.name !== '' && this.snilsValid;
-    },
-    ...mapGetters({
-      modules: 'modules',
-      l2_user_data: 'user_data',
-      hospitals: 'hospitals',
-    }),
-    can_edit_any_organization() {
-      return this.l2_user_data.su || this.l2_user_data.all_hospitals_users_control;
-    },
-    user_hospital() {
-      return this.l2_user_data.hospital || -1;
-    },
-    own_hospital() {
-      return [this.hospitals.find(({ id }) => id === this.l2_user_data.hospital) || {}];
-    },
-  },
-  watch: {
-    'user.family': function () {
-      this.user.family = this.user.family
-        .replace(/\s\s+/g, ' ')
-        .split(' ')
-        .map((s) => s
-          .split('-')
-          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
-          .join('-'))
-        .join(' ');
-      if (this.open_pk === -1) {
-        this.deb_gu();
-      }
-    },
-    'user.name': function () {
-      this.user.name = this.user.name
-        .replace(/\s\s+/g, ' ')
-        .split(' ')
-        .map((s) => s
-          .split('-')
-          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
-          .join('-'))
-        .join(' ');
-      if (this.open_pk === -1) {
-        this.deb_gu();
-      }
-    },
-    'user.patronymic': function () {
-      this.user.patronymic = this.user.patronymic
-        .replace(/\s\s+/g, ' ')
-        .split(' ')
-        .map((s) => s
-          .split('-')
-          .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
-          .join('-'))
-        .join(' ');
-      if (this.open_pk === -1) {
-        this.deb_gu();
-      }
-    },
-    'user.external_access': function () {
-      if (!this.user.external_access) {
-        this.user.date_stop_external_access = '';
-      }
-    },
-    user_hospital: {
-      handler() {
-        if (this.selected_hospital !== -1 || this.user_hospital === -1) {
-          return;
-        }
-        this.selected_hospital = this.user_hospital;
-      },
-      immediate: true,
-    },
-    selected_hospital() {
-      if (this.selected_hospital === -1) {
-        return;
-      }
-
-      this.load_users();
-    },
-    resource_researches() {
-      if (this.resource_researches.length === 0) {
-        this.current_resource_pk = -1;
-      }
-    },
-  },
-  created() {
-    this.load_users();
-    this.current_resource_pk = -1;
-    this.resource_researches = [];
-    this.current_resource_title = '';
-  },
-  mounted() {
-    this.getAllAnalyzers();
-  },
-  methods: {
-    open_schedule(pk) {
-      window.open(`/ui/schedule#${UrlData.objectToData({ resourceSelected: pk })}`, '_blank');
-    },
-    current_resource_researches(row) {
-      for (const res of this.resource_templates_list) {
-        if (row.pk === res.pk) {
-          this.resource_researches = res.researches;
-          this.current_resource_pk = row.pk;
-          this.current_resource_title = res.title;
-          break;
-        }
-      }
-    },
-    async getAllAnalyzers() {
-      const list = await this.$api('analyzers/all-analyzers');
-      this.analyzers_list = list.data;
-    },
-    async save_resource() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('schedule/save-resource', {
-        pk: this.user.doc_pk,
-        resource_researches: this.resource_researches,
-        res_pk: this.current_resource_pk,
-        res_title: this.current_resource_title,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', message);
-        if (this.current_resource_pk === -1) {
-          this.current_resource_title = '';
-          this.resource_researches = [];
-        }
-        await this.reloadResources();
-      }
-    },
-    change_setup_forbidden() {
-      this.setup_forbidden = !this.setup_forbidden;
-    },
-    async restrictedOfPrice() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok } = await this.$api('users/update-restricted-directions', {
-        userPk: this.user.doc_pk,
-        hospitalPk: this.selected_hospital,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'успешно');
-      } else {
-        this.$root.$emit('msg', 'error', 'ошибка');
-      }
-    },
-    async cancelRestricted() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok } = await this.$api('users/cancel-restricted-directions', {
-        userPk: this.user.doc_pk,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'успешно');
-      } else {
-        this.$root.$emit('msg', 'error', 'ошибка');
-      }
-    },
-    change_setup_analyzer() {
-      this.setup_analyzer = !this.setup_analyzer;
-    },
-    change_setup_resource() {
-      this.setup_resource = !this.setup_resource;
-    },
-    deb_gu: debounce(function () {
-      this.gen_username();
-    }, 500),
-    gen_username() {
-      let v = `${this.user.family} ${this.user.name} ${this.user.patronymic}`;
-      let ls = v.split(' ');
-      if (ls.length > 3) {
-        ls = [ls[0], ls.slice(1, ls.length - 2).join(' '), ls[ls.length - 1] || ''];
-      }
-      while (ls.length <= 2) {
-        ls.push(' ');
-      }
-      v = ls[0] + (ls[1][0] || '') + (ls[2][0] || '');
-      v = toTranslit(v.replace(/\s/g, '')) + strRand(3, 2);
-      this.user.username = v;
-      this.$root.$emit('msg', 'ok', 'Имя пользователя сгенерировано');
-    },
-    gen_passwd() {
-      this.user.password = strRand();
-    },
-    async load_users(prevClr = false) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      if (!prevClr) {
-        this.departments = [];
-      }
-      const {
-        departments, specialities, positions, districts, doctorProfiles,
-      } = await usersPoint.loadUsers(this, 'selected_hospital');
-      this.departments = departments;
-      this.specialities = specialities;
-      this.positions = positions;
-      this.districts = districts;
-      this.doctor_profiles = doctorProfiles;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async open(pk, dep = null) {
-      if ((pk === this.open_pk && pk !== -1) || (this.open_pk === -1 && pk === -1 && dep === this.user.department)) {
-        return;
-      }
-      this.close();
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { user } = await usersPoint.loadUser({ pk });
-      this.user = user;
-      if (pk === -1) {
-        this.user.department = dep;
-        this.gen_passwd();
-      }
-      this.current_resource_pk = -1;
-      this.current_resource_title = '';
-      this.resource_researches = [];
-      this.resource_templates_list = this.user.resource_schedule;
-      await this.$store.dispatch(actions.DEC_LOADING);
-      this.open_pk = pk;
-    },
-    async reloadResources() {
-      if (!this.open_pk) {
-        return;
-      }
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { user } = await usersPoint.loadUser({ pk: this.open_pk });
-      this.user.resource_schedule = user.resource_schedule;
-      this.resource_templates_list = this.user.resource_schedule;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async save() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, npk, message } = await usersPoint.saveUser({
-        pk: this.open_pk,
-        user_data: this.user,
-        groupsAnalyzer: this.analyzers,
-        hospital_pk: this.selected_hospital,
-      });
-      if (ok) {
-        this.$root.$emit(
-          'msg',
-          'ok',
-          `Пользователь сохранён\n${this.user.family} ${this.user.name} ${this.user.patronymic} – ${this.user.username}`,
-        );
-        this.open_pk = npk;
-        this.load_users(true);
-        if (this.user.sendPassword && this.validEmail) {
-          this.user.password = '';
-        }
-        this.user.sendPassword = false;
-      } else {
-        this.$root.$emit('msg', 'error', `Ошибка\n${message}`);
-      }
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async close() {
-      this.open_pk = -2;
-      this.analyzers = [];
-      this.user = {
-        family: '',
-        name: '',
-        patronymic: '',
-        groups: [],
-        groups_list: [],
-        restricted_to_direct: [],
-        resource_schedule: [],
-        users_services: [],
-        username: '',
-        password: '',
-        department: null,
-        rmis_resource_id: '',
-      };
-      this.current_resource_pk = -1;
-      this.current_resource_title = '';
-      this.resource_researches = [];
-    },
-  },
 };
+
+const filter = ref('');
+const departments = ref([]);
+const analyzers = ref([]);
+const analyzersList = ref([]);
+const specialities = ref([]);
+const positions = ref([]);
+const districts = ref([]);
+const doctorProfiles = ref([]);
+const resourceResearches = ref([]);
+const setupAnalyzer = ref(false);
+const setupForbidden = ref(false);
+const setupResource = ref(false);
+const resourceTemplatesList = ref([]);
+const currentResourcePk = ref(-1);
+const currentResourceTitle = ref('');
+const user = ref({
+  username: '',
+  password: '',
+  family: '',
+  name: '',
+  patronymic: '',
+  department: '',
+  email: '',
+  snils: '',
+  rmis_location: '',
+  rmis_login: '',
+  rmis_password: '',
+  doc_pk: -1,
+  personal_code: -1,
+  cabinet: '',
+  rmis_resource_id: '',
+  rmis_employee_id: '',
+  rmis_service_id_time_table: '',
+  sendPassword: false,
+  external_access: false,
+  date_stop_external_access: '',
+  resource_schedule: [],
+  notControlAnketa: false,
+  date_extract_employee: '',
+  date_stop_certificate: '',
+  replace_doctor_cda: -1,
+  department_doctors: [],
+  additionalInfo: '{}',
+  dismissed: false,
+  rooms: '',
+  rooms_list: [],
+  available_quotas_time: '',
+  max_age_patient_registration: null,
+  users_services: [],
+  restricted_to_direct: [],
+  district: null,
+  groups: [],
+  groups_list: [],
+  position: null,
+  speciality: null,
+});
+const selectedHospital = ref(-1);
+const openPk = ref(-2);
+
+const rows = computed(() => resourceTemplatesList.value.map((r) => ({
+  ...r, researches: r.researches.map((rpk) => store.getters.researches_obj[rpk]).filter(Boolean),
+})));
+
+const snilsValid = computed(() => (
+  !user.value.snils || (!user.value.snils.includes('-') && !user.value.snils.includes(' ') && validateSnils(user.value.snils))
+));
+
+const validEmail = computed(() => validateEmail(user.value?.email));
+
+const departmentFiltered = computed(() => {
+  const r = [];
+  for (const x of departments.value) {
+    r.push({
+      ...x,
+      users: x.users.filter(
+        (y) => y.fio.toLowerCase().startsWith(filter.value.toLowerCase())
+              || y.username.toLowerCase().startsWith(filter.value.toLowerCase()),
+      ),
+    });
+  }
+  return r.filter((d) => filter.value === '' || d.users.length || d.title.toLowerCase().startsWith(filter.value.toLowerCase()));
+});
+
+const valid = computed(() => {
+  const p = (openPk.value > -1
+      && (user.value.password.length === 0 || user.value.password.length >= 3 || (user.value.sendPassword && validEmail.value)))
+        || (openPk.value === -1 && (user.value.password.length >= 3 || (user.value.sendPassword && validEmail.value)));
+  return p && user.value.username !== '' && user.value.family !== '' && user.value.name !== '' && snilsValid.value;
+});
+
+const modules = computed(() => store.getters.modules);
+const l2UserData = computed(() => store.getters.user_data);
+const hospitals = computed(() => store.getters.hospitals);
+
+const canEditAnyOrganization = computed(() => l2UserData.value.su || l2UserData.value.all_hospitals_users_control);
+
+const userHospital = computed(() => l2UserData.value.hospital || -1);
+
+const ownHospital = computed(() => [hospitals.value.find(({ id }) => id === l2UserData.value.hospital) || {}]);
+
+// method block
+const openSchedule = (pk) => {
+  window.open(`/ui/schedule#${UrlData.objectToData({ resourceSelected: pk })}`, '_blank');
+};
+
+const currentResourceResearches = (row) => {
+  for (const res of resourceTemplatesList.value) {
+    if (row.pk === res.pk) {
+      resourceResearches.value = res.researches;
+      currentResourcePk.value = row.pk;
+      currentResourceTitle.value = res.title;
+      break;
+    }
+  }
+};
+
+const getAllAnalyzers = async () => {
+  const list = await api('analyzers/all-analyzers');
+  analyzersList.value = list.data;
+};
+
+const changeSetupForbidden = () => {
+  setupForbidden.value = !setupForbidden.value;
+};
+
+const restrictedOfPrice = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('users/update-restricted-directions', {
+    userPk: user.value.doc_pk,
+    hospitalPk: selectedHospital.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'успешно');
+  } else {
+    root.$emit('msg', 'error', 'ошибка');
+  }
+};
+
+const cancelRestricted = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok } = await api('users/cancel-restricted-directions', {
+    userPk: user.value.doc_pk,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'успешно');
+  } else {
+    root.$emit('msg', 'error', 'ошибка');
+  }
+};
+
+const changeSetupAnalyzer = () => {
+  setupAnalyzer.value = !setupAnalyzer.value;
+};
+
+const changeSetupResource = () => {
+  setupResource.value = !setupResource.value;
+};
+
+const genUsername = () => {
+  let v = `${user.value.family} ${user.value.name} ${user.value.patronymic}`;
+  let ls = v.split(' ');
+  if (ls.length > 3) {
+    ls = [ls[0], ls.slice(1, ls.length - 2).join(' '), ls[ls.length - 1] || ''];
+  }
+  while (ls.length <= 2) {
+    ls.push(' ');
+  }
+  v = ls[0] + (ls[1][0] || '') + (ls[2][0] || '');
+  v = toTranslit(v.replace(/\s/g, '')) + strRand(3, 2);
+  user.value.username = v;
+  root.$emit('msg', 'ok', 'Имя пользователя сгенерировано');
+};
+
+const debGu = debounce(() => {
+  genUsername();
+}, 500);
+
+const genPasswd = () => {
+  user.value.password = strRand();
+};
+
+const loadUsers = async (prevClr = false) => {
+  await store.dispatch(actions.INC_LOADING);
+  if (!prevClr) {
+    departments.value = [];
+  }
+  const data = await usersPoint.loadUsers({ selected_hospital: selectedHospital.value });
+  departments.value = data.departments;
+  specialities.value = data.specialities;
+  positions.value = data.positions;
+  districts.value = data.districts;
+  doctorProfiles.value = data.doctorProfiles;
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const reloadResources = async () => {
+  if (!openPk.value) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const { userTmp } = await usersPoint.loadUser({ pk: this.openPk });
+  user.value.resource_schedule = userTmp.resource_schedule;
+  resourceTemplatesList.value = user.value.resource_schedule;
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const saveResource = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('schedule/save-resource', {
+    pk: user.value.doc_pk,
+    resource_researches: resourceResearches.value,
+    res_pk: currentResourcePk.value,
+    res_title: currentResourceTitle.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', message);
+    if (currentResourcePk.value === -1) {
+      currentResourceTitle.value = '';
+      resourceResearches.value = [];
+    }
+    await reloadResources();
+  }
+};
+
+const save = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, npk, message } = await usersPoint.saveUser({
+    pk: openPk.value,
+    user_data: user.value,
+    groupsAnalyzer: analyzers.value,
+    hospital_pk: selectedHospital.value,
+  });
+  if (ok) {
+    root.$emit(
+      'msg',
+      'ok',
+      `Пользователь сохранён\n${user.value.family} ${user.value.name} ${user.value.patronymic} – ${user.value.username}`,
+    );
+    openPk.value = npk;
+    await loadUsers(true);
+    if (user.value.sendPassword && validEmail.value) {
+      user.value.password = '';
+    }
+    user.value.sendPassword = false;
+  } else {
+    root.$emit('msg', 'error', `Ошибка\n${message}`);
+  }
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const close = async () => {
+  openPk.value = -2;
+  analyzers.value = [];
+  user.value = {
+    username: '',
+    password: '',
+    family: '',
+    name: '',
+    patronymic: '',
+    department: '',
+    email: '',
+    snils: '',
+    rmis_location: '',
+    rmis_login: '',
+    rmis_password: '',
+    doc_pk: -1,
+    personal_code: -1,
+    cabinet: '',
+    rmis_resource_id: '',
+    rmis_employee_id: '',
+    rmis_service_id_time_table: '',
+    sendPassword: false,
+    external_access: false,
+    date_stop_external_access: '',
+    resource_schedule: [],
+    notControlAnketa: false,
+    date_extract_employee: '',
+    date_stop_certificate: '',
+    replace_doctor_cda: -1,
+    department_doctors: [],
+    additionalInfo: '{}',
+    dismissed: false,
+  };
+  currentResourcePk.value = -1;
+  currentResourceTitle.value = '';
+  resourceResearches.value = [];
+};
+
+const open = async (pk, dep = null) => {
+  if ((pk === openPk.value && pk !== -1) || (openPk.value === -1 && pk === -1 && dep === user.value.department)) {
+    return;
+  }
+  await close();
+  await store.dispatch(actions.INC_LOADING);
+  const data = await usersPoint.loadUser({ pk });
+  user.value = data.user;
+  if (pk === -1) {
+    user.value.department = dep;
+    genPasswd();
+  }
+  currentResourcePk.value = -1;
+  currentResourceTitle.value = '';
+  resourceResearches.value = [];
+  resourceTemplatesList.value = user.value.resource_schedule;
+  await store.dispatch(actions.DEC_LOADING);
+  openPk.value = pk;
+};
+
+// created block setup в created все делает
+loadUsers();
+currentResourcePk.value = -1;
+resourceResearches.value = [];
+currentResourceTitle.value = '';
+
+watch(() => user.value.family, () => {
+  user.value.family = user.value.family
+    .replace(/\s\s+/g, ' ')
+    .split(' ')
+    .map((s) => s
+      .split('-')
+      .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+      .join('-'))
+    .join(' ');
+  if (openPk.value === -1) {
+    debGu();
+  }
+});
+
+watch(() => user.value.name, () => {
+  user.value.name = user.value.name
+    .replace(/\s\s+/g, ' ')
+    .split(' ')
+    .map((s) => s
+      .split('-')
+      .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+      .join('-'))
+    .join(' ');
+  if (openPk.value === -1) {
+    debGu();
+  }
+});
+
+watch(() => user.value.patronymic, () => {
+  user.value.patronymic = user.value.patronymic
+    .replace(/\s\s+/g, ' ')
+    .split(' ')
+    .map((s) => s
+      .split('-')
+      .map((x) => x.charAt(0).toUpperCase() + x.substring(1).toLowerCase())
+      .join('-'))
+    .join(' ');
+  if (openPk.value === -1) {
+    debGu();
+  }
+});
+
+watch(() => user.value.external_access, () => {
+  if (!user.value.external_access) {
+    user.value.date_stop_external_access = '';
+  }
+});
+
+watch(() => userHospital, () => {
+  if (selectedHospital.value !== -1 || userHospital.value === -1) {
+    return;
+  }
+  selectedHospital.value = userHospital.value;
+}, { immediate: true });
+
+watch(() => selectedHospital, () => {
+  if (selectedHospital.value === -1) {
+    return;
+  }
+  loadUsers();
+});
+
+watch(() => resourceResearches, () => {
+  if (resourceResearches.value.length === 0) {
+    currentResourcePk.value = -1;
+  }
+});
+
+onMounted(() => {
+  getAllAnalyzers();
+});
 </script>
 
 <style lang="scss" scoped>

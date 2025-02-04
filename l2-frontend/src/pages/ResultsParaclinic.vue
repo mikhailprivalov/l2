@@ -137,6 +137,7 @@
                 class="amd amd-error"
               >
                 ЕГИСЗ: ошибка
+                ЕГИСЗ: ошибка
               </div>
               <div
                 v-else-if="direction.amd === 'planned'"
@@ -785,6 +786,7 @@
             :pk="row.pk"
             :price_category="row.price_category"
             :is_gistology="row.research.is_gistology"
+            :paid_fin_source="paidFinSource(row.fin_source, row.fin_source_list)"
           />
           <div
             v-if="
