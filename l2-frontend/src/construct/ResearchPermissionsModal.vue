@@ -96,7 +96,7 @@ const selectedUsers = ref(null);
 const usersData = ref([]);
 const getUsers = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { users } = await api('load-users-by-group', { group: '*' });
+  const { users } = await api('load-users-by-group', { group: '*', department_not_select: true });
   await store.dispatch(actions.DEC_LOADING);
   usersData.value = users;
 };

@@ -84,7 +84,7 @@
               class="btn btn-blue-nb no-margin-left"
               type="button"
               style="border-radius: 0;width: 100%;"
-              :disabled="has_unsaved || loaded_pk < 0"
+              :disabled="!canChangePermissions || loaded_pk < 0"
               @click="openPermissionsModal"
             >
               Права
@@ -305,7 +305,7 @@
               class="btn btn-blue-nb no-margin-left"
               type="button"
               style="border-radius: 0;width: 100%;"
-              :disabled="has_unsaved || loaded_pk < 0"
+              :disabled="!canChangePermissions || loaded_pk < 0"
               @click="openPermissionsModal"
             >
               Права
@@ -1175,7 +1175,7 @@
           </button>
           <LoadFile
             is-load-group-for-protocol
-            title-button="Загрузить из файла"
+            title-button="Загрузить группу"
             file-filter="application/JSON"
             :research-id="pk"
             tag="div"
@@ -1184,7 +1184,7 @@
           <LoadFile
             v-if="pk === -1"
             is-load-group-for-protocol
-            title-button="Копировать услугу"
+            title-button="Загрузить услугу"
             file-filter="application/JSON"
             :research-id="pk"
             tag="div"
@@ -1411,6 +1411,7 @@ export default {
       timeoutTwo: null,
       timeoutThree: null,
       groupsRollUp: false,
+      canChangePermissions: false,
     };
   },
   computed: {
@@ -1506,6 +1507,7 @@ export default {
   },
   async created() {
     this.checkShowAllTemplates();
+    this.checkEditPermissions();
     await this.load();
     await this.loadDepartmentsForPermissions();
     await this.load_deparments();
@@ -1926,6 +1928,14 @@ export default {
       if (groups.includes('Конструктор: Параклинические (описательные) исследования - шаблоны по подразделениям')
         || groups.includes('Admin')) {
         this.showAllDepartmentForTemplateField = true;
+      }
+    },
+    checkEditPermissions() {
+      this.userDepartmentId = this.$store.getters.user_data.department.pk;
+      const { groups } = this.$store.getters.user_data;
+      if (!groups.includes('Конструктор: Редактировать свои услуги')
+        || groups.includes('Admin')) {
+        this.canChangePermissions = true;
       }
     },
     async changeTemplateField() {
