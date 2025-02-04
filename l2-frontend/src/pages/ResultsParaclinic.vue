@@ -963,8 +963,7 @@
             </div>
           </div>
           <div
-            v-if="(row.research.is_doc_refferal || row.research.is_gistology ||
-              row.research.is_paraclinic || row.research.is_form ) && stat_btn && !is_operator_protocol"
+            v-if="(row.research.is_doc_refferal || row.research.is_gistology) && stat_btn && !is_operator_protocol"
             class="group"
           >
             <div class="group-title">
