@@ -39,7 +39,7 @@ def form_01(request_data):
                     return {"ok": False, "result": {}, "message": "Нет обязательных полей"}
                 title_idx = cells.index("наименование")
                 short_title_idx = cells.index("код")
-                color_idx = cells.index("цвет")
+                color_idx = cells.index("цвет (rgb, hex)")
                 starts = True
         else:
             title = cells[title_idx].strip()
