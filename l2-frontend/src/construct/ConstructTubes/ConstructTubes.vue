@@ -1,12 +1,15 @@
 <template>
   <div>
-    <a
-      class="a-under a-align"
-      href="#"
-      @click.prevent="downloadXlsx()"
-    >
-      XLSX
-    </a>
+    <div class="load-upload">
+      <a
+        class="a-under a-align"
+        href="#"
+        @click.prevent="downloadXlsx()"
+      >
+        XLSX
+      </a>
+      <UploadFileModal />
+    </div>
     <div
       class="card-no-hover card card-1"
     >
@@ -137,6 +140,7 @@ import * as actions from '@/store/action-types';
 import { useStore } from '@/store';
 import api from '@/api';
 import InputColorString from '@/construct/ConstructTubes/InputColorString.vue';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 interface tubeData {
   id: number,
@@ -253,5 +257,9 @@ const create = async () => {
   align-self: stretch;
   flex: 1;
   padding: 6px 0;
+}
+.load-upload {
+  display: flex;
+  gap: 10px;
 }
 </style>
