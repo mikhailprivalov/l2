@@ -37,7 +37,7 @@ def form_01(request_data):
             if "цвет (rgb, hex)" in cells:
                 if not check_need_col(cells, need_col_name):
                     return {"ok": False, "result": {}, "message": "Нет обязательных полей"}
-                title_idx = cells.index("Наименование")
+                title_idx = cells.index("наименование")
                 short_title_idx = cells.index("код")
                 color_idx = cells.index("цвет")
                 starts = True
