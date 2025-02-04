@@ -12,7 +12,7 @@
         :types-file="['XLSX']"
         :forms-file="['102.01']"
         :show-results="true"
-        @upload-success="getTubes"
+        @uploadSuccess="getTubes"
       />
     </div>
     <div
