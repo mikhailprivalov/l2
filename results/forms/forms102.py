@@ -242,7 +242,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         "Код по МКБ",
         "Комментарии к заключению и рекомендации",
         "Врач-консультант",
-        "Медицинские услуги(платная категория)"
+        "Медицинские услуги(платная категория)",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     data = {}
