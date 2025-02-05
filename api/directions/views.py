@@ -2294,7 +2294,12 @@ def directions_paraclinic_result(request):
                 continue
             for field in group["fields"]:
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
-                if not v_f.get(str(field["pk"]), True) and not (iss.research.is_gistology and (f.title == "Медицинские услуги(платная категория)" or f.title == "Медицинские услуги")):
+                if not v_f.get(str(field["pk"]), True) and not (iss.research.is_gistology and (
+                        f.title == "Медицинские услуги(стационар)" or
+                        f.title == "Медицинские услуги(поликлиника)" or
+                        f.title == "Медицинские услуги(платная категория)" or
+                        f.title == "Медицинские услуги")
+                ):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
                     continue
                 if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
