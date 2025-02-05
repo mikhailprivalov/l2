@@ -1889,6 +1889,9 @@ def directions_paraclinic_form(request):
                     or iss["research"]["is_direction_params"]
                     or iss["research"]["is_global_direction_params"]
                     or iss["research"]["is_expertise"]
+                    or iss["research"]["is_monitoring"]
+                    or iss["research"]["is_treatment"]
+                    or iss["research"]["is_stom"]
                 ):
                     iss = {
                         **iss,
