@@ -44,6 +44,7 @@ export default function typesAndForms() {
   const fileFormsInfo = ref({
     101.01: 'Необходимые поля: "снилс", "фио", "дата рождения", "пол", "инн организации", "код вредности", "должность", '
       + '"дата мед. осмотра", "подразделение"',
+    102.01: 'Необходимые поля: "наименование (макс. длинна 255)", "код (макс. длинна 16)", "цвет (rgb, hex) (макс. длинна 7)"',
   });
   const addForms = (type: string, forms = null, allowedForms: string[] = null) => {
     const result: formsFile[] = [];
