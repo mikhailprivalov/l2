@@ -1744,6 +1744,7 @@ def directions_paraclinic_form(request):
                         "is_form": i.research.is_form,
                         "is_stom": i.research.is_stom,
                         "isAux": i.research.is_aux,
+                        "is_expertise": i.research.is_expertise,
                         "is_monitoring": i.research.is_monitoring,
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
@@ -1885,7 +1886,7 @@ def directions_paraclinic_form(request):
                     or iss["research"]["is_gistology"]
                     or iss["research"]["is_paraclinic"]
                     or iss["research"]["is_form"]
-                    or iss["research"]["is_aux"]
+                    or iss["research"]["isAux"]
                     or iss["research"]["is_direction_params"]
                     or iss["research"]["is_global_direction_params"]
                     or iss["research"]["is_expertise"]
