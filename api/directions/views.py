@@ -1881,8 +1881,14 @@ def directions_paraclinic_form(request):
                     )
 
                 if not force_form and (
-                    iss["research"]["is_doc_refferal"] or iss["research"]["is_gistology"] or iss["research"]["is_paraclinic"] or iss["research"]["is_form"] or iss["research"]["is_aux"]
-                    or iss["research"]["is_direction_params"] or iss["research"]["is_global_direction_params"] or iss["research"]["is_expertise"]
+                    iss["research"]["is_doc_refferal"]
+                    or iss["research"]["is_gistology"]
+                    or iss["research"]["is_paraclinic"]
+                    or iss["research"]["is_form"]
+                    or iss["research"]["is_aux"]
+                    or iss["research"]["is_direction_params"]
+                    or iss["research"]["is_global_direction_params"]
+                    or iss["research"]["is_expertise"]
                 ):
                     iss = {
                         **iss,
