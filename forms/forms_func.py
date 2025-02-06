@@ -1189,7 +1189,6 @@ def hosp_get_operation_data(num_dir):
         'Метод обезболивания',
         'Осложнения',
         'Код операции',
-
         'Код оперативного вмешательства согласно номенклатуре медицинских услуг',
         'Код манипуляции',
         'Оперативное вмешательство',
@@ -1197,6 +1196,7 @@ def hosp_get_operation_data(num_dir):
         'Анестезиолог',
         'Код анестезиолога',
         'Категория сложности',
+        'ykur',
         'Диагноз после оперативного лечения',
         'МКБ 10',
         'Оперировал',
@@ -1299,6 +1299,9 @@ def hosp_get_operation_data(num_dir):
                     continue
                 if field[3] == 'Категория сложности':
                     operation_data['category_difficult'] = f"Сложность - {field[2]}"
+                    continue
+                if field[3] == 'ykur':
+                    operation_data['category_difficult'] = f"ykur  {field[2]}"
                     continue
                 if field[3] == 'Диагноз после оперативного лечения':
                     operation_data['diagnos_after_operation'] = field[2]
