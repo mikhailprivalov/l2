@@ -1081,19 +1081,23 @@ const snilsValid = computed(() => (
 
 const validEmail = computed(() => validateEmail(user.value?.email));
 
-const departmentFiltered = computed(() => {
-  const r = [];
-  for (const x of departments.value) {
-    r.push({
-      ...x,
-      users: x.users.filter(
-        (y) => y.fio.toLowerCase().startsWith(search.value.toLowerCase())
-              || y.username.toLowerCase().startsWith(search.value.toLowerCase()),
-      ),
-    });
+const departmentFiltered = computed(() => departments.value.map(department => {
+  const searchTerm = search.value.toLowerCase();
+  const result = department.users.filter(currentUser => {
+    const userFio = currentUser.fio.toLowerCase();
+    const userUserName = currentUser.username.toLowerCase();
+    return userFio.includes(searchTerm) || userUserName.includes(searchTerm);
+  });
+  if (result) {
+    return { pk: department.pk, title: department.title, users: result };
   }
-  return r.filter((d) => search.value === '' || d.users.length || d.title.toLowerCase().startsWith(search.value.toLowerCase()));
-});
+  return [];
+}).filter(department => {
+  if (search.value) {
+    return department.users.length !== 0;
+  }
+  return true;
+}));
 
 const valid = computed(() => {
   const p = (openPk.value > -1
