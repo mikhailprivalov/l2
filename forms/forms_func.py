@@ -1166,9 +1166,9 @@ def hosp_get_operation_data(num_dir):
             # найти протоколы по типу операции
             if (i.get('research_title').lower().find('операци') != -1 or i.get('research_title').lower().find('манипул') != -1) and i['date_confirm']:
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
-
     titles_field = [
         'Название операции',
+        'Наименование оперативного вмешательства',
         'Название манипуляции',
         'Дата проведения',
         'Время начала',
@@ -1176,6 +1176,7 @@ def hosp_get_operation_data(num_dir):
         'Метод обезболивания',
         'Осложнения',
         'Код операции',
+        'Код оперативного вмешательства согласно номенклатуре медицинских услуг',
         'Код манипуляции',
         'Оперативное вмешательство',
         'Описание манипуляции',
@@ -1198,6 +1199,7 @@ def hosp_get_operation_data(num_dir):
         'Вид анестезиологического пособия',
         'Осложнения, возникшие в ходе оперативного вмешательства (операции)',
         'Оперирующий врач'
+        'Кровопотеря во время оперативного вмешательства',
     ]
     list_values = []
 
@@ -1242,7 +1244,7 @@ def hosp_get_operation_data(num_dir):
                 operation_data['doc_code'] = ''
             category_difficult = ''
             for field in fields_operation:
-                if field[3] == 'Название операции' or field[3] == 'Название манипуляции' or field[3] == 'Наименование оперативного вмешательства (операции)' :
+                if field[3] == 'Название операции' or (field[3] == 'Название манипуляции') or (field[3] == 'Наименование оперативного вмешательства (операции)'):
                     operation_data['name_operation'] = field[2]
                     continue
                 if field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
@@ -1254,13 +1256,14 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Время окончания':
                     operation_data['time_end'] = field[2]
                     continue
-                if field[3] == 'Метод обезболивания' or field[3] == 'Вид анестезиологического пособия':
+                if field[3] == 'Метод обезболивания' or (field[3] == 'Вид анестезиологического пособия'):
                     operation_data['anesthesia method'] = field[2]
                     continue
-                if field[3] == 'Осложнения' or field[3] == 'Реакции и осложнения:' or field[3] == 'Осложнения, возникшие в ходе оперативного вмешательства (операции)':
+                if field[3] == 'Осложнения' or (field[3] == 'Реакции и осложнения:') or (field[3] == 'Осложнения, возникшие в ходе оперативного вмешательства (операции)')\
+                        or field[3] == 'Кровопотеря во время оперативного вмешательства':
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции':
+                if field[3] == 'Код операции' or (field[3] == 'Код оперативного вмешательства согласно номенклатуре медицинских услуг'):
                     operation_data['code_operation'] = field[2]
                     continue
                 if field[3] == 'Код манипуляции':
