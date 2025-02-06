@@ -1316,6 +1316,17 @@ const close = async () => {
     department_doctors: [],
     additionalInfo: '{}',
     dismissed: false,
+    rooms: '',
+    rooms_list: [],
+    available_quotas_time: '',
+    max_age_patient_registration: null,
+    users_services: [],
+    restricted_to_direct: [],
+    district: null,
+    groups: [],
+    groups_list: [],
+    position: null,
+    speciality: null,
   };
   currentResourcePk.value = -1;
   currentResourceTitle.value = '';
