@@ -520,7 +520,7 @@ const router = new Router({
     {
       path: '/ui/profiles',
       name: 'profiles',
-      component: () => import('@/pages/Profiles.vue'),
+      component: () => import('@/pages/Profiles/Profiles.vue'),
       meta: {
         title: 'Профили пользователей',
         groups: [
