@@ -1173,10 +1173,14 @@ def hosp_get_operation_data(num_dir):
     if hosp_operation:
         for i in hosp_operation:
             # найти протоколы по типу операции
-            if (i.get('research_title').lower().find('операции') != -1 or i.get('research_title').lower().find('манипул') != -1) and i['date_confirm']:
+            if (i.get('research_title').lower().find('операции') != -1 or i.get('research_title').lower().find('манипул') != -1
+                or i.get('research_title').lower().find('реабилитации') != -1
+            ) and i['date_confirm']:
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
     titles_field = [
         'Название операции',
+        'Наименование услуги',
+        'Код услуги',
         'Наименование оперативного вмешательства',
         'Название манипуляции',
         'Дата проведения',
@@ -1185,6 +1189,7 @@ def hosp_get_operation_data(num_dir):
         'Метод обезболивания',
         'Осложнения',
         'Код операции',
+
         'Код оперативного вмешательства согласно номенклатуре медицинских услуг',
         'Код манипуляции',
         'Оперативное вмешательство',
@@ -1253,7 +1258,8 @@ def hosp_get_operation_data(num_dir):
                 operation_data['doc_code'] = ''
             category_difficult = ''
             for field in fields_operation:
-                if field[3] == 'Название операции' or (field[3] == 'Название манипуляции') or (field[3] == 'Наименование оперативного вмешательства (операции)'):
+                if field[3] == 'Название операции' or (field[3] == 'Название манипуляции') or (
+                        field[3] == 'Наименование оперативного вмешательства (операции)' or (field[3] == 'Наименование услуги')):
                     operation_data['name_operation'] = field[2]
                     continue
                 if field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
@@ -1276,7 +1282,7 @@ def hosp_get_operation_data(num_dir):
                 ):
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции' or (field[3] == 'Код оперативного вмешательства согласно номенклатуре медицинских услуг'):
+                if field[3] == 'Код операции' or (field[3] == 'Код оперативного вмешательства согласно номенклатуре медицинских услуг') or (field[3] == 'Код услуги'):
                     operation_data['code_operation'] = field[2]
                     continue
                 if field[3] == 'Код манипуляции':
@@ -1330,13 +1336,13 @@ def hosp_get_operation_data(num_dir):
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']}-{category_difficult}"
-            if operation_data.get('name_operation') == '-':
+            if operation_data.get('name_operation') == '-' and operation_data.get('Группа крови АВО'):
                 operation_data["name_operation"] = (
                     f"{iss_obj.research.title} "
                     f"Группа крови АВО:{operation_data.get('Группа крови АВО')} "
                     f"Фенотип донора: {operation_data.get('Фенотип донора:', '-')} "
                     f"Наименование компонента донорской крови: {operation_data.get('Наименование компонента донорской крови', '-')} "
-                    f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')}"
+                    f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')} "
                 )
             operation_result.append(operation_data.copy())
 
