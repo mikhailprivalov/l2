@@ -2,7 +2,7 @@
   <div class="root">
     <div class="left">
       <Treeselect
-        v-model="selectedHospital"
+        v-model="selectedHospitalId"
         :multiple="false"
         :disable-branch-nodes="true"
         :options="canEditAnyOrganization ? hospitals : ownHospital"
@@ -1068,7 +1068,7 @@ const user = ref({
   position: null,
   speciality: null,
 });
-const selectedHospital = ref(-1);
+const selectedHospitalId = ref(-1);
 const openPk = ref(-2);
 
 const rows = computed(() => resourceTemplatesList.value.map((r) => ({
@@ -1141,7 +1141,7 @@ const restrictedOfPrice = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok } = await api('users/update-restricted-directions', {
     userPk: user.value.doc_pk,
-    hospitalPk: selectedHospital.value,
+    hospitalPk: selectedHospitalId.value,
   });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
@@ -1200,7 +1200,7 @@ const loadUsers = async (prevClr = false) => {
   if (!prevClr) {
     departments.value = [];
   }
-  const data = await usersPoint.loadUsers({ selected_hospital: selectedHospital.value });
+  const data = await usersPoint.loadUsers({ selected_hospital: selectedHospitalId.value });
   departments.value = data.departments;
   specialities.value = data.specialities;
   positions.value = data.positions;
@@ -1245,7 +1245,7 @@ const save = async () => {
     pk: openPk.value,
     user_data: user.value,
     groupsAnalyzer: analyzers.value,
-    hospital_pk: selectedHospital.value,
+    hospital_pk: selectedHospitalId.value,
   });
   if (ok) {
     root.$emit(
@@ -1389,14 +1389,14 @@ watch(() => user.value.external_access, () => {
 });
 
 watch(() => userHospital.value, () => {
-  if (selectedHospital.value !== -1 || userHospital.value === -1) {
+  if (selectedHospitalId.value !== -1 || userHospital.value === -1) {
     return;
   }
-  selectedHospital.value = userHospital.value;
+  selectedHospitalId.value = userHospital.value;
 }, { immediate: true });
 
-watch(() => selectedHospital.value, () => {
-  if (selectedHospital.value === -1) {
+watch(() => selectedHospitalId.value, () => {
+  if (selectedHospitalId.value === -1) {
     return;
   }
   loadUsers();
