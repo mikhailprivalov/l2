@@ -17,7 +17,7 @@
         placeholder="Фильтр"
         style="margin-top: 5px"
       >
-      <div class="left-wrapper">
+      <div class="user-list">
         <Department
           v-for="department in departmentFiltered"
           :key="department.pk"
@@ -1442,7 +1442,7 @@ onMounted(() => {
   }
 }
 
-.left-wrapper {
+.user-list {
   height: calc(100% - 75px);
   padding-top: 5px;
   overflow-y: auto;
@@ -1490,15 +1490,6 @@ onMounted(() => {
   }
 }
 
-.user-link {
-  color: #000;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
 .main-data {
   .input-group {
     width: 100%;
@@ -1508,49 +1499,6 @@ onMounted(() => {
     border-radius: 0;
     width: 50px;
     margin-right: -1px;
-  }
-}
-
-ul {
-  padding-left: 20px;
-}
-
-li > ul > li {
-  list-style: none;
-
-  &::before {
-    color: #000;
-    content: '\2022';
-    font-size: 18px;
-    line-height: 12px;
-    padding-right: 8px;
-    position: relative;
-    top: 0;
-  }
-
-  &.selected::before {
-    color: #26816a;
-    text-shadow: 0 0 4px rgba(#26816a, 0.9);
-  }
-}
-
-li.selected {
-  a {
-    font-weight: bold;
-
-    &.user-link {
-      text-shadow: 0 0 4px rgba(#26816a, 0.5);
-    }
-
-    &::before {
-      content: '[';
-      color: #26816a;
-    }
-
-    &::after {
-      content: ']';
-      color: #26816a;
-    }
   }
 }
 
