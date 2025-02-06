@@ -18,9 +18,11 @@
         style="margin-top: 5px"
       >
       <div class="left-wrapper">
-        <department
-          v-for="department in departments"
+        <Department
+          v-for="department in departmentFiltered"
           :key="department.pk"
+          :department="department"
+          @select-user="open"
         />
       </div>
     </div>
@@ -945,7 +947,7 @@ import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import UrlData from '@/UrlData';
 import { useStore } from '@/store';
 import api from '@/api';
-import Department from "@/pages/Profiles/Department.vue";
+import Department from '@/pages/Profiles/Department.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -1311,7 +1313,7 @@ const close = async () => {
   resourceResearches.value = [];
 };
 
-const open = async (pk, dep = null) => {
+const open = async ({ pk, dep = null }) => {
   if ((pk === openPk.value && pk !== -1) || (openPk.value === -1 && pk === -1 && dep === user.value.department)) {
     return;
   }
