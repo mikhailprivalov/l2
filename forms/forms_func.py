@@ -818,7 +818,7 @@ def hosp_extract_get_data(hosp_last_num):
                     final_diagnos_mkb_code = final_diagnos_mkb_details.get("code", "")
                     final_diagnos_mkb = final_diagnos_mkb_code
                 except:
-                    final_diagnos_mkb = ""
+                    final_diagnos_mkb = final_diagnos_mkb
 
             if i[3] == 'Осложнение основного диагноза по МКБ':
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
