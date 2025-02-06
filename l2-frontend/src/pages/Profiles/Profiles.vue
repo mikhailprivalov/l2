@@ -10,12 +10,12 @@
         :append-to-body="true"
         :disabled="openPk !== -2"
         :clearable="false"
+        class="treeselect-noborder"
       />
       <input
         v-model="search"
-        class="form-control"
-        placeholder="Фильтр"
-        style="margin-top: 5px"
+        class="form-control search nbr"
+        placeholder="Поиск"
       >
       <div class="user-list">
         <Department
@@ -1435,9 +1435,6 @@ onMounted(() => {
 .left {
   background: #fff;
   border-right: 1px solid #646d78;
-  padding-top: 5px;
-  padding-left: 2px;
-  padding-right: 5px;
   width: 320px;
 
   input {
@@ -1448,7 +1445,7 @@ onMounted(() => {
 
 .user-list {
   height: calc(100% - 75px);
-  padding-top: 5px;
+  padding: 5px 5px 0 2px;
   overflow-y: auto;
 }
 
@@ -1616,5 +1613,10 @@ onMounted(() => {
 }
 .border-top-none {
   border-top: 0;
+}
+
+.search {
+  border-left: 0;
+  border-right: 0;
 }
 </style>
