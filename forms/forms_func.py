@@ -754,7 +754,9 @@ def hosp_extract_get_data(hosp_last_num):
         'Время выписки',
         'Дата выписки',
         'Основной диагноз (описание)',
+        'Основное заболевание',
         'Основной диагноз по МКБ',
+        'код по МКБ',
         'Осложнение основного диагноза (описание)',
         'Осложнение основного диагноза по МКБ',
         'Сопутствующий диагноз (описание)',
@@ -799,7 +801,7 @@ def hosp_extract_get_data(hosp_last_num):
                 date_value = normalize_date(i[2])
             if i[3] == 'Время выписки':
                 time_value = i[2]
-            if i[3] == 'Основной диагноз (описание)':
+            if i[3] == 'Основной диагноз (описание)' or i[3] == 'Основное заболевание':
                 final_diagnos = i[2]
             if i[3] == 'Осложнение основного диагноза (описание)':
                 other_diagnos = i[2]
@@ -809,8 +811,15 @@ def hosp_extract_get_data(hosp_last_num):
                 outcome = i[2]
             if i[3] == 'Результат госпитализации':
                 result_hospital = i[2]
-            if i[3] == 'Основной диагноз по МКБ':
+            if i[3] == 'Основной диагноз по МКБ' or i[3] == 'код по МКБ':
                 final_diagnos_mkb = str(i[2])
+                try:
+                    final_diagnos_mkb_details = json.loads(final_diagnos_mkb)
+                    final_diagnos_mkb_code = final_diagnos_mkb_details.get("code", "")
+                    final_diagnos_mkb = final_diagnos_mkb_code
+                except:
+                    final_diagnos_mkb = ""
+
             if i[3] == 'Осложнение основного диагноза по МКБ':
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
