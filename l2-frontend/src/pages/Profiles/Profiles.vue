@@ -12,7 +12,7 @@
         :clearable="false"
       />
       <input
-        v-model="filter"
+        v-model="search"
         class="form-control"
         placeholder="Фильтр"
         style="margin-top: 5px"
@@ -1012,7 +1012,7 @@ const strRand = (l = 8, v = 1) => {
   return result;
 };
 
-const filter = ref('');
+const search = ref('');
 const departments = ref([]);
 const analyzers = ref([]);
 const analyzersList = ref([]);
@@ -1087,12 +1087,12 @@ const departmentFiltered = computed(() => {
     r.push({
       ...x,
       users: x.users.filter(
-        (y) => y.fio.toLowerCase().startsWith(filter.value.toLowerCase())
-              || y.username.toLowerCase().startsWith(filter.value.toLowerCase()),
+        (y) => y.fio.toLowerCase().startsWith(search.value.toLowerCase())
+              || y.username.toLowerCase().startsWith(search.value.toLowerCase()),
       ),
     });
   }
-  return r.filter((d) => filter.value === '' || d.users.length || d.title.toLowerCase().startsWith(filter.value.toLowerCase()));
+  return r.filter((d) => search.value === '' || d.users.length || d.title.toLowerCase().startsWith(search.value.toLowerCase()));
 });
 
 const valid = computed(() => {
