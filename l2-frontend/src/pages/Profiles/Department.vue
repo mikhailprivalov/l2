@@ -45,7 +45,7 @@ const selectedUserId = ref(-1);
 
 const selectUser = (userId: number, departmentId: number = null) => {
   selectedUserId.value = userId;
-  emit('select-user', { userId, departmentId });
+  emit('select-user', { pk: userId, dep: departmentId });
 };
 </script>
 
