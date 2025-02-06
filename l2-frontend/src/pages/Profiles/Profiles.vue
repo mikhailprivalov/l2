@@ -1315,7 +1315,6 @@ const close = async () => {
 };
 
 const open = async ({ pk, dep }) => {
-  console.log(pk);
   if ((pk === openPk.value && pk !== -1) || (openPk.value === -1 && pk === -1 && dep === user.value.department)) {
     return;
   }
