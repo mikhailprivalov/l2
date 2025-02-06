@@ -4,17 +4,17 @@
       <strong>{{ props.department.title }}</strong>
       <ul>
         <li
-          v-for="user in props.department.users"
-          :key="user.pk"
-          :class="{ selected: user.pk === selectedUserId }"
+          v-for="userX in props.department.users"
+          :key="userX.pk"
+          :class="{ selected: userX.pk === selectedUserId }"
         >
           <a
             class="user-link"
             href="#"
-            @click.prevent="selectUser(user.pk)"
-          >{{ user.username }} – {{ user.fio }}</a>
+            @click.prevent="selectUser(userX.pk)"
+          >{{ userX.username }} – {{ userX.fio }}</a>
         </li>
-        <li :class="{ selected: selectedUserId === -1 && user.department === props.department.pk }">
+        <li :class="{ selected: selectedUserId === -1 && props.user.department === props.department.pk }">
           <a
             href="#"
             @click.prevent="selectUser(-1, props.department.pk)"
@@ -33,6 +33,10 @@ const emit = defineEmits(['select-user']);
 const props = defineProps({
   department: {
     required: true,
+    type: Object,
+  },
+  user: {
+    required: false,
     type: Object,
   },
 });

@@ -22,6 +22,7 @@
           v-for="department in departmentFiltered"
           :key="department.pk"
           :department="department"
+          :user="user"
           @select-user="open"
         />
       </div>
@@ -1313,7 +1314,8 @@ const close = async () => {
   resourceResearches.value = [];
 };
 
-const open = async ({ pk, dep = null }) => {
+const open = async ({ pk, dep }) => {
+  console.log(pk);
   if ((pk === openPk.value && pk !== -1) || (openPk.value === -1 && pk === -1 && dep === user.value.department)) {
     return;
   }
