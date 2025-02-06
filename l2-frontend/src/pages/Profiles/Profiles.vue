@@ -18,33 +18,10 @@
         style="margin-top: 5px"
       >
       <div class="left-wrapper">
-        <ul>
-          <li
-            v-for="d in departmentFiltered"
-            :key="d.pk"
-          >
-            <strong>{{ d.title }}</strong>
-            <ul>
-              <li
-                v-for="x in d.users"
-                :key="x.pk"
-                :class="{ selected: x.pk === openPk }"
-              >
-                <a
-                  class="user-link"
-                  href="#"
-                  @click.prevent="open(x.pk)"
-                >{{ x.username }} – {{ x.fio }}</a>
-              </li>
-              <li :class="{ selected: openPk === -1 && user.department === d.pk }">
-                <a
-                  href="#"
-                  @click.prevent="open(-1, d.pk)"
-                > <i class="fa fa-plus" /> добавить пользователя</a>
-              </li>
-            </ul>
-          </li>
-        </ul>
+        <department
+          v-for="department in departments"
+          :key="department.pk"
+        />
       </div>
     </div>
     <div
@@ -968,6 +945,7 @@ import SelectedResearches from '@/ui-cards/SelectedResearches.vue';
 import UrlData from '@/UrlData';
 import { useStore } from '@/store';
 import api from '@/api';
+import Department from "@/pages/Profiles/Department.vue";
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
