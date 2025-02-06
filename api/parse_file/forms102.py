@@ -12,7 +12,7 @@ def check_need_col(cols: list, need_cols: set):
 
 def form_01(request_data):
     """
-    Загрузка цен по прайсу
+    Загрузка ёмкостей для биоматериала
 
     На входе:
     Файл XLSX с ёмкостями для биоматериала
