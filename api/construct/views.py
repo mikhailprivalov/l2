@@ -18,7 +18,7 @@ def get_lab_departments(request):
 
 @login_required
 @group_required("Конструктор: Лабораторные исследования")
-def get_tubes_group(request):
+def get_tubes_with_researches(request):
     request_data = json.loads(request.body)
     result = Researches.get_tubes(request_data["department_id"])
     return JsonResponse({"result": result})
