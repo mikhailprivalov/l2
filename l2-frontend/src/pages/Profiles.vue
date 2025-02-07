@@ -1396,21 +1396,21 @@ watch(() => user.value.external_access, () => {
   }
 });
 
-watch(() => userHospital.value, () => {
+watch(userHospital, () => {
   if (selectedHospital.value !== -1 || userHospital.value === -1) {
     return;
   }
   selectedHospital.value = userHospital.value;
 }, { immediate: true });
 
-watch(() => selectedHospital.value, () => {
+watch(selectedHospital, () => {
   if (selectedHospital.value === -1) {
     return;
   }
   loadUsers();
 });
 
-watch(() => resourceResearches.value, () => {
+watch(resourceResearches, () => {
   if (resourceResearches.value.length === 0) {
     currentResourcePk.value = -1;
   }
