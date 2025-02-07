@@ -67,6 +67,7 @@ class Tubes(models.Model):
             {
                 "id": tube.pk,
                 "label": tube.title if not pk_in_title else f"{tube.title} ({tube.pk})",
+                "shortLabel": tube.short_title,
                 "color": tube.color,
             }
             for tube in Tubes.objects.all().order_by("title")
@@ -76,3 +77,35 @@ class Tubes(models.Model):
     class Meta:
         verbose_name = 'Вид ёмкости'
         verbose_name_plural = 'Виды ёмкостей'
+
+    @staticmethod
+    def check_tube(title, short_title, color):
+        title_valid = title and 0 < len(title) < 256
+        short_title_valid = short_title and len(short_title) < 17
+        color_rules = '^#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})$'
+        color_valid = color and bool(re.match(color_rules, color))
+        result = title_valid and short_title_valid and color_valid
+        return result
+
+    @staticmethod
+    def update_tube(id: int, title: str, short_title: str, color: str):
+        tube_valid = Tubes.check_tube(title, short_title, color)
+        if not tube_valid:
+            return {"ok": False, "message": "Валидация не пройдена"}
+        tube = Tubes.objects.filter(pk=id).first()
+        if not tube:
+            return {"ok": False, "message": "Такой ёмкости нет"}
+        tube.title = title
+        tube.short_title = short_title
+        tube.color = color
+        tube.save()
+        return {"ok": True, "message": ""}
+
+    @staticmethod
+    def create_tube(title: str, short_title: str, color: str):
+        tube_valid = Tubes.check_tube(title, short_title, color)
+        if not tube_valid:
+            return {"ok": False, "message": "Валидация не пройдена"}
+        tube = Tubes(title=title, short_title=short_title, color=color)
+        tube.save()
+        return {"ok": True, "message": "", "data": tube.pk}
