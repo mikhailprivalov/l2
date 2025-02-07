@@ -54,7 +54,7 @@
         :research="currentResearch"
         :ref-books="refBooks"
         :departments="departments.slice(1)"
-        @updateResearch="getTubes"
+        @updateResearch="getTubesWithResearches"
       />
     </div>
     <RelationTubeEdit
@@ -101,9 +101,9 @@ const researchTubes = ref([]);
 const currentResearch = ref({
   pk: null, order: 1, departmentId: department.value, tubes: null,
 });
-const getTubesGroup = async () => {
+const getTubesWithResearches = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('construct/laboratory/get-tubes-group', { department_id: department.value });
+  const { result } = await api('construct/laboratory/get-tubes-with-researches', { department_id: department.value });
   await store.dispatch(actions.DEC_LOADING);
   researchTubes.value = result;
 };
@@ -142,7 +142,7 @@ const updateOrder = async ({ researchPk, researchNearbyPk, action }) => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
-    await getTubesGroup();
+    await getTubesWithResearches();
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
@@ -156,7 +156,7 @@ const changeVisibility = async ({ researchPk }) => {
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Обновлено');
-    await getTubesGroup();
+    await getTubesWithResearches();
   } else {
     root.$emit('msg', 'error', 'Ошибка');
   }
@@ -197,7 +197,7 @@ const getRefbooks = async () => {
 };
 
 watch([department], () => {
-  getTubesGroup();
+  getTubesWithResearches();
   currentResearch.value = {
     pk: null, order: null, departmentId: department.value, tubes: null,
   };
@@ -210,7 +210,7 @@ const editRelation = ({ relationId }) => {
 };
 
 const hideModal = () => {
-  getTubesGroup();
+  getTubesWithResearches();
   editRelationId.value = null;
 };
 
