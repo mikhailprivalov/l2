@@ -1392,21 +1392,21 @@ watch(() => user.value.external_access, () => {
   }
 });
 
-watch(() => userHospital.value, () => {
+watch(userHospital, () => {
   if (selectedHospitalId.value !== -1 || userHospital.value === -1) {
     return;
   }
   selectedHospitalId.value = userHospital.value;
 }, { immediate: true });
 
-watch(() => selectedHospitalId.value, () => {
+watch(selectedHospitalId, () => {
   if (selectedHospitalId.value === -1) {
     return;
   }
   loadUsers();
 });
 
-watch(() => resourceResearches.value, () => {
+watch(resourceResearches, () => {
   if (resourceResearches.value.length === 0) {
     currentResourcePk.value = -1;
   }
