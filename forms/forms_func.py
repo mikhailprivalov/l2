@@ -754,7 +754,9 @@ def hosp_extract_get_data(hosp_last_num):
         'Время выписки',
         'Дата выписки',
         'Основной диагноз (описание)',
+        'Основное заболевание',
         'Основной диагноз по МКБ',
+        'код по МКБ',
         'Осложнение основного диагноза (описание)',
         'Осложнение основного диагноза по МКБ',
         'Сопутствующий диагноз (описание)',
@@ -762,6 +764,7 @@ def hosp_extract_get_data(hosp_last_num):
         'Исход госпитализации',
         'Результат госпитализации',
         'Проведено койко-дней',
+        'Количество дней нахождения в медицинской организации',
         'Заведующий отделением',
         'Палата №',
         'Основное заболевание код по МКБ',
@@ -799,7 +802,7 @@ def hosp_extract_get_data(hosp_last_num):
                 date_value = normalize_date(i[2])
             if i[3] == 'Время выписки':
                 time_value = i[2]
-            if i[3] == 'Основной диагноз (описание)':
+            if i[3] == 'Основной диагноз (описание)' or i[3] == 'Основное заболевание':
                 final_diagnos = i[2]
             if i[3] == 'Осложнение основного диагноза (описание)':
                 other_diagnos = i[2]
@@ -809,13 +812,20 @@ def hosp_extract_get_data(hosp_last_num):
                 outcome = i[2]
             if i[3] == 'Результат госпитализации':
                 result_hospital = i[2]
-            if i[3] == 'Основной диагноз по МКБ':
+            if i[3] == 'Основной диагноз по МКБ' or i[3] == 'код по МКБ':
                 final_diagnos_mkb = str(i[2])
+                try:
+                    final_diagnos_mkb_details = json.loads(final_diagnos_mkb)
+                    final_diagnos_mkb_code = final_diagnos_mkb_details.get("code", "")
+                    final_diagnos_mkb = final_diagnos_mkb_code
+                except:
+                    final_diagnos_mkb = str(i[2])
+
             if i[3] == 'Осложнение основного диагноза по МКБ':
                 other_diagnos_mkb = str(i[2]).split(' ')[0]
             if i[3] == 'Сопутствующий диагноз по МКБ':
                 near_diagnos_mkb = str(i[2]).split(' ')[0]
-            if i[3] == 'Проведено койко-дней':
+            if i[3] == 'Проведено койко-дней' or i[3] == 'Количество дней нахождения в медицинской организации':
                 days_count = str(i[2])
             if i[3] == 'Заведующий отделением':
                 manager_depart = str(i[2])
@@ -1164,11 +1174,15 @@ def hosp_get_operation_data(num_dir):
     if hosp_operation:
         for i in hosp_operation:
             # найти протоколы по типу операции
-            if (i.get('research_title').lower().find('операци') != -1 or i.get('research_title').lower().find('манипул') != -1) and i['date_confirm']:
+            if (
+                i.get('research_title').lower().find('операции') != -1 or i.get('research_title').lower().find('манипул') != -1 or i.get('research_title').lower().find('реабилитации') != -1
+            ) and i['date_confirm']:
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
-
     titles_field = [
         'Название операции',
+        'Наименование услуги',
+        'Код услуги',
+        'Наименование оперативного вмешательства',
         'Название манипуляции',
         'Дата проведения',
         'Время начала',
@@ -1176,12 +1190,14 @@ def hosp_get_operation_data(num_dir):
         'Метод обезболивания',
         'Осложнения',
         'Код операции',
+        'Код оперативного вмешательства согласно номенклатуре медицинских услуг',
         'Код манипуляции',
         'Оперативное вмешательство',
         'Описание манипуляции',
         'Анестезиолог',
         'Код анестезиолога',
         'Категория сложности',
+        'ykur',
         'Диагноз после оперативного лечения',
         'МКБ 10',
         'Оперировал',
@@ -1198,6 +1214,7 @@ def hosp_get_operation_data(num_dir):
         'Вид анестезиологического пособия',
         'Осложнения, возникшие в ходе оперативного вмешательства (операции)',
         'Оперирующий врач'
+        'Кровопотеря во время оперативного вмешательства',
     ]
     list_values = []
 
@@ -1242,7 +1259,11 @@ def hosp_get_operation_data(num_dir):
                 operation_data['doc_code'] = ''
             category_difficult = ''
             for field in fields_operation:
-                if field[3] == 'Название операции' or field[3] == 'Название манипуляции' or field[3] == 'Наименование оперативного вмешательства (операции)' :
+                if (
+                    field[3] == 'Название операции'
+                    or (field[3] == 'Название манипуляции')
+                    or (field[3] == 'Наименование оперативного вмешательства (операции)' or (field[3] == 'Наименование услуги'))
+                ):
                     operation_data['name_operation'] = field[2]
                     continue
                 if field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
@@ -1254,13 +1275,18 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Время окончания':
                     operation_data['time_end'] = field[2]
                     continue
-                if field[3] == 'Метод обезболивания' or field[3] == 'Вид анестезиологического пособия':
+                if field[3] == 'Метод обезболивания' or (field[3] == 'Вид анестезиологического пособия'):
                     operation_data['anesthesia method'] = field[2]
                     continue
-                if field[3] == 'Осложнения' or field[3] == 'Реакции и осложнения:' or field[3] == 'Осложнения, возникшие в ходе оперативного вмешательства (операции)':
+                if (
+                    field[3] == 'Осложнения'
+                    or (field[3] == 'Реакции и осложнения:')
+                    or (field[3] == 'Осложнения, возникшие в ходе оперативного вмешательства (операции)')
+                    or field[3] == 'Кровопотеря во время оперативного вмешательства'
+                ):
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции':
+                if field[3] == 'Код операции' or (field[3] == 'Код оперативного вмешательства согласно номенклатуре медицинских услуг') or (field[3] == 'Код услуги'):
                     operation_data['code_operation'] = field[2]
                     continue
                 if field[3] == 'Код манипуляции':
@@ -1277,6 +1303,9 @@ def hosp_get_operation_data(num_dir):
                     continue
                 if field[3] == 'Категория сложности':
                     operation_data['category_difficult'] = f"Сложность - {field[2]}"
+                    continue
+                if field[3] == 'ykur':
+                    operation_data['category_difficult'] = f"ykur  {field[2]}"
                     continue
                 if field[3] == 'Диагноз после оперативного лечения':
                     operation_data['diagnos_after_operation'] = field[2]
@@ -1314,13 +1343,13 @@ def hosp_get_operation_data(num_dir):
                     continue
 
             operation_data['name_operation'] = f"{operation_data['name_operation']}-{category_difficult}"
-            if operation_data.get('name_operation') == '-':
+            if operation_data.get('name_operation') == '-' and operation_data.get('Группа крови АВО'):
                 operation_data["name_operation"] = (
                     f"{iss_obj.research.title} "
                     f"Группа крови АВО:{operation_data.get('Группа крови АВО')} "
                     f"Фенотип донора: {operation_data.get('Фенотип донора:', '-')} "
                     f"Наименование компонента донорской крови: {operation_data.get('Наименование компонента донорской крови', '-')} "
-                    f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')}"
+                    f"№ единицы компонентов крови:{operation_data.get('№ единицы компонентов крови:', '-')} "
                 )
             operation_result.append(operation_data.copy())
 

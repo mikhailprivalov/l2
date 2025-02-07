@@ -1745,6 +1745,8 @@ def directions_paraclinic_form(request):
                         "is_stom": i.research.is_stom,
                         "isAux": i.research.is_aux,
                         "is_expertise": i.research.is_expertise,
+                        "is_direction_params": i.research.is_direction_params,
+                        "is_global_direction_params": i.research.is_global_direction_params,
                         "is_monitoring": i.research.is_monitoring,
                         "wide_headers": i.research.wide_headers,
                         "comment": i.localization.title if i.localization else i.comment,
@@ -2291,12 +2293,21 @@ def directions_paraclinic_result(request):
                 ParaclinicResult.objects.filter(issledovaniye=iss, field__group__pk=group["pk"]).delete()
                 continue
             for field in group["fields"]:
-                if not v_f.get(str(field["pk"]), True):
+                f = ParaclinicInputField.objects.get(pk=field["pk"])
+                if not v_f.get(str(field["pk"]), True) and not (
+                    iss.research.is_gistology
+                    and (
+                        f.title == "Медицинские услуги(стационар)"
+                        or f.title == "Медицинские услуги(поликлиника)"
+                        or f.title == "Медицинские услуги(платная категория)"
+                        or f.title == "Медицинские услуги"
+                    )
+                ):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
                     continue
                 if not ParaclinicInputField.objects.filter(pk=field["pk"]).exists():
                     continue
-                f = ParaclinicInputField.objects.get(pk=field["pk"])
+
                 if f.title == "Дата смерти":
                     date_death = datetime.strptime(field["value"], "%Y-%m-%d").date()
                 if f.title == "Регистрационный номер" and iss.research.is_gistology:
@@ -2454,7 +2465,7 @@ def directions_paraclinic_result(request):
         iss.result_reception_id = none_if_minus_1(request_data.get("result"))
         iss.outcome_illness_id = none_if_minus_1(request_data.get("outcome"))
         iss.fin_source_id = none_if_minus_1(request_data.get("fin_source"))
-        if request_data.get("fin_source", None):
+        if request_data.get("fin_source", None) and none_if_minus_1(request_data.get("fin_source")):
             if IstochnikiFinansirovaniya.objects.get(pk=int(request_data.get("fin_source"))).title == "Платно":
                 iss.price_category_id = none_if_minus_1(request_data.get("price_category") or -1)
             else:
