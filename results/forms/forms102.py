@@ -331,7 +331,10 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         )
     )
     fwb.append(Paragraph(f'{open_bold_tag}16. Регистрационный номер:{close_tag_bold} {space_symbol * 2}{data["Регистрационный номер"]}', style_ml))
-    med_service = json.loads(data["Медицинские услуги"])
+    try:
+        med_service = json.loads(data.get("Медицинские услуги"))
+    except:
+        med_service = {"code": "", "title": ""}
     if iss.price_category and data.get("Медицинские услуги(платная категория)"):
         med_service = {"code": "", "title": data.get("Медицинские услуги(платная категория)")}
     fwb.append(Paragraph(f'{open_bold_tag}17. Медицинские услуги:{close_tag_bold} {space_symbol * 2}{med_service["code"]} {med_service["title"]}', style_ml))
