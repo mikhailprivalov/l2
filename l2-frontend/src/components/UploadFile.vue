@@ -228,7 +228,9 @@ const changeType = () => {
   } else {
     selectedForm.value = null;
   }
-  noSupportedFileForms.value = unsupportedFileForms(selectedType.value, props.formsFile);
+  if (props.formsFile) {
+    noSupportedFileForms.value = unsupportedFileForms(selectedType.value, props.formsFile);
+  }
 };
 
 watch(selectedType, () => {
