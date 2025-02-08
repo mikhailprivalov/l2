@@ -1403,4 +1403,4 @@ def researches_for_formula(request):
 
         result.append({"depatmentTitle": prev_departmnet_title, "idResearch": prev_research_id, "titleResearch": prev_research_title, "fractions": fractions.copy()})
 
-    return JsonResponse({"result":result})
+    return JsonResponse({"result": result})
