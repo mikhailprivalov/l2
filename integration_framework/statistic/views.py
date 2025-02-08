@@ -1,6 +1,6 @@
 import base64
 import simplejson as json
-from django.http import JsonResponse, HttpRequest
+from django.http import HttpRequest
 from rest_framework.decorators import api_view
 from statistic.views import statistic_xls
 from rest_framework.response import Response
