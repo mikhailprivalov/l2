@@ -827,10 +827,15 @@
                     </div>
                     <div v-else-if="row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                       <strong>ID поля:</strong>
-                      <input
-                        v-model="row.default"
-                        class="form-control"
-                      >
+                      <div class="flex gap5">
+                        <input
+                          v-model="row.default"
+                          class="form-control"
+                        >
+                        <button class="btn btn-blue-nb">
+                          <i class="fa fa-ellipsis-v" />
+                        </button>
+                      </div>
                     </div>
                     <div v-else-if="row.field_type === 15">
                       <strong>Значение по умолчанию:</strong>
@@ -2212,5 +2217,12 @@ export default {
   &__placeholder {
     line-height: 26px !important;
   }
+}
+
+.flex {
+  display: flex;
+}
+.gap5 {
+  gap: 5px;
 }
 </style>
