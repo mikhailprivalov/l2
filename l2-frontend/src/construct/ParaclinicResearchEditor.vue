@@ -832,7 +832,10 @@
                           v-model="row.default"
                           class="form-control"
                         >
-                        <button class="btn btn-blue-nb">
+                        <button
+                          class="btn btn-blue-nb"
+                          @click="openLinkFieldModal(row.pk)"
+                        >
                           <i class="fa fa-ellipsis-v" />
                         </button>
                       </div>
@@ -1251,6 +1254,11 @@
       type="schemaPdf"
       :max-count-files="1"
     />
+    <LinkFieldModal
+      v-if="showLinkFieldModal"
+      :field-id="currentLinkFieldId"
+      @close-modal="closeLinkFieldModal"
+    />
   </div>
 </template>
 
@@ -1271,6 +1279,7 @@ import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
+import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1279,6 +1288,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    LinkFieldModal,
     FileAddModal,
     ResearchPermissionsModal,
     LoadFile,
@@ -1417,6 +1427,8 @@ export default {
       timeoutThree: null,
       groupsRollUp: false,
       canChangePermissions: false,
+      showLinkFieldModal: false,
+      currentLinkFieldId: null,
     };
   },
   computed: {
@@ -1957,6 +1969,14 @@ export default {
     },
     closeFileAddModal() {
       this.showFileAddModal = false;
+    },
+    openLinkFieldModal(fieldId) {
+      this.currentLinkFieldId = fieldId;
+      this.showLinkFieldModal = true;
+    },
+    closeLinkFieldModal() {
+      this.currentLinkFieldId = null;
+      this.showLinkFieldModal = false;
     },
   },
 };
