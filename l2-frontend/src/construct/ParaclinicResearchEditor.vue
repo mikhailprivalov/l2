@@ -1258,6 +1258,7 @@
       v-if="showLinkFieldModal"
       ref="LinkModal"
       :field-id="currentLinkFieldId"
+      :field-value="currentLinkFieldValue"
       @close-modal="closeLinkFieldModal"
     />
   </div>

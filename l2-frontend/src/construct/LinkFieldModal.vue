@@ -38,6 +38,10 @@ const props = defineProps({
     required: true,
     type: Number,
   },
+  fieldValue: {
+    required: true,
+    type: String,
+  },
 });
 
 const closeModal = () => {
