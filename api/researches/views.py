@@ -1393,8 +1393,9 @@ def researches_for_formula(request):
                         "idHideResearch": i.research_hide,
                         "idResearch": prev_research_id,
                         "titleResearch": prev_research_title,
-                        "fractions": fractions.copy()}
-)
+                        "fractions": fractions.copy(),
+                    }
+                )
                 fractions = []
             fractions.append({"id": i.fraction_id, "title": i.fraction_title, "isHideFration": i.fration_hide})
             prev_research_id = i.research_id
