@@ -76,4 +76,5 @@ urlpatterns = [
     path('researches/', include('integration_framework.researches.urls')),
     path('send-messages/', include('integration_framework.send_messages.urls')),
     path('employees/', include('integration_framework.employees.urls')),
+    path('statistic/', include('integration_framework.statistic.urls')),
 ]
