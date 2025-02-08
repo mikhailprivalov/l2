@@ -30,23 +30,23 @@
           </thead>
           <tr
             v-for="research in addedResearches"
-            :key="research.pk"
+            :key="research.id"
           >
             <td class="border">
-              <VueTippyTd :text="research.title" />
+              <VueTippyTd :text="research.label" />
             </td>
             <td class="border">
               <div class="flex">
                 <div
                   v-for="test in research.tests"
-                  :key="test.pk"
+                  :key="test.id"
                   class="flex"
                 >
                   <input
-                    :id="test.pk"
+                    :id="test.id"
                     type="checkbox"
                   >
-                  <label :for="test.pk">{{ test.title }}</label>
+                  <label :for="test.id">{{ test.label }}</label>
                 </div>
               </div>
             </td>
@@ -65,14 +65,27 @@
           <tr>
             <td class="border">
               <Treeselect
-                v-model="selectedResearchId"
+                v-model="selectedResearch"
+                value-format="object"
                 :options="researches"
+                :clearable="false"
                 class="treeselect-noborder"
                 placeholder="Выберите услугу"
               />
             </td>
             <td class="border">
               <div class="flex">
+                <div
+                  v-for="test in selectedResearch.tests"
+                  :key="test.id"
+                  class="flex"
+                >
+                  <input
+                    :id="test.id"
+                    type="checkbox"
+                  >
+                  <label :for="test.id">{{ test.label }}</label>
+                </div>
               </div>
             </td>
             <td class="border">
@@ -135,13 +148,16 @@ const closeModal = () => {
 
 const addedResearches = ref([]);
 
-const selectedResearchId = ref(null);
+const researches = ref([
+  { id: 1, label: 'Услуга 1', tests: [{ id: 1, label: 'тест 1' }, { id: 2, label: 'тест 2' }] },
+  { id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }] },
+]);
+const selectedResearch = ref({ id: -1, label: 'НЕ ВЫБРАНО', tests: [] });
 const addResearches = () => {
-  const newResearch = { pk: 1, title: 'Услуга 1', tests: [{ pk: 1, title: 'тест 1' }] };
-  addedResearches.value.push(newResearch);
+  if (selectedResearch.value.id !== -1) {
+    addedResearches.value.push(selectedResearch.value);
+  }
 };
-
-const researches = ref([]);
 
 </script>
 
