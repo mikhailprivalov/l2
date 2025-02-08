@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import HttpResponse, JsonResponse
 
-from api.directions.sql_func import get_template_research_by_department
+from api.directions.sql_func import get_template_research_by_department, get_lab_podr
 from api.researches.help_files.constructor_help import constructor_help_message
 from appconf.manager import SettingManager
 from directions.models import FrequencyOfUseResearches
@@ -35,7 +35,7 @@ from directory.models import (
     ConstructorEditAccessResearch,
     Researches,
 )
-from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor
+from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor, get_lab_researches_with_tests_params
 from directory.utils import get_researches_details
 from laboratory.decorators import group_required
 from laboratory.settings import REQUIRED_STATTALON_FIELDS, RESEARCHES_PK_REQUIRED_STATTALON_FIELDS, DISABLED_RESULT_FORMS
@@ -1368,3 +1368,39 @@ def change_group_field(request):
         result = {"ok": True, "message": "Группа изменена"}
 
     return JsonResponse(result)
+
+
+@login_required
+@group_required("Оператор", "Конструктор: Параклинические (описательные) исследования", "Конструктор: Редактировать свои услуги")
+def researches_for_formula(request):
+    request_data = json.loads(request.body)
+    type = request_data.get('type')
+    result = []
+    if type == "laboratory":
+        lab_podr = get_lab_podr()
+        lab_podr = [i[0] for i in lab_podr]
+        sql_result = get_lab_researches_with_tests_params(tuple(lab_podr))
+        step = 0
+        prev_research_id = -1
+        prev_research_title = ""
+        prev_departmnet_title = ""
+        fractions = []
+        for i in sql_result:
+            if step != 0 and i.research_id != prev_research_id:
+                result.append(
+                    {
+                        "depatmentTitle": prev_departmnet_title,
+                        "idHideResearch": i.research_hide,
+                        "idResearch": prev_research_id,
+                        "titleResearch": prev_research_title,
+                        "fractions": fractions.copy()}
+)
+                fractions = []
+            fractions.append({"id": i.fraction_id, "title": i.fraction_title, "isHideFration": i.fration_hide})
+            prev_research_id = i.research_id
+            prev_research_title = i.research_title
+            prev_departmnet_title = i.department_title
+
+        result.append({"depatmentTitle": prev_departmnet_title, "idResearch": prev_research_id, "titleResearch": prev_research_title, "fractions": fractions.copy()})
+
+    return JsonResponse({"result":result})

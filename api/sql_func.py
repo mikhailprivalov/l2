@@ -163,6 +163,7 @@ def get_field_result_by_cda(client_id, field_ids, count=1, parent_iss=-1, use_pa
             WHERE directions_napravleniya.client_id = %(client_p)s
             and directions_paraclinicresult.field_id in %(field_ids)s
             and directions_issledovaniya.time_confirmation is not NULL
+            and directions_paraclinicresult.value is not NULL
             AND 
             CASE WHEN %(use_parent_iss)s != '-1' THEN 
                 directions_napravleniya.parent_id in %(parent_iss)s
