@@ -1256,6 +1256,7 @@
     />
     <LinkFieldModal
       v-if="showLinkFieldModal"
+      ref="LinkModal"
       :field-id="currentLinkFieldId"
       @close-modal="closeLinkFieldModal"
     />
@@ -1976,6 +1977,9 @@ export default {
     },
     closeLinkFieldModal() {
       this.currentLinkFieldId = null;
+      if (this.$refs.LinkModal) {
+        this.$refs.LinkModal.$el.style.display = 'none';
+      }
       this.showLinkFieldModal = false;
     },
   },
