@@ -10,7 +10,57 @@
     <div
       slot="body"
     >
-      <div></div>
+      <div class="scroll">
+        <table class="table no-margin-bottom">
+          <colgroup>
+            <col>
+            <col>
+          </colgroup>
+          <thead class="sticky">
+            <tr class="border-no-top">
+              <th class="text-center border-right">
+                <strong>Услуга</strong>
+              </th>
+              <th class="text-center border-right">
+                <strong>Тесты</strong>
+              </th>
+            </tr>
+          </thead>
+          <tr>
+            <td>
+              <input class="form-control nbr">
+            </td>
+            <td>
+              <div class="flex">
+                <input
+                  id="test1"
+                  type="checkbox"
+                >
+                <label for="test1">тест1</label>
+                <input
+                  id="test2"
+                  type="checkbox"
+                >
+                <label for="test2">тест2</label>
+                <input
+                  id="test3"
+                  type="checkbox"
+                >
+                <label for="test3">тест3</label>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+      <div class="button">
+        <button
+          v-tippy
+          class="btn last btn-blue-nb nbr"
+          title="Добавить услугу"
+        >
+          <i class="fa fa-save" />
+        </button>
+      </div>
     </div>
     <div slot="footer">
       <div class="row">
@@ -50,5 +100,17 @@ const closeModal = () => {
 </script>
 
 <style scoped lang="scss">
-
+.scroll {
+  max-height: calc(100vh - 463px);
+  overflow-y: auto;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: white;
+}
+.no-margin-bottom {
+  margin-bottom: 0;
+}
 </style>
