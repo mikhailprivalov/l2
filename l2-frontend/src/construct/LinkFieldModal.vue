@@ -26,27 +26,29 @@
               </th>
             </tr>
           </thead>
-          <tr>
+          <tr
+            v-for="research in researches"
+            :key="research.pk"
+          >
             <td>
-              <input class="form-control nbr">
+              <input
+                v-model="research.title"
+                class="form-control nbr"
+              >
             </td>
             <td>
               <div class="flex">
-                <input
-                  id="test1"
-                  type="checkbox"
+                <div
+                  v-for="test in research.tests"
+                  :key="test.pk"
+                  class="flex"
                 >
-                <label for="test1">тест1</label>
-                <input
-                  id="test2"
-                  type="checkbox"
-                >
-                <label for="test2">тест2</label>
-                <input
-                  id="test3"
-                  type="checkbox"
-                >
-                <label for="test3">тест3</label>
+                  <input
+                    :id="test.pk"
+                    type="checkbox"
+                  >
+                  <label :for="test.pk">{{ test.title }}</label>
+                </div>
               </div>
             </td>
           </tr>
@@ -57,6 +59,7 @@
           v-tippy
           class="btn last btn-blue-nb nbr"
           title="Добавить услугу"
+          @click="addResearches"
         >
           <i class="fa fa-save" />
         </button>
@@ -80,6 +83,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+
 import Modal from '@/ui-cards/Modal.vue';
 
 const emit = defineEmits(['close-modal']);
@@ -97,11 +102,18 @@ const props = defineProps({
 const closeModal = () => {
   emit('close-modal');
 };
+
+const researches = ref([]);
+const addResearches = () => {
+  const newResearch = { pk: 1, title: 'Услуга 1', tests: [{ pk: 1, title: 'тест 1' }] };
+  researches.value.push(newResearch);
+};
+
 </script>
 
 <style scoped lang="scss">
 .scroll {
-  max-height: calc(100vh - 463px);
+  max-height: 400px;
   overflow-y: auto;
 }
 .sticky {
