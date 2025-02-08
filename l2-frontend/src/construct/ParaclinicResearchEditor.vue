@@ -834,7 +834,7 @@
                         >
                         <button
                           class="btn btn-blue-nb"
-                          @click="openLinkFieldModal(row.pk)"
+                          @click="openLinkFieldModal(row.pk, row.default)"
                         >
                           <i class="fa fa-ellipsis-v" />
                         </button>
@@ -1430,6 +1430,7 @@ export default {
       canChangePermissions: false,
       showLinkFieldModal: false,
       currentLinkFieldId: null,
+      currentLinkFieldValue: null,
     };
   },
   computed: {
@@ -1971,12 +1972,14 @@ export default {
     closeFileAddModal() {
       this.showFileAddModal = false;
     },
-    openLinkFieldModal(fieldId) {
+    openLinkFieldModal(fieldId, value) {
       this.currentLinkFieldId = fieldId;
+      this.currentLinkFieldValue = value;
       this.showLinkFieldModal = true;
     },
     closeLinkFieldModal() {
       this.currentLinkFieldId = null;
+      this.currentLinkFieldValue = null;
       if (this.$refs.LinkModal) {
         this.$refs.LinkModal.$el.style.display = 'none';
       }

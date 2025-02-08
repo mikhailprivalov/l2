@@ -9,9 +9,9 @@
     <span slot="header">Создание ссылочных строк</span>
     <div
       slot="body"
-      style="min-height: 200px"
-      class="directions-manage"
-    />
+    >
+      <div></div>
+    </div>
     <div slot="footer">
       <div class="row">
         <div class="col-xs-8" />
