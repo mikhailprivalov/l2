@@ -97,13 +97,13 @@
                   class="flex"
                 >
                   <input
-                    :id="selectedTest.id"
+                    :id="`add-${selectedTest.id}`"
                     v-model="selectedResearch.activeTest"
                     :value="selectedTest.id"
                     type="checkbox"
                     class="checkbox"
                   >
-                  <label :for="selectedTest.id"> {{ selectedTest.label }} </label>
+                  <label :for="`add-${selectedTest.id}`"> {{ selectedTest.label }} </label>
                 </div>
               </div>
             </td>
