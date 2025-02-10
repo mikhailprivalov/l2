@@ -66,6 +66,15 @@
               </div>
             </td>
           </tr>
+        </table>
+      </div>
+      <div class="add-block">
+        <table class="table">
+          <colgroup>
+            <col class="research-col">
+            <col>
+            <col class="button-col">
+          </colgroup>
           <tr>
             <td class="border">
               <Treeselect
@@ -171,7 +180,7 @@ const addResearches = () => {
   width: 100%;
 }
 .scroll {
-  height: calc(100% - 51px);
+  max-height: calc(100% - 100px);
   overflow-y: auto;
 }
 .table {
@@ -209,9 +218,12 @@ const addResearches = () => {
   flex-direction: row;
   justify-content: stretch;
 }
-  .btn {
-    align-self: stretch;
-    flex: 1;
-    padding: 7px 0;
-  }
+.btn {
+  align-self: stretch;
+  flex: 1;
+  padding: 7px 0;
+}
+.add-block {
+  margin: 5px 0;
+}
 </style>
