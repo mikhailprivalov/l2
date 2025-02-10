@@ -833,10 +833,10 @@
                           class="form-control"
                         >
                         <button
-                          class="btn btn-blue-nb"
+                          class="btn btn-blue-nb link-button"
                           @click="openLinkFieldModal(row.pk, row.default)"
                         >
-                          <i class="fa fa-ellipsis-v" />
+                          <i class="fa fa-ellipsis-h" />
                         </button>
                       </div>
                     </div>
@@ -2252,5 +2252,8 @@ export default {
 }
 .gap5 {
   gap: 5px;
+}
+.link-button {
+  padding: 0 10px;
 }
 </style>
