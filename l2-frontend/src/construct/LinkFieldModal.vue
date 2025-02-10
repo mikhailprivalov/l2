@@ -31,7 +31,7 @@
           </thead>
           <tr
             v-for="(research, resIdx) in addedResearches"
-            :key="resIdx"
+            :key="research.id"
           >
             <td class="border">
               <VueTippyTd
@@ -51,6 +51,7 @@
                     v-model="research.activeTest"
                     :value="addedTest.id"
                     type="checkbox"
+                    class="checkbox"
                   >
                   <label :for="`${resIdx}-${testIdx}-${addedTest.id}`"> {{ addedTest.label }} </label>
                 </div>
@@ -100,6 +101,7 @@
                     v-model="selectedResearch.activeTest"
                     :value="selectedTest.id"
                     type="checkbox"
+                    class="checkbox"
                   >
                   <label :for="selectedTest.id"> {{ selectedTest.label }} </label>
                 </div>
@@ -236,5 +238,8 @@ const addResearches = () => {
 }
 .add-block {
   margin: 5px 0;
+}
+.checkbox {
+  margin: 5px;
 }
 </style>
