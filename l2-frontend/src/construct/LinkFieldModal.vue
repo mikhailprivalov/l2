@@ -81,7 +81,7 @@
           <tr>
             <td class="border">
               <Treeselect
-                v-model="selectedResearch"
+                v-model="researchToAdd"
                 value-format="object"
                 :options="researches"
                 :clearable="false"
@@ -92,13 +92,13 @@
             <td class="border">
               <div class="flex">
                 <div
-                  v-for="selectedTest in selectedResearch.tests"
+                  v-for="selectedTest in researchToAdd.tests"
                   :key="selectedTest.id"
                   class="flex"
                 >
                   <input
                     :id="`add-${selectedTest.id}`"
-                    v-model="selectedResearch.activeTest"
+                    v-model="researchToAdd.activeTest"
                     :value="selectedTest.id"
                     type="checkbox"
                     class="checkbox"
@@ -177,18 +177,18 @@ const researches = ref([
     id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTest: [],
   },
 ]);
-const selectedResearch = ref({
+const researchToAdd = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
 
-const researchNotSelect = computed(() => selectedResearch.value.id === -1);
+const researchNotSelect = computed(() => researchToAdd.value.id === -1);
 const checkExists = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
-  if (selectedResearch.value.id !== -1) {
-    const exists = checkExists(selectedResearch.value.id);
+  if (researchToAdd.value.id !== -1) {
+    const exists = checkExists(researchToAdd.value.id);
     if (!exists) {
-      addedResearches.value.push({ ...selectedResearch.value });
-      selectedResearch.value = {
+      addedResearches.value.push({ ...researchToAdd.value });
+      researchToAdd.value = {
         id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
       };
     } else {
