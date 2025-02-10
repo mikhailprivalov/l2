@@ -123,8 +123,11 @@ def statistic_xls(request):
         date_end_o = normalize_date(date_end_o)
 
     date_start, date_end = try_parse_range(date_start_o, date_end_o)
+    unlimited_access = False
+    if hasattr(request.user, 'unlimited_access'):
+        unlimited_access = True
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"]:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"] and not unlimited_access:
         for i in UNLIMIT_PERIOD_STATISTIC_GROUP:
             if i not in [str(x) for x in request.user.groups.all()]:
                 pk_research = request_data.get("research")
@@ -134,7 +137,11 @@ def statistic_xls(request):
                     return JsonResponse({"error": "period max - 60 days"})
 
     if date_start_o != "" and date_end_o != "":
-        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=request.user.doctorprofile).save()
+        if hasattr(request.user, 'doctorprofile'):
+            user_log = request.user.doctorprofile
+        else:
+            user_log = None
+        slog.Log(key=tp, type=100, body=json.dumps({"pk": pk, "date": {"start": date_start_o, "end": date_end_o}}), user=user_log).save()
 
     # Отчет по динамике анализов
     if tp == "directions_list_dynamic":
@@ -1797,7 +1804,7 @@ def statistic_xls(request):
                 ws.write(row_num, col_num, row[col_num], font_style)
     elif tp == "message-ticket":
         filters = {'pk': int(request_data.get("hospital"))}
-        any_hospital = request.user.doctorprofile.all_hospitals_users_control
+        any_hospital = request.user.doctorprofile.all_hospitals_users_control if hasattr(request.user, 'doctorprofile') else request.user.unlimited_access
         if not any_hospital:
             filters['pk'] = request.user.doctorprofile.get_hospital_id()
 
