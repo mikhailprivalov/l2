@@ -31,7 +31,7 @@
           </thead>
           <tr
             v-for="(research, resIdx) in addedResearches"
-            :key="research.id"
+            :key="resIdx"
           >
             <td class="border">
               <VueTippyTd
