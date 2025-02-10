@@ -30,7 +30,7 @@
             </tr>
           </thead>
           <tr
-            v-for="research in addedResearches"
+            v-for="(research, resIdx) in addedResearches"
             :key="research.id"
           >
             <td class="border">
@@ -42,15 +42,17 @@
             <td class="border">
               <div class="flex">
                 <div
-                  v-for="test in research.tests"
-                  :key="test.id"
+                  v-for="(addedTest, testIdx) in research.tests"
+                  :key="addedTest.id"
                   class="flex"
                 >
                   <input
-                    :id="test.id"
+                    :id="`${resIdx}-${testIdx}-${addedTest.id}`"
+                    v-model="research.activeTest"
+                    :value="addedTest.id"
                     type="checkbox"
                   >
-                  <label :for="test.id">{{ test.label }}</label>
+                  <label :for="`${resIdx}-${testIdx}-${addedTest.id}`"> {{ addedTest.label }} </label>
                 </div>
               </div>
             </td>
@@ -89,15 +91,17 @@
             <td class="border">
               <div class="flex">
                 <div
-                  v-for="test in selectedResearch.tests"
-                  :key="test.id"
+                  v-for="(selectedTest, testIdx) in selectedResearch.tests"
+                  :key="selectedTest.id"
                   class="flex"
                 >
                   <input
-                    :id="test.id"
+                    :id="`${testIdx}-${selectedTest.id}`"
+                    v-model="selectedResearch.activeTest"
+                    :value="selectedTest.id"
                     type="checkbox"
                   >
-                  <label :for="test.id">{{ test.label }}</label>
+                  <label :for="`${testIdx}-${selectedTest.id}`"> {{ selectedTest.label }} </label>
                 </div>
               </div>
             </td>
@@ -162,13 +166,26 @@ const closeModal = () => {
 const addedResearches = ref([]);
 
 const researches = ref([
-  { id: 1, label: 'Услуга 1', tests: [{ id: 1, label: 'тест 1' }, { id: 2, label: 'тест 2' }] },
-  { id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }] },
+  {
+    id: 1, label: 'Услуга 1', tests: [{ id: 1, label: 'тест 1' }, { id: 2, label: 'тест 2' }], activeTest: [],
+  },
+  {
+    id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTest: [],
+  },
 ]);
-const selectedResearch = ref({ id: -1, label: 'НЕ ВЫБРАНО', tests: [] });
+const selectedResearch = ref({
+  id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
+});
 const addResearches = () => {
   if (selectedResearch.value.id !== -1) {
-    addedResearches.value.push(selectedResearch.value);
+    // const value = {
+    //   id: selectedResearch.value.id,
+    //   label: selectedResearch.value.label,
+    //   tests: selectedResearch.value.tests,
+    //   activeTest: selectedResearch.value.selectedTest,
+    // };
+    // const value = {...selectedResearch.value}
+    addedResearches.value.push({ ...selectedResearch.value });
   }
 };
 
