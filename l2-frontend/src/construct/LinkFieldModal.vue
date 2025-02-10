@@ -113,7 +113,7 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Добавить услугу"
-                  :disabled="researchNotSelect"
+                  :disabled="!researchSelect"
                   @click="addResearches"
                 >
                   <i class="fa fa-plus" />
@@ -181,10 +181,10 @@ const researchToAdd = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
 
-const researchNotSelect = computed(() => researchToAdd.value.id === -1);
+const researchSelect = computed(() => researchToAdd.value.id === -1);
 const checkExists = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
-  if (researchToAdd.value.id !== -1) {
+  if (!researchSelect.value) {
     const exists = checkExists(researchToAdd.value.id);
     if (!exists) {
       addedResearches.value.push({ ...researchToAdd.value });
