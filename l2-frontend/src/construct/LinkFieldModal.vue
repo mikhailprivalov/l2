@@ -9,6 +9,7 @@
     <span slot="header">Создание ссылочных строк</span>
     <div
       slot="body"
+      class="body"
     >
       <div class="scroll">
         <table class="table">
@@ -162,8 +163,12 @@ const addResearches = () => {
 </script>
 
 <style scoped lang="scss">
+.body {
+  height: 100%;
+  width: 100%;
+}
 .scroll {
-  max-height: 400px;
+  height: calc(100% - 51px);
   overflow-y: auto;
 }
 .sticky {
