@@ -14,9 +14,9 @@
       <div class="scroll">
         <table class="table">
           <colgroup>
-            <col style="width: 535px">
+            <col class="research-col">
             <col>
-            <col style="width: 35px">
+            <col class="button-col">
           </colgroup>
           <thead class="sticky">
             <tr class="border-no-top">
@@ -34,7 +34,10 @@
             :key="research.id"
           >
             <td class="border">
-              <VueTippyTd :text="research.label" />
+              <VueTippyTd
+                class="research-padding"
+                :text="research.label"
+              />
             </td>
             <td class="border">
               <div class="flex">
@@ -171,6 +174,16 @@ const addResearches = () => {
   height: calc(100% - 51px);
   overflow-y: auto;
 }
+.table {
+  margin-bottom: 0;
+  table-layout: fixed;
+}
+.research-col {
+  width: 535px;
+}
+.button-col {
+  width: 35px;
+}
 .sticky {
   position: sticky;
   top: 0;
@@ -183,11 +196,22 @@ const addResearches = () => {
 .flex {
   display: flex;
 }
-.table {
-  margin-bottom: 0;
-  table-layout: fixed;
-}
 .border {
   border: 1px solid grey;
 }
+.research-padding {
+  padding: 8px 6px;
+}
+.button {
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  justify-content: stretch;
+}
+  .btn {
+    align-self: stretch;
+    flex: 1;
+    padding: 7px 0;
+  }
 </style>
