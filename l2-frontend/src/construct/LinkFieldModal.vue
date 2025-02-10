@@ -178,14 +178,7 @@ const selectedResearch = ref({
 });
 const addResearches = () => {
   if (selectedResearch.value.id !== -1) {
-    // const value = {
-    //   id: selectedResearch.value.id,
-    //   label: selectedResearch.value.label,
-    //   tests: selectedResearch.value.tests,
-    //   activeTest: selectedResearch.value.selectedTest,
-    // };
-    // const value = {...selectedResearch.value}
-    addedResearches.value.push({ ...selectedResearch.value });
+    addedResearches.value.push(selectedResearch.value);
   }
 };
 
