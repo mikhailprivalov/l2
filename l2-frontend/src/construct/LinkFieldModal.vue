@@ -178,7 +178,7 @@ const selectedResearch = ref({
 });
 const addResearches = () => {
   if (selectedResearch.value.id !== -1) {
-    addedResearches.value.push(selectedResearch.value);
+    addedResearches.value.push({ ...selectedResearch.value });
   }
 };
 
