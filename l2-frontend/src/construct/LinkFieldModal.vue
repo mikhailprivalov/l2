@@ -181,10 +181,10 @@ const researchToAdd = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
 
-const researchSelect = computed(() => researchToAdd.value.id === -1);
+const researchSelect = computed(() => researchToAdd.value.id !== -1);
 const checkExists = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
-  if (!researchSelect.value) {
+  if (researchSelect.value) {
     const exists = checkExists(researchToAdd.value.id);
     if (!exists) {
       addedResearches.value.push({ ...researchToAdd.value });
@@ -194,6 +194,8 @@ const addResearches = () => {
     } else {
       root.$emit('msg', 'error', 'Такая услуга уже есть');
     }
+  } else {
+    root.$emit('msg', 'error', 'Услуга не выбрана');
   }
 };
 
