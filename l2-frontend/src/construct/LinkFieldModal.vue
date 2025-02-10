@@ -91,17 +91,17 @@
             <td class="border">
               <div class="flex">
                 <div
-                  v-for="(selectedTest, testIdx) in selectedResearch.tests"
+                  v-for="selectedTest in selectedResearch.tests"
                   :key="selectedTest.id"
                   class="flex"
                 >
                   <input
-                    :id="`${testIdx}-${selectedTest.id}`"
+                    :id="selectedTest.id"
                     v-model="selectedResearch.activeTest"
                     :value="selectedTest.id"
                     type="checkbox"
                   >
-                  <label :for="`${testIdx}-${selectedTest.id}`"> {{ selectedTest.label }} </label>
+                  <label :for="selectedTest.id"> {{ selectedTest.label }} </label>
                 </div>
               </div>
             </td>
