@@ -114,6 +114,7 @@
                   class="btn last btn-blue-nb nbr"
                   title="Добавить услугу"
                   @click="addResearches"
+                  @disabled="researchNotSelect"
                 >
                   <i class="fa fa-plus" />
                 </button>
@@ -141,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, ref } from 'vue';
+import { computed, getCurrentInstance, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -179,6 +180,8 @@ const researches = ref([
 const selectedResearch = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
+
+const researchNotSelect = computed(() => selectedResearch.value.id === -1);
 const checkExists = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
   if (selectedResearch.value.id !== -1) {
