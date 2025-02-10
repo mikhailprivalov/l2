@@ -30,7 +30,7 @@
             </tr>
           </thead>
           <tr
-            v-for="(research, resIdx) in addedResearches"
+            v-for="research in addedResearches"
             :key="research.id"
           >
             <td class="border">
@@ -42,18 +42,18 @@
             <td class="border">
               <div class="flex">
                 <div
-                  v-for="(addedTest, testIdx) in research.tests"
+                  v-for="addedTest in research.tests"
                   :key="addedTest.id"
                   class="flex"
                 >
                   <input
-                    :id="`${resIdx}-${testIdx}-${addedTest.id}`"
+                    :id="addedTest.id"
                     v-model="research.activeTest"
                     :value="addedTest.id"
                     type="checkbox"
                     class="checkbox"
                   >
-                  <label :for="`${resIdx}-${testIdx}-${addedTest.id}`"> {{ addedTest.label }} </label>
+                  <label :for="addedTest.id"> {{ addedTest.label }} </label>
                 </div>
               </div>
             </td>
