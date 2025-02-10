@@ -1267,7 +1267,7 @@ def hosp_get_operation_data(num_dir):
                 ):
                     operation_data['name_operation'] = field[2]
                     continue
-                if field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
+                if field[3] == 'Дата начала' or field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
                     operation_data['date'] = normalize_date(field[2])
                     continue
                 if field[3] == 'Время начала':
