@@ -179,11 +179,11 @@ const researches = ref([
 const selectedResearch = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
-const checkUnique = (searchId) => addedResearches.value.find(research => research.id === searchId);
+const checkExists = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
   if (selectedResearch.value.id !== -1) {
-    const unique = checkUnique(selectedResearch.value.id);
-    if (unique) {
+    const exists = checkExists(selectedResearch.value.id);
+    if (!exists) {
       addedResearches.value.push({ ...selectedResearch.value });
       selectedResearch.value = {
         id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
