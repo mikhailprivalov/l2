@@ -113,8 +113,8 @@
                   v-tippy
                   class="btn last btn-blue-nb nbr"
                   title="Добавить услугу"
+                  :disabled="researchNotSelect"
                   @click="addResearches"
-                  @disabled="researchNotSelect"
                 >
                   <i class="fa fa-plus" />
                 </button>
