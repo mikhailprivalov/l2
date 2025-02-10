@@ -19,7 +19,7 @@
             <col class="button-col">
           </colgroup>
           <thead class="sticky">
-            <tr class="border-no-top">
+            <tr>
               <th class="text-center border-right">
                 <strong>Услуга</strong>
               </th>
@@ -180,7 +180,7 @@ const addResearches = () => {
   width: 100%;
 }
 .scroll {
-  max-height: calc(100% - 100px);
+  max-height: calc(100% - 106px);
   overflow-y: auto;
 }
 .table {
@@ -198,6 +198,7 @@ const addResearches = () => {
   top: 0;
   z-index: 1;
   background-color: white;
+  border-bottom: 1px solid grey;
 }
 .add-research {
   width: 500px;
