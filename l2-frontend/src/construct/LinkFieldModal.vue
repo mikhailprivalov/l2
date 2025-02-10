@@ -141,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { getCurrentInstance, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -149,6 +149,7 @@ import VueTippyTd from '@/construct/VueTippyTd.vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+const root = getCurrentInstance().proxy.$root;
 const emit = defineEmits(['close-modal']);
 const props = defineProps({
   fieldId: {
@@ -178,9 +179,18 @@ const researches = ref([
 const selectedResearch = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
+const checkUnique = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
   if (selectedResearch.value.id !== -1) {
-    addedResearches.value.push({ ...selectedResearch.value });
+    const unique = checkUnique(selectedResearch.value.id);
+    if (unique) {
+      addedResearches.value.push({ ...selectedResearch.value });
+      selectedResearch.value = {
+        id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
+      };
+    } else {
+      root.$emit('msg', 'error', 'Такая услуга уже есть');
+    }
   }
 };
 
