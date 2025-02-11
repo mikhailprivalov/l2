@@ -212,13 +212,13 @@ onMounted(async () => {
           root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
         }
       } else {
-        root.$emit('msg', 'error', 'Не удалось преобразовать лаб. ссылку');
+        root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
       }
     } catch (error) {
       root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
     }
   } else {
-    root.$emit('msg', 'error', 'Текущее значение не лаб. ссылка');
+    root.$emit('msg', 'warning', 'Текущее значение не лаб. ссылка');
   }
 });
 
