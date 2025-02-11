@@ -197,19 +197,28 @@ onMounted(async () => {
       const parseValue = JSON.parse(normalyzeValue);
       if (typeof parseValue === 'object') {
         let researchNotExists = false;
+        let testsNotAdd = false;
         // eslint-disable-next-line no-restricted-syntax,guard-for-in
         for (const key in parseValue) {
           const currentResearch = researches.value.find(research => research.id === Number(key));
           if (currentResearch) {
-            const tests = parseValue[key].split(',');
-            currentResearch.activeTests.push(...tests);
-            addedResearches.value.push(currentResearch);
+            const tests = parseValue[key].replaceAll(' ', '').split(',');
+            const allTestIsNumber = tests.every((test) => Number(test));
+            if (allTestIsNumber) {
+              currentResearch.activeTests.push(...tests);
+              addedResearches.value.push(currentResearch);
+            } else {
+              testsNotAdd = true;
+            }
           } else {
             researchNotExists = true;
           }
         }
         if (researchNotExists) {
           root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
+        }
+        if (testsNotAdd) {
+          root.$emit('msg', 'warning', 'Некоторые тесты не добавлены');
         }
       } else {
         root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
