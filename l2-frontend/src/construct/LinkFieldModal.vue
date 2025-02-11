@@ -188,10 +188,13 @@ const hospType = '%root_hosp';
 // });
 
 onMounted(async () => {
-  const [hosp, type, value]: [string, string, string] = props.fieldValue.split('#');
-  if (type === 'laboratory') {
+  const [hosp, typeHosp, value]: [string, string, string] = props.fieldValue.split('#');
+  const normalizeHosp = hosp.trim();
+  const normalizeType = typeHosp.trim();
+  const normalyzeValue = value.trim();
+  if (normalizeType === 'laboratory') {
     try {
-      const parseValue = JSON.parse(value);
+      const parseValue = JSON.parse(normalyzeValue);
       if (typeof parseValue === 'object') {
         let researchNotExists = false;
         // eslint-disable-next-line no-restricted-syntax,guard-for-in
