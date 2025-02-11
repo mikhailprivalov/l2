@@ -70,7 +70,7 @@
         </tr>
       </table>
     </div>
-    <h5>Добавить услугу</h5>
+    <h5 class="margin">Добавить услугу</h5>
     <div class="add-block">
       <table class="table">
         <colgroup>
@@ -123,9 +123,9 @@
         </tr>
       </table>
     </div>
-    <div>
+    <div class="margin">
       <button
-        class="btn btn-blue-nb"
+        class="btn btn-blue-nb save-button"
         @click="addLink"
       >
         Сохранить
@@ -313,5 +313,11 @@ const addLink = () => {
 }
 .not-added-research {
   margin: 10px;
+}
+.margin {
+  margin: 5px;
+}
+.save-button {
+  padding: 7px 5px;
 }
 </style>
