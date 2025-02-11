@@ -173,10 +173,10 @@ const addedResearches = ref([]);
 
 const researches = ref([
   {
-    id: 1, label: 'Услуга 1', tests: [{ id: 1, label: 'тест 1' }, { id: 2, label: 'тест 2' }], activeTest: [],
+    id: 1, label: 'Услуга 1', tests: [{ id: 1, label: 'тест 1' }, { id: 2, label: 'тест 2' }], activeTests: [],
   },
   {
-    id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTest: [],
+    id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTests: [],
   },
 ]);
 
@@ -193,16 +193,26 @@ onMounted(async () => {
     try {
       const parseValue = JSON.parse(value);
       if (typeof parseValue === 'object') {
+        let researchNotExists = false;
         // eslint-disable-next-line no-restricted-syntax,guard-for-in
         for (const key in parseValue) {
-          console.log(key);
-          console.log(parseValue[key]);
+          const currentResearch = researches.value.find(research => research.id === Number(key));
+          if (currentResearch) {
+            const tests = parseValue[key].split(',');
+            currentResearch.activeTests.push(...tests);
+            addedResearches.value.push(currentResearch);
+          } else {
+            researchNotExists = true;
+          }
+        }
+        if (researchNotExists) {
+          root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
         }
       } else {
         root.$emit('msg', 'error', 'Не удалось преобразовать лаб. ссылку');
       }
     } catch (error) {
-      root.$emit('msg', 'error', 'Не удалось преобразовать лаб. ссылку');
+      root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
     }
   } else {
     root.$emit('msg', 'error', 'Текущее значение не лаб. ссылка');
@@ -210,7 +220,7 @@ onMounted(async () => {
 });
 
 const researchToAdd = ref({
-  id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
+  id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
 });
 
 const researchSelect = computed(() => researchToAdd.value.id !== -1);
@@ -221,7 +231,7 @@ const addResearches = () => {
     if (!exists) {
       addedResearches.value.push({ ...researchToAdd.value });
       researchToAdd.value = {
-        id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
+        id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
       };
     } else {
       root.$emit('msg', 'error', 'Такая услуга уже есть');
