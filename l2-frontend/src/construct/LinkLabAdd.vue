@@ -116,9 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed, getCurrentInstance, onMounted, ref,
-} from 'vue';
+import {computed, getCurrentInstance, onMounted, ref,} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
@@ -156,8 +154,7 @@ const hospType = ref('%root_hosp');
 
 onMounted(async () => {
   const [hosp, typeHosp, value]: [string, string, string] = props.fieldValue.split('#');
-  const normalizeHosp = hosp.trim();
-  hospType.value = normalizeHosp;
+  hospType.value = hosp.trim();
   const normalizeType = typeHosp.trim();
   const normalyzeValue = value.trim();
   if (normalizeType === 'laboratory') {
