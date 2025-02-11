@@ -171,15 +171,18 @@ const currentLinkString = computed(() => {
 });
 
 onMounted(async () => {
-  const fieldValue = props.fieldValue.trim();
-  if (fieldValue.length === 0) {
+  const { fieldValue } = props;
+  if (!fieldValue || (fieldValue && fieldValue.trim().length === 0)) {
     return;
   }
-  const [hosp, typeHosp, value]: [string, string, string] = fieldValue.split('#');
-  hospType.value = hosp.trim();
-  const normalizeType = typeHosp.trim();
+  const [typeHosp, typeLink, value]: [string, string, string] = fieldValue.split('#');
+  if (!typeHosp || !typeLink || !value) {
+    return;
+  }
+  hospType.value = typeHosp.trim();
+  const normalizeTypeLink = typeLink.trim();
   const normalyzeValue = value.trim();
-  if (normalizeType === 'laboratory') {
+  if (normalizeTypeLink === 'laboratory') {
     try {
       const parseValue = JSON.parse(normalyzeValue);
       if (typeof parseValue === 'object') {
