@@ -163,7 +163,9 @@ const hospType = ref('%root_hosp');
 const currentLinkString = computed(() => {
   const addResearches = {};
   for (const research of addedResearches.value) {
-    addResearches[research.id] = research.activeTests.sort().join(',');
+    if (research.activeTests.length > 0) {
+      addResearches[research.id] = research.activeTests.join(',');
+    }
   }
   return `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
 });
