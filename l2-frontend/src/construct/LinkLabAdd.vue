@@ -18,6 +18,16 @@
             <th />
           </tr>
         </thead>
+        <tr v-if="addedResearches.length === 0">
+          <td
+            colspan="3"
+            class="text-center"
+          >
+            <div class="not-added-research">
+              Нет данных
+            </div>
+          </td>
+        </tr>
         <tr
           v-for="research in addedResearches"
           :key="research.id"
@@ -300,5 +310,8 @@ const addLink = () => {
 }
 .checkbox {
   margin: 5px;
+}
+.not-added-research {
+  margin: 10px;
 }
 </style>
