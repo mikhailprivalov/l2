@@ -142,7 +142,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, ref } from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -151,7 +153,7 @@ import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 const root = getCurrentInstance().proxy.$root;
-const emit = defineEmits(['close-modal']);
+const emit = defineEmits(['close-modal', 'add-link']);
 const props = defineProps({
   fieldId: {
     required: true,
@@ -177,6 +179,36 @@ const researches = ref([
     id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTest: [],
   },
 ]);
+
+const hospType = '%root_hosp';
+
+// const currentLinkString = computed(() => {
+//   const [hosp, type, value]: [string, string, string] = props.fieldValue.split('#');
+//
+// });
+
+onMounted(async () => {
+  const [hosp, type, value]: [string, string, string] = props.fieldValue.split('#');
+  if (type === 'laboratory') {
+    try {
+      const parseValue = JSON.parse(value);
+      if (typeof parseValue === 'object') {
+        // eslint-disable-next-line no-restricted-syntax,guard-for-in
+        for (const key in parseValue) {
+          console.log(key);
+          console.log(parseValue[key]);
+        }
+      } else {
+        root.$emit('msg', 'error', 'Не удалось преобразовать лаб. ссылку');
+      }
+    } catch (error) {
+      root.$emit('msg', 'error', 'Не удалось преобразовать лаб. ссылку');
+    }
+  } else {
+    root.$emit('msg', 'error', 'Текущее значение не лаб. ссылка');
+  }
+});
+
 const researchToAdd = ref({
   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTest: [],
 });
@@ -198,7 +230,6 @@ const addResearches = () => {
     root.$emit('msg', 'error', 'Услуга не выбрана');
   }
 };
-
 </script>
 
 <style scoped lang="scss">
