@@ -164,7 +164,7 @@ const currentLinkString = computed(() => {
   const addResearches = {};
   for (const research of addedResearches.value) {
     if (research.activeTests.length > 0) {
-      addResearches[research.id] = research.activeTests.join(',');
+      addResearches[research.id] = research.activeTests.sort().join(',');
     }
   }
   return `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
