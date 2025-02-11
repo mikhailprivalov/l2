@@ -182,42 +182,42 @@ onMounted(async () => {
   hospType.value = typeHosp.trim();
   const normalizeTypeLink = typeLink.trim();
   const normalyzeValue = value.trim();
-  if (normalizeTypeLink === 'laboratory') {
-    try {
-      const parseValue = JSON.parse(normalyzeValue);
-      if (typeof parseValue === 'object') {
-        let researchNotExists = false;
-        let testsNotAdd = false;
-        // eslint-disable-next-line no-restricted-syntax,guard-for-in
-        for (const key in parseValue) {
-          const currentResearch = researches.value.find(research => research.id === Number(key));
-          if (currentResearch) {
-            const tests = parseValue[key].replaceAll(' ', '').split(',');
-            const allTestIsNumber = tests.every((test) => Number(test));
-            if (allTestIsNumber) {
-              currentResearch.activeTests.push(...tests);
-            } else {
-              testsNotAdd = true;
-            }
-            addedResearches.value.push(currentResearch);
-          } else {
-            researchNotExists = true;
-          }
-        }
-        if (researchNotExists) {
-          root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
-        }
-        if (testsNotAdd) {
-          root.$emit('msg', 'warning', 'Некоторые тесты не добавлены');
-        }
-      } else {
-        root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
-      }
-    } catch (error) {
-      root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
-    }
-  } else {
+  if (normalizeTypeLink !== 'laboratory') {
     root.$emit('msg', 'warning', 'Текущее значение не лаб. ссылка');
+    return;
+  }
+  try {
+    const parseValue = JSON.parse(normalyzeValue);
+    if (typeof parseValue !== 'object') {
+      root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
+      return;
+    }
+    let researchNotExists = false;
+    let testsNotAdd = false;
+    // eslint-disable-next-line no-restricted-syntax,guard-for-in
+    for (const key in parseValue) {
+      const currentResearch = researches.value.find(research => research.id === Number(key));
+      if (!currentResearch) {
+        researchNotExists = true;
+        continue;
+      }
+      const tests = parseValue[key].replaceAll(' ', '').split(',');
+      const allTestIsNumber = tests.every((test) => Number(test));
+      if (allTestIsNumber) {
+        currentResearch.activeTests.push(...tests);
+      } else {
+        testsNotAdd = true;
+      }
+      addedResearches.value.push(currentResearch);
+    }
+    if (researchNotExists) {
+      root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
+    }
+    if (testsNotAdd) {
+      root.$emit('msg', 'warning', 'Некоторые тесты не добавлены');
+    }
+  } catch (error) {
+    root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
   }
 });
 
