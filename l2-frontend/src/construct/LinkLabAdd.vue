@@ -171,46 +171,49 @@ const currentLinkString = computed(() => {
 });
 
 onMounted(async () => {
-  const [hosp, typeHosp, value]: [string, string, string] = props.fieldValue.split('#');
-  hospType.value = hosp.trim();
-  const normalizeType = typeHosp.trim();
-  const normalyzeValue = value.trim();
-  if (normalizeType === 'laboratory') {
-    try {
-      const parseValue = JSON.parse(normalyzeValue);
-      if (typeof parseValue === 'object') {
-        let researchNotExists = false;
-        let testsNotAdd = false;
-        // eslint-disable-next-line no-restricted-syntax,guard-for-in
-        for (const key in parseValue) {
-          const currentResearch = researches.value.find(research => research.id === Number(key));
-          if (currentResearch) {
-            const tests = parseValue[key].replaceAll(' ', '').split(',');
-            const allTestIsNumber = tests.every((test) => Number(test));
-            if (allTestIsNumber) {
-              currentResearch.activeTests.push(...tests);
+  const fieldValue = props.fieldValue.trim();
+  if (fieldValue.length > 0); {
+    const [hosp, typeHosp, value]: [string, string, string] = fieldValue.split('#');
+    hospType.value = hosp.trim();
+    const normalizeType = typeHosp.trim();
+    const normalyzeValue = value.trim();
+    if (normalizeType === 'laboratory') {
+      try {
+        const parseValue = JSON.parse(normalyzeValue);
+        if (typeof parseValue === 'object') {
+          let researchNotExists = false;
+          let testsNotAdd = false;
+          // eslint-disable-next-line no-restricted-syntax,guard-for-in
+          for (const key in parseValue) {
+            const currentResearch = researches.value.find(research => research.id === Number(key));
+            if (currentResearch) {
+              const tests = parseValue[key].replaceAll(' ', '').split(',');
+              const allTestIsNumber = tests.every((test) => Number(test));
+              if (allTestIsNumber) {
+                currentResearch.activeTests.push(...tests);
+              } else {
+                testsNotAdd = true;
+              }
+              addedResearches.value.push(currentResearch);
             } else {
-              testsNotAdd = true;
+              researchNotExists = true;
             }
-            addedResearches.value.push(currentResearch);
-          } else {
-            researchNotExists = true;
           }
+          if (researchNotExists) {
+            root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
+          }
+          if (testsNotAdd) {
+            root.$emit('msg', 'warning', 'Некоторые тесты не добавлены');
+          }
+        } else {
+          root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
         }
-        if (researchNotExists) {
-          root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
-        }
-        if (testsNotAdd) {
-          root.$emit('msg', 'warning', 'Некоторые тесты не добавлены');
-        }
-      } else {
-        root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
+      } catch (error) {
+        root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
       }
-    } catch (error) {
-      root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
+    } else {
+      root.$emit('msg', 'warning', 'Текущее значение не лаб. ссылка');
     }
-  } else {
-    root.$emit('msg', 'warning', 'Текущее значение не лаб. ссылка');
   }
 });
 
@@ -224,7 +227,7 @@ const addResearches = () => {
   if (researchSelect.value) {
     const exists = checkExists(researchToAdd.value.id);
     if (!exists) {
-      addedResearches.value.push({ ...researchToAdd.value });
+      addedResearches.value.push({ ...researchToAdd.value, activeTests: researchToAdd.value.activeTests });
       researchToAdd.value = {
         id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
       };
