@@ -60,6 +60,7 @@
         </tr>
       </table>
     </div>
+    <h5>Добавить услугу</h5>
     <div class="add-block">
       <table class="table">
         <colgroup>
@@ -112,6 +113,14 @@
         </tr>
       </table>
     </div>
+    <div>
+      <button
+        class="btn btn-blue-nb"
+        @click="addLink"
+      >
+        Сохранить
+      </button>
+    </div>
   </div>
 </template>
 
@@ -154,11 +163,9 @@ const hospType = ref('%root_hosp');
 const currentLinkString = computed(() => {
   const addResearches = {};
   for (const research of addedResearches.value) {
-    addResearches[research.id] = research.activeTests.join(',');
+    addResearches[research.id] = research.activeTests.sort().join(',');
   }
-  const result = `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
-  console.log(result);
-  return result;
+  return `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
 });
 
 onMounted(async () => {
@@ -225,6 +232,10 @@ const addResearches = () => {
   } else {
     root.$emit('msg', 'error', 'Услуга не выбрана');
   }
+};
+
+const addLink = () => {
+  emit('add-link', { currentLinkString: currentLinkString.value });
 };
 </script>
 

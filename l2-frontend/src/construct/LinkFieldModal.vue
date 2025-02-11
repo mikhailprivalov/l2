@@ -54,8 +54,9 @@ const closeModal = () => {
   emit('close-modal');
 };
 
-const addLink = () => {
-  emit('add-link');
+const addLink = ({ currentLinkString }) => {
+  console.log(currentLinkString);
+  emit('add-link', currentLinkString);
 };
 </script>
 
