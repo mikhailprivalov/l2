@@ -180,7 +180,7 @@ const currentLinkString = computed(() => {
   return `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
 });
 
-onMounted(async () => {
+const parseCurrentFieldValue = () => {
   const { fieldValue } = props;
   if (!fieldValue || (fieldValue && fieldValue.trim().length === 0)) {
     return;
@@ -230,6 +230,10 @@ onMounted(async () => {
   } catch (error) {
     root.$emit('msg', 'error', 'Ошибка преобразования лаб. ссылки');
   }
+};
+
+onMounted(async () => {
+  parseCurrentFieldValue();
 });
 
 const researchToAdd = ref({
