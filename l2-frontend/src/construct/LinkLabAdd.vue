@@ -116,7 +116,9 @@
 </template>
 
 <script setup lang="ts">
-import {computed, getCurrentInstance, onMounted, ref,} from 'vue';
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
@@ -149,8 +151,15 @@ const researches = ref([
 
 const hospType = ref('%root_hosp');
 
-// const currentLinkString = computed(() => {
-// });
+const currentLinkString = computed(() => {
+  const addResearches = {};
+  for (const research of addedResearches.value) {
+    addResearches[research.id] = research.activeTests.join(',');
+  }
+  const result = `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
+  console.log(result);
+  return result;
+});
 
 onMounted(async () => {
   const [hosp, typeHosp, value]: [string, string, string] = props.fieldValue.split('#');
