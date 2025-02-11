@@ -201,14 +201,15 @@ onMounted(async () => {
         researchNotExists = true;
         continue;
       }
+      const copyCurrentResearch = structuredClone(currentResearch);
       const tests = parseValue[key].replaceAll(' ', '').split(',');
       const allTestIsNumber = tests.every((test) => Number(test));
       if (allTestIsNumber) {
-        currentResearch.activeTests.push(...tests);
+        copyCurrentResearch.activeTests.push(...tests);
       } else {
         testsNotAdd = true;
       }
-      addedResearches.value.push({ ...currentResearch });
+      addedResearches.value.push(copyCurrentResearch);
     }
     if (researchNotExists) {
       root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
