@@ -206,10 +206,10 @@ onMounted(async () => {
             const allTestIsNumber = tests.every((test) => Number(test));
             if (allTestIsNumber) {
               currentResearch.activeTests.push(...tests);
-              addedResearches.value.push(currentResearch);
             } else {
               testsNotAdd = true;
             }
+            addedResearches.value.push(currentResearch);
           } else {
             researchNotExists = true;
           }
