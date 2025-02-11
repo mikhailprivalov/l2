@@ -149,16 +149,15 @@ const researches = ref([
   },
 ]);
 
-const hospType = '%root_hosp';
+const hospType = ref('%root_hosp');
 
 // const currentLinkString = computed(() => {
-//   const [hosp, type, value]: [string, string, string] = props.fieldValue.split('#');
-//
 // });
 
 onMounted(async () => {
   const [hosp, typeHosp, value]: [string, string, string] = props.fieldValue.split('#');
   const normalizeHosp = hosp.trim();
+  hospType.value = normalizeHosp;
   const normalizeType = typeHosp.trim();
   const normalyzeValue = value.trim();
   if (normalizeType === 'laboratory') {
