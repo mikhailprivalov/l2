@@ -48,7 +48,7 @@
                 >
                   <input
                     :id="addedTest.id"
-                    v-model="research.activeTest"
+                    v-model="research.activeTests"
                     :value="addedTest.id"
                     type="checkbox"
                     class="checkbox"
@@ -98,7 +98,7 @@
                 >
                   <input
                     :id="`add-${selectedTest.id}`"
-                    v-model="researchToAdd.activeTest"
+                    v-model="researchToAdd.activeTests"
                     :value="selectedTest.id"
                     type="checkbox"
                     class="checkbox"
