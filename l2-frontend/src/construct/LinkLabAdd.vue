@@ -208,7 +208,7 @@ onMounted(async () => {
       } else {
         testsNotAdd = true;
       }
-      addedResearches.value.push(currentResearch);
+      addedResearches.value.push({ ...currentResearch });
     }
     if (researchNotExists) {
       root.$emit('msg', 'warning', 'Некоторые услуги не добавлены');
