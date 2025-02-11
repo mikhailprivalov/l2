@@ -70,7 +70,9 @@
         </tr>
       </table>
     </div>
-    <h5 class="margin">Добавить услугу</h5>
+    <h5 class="margin">
+      Добавить услугу
+    </h5>
     <div class="add-block">
       <table class="table">
         <colgroup>
@@ -141,10 +143,13 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 const root = getCurrentInstance().proxy.$root;
+const store = useStore();
 const emit = defineEmits(['add-link']);
 const props = defineProps({
   fieldId: {
@@ -167,6 +172,13 @@ const researches = ref([
     id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTests: [],
   },
 ]);
+
+// const getResearches = async () => {
+//   await store.dispatch(actions.INC_LOADING);
+//   const { data } = await api('get-research-list', { include_categories: ['is_laboratory'] });
+//   await store.dispatch(actions.DEC_LOADING);
+//   researches.value = data;
+// };
 
 const hospType = ref('%root_hosp');
 
@@ -233,6 +245,7 @@ const parseCurrentFieldValue = () => {
 };
 
 onMounted(async () => {
+  await getResearches();
   parseCurrentFieldValue();
 });
 
