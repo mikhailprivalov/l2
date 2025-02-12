@@ -43,7 +43,9 @@
               <div
                 v-for="addedTest in research.tests"
                 :key="addedTest.id"
-                class="flex"
+                v-tippy
+                :title="addedTest.title"
+                class="flex test-item"
               >
                 <input
                   :id="addedTest.id"
@@ -52,7 +54,10 @@
                   type="checkbox"
                   class="checkbox"
                 >
-                <label :for="addedTest.id"> {{ addedTest.title }} </label>
+                <label
+                  class="test-label"
+                  :for="addedTest.id"
+                > {{ addedTest.title }} </label>
               </div>
             </div>
           </td>
@@ -293,5 +298,16 @@ const addResearches = () => {
 }
 .margin {
   margin: 5px;
+}
+.test-td {
+  overflow-x: auto;
+}
+.test-item {
+  width: 70px;
+  overflow-x: auto;
+}
+.test-label {
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
