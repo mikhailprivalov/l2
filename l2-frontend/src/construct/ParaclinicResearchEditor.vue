@@ -1996,6 +1996,7 @@ export default {
           }
         }
       }
+      this.closeLinkFieldModal();
     },
   },
 };
