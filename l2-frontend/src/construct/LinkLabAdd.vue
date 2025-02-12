@@ -113,19 +113,28 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, ref, watch,
+  computed, getCurrentInstance, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
-import { useStore } from '@/store';
-import * as actions from '@/store/action-types';
-import api from '@/api';
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
 const emit = defineEmits(['add-lab-data']);
+
+interface testData {
+  id: number,
+  title: string,
+  isHideFraciton: boolean,
+}
+interface researchData {
+  departmentTitle: string,
+  id: number,
+  label: string,
+  tests: testData[]
+}
+
 const props = defineProps({
   linkValue: {
     required: true,
@@ -133,7 +142,7 @@ const props = defineProps({
   },
   researches: {
     required: true,
-    type: Array,
+    type: Object as PropType<researchData[]>,
   },
 });
 
@@ -163,9 +172,9 @@ const parsePropsValue = () => {
   if (!linkValue || (linkValue && linkValue.trim().length === 0)) {
     return;
   }
-  const normalyzeValue = linkValue.trim();
+  const normalizedValue = linkValue.trim();
   try {
-    const parseValue = JSON.parse(normalyzeValue);
+    const parseValue = JSON.parse(normalizedValue);
     if (typeof parseValue !== 'object') {
       root.$emit('msg', 'warning', 'Не удалось разобрать лаб. ссылку');
       return;

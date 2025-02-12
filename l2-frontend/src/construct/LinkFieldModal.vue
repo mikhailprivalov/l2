@@ -76,6 +76,7 @@ import { useStore } from '@/store';
 
 const store = useStore();
 const emit = defineEmits(['close-modal', 'add-link']);
+
 const props = defineProps({
   fieldId: {
     required: true,
@@ -104,7 +105,12 @@ const getResearches = async () => {
   researches.value = result;
 };
 
-const currentLinkString = computed(() => `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${daysAgo.value}`);
+const currentLinkString = computed(() => {
+  if (valueLink.value.length > 2) {
+    return `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${daysAgo.value}`;
+  }
+  return '';
+});
 
 const addLink = () => {
   emit('add-link', currentLinkString.value);
