@@ -2834,11 +2834,7 @@ def update_coast_research_in_price(request):
 @group_required("Конструктор: Настройка организации")
 def get_research_list(request):
     request_data = json.loads(request.body)
-    all_categories = {"is_laboratory", "is_paraclinic", "is_doc_refferal", "is_form", "is_treatment", "is_microbiology", "is_gistology", "is_citology", "is_stom", "is_complex"}
     exclude_categories = request_data.get("exclude_categories")
-    include_categories = request_data.get("include_categories")
-    if include_categories:
-        exclude_categories = list((all_categories - set(include_categories)))
     researches = Researches.objects.all().order_by("title")
     res_list = Researches.gen_non_excluded_categories(exclude_categories)
     lab_podr = get_lab_podr()
