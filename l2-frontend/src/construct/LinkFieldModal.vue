@@ -13,6 +13,7 @@
     >
       <LinkLabAdd
         :link-value="valueLink"
+        :researches="researches"
         @add-lab-data="changeValueLink"
       />
     </div>
@@ -67,9 +68,12 @@ import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
 import LinkLabAdd from '@/construct/LinkLabAdd.vue';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import * as actions from '@/store/action-types';
+import api from '@/api';
+import { useStore } from '@/store';
 
+const store = useStore();
 const emit = defineEmits(['close-modal', 'add-link']);
 const props = defineProps({
   fieldId: {
@@ -91,6 +95,13 @@ const hospType = ref('%root_hosp');
 const valueType = ref('laboratory');
 const valueLink = ref('');
 const daysAgo = ref(0);
+const researches = ref([]);
+const getResearches = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('researches/researches-for-formula', { type: valueType.value });
+  await store.dispatch(actions.DEC_LOADING);
+  researches.value = result;
+};
 
 const currentLinkString = computed(() => `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${daysAgo.value}`);
 
@@ -123,14 +134,13 @@ const parseCurrentFieldValue = () => {
   const normalyzeValue = value.trim();
   hospType.value = normalizeTypeHosp;
   const numberDaysAgo = Number(normalizeDaysAgo);
-  console.log(normalizeDaysAgo);
-  console.log(numberDaysAgo);
   daysAgo.value = numberDaysAgo || 0;
   valueType.value = normalizeTypeValue;
   valueLink.value = normalyzeValue;
 };
 
-onMounted(() => {
+onMounted(async () => {
+  await getResearches();
   parseCurrentFieldValue();
 });
 </script>

@@ -29,7 +29,7 @@
           </td>
         </tr>
         <tr
-          v-for="research in addedResearches"
+          v-for="(research, idx) in addedResearches"
           :key="research.id"
         >
           <td class="border">
@@ -62,6 +62,7 @@
                 v-tippy
                 class="btn last btn-blue-nb nbr"
                 title="Удалить услугу"
+                @click="deleteResearch(idx)"
               >
                 <i class="fa fa-times" />
               </button>
@@ -112,7 +113,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  computed, getCurrentInstance, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -130,21 +131,17 @@ const props = defineProps({
     required: true,
     type: String,
   },
+  researches: {
+    required: true,
+    type: Array,
+  },
 });
 
 const addedResearches = ref([]);
-const researches = ref([]);
 
-const getResearches = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('researches/researches-for-formula', { type: 'laboratory' });
-  await store.dispatch(actions.DEC_LOADING);
-  researches.value = result;
+const deleteResearch = (index) => {
+  addedResearches.value.splice(index, 1);
 };
-
-onMounted(async () => {
-  await getResearches();
-});
 
 const currentLabData = computed(() => {
   const addResearches = {};
@@ -177,7 +174,7 @@ const parsePropsValue = () => {
     let testsNotAdd = false;
     // eslint-disable-next-line no-restricted-syntax,guard-for-in
     for (const key in parseValue) {
-      const currentResearch = researches.value.find(research => research.id === Number(key));
+      const currentResearch = props.researches.find(research => research.id === Number(key));
       if (!currentResearch) {
         researchNotExists = true;
         continue;
@@ -217,7 +214,7 @@ const addResearches = () => {
   if (researchSelect.value) {
     const exists = checkExists(researchToAdd.value);
     if (!exists) {
-      const currentResearch = researches.value.find(research => research.id === researchToAdd.value);
+      const currentResearch = props.researches.find(research => research.id === researchToAdd.value);
       const activeTests = currentResearch.tests.map(test => test.id);
       addedResearches.value.push({ ...currentResearch, activeTests });
       researchToAdd.value = null;
