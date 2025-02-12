@@ -183,7 +183,7 @@ const parsePropsValue = () => {
       const tests = parseValue[key].replaceAll(' ', '').split(',');
       const allTestIsNumber = tests.every((test) => Number(test));
       if (allTestIsNumber) {
-        copyCurrentResearch.activeTests.push(...tests);
+        copyCurrentResearch.activeTests = { ...tests };
       } else {
         testsNotAdd = true;
       }
