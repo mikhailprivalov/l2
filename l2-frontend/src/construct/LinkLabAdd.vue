@@ -245,7 +245,6 @@ const parseCurrentFieldValue = () => {
 };
 
 onMounted(async () => {
-  await getResearches();
   parseCurrentFieldValue();
 });
 
