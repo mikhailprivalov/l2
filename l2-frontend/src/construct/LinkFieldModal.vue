@@ -4,6 +4,7 @@
     show-footer="true"
     white-bg="true"
     min-width="95%"
+    margin-left-right="37px"
     @close="closeModal"
   >
     <span slot="header">Создание ссылочных строк</span>
