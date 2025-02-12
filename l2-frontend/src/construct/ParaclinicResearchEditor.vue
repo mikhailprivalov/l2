@@ -1260,6 +1260,7 @@
       :field-id="currentLinkFieldId"
       :field-value="currentLinkFieldValue"
       @close-modal="closeLinkFieldModal"
+      @add-link="addLinkInField"
     />
   </div>
 </template>
@@ -1985,6 +1986,16 @@ export default {
         this.$refs.LinkModal.$el.style.display = 'none';
       }
       this.showLinkFieldModal = false;
+    },
+    addLinkInField(link: string) {
+      for (const group of this.groups) {
+        for (const field of group.fields) {
+          if (field.pk === this.currentLinkFieldId) {
+            field.default = link;
+            break;
+          }
+        }
+      }
     },
   },
 };
