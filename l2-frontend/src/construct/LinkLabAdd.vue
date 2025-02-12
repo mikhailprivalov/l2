@@ -125,8 +125,8 @@
         </tr>
       </table>
     </div>
-    <div class="flex">
-      <div>
+    <div class="flex gap5">
+      <div class="type-hosp">
         <label>Где искать</label>
         <Treeselect
           v-model="hospType"
@@ -134,18 +134,18 @@
           :clearable="false"
         />
       </div>
-      <div>
-        <label>Сколько дней спустя</label>
+      <div class="days-ago">
+        <label>Кол-во дн. назад</label>
         <input
           v-model="daysAgo"
-          class="form-control"
+          class="form-control nbr"
           type="number"
         >
       </div>
     </div>
     <div class="margin">
       <button
-        class="btn btn-blue-nb save-button"
+        class="btn btn-blue-nb save-button nbr"
         @click="addLink"
       >
         Сохранить
@@ -359,5 +359,14 @@ const addLink = () => {
 }
 .save-button {
   padding: 7px 5px;
+}
+.type-hosp {
+  width: 300px;
+}
+.days-ago {
+  width: 125px;
+}
+.gap5 {
+  gap: 5px;
 }
 </style>
