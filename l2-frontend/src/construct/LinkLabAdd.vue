@@ -125,57 +125,26 @@
         </tr>
       </table>
     </div>
-    <div class="flex gap5 margin">
-      <div class="type-hosp">
-        <label>Где искать</label>
-        <Treeselect
-          v-model="hospType"
-          :options="hospTypes"
-          class="nbr"
-          :clearable="false"
-        />
-      </div>
-      <div class="days-ago">
-        <label>Кол-во дн. назад</label>
-        <input
-          v-model="daysAgo"
-          class="form-control nbr"
-          type="number"
-        >
-      </div>
-    </div>
-    <div class="margin">
-      <button
-        class="btn btn-blue-nb save-button nbr"
-        @click="addLink"
-      >
-        Сохранить
-      </button>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
-import * as actions from '@/store/action-types';
-import api from '@/api';
+// import * as actions from '@/store/action-types';
+// import api from '@/api';
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
+// const store = useStore();
 const emit = defineEmits(['add-link']);
 const props = defineProps({
-  fieldId: {
-    required: true,
-    type: Number,
-  },
-  fieldValue: {
+  value: {
     required: true,
     type: String,
   },
@@ -199,13 +168,13 @@ const researches = ref([
 //   researches.value = data;
 // };
 
-const hospTypes = ref([
-  { id: '%root_hosp', label: 'Весь cлучай госпитализации' },
-  { id: '%current_hosp', label: 'Текущая история' },
-]);
-const hospType = ref('%root_hosp');
-
-const daysAgo = ref(0);
+// const hospTypes = ref([
+//   { id: '%root_hosp', label: 'Весь cлучай госпитализации' },
+//   { id: '%current_hosp', label: 'Текущая история' },
+// ]);
+// const hospType = ref('%root_hosp');
+//
+// const daysAgo = ref(0);
 
 const currentLinkString = computed(() => {
   const addResearches = {};
@@ -214,25 +183,19 @@ const currentLinkString = computed(() => {
       addResearches[research.id] = research.activeTests.sort().join(',');
     }
   }
-  return `${hospType.value}#laboratory#${JSON.stringify(addResearches)}`;
+  return JSON.stringify(addResearches);
+});
+
+watch(currentLinkString, () => {
+  emit('add-link', { currentLinkString: currentLinkString.value });
 });
 
 const parseCurrentFieldValue = () => {
-  const { fieldValue } = props;
-  if (!fieldValue || (fieldValue && fieldValue.trim().length === 0)) {
+  const { value } = props;
+  if (!value || (value && value.trim().length === 0)) {
     return;
   }
-  const [typeHosp, typeLink, value]: [string, string, string] = fieldValue.split('#');
-  if (!typeHosp || !typeLink || !value) {
-    return;
-  }
-  hospType.value = typeHosp.trim();
-  const normalizeTypeLink = typeLink.trim();
   const normalyzeValue = value.trim();
-  if (normalizeTypeLink !== 'laboratory') {
-    root.$emit('msg', 'warning', 'Текущее значение не лаб. ссылка');
-    return;
-  }
   try {
     const parseValue = JSON.parse(normalyzeValue);
     if (typeof parseValue !== 'object') {
@@ -294,10 +257,6 @@ const addResearches = () => {
     root.$emit('msg', 'error', 'Услуга не выбрана');
   }
 };
-
-const addLink = () => {
-  emit('add-link', { currentLinkString: currentLinkString.value });
-};
 </script>
 
 <style scoped lang="scss">
@@ -355,22 +314,22 @@ const addLink = () => {
 .not-added-research {
   margin: 10px;
 }
-.margin {
-  margin: 5px;
-}
-.save-button {
-  padding: 7px 5px;
-}
-.type-hosp {
-  width: 300px;
-}
-.days-ago {
-  width: 125px;
-}
-.gap5 {
-  gap: 5px;
-}
-::v-deep .nbr .vue-treeselect__control {
-  border-radius: 0;
-}
+//.margin {
+//  margin: 5px;
+//}
+//.save-button {
+//  padding: 7px 5px;
+//}
+//.type-hosp {
+//  width: 300px;
+//}
+//.days-ago {
+//  width: 125px;
+//}
+//.gap5 {
+//  gap: 5px;
+//}
+//::v-deep .nbr .vue-treeselect__control {
+//  border-radius: 0;
+//}
 </style>
