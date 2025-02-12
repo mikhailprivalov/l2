@@ -114,9 +114,14 @@ const parseCurrentFieldValue = () => {
   if (!typeHosp || !typeValue || !value) {
     return;
   }
-  const normalizeDaysAgo = countDaysAgo.trim();
+  const normalizeTypeHosp = typeHosp.trim();
+  let normalizeDaysAgo = '0';
+  if (countDaysAgo) {
+    normalizeDaysAgo = countDaysAgo.trim();
+  }
   const normalizeTypeValue = typeValue.trim();
   const normalyzeValue = value.trim();
+  hospType.value = normalizeTypeHosp;
   daysAgo.value = Number(normalizeDaysAgo);
   valueType.value = normalizeTypeValue;
   valueLink.value = normalyzeValue;

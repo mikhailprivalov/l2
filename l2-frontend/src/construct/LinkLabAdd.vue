@@ -142,7 +142,7 @@ import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
 // const store = useStore();
-const emit = defineEmits(['add-link']);
+const emit = defineEmits(['change-value']);
 const props = defineProps({
   value: {
     required: true,
@@ -187,7 +187,7 @@ const currentLinkString = computed(() => {
 });
 
 watch(currentLinkString, () => {
-  emit('add-link', { currentLinkString: currentLinkString.value });
+  emit('change-value', { currentLinkString: currentLinkString.value });
 });
 
 const parseCurrentFieldValue = () => {
