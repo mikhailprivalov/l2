@@ -13,7 +13,7 @@
     >
       <LinkLabAdd
         :link-value="valueLink"
-        @add-value="addLink"
+        @add-lab-data="changeValueLink"
       />
     </div>
     <div slot="footer">
@@ -94,15 +94,14 @@ const valueType = ref('laboratory');
 const valueLink = ref('');
 const daysAgo = ref(0);
 
+
+
 const closeModal = () => {
   emit('close-modal');
 };
 
-const currentLinkData = ref('');
-
-const addLink = ({ currentLinkString }) => {
-  currentLinkData.value = `${hospType.value}#laboratory#${currentLinkString}#days_ago${daysAgo.value}`;
-  emit('add-link', currentLinkData.value);
+const changeValueLink = (value) => {
+  valueLink.value = value;
 };
 
 const parseCurrentFieldValue = () => {
@@ -129,7 +128,6 @@ const parseCurrentFieldValue = () => {
 
 onMounted(() => {
   parseCurrentFieldValue();
-  console.log('после парсинга в модалке:', valueLink.value);
 });
 </script>
 

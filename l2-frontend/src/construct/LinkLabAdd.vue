@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  computed, getCurrentInstance, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -142,7 +142,7 @@ import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
 // const store = useStore();
-const emit = defineEmits(['add-value']);
+const emit = defineEmits(['add-lab-data']);
 const props = defineProps({
   linkValue: {
     required: true,
@@ -176,7 +176,7 @@ const researches = ref([
 //
 // const daysAgo = ref(0);
 
-const currentLinkString = computed(() => {
+const currentLabData = computed(() => {
   const addResearches = {};
   for (const research of addedResearches.value) {
     if (research.activeTests.length > 0) {
@@ -186,8 +186,8 @@ const currentLinkString = computed(() => {
   return JSON.stringify(addResearches);
 });
 
-watch(currentLinkString, () => {
-  emit('add-value', currentLinkString.value);
+watch(currentLabData, () => {
+  emit('add-lab-data', currentLabData.value);
 });
 
 const parsePropsValue = () => {
