@@ -263,9 +263,6 @@ const addResearches = () => {
   background-color: white;
   border-bottom: 1px solid grey;
 }
-.add-research {
-  width: 500px;
-}
 .flex {
   display: flex;
 }
