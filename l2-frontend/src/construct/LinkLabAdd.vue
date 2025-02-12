@@ -38,7 +38,7 @@
               :text="research.label"
             />
           </td>
-          <td class="border">
+          <td class="border test-td">
             <div class="flex">
               <div
                 v-for="addedTest in research.tests"
@@ -304,10 +304,10 @@ const addResearches = () => {
 }
 .test-item {
   width: 70px;
-  overflow-x: auto;
 }
 .test-label {
   text-overflow: ellipsis;
+  overflow: hidden;
   white-space: nowrap;
 }
 </style>
