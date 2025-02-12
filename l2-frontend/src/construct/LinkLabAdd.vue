@@ -142,9 +142,9 @@ import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
 // const store = useStore();
-const emit = defineEmits(['change-value']);
+const emit = defineEmits(['add-value']);
 const props = defineProps({
-  value: {
+  linkValue: {
     required: true,
     type: String,
   },
@@ -187,15 +187,18 @@ const currentLinkString = computed(() => {
 });
 
 watch(currentLinkString, () => {
-  emit('change-value', { currentLinkString: currentLinkString.value });
+  emit('add-value', currentLinkString.value);
 });
 
-const parseCurrentFieldValue = () => {
-  const { value } = props;
-  if (!value || (value && value.trim().length === 0)) {
+const parsePropsValue = () => {
+  console.log(props.linkValue);
+  const { linkValue } = props;
+  console.log(linkValue, 'ававыа');
+  if (!linkValue || (linkValue && linkValue.trim().length === 0)) {
     return;
   }
-  const normalyzeValue = value.trim();
+  const normalyzeValue = linkValue.trim();
+  console.log('мы дошли до попытка парсинга');
   try {
     const parseValue = JSON.parse(normalyzeValue);
     if (typeof parseValue !== 'object') {
@@ -204,6 +207,7 @@ const parseCurrentFieldValue = () => {
     }
     let researchNotExists = false;
     let testsNotAdd = false;
+    console.log('мы дошли до попытка парсинга 222');
     // eslint-disable-next-line no-restricted-syntax,guard-for-in
     for (const key in parseValue) {
       const currentResearch = researches.value.find(research => research.id === Number(key));
@@ -233,7 +237,7 @@ const parseCurrentFieldValue = () => {
 };
 
 onMounted(async () => {
-  parseCurrentFieldValue();
+  parsePropsValue();
 });
 
 const researchToAdd = ref({

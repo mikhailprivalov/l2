@@ -12,7 +12,7 @@
       class="body"
     >
       <LinkLabAdd
-        :value="valueLink"
+        :link-value="valueLink"
         @add-link="addLink"
       />
     </div>
