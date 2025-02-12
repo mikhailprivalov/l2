@@ -125,6 +125,24 @@
         </tr>
       </table>
     </div>
+    <div class="flex">
+      <div>
+        <label>Где искать</label>
+        <Treeselect
+          v-model="hospType"
+          :options="hospTypes"
+          :clearable="false"
+        />
+      </div>
+      <div>
+        <label>Сколько дней спустя</label>
+        <input
+          v-model="daysAgo"
+          class="form-control"
+          type="number"
+        >
+      </div>
+    </div>
     <div class="margin">
       <button
         class="btn btn-blue-nb save-button"
@@ -180,7 +198,13 @@ const researches = ref([
 //   researches.value = data;
 // };
 
+const hospTypes = ref([
+  { id: '%root_hosp', label: 'Весь cлучай госпитализации' },
+  { id: '%current_hosp', label: 'Текущая история' },
+]);
 const hospType = ref('%root_hosp');
+
+const daysAgo = ref(0);
 
 const currentLinkString = computed(() => {
   const addResearches = {};
