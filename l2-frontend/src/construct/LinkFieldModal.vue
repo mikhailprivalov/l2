@@ -11,6 +11,7 @@
       slot="body"
       class="body"
     >
+      Текущая ссылка - {{ currentLinkString }}
       <LinkLabAdd
         :link-value="valueLink"
         :researches="researches"
