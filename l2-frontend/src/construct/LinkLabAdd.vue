@@ -191,6 +191,7 @@ watch(currentLabData, () => {
 });
 
 const parsePropsValue = () => {
+  addedResearches.value = [];
   const { linkValue } = props;
   if (!linkValue || (linkValue && linkValue.trim().length === 0)) {
     return;
@@ -233,7 +234,10 @@ const parsePropsValue = () => {
 };
 
 watch(() => props.linkValue, () => {
-  parsePropsValue();
+  if (props.linkValue !== currentLabData.value) {
+    console.log('запуск парсинга');
+    parsePropsValue();
+  }
 });
 
 const researchToAdd = ref({
