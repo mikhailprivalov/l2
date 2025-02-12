@@ -112,12 +112,12 @@ const parseCurrentFieldValue = () => {
   if (!fieldValue || (fieldValue && fieldValue.trim().length === 0)) {
     return;
   }
-  const [typeHosp, typeValue, value, countDaysAgo]: [string, string, string, string] = fieldValue.split('#');
+  const [typeHosp, typeValue, value, , countDaysAgo]: [string, string, string, string] = fieldValue.split('#');
   if (!typeHosp || !typeValue || !value) {
     return;
   }
   const normalizeTypeHosp = typeHosp.trim();
-  let normalizeDaysAgo;
+  let normalizeDaysAgo = '0';
   if (countDaysAgo) {
     normalizeDaysAgo = countDaysAgo.trim();
   }
@@ -125,6 +125,8 @@ const parseCurrentFieldValue = () => {
   const normalyzeValue = value.trim();
   hospType.value = normalizeTypeHosp;
   const numberDaysAgo = Number(normalizeDaysAgo);
+  console.log(normalizeDaysAgo);
+  console.log(numberDaysAgo);
   daysAgo.value = numberDaysAgo || 0;
   valueType.value = normalizeTypeValue;
   valueLink.value = normalyzeValue;
