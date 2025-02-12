@@ -251,7 +251,7 @@ const addResearches = () => {
   table-layout: fixed;
 }
 .research-col {
-  width: 535px;
+  width: 350px;
 }
 .button-col {
   width: 35px;
