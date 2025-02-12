@@ -84,31 +84,13 @@
           <td class="border">
             <Treeselect
               v-model="researchToAdd"
-              value-format="object"
               :options="researches"
               :clearable="false"
               class="treeselect-noborder"
               placeholder="Выберите услугу"
             />
           </td>
-          <td class="border">
-            <div class="flex">
-              <div
-                v-for="selectedTest in researchToAdd.tests"
-                :key="selectedTest.id"
-                class="flex"
-              >
-                <input
-                  :id="`add-${selectedTest.id}`"
-                  v-model="researchToAdd.activeTests"
-                  :value="selectedTest.id"
-                  type="checkbox"
-                  class="checkbox"
-                >
-                <label :for="`add-${selectedTest.id}`"> {{ selectedTest.label }} </label>
-              </div>
-            </div>
-          </td>
+          <td class="border" />
           <td class="border">
             <div class="button">
               <button
@@ -239,20 +221,21 @@ watch(() => props.linkValue, () => {
   }
 });
 
-const researchToAdd = ref({
-  id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
-});
+// const researchToAdd = ref({
+//   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
+// });
+const researchToAdd = ref(null);
 
-const researchSelect = computed(() => researchToAdd.value.id !== -1);
+const researchSelect = computed(() => Boolean(researchToAdd.value));
 const checkExists = (searchId) => addedResearches.value.find(research => research.id === searchId);
 const addResearches = () => {
   if (researchSelect.value) {
-    const exists = checkExists(researchToAdd.value.id);
+    const exists = checkExists(researchToAdd.value);
     if (!exists) {
-      addedResearches.value.push({ ...researchToAdd.value, activeTests: researchToAdd.value.activeTests });
-      researchToAdd.value = {
-        id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
-      };
+      const currentResearch = researches.value.find(research => research.id === researchToAdd.value);
+      const activeTests = currentResearch.tests.map(test => test.id);
+      addedResearches.value.push({ ...currentResearch, activeTests });
+      researchToAdd.value = null;
     } else {
       root.$emit('msg', 'error', 'Такая услуга уже есть');
     }
