@@ -13,7 +13,7 @@
     >
       <LinkLabAdd
         :link-value="valueLink"
-        @add-link="addLink"
+        @add-value="addLink"
       />
     </div>
     <div slot="footer">
@@ -129,6 +129,7 @@ const parseCurrentFieldValue = () => {
 
 onMounted(() => {
   parseCurrentFieldValue();
+  console.log('после парсинга в модалке:', valueLink.value);
 });
 </script>
 

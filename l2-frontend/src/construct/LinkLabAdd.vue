@@ -191,14 +191,11 @@ watch(currentLinkString, () => {
 });
 
 const parsePropsValue = () => {
-  console.log(props.linkValue);
   const { linkValue } = props;
-  console.log(linkValue, 'ававыа');
   if (!linkValue || (linkValue && linkValue.trim().length === 0)) {
     return;
   }
   const normalyzeValue = linkValue.trim();
-  console.log('мы дошли до попытка парсинга');
   try {
     const parseValue = JSON.parse(normalyzeValue);
     if (typeof parseValue !== 'object') {
@@ -207,7 +204,6 @@ const parsePropsValue = () => {
     }
     let researchNotExists = false;
     let testsNotAdd = false;
-    console.log('мы дошли до попытка парсинга 222');
     // eslint-disable-next-line no-restricted-syntax,guard-for-in
     for (const key in parseValue) {
       const currentResearch = researches.value.find(research => research.id === Number(key));
@@ -236,7 +232,7 @@ const parsePropsValue = () => {
   }
 };
 
-onMounted(async () => {
+watch(() => props.linkValue, () => {
   parsePropsValue();
 });
 
