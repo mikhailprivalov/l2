@@ -33,7 +33,7 @@ def plan_operations_cancel(request):
 def get_plan_operations_by_patient(request):
     request_data = json.loads(request.body)
     start_date = datetime.combine(current_time(), dtime.min)
-    card_pk = request.GET.get("card_pk")
+    card_pk = request_data.get("card_pk")
     patient_card = Card.objects.filter(pk=card_pk).first()
     result = PlanOperations.objects.filter(patient_card=patient_card, date__gte=start_date).order_by('date')
     data = [

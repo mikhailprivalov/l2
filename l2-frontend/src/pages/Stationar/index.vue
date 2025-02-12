@@ -1685,7 +1685,7 @@ export default {
     async copy_results(row, pk) {
       await this.$store.dispatch(actions.INC_LOADING);
       this.hide_results();
-      const { data } = await directionsPoint.paraclinicDataByFields({ pk });
+      const { data } = await directionsPoint.paraclinicDataByFields({ pk, pk_dest: row.pk });
       this.replace_fields_values(row, data);
       await this.$store.dispatch(actions.DEC_LOADING);
     },
