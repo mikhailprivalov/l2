@@ -243,7 +243,7 @@ const addResearches = () => {
 
 <style scoped lang="scss">
 .scroll {
-  max-height: calc(100% - 106px);
+  max-height: calc(100vh - 300px);
   overflow-y: auto;
 }
 .table {
