@@ -125,12 +125,13 @@
         </tr>
       </table>
     </div>
-    <div class="flex gap5">
+    <div class="flex gap5 margin">
       <div class="type-hosp">
         <label>Где искать</label>
         <Treeselect
           v-model="hospType"
           :options="hospTypes"
+          class="nbr"
           :clearable="false"
         />
       </div>
@@ -368,5 +369,8 @@ const addLink = () => {
 }
 .gap5 {
   gap: 5px;
+}
+::v-deep .nbr .vue-treeselect__control {
+  border-radius: 0;
 }
 </style>
