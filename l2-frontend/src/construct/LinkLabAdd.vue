@@ -235,7 +235,6 @@ const parsePropsValue = () => {
 
 watch(() => props.linkValue, () => {
   if (props.linkValue !== currentLabData.value) {
-    console.log('запуск парсинга');
     parsePropsValue();
   }
 });
