@@ -114,6 +114,7 @@ const closeModal = () => {
 };
 
 const changeValueLink = (value) => {
+  console.log('меням данные');
   valueLink.value = value;
 };
 
