@@ -21,6 +21,14 @@
         <div class="col-xs-10">
           <div>
             <div class="flex gap5 margin">
+              <div class="margin">
+                <button
+                  class="btn btn-blue-nb save-button nbr"
+                  @click="addLink"
+                >
+                  Сохранить
+                </button>
+              </div>
               <div class="type-hosp">
                 <label>Где искать</label>
                 <Treeselect
@@ -39,14 +47,6 @@
                 >
               </div>
             </div>
-            <div class="margin">
-              <button
-                class="btn btn-blue-nb save-button nbr"
-                @click="addLink"
-              >
-                Сохранить
-              </button>
-            </div>
           </div>
         </div>
         <div class="col-xs-2">
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -94,8 +94,11 @@ const valueType = ref('laboratory');
 const valueLink = ref('');
 const daysAgo = ref(0);
 
+const currentLinkString = computed(() => `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${daysAgo.value}`);
 
-
+const addLink = () => {
+  emit('add-link', currentLinkString.value);
+};
 const closeModal = () => {
   emit('close-modal');
 };
