@@ -1401,6 +1401,7 @@ def researches_for_formula(request):
             prev_research_id = i.research_id
             prev_research_title = i.research_title
             prev_departmnet_title = i.department_title
+            step += 1
 
         result.append({"depatmentTitle": prev_departmnet_title, "id": prev_research_id, "label": prev_research_title, "tests": fractions.copy()})
 
