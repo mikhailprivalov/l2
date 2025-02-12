@@ -20,7 +20,7 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-4">
+        <div class="col-xs-6">
           <div>
             <div class="input-group">
               <span class="input-group-addon nbr">Где искать</span>
@@ -39,7 +39,7 @@
             </div>
           </div>
         </div>
-        <div class="col-xs-4" />
+        <div class="col-xs-2" />
         <div class="col-xs-2">
           <button
             type="button"
@@ -114,7 +114,6 @@ const closeModal = () => {
 };
 
 const changeValueLink = (value) => {
-  console.log('меням данные');
   valueLink.value = value;
 };
 

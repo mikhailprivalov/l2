@@ -144,10 +144,8 @@ const deleteResearch = (index) => {
 };
 
 const currentLabData = computed(() => {
-  console.log('мы что-то сделали');
   const addResearches = {};
   for (const research of addedResearches.value) {
-    console.log(research);
     if (research.activeTests.length > 0) {
       addResearches[research.id] = research.activeTests.sort().join(',');
     }
