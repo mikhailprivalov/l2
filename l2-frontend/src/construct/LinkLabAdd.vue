@@ -221,9 +221,6 @@ watch(() => props.linkValue, () => {
   }
 });
 
-// const researchToAdd = ref({
-//   id: -1, label: 'НЕ ВЫБРАНО', tests: [], activeTests: [],
-// });
 const researchToAdd = ref(null);
 
 const researchSelect = computed(() => Boolean(researchToAdd.value));
