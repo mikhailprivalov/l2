@@ -52,7 +52,7 @@
                   type="checkbox"
                   class="checkbox"
                 >
-                <label :for="addedTest.id"> {{ addedTest.label }} </label>
+                <label :for="addedTest.id"> {{ addedTest.title }} </label>
               </div>
             </div>
           </td>
@@ -112,18 +112,18 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyTd from '@/construct/VueTippyTd.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
-// import * as actions from '@/store/action-types';
-// import api from '@/api';
+import * as actions from '@/store/action-types';
+import api from '@/api';
 
 const root = getCurrentInstance().proxy.$root;
-// const store = useStore();
+const store = useStore();
 const emit = defineEmits(['add-lab-data']);
 const props = defineProps({
   linkValue: {
@@ -133,30 +133,18 @@ const props = defineProps({
 });
 
 const addedResearches = ref([]);
+const researches = ref([]);
 
-const researches = ref([
-  {
-    id: 1, label: 'Услуга 1', tests: [{ id: 1, label: 'тест 1' }, { id: 2, label: 'тест 2' }], activeTests: [],
-  },
-  {
-    id: 2, label: 'Услуга 2', tests: [{ id: 3, label: 'тест 1' }, { id: 4, label: 'тест 2' }], activeTests: [],
-  },
-]);
+const getResearches = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('researches/researches-for-formula', { type: 'laboratory' });
+  await store.dispatch(actions.DEC_LOADING);
+  researches.value = result;
+};
 
-// const getResearches = async () => {
-//   await store.dispatch(actions.INC_LOADING);
-//   const { data } = await api('get-research-list', { include_categories: ['is_laboratory'] });
-//   await store.dispatch(actions.DEC_LOADING);
-//   researches.value = data;
-// };
-
-// const hospTypes = ref([
-//   { id: '%root_hosp', label: 'Весь cлучай госпитализации' },
-//   { id: '%current_hosp', label: 'Текущая история' },
-// ]);
-// const hospType = ref('%root_hosp');
-//
-// const daysAgo = ref(0);
+onMounted(async () => {
+  await getResearches();
+});
 
 const currentLabData = computed(() => {
   const addResearches = {};
