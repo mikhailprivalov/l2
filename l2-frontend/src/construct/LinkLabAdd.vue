@@ -317,22 +317,7 @@ const addResearches = () => {
 .not-added-research {
   margin: 10px;
 }
-//.margin {
-//  margin: 5px;
-//}
-//.save-button {
-//  padding: 7px 5px;
-//}
-//.type-hosp {
-//  width: 300px;
-//}
-//.days-ago {
-//  width: 125px;
-//}
-//.gap5 {
-//  gap: 5px;
-//}
-//::v-deep .nbr .vue-treeselect__control {
-//  border-radius: 0;
-//}
+.margin {
+  margin: 5px;
+}
 </style>

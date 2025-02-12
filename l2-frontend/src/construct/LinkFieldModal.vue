@@ -18,41 +18,39 @@
     </div>
     <div slot="footer">
       <div class="row">
-        <div class="col-xs-10">
+        <div class="col-xs-4">
           <div>
-            <div class="flex gap5 margin">
-              <div class="margin">
-                <button
-                  class="btn btn-blue-nb save-button nbr"
-                  @click="addLink"
-                >
-                  Сохранить
-                </button>
-              </div>
-              <div class="type-hosp">
-                <label>Где искать</label>
-                <Treeselect
-                  v-model="hospType"
-                  :options="hospTypes"
-                  class="nbr"
-                  :clearable="false"
-                />
-              </div>
-              <div class="days-ago">
-                <label>Кол-во дн. назад</label>
-                <input
-                  v-model="daysAgo"
-                  class="form-control nbr"
-                  type="number"
-                >
-              </div>
+            <div class="input-group">
+              <span class="input-group-addon nbr">Где искать</span>
+              <Treeselect
+                v-model="hospType"
+                :options="hospTypes"
+                class="nbr"
+                :clearable="false"
+              />
+              <span class="input-group-addon nbr">Кол-во дн. назад</span>
+              <input
+                v-model="daysAgo"
+                class="form-control nbr days-ago"
+                type="number"
+              >
             </div>
           </div>
+        </div>
+        <div class="col-xs-4" />
+        <div class="col-xs-2">
+          <button
+            type="button"
+            class="btn btn-primary-nb btn-blue-nb nbr"
+            @click="addLink"
+          >
+            Сохранить
+          </button>
         </div>
         <div class="col-xs-2">
           <button
             type="button"
-            class="btn btn-primary-nb btn-blue-nb"
+            class="btn btn-primary-nb btn-blue-nb nbr"
             @click="closeModal"
           >
             Закрыть
@@ -145,20 +143,17 @@ onMounted(() => {
 .flex {
   display: flex;
 }
-.margin {
-  margin: 5px;
-}
-.margin {
-  margin: 5px;
-}
 .save-button {
   padding: 7px 5px;
 }
 .type-hosp {
   width: 300px;
 }
+.type-hosp-label {
+  width: 100px;
+}
 .days-ago {
-  width: 125px;
+  width: 105px;
 }
 .gap5 {
   gap: 5px;
