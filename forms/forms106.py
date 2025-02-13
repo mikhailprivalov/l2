@@ -1306,7 +1306,6 @@ def form_02(request_data):
 
     if hosp_extract_data.get("result_by_cda"):
         cda_data_result.update(hosp_extract_data.get("result_by_cda"))
-
     if primary_reception_data.get("result_by_cda"):
         cda_data_result.update(primary_reception_data.get("result_by_cda"))
 
@@ -1387,20 +1386,25 @@ def check_section_param(objs, styles_obj, section, tbl_specification, cda_titles
 
 def join_diag_title_row(data_cda):
     code, title = "", ""
+    has_code = False
     for i in data_cda:
         if "code" in i:
+            has_code = True
             field_json = json.loads(i)
             code = field_json.get("code")
             title = field_json.get("title")
             data_cda.remove(i)
-    result = ";".join(data_cda)
-    result = f"{result}; {title}"
+    if has_code:
+        result = ";".join(data_cda)
+        result = f"{result}; {title}"
+    else:
+        result = data_cda[0]
+        code = data_cda[1]
     return [result, code]
 
 
 def check_diagnos_row_is_dict(data_cda):
     result = data_cda
-    print(result)
     new_result = ""
     field_json = {}
     if len(data_cda) > 0:
