@@ -32,7 +32,6 @@ def patologistology_buh(data):
     tmp_data = tmp_dict_data.copy()
 
     for i in data:
-        print(i)
         if prev_direction != i.direction_id and step != 0:
             if not tmp_data.get("paid_service_code"):
                 tmp_data["paid_service_code"] = "-"
