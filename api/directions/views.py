@@ -3178,7 +3178,6 @@ def last_field_result(request):
             field_pks = [i for i in field_pks]
             result = field_get_link_data_by_cda(tuple(field_pks), client_pk, use_parent_iss='1', days_ago=days_ago)
 
-
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
         data = request_data["fieldPk"].split('#')
