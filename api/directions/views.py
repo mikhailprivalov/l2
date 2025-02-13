@@ -3163,7 +3163,6 @@ def last_field_result(request):
         data = request_data["fieldPk"].split('#')
         logical_or = True
         days_ago = -1
-        print(data)
         if len(data) < 2:
             result = {"value": ""}
         else:
