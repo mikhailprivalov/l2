@@ -2301,6 +2301,7 @@ def directions_paraclinic_result(request):
                         or f.title == "Медицинские услуги(поликлиника)"
                         or f.title == "Медицинские услуги(платная категория)"
                         or f.title == "Медицинские услуги"
+                        or f.title == "Тип учреждения"
                     )
                 ):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
