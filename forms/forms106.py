@@ -1400,6 +1400,7 @@ def join_diag_title_row(data_cda):
 
 def check_diagnos_row_is_dict(data_cda):
     result = data_cda
+    print(result)
     new_result = ""
     field_json = {}
     if len(data_cda) > 0:
