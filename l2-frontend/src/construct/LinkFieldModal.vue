@@ -34,7 +34,7 @@
                 class="nbr"
                 :clearable="false"
               />
-              <span class="input-group-addon nbr">Кол-во дн. назад</span>
+              <span class="input-group-addon nbr">Сколько дней назад</span>
               <input
                 v-model="daysAgo"
                 class="form-control nbr days-ago"
