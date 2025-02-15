@@ -9,10 +9,10 @@
         </colgroup>
         <thead class="sticky">
           <tr>
-            <th class="text-center border-right">
+            <th class="text-center">
               <strong>Услуга</strong>
             </th>
-            <th class="text-center border-right">
+            <th class="text-center">
               <strong>Тесты</strong>
             </th>
             <th />
@@ -310,5 +310,8 @@ const addResearches = () => {
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+}
+.table > thead > tr > th {
+  border-bottom: none;
 }
 </style>
