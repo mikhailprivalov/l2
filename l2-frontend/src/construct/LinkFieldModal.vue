@@ -12,7 +12,10 @@
       slot="body"
       class="body"
     >
-      Текущая ссылка - {{ currentLinkString }}
+      <VueTippyDiv
+        class="link-text"
+        :text="`Текущая ссылка - ${currentLinkString}`"
+      />
       <LinkLabAdd
         :link-value="valueLink"
         :researches="researches"
@@ -74,6 +77,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
+import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 
 const store = useStore();
 const emit = defineEmits(['close-modal', 'add-link']);
@@ -179,5 +183,10 @@ onMounted(async () => {
 }
 ::v-deep .nbr .vue-treeselect__control {
   border-radius: 0;
+}
+.link-text {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 </style>
