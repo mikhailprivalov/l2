@@ -161,7 +161,7 @@ const currentLabData = computed(() => {
       addResearches[research.id] = research.activeTests.sort().join(',');
     }
   }
-  return JSON.stringify(addResearches);
+  return JSON.stringify(addResearches, null, 1);
 });
 
 watch(currentLabData, () => {
