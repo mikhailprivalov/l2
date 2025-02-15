@@ -157,6 +157,7 @@ onMounted(async () => {
 .body {
   height: 100%;
   width: 100%;
+  padding: 10px 15px;
 }
 .flex {
   display: flex;
