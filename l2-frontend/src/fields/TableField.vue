@@ -361,7 +361,9 @@ export default {
   },
   mounted() {
     this.checkTable();
-    this.loadLastDiagnoseResult();
+    if (!this.val) {
+      this.loadLastDiagnoseResult();
+    }
     this.$root.$on('checkTables', () => setTimeout(() => this.checkTable(), 50));
   },
   beforeDestroy() {

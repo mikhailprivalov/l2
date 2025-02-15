@@ -158,3 +158,32 @@ def get_constructor_edit_access_by_department_or_doctor(department_id, doctor_id
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_lab_researches_with_tests_params(department_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                directory_researches.id as research_id,
+                directory_researches.title as research_title,
+                directory_researches.hide as research_hide,
+                
+                pp.id as department_id,
+                pp.title as department_title,
+                
+                df.id as fraction_id,
+                df.title as fraction_title,
+                df.hide as fration_hide,
+                df.sort_weight as sort_weight
+                
+                FROM directory_researches
+                LEFT JOIN podrazdeleniya_podrazdeleniya pp on directory_researches.podrazdeleniye_id = pp.id
+                LEFT JOIN directory_fractions df on directory_researches.id = df.research_id
+                WHERE directory_researches.podrazdeleniye_id in %(department_ids)s
+                ORDER BY directory_researches.id, df.sort_weight
+        """,
+            params={'department_ids': department_ids},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

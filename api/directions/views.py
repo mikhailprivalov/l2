@@ -2301,6 +2301,7 @@ def directions_paraclinic_result(request):
                         or f.title == "Медицинские услуги(поликлиника)"
                         or f.title == "Медицинские услуги(платная категория)"
                         or f.title == "Медицинские услуги"
+                        or f.title == "Тип учреждения"
                     )
                 ):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
@@ -3176,7 +3177,7 @@ def last_field_result(request):
             paraclinic_field = ParaclinicInputField.objects.filter(cda_option_id__in=cda_id).values_list("pk", flat=True)
             field_pks = list(paraclinic_field)
             field_pks = [i for i in field_pks]
-            result = field_get_link_data_by_cda(tuple(field_pks), client_pk, use_parent_iss='1', days_ago=days_ago)
+            result = field_get_link_data_by_cda(tuple(field_pks), client_pk, days_ago=days_ago)
 
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
