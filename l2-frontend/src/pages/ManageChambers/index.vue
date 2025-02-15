@@ -122,7 +122,7 @@
                       class="draggable-doctor"
                       chosen-class="chosen-doctor"
                       ghost-class="ghost-doctor"
-                      :disabled="!userCanEdit"
+                      :disabled="!userCanEdit || checkConditionsOpacity(bed)"
                       @change="changeDoctor($event, bed);"
                     >
                       <div class="flex">
@@ -150,7 +150,7 @@
                       class="draggable-beds"
                       chosen-class="chosen-beds"
                       ghost-class="ghost-beds"
-                      :disabled="!userCanEdit"
+                      :disabled="!userCanEdit || checkConditionsOpacity(bed)"
                       @start="copyBedDoctor(bed)"
                       @change="changePatientBed($event, bed)"
                     >
