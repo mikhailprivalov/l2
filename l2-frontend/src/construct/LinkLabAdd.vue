@@ -18,12 +18,15 @@
             <th />
           </tr>
         </thead>
-        <tr v-if="addedResearches.length === 0">
+        <tr
+          v-if="addedResearches.length === 0"
+          class="no-data-tr"
+        >
           <td
             colspan="3"
             class="text-center"
           >
-            <div class="not-added-research">
+            <div>
               Нет данных
             </div>
           </td>
@@ -37,11 +40,11 @@
             :text="research.label"
           />
           <td class="border test-td">
-            <div class="flex test-row">
+            <div class="flex">
               <div
                 v-for="addedTest in research.tests"
                 :key="addedTest.id"
-                class="flex test-item"
+                class="flex"
               >
                 <input
                   :id="addedTest.id"
@@ -61,7 +64,7 @@
             <div class="button">
               <button
                 v-tippy
-                class="btn last btn-blue-nb nbr delete-button"
+                class="btn last btn-blue-nb nbr"
                 title="Удалить услугу"
                 @click="deleteResearch(idx)"
               >
@@ -87,7 +90,7 @@
               v-model="researchToAdd"
               :options="researches"
               :clearable="false"
-              class="treeselect-noborder"
+              class="treeselect-noborder treeselect-30px"
               placeholder="Выберите услугу"
             />
           </td>
@@ -282,17 +285,13 @@ const addResearches = () => {
 .btn {
   align-self: stretch;
   flex: 1;
-  padding: 2px 0;
+  padding: 4px 0;
 }
 .add-block {
   margin: 5px 0;
 }
 .checkbox {
-  margin: 0 5px;
-  height: 13px;
-}
-.not-added-research {
-  margin: 10px;
+  margin: 5px;
 }
 .margin {
   margin: 5px;
@@ -301,20 +300,24 @@ const addResearches = () => {
   overflow-x: auto;
 }
 .test-label {
-  margin-top: -5px;
   margin-bottom: 0;
   white-space: nowrap;
 }
-.delete-button {
-  padding: 4px 0;
-}
-//.test-row {
-//  margin-top: -5px;
-//}
-//.test-item {
-//  margin-top: -5px;
-//}
 .table > thead > tr > th {
   border-bottom: none;
 }
+.no-data-tr {
+  height: 31px;
+}
+::v-deep .treeselect-30px .vue-treeselect {
+  &__control {
+    height: 30px !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 30px !important;
+  }
+}
+
 </style>
