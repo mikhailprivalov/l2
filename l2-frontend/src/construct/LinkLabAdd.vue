@@ -80,10 +80,9 @@
       Добавить услугу
     </h5>
     <div class="add-block">
-      <table class="table">
+      <table class="table add-table">
         <colgroup>
-          <col class="research-col">
-          <col>
+          <col class="add-research-col">
           <col class="button-col">
         </colgroup>
         <tr>
@@ -96,7 +95,6 @@
               placeholder="Выберите услугу"
             />
           </td>
-          <td class="border" />
           <td class="border">
             <div class="button">
               <button
@@ -250,8 +248,14 @@ const addResearches = () => {
   margin-bottom: 0;
   table-layout: fixed;
 }
+.add-table {
+  width: 535px;
+}
 .research-col {
   width: 350px;
+}
+.add-research-col {
+  width: 500px;
 }
 .button-col {
   width: 35px;
