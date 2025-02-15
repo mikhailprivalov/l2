@@ -32,18 +32,16 @@
           v-for="(research, idx) in addedResearches"
           :key="research.id"
         >
-          <td class="border">
-            <VueTippyTd
-              class="research-padding"
-              :text="research.label"
-            />
-          </td>
+          <VueTippyTd
+            class="border research-padding"
+            :text="research.label"
+          />
           <td class="border test-td">
-            <div class="flex">
+            <div class="flex test-row">
               <div
                 v-for="addedTest in research.tests"
                 :key="addedTest.id"
-                class="flex"
+                class="flex test-item"
               >
                 <input
                   :id="addedTest.id"
@@ -63,7 +61,7 @@
             <div class="button">
               <button
                 v-tippy
-                class="btn last btn-blue-nb nbr"
+                class="btn last btn-blue-nb nbr delete-button"
                 title="Удалить услугу"
                 @click="deleteResearch(idx)"
               >
@@ -272,7 +270,7 @@ const addResearches = () => {
   border: 1px solid grey;
 }
 .research-padding {
-  padding: 8px 6px;
+  padding: 0 6px;
 }
 .button {
   width: 100%;
@@ -284,13 +282,14 @@ const addResearches = () => {
 .btn {
   align-self: stretch;
   flex: 1;
-  padding: 7px 0;
+  padding: 2px 0;
 }
 .add-block {
   margin: 5px 0;
 }
 .checkbox {
-  margin: 5px;
+  margin: 0 5px;
+  height: 13px;
 }
 .not-added-research {
   margin: 10px;
@@ -302,10 +301,19 @@ const addResearches = () => {
   overflow-x: auto;
 }
 .test-label {
-  text-overflow: ellipsis;
-  overflow: hidden;
+  margin-top: -5px;
+  margin-bottom: 0;
   white-space: nowrap;
 }
+.delete-button {
+  padding: 4px 0;
+}
+//.test-row {
+//  margin-top: -5px;
+//}
+//.test-item {
+//  margin-top: -5px;
+//}
 .table > thead > tr > th {
   border-bottom: none;
 }
