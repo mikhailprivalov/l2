@@ -43,9 +43,7 @@
               <div
                 v-for="addedTest in research.tests"
                 :key="addedTest.id"
-                v-tippy
-                :title="addedTest.title"
-                class="flex test-item"
+                class="flex"
               >
                 <input
                   :id="addedTest.id"
@@ -302,9 +300,6 @@ const addResearches = () => {
 }
 .test-td {
   overflow-x: auto;
-}
-.test-item {
-  width: 70px;
 }
 .test-label {
   text-overflow: ellipsis;
