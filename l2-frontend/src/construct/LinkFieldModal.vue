@@ -39,6 +39,7 @@
                 v-model="daysAgo"
                 class="form-control nbr days-ago"
                 type="number"
+                min="0"
               >
             </div>
           </div>
@@ -112,7 +113,11 @@ const getResearches = async () => {
 
 const currentLinkString = computed(() => {
   if (valueLink.value.length > 2) {
-    return `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${daysAgo.value}`;
+    let currentDaysAgo = daysAgo.value;
+    if (daysAgo.value < 0) {
+      currentDaysAgo = 0;
+    }
+    return `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${currentDaysAgo}`;
   }
   return '';
 });
