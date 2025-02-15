@@ -69,7 +69,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import {
+  computed, onMounted, ref, watch,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import Modal from '@/ui-cards/Modal.vue';
@@ -103,6 +105,13 @@ const hospType = ref('%root_hosp');
 const valueType = ref('laboratory');
 const valueLink = ref('');
 const daysAgo = ref(0);
+
+watch(daysAgo, () => {
+  if (daysAgo.value < 0) {
+    daysAgo.value = 0;
+  }
+});
+
 const researches = ref([]);
 const getResearches = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -113,11 +122,7 @@ const getResearches = async () => {
 
 const currentLinkString = computed(() => {
   if (valueLink.value.length > 2) {
-    let currentDaysAgo = daysAgo.value;
-    if (daysAgo.value < 0) {
-      currentDaysAgo = 0;
-    }
-    return `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${currentDaysAgo}`;
+    return `${hospType.value}#${valueType.value}#${valueLink.value}#days_ago#${daysAgo.value}`;
   }
   return '';
 });
