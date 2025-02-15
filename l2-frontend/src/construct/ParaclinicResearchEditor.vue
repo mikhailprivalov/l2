@@ -827,10 +827,18 @@
                     </div>
                     <div v-else-if="row.field_type === 13 || row.field_type === 14 || row.field_type === 23">
                       <strong>ID поля:</strong>
-                      <input
-                        v-model="row.default"
-                        class="form-control"
-                      >
+                      <div class="flex gap5">
+                        <input
+                          v-model="row.default"
+                          class="form-control"
+                        >
+                        <button
+                          class="btn btn-blue-nb link-button"
+                          @click="openLinkFieldModal(row.pk, row.default)"
+                        >
+                          <i class="fa fa-ellipsis-h" />
+                        </button>
+                      </div>
                     </div>
                     <div v-else-if="row.field_type === 15">
                       <strong>Значение по умолчанию:</strong>
@@ -1246,6 +1254,14 @@
       type="schemaPdf"
       :max-count-files="1"
     />
+    <LinkFieldModal
+      v-if="showLinkFieldModal"
+      ref="LinkModal"
+      :field-id="currentLinkFieldId"
+      :field-value="currentLinkFieldValue"
+      @close-modal="closeLinkFieldModal"
+      @add-link="addLinkInField"
+    />
   </div>
 </template>
 
@@ -1266,6 +1282,7 @@ import PermanentDirectories from '@/construct/PermanentDirectories.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
+import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1274,6 +1291,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    LinkFieldModal,
     FileAddModal,
     ResearchPermissionsModal,
     LoadFile,
@@ -1412,6 +1430,9 @@ export default {
       timeoutThree: null,
       groupsRollUp: false,
       canChangePermissions: false,
+      showLinkFieldModal: false,
+      currentLinkFieldId: null,
+      currentLinkFieldValue: null,
     };
   },
   computed: {
@@ -1953,6 +1974,30 @@ export default {
     closeFileAddModal() {
       this.showFileAddModal = false;
     },
+    openLinkFieldModal(fieldId, value) {
+      this.currentLinkFieldId = fieldId;
+      this.currentLinkFieldValue = value;
+      this.showLinkFieldModal = true;
+    },
+    closeLinkFieldModal() {
+      this.currentLinkFieldId = null;
+      this.currentLinkFieldValue = null;
+      if (this.$refs.LinkModal) {
+        this.$refs.LinkModal.$el.style.display = 'none';
+      }
+      this.showLinkFieldModal = false;
+    },
+    addLinkInField(link: string) {
+      for (const group of this.groups) {
+        for (const field of group.fields) {
+          if (field.pk === this.currentLinkFieldId) {
+            field.default = link;
+            break;
+          }
+        }
+      }
+      this.closeLinkFieldModal();
+    },
   },
 };
 </script>
@@ -2212,5 +2257,15 @@ export default {
   &__placeholder {
     line-height: 26px !important;
   }
+}
+
+.flex {
+  display: flex;
+}
+.gap5 {
+  gap: 5px;
+}
+.link-button {
+  padding: 0 10px;
 }
 </style>
