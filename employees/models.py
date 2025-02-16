@@ -29,7 +29,7 @@ class Employee(models.Model):
     doctorprofile_updated = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated'
     )
-    snils = models.CharField(max_length=11, verbose_name="СНИЛС", help_text='12345678912', default=None, blank=True, null=True,)
+    snils = models.CharField(max_length=11, verbose_name="СНИЛС", help_text='12345678912', default=None, blank=True, null=True)
 
     def __str__(self):
         return f'{self.family} {self.name} {self.patronymic} ({self.hospital})'.strip()
@@ -118,7 +118,7 @@ class Employee(models.Model):
         indexes = [
             models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active']),
         ]
-        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active')
+        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active', 'snils')
         ordering = ('hospital__short_title', 'hospital__title', 'family', 'name', 'patronymic')
 
 
