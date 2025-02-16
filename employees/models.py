@@ -116,7 +116,7 @@ class Employee(models.Model):
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
         indexes = [
-            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active']),
+            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active', 'snils']),
         ]
         unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active', 'snils')
         ordering = ('hospital__short_title', 'hospital__title', 'family', 'name', 'patronymic')
