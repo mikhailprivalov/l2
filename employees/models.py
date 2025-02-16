@@ -358,6 +358,8 @@ class EmployeePosition(models.Model):
     tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
     type_work_time = models.ForeignKey(TypeWorkTimeEmployee, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
+    date_employment = models.DateField(verbose_name="Дата приема на работу", help_text="2025-01-11", blank=True, null=True, default=None)
+    date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
