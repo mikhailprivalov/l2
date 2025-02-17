@@ -1385,7 +1385,7 @@ def check_section_param(objs, styles_obj, section, tbl_specification, cda_titles
 
 
 def join_diag_title_row(data_cda):
-    code, title = "", ""
+    code, title, result = "", "", ""
     has_code = False
     for i in data_cda:
         if "code" in i:
@@ -1398,8 +1398,12 @@ def join_diag_title_row(data_cda):
         result = ";".join(data_cda)
         result = f"{result}; {title}"
     else:
-        result = data_cda[0]
-        code = data_cda[1]
+        if len(data_cda) > 0:
+            result = data_cda[0] if data_cda[0] else ""
+        if len(data_cda) > 1:
+            code = data_cda[1]
+        else:
+            code = ""
     return [result, code]
 
 
