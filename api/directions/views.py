@@ -1893,6 +1893,7 @@ def directions_paraclinic_form(request):
                     or iss["research"]["is_global_direction_params"]
                     or iss["research"]["is_expertise"]
                     or iss["research"]["is_monitoring"]
+                    or iss["research"]["is_microbiology"]
                     or iss["research"]["is_treatment"]
                     or iss["research"]["is_stom"]
                 ):
@@ -3850,14 +3851,11 @@ def tubes_for_get(request):
                     with transaction.atomic():
                         try:
                             # if direction.hospital and direction.hospital.use_self_generate_tube:
+                            hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                             if direction.hospital:
                                 hospital_for_generator_tube = direction.hospital
-                            elif direction.hospital and not direction.external_executor_hospital:
-                                hospital_for_generator_tube = direction.hospital
-                            elif direction.external_executor_hospital:
+                            if direction.external_executor_hospital:
                                 hospital_for_generator_tube = direction.external_executor_hospital
-                            else:
-                                hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                             generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                             generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                             number = generator.get_next_value()
