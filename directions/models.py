@@ -1120,7 +1120,6 @@ class Napravleniya(models.Model):
                 current_hospital = hospital
             price_name_obj = contracts.PriceName.get_hospital_price_by_date(current_hospital, current_time(only_date=True), current_time(only_date=True), True)
             price_name_id = price_name_obj.pk
-
         dir = Napravleniya(
             client=client,
             doc=doc if not for_rmis else None,
