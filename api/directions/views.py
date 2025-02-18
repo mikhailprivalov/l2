@@ -2877,8 +2877,7 @@ def last_field_result(request):
             district = ""
         result = {"value": district}
     elif request_data["fieldPk"].find('%patient_card_number') != -1:
-        card_number = c.number if c.number else ""
-        result = {"value": card_number}
+        result = {"value": c.number}
     elif request_data["fieldPk"].find('%hospital') != -1:
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
