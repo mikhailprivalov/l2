@@ -29,6 +29,7 @@ class Employee(models.Model):
     doctorprofile_updated = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated'
     )
+    snils = models.CharField(max_length=11, verbose_name="СНИЛС", help_text='12345678912', default=None, blank=True, null=True)
 
     def __str__(self):
         return f'{self.family} {self.name} {self.patronymic} ({self.hospital})'.strip()
@@ -115,15 +116,15 @@ class Employee(models.Model):
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
         indexes = [
-            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active']),
+            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active', 'snils']),
         ]
-        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active')
+        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active', 'snils')
         ordering = ('hospital__short_title', 'hospital__title', 'family', 'name', 'patronymic')
 
 
 class Position(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=64, verbose_name='Название должности')
+    name = models.CharField(max_length=128, verbose_name='Название должности')
     is_active = models.BooleanField(default=True, verbose_name='Активна')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -214,7 +215,7 @@ class Position(models.Model):
 
 class Department(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=64, verbose_name='Название отдела')
+    name = models.CharField(max_length=128, verbose_name='Название отдела')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -357,6 +358,8 @@ class EmployeePosition(models.Model):
     tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
     type_work_time = models.ForeignKey(TypeWorkTimeEmployee, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
+    date_employment = models.DateField(verbose_name="Дата приема на работу", help_text="2025-01-11", blank=True, null=True, default=None)
+    date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
