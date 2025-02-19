@@ -12,6 +12,7 @@ constructor_help_message = [
     {"label": "-", "param": "%full_main_address", "value": "Адрес регистрации пациента по ФИАС"},
     {"label": "-", "param": "%docprofile", "value": "Текущий пользователь"},
     {"label": "-", "param": "%doc_position", "value": "Должность текущего пользователя"},
+    {"label": "-", "param": "%patient_card_number", "value": "Номер карты пациента"},
     {"label": "-", "param": "%patient_fio", "value": "ФИО пациента"},
     {"label": "-", "param": "%patient_family", "value": "Только фамилия пациента"},
     {"label": "-", "param": "%patient_name", "value": "Только имя пациента"},
