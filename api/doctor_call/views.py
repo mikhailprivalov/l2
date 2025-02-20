@@ -94,7 +94,7 @@ def actual_rows(request):
     card_pk: int = data[0]
 
     if DOC_CALLS_ACTUAL_ROWS_FROM_DATE:
-        from_date = datetime.datetime.strptime(DOC_CALLS_ACTUAL_ROWS_FROM_DATE, '%Y-%m-%d')
+        from_date = datetime.datetime.strptime(DOC_CALLS_ACTUAL_ROWS_FROM_DATE, '%Y-%m-%d')[:100]
     else:
         from_date = current_time()
 
