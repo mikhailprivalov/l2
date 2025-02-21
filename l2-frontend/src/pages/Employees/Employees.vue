@@ -9,7 +9,7 @@
             :options="refBooks.organizations"
             :clearable="false"
             class="treeselect-34px"
-            placeholder="Выберите подразделение"
+            placeholder="Выберите организацию"
             :append-to-body="true"
           />
         </div>
@@ -21,8 +21,9 @@
             v-model="filters.departementIds"
             :options="refBooks.departments"
             :clearable="false"
+            :multiple="true"
             class="treeselect-34px"
-            placeholder="Выберите подразделение"
+            placeholder="Выберите подразделения"
             :append-to-body="true"
           />
         </div>
@@ -34,8 +35,9 @@
             v-model="filters.positionsIds"
             :options="refBooks.positions"
             :clearable="false"
+            :multiple="true"
             class="treeselect-34px"
-            placeholder="Выберите подразделение"
+            placeholder="Выберите должности"
             :append-to-body="true"
           />
         </div>
@@ -47,8 +49,9 @@
             v-model="filters.employmentFormsIds"
             :options="refBooks.employmentForms"
             :clearable="false"
+            :multiple="true"
             class="treeselect-34px"
-            placeholder="Выберите подразделение"
+            placeholder="Выберите форму занятости"
             :append-to-body="true"
           />
         </div>
