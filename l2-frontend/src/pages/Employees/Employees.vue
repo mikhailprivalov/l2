@@ -65,7 +65,28 @@
         placeholder="Введите значение"
       >
     </div>
-    <div class="employee-block" />
+    <div class="employees">
+      <VeTable
+        :columns="columns"
+        :table-data="employees"
+      />
+      <div
+        v-show="employees.length === 0"
+        class="empty-list"
+      >
+        Нет записей
+      </div>
+      <div class="flex flex-space-between">
+        <VePagination
+          :total="employees.length"
+          :page-index="page"
+          :page-size="pageSize"
+          :page-size-option="pageSizeOptions"
+          @on-page-number-change="pageNumberChange"
+          @on-page-size-change="pageSizeChange"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -75,11 +96,20 @@ import {
   getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import {
+  VeLocale,
+  VePagination,
+  VeTable,
+} from 'vue-easytable';
+
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import api from '@/api';
+import 'vue-easytable/libs/theme-default/index.css';
+import ruRu from '@/locales/ve';
+
+VeLocale.use(ruRu);
 
 const root = getCurrentInstance().proxy.$root;
 const store = useStore();
@@ -128,6 +158,47 @@ watch(() => filters.value.organizationId, () => {
 
 const search = ref('');
 
+const columns = ref([
+  {
+    key: 'employmentForm', field: 'employmentForm', title: 'Вид занятости', align: 'center', width: 100,
+  },
+  {
+    key: 'snils', field: 'snils', title: 'СНИЛС', align: 'center', width: 100,
+  },
+  {
+    key: 'tabelNumber', field: 'tabelNumber', title: 'Табельный №', align: 'center', width: 100,
+  },
+  {
+    key: 'employeeFio', field: 'employeeFio', title: 'Работник', align: 'center',
+  },
+  {
+    key: 'department', field: 'department', title: 'Подразделение', align: 'center', width: 200,
+  },
+  {
+    key: 'position', field: 'position', title: 'Должность', align: 'center', width: 150,
+  },
+  {
+    key: 'countBid', field: 'countBid', title: 'Кол-во ставок', align: 'center', width: 50,
+  },
+  {
+    key: 'dateEmployment', field: 'dateEmployment', title: 'Дата приема', align: 'center', width: 100,
+  },
+  {
+    key: 'DateDismissal', field: 'DateDismissal', title: 'Дата увольнения', align: 'center', width: 100,
+  },
+]);
+const page = ref(1);
+const pageSize = ref(25);
+const pageSizeOptions = [25, 50, 100];
+const pageNumberChange = (number: number) => {
+  page.value = number;
+};
+const pageSizeChange = (size: number) => {
+  pageSize.value = size;
+};
+
+const employees = ref([]);
+
 </script>
 
 <style scoped lang="scss">
@@ -150,5 +221,12 @@ const search = ref('');
 }
 .search {
   margin-bottom: 10px;
+}
+.employees {
+  background-color: #fff;
+}
+.empty-list {
+  width: 85px;
+  margin: 20px auto;
 }
 </style>
