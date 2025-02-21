@@ -46,7 +46,7 @@
         <div class="filter-item">
           <label>Форма занятости</label>
           <Treeselect
-            v-model="filters.employmentFormsIds"
+            v-model="filters.employmentFormIds"
             :options="refBooks.employmentForms"
             :clearable="false"
             :multiple="true"
@@ -120,7 +120,7 @@ const filters = ref({
   organizationId: null,
   departementIds: null,
   positionsIds: null,
-  employmentFormsIds: null,
+  employmentFormIds: null,
 });
 
 const organizations = ref([]);
@@ -198,6 +198,22 @@ const pageSizeChange = (size: number) => {
 };
 
 const employees = ref([]);
+
+const getEmployees = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('employees/get-employees', {
+    organizationId: filters.value.organizationId,
+    departmentIds: filters.value.departementIds,
+    positionIds: filters.value.positionsIds,
+    employmentFormIds: filters.value.employmentFormIds,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  employees.value = result;
+};
+
+watch(() => filters.value, () => {
+  getEmployees();
+}, { deep: true });
 
 </script>
 
