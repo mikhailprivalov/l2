@@ -6,7 +6,7 @@
           <label>Организации</label>
           <Treeselect
             v-model="filters.organizationId"
-            :options="refBooks.organizations"
+            :options="organizations"
             :clearable="false"
             class="treeselect-34px"
             placeholder="Выберите организацию"
@@ -63,7 +63,10 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, onMounted, ref } from 'vue';
+import {
+  computed,
+  getCurrentInstance, onMounted, ref, watch,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -74,6 +77,8 @@ import api from '@/api';
 const root = getCurrentInstance().proxy.$root;
 const store = useStore();
 
+const userOrganizationId = computed(() => store.getters.user_data.hospital);
+
 const filters = ref({
   organizationId: null,
   departementIds: null,
@@ -81,8 +86,23 @@ const filters = ref({
   employmentFormsIds: null,
 });
 
+const organizations = ref([]);
+const getOrganization = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('employees/get-organizations');
+  await store.dispatch(actions.DEC_LOADING);
+  organizations.value = result;
+};
+
+onMounted(() => {
+  getOrganization();
+});
+
+watch(organizations, () => {
+  filters.value.organizationId = userOrganizationId;
+});
+
 const refBooks = ref({
-  organizations: [],
   departments: [],
   positions: [],
   employmentForms: [],
@@ -90,12 +110,12 @@ const refBooks = ref({
 
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('employees/get-ref-books');
+  const { result } = await api('employees/get-ref-books', { organizationId: userOrganizationId.value });
   await store.dispatch(actions.DEC_LOADING);
   refBooks.value = result;
 };
 
-onMounted(() => {
+watch(() => filters.value.organizationId, () => {
   getRefBooks();
 });
 

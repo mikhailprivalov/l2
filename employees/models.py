@@ -203,6 +203,13 @@ class Position(models.Model):
         if Position.objects.filter(hospital_id=hospital_id, name=name).exclude(id=current_id).exists():
             raise ValueError('Должность с таким названием уже существует')
 
+    @staticmethod
+    def get_active(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        positions = [{"id": position.pk, "label": position.name} for position in Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        return positions or []
+
     class Meta:
         verbose_name = 'Должность'
         verbose_name_plural = 'Должности'
@@ -318,7 +325,7 @@ class Department(models.Model):
         if not hospital_id:
             hospital_id = Hospitals.objects.get(is_default=True)
         departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
-        return departments
+        return departments or []
 
     class Meta:
         verbose_name = 'Отдел'
@@ -339,6 +346,11 @@ class TypeWorkTimeEmployee(models.Model):
     class Meta:
         verbose_name = 'Тип занятости'
         verbose_name_plural = 'Типы занятости'
+
+    @staticmethod
+    def get_active():
+        typesWorkTime = [{"id": typeWorkTime.pk, "label": typeWorkTime.title} for typeWorkTime in TypeWorkTimeEmployee.objects.all().order_by('title')]
+        return typesWorkTime or []
 
 
 class EmployeePosition(models.Model):
