@@ -448,6 +448,11 @@ class EmployeePosition(models.Model):
         if rate < 0:
             raise ValueError('Ставка не может быть отрицательной')
 
+    @staticmethod
+    def get_employee_position(org_id: int, department_ids: list, position_ids: list, employment_form_ids: list):
+        result = []
+        return result
+
     class Meta:
         verbose_name = 'Должность сотрудника'
         verbose_name_plural = 'Должности сотрудников'

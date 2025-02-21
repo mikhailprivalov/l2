@@ -5,7 +5,7 @@ from django.http import JsonResponse
 
 from hospitals.models import Hospitals
 from laboratory.decorators import group_required
-from employees.models import Department, Position, TypeWorkTimeEmployee
+from employees.models import Department, Position, TypeWorkTimeEmployee, EmployeePosition
 
 
 @login_required
@@ -38,6 +38,10 @@ def get_ref_books(request):
 @group_required("Конструктор: Настройка организации")
 def get_employees(request):
     request_data = json.loads(request.body)
-    print(request_data)
+    organization_id = request_data["organizationId"]
+    departments_ids = request_data["departmentIds"]
+    position_ids = request_data["positionIds"]
+    employment_form_ids = request_data["employmentFormIds"]
+    employees = EmployeePosition
     result = []
     return JsonResponse({"result": result})
