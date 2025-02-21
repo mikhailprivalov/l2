@@ -29,6 +29,6 @@ def get_ref_books(request):
     organization_id = request_data["organizationId"]
     departments = Department.get_active(organization_id)
     positions = Position.get_active(organization_id)
-    employmentForms = TypeWorkTimeEmployee.get_active()
-    result = {"departments": departments, "positions": positions, "employmentForms": employmentForms}
+    employment_forms = TypeWorkTimeEmployee.get_active()
+    result = {"departments": departments, "positions": positions, "employmentForms": employment_forms}
     return JsonResponse({"result": result})
