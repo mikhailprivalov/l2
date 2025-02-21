@@ -47,10 +47,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import {getCurrentInstance, onMounted, ref} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import { useStore } from '@/store';
+import * as actions from '@/store/action-types';
+import api from "@/api";
+
+const root = getCurrentInstance().proxy.$root;
+const store = useStore();
 
 const filters = ref({
   departements: null,
@@ -62,6 +68,17 @@ const refBooks = ref({
   departments: [],
   positions: [],
   employmentForms: [],
+});
+
+const getRefBooks = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('employees/get-ref-books');
+  await store.dispatch(actions.DEC_LOADING);
+  refBooks.value = result;
+};
+
+onMounted(() => {
+  getRefBooks();
 });
 
 </script>
