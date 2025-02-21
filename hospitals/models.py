@@ -148,6 +148,16 @@ class Hospitals(models.Model):
             return os.path.join(MEDIA_ROOT, 'title_stamp_customer_pdf', self.title_stamp_customer)
         return None
 
+    @staticmethod
+    def get_hospitals(hospital_id: int = None):
+        if hospital_id:
+            hospitals = Hospitals.objects.filter(pk=hospital_id)
+        else:
+            hospitals = Hospitals.objects.filter(hide=False).order_by('title')
+        result = [{"id": hospital.pk, "label": hospital.title} for hospital in hospitals]
+        return result
+
+
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
