@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="main">
     <div class="filters">
       <div>
         <div class="filter-item">
@@ -57,7 +57,14 @@
         </div>
       </div>
     </div>
-    <div class="search-block" />
+    <div class="search">
+      <label>Поиск</label>
+      <input
+        v-model.trim="search"
+        class="form-control"
+        placeholder="Введите значение"
+      >
+    </div>
     <div class="employee-block" />
   </div>
 </template>
@@ -119,9 +126,14 @@ watch(() => filters.value.organizationId, () => {
   getRefBooks();
 });
 
+const search = ref('');
+
 </script>
 
 <style scoped lang="scss">
+.main {
+  margin: 10px;
+}
 .filters {
   display: grid;
   background-color: #fff;
@@ -131,8 +143,12 @@ watch(() => filters.value.organizationId, () => {
   box-shadow: 0 1px 3px rgb(0 0 0 / 12%), 0 1px 2px rgb(0 0 0 / 24%);
   max-height: 185px;
   overflow-y: auto;
+  margin-bottom: 10px;
 }
 .filter-item {
   margin: 0 5px;
+}
+.search {
+  margin-bottom: 10px;
 }
 </style>
