@@ -160,31 +160,31 @@ const search = ref('');
 
 const columns = ref([
   {
-    key: 'employmentForm', field: 'employmentForm', title: 'Вид занятости', align: 'center', width: 100,
+    key: 'employmentForm', field: 'employmentForm', title: 'Вид занятости', align: 'center', width: 150,
   },
   {
-    key: 'snils', field: 'snils', title: 'СНИЛС', align: 'center', width: 100,
+    key: 'snils', field: 'snils', title: 'СНИЛС', align: 'center', width: 150,
   },
   {
-    key: 'tabelNumber', field: 'tabelNumber', title: 'Табельный №', align: 'center', width: 100,
+    key: 'tabelNumber', field: 'tabelNumber', title: 'Табельный №', align: 'center', width: 150,
   },
   {
     key: 'employeeFio', field: 'employeeFio', title: 'Работник', align: 'center',
   },
   {
-    key: 'department', field: 'department', title: 'Подразделение', align: 'center', width: 200,
+    key: 'department', field: 'department', title: 'Подразделение', align: 'center', width: 230,
   },
   {
     key: 'position', field: 'position', title: 'Должность', align: 'center', width: 150,
   },
   {
-    key: 'countBid', field: 'countBid', title: 'Кол-во ставок', align: 'center', width: 50,
+    key: 'countBid', field: 'countBid', title: 'Кол-во ставок', align: 'center', width: 70,
   },
   {
-    key: 'dateEmployment', field: 'dateEmployment', title: 'Дата приема', align: 'center', width: 100,
+    key: 'dateEmployment', field: 'dateEmployment', title: 'Дата приема', align: 'center', width: 120,
   },
   {
-    key: 'DateDismissal', field: 'DateDismissal', title: 'Дата увольнения', align: 'center', width: 100,
+    key: 'DateDismissal', field: 'DateDismissal', title: 'Дата увольнения', align: 'center', width: 120,
   },
 ]);
 const page = ref(1);
