@@ -3,9 +3,22 @@
     <div class="filters">
       <div>
         <div class="filter-item">
+          <label>Организации</label>
+          <Treeselect
+            v-model="filters.organizationId"
+            :options="refBooks.organizations"
+            :clearable="false"
+            class="treeselect-34px"
+            placeholder="Выберите подразделение"
+            :append-to-body="true"
+          />
+        </div>
+      </div>
+      <div>
+        <div class="filter-item">
           <label>Подразделения</label>
           <Treeselect
-            v-model="filters.departements"
+            v-model="filters.departementIds"
             :options="refBooks.departments"
             :clearable="false"
             class="treeselect-34px"
@@ -18,7 +31,7 @@
         <div class="filter-item">
           <label>Должности</label>
           <Treeselect
-            v-model="filters.positions"
+            v-model="filters.positionsIds"
             :options="refBooks.positions"
             :clearable="false"
             class="treeselect-34px"
@@ -31,7 +44,7 @@
         <div class="filter-item">
           <label>Форма занятости</label>
           <Treeselect
-            v-model="filters.employmentForms"
+            v-model="filters.employmentFormsIds"
             :options="refBooks.employmentForms"
             :clearable="false"
             class="treeselect-34px"
@@ -47,24 +60,26 @@
 </template>
 
 <script setup lang="ts">
-import {getCurrentInstance, onMounted, ref} from 'vue';
+import { getCurrentInstance, onMounted, ref } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
-import api from "@/api";
+import api from '@/api';
 
 const root = getCurrentInstance().proxy.$root;
 const store = useStore();
 
 const filters = ref({
-  departements: null,
-  positions: null,
-  employmentForms: null,
+  organizationId: null,
+  departementIds: null,
+  positionsIds: null,
+  employmentFormsIds: null,
 });
 
 const refBooks = ref({
+  organizations: [],
   departments: [],
   positions: [],
   employmentForms: [],
