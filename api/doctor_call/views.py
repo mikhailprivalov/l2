@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from appconf.manager import SettingManager
+from laboratory.settings import DOC_CALLS_ACTUAL_ROWS_FROM_DATE
 from slog.models import Log
 from clients.models import Card
 from doctor_call.models import DoctorCall, DoctorCallLog
@@ -92,7 +93,12 @@ def actual_rows(request):
     data = data_parse(request.body, {'card_pk': int})
     card_pk: int = data[0]
 
-    date_from = datetime.datetime.combine(current_time(), datetime.time.min)
+    if DOC_CALLS_ACTUAL_ROWS_FROM_DATE:
+        from_date = datetime.datetime.strptime(DOC_CALLS_ACTUAL_ROWS_FROM_DATE, '%Y-%m-%d')[:100]
+    else:
+        from_date = current_time()
+
+    date_from = datetime.datetime.combine(from_date, datetime.time.min)
 
     rows = list(
         DoctorCall.objects.filter(client_id=card_pk, exec_at__gte=date_from)

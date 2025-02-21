@@ -13,6 +13,8 @@ def report_buh_gistology(directions):
         dn.istochnik_f_id,
         to_char(dn.visit_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH24:MI') AS char_visit_date,
         dn.visit_date,
+        dn.rmis_number,
+        
         di.title as iss_finsource_title,
         cp.title as iss_price_category,
         
