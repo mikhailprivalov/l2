@@ -25,7 +25,6 @@ def get_organizations(request):
 @login_required
 @group_required("Конструктор: Настройка организации")
 def get_ref_books(request):
-    print('пришел запрос')
     request_data = json.loads(request.body)
     organization_id = request_data["organizationId"]
     departments = Department.get_active(organization_id)
