@@ -45,7 +45,10 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(TypeWorkTimeEmployee)
 class TypeWorkTimeEmployeeAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title',)
+    list_display = (
+        'pk',
+        'title',
+    )
     list_filter = ('title',)
     search_fields = ('pk', 'title')
     ordering = ('pk', 'title')
