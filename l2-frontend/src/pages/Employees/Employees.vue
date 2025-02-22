@@ -77,9 +77,10 @@
       <VeTable
         :columns="columns"
         :table-data="employeesPagination"
+        max-height="calc(100vh - 241px)"
       />
       <div
-        v-show="employees.length === 0"
+        v-show="employeesPagination.length === 0"
         class="empty-list"
       >
         Нет записей
@@ -274,8 +275,5 @@ const employeesPagination = computed(() => filteredEmployees.value.slice((page.v
 .empty-list {
   width: 85px;
   margin: 20px auto;
-}
-::v-deep .ve-table-container {
-  height: calc(100vh - 241px) !important;
 }
 </style>
