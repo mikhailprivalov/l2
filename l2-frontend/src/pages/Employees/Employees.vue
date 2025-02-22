@@ -68,7 +68,7 @@
     <div class="employees">
       <VeTable
         :columns="columns"
-        :table-data="employees"
+        :table-data="filteredEmployees"
       />
       <div
         v-show="employees.length === 0"
@@ -78,7 +78,7 @@
       </div>
       <div class="flex flex-space-between">
         <VePagination
-          :total="employees.length"
+          :total="filteredEmployees.length"
           :page-index="page"
           :page-size="pageSize"
           :page-size-option="pageSizeOptions"
@@ -110,6 +110,19 @@ import 'vue-easytable/libs/theme-default/index.css';
 import ruRu from '@/locales/ve';
 
 VeLocale.use(ruRu);
+
+interface employeeData {
+  employeeId: number,
+  employmentForm: string,
+  snils: string,
+  tabelNumber: string,
+  employeeFio: string,
+  department: string,
+  position: string,
+  rate: number,
+  dateEmployment: string,
+  dateDismissal: string,
+}
 
 const root = getCurrentInstance().proxy.$root;
 const store = useStore();
@@ -197,7 +210,7 @@ const pageSizeChange = (size: number) => {
   pageSize.value = size;
 };
 
-const employees = ref([]);
+const employees = ref<employeeData[]>([]);
 
 const getEmployees = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -214,6 +227,12 @@ const getEmployees = async () => {
 watch(() => filters.value, () => {
   getEmployees();
 }, { deep: true });
+
+const filteredEmployees = computed(() => employees.value.filter(employee => {
+  const fio = employee.employeeFio.toLowerCase();
+  const searchTerm = search.value.toLowerCase();
+  return fio.includes(searchTerm);
+}));
 
 </script>
 
