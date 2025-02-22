@@ -450,12 +450,12 @@ class EmployeePosition(models.Model):
 
     @staticmethod
     def get_employee_position(org_id: int, department_ids: list, position_ids: list, employment_form_ids: list):
-        department_ids_tuple = tuple(department_ids) if department_ids else None
-        position_ids_tuple = tuple(position_ids) if position_ids else None
-        employment_form_ids_tuple = tuple(employment_form_ids) if employment_form_ids else None
+        department_ids_tuple = tuple(department_ids) if department_ids else tuple([None])
+        position_ids_tuple = tuple(position_ids) if position_ids else tuple([None])
+        employment_form_ids_tuple = tuple(employment_form_ids) if employment_form_ids else tuple([None])
         employees = get_employee_position(org_id, department_ids_tuple, position_ids_tuple, employment_form_ids_tuple)
         result = [{
-            "employeeId": employee.employee_position_Id,
+            "employeeId": employee.employee_position_id,
             "employmentForm": employee.employment_form,
             "snils": employee.snils,
             "tabelNumber": employee.tabel_number,

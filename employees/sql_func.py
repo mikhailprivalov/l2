@@ -68,21 +68,21 @@ def get_employee_position(org_id: int, department_ids: tuple = None, position_id
         AND
         CASE
         WHEN %(department_ids)s IS NOT NULL THEN
-          employees_employeeposition.department_id IN (%(department_ids)s)
+          employees_employeeposition.department_id IN %(department_ids)s 
         ELSE TRUE
         END
         
         AND
         CASE
         WHEN %(position_ids)s IS NOT NULL THEN
-          employees_employeeposition.position_id IN (%(position_ids)s)
+          employees_employeeposition.position_id IN %(position_ids)s
         ELSE TRUE
         END
         
         AND 
         CASE
         WHEN %(employment_form_ids)s IS NOT NULL THEN
-          employees_employeeposition.type_work_time_id IN (%(employment_form_ids)s)
+          employees_employeeposition.type_work_time_id IN %(employment_form_ids)s
         ELSE TRUE
         END
 
