@@ -44,7 +44,7 @@
       </div>
       <div>
         <div class="filter-item">
-          <label>Форма занятости</label>
+          <label>Вид занятости</label>
           <Treeselect
             v-model="filters.employmentFormIds"
             :options="refBooks.employmentForms"
