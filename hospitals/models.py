@@ -157,7 +157,6 @@ class Hospitals(models.Model):
         result = [{"id": hospital.pk, "label": hospital.title} for hospital in hospitals]
         return result
 
-
     class Meta:
         verbose_name = 'Больница'
         verbose_name_plural = 'Больницы'
