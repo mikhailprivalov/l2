@@ -206,7 +206,7 @@ const columns = ref([
     key: 'dateEmployment', field: 'dateEmployment', title: 'Дата приема', align: 'center', width: 120,
   },
   {
-    key: 'DateDismissal', field: 'DateDismissal', title: 'Дата увольнения', align: 'center', width: 120,
+    key: 'dateDismissal', field: 'dateDismissal', title: 'Дата увольнения', align: 'center', width: 120,
   },
 ]);
 const page = ref(1);

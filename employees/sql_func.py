@@ -85,6 +85,8 @@ def get_employee_position(org_id: int, department_ids: tuple = None, position_id
           employees_employeeposition.type_work_time_id IN %(employment_form_ids)s
         ELSE TRUE
         END
+        
+        ORDER BY employees_employee.family
 
         """,
             params={'org_id': org_id, "department_ids": department_ids, "position_ids": position_ids, "employment_form_ids": employment_form_ids},
