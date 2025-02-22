@@ -11,7 +11,7 @@
             class="treeselect-34px"
             placeholder="Выберите организацию"
             :append-to-body="true"
-            limit="1"
+            :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
         </div>
@@ -27,7 +27,7 @@
             class="treeselect-34px"
             placeholder="Выберите подразделения"
             :append-to-body="true"
-            limit="1"
+            :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
         </div>
@@ -43,7 +43,7 @@
             class="treeselect-34px"
             placeholder="Выберите должности"
             :append-to-body="true"
-            limit="1"
+            :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
         </div>
@@ -59,7 +59,7 @@
             class="treeselect-34px"
             placeholder="Выберите форму занятости"
             :append-to-body="true"
-            limit="1"
+            :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
         </div>
@@ -158,7 +158,7 @@ onMounted(() => {
 });
 
 watch(organizations, () => {
-  filters.value.organizationId = userOrganizationId;
+  filters.value.organizationId = userOrganizationId.value;
 });
 
 const refBooks = ref({
