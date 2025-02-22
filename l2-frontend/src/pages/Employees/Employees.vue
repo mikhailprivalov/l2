@@ -11,6 +11,7 @@
             class="treeselect-34px"
             placeholder="Выберите организацию"
             :append-to-body="true"
+            no-options-text="Не найдено"
             :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
@@ -27,6 +28,7 @@
             class="treeselect-34px"
             placeholder="Выберите подразделения"
             :append-to-body="true"
+            no-options-text="Не найдено"
             :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
@@ -43,6 +45,7 @@
             class="treeselect-34px"
             placeholder="Выберите должности"
             :append-to-body="true"
+            no-options-text="Не найдено"
             :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
@@ -59,6 +62,7 @@
             class="treeselect-34px"
             placeholder="Выберите форму занятости"
             :append-to-body="true"
+            no-options-text="Не найдено"
             :limit="1"
             :limit-text="count => `и ещё ${count}`"
           />
