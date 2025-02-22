@@ -178,7 +178,7 @@ const columns = ref([
     key: 'position', field: 'position', title: 'Должность', align: 'center', width: 150,
   },
   {
-    key: 'countBid', field: 'countBid', title: 'Кол-во ставок', align: 'center', width: 70,
+    key: 'rate', field: 'rate', title: 'Кол-во ставок', align: 'center', width: 70,
   },
   {
     key: 'dateEmployment', field: 'dateEmployment', title: 'Дата приема', align: 'center', width: 120,
