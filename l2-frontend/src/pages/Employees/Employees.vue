@@ -68,6 +68,7 @@
     <div class="employees">
       <VeTable
         :columns="columns"
+        max-height="calc(100vh - 300px)"
         :table-data="employeesPagination"
       />
       <div
