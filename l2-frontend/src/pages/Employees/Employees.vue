@@ -169,7 +169,7 @@ const refBooks = ref({
 
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('employees/get-ref-books', { organizationId: userOrganizationId.value });
+  const { result } = await api('employees/get-ref-books', { organizationId: filters.value.organizationId });
   await store.dispatch(actions.DEC_LOADING);
   refBooks.value = result;
 };
