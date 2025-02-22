@@ -43,6 +43,7 @@ def get_employee_position(org_id: int, department_ids: tuple = None, position_id
         cursor.execute(
             """
         SELECT 
+        employees_position.id as employee_position_id,
         employees_typeworktimeemployee.title as employment_form,
         employees_employee.snils,
         employees_employeeposition.tabel_number,

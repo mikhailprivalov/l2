@@ -453,7 +453,19 @@ class EmployeePosition(models.Model):
         department_ids_tuple = tuple(department_ids) if department_ids else None
         position_ids_tuple = tuple(position_ids) if position_ids else None
         employment_form_ids_tuple = tuple(employment_form_ids) if employment_form_ids else None
-        result = get_employee_position(org_id, department_ids_tuple, position_ids_tuple, employment_form_ids_tuple)
+        employees = get_employee_position(org_id, department_ids_tuple, position_ids_tuple, employment_form_ids_tuple)
+        result = [{
+            "employeeId": employee.employee_position_Id,
+            "employmentForm": employee.employment_form,
+            "snils": employee.snils,
+            "tabelNumber": employee.tabel_number,
+            "employeeFio": f"{employee.employee_family} {employee.employee_name} {employee.employee_patronymic}",
+            "department": employee.department_title,
+            "position": employee.position_title,
+            "rate": employee.rate,
+            "dateEmployment": employee.date_employment,
+            "dateDismissal": employee.date_dismissal,
+        } for employee in employees]
         return result
 
     class Meta:
