@@ -454,18 +454,21 @@ class EmployeePosition(models.Model):
         position_ids_tuple = tuple(position_ids) if position_ids else tuple([None])
         employment_form_ids_tuple = tuple(employment_form_ids) if employment_form_ids else tuple([None])
         employees = get_employee_position(org_id, department_ids_tuple, position_ids_tuple, employment_form_ids_tuple)
-        result = [{
-            "employeeId": employee.employee_position_id,
-            "employmentForm": employee.employment_form,
-            "snils": employee.snils,
-            "tabelNumber": employee.tabel_number,
-            "employeeFio": f"{employee.employee_family} {employee.employee_name} {employee.employee_patronymic}",
-            "department": employee.department_title,
-            "position": employee.position_title,
-            "rate": employee.rate,
-            "dateEmployment": employee.date_employment.strftime("%d.%m.%Y") if employee.date_employment else None,
-            "dateDismissal": employee.date_dismissal.strftime("%d.%m.%Y") if employee.date_dismissal else None,
-        } for employee in employees]
+        result = [
+            {
+                "employeeId": employee.employee_position_id,
+                "employmentForm": employee.employment_form,
+                "snils": employee.snils,
+                "tabelNumber": employee.tabel_number,
+                "employeeFio": f"{employee.employee_family} {employee.employee_name} {employee.employee_patronymic}",
+                "department": employee.department_title,
+                "position": employee.position_title,
+                "rate": employee.rate,
+                "dateEmployment": employee.date_employment.strftime("%d.%m.%Y") if employee.date_employment else None,
+                "dateDismissal": employee.date_dismissal.strftime("%d.%m.%Y") if employee.date_dismissal else None,
+            }
+            for employee in employees
+        ]
         return result
 
     class Meta:
