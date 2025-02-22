@@ -463,8 +463,8 @@ class EmployeePosition(models.Model):
             "department": employee.department_title,
             "position": employee.position_title,
             "rate": employee.rate,
-            "dateEmployment": employee.date_employment,
-            "dateDismissal": employee.date_dismissal,
+            "dateEmployment": employee.date_employment.strftime("%d.%m.%Y") if employee.date_employment else None,
+            "dateDismissal": employee.date_dismissal.strftime("%d.%m.%Y") if employee.date_dismissal else None,
         } for employee in employees]
         return result
 
