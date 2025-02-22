@@ -36,3 +36,32 @@ def get_employees_by_department(department_id: int):
         )
         row = namedtuplefetchall(cursor)
     return row
+
+
+def get_employee_position(org_id: int, department_ids: list, position_ids: list, employment_form_ids: list):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT 
+        employees_typeworktimeemployee.title as employment_form,
+        employees_employee.snils,
+        employees_employeeposition.tabel_number,
+        employees_employee.family as employee_family,
+        employees_employee.name as employee_name,
+        employees_employee.patronymic as employee_patronymic,
+        employees_department.name as department_title,
+        employees_position.name as position_title,
+        employees_employeeposition.rate,
+        employees_employeeposition.date_employment,
+        employees_employeeposition.date_dismissal
+        
+        FROM employees_employeeposition
+        INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
+        INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
+        INNER JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
+        LEFT JOIN employees_typeworktimeemployee on employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
+        """,
+            params={'org_id': org_id, "department_ids": department_ids, "position_ids": position_ids, "employment_form_ids": employment_form_ids},
+        )
+        row = namedtuplefetchall(cursor)
+    return row

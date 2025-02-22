@@ -5,7 +5,7 @@ import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
-from employees.sql_func import get_employees_by_department, get_work_time_by_document
+from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
@@ -450,7 +450,10 @@ class EmployeePosition(models.Model):
 
     @staticmethod
     def get_employee_position(org_id: int, department_ids: list, position_ids: list, employment_form_ids: list):
-        result = []
+        department_ids_tuple = tuple(department_ids)
+        position_ids_tuple = tuple(position_ids)
+        employment_form_ids = tuple(employment_form_ids)
+        result = get_employee_position(org_id, department_ids, position_ids, employment_form_ids)
         return result
 
     class Meta:
