@@ -57,9 +57,9 @@ def get_employee_position(org_id: int, department_ids: tuple = None, position_id
         employees_employeeposition.date_dismissal
         
         FROM employees_employeeposition
-        INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
-        INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
-        INNER JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
+        LEFT JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
+        LEFT JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
+        LEFT JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
         LEFT JOIN employees_typeworktimeemployee on employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
         
         WHERE 
