@@ -42,6 +42,6 @@ def get_employees(request):
     departments_ids = request_data["departmentIds"]
     position_ids = request_data["positionIds"]
     employment_form_ids = request_data["employmentFormIds"]
-    employees = EmployeePosition
-    result = []
+    employees = EmployeePosition.get_employee_position(organization_id, departments_ids, position_ids, employment_form_ids)
+    result = employees
     return JsonResponse({"result": result})
