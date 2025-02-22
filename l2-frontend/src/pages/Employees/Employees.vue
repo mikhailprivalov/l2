@@ -201,13 +201,14 @@ const columns = ref([
   },
 ]);
 const page = ref(1);
-const pageSize = ref(4);
-const pageSizeOptions = [4, 50, 100];
+const pageSize = ref(25);
+const pageSizeOptions = [25, 50, 100];
 const pageNumberChange = (number: number) => {
   page.value = number;
 };
 const pageSizeChange = (size: number) => {
   pageSize.value = size;
+  page.value = 1;
 };
 
 const employees = ref<employeeData[]>([]);
