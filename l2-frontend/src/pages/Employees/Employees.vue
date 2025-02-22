@@ -68,7 +68,6 @@
     <div class="employees">
       <VeTable
         :columns="columns"
-        max-height="calc(100vh - 300px)"
         :table-data="employeesPagination"
       />
       <div
@@ -267,5 +266,8 @@ const employeesPagination = computed(() => filteredEmployees.value.slice((page.v
 .empty-list {
   width: 85px;
   margin: 20px auto;
+}
+::v-deep .ve-table-container {
+  height: calc(100vh - 241px) !important;
 }
 </style>
