@@ -1,4 +1,8 @@
+from typing import Union
+
 from openpyxl.reader.excel import load_workbook
+
+from hospitals.models import Hospitals
 
 
 def check_need_col(cols: list, need_cols: set):
@@ -21,11 +25,25 @@ def form_01(request_data):
     Загрузка сотрудников организации
 
     На входе:
-    Файл XLSX со столбцами (указаны в need_col_name)
+    "file" - Файл XLSX со столбцами (указаны в need_col_name)
+    "entity_id" - ID организации куда загружать данные с файла
+    "user" (опционально) - user объект из request-а с фронта, может не быть при вызове из django management commands
     """
 
     file = request_data.get("file")
     organization_id = request_data.get("entity_id")
+    user = request_data.get("user")
+    user_id_admin = False
+    user_organization = None
+    organization = Hospitals.objects.filter(pk=organization_id).first()
+    if not organization:
+        return {"ok": False, "result": {}, "message": "Такой организации нет"}
+    if user:
+        user_organization: Union[Hospitals, None] = user.doctorprofile.get_hospital()
+        user_is_admin = user.is_superuser
+        if user_organization.pk != organization_id and user_id_admin is False:
+            return {"ok": False, "result": {}, "message": "Запрещено передавать не свою организацию"}
+
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
     columns = [{"field": "title", "key": "title", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
