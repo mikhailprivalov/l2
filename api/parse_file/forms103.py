@@ -1,3 +1,4 @@
+import datetime
 from fractions import Fraction
 from typing import Union
 
@@ -27,6 +28,15 @@ def not_empty(value) -> bool:
     result = value and value.strip() and value != "None"
     return result
 
+
+def check_date(date):
+    if not date:
+        return False
+    try:
+        datetime.datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
+        return False
+    return True
 
 def normalize_employee_data(employment_form, snils, tabel_number, fio, department_title, position_title, rate, date_employment, date_dismissal):
     result = {
@@ -70,27 +80,33 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     return result
 
 
-def validate_employee_data(normalized_employee_data):
+def validate_employee_data(normalized_data):
     result = {"ok": True, "data": {}}
-    fio = normalized_employee_data["fio"]
-    snils = normalized_employee_data["snils"]
+    fio = normalized_data["fio"]
+    snils = normalized_data["snils"]
     name_local = fio if fio else snils
     errors = []
     if not name_local:
         result = {"ok": False, "data": {}, "empty": True}
         return result
-    # if normalize_data["inn_company"] != inn_company:
-    #     errors.append("ИНН организации не совпадает")
-    # if not check_date(normalize_data["birthday"]):
-    #     errors.append("Дата рождения: неверная/несуществующая дата")
-    # if not check_date(normalize_data["examination_date"]):
-    #     errors.append("Дата мед. осмотра: неверная/несуществующая дата")
-    # if not normalize_data["department"]:
-    #     errors.append("Подразделение не указано")
-    # if not normalize_data["gender"] in ["м", "ж"]:
-    #     errors.append("Пол указан не верно")
-    # if normalize_data["position"] and len(normalize_data["position"]) > 128:
-    #     errors.append("Должность больше 128 символов")
+    if normalized_data["employment_form"] and len(normalized_data["employment_form"]) > 255:
+        errors.append("Вид занятости слишком длинный")
+    if not snils:
+        errors.append("Нет СНИЛС")
+    if not normalized_data["tabel_number"]:
+        errors.append("Нет табельного номера")
+    if not normalized_data["fio"]:
+        errors.append("Нет ФИО")
+    if not normalized_data["department_title"]:
+        errors.append("Нет подразделения")
+    if not normalized_data["position_title"]:
+        errors.append("Нет должности")
+    if not normalized_data["rate"]:
+        errors.append("Нет ставки")
+    if not normalized_data["date_employment"]:
+        errors.append("Нет даты приема")
+    elif not check_date(normalized_data["date_employment"]):
+        errors.append("Дата приема: неверная/несуществующая дата")
 
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}, "empty": False}
