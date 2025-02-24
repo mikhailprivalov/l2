@@ -1,8 +1,5 @@
 from django.core.management.base import BaseCommand
-from openpyxl import load_workbook
-
 from api.parse_file.forms103 import form_01
-from hospitals.models import Hospitals
 
 
 class Command(BaseCommand):
