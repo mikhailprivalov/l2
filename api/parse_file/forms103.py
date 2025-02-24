@@ -75,7 +75,7 @@ def check_not_empty_and_max_len(data):
     value = data["value"]
     max_len = data["max_len"]
     if value and len(value) > max_len:
-        return {"ok": False, "message": ""}
+        return {"ok": False, "message": "Слишком длинный (ое)"}
     return {"ok": True, "message": ""}
 
 
@@ -102,7 +102,7 @@ def check_rate(data):
         if value_in_float > 1:
             return {"ok": False, "message": "Не корректно"}
     except Exception as e:
-        return {"ok": False, "message": "Не корректно"}
+        return {"ok": False, "message": "Не корректно (ое)"}
     return {"ok": True, "message": ""}
 
 
