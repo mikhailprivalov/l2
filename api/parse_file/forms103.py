@@ -219,7 +219,7 @@ def form_01(request_data):
 
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    columns = [{"field": "title", "key": "title", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
+    columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
     incorrect_employees = []
     employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = ('', '', '', '', '',
                                                                                                                                                                        '', '', '', '')
@@ -261,9 +261,6 @@ def form_01(request_data):
                 incorrect_employees.append(validation_result["data"])
                 continue
 
-            # if not valid:
-            #     incorrect_employees.append({"title": title, "reason": "Валидация не пройдена"})
-            #     continue
     result = {
         "colData": columns,
         "data": incorrect_employees,
