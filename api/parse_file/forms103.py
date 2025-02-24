@@ -135,7 +135,7 @@ def check_value(value: str, checks: list, value_len: int, return_key: str):
                 if not result["ok"]:
                     return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
             except Exception as e:
-                return {"ok": False, "message": "Ошибка проверки"}
+                return {"ok": False, "message": f"Ошибка проверки, {e}"}
     return {"ok": True, "message": ""}
 
 
