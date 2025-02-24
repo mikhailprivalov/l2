@@ -71,6 +71,14 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     return result
 
 
+def not_empty_and_big_len(data):
+    value = data["value"]
+    max_len = data["max_len"]
+    if value and len(value) > max_len:
+        return {"ok": False, "message": ""}
+    return {"ok": True, "message": ""}
+
+
 def check_empty(data):
     value = data["value"]
     if not value:
@@ -112,6 +120,7 @@ def check_value(value: str, checks: list, value_len: int, return_key: str):
     Перебирает проверки, для каждой ищет необходимую функцию и проверяет значение
     """
     checks_func = {
+        "not_empty_and_big_len": check_not_empty_and_len,
         "empty": check_empty,
         "len": check_len,
         "rate": check_rate,
@@ -171,7 +180,7 @@ def validate_employee_data(normalized_data):
     if not name_local:
         result = {"ok": False, "data": {}, "empty": True}
         return result
-    if normalized_data["employment_form"] and len(normalized_data["employment_form"]) > 255:
+    if normalized_data["employment_form"] and len(normalized_data["employment_form"]) <= 255:
         errors.append("Вид занятости слишком длинный")
 
     for key in normalized_data.keys():
@@ -181,29 +190,6 @@ def validate_employee_data(normalized_data):
         check_result = check_value(normalized_data[key], checks, value_len, ru_key)
         if not check_result["ok"]:
             errors.append(check_result["message"])
-
-    if not snils:
-        errors.append("Нет СНИЛС")
-    elif len(snils) > 11:
-        errors.append("Не корректный СНИЛС")
-    if not normalized_data["tabel_number"]:
-        errors.append("Нет табельного номера")
-    elif len(normalized_data["tabel_number"]) > 255:
-        errors.append("Табельный номер слишком длинный")
-    if not normalized_data["fio"]:
-        errors.append("Нет ФИО")
-    if not normalized_data["department_title"]:
-        errors.append("Нет подразделения")
-    elif len(normalized_data["department_title"]) > 128:
-        errors.append("Подразделение слишком длинное")
-    if not normalized_data["position_title"]:
-        errors.append("Нет должности")
-    if not normalized_data["rate"]:
-        errors.append("Нет ставки")
-    if not normalized_data["date_employment"]:
-        errors.append("Нет даты приема")
-    elif not check_date(normalized_data["date_employment"]):
-        errors.append("Дата приема: неверная/несуществующая дата")
 
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}, "empty": False}
