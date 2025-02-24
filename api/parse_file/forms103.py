@@ -33,15 +33,13 @@ def form_01(request_data):
     file = request_data.get("file")
     organization_id = request_data.get("entity_id")
     user = request_data.get("user")
-    user_id_admin = False
-    user_organization = None
     organization: Union[Hospitals, None] = Hospitals.objects.filter(pk=organization_id).first()
     if not organization:
         return {"ok": False, "result": {}, "message": "Такой организации нет"}
     if user:
         user_organization: Union[Hospitals, None] = user.doctorprofile.get_hospital()
         user_is_admin = user.is_superuser
-        if user_organization.pk != organization.pk and user_id_admin is False:
+        if user_organization.pk != organization.pk and user_is_admin is False:
             return {"ok": False, "result": {}, "message": "Запрещено передавать не свою организацию"}
 
     wb = load_workbook(filename=file)
