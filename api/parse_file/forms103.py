@@ -1,0 +1,63 @@
+from openpyxl.reader.excel import load_workbook
+
+from researches.models import Tubes
+
+
+def check_need_col(cols: list, need_cols: set):
+    other_need_cols = set(set(cols) - need_cols)
+    if len(other_need_cols) + len(need_cols) != len(cols):
+        return False
+    return True
+
+
+def form_01(request_data):
+    """
+    Загрузка сотрудников организации
+
+    На входе:
+    Файл XLSX со столбцами (указаны в need_col_name)
+    """
+
+    file = request_data.get("file")
+    wb = load_workbook(filename=file)
+    ws = wb[wb.sheetnames[0]]
+    columns = [{"field": "title", "key": "title", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
+    incorrect_employees = []
+    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = ('', '', '', '', '',
+                                                                                                                                                                        '', '', '', '')
+    # title_idx, short_title_idx, color_idx = (
+    #     '',
+    #     '',
+    #     '',
+    # )
+    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
+    starts = False
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "Табельный номер" in cells:
+                if not check_need_col(cells, need_col_name):
+                    return {"ok": False, "result": {}, "message": "Нет обязательных полей"}
+                employment_form_idx = cells.index("Вид занятости")
+                snils_idx = cells.index("СНИЛС")
+                tabel_number_idx = cells.index("Табельный номер")
+                employee_fio_idx = cells.index("Сотрудник")
+                department_title_idx = cells.index("Подразделение")
+                position_title_idx = cells.index("Должность")
+                rate_idx = cells.index("Количество ставок")
+                date_employment_idx = cells.index("Дата приема")
+                date_dismissal_idx = cells.index("Дата увольнения")
+                starts = True
+        else:
+            print('ура!')
+            # if not valid:
+            #     incorrect_employees.append({"title": title, "reason": "Валидация не пройдена"})
+            #     continue
+    result = {
+        "colData": columns,
+        "data": incorrect_employees,
+    }
+
+    if not starts:
+        return {"ok": False, "result": [], "message": "Не найдены колонка 'Табельный номер'"}
+    return {"ok": True, "result": result, "message": ""}
