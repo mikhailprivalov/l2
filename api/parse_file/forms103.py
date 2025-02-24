@@ -80,7 +80,64 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     return result
 
 
+def check_len(data):
+    value = data["value"]
+    max_len = data["max_len"]
+    if len(value) > max_len:
+        return {"ok": False, "message": "Слишком длинный (ое)"}
+    return {"ok": True, "message": ""}
+
+
+def check_value(value: str, checks: list, value_len: int, return_key: str):
+
+    checks_func = {
+        "len": check_len,
+    }
+
+    for check in checks:
+        check_func = checks_func.get(check, None)
+        if check_func:
+            result = check_func({"value": value, "max_len": value_len})
+            if not result["ok"]:
+                return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
+    return {"ok": True, "message": ""}
+
+
 def validate_employee_data(normalized_data):
+
+    russian_keys = {
+        "employment_form": "Вид занятости",
+        "snils": "СНИЛС",
+        "tabel_number": "Табельный номер",
+        "fio": "ФИО",
+        "department_title": "Подразделение",
+        "position_title": "Должность",
+        "rate": "Количество ставок",
+        "date_employment": "Дата приема",
+        "date_dismissal": "Дата увольнения",
+    }
+    values_lens = {
+        "employment_form": 255,
+        "snils": 11,
+        "tabel_number": 255,
+        "fio": 192,
+        "department_title": 128,
+        "position_title": 128,
+        "date_employment": "Дата приема",
+        "date_dismissal": "Дата увольнения",
+    }
+    check_lists = {
+        "employment_form": ["len"],
+        "snils": ["empty", "len"],
+        "tabel_number": ["empty", "len"],
+        "fio": ["empty", "len"],
+        "department_title": ["empty", "len"],
+        "position_title": ["empty", "len"],
+        "rate": ["is_float"],
+        "date_employment": ["is_date"],
+        "date_dismissal": ["is_date"],
+    }
+
     result = {"ok": True, "data": {}}
     fio = normalized_data["fio"]
     snils = normalized_data["snils"]
@@ -91,14 +148,29 @@ def validate_employee_data(normalized_data):
         return result
     if normalized_data["employment_form"] and len(normalized_data["employment_form"]) > 255:
         errors.append("Вид занятости слишком длинный")
+
+    for key in normalized_data.keys():
+        checks = check_lists.get(key, [])
+        value_len = values_lens.get(key, None)
+        ru_key = russian_keys.get(key, None)
+        check_result = check_value(normalized_data[key], checks, value_len, ru_key)
+        if not check_result["ok"]:
+            errors.append(check_result["message"])
+
     if not snils:
         errors.append("Нет СНИЛС")
+    elif len(snils) > 11:
+        errors.append("Не корректный СНИЛС")
     if not normalized_data["tabel_number"]:
         errors.append("Нет табельного номера")
+    elif len(normalized_data["tabel_number"]) > 255:
+        errors.append("Табельный номер слишком длинный")
     if not normalized_data["fio"]:
         errors.append("Нет ФИО")
     if not normalized_data["department_title"]:
         errors.append("Нет подразделения")
+    elif len(normalized_data["department_title"]) > 128:
+        errors.append("Подразделение слишком длинное")
     if not normalized_data["position_title"]:
         errors.append("Нет должности")
     if not normalized_data["rate"]:
@@ -112,7 +184,6 @@ def validate_employee_data(normalized_data):
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}, "empty": False}
 
     return result
-    return {}
 
 
 def form_01(request_data):
