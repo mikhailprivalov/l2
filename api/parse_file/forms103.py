@@ -120,8 +120,8 @@ def check_value(value: str, checks: list, value_len: int, return_key: str):
     Перебирает проверки, для каждой ищет необходимую функцию и проверяет значение
     """
     checks_func = {
-        "not_empty_and_big_len": check_not_empty_and_len,
-        "empty": check_empty,
+        "not_empty_and_big_len": not_empty_and_big_len,
+        "not_empty": check_empty,
         "len": check_len,
         "rate": check_rate,
         "date": check_date,
@@ -162,11 +162,11 @@ def validate_employee_data(normalized_data):
     }
     check_lists = {
         "employment_form": ["len"],
-        "snils": ["empty", "len"],
-        "tabel_number": ["empty", "len"],
-        "fio": ["empty", "len"],
-        "department_title": ["empty", "len"],
-        "position_title": ["empty", "len"],
+        "snils": ["not_empty", "len"],
+        "tabel_number": ["not_empty", "len"],
+        "fio": ["not_empty", "len"],
+        "department_title": ["not_empty", "len"],
+        "position_title": ["not_empty", "len"],
         "rate": ["rate"],
         "date_employment": ["date"],
         "date_dismissal": ["date"],
