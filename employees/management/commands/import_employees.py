@@ -18,6 +18,6 @@ class Command(BaseCommand):
         if result_upload["ok"]:
             self.stdout.write("Успешная загрузка сотрудников")
         else:
-            self.stdout.write("Ошибка загрузки сотрудников")
+            self.stdout.write(f"Ошибка загрузки сотрудников: {result_upload['message']}")
 
 
