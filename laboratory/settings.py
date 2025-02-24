@@ -434,6 +434,7 @@ ALLOWED_FORMS_FILE = {
     "100.02": False,
     "101.01": False,
     "102.01": False,
+    "103.01": False,
 }
 
 EXCLUDE_TYPE_RESEARCH = {
