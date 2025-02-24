@@ -1,3 +1,4 @@
+from fractions import Fraction
 from typing import Union
 
 from openpyxl.reader.excel import load_workbook
@@ -56,20 +57,16 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
             result["patronymic"] = fio_data[2:]
-        ## todo Придумать как обрабатывать строчки типа Иванов Иван Иванович (внешн) (внешн) (внешн) с учетом двойных фио
     if not_empty(department_title):
         result["department_title"] = remove_spaces(department_title)
     if not_empty(position_title):
         result["position_title"] = remove_spaces(position_title)
     if not_empty(rate):
         result["rate"] = remove_spaces(rate)
-        ## todo обрабатывать здесь 1/2, 1/4, 3/4, 1 и т/д - превращать в десятичную дробь
     if not_empty(date_employment):
         result["date_employment"] = remove_spaces(date_employment)[0]
-        ## todo - подумать надо ли здесь превращать в дату напрямую
     if not_empty(date_dismissal):
         result["date_dismissal"] = remove_spaces(date_dismissal)[0]
-        ## todo - подумать надо ли здесь превращать в дату напрямую
     return result
 
 
