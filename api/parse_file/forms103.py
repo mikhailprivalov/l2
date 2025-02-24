@@ -71,6 +71,31 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
 
 
 def validate_employee_data(normalized_employee_data):
+    result = {"ok": True, "data": {}}
+    fio = normalized_employee_data["fio"]
+    snils = normalized_employee_data["snils"]
+    name_local = fio if fio else snils
+    errors = []
+    if not name_local:
+        result = {"ok": False, "data": {}, "empty": True}
+        return result
+    # if normalize_data["inn_company"] != inn_company:
+    #     errors.append("ИНН организации не совпадает")
+    # if not check_date(normalize_data["birthday"]):
+    #     errors.append("Дата рождения: неверная/несуществующая дата")
+    # if not check_date(normalize_data["examination_date"]):
+    #     errors.append("Дата мед. осмотра: неверная/несуществующая дата")
+    # if not normalize_data["department"]:
+    #     errors.append("Подразделение не указано")
+    # if not normalize_data["gender"] in ["м", "ж"]:
+    #     errors.append("Пол указан не верно")
+    # if normalize_data["position"] and len(normalize_data["position"]) > 128:
+    #     errors.append("Должность больше 128 символов")
+
+    if errors:
+        result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}, "empty": False}
+
+    return result
     return {}
 
 
@@ -133,6 +158,12 @@ def form_01(request_data):
 
             normalized_employee_data = normalize_employee_data(employment_form, snils, tabel_number, employee_fio, department_title, position_title, rate, date_employment, date_dismissal)
             validation_result = validate_employee_data(normalized_employee_data)
+
+            if not validation_result["ok"] and validation_result.get("empty"):
+                continue
+            if not validation_result["ok"]:
+                incorrect_employees.append(validation_result["data"])
+                continue
 
             # if not valid:
             #     incorrect_employees.append({"title": title, "reason": "Валидация не пройдена"})
