@@ -25,7 +25,7 @@ def form_01(request_data):
     """
 
     file = request_data.get("file")
-    entity_id = request_data.get("entity_id")
+    organization_id = request_data.get("entity_id")
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
     columns = [{"field": "title", "key": "title", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
