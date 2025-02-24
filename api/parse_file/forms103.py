@@ -117,7 +117,7 @@ def check_date(data):
 
 def check_value(value: str, checks: list, value_len: int, return_key: str):
     """
-    Перебирает проверки, для каждой ищет необходимую функцию и проверяет значение
+    Перебирает проверки
     """
     checks_func = {
         "not_empty_and_max_len": check_not_empty_and_max_len,
@@ -180,8 +180,6 @@ def validate_employee_data(normalized_data):
     if not name_local:
         result = {"ok": False, "data": {}, "empty": True}
         return result
-    if normalized_data["employment_form"] and len(normalized_data["employment_form"]) <= 255:
-        errors.append("Вид занятости слишком длинный")
 
     for key in normalized_data.keys():
         checks = check_lists.get(key, [])
