@@ -150,8 +150,6 @@ def validate_employee_data(normalized_data):
         "fio": 192,
         "department_title": 128,
         "position_title": 128,
-        "date_employment": "Дата приема",
-        "date_dismissal": "Дата увольнения",
     }
     check_lists = {
         "employment_form": ["len"],
