@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
+from api.parse_file.forms103 import form_01
 from hospitals.models import Hospitals
 
 
@@ -16,4 +17,10 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         file_path = kwargs["path"]
         organization_id = kwargs["organization_id"]
+        result_upload = form_01(request_data={"file": file_path, "entity_id": organization_id})
+        if result_upload["ok"]:
+            self.stdout.write("Успешная загрузка сотрудников")
+        else:
+            self.stdout.write("Ошибка загрузки сотрудников")
+
 
