@@ -12,8 +12,65 @@ def check_need_col(cols: list, need_cols: set):
     return True
 
 
-def normalize_employee_data(employment_form, snils, tabel_number, employee_fio, department_title, position_title, rate, date_employment, date_dismissal):
-    return {}
+def remove_spaces(text: str, return_list: bool = False) -> Union[str, list]:
+    text_list = text.split(" ")
+    text_list_normalized = [word for word in text_list if word.strip()]
+    if return_list:
+        result = text_list_normalized
+    else:
+        result = " ".join(text_list_normalized)
+    return result
+
+
+def not_empty(value) -> bool:
+    result = value and value.strip() and value != "None"
+    return result
+
+
+def normalize_employee_data(employment_form, snils, tabel_number, fio, department_title, position_title, rate, date_employment, date_dismissal):
+    result = {
+        "employment_form": None,
+        "snils": None,
+        "tabel_number": None,
+        "fio": None,
+        "family": None,
+        "name": None,
+        "patronymic": None,
+        "department_title": None,
+        "position_title": None,
+        "rate": None,
+        "date_employment": None,
+        "date_dismissal": None,
+    }
+
+    if not_empty(employment_form):
+        result["employment_form"] = remove_spaces(employment_form)
+    if not_empty(snils):
+        result["snils"] = snils.replace("-", "").replace(" ", "")
+    if not_empty(tabel_number):
+        result["tabel_number"] = remove_spaces(tabel_number)
+    if not_empty(fio):
+        fio_data: list = remove_spaces(fio, True)
+        result["fio"] = " ".join(fio_data)
+        result["family"] = fio_data[0]
+        result["name"] = fio_data[1]
+        if len(fio_data) > 2:
+            result["patronymic"] = fio_data[2:]
+        ## todo Придумать как обрабатывать строчки типа Иванов Иван Иванович (внешн) (внешн) (внешн) с учетом двойных фио
+    if not_empty(department_title):
+        result["department_title"] = remove_spaces(department_title)
+    if not_empty(position_title):
+        result["position_title"] = remove_spaces(position_title)
+    if not_empty(rate):
+        result["rate"] = remove_spaces(rate)
+        ## todo обрабатывать здесь 1/2, 1/4, 3/4, 1 и т/д - превращать в десятичную дробь
+    if not_empty(date_employment):
+        result["date_employment"] = remove_spaces(date_employment)[0]
+        ## todo - подумать надо ли здесь превращать в дату напрямую
+    if not_empty(date_dismissal):
+        result["date_dismissal"] = remove_spaces(date_dismissal)[0]
+        ## todo - подумать надо ли здесь превращать в дату напрямую
+    return result
 
 
 def validate_employee_data(normalized_employee_data):
@@ -67,15 +124,15 @@ def form_01(request_data):
                 date_dismissal_idx = cells.index("Дата увольнения")
                 starts = True
         else:
-            employment_form = cells[employment_form_idx].strip()
-            snils = cells[snils_idx].strip()
-            tabel_number = cells[tabel_number_idx].strip()
-            employee_fio = cells[employee_fio_idx].strip()
-            department_title = cells[department_title_idx].strip()
-            position_title = cells[position_title_idx].strip()
-            rate = cells[rate_idx].strip()
-            date_employment = cells[date_employment_idx].strip()
-            date_dismissal = cells[date_dismissal_idx].strip()
+            employment_form = cells[employment_form_idx]
+            snils = cells[snils_idx]
+            tabel_number = cells[tabel_number_idx]
+            employee_fio = cells[employee_fio_idx]
+            department_title = cells[department_title_idx]
+            position_title = cells[position_title_idx]
+            rate = cells[rate_idx]
+            date_employment = cells[date_employment_idx]
+            date_dismissal = cells[date_dismissal_idx]
 
             normalized_employee_data = normalize_employee_data(employment_form, snils, tabel_number, employee_fio, department_title, position_title, rate, date_employment, date_dismissal)
             validation_result = validate_employee_data(normalized_employee_data)
