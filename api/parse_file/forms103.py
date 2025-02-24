@@ -29,15 +29,6 @@ def not_empty(value) -> bool:
     return result
 
 
-def check_date(date):
-    if not date:
-        return False
-    try:
-        datetime.datetime.strptime(date, '%Y-%m-%d')
-    except ValueError:
-        return False
-    return True
-
 def normalize_employee_data(employment_form, snils, tabel_number, fio, department_title, position_title, rate, date_employment, date_dismissal):
     result = {
         "employment_form": None,
@@ -80,6 +71,13 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     return result
 
 
+def check_empty(data):
+    value = data["value"]
+    if not value:
+        return {"ok": False, "message": "Пустой (ое)"}
+    return {"ok": True, "message": ""}
+
+
 def check_len(data):
     value = data["value"]
     max_len = data["max_len"]
@@ -88,11 +86,36 @@ def check_len(data):
     return {"ok": True, "message": ""}
 
 
-def check_value(value: str, checks: list, value_len: int, return_key: str):
+def check_rate(data):
+    value = data["value"]
+    try:
+        value_in_fraction = Fraction(value)
+        value_in_float = float(value_in_fraction)
+        if value_in_float > 1:
+            return {"ok": False, "message": "Не корректно"}
+    except Exception as e:
+        return {"ok": False, "message": "Не корректно"}
+    return {"ok": True, "message": ""}
 
+
+def check_date(data):
+    value = data["value"]
+    try:
+        datetime.datetime.strptime(value, '%Y-%m-%d')
+    except ValueError:
+        return {"ok": False, "message": "неверная/несуществующая дата"}
+    return {"ok": True, "message": ""}
+
+
+def check_value(value: str, checks: list, value_len: int, return_key: str):
+    """
+    Перебирает проверки, для каждой ищет необходимую функцию и проверяет значение
+    """
     checks_func = {
+        "empty": check_empty,
         "len": check_len,
-        "empty":  ""
+        "rate": check_rate,
+        "date": check_date,
     }
 
     for check in checks:
@@ -137,9 +160,9 @@ def validate_employee_data(normalized_data):
         "fio": ["empty", "len"],
         "department_title": ["empty", "len"],
         "position_title": ["empty", "len"],
-        "rate": ["is_float"],
-        "date_employment": ["is_date"],
-        "date_dismissal": ["is_date"],
+        "rate": ["rate"],
+        "date_employment": ["date"],
+        "date_dismissal": ["date"],
     }
 
     result = {"ok": True, "data": {}}
