@@ -71,7 +71,7 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     return result
 
 
-def not_empty_and_big_len(data):
+def check_not_empty_and_max_len(data):
     value = data["value"]
     max_len = data["max_len"]
     if value and len(value) > max_len:
@@ -79,14 +79,14 @@ def not_empty_and_big_len(data):
     return {"ok": True, "message": ""}
 
 
-def check_empty(data):
+def check_not_empty(data):
     value = data["value"]
     if not value:
         return {"ok": False, "message": "Пустой (ое)"}
     return {"ok": True, "message": ""}
 
 
-def check_len(data):
+def check_max_len(data):
     value = data["value"]
     max_len = data["max_len"]
     if len(value) > max_len:
@@ -120,9 +120,9 @@ def check_value(value: str, checks: list, value_len: int, return_key: str):
     Перебирает проверки, для каждой ищет необходимую функцию и проверяет значение
     """
     checks_func = {
-        "not_empty_and_big_len": not_empty_and_big_len,
-        "not_empty": check_empty,
-        "len": check_len,
+        "not_empty_and_max_len": check_not_empty_and_max_len,
+        "not_empty": check_not_empty,
+        "max_len": check_max_len,
         "rate": check_rate,
         "date": check_date,
     }
@@ -161,12 +161,12 @@ def validate_employee_data(normalized_data):
         "position_title": 128,
     }
     check_lists = {
-        "employment_form": ["len"],
-        "snils": ["not_empty", "len"],
-        "tabel_number": ["not_empty", "len"],
-        "fio": ["not_empty", "len"],
-        "department_title": ["not_empty", "len"],
-        "position_title": ["not_empty", "len"],
+        "employment_form": ["not_empty_and_max_len"],
+        "snils": ["not_empty", "max_len"],
+        "tabel_number": ["not_empty", "max_len"],
+        "fio": ["not_empty", "max_len"],
+        "department_title": ["not_empty", "max_len"],
+        "position_title": ["not_empty", "max_len"],
         "rate": ["rate"],
         "date_employment": ["date"],
         "date_dismissal": ["date"],
