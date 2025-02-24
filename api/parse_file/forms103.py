@@ -92,14 +92,18 @@ def check_value(value: str, checks: list, value_len: int, return_key: str):
 
     checks_func = {
         "len": check_len,
+        "empty":  ""
     }
 
     for check in checks:
         check_func = checks_func.get(check, None)
         if check_func:
-            result = check_func({"value": value, "max_len": value_len})
-            if not result["ok"]:
-                return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
+            try:
+                result = check_func({"value": value, "max_len": value_len})
+                if not result["ok"]:
+                    return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
+            except Exception as e:
+                return {"ok": False, "message": "Ошибка проверки"}
     return {"ok": True, "message": ""}
 
 
