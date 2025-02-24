@@ -70,7 +70,12 @@
       </div>
     </div>
     <div class="flex">
-      <UploadFileModal />
+      <UploadFileModal
+        :types-file="['XLSX']"
+        :forms-file="['103.01']"
+        :show-results="true"
+        :entity-id="filters.organizationId"
+      />
     </div>
     <div class="search">
       <label>Поиск</label>
