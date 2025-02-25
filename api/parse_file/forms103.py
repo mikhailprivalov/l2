@@ -71,18 +71,10 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     return result
 
 
-def check_not_empty_and_max_len(data):
-    value = data["value"]
-    max_len = data["max_len"]
-    if value and len(value) > max_len:
-        return {"ok": False, "message": "Слишком длинный (ое)"}
-    return {"ok": True, "message": ""}
-
-
 def check_not_empty(data):
     value = data["value"]
     if not value:
-        return {"ok": False, "message": "Пустой (ое)"}
+        return {"ok": False, "message": "не указано"}
     return {"ok": True, "message": ""}
 
 
@@ -91,7 +83,7 @@ def check_max_len(data):
     max_len = data["max_len"]
     if value and max_len:
         if len(value) > max_len:
-            return {"ok": False, "message": "Слишком длинный (ое)"}
+            return {"ok": False, "message": f"Превышает максимальную длину ({max_len})"}
     return {"ok": True, "message": ""}
 
 
@@ -103,7 +95,7 @@ def check_rate(data):
             value_in_float = float(value_in_fraction)
             if value_in_float > 1:
                 return {"ok": False, "message": "Не корректно"}
-        except Exception as e:
+        except Exception:
             return {"ok": False, "message": "Не корректно"}
     return {"ok": True, "message": ""}
 
