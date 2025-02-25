@@ -9,7 +9,26 @@ from hospitals.models import Hospitals
 from utils.dates import normalize_dots_date
 
 
+def check_request_data(organization_id, user=None):
+    """
+    Проверяет есть ли переданная организация и проверяет права пользователя (если он передан)
+    """
+    result = {"ok": True, "message": ""}
+    organization: Union[Hospitals, None] = Hospitals.objects.filter(pk=organization_id).first()
+    if not organization:
+        result = {"ok": False, "result": {}, "message": "Такой организации нет"}
+    elif user:
+        user_organization: Union[Hospitals, None] = user.doctorprofile.get_hospital()
+        user_is_admin = user.is_superuser
+        if user_organization.pk != organization.pk and user_is_admin is False:
+            result = {"ok": False, "result": {}, "message": "Запрещено передавать не свою организацию"}
+    return result
+
+
 def check_need_col(cols: list, need_cols: set):
+    """
+    Проверяет что все необходимые колонки есть
+    """
     other_need_cols = set(set(cols) - need_cols)
     if len(other_need_cols) + len(need_cols) != len(cols):
         return False
@@ -218,14 +237,10 @@ def form_01(request_data):
     file = request_data.get("file")
     organization_id = request_data.get("entity_id")
     user = request_data.get("user")
-    organization: Union[Hospitals, None] = Hospitals.objects.filter(pk=organization_id).first()
-    if not organization:
-        return {"ok": False, "result": {}, "message": "Такой организации нет"}
-    if user:
-        user_organization: Union[Hospitals, None] = user.doctorprofile.get_hospital()
-        user_is_admin = user.is_superuser
-        if user_organization.pk != organization.pk and user_is_admin is False:
-            return {"ok": False, "result": {}, "message": "Запрещено передавать не свою организацию"}
+
+    result_request_check = check_request_data(user, organization_id)
+    if not result_request_check["ok"]:
+        return result_request_check
 
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
@@ -307,7 +322,7 @@ def form_01(request_data):
 
         if not current_employee_position:
             new_employee_position = EmployeePosition(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
-                                                         tabel_number=employee["tabel_number"])
+                                                     tabel_number=employee["tabel_number"])
             new_employee_position.save()
 
     result = {
