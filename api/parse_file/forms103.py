@@ -3,6 +3,7 @@ from fractions import Fraction
 from typing import Union
 
 from openpyxl.reader.excel import load_workbook
+from openpyxl.worksheet.worksheet import Worksheet
 
 from employees.models import Department, Position, Employee, EmployeePosition
 from hospitals.models import Hospitals
@@ -33,6 +34,65 @@ def check_need_col(cols: list, need_cols: set):
     if len(other_need_cols) + len(need_cols) != len(cols):
         return False
     return True
+
+
+def parse_file(ws: Worksheet):
+    """
+    Разбор xlsx листа из файла
+    """
+    result = {"ok": True, "message": "", "result": {}}
+    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
+    starts = False
+    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = ('', '', '', '', '',
+                                                                                                                                                                       '', '', '', '')
+    employees = []
+    incorrect_employees = []
+    departments_titles = set()
+    positions_titles = set()
+    for row in ws.rows:
+        cells = [str(x.value) for x in row]
+        if not starts:
+            if "Табельный номер" in cells:
+                if not check_need_col(cells, need_col_name):
+                    return {"ok": False, "message": "Нет обязательных полей", "result": {}}
+                employment_form_idx = cells.index("Вид занятости")
+                snils_idx = cells.index("СНИЛС")
+                tabel_number_idx = cells.index("Табельный номер")
+                employee_fio_idx = cells.index("Сотрудник")
+                department_title_idx = cells.index("Подразделение")
+                position_title_idx = cells.index("Должность")
+                rate_idx = cells.index("Количество ставок")
+                date_employment_idx = cells.index("Дата приема")
+                date_dismissal_idx = cells.index("Дата увольнения")
+                starts = True
+        else:
+            employment_form = cells[employment_form_idx]
+            snils = cells[snils_idx]
+            tabel_number = cells[tabel_number_idx]
+            employee_fio = cells[employee_fio_idx]
+            department_title = cells[department_title_idx]
+            position_title = cells[position_title_idx]
+            rate = cells[rate_idx]
+            date_employment = cells[date_employment_idx]
+            date_dismissal = cells[date_dismissal_idx]
+
+            normalized_employee_data = normalize_employee_data(employment_form, snils, tabel_number, employee_fio, department_title, position_title, rate, date_employment, date_dismissal)
+            validation_result = validate_employee_data(normalized_employee_data)
+
+            if not validation_result["ok"] and validation_result.get("empty"):
+                continue
+            if not validation_result["ok"]:
+                incorrect_employees.append(validation_result["data"])
+                continue
+
+            departments_titles.add(normalized_employee_data["department_title"])
+            positions_titles.add(normalized_employee_data["position_title"])
+            employees.append(normalized_employee_data)
+
+    if not starts:
+        return {"ok": False, "result": {}, "message": "Не найдены колонка 'Табельный номер'"}
+    result["result"] = {"employees": employees, "incorrect_employees": incorrect_employees, "departments_titles": departments_titles, "positions_titles": positions_titles}
+    return result
 
 
 def remove_spaces(text: str, return_list: bool = False) -> Union[str, list]:
@@ -237,62 +297,20 @@ def form_01(request_data):
     file = request_data.get("file")
     organization_id = request_data.get("entity_id")
     user = request_data.get("user")
-
     result_request_check = check_request_data(user, organization_id)
     if not result_request_check["ok"]:
         return result_request_check
-
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
     columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
-    incorrect_employees = []
-    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = ('', '', '', '', '',
-                                                                                                                                                                       '', '', '', '')
-    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
-    starts = False
+    result_parse_file = parse_file(ws)
+    if not result_parse_file["ok"]:
+        return result_parse_file
 
-    employees = []
-    departments_titles = []
-    positions_titles = []
-    for row in ws.rows:
-        cells = [str(x.value) for x in row]
-        if not starts:
-            if "Табельный номер" in cells:
-                if not check_need_col(cells, need_col_name):
-                    return {"ok": False, "result": {}, "message": "Нет обязательных полей"}
-                employment_form_idx = cells.index("Вид занятости")
-                snils_idx = cells.index("СНИЛС")
-                tabel_number_idx = cells.index("Табельный номер")
-                employee_fio_idx = cells.index("Сотрудник")
-                department_title_idx = cells.index("Подразделение")
-                position_title_idx = cells.index("Должность")
-                rate_idx = cells.index("Количество ставок")
-                date_employment_idx = cells.index("Дата приема")
-                date_dismissal_idx = cells.index("Дата увольнения")
-                starts = True
-        else:
-            employment_form = cells[employment_form_idx]
-            snils = cells[snils_idx]
-            tabel_number = cells[tabel_number_idx]
-            employee_fio = cells[employee_fio_idx]
-            department_title = cells[department_title_idx]
-            position_title = cells[position_title_idx]
-            rate = cells[rate_idx]
-            date_employment = cells[date_employment_idx]
-            date_dismissal = cells[date_dismissal_idx]
-
-            normalized_employee_data = normalize_employee_data(employment_form, snils, tabel_number, employee_fio, department_title, position_title, rate, date_employment, date_dismissal)
-            validation_result = validate_employee_data(normalized_employee_data)
-
-            if not validation_result["ok"] and validation_result.get("empty"):
-                continue
-            if not validation_result["ok"]:
-                incorrect_employees.append(validation_result["data"])
-                continue
-
-            departments_titles.append(normalized_employee_data["department_title"])
-            positions_titles.append(normalized_employee_data["position_title"])
-            employees.append(normalized_employee_data)
+    employees: list = result_parse_file["data"]["employees"]
+    incorrect_employees: list = result_parse_file["data"]["incorrect_employees"]
+    departments_titles: set = result_parse_file["data"]["departments_titles"]
+    positions_titles: set = result_parse_file["data"]["positions_titles"]
 
     update_organization_departments(organization_id, departments_titles)
     update_organization_positions(organization_id, positions_titles)
@@ -329,7 +347,4 @@ def form_01(request_data):
         "colData": columns,
         "data": incorrect_employees,
     }
-
-    if not starts:
-        return {"ok": False, "result": [], "message": "Не найдены колонка 'Табельный номер'"}
     return {"ok": True, "result": result, "message": ""}
