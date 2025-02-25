@@ -180,7 +180,6 @@ def validate_employee_data(normalized_data):
     if not name_local:
         result = {"ok": False, "data": {}, "empty": True}
         return result
-
     for key in normalized_data.keys():
         checks = check_lists.get(key, [])
         value_len = values_lens.get(key, None)
@@ -188,10 +187,8 @@ def validate_employee_data(normalized_data):
         check_result = check_value(normalized_data[key], checks, value_len, ru_key)
         if not check_result["ok"]:
             errors.append(check_result["message"])
-
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}, "empty": False}
-
     return result
 
 
