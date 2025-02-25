@@ -112,6 +112,11 @@ class Employee(models.Model):
         if Employee.objects.filter(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic).exclude(id=current_id).exists():
             raise ValueError('Такой сотрудник уже существует')
 
+    @staticmethod
+    def find_by_snils(snils: str, hospital_id: int):
+        employee = Employee.objects.filter(snils=snils).first()
+        return employee
+
     class Meta:
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
@@ -216,6 +221,13 @@ class Position(models.Model):
             hospital_id = Hospitals.objects.get(is_default=True)
         titles = set(Position.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
         return titles
+
+    @staticmethod
+    def get_active_positions(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        positions = Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
+        return positions
 
     @staticmethod
     def create_position(name: str, hospital_id: int = None, return_new: bool = False):
@@ -349,6 +361,13 @@ class Department(models.Model):
             hospital_id = Hospitals.objects.get(is_default=True)
         titles = set(Department.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
         return titles
+
+    @staticmethod
+    def get_active_departments(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        departments = Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
+        return departments
 
     @staticmethod
     def create_department(name: str, hospital_id: int = None, return_new: bool = False):
