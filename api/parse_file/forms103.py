@@ -248,7 +248,7 @@ def form_01(request_data):
     file = request_data.get("file")
     organization_id = request_data.get("entity_id")
     user = request_data.get("user")
-    result_request_check = check_request_data(user, organization_id)
+    result_request_check = check_request_data(organization_id, user)
     if not result_request_check["ok"]:
         return result_request_check
     wb = load_workbook(filename=file)
@@ -263,7 +263,7 @@ def form_01(request_data):
 
     update_organization_departments(organization_id, departments_titles)
     update_organization_positions(organization_id, positions_titles)
-    update_organization_employee_positions(organization_id, employees)
+    # update_organization_employee_positions(organization_id, employees)
 
     columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
     result = {
