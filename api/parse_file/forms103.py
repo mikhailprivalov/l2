@@ -98,6 +98,17 @@ def string_not_empty(value) -> bool:
     return result
 
 
+def normalize_rate(rate: str):
+    if not rate:
+        return None
+    try:
+        rate_in_fraciton = Fraction(rate)
+        float_rate = float(rate_in_fraciton)
+    except Exception:
+        return None
+    return float_rate
+
+
 def normalize_employee_data(employment_form, snils, tabel_number, fio, department_title, position_title, rate, date_employment, date_dismissal):
     result = {
         "employment_form": None,
@@ -133,7 +144,8 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     if string_not_empty(position_title):
         result["position_title"] = remove_spaces(position_title)
     if string_not_empty(rate):
-        result["rate"] = remove_spaces(rate)
+        rate_within_spaces = remove_spaces(rate)
+        result["rate"] = normalize_rate(rate_within_spaces)
     if string_not_empty(date_employment):
         date_employment_within_spaces = remove_spaces(date_employment)
         result["date_employment"] = normalize_dots_date(date_employment_within_spaces)
