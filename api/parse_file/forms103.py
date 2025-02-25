@@ -299,7 +299,6 @@ def form_01(request_data):
     incorrect_employees: list = result_parse_file["result"]["incorrect_employees"]
     departments_titles: set = result_parse_file["result"]["departments_titles"]
     positions_titles: set = result_parse_file["result"]["positions_titles"]
-
     update_organization_departments(organization_id, departments_titles)
     update_organization_positions(organization_id, positions_titles)
     result_update = update_organization_employee_positions(organization_id, employees)
