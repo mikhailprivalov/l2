@@ -252,6 +252,7 @@ def update_organization_employee_positions(organization_id: int, employees):
                 active = False
             else:
                 active = True
+            ## todo убедится что обновление-создание работает по верной логике
             new_employee_position = EmployeePosition(is_active=active, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
                                                      tabel_number=employee["tabel_number"], rate=employee["rate"], type_work_time_id=current_employment_form.pk,
                                                      date_employment=employee["date_employment"], date_dismissal=employee["date_dismissal"])
