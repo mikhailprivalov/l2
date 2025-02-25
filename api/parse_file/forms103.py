@@ -5,6 +5,7 @@ from typing import Union
 from openpyxl.reader.excel import load_workbook
 
 from hospitals.models import Hospitals
+from utils.dates import normalize_dots_date
 
 
 def check_need_col(cols: list, need_cols: set):
@@ -44,7 +45,6 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         "date_employment": None,
         "date_dismissal": None,
     }
-
     if not_empty(employment_form):
         result["employment_form"] = remove_spaces(employment_form)
     if not_empty(snils):
@@ -65,9 +65,11 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     if not_empty(rate):
         result["rate"] = remove_spaces(rate)
     if not_empty(date_employment):
-        result["date_employment"] = remove_spaces(date_employment)[0]
+        date_employment_within_spaces = remove_spaces(date_employment)
+        result["date_employment"] = normalize_dots_date(date_employment_within_spaces)
     if not_empty(date_dismissal):
-        result["date_dismissal"] = remove_spaces(date_dismissal)[0]
+        date_dismissal_within_spaces = remove_spaces(date_dismissal)
+        result["date_dismissal"] = normalize_dots_date(date_dismissal_within_spaces)
     return result
 
 
@@ -83,7 +85,7 @@ def check_max_len(data):
     max_len = data["max_len"]
     if value and max_len:
         if len(value) > max_len:
-            return {"ok": False, "message": f"Превышает максимальную длину ({max_len})"}
+            return {"ok": False, "message": f"превышает максимальную длину ({max_len})"}
     return {"ok": True, "message": ""}
 
 
@@ -94,9 +96,9 @@ def check_rate(data):
             value_in_fraction = Fraction(value)
             value_in_float = float(value_in_fraction)
             if value_in_float > 1:
-                return {"ok": False, "message": "Не корректно"}
+                return {"ok": False, "message": "не корректно"}
         except Exception:
-            return {"ok": False, "message": "Не корректно"}
+            return {"ok": False, "message": "не корректно"}
     return {"ok": True, "message": ""}
 
 
@@ -166,7 +168,6 @@ def validate_employee_data(normalized_data):
         "date_employment": ["not_empty", "date"],
         "date_dismissal": ["date"],
     }
-
     result = {"ok": True, "data": {}}
     fio = normalized_data["fio"]
     snils = normalized_data["snils"]
