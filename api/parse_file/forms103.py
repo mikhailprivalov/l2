@@ -208,6 +208,9 @@ def validate_employee_data(normalized_data):
 
 
 def update_organization_departments(organization_id: int, new_departments_titles: Union[list, set]):
+    """
+    Добавляет подразделения в организации если их не было
+    """
     all_current_departments_titles = Department.get_active_titles(organization_id)
     for department_title in new_departments_titles:
         if department_title not in all_current_departments_titles:
@@ -215,6 +218,9 @@ def update_organization_departments(organization_id: int, new_departments_titles
 
 
 def update_organization_positions(organization_id: int, new_positions_titles: Union[list, set]):
+    """
+    Добавляет должности в организации если их не было
+    """
     all_current_positions_titles = Position.get_active_titles(organization_id)
     for position_title in new_positions_titles:
         if position_title not in all_current_positions_titles:
@@ -222,6 +228,9 @@ def update_organization_positions(organization_id: int, new_positions_titles: Un
 
 
 def update_employee_position(employee_position, employee_data):
+    """
+    Обновляет данные трудового договора (EmployeePosition)
+    """
     if employee_data["date_dismissal"]:
         employee_position.date_dismissal = employee_data["date_dismissal"]
         employee_position.is_active = False
@@ -229,6 +238,9 @@ def update_employee_position(employee_position, employee_data):
 
 
 def create_employee_position(employee_data, employee, department, position, employment_form):
+    """
+        Создает новый трудовой договор (EmployeePosition)
+        """
     active = False if employee_data["date_dismissal"] else True
     new_employee_position = EmployeePosition(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=department.pk, tabel_number=employee["tabel_number"],
                                              rate=employee["rate"], type_work_time_id=employment_form.pk, date_employment=employee["date_employment"],
@@ -238,7 +250,7 @@ def create_employee_position(employee_data, employee, department, position, empl
 
 def update_organization_employee_positions(organization_id: int, employees):
     """
-    Обновление и создание новых сотрудников, их employee_positon (трудовых договоров)
+    Обновление и создание новых сотрудников (Employee), трудовых договоров (EmployeePosition)
     """
     departments = Department.get_active_departments(organization_id)
     positions = Position.get_active_positions(organization_id)
