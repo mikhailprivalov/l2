@@ -171,7 +171,7 @@ def validate_employee_data(normalized_data):
         "department_title": ["not_empty", "max_len"],
         "position_title": ["not_empty", "max_len"],
         "rate": ["rate"],
-        "date_employment": ["date"],
+        "date_employment": ["not_empty", "date"],
         "date_dismissal": ["date"],
     }
 
