@@ -3,6 +3,8 @@ from fractions import Fraction
 from typing import Union
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+from api.parse_file.validaiton import check_value
 from employees.models import Department, Position, Employee, EmployeePosition
 from hospitals.models import Hospitals
 from utils.dates import normalize_dots_date
@@ -91,7 +93,7 @@ def remove_spaces(text: str, return_list: bool = False) -> Union[str, list]:
     return result
 
 
-def not_empty(value) -> bool:
+def string_not_empty(value) -> bool:
     result = value and value.strip() and value != "None"
     return result
 
@@ -111,95 +113,32 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         "date_employment": None,
         "date_dismissal": None,
     }
-    if not_empty(employment_form):
+    if string_not_empty(employment_form):
         result["employment_form"] = remove_spaces(employment_form)
-    if not_empty(snils):
+    if string_not_empty(snils):
         result["snils"] = snils.replace("-", "").replace(" ", "")
-    if not_empty(tabel_number):
+    if string_not_empty(tabel_number):
         result["tabel_number"] = remove_spaces(tabel_number)
-    if not_empty(fio):
+    if string_not_empty(fio):
         fio_data: list = remove_spaces(fio, True)
         result["fio"] = " ".join(fio_data)
         result["family"] = fio_data[0]
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
             result["patronymic"] = fio_data[2:]
-    if not_empty(department_title):
+    if string_not_empty(department_title):
         result["department_title"] = remove_spaces(department_title)
-    if not_empty(position_title):
+    if string_not_empty(position_title):
         result["position_title"] = remove_spaces(position_title)
-    if not_empty(rate):
+    if string_not_empty(rate):
         result["rate"] = remove_spaces(rate)
-    if not_empty(date_employment):
+    if string_not_empty(date_employment):
         date_employment_within_spaces = remove_spaces(date_employment)
         result["date_employment"] = normalize_dots_date(date_employment_within_spaces)
-    if not_empty(date_dismissal):
+    if string_not_empty(date_dismissal):
         date_dismissal_within_spaces = remove_spaces(date_dismissal)
         result["date_dismissal"] = normalize_dots_date(date_dismissal_within_spaces)
     return result
-
-
-def check_not_empty(data):
-    value = data["value"]
-    if not value:
-        return {"ok": False, "message": "не указано"}
-    return {"ok": True, "message": ""}
-
-
-def check_max_len(data):
-    value = data["value"]
-    max_len = data["max_len"]
-    if value and max_len:
-        if len(value) > max_len:
-            return {"ok": False, "message": f"превышает максимальную длину ({max_len})"}
-    return {"ok": True, "message": ""}
-
-
-def check_rate(data):
-    value = data["value"]
-    if value:
-        try:
-            value_in_fraction = Fraction(value)
-            value_in_float = float(value_in_fraction)
-            if value_in_float > 1:
-                return {"ok": False, "message": "больше единицы"}
-        except Exception:
-            return {"ok": False, "message": "не корректно"}
-    return {"ok": True, "message": ""}
-
-
-def check_date(data):
-    value = data["value"]
-    if value:
-        try:
-            datetime.datetime.strptime(value, '%Y-%m-%d')
-        except ValueError:
-            return {"ok": False, "message": "неверная/несуществующая дата"}
-    return {"ok": True, "message": ""}
-
-
-def check_value(value: str, checks: list, value_len: int, return_key: str):
-    """
-    Перебирает проверки
-    not_empty - обязательно значение
-    """
-    checks_func = {
-        "not_empty": check_not_empty,
-        "max_len": check_max_len,
-        "rate": check_rate,
-        "date": check_date,
-    }
-
-    for check in checks:
-        check_func = checks_func.get(check, None)
-        if check_func:
-            try:
-                result = check_func({"value": value, "max_len": value_len})
-                if not result["ok"]:
-                    return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
-            except Exception as e:
-                return {"ok": False, "message": f"Ошибка проверки, {e}"}
-    return {"ok": True, "message": ""}
 
 
 def validate_employee_data(normalized_data):
