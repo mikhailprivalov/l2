@@ -283,8 +283,7 @@ def form_01(request_data):
     update_organization_departments(organization_id, departments_titles)
     update_organization_positions(organization_id, positions_titles)
     result_update = update_organization_employee_positions(organization_id, employees)
-    if not result_update["ok"]:
-        incorrect_employees.extend(result_update["data"])
+    incorrect_employees.extend(result_update["data"])
     columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
     result = {
         "colData": columns,
