@@ -236,7 +236,9 @@ def create_employee_postion(employee_data, employee, department, position, emplo
 
 
 def update_organization_employee_positions(organization_id: int, employees):
-    ## todo - разбить на функции для простоты
+    """
+    Обновление и создание новых сотрудников, их employee_positon (трудовых договоров)
+    """
     departments = Department.get_active_departments(organization_id)
     positions = Position.get_active_positions(organization_id)
     employment_forms = TypeWorkTimeEmployee.objects.all()
