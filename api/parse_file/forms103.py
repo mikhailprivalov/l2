@@ -126,6 +126,7 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
     }
 
     ## todo возможно стоит получать дискт и перебирая его ключи нормализовывать как в валидации
+    ## todo придумать как через цикл добавлять ключи family, name и patronymic
     if string_not_empty(employment_form):
         result["employment_form"] = remove_spaces(employment_form)
     if string_not_empty(snils):
