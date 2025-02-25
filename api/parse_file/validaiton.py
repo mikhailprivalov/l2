@@ -21,13 +21,10 @@ def check_max_len(data):
 def check_rate(data):
     value = data["value"]
     if value:
-        try:
-            value_in_fraction = Fraction(value)
-            value_in_float = float(value_in_fraction)
-            if value_in_float > 1:
-                return {"ok": False, "message": "больше единицы"}
-        except Exception:
+        if type(value) != float:
             return {"ok": False, "message": "не корректно"}
+        elif type(value) == float and value > 1:
+            return {"ok": False, "message": "больше единицы"}
     return {"ok": True, "message": ""}
 
 
