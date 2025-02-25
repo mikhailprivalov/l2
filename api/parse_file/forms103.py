@@ -4,6 +4,7 @@ from typing import Union
 
 from openpyxl.reader.excel import load_workbook
 
+from employees.models import Department, Position
 from hospitals.models import Hospitals
 from utils.dates import normalize_dots_date
 
@@ -137,7 +138,6 @@ def check_value(value: str, checks: list, value_len: int, return_key: str):
 
 
 def validate_employee_data(normalized_data):
-
     russian_keys = {
         "employment_form": "Вид занятости",
         "snils": "СНИЛС",
@@ -191,6 +191,20 @@ def validate_employee_data(normalized_data):
     return result
 
 
+def update_organization_departments(organization_id: int, new_departments_titles: Union[list, set]):
+    all_current_departments_titles = Department.get_active_titles(organization_id)
+    for department_title in new_departments_titles:
+        if department_title not in all_current_departments_titles:
+            Department.create_department(department_title, organization_id)
+
+
+def update_organization_positions(organization_id: int, new_positions_titles: Union[list, set]):
+    all_current_positions_titles = Position.get_active_titles(organization_id)
+    for position_title in new_positions_titles:
+        if position_title not in all_current_positions_titles:
+            Position.create_position(position_title, organization_id)
+
+
 def form_01(request_data):
     """
     Загрузка сотрудников организации
@@ -221,6 +235,10 @@ def form_01(request_data):
                                                                                                                                                                        '', '', '', '')
     need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
     starts = False
+
+    employees = []
+    departments_titles = []
+    positions_titles = []
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -256,6 +274,14 @@ def form_01(request_data):
             if not validation_result["ok"]:
                 incorrect_employees.append(validation_result["data"])
                 continue
+
+            departments_titles.append(normalized_employee_data["department_title"])
+            positions_titles.append(normalized_employee_data["position_title"])
+            employees.append(normalized_employee_data)
+
+    update_organization_departments(organization_id, departments_titles)
+    update_organization_positions(organization_id, positions_titles)
+
 
     result = {
         "colData": columns,

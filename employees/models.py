@@ -210,6 +210,22 @@ class Position(models.Model):
         positions = [{"id": position.pk, "label": position.name} for position in Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
         return positions or []
 
+    @staticmethod
+    def get_active_titles(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        titles = set(Position.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
+        return titles
+
+    @staticmethod
+    def create_position(name: str, hospital_id: int = None, return_new: bool = False):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        new_position = Position(hospital_id=hospital_id, name=name, is_active=True)
+        new_position.save()
+        if return_new:
+            return new_position
+
     class Meta:
         verbose_name = 'Должность'
         verbose_name_plural = 'Должности'
@@ -326,6 +342,22 @@ class Department(models.Model):
             hospital_id = Hospitals.objects.get(is_default=True)
         departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
         return departments or []
+
+    @staticmethod
+    def get_active_titles(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        titles = set(Department.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
+        return titles
+
+    @staticmethod
+    def create_department(name: str, hospital_id: int = None, return_new: bool = False):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        new_department = Department(hospital_id=hospital_id, name=name, is_active=True)
+        new_department.save()
+        if return_new:
+            return new_department
 
     class Meta:
         verbose_name = 'Отдел'
