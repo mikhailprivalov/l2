@@ -96,7 +96,7 @@ def check_rate(data):
             value_in_fraction = Fraction(value)
             value_in_float = float(value_in_fraction)
             if value_in_float > 1:
-                return {"ok": False, "message": "не корректно"}
+                return {"ok": False, "message": "больше единицы"}
         except Exception:
             return {"ok": False, "message": "не корректно"}
     return {"ok": True, "message": ""}
