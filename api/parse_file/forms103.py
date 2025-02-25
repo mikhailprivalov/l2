@@ -147,11 +147,11 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         rate_within_spaces = remove_spaces(rate)
         result["rate"] = normalize_rate(rate_within_spaces)
     if string_not_empty(date_employment):
-        date_employment_within_spaces = remove_spaces(date_employment)
-        result["date_employment"] = normalize_dots_date(date_employment_within_spaces)
+        date_employment_within_spaces = remove_spaces(date_employment, True)
+        result["date_employment"] = normalize_dots_date(date_employment_within_spaces[0])
     if string_not_empty(date_dismissal):
-        date_dismissal_within_spaces = remove_spaces(date_dismissal)
-        result["date_dismissal"] = normalize_dots_date(date_dismissal_within_spaces)
+        date_dismissal_within_spaces = remove_spaces(date_dismissal, True)
+        result["date_dismissal"] = normalize_dots_date(date_dismissal_within_spaces[0])
     return result
 
 
@@ -248,9 +248,13 @@ def update_organization_employee_positions(organization_id: int, employees):
             ## todo обновлять ли вид занятости если он пустой?
             continue
         elif not current_employee_position:
-            new_employee_position = EmployeePosition(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
+            if employee["date_dismissal"]:
+                active = False
+            else:
+                active = True
+            new_employee_position = EmployeePosition(is_active=active, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
                                                      tabel_number=employee["tabel_number"], rate=employee["rate"], type_work_time_id=current_employment_form.pk,
-                                                     date_employment=employee["date_employment"])
+                                                     date_employment=employee["date_employment"], date_dismissal=employee["date_dismissal"])
             new_employee_position.save()
     return {"ok": True, "message": "", "data": incorrent_employees}
 
