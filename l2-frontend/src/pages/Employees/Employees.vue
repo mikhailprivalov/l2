@@ -75,6 +75,7 @@
         :forms-file="['103.01']"
         :show-results="true"
         :entity-id="filters.organizationId"
+        @uploadSuccess="getEmployees"
       />
     </div>
     <div class="search">
