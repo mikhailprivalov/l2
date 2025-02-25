@@ -221,14 +221,14 @@ def update_organization_positions(organization_id: int, new_positions_titles: Un
             Position.create_position(position_title, organization_id)
 
 
-def update_employee_postion(employee_position, employee_data):
+def update_employee_position(employee_position, employee_data):
     if employee_data["date_dismissal"]:
         employee_position.date_dismissal = employee_data["date_dismissal"]
         employee_position.is_active = False
         employee_position.save()
 
 
-def create_employee_postion(employee_data, employee, department, position, employment_form):
+def create_employee_position(employee_data, employee, department, position, employment_form):
     active = False if employee_data["date_dismissal"] else True
     new_employee_position = EmployeePosition(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=department.pk, tabel_number=employee["tabel_number"],
                                              rate=employee["rate"], type_work_time_id=employment_form.pk, date_employment=employee["date_employment"],
@@ -256,9 +256,9 @@ def update_organization_employee_positions(organization_id: int, employees):
             continue
         current_employee_position = EmployeePosition.find_employee_position(current_employee, current_position, current_department, employee["tabel_number"])
         if current_employee_position:
-            update_employee_postion(current_employee_position, employee)
+            update_employee_position(current_employee_position, employee)
         else:
-            create_employee_postion(employee, current_employee, current_department, current_position, current_employment_form)
+            create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
     return {"ok": True, "message": "", "data": incorrent_employees}
 
 
