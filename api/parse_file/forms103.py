@@ -221,6 +221,7 @@ def update_organization_positions(organization_id: int, new_positions_titles: Un
 
 
 def update_organization_employee_positions(organization_id: int, employees):
+    ## todo - разбить на функции для простоты
     departments = Department.get_active_departments(organization_id)
     positions = Position.get_active_positions(organization_id)
     employment_forms = TypeWorkTimeEmployee.objects.all()
