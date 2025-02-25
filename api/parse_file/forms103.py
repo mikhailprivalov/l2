@@ -1,10 +1,8 @@
 import datetime
 from fractions import Fraction
 from typing import Union
-
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-
 from employees.models import Department, Position, Employee, EmployeePosition
 from hospitals.models import Hospitals
 from utils.dates import normalize_dots_date
@@ -66,29 +64,17 @@ def parse_work_sheet(ws: Worksheet):
                 date_dismissal_idx = cells.index("Дата увольнения")
                 starts = True
         else:
-            employment_form = cells[employment_form_idx]
-            snils = cells[snils_idx]
-            tabel_number = cells[tabel_number_idx]
-            employee_fio = cells[employee_fio_idx]
-            department_title = cells[department_title_idx]
-            position_title = cells[position_title_idx]
-            rate = cells[rate_idx]
-            date_employment = cells[date_employment_idx]
-            date_dismissal = cells[date_dismissal_idx]
-
-            normalized_employee_data = normalize_employee_data(employment_form, snils, tabel_number, employee_fio, department_title, position_title, rate, date_employment, date_dismissal)
+            normalized_employee_data = normalize_employee_data(cells[employment_form_idx], cells[snils_idx], cells[tabel_number_idx], cells[employee_fio_idx], cells[department_title_idx],
+                                                               cells[position_title_idx], cells[rate_idx], cells[date_employment_idx], cells[date_dismissal_idx])
             validation_result = validate_employee_data(normalized_employee_data)
-
             if not validation_result["ok"] and validation_result.get("empty"):
                 continue
             if not validation_result["ok"]:
                 incorrect_employees.append(validation_result["data"])
                 continue
-
             departments_titles.add(normalized_employee_data["department_title"])
             positions_titles.add(normalized_employee_data["position_title"])
             employees.append(normalized_employee_data)
-
     if not starts:
         return {"ok": False, "result": {}, "message": "Не найдены колонка 'Табельный номер'"}
     result["result"] = {"employees": employees, "incorrect_employees": incorrect_employees, "departments_titles": departments_titles, "positions_titles": positions_titles}
