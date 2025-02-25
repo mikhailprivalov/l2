@@ -36,7 +36,7 @@ def check_need_col(cols: list, need_cols: set):
     return True
 
 
-def parse_file(ws: Worksheet):
+def parse_work_sheet(ws: Worksheet):
     """
     Разбор xlsx листа из файла
     """
@@ -284,6 +284,33 @@ def update_organization_positions(organization_id: int, new_positions_titles: Un
             Position.create_position(position_title, organization_id)
 
 
+def update_organization_employee_positions(organization_id: int, employees):
+    departments = Department.get_active_departments(organization_id)
+    positions = Position.get_active_positions(organization_id)
+    for employee in employees:
+        current_employee = Employee.find_by_snils(employee["snils"], organization_id)
+        ## todo - если найдено, надо ли обнолять фио?
+        if not current_employee:
+            current_employee = Employee(hospital_id=organization_id, family=employee["family"], name=employee["name"], patronymic=employee["patronymic"], snils=employee["snils"])
+            current_employee.save()
+        current_department = departments.get(name=employee["department_title"])
+        current_position = positions.get(name=employee["position_title"])
+        current_employee_position = EmployeePosition.objects.filter(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
+                                                                    tabel_number=employee["tabel_number"]).first()
+        if current_employee_position and employee["date_dismissal"]:
+            current_employee_position.date_dismissal = employee["date_dismissal"]
+            current_employee_position.is_active = False
+            current_employee_position.save()
+            continue
+        elif current_employee_position and not employee["date_dismissal"]:
+            ## todo обновлять ли вид занятости если он пустой?
+            continue
+        if not current_employee_position:
+            new_employee_position = EmployeePosition(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
+                                                     tabel_number=employee["tabel_number"])
+            new_employee_position.save()
+
+
 def form_01(request_data):
     """
     Загрузка сотрудников организации
@@ -302,11 +329,9 @@ def form_01(request_data):
         return result_request_check
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
-    result_parse_file = parse_file(ws)
+    result_parse_file = parse_work_sheet(ws)
     if not result_parse_file["ok"]:
         return result_parse_file
-
     employees: list = result_parse_file["data"]["employees"]
     incorrect_employees: list = result_parse_file["data"]["incorrect_employees"]
     departments_titles: set = result_parse_file["data"]["departments_titles"]
@@ -314,35 +339,9 @@ def form_01(request_data):
 
     update_organization_departments(organization_id, departments_titles)
     update_organization_positions(organization_id, positions_titles)
+    update_organization_employee_positions(organization_id, employees)
 
-    departments = Department.get_active_departments(organization_id)
-    positions = Position.get_active_positions(organization_id)
-
-    for employee in employees:
-        current_employee = Employee.find_by_snils(employee["snils"], organization_id)
-        ## todo - если найдено, надо ли обнолять фио?
-        if not current_employee:
-            current_employee = Employee(hospital_id=organization_id, family=employee["family"], name=employee["name"], patronymic=employee["patronymic"], snils=employee["snils"])
-            current_employee.save()
-        current_department = departments.get(name=employee["department_title"])
-        current_position = positions.get(name=employee["position_title"])
-        current_employee_position = EmployeePosition.objects.filter(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
-                                                                    tabel_number=employee["tabel_number"]).first()
-
-        if current_employee_position and employee["date_dismissal"]:
-            current_employee_position.date_dismissal = employee["date_dismissal"]
-            current_employee_position.is_active = False
-            current_employee_position.save()
-            continue
-        elif current_employee_position and not employee["date_dismissal"]:
-            ## todo обновлять ли вид занятости если он пустой?
-            continue
-
-        if not current_employee_position:
-            new_employee_position = EmployeePosition(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
-                                                     tabel_number=employee["tabel_number"])
-            new_employee_position.save()
-
+    columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
     result = {
         "colData": columns,
         "data": incorrect_employees,
