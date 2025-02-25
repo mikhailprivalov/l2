@@ -164,13 +164,13 @@ def validate_employee_data(normalized_data):
         "position_title": 128,
     }
     check_lists = {
-        "employment_form": ["max_len"],
+        "employment_form": ["not_empty", "max_len"],
         "snils": ["not_empty", "max_len"],
         "tabel_number": ["not_empty", "max_len"],
         "fio": ["not_empty", "max_len"],
         "department_title": ["not_empty", "max_len"],
         "position_title": ["not_empty", "max_len"],
-        "rate": ["rate"],
+        "rate": ["not_empty", "rate"],
         "date_employment": ["not_empty", "date"],
         "date_dismissal": ["date"],
     }
