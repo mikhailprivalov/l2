@@ -220,6 +220,21 @@ def update_organization_positions(organization_id: int, new_positions_titles: Un
             Position.create_position(position_title, organization_id)
 
 
+def update_employee_postion(employee_position, employee_data):
+    if employee_data["date_dismissal"]:
+        employee_position.date_dismissal = employee_data["date_dismissal"]
+        employee_position.is_active = False
+        employee_position.save()
+
+
+def create_employee_postion(employee_data, employee, department, position, employment_form):
+    active = False if employee_data["date_dismissal"] else True
+    new_employee_position = EmployeePosition(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=department.pk,
+                                             tabel_number=employee["tabel_number"], rate=employee["rate"], type_work_time_id=employment_form.pk,
+                                             date_employment=employee["date_employment"], date_dismissal=employee["date_dismissal"])
+    new_employee_position.save()
+
+
 def update_organization_employee_positions(organization_id: int, employees):
     ## todo - разбить на функции для простоты
     departments = Department.get_active_departments(organization_id)
@@ -228,36 +243,19 @@ def update_organization_employee_positions(organization_id: int, employees):
     incorrent_employees = []
     for employee in employees:
         current_employee = Employee.find_by_snils(employee["snils"], organization_id)
-        ## todo - если найдено, надо ли обнолять фио?
         if not current_employee:
-            current_employee = Employee(hospital_id=organization_id, family=employee["family"], name=employee["name"], patronymic=employee["patronymic"], snils=employee["snils"])
-            current_employee.save()
+            current_employee = Employee.create_employee(employee["family"], employee["name"], employee["patronymic"], employee["snils"], organization_id, True)
         current_department = departments.get(name=employee["department_title"])
         current_position = positions.get(name=employee["position_title"])
         current_employment_form = employment_forms.filter(title=employee["employment_form"]).first()
         if not current_employment_form:
             incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вид занятости в справочнике ({employee['employment_form']})"})
             continue
-        current_employee_position = EmployeePosition.objects.filter(is_active=True, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
-                                                                    tabel_number=employee["tabel_number"]).first()
-        if current_employee_position and employee["date_dismissal"]:
-            current_employee_position.date_dismissal = employee["date_dismissal"]
-            current_employee_position.is_active = False
-            current_employee_position.save()
-            continue
-        elif current_employee_position and not employee["date_dismissal"]:
-            ## todo обновлять ли вид занятости если он пустой?
-            continue
-        elif not current_employee_position:
-            if employee["date_dismissal"]:
-                active = False
-            else:
-                active = True
-            ## todo убедится что обновление-создание работает по верной логике
-            new_employee_position = EmployeePosition(is_active=active, employee_id=current_employee.pk, position_id=current_position.pk, department_id=current_department.pk,
-                                                     tabel_number=employee["tabel_number"], rate=employee["rate"], type_work_time_id=current_employment_form.pk,
-                                                     date_employment=employee["date_employment"], date_dismissal=employee["date_dismissal"])
-            new_employee_position.save()
+        current_employee_position = EmployeePosition.find_employee_position(current_employee, current_position, current_department, employee["tabel_number"])
+        if current_employee_position:
+            update_employee_postion(current_employee_position, employee)
+        else:
+            create_employee_postion(employee, current_employee, current_department, current_position, current_employment_form)
     return {"ok": True, "message": "", "data": incorrent_employees}
 
 

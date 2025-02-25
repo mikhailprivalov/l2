@@ -114,8 +114,15 @@ class Employee(models.Model):
 
     @staticmethod
     def find_by_snils(snils: str, hospital_id: int):
-        employee = Employee.objects.filter(snils=snils).first()
+        employee = Employee.objects.filter(snils=snils, hospital_id=hospital_id).first()
         return employee
+
+    @staticmethod
+    def create_employee(family, name, patronymic, snils, hospital_id: int, return_new: bool = False):
+        new_employee = Employee(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic, snils=snils)
+        new_employee.save()
+        if return_new:
+            return new_employee
 
     class Meta:
         verbose_name = 'Сотрудник'
@@ -521,6 +528,11 @@ class EmployeePosition(models.Model):
             for employee in employees
         ]
         return result
+
+    @staticmethod
+    def find_employee_position(employee: Employee, position: Position, deparment: Department, tabel_number: str):
+        employee_position = EmployeePosition.objects.filter(is_active=True, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
+        return employee_position
 
     class Meta:
         verbose_name = 'Должность сотрудника'
