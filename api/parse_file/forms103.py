@@ -113,6 +113,8 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         "date_employment": None,
         "date_dismissal": None,
     }
+
+    ## todo возможно стоит получать дискт и перебирая его ключи нормализовывать как в валидации
     if string_not_empty(employment_form):
         result["employment_form"] = remove_spaces(employment_form)
     if string_not_empty(snils):
