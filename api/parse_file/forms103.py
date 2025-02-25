@@ -89,38 +89,41 @@ def check_not_empty(data):
 def check_max_len(data):
     value = data["value"]
     max_len = data["max_len"]
-    if len(value) > max_len:
-        return {"ok": False, "message": "Слишком длинный (ое)"}
+    if value and max_len:
+        if len(value) > max_len:
+            return {"ok": False, "message": "Слишком длинный (ое)"}
     return {"ok": True, "message": ""}
 
 
 def check_rate(data):
     value = data["value"]
-    try:
-        value_in_fraction = Fraction(value)
-        value_in_float = float(value_in_fraction)
-        if value_in_float > 1:
+    if value:
+        try:
+            value_in_fraction = Fraction(value)
+            value_in_float = float(value_in_fraction)
+            if value_in_float > 1:
+                return {"ok": False, "message": "Не корректно"}
+        except Exception as e:
             return {"ok": False, "message": "Не корректно"}
-    except Exception as e:
-        return {"ok": False, "message": "Не корректно (ое)"}
     return {"ok": True, "message": ""}
 
 
 def check_date(data):
     value = data["value"]
-    try:
-        datetime.datetime.strptime(value, '%Y-%m-%d')
-    except ValueError:
-        return {"ok": False, "message": "неверная/несуществующая дата"}
+    if value:
+        try:
+            datetime.datetime.strptime(value, '%Y-%m-%d')
+        except ValueError:
+            return {"ok": False, "message": "неверная/несуществующая дата"}
     return {"ok": True, "message": ""}
 
 
 def check_value(value: str, checks: list, value_len: int, return_key: str):
     """
     Перебирает проверки
+    not_empty - обязательно значение
     """
     checks_func = {
-        "not_empty_and_max_len": check_not_empty_and_max_len,
         "not_empty": check_not_empty,
         "max_len": check_max_len,
         "rate": check_rate,
@@ -161,7 +164,7 @@ def validate_employee_data(normalized_data):
         "position_title": 128,
     }
     check_lists = {
-        "employment_form": ["not_empty_and_max_len"],
+        "employment_form": ["max_len"],
         "snils": ["not_empty", "max_len"],
         "tabel_number": ["not_empty", "max_len"],
         "fio": ["not_empty", "max_len"],
