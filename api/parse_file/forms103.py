@@ -138,7 +138,7 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         result["family"] = fio_data[0]
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
-            result["patronymic"] = fio_data[2:]
+            result["patronymic"] = " ".join(fio_data[2:])
     if string_not_empty(department_title):
         result["department_title"] = remove_spaces(department_title)
     if string_not_empty(position_title):
