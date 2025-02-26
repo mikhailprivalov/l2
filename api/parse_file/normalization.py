@@ -1,5 +1,7 @@
 from fractions import Fraction
 
+from utils.dates import normalize_dots_date
+
 
 def remove_double_spaces(text: str, return_list: bool = False, no_join: bool = False):
     """
