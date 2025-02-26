@@ -30,5 +30,3 @@ class Command(BaseCommand):
             self.stdout.write(f"Успешная загрузка сотрудников, результаты доступны в {dir_tmp}")
         else:
             self.stdout.write(f"Ошибка загрузки сотрудников: {result_upload['message']}")
-
-
