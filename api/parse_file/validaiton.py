@@ -38,7 +38,7 @@ def check_date(data):
     return {"ok": True, "message": ""}
 
 
-def check_value(value: str, checks: list, value_len: int, return_key: str):
+def check_values(value: str, checks: list, value_len: int, return_key: str):
     """
     Перебирает проверки
     not_empty - обязательно значение

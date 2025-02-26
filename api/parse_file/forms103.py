@@ -4,7 +4,7 @@ from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
 from api.parse_file.normalization import normalize_values
-from api.parse_file.validaiton import check_value
+from api.parse_file.validaiton import check_values
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
 
@@ -168,7 +168,7 @@ def validate_employee_data(normalized_data):
         checks = check_lists.get(key, [])
         value_len = values_lens.get(key, None)
         ru_key = russian_keys.get(key, None)
-        check_result = check_value(normalized_data[key], checks, value_len, ru_key)
+        check_result = check_values(normalized_data[key], checks, value_len, ru_key)
         if not check_result["ok"]:
             errors.append(check_result["message"])
     if errors:
