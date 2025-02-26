@@ -236,9 +236,13 @@ def update_organization_employee_positions(organization_id: int, employees):
         if not current_employment_form:
             incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вид занятости в справочнике ({employee['employment_form']})"})
             continue
-        current_employee_position = EmployeePosition.find_employee_position(current_employee, current_position, current_department, employee["tabel_number"])
-        if current_employee_position:
-            update_employee_position(current_employee_position, employee)
+        current_active_employee_position = EmployeePosition.find_employee_position(True, current_employee, current_position, current_department, employee["tabel_number"])
+        if current_active_employee_position:
+            update_employee_position(current_active_employee_position, employee)
+        elif not current_active_employee_position and employee["date_dismissal"]:
+            current_non_active_employee_position = EmployeePosition.find_employee_position(False, current_employee, current_position, current_department, employee["tabel_number"])
+            if not current_non_active_employee_position:
+                create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
         else:
             create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
     return {"ok": True, "message": "", "data": incorrent_employees}
