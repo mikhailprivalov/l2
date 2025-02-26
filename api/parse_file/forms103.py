@@ -122,7 +122,6 @@ def normalize_employee_data(**kwargs):
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
             result["patronymic"] = " ".join(fio_data[2:])
-    print(result["rate"])
     return result
 
 
