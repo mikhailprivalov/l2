@@ -32,7 +32,7 @@ def normalize_rate(value):
         rate_in_fraciton = Fraction(value)
         float_rate = float(rate_in_fraciton)
     except Exception:
-        return None
+        return value
     return float_rate
 
 
@@ -65,7 +65,7 @@ def normalize_values(value: str, actions: list):
                     tmp_value = normalize_func(tmp_value)
                     if not tmp_value:
                         return None
-                except Exception as e:
+                except Exception:
                     return None
     else:
         return None
