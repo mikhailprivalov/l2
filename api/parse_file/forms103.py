@@ -212,9 +212,9 @@ def create_employee_position(employee_data, employee, department, position, empl
         Создает новый трудовой договор (EmployeePosition)
         """
     active = False if employee_data["date_dismissal"] else True
-    new_employee_position = EmployeePosition(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=department.pk, tabel_number=employee["tabel_number"],
-                                             rate=employee["rate"], type_work_time_id=employment_form.pk, date_employment=employee["date_employment"],
-                                             date_dismissal=employee["date_dismissal"])
+    new_employee_position = EmployeePosition(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=department.pk, tabel_number=employee_data["tabel_number"],
+                                             rate=employee_data["rate"], type_work_time_id=employment_form.pk, date_employment=employee_data["date_employment"],
+                                             date_dismissal=employee_data["date_dismissal"])
     new_employee_position.save()
 
 
