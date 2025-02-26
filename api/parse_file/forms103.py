@@ -2,6 +2,8 @@ from fractions import Fraction
 from typing import Union
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
+from api.parse_file.normalization import normalize_values
 from api.parse_file.validaiton import check_value
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
@@ -64,8 +66,9 @@ def parse_work_sheet(ws: Worksheet):
                 date_dismissal_idx = cells.index("Дата увольнения")
                 starts = True
         else:
-            normalized_employee_data = normalize_employee_data(cells[employment_form_idx], cells[snils_idx], cells[tabel_number_idx], cells[employee_fio_idx], cells[department_title_idx],
-                                                               cells[position_title_idx], cells[rate_idx], cells[date_employment_idx], cells[date_dismissal_idx])
+            normalized_employee_data = normalize_employee_data(employment_form=cells[employment_form_idx], snils=cells[snils_idx], tabel_number=cells[tabel_number_idx],
+                                                               fio=cells[employee_fio_idx], department_title=cells[department_title_idx], position_title=cells[position_title_idx],
+                                                               rate=cells[rate_idx], date_employment=cells[date_employment_idx], date_dismissal=cells[date_dismissal_idx])
             validation_result = validate_employee_data(normalized_employee_data)
             if not validation_result["ok"] and validation_result.get("empty"):
                 continue
@@ -81,33 +84,7 @@ def parse_work_sheet(ws: Worksheet):
     return result
 
 
-def remove_spaces(text: str, return_list: bool = False) -> Union[str, list]:
-    text_list = text.split(" ")
-    text_list_normalized = [word for word in text_list if word.strip()]
-    if return_list:
-        result = text_list_normalized
-    else:
-        result = " ".join(text_list_normalized)
-    return result
-
-
-def string_not_empty(value) -> bool:
-    result = value and value.strip() and value != "None"
-    return result
-
-
-def normalize_rate(rate: str):
-    if not rate:
-        return None
-    try:
-        rate_in_fraciton = Fraction(rate)
-        float_rate = float(rate_in_fraciton)
-    except Exception:
-        return None
-    return float_rate
-
-
-def normalize_employee_data(employment_form, snils, tabel_number, fio, department_title, position_title, rate, date_employment, date_dismissal):
+def normalize_employee_data(**kwargs):
     result = {
         "employment_form": None,
         "snils": None,
@@ -122,35 +99,30 @@ def normalize_employee_data(employment_form, snils, tabel_number, fio, departmen
         "date_employment": None,
         "date_dismissal": None,
     }
+    actions = {
+        "employment_form": ["remove_double_spaces"],
+        "snils": ["normalize_snils"],
+        "tabel_number": ["remove_double_spaces"],
+        "fio": ["remove_double_spaces"],
+        "department_title": ["remove_double_spaces"],
+        "position_title": ["remove_double_spaces"],
+        "rate": ["remove_double_spaces", "normalize_rate"],
+        "date_employment": ["normalize_date"],
+        "date_dismissal": ["normalize_date"],
+    }
 
-    ## todo возможно стоит получать дискт и перебирая его ключи нормализовывать как в валидации
-    ## todo придумать как через цикл добавлять ключи family, name и patronymic
-    if string_not_empty(employment_form):
-        result["employment_form"] = remove_spaces(employment_form)
-    if string_not_empty(snils):
-        result["snils"] = snils.replace("-", "").replace(" ", "")
-    if string_not_empty(tabel_number):
-        result["tabel_number"] = remove_spaces(tabel_number)
-    if string_not_empty(fio):
-        fio_data: list = remove_spaces(fio, True)
-        result["fio"] = " ".join(fio_data)
+    for key in kwargs.keys():
+        action = actions.get(key, None)
+        if action:
+            action_result = normalize_values(kwargs[key], action)
+            result[key] = action_result
+
+    if result["fio"]:
+        fio_data = result["fio"].split(" ")
         result["family"] = fio_data[0]
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
             result["patronymic"] = " ".join(fio_data[2:])
-    if string_not_empty(department_title):
-        result["department_title"] = remove_spaces(department_title)
-    if string_not_empty(position_title):
-        result["position_title"] = remove_spaces(position_title)
-    if string_not_empty(rate):
-        rate_within_spaces = remove_spaces(rate)
-        result["rate"] = normalize_rate(rate_within_spaces)
-    if string_not_empty(date_employment):
-        date_employment_within_spaces = remove_spaces(date_employment, True)
-        result["date_employment"] = normalize_dots_date(date_employment_within_spaces[0])
-    if string_not_empty(date_dismissal):
-        date_dismissal_within_spaces = remove_spaces(date_dismissal, True)
-        result["date_dismissal"] = normalize_dots_date(date_dismissal_within_spaces[0])
     return result
 
 
@@ -293,14 +265,14 @@ def form_01(request_data):
     result_parse_file = parse_work_sheet(ws)
     if not result_parse_file["ok"]:
         return result_parse_file
-    employees: list = result_parse_file["result"]["employees"]
+    # employees: list = result_parse_file["result"]["employees"]
     incorrect_employees: list = result_parse_file["result"]["incorrect_employees"]
-    departments_titles: set = result_parse_file["result"]["departments_titles"]
-    positions_titles: set = result_parse_file["result"]["positions_titles"]
-    update_organization_departments(organization_id, departments_titles)
-    update_organization_positions(organization_id, positions_titles)
-    result_update = update_organization_employee_positions(organization_id, employees)
-    incorrect_employees.extend(result_update["data"])
+    # departments_titles: set = result_parse_file["result"]["departments_titles"]
+    # positions_titles: set = result_parse_file["result"]["positions_titles"]
+    # update_organization_departments(organization_id, departments_titles)
+    # update_organization_positions(organization_id, positions_titles)
+    # result_update = update_organization_employee_positions(organization_id, employees)
+    # incorrect_employees.extend(result_update["data"])
     columns = [{"field": "fio", "key": "fio", "title": "Сотрудник", "align": "left", "width": 250}, {"field": "reason", "key": "reason", "title": 'Причина ошибки'}]
     result = {
         "colData": columns,
