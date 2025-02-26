@@ -7,7 +7,6 @@ from api.parse_file.normalization import normalize_values
 from api.parse_file.validaiton import check_value
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
-from utils.dates import normalize_dots_date
 
 
 def check_request_data(organization_id, user=None):
@@ -123,6 +122,7 @@ def normalize_employee_data(**kwargs):
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
             result["patronymic"] = " ".join(fio_data[2:])
+    print(result["rate"])
     return result
 
 
