@@ -221,6 +221,9 @@ def create_employee_position(employee_data, employee, department, position, empl
 def update_organization_employee_positions(organization_id: int, employees):
     """
     Обновление и создание новых сотрудников (Employee), трудовых договоров (EmployeePosition)
+    Ищет сотрудника, если нет - создает
+    Ищет активный трудовой договор - обновляет, если нет, ищет архивный, если нет - создает архивный
+    Если не нашло ничего - создает новый трудовой договор
     """
     departments = Department.get_active_departments(organization_id)
     positions = Position.get_active_positions(organization_id)
