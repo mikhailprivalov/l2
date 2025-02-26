@@ -72,9 +72,17 @@ def parse_work_sheet(ws: Worksheet):
                 date_dismissal_idx = cells.index("Дата увольнения")
                 starts = True
         else:
-            normalized_employee_data = normalize_employee_data(employment_form=cells[employment_form_idx], snils=cells[snils_idx], tabel_number=cells[tabel_number_idx],
-                                                               fio=cells[employee_fio_idx], department_title=cells[department_title_idx], position_title=cells[position_title_idx],
-                                                               rate=cells[rate_idx], date_employment=cells[date_employment_idx], date_dismissal=cells[date_dismissal_idx])
+            normalized_employee_data = normalize_employee_data(
+                employment_form=cells[employment_form_idx],
+                snils=cells[snils_idx],
+                tabel_number=cells[tabel_number_idx],
+                fio=cells[employee_fio_idx],
+                department_title=cells[department_title_idx],
+                position_title=cells[position_title_idx],
+                rate=cells[rate_idx],
+                date_employment=cells[date_employment_idx],
+                date_dismissal=cells[date_dismissal_idx],
+            )
             validation_result = validate_employee_data(normalized_employee_data)
             if not validation_result["ok"] and validation_result.get("empty"):
                 continue
