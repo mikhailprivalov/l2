@@ -1,5 +1,4 @@
 import datetime
-from fractions import Fraction
 
 
 def check_not_empty(data):
@@ -21,9 +20,9 @@ def check_max_len(data):
 def check_rate(data):
     value = data["value"]
     if value:
-        if type(value) != float:
+        if not isinstance(value, float):
             return {"ok": False, "message": "не корректно"}
-        elif type(value) == float and value > 1:
+        elif isinstance(value, float) and value > 1:
             return {"ok": False, "message": "больше единицы"}
     return {"ok": True, "message": ""}
 
