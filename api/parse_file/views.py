@@ -667,7 +667,6 @@ def data_research_exam_patient(request, set_research):
         "snils": "СНИЛС",
         **head_research_data,
     }
-
     file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name
 

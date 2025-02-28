@@ -2310,7 +2310,6 @@ def data_xls_save_headers_file(meta_patients, head_data, sheet_name, name_func):
     if name_func == "fill_xls_check_research_exam_data":
         ws = base_data.fill_xls_check_research_exam_data(ws, meta_patients)
     file_dir = save_file_disk(wb)
-
     return file_dir
 
 
