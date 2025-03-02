@@ -624,8 +624,8 @@ def form_02_530(request_data):
     Процедурный лист по 530н приказу
     """
     num_dir = json.loads(request_data["hosp_pk"])
-    ind_card = Napravleniya.objects.get(pk=num_dir)
-    patient_data = ind_card.client.get_data_individual()
+    direction = Napravleniya.objects.get(pk=num_dir)
+    patient_data = direction.client.get_data_individual()
 
     hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_first_num = hosp_nums_obj[0].get("direction")
@@ -706,32 +706,34 @@ def form_02_530(request_data):
     data = get_procedure_by_dir(procedural_obj)
     results_json = json.loads(data.content.decode('utf-8'))
 
-    all_dates = results_json.get('dates')  # только все даты
+    all_dates = results_json.get('dates')
 
     drugs_and_dates = []
 
-    for item in results_json.get('result'):
+    result = results_json.get('result')
+
+    for item in result:
         drug_info_dates = {
             'info': f'{item.get("form_release")} {item.get("drug")} {item.get("method")} {item.get("dosage")}',
         }
-        for item_1, item_2 in item.items():
-            if item_1 == 'dates':
-                for date, time in item_2.items():
-                    dates_list = []
 
-                    for time_2, check in time.items():
-                        if check.get('ok'):
-                            dates_list.append(time_2)
-                    if dates_list:
-                        drug_info_dates[date] = dates_list
+        dates = item['dates']
+        for date, time_slots in dates.items():
+            available_times = [time for time, check in time_slots.items() if check.get('ok')]
+            if available_times:
+                drug_info_dates[date] = available_times
+
         drugs_and_dates.append(drug_info_dates)
+
+    range_coeff = 15
 
     count_table = ceil(len(all_dates) / 15)
 
-    for count in range(count_table):
-        dates_list = []
+    dates_for_table = [Paragraph('', styleTitleDrug) for _ in range(3)]
 
-        dates_on_one_sheet = deepcopy(all_dates[:15])
+    for count in range(count_table):
+
+        dates_on_one_sheet = all_dates[range_coeff * count:range_coeff * (count + 1)]
 
         drugs_title = Paragraph('Лекарственный препарат (наименование, лекарственная форма, дозировка, способ введения (применения), лечебное питание, режим', styleTable)
         start_date = Paragraph('Дата назначения; подпись лечащего врача (врача-специалиста), сделавшего назначение', styleTable)
@@ -739,36 +741,34 @@ def form_02_530(request_data):
         marks = Paragraph(
             'Отметки об исполнении назначения лекарственного препарата, лечебного питания, режима, (дата и время исполнения, подпись медицинского работника, ответственного за исполнение)(время, дата, подпись)',
             styleTable)
-        inner_table = [[drugs_title, start_date, cancel_date, marks]]
 
-        dates_for_table = [VerticalParagraph(f'{x}', style=styleTitleDrug) for x in dates_on_one_sheet]
-        for index in range(3):
-            dates_for_table.insert(index, Paragraph('', styleTitleDrug))
+        dates_for_table.extend([VerticalParagraph(f'{x}', style=styleTitleDrug) for x in dates_on_one_sheet])
+
         dates_for_table.append(Paragraph('Сведения о реакции на применение (при наличии)', styleTable))
-        inner_table.append(dates_for_table)
 
-        regim_row = [Paragraph('Regime', styleTitleDrug)]
-        inner_table.append(regim_row)
-
-        diet_row = [Paragraph('Diet', styleTitleDrug)]
-        inner_table.append(diet_row)
+        inner_table = [
+            [drugs_title, start_date, cancel_date, marks],
+            dates_for_table,
+            [Paragraph('Regime', styleTitleDrug)],
+            [Paragraph('Diet', styleTitleDrug)]
+        ]
 
         for record in drugs_and_dates:
+
             drug_info = Paragraph(record.get('info'), styleTitleDrug)
             drug_start_date = Paragraph(list(record.keys())[1], styleTitleDrug)
             end_date = Paragraph(list(record.keys())[-1], styleTitleDrug)
             drug_row = [drug_info, drug_start_date, end_date]
+
             drug_row.extend(['' for _ in range(len(dates_on_one_sheet))])
 
-            for date in record.keys():
-                if date in all_dates[:15]:
+            for date in list(record.keys())[(range_coeff - 1) * count:(range_coeff - 1) * (count + 1)]:
+                if date in dates_on_one_sheet:
                     mark = ''
                     for time in record.get(date):
                         mark += f'V {time} '
-                    index = all_dates.index(date)
+                    index = dates_on_one_sheet.index(date)
                     drug_row[index + 3] = Paragraph(mark, styleCheckMark)
-
-            del dates_list[:15]
 
             inner_table.append(drug_row)
 
@@ -796,8 +796,6 @@ def form_02_530(request_data):
                 ]
             )
         )
-
-        del all_dates[:15]
 
         objs.append(tbl)
         objs.append(Spacer(1, 15 * mm))
