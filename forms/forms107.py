@@ -337,7 +337,7 @@ def draw_pressure(value, step, x_coord, y_coord):
     return drawing
 
 
-def form_02(request_data):
+def form_02_old(request_data):
     """
     Процедурный лист
     """
@@ -619,7 +619,7 @@ def form_03(request_data):
     return pdf
 
 
-def form_02_530(request_data):
+def form_02(request_data):
     """
     Процедурный лист по 530н приказу
     """
