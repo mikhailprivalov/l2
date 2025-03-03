@@ -41,7 +41,11 @@ def patologistology_buh(data):
                 tmp_data["type_hospital"] = "-"
             result.append(tmp_data.copy())
             tmp_data = tmp_dict_data.copy()
-        tmp_data["direction"] = i.direction_id
+        is_rmis_number = ""
+        if i.rmis_number:
+            is_rmis_number = "e"
+
+        tmp_data["direction"] = f"{i.direction_id} - {is_rmis_number}"
         tmp_data["fin_source"] = i.iss_finsource_title
         tmp_data["doctor_fio"] = f"{i.doctor_family} {i.doctor_name} {i.doctor_patronymic}"
         tmp_data["date_confirm"] = i.date_confirm if i.date_confirm else "-"

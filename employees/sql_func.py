@@ -36,3 +36,60 @@ def get_employees_by_department(department_id: int):
         )
         row = namedtuplefetchall(cursor)
     return row
+
+
+def get_employee_position(org_id: int, department_ids: tuple = None, position_ids: tuple = None, employment_form_ids: tuple = None):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        SELECT 
+        employees_position.id as employee_position_id,
+        employees_typeworktimeemployee.title as employment_form,
+        employees_employee.snils,
+        employees_employeeposition.tabel_number,
+        employees_employee.family as employee_family,
+        employees_employee.name as employee_name,
+        employees_employee.patronymic as employee_patronymic,
+        employees_department.name as department_title,
+        employees_position.name as position_title,
+        employees_employeeposition.rate,
+        employees_employeeposition.date_employment,
+        employees_employeeposition.date_dismissal
+        
+        FROM employees_employeeposition
+        LEFT JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
+        LEFT JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
+        LEFT JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
+        LEFT JOIN employees_typeworktimeemployee on employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
+        
+        WHERE 
+        employees_employee.hospital_id = %(org_id)s
+        
+        AND
+        CASE
+        WHEN %(department_ids)s IS NOT NULL THEN
+          employees_employeeposition.department_id IN %(department_ids)s 
+        ELSE TRUE
+        END
+        
+        AND
+        CASE
+        WHEN %(position_ids)s IS NOT NULL THEN
+          employees_employeeposition.position_id IN %(position_ids)s
+        ELSE TRUE
+        END
+        
+        AND 
+        CASE
+        WHEN %(employment_form_ids)s IS NOT NULL THEN
+          employees_employeeposition.type_work_time_id IN %(employment_form_ids)s
+        ELSE TRUE
+        END
+        
+        ORDER BY employees_employee.family
+
+        """,
+            params={'org_id': org_id, "department_ids": department_ids, "position_ids": position_ids, "employment_form_ids": employment_form_ids},
+        )
+        row = namedtuplefetchall(cursor)
+    return row
