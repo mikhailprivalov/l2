@@ -18,6 +18,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogethe
 from api.procedure_list.views import get_procedure_by_dir
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
+from forms.forms_func import primary_reception_get_data, hosp_extract_get_data
 from laboratory.settings import FONTS_FOLDER
 from api.stationar.stationar_func import hosp_get_hosp_direction, get_temperature_list, get_assignments
 from reportlab.lib import colors
@@ -26,6 +27,28 @@ from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.widgets.markers import makeMarker
 from datetime import datetime
 from math import ceil
+
+
+class VerticalParagraph(Paragraph):
+    """Вертикальный текст в Paragraph"""
+
+    def __init__(self, args, **kwargs):
+        super().__init__(args, **kwargs)
+        self.horizontal_position = -self.style.leading
+
+    def draw(self):
+        canvas = self.canv
+        canvas.rotate(90)
+        canvas.translate(1, self.horizontal_position)
+        super().draw()
+
+    def wrap(self, available_width, _):
+        string_width = self.canv.stringWidth(
+            self.getPlainText(), self.style.fontName, self.style.fontSize
+        )
+        self.horizontal_position = - (available_width + self.style.leading) / 2
+        height, _ = super().wrap(availWidth=1 + string_width, availHeight=available_width)
+        return self.style.leading, height
 
 
 def form_01(request_data):
@@ -314,7 +337,7 @@ def draw_pressure(value, step, x_coord, y_coord):
     return drawing
 
 
-def form_02(request_data):
+def form_02_old(request_data):
     """
     Процедурный лист
     """
@@ -591,6 +614,193 @@ def form_03(request_data):
         first_pages(canvas, doc)
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_02(request_data):
+    """
+    Процедурный лист по 530н приказу
+    """
+    num_dir = json.loads(request_data["hosp_pk"])
+    direction = Napravleniya.objects.get(pk=num_dir)
+    patient_data = direction.client.get_data_individual()
+
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
+    hosp_first_num = hosp_nums_obj[0].get("direction")
+
+    first_inspection = primary_reception_get_data(hosp_first_num)
+    medicament_allergy = first_inspection.get("medicament_allergy")
+    final_diagnos = first_inspection.get("final_diagnos")
+
+    if sys.platform == "win32":
+        locale.setlocale(locale.LC_ALL, "rus_rus")
+    else:
+        locale.setlocale(locale.LC_ALL, "ru_RU.UTF-8")
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=landscape(A4), leftMargin=15 * mm, rightMargin=5 * mm, topMargin=13 * mm, bottomMargin=10 * mm, allowSplitting=1, title="Форма {}".format("Лист назначений и их выполнение")
+    )
+
+    width, height = landscape(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 3.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+
+    styleTable = deepcopy(style)
+    styleTable.alignment = TA_CENTER
+    styleTable.fontSize = 9
+    styleTable.leading = 3.5 * mm
+    styleTable.spaceAfter = 1.0 * mm
+
+    styleTitleDrug = styleSheet["Italic"]
+    styleTitleDrug.alignment = TA_CENTER
+    styleTitleDrug.fontSize = 8
+    styleTitleDrug.leading = 3.5 * mm
+    styleTitleDrug.spaceAfter = 1.0 * mm
+
+    styleCheckMark = deepcopy(style)
+    styleCheckMark.alignment = TA_CENTER
+    styleCheckMark.fontSize = 6.5
+    styleCheckMark.leading = 2.5 * mm
+    styleCheckMark.spaceAfter = 1.0 * mm
+    space_symbol = '&nbsp;'
+    title_page = [
+        Indenter(left=0 * mm),
+        Spacer(1, 2 * mm),
+        Paragraph(f'<font fontname="PTAstraSerifBold" size=13>ЛИСТ НАЗНАЧЕНИЙ И ИХ ВЫПОЛНЕНИЕ {space_symbol*3}</font> ', styleCenter),
+    ]
+
+    objs = []
+
+    objs.extend(title_page)
+    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}  Дата рождения {patient_data["birthday"]}г.', style))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph(f'N медицинской карты {num_dir}  Палата______', styleT))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph(f'Диагноз (основное заболевание): {final_diagnos}', styleT))
+    objs.append(Spacer(1, 2 * mm))
+    objs.append(Paragraph(f'Аллергические реакции на лекарственные препараты, пищевая аллергия или иные виды непереносимости в анамнезе, с указанием типа и вида аллергической реакции: {medicament_allergy}', styleT))
+    objs.append(Spacer(1, 2 * mm))
+
+    procedural = json.dumps({'direction': num_dir})
+    procedural_obj = HttpRequest()
+    procedural_obj._body = procedural
+    procedural_obj.user = request_data["user"]
+    data = get_procedure_by_dir(procedural_obj)
+    results_json = json.loads(data.content.decode('utf-8'))
+
+    all_dates = results_json.get('dates')
+
+    drugs_and_dates = []
+
+    result = results_json.get('result')
+
+    for item in result:
+        drug_info_dates = {
+            'info': f'{item.get("form_release")} {item.get("drug")} {item.get("method")} {item.get("dosage")}',
+        }
+
+        dates = item['dates']
+        for date, time_slots in dates.items():
+            available_times = [time for time, check in time_slots.items() if check.get('ok')]
+            if available_times:
+                drug_info_dates[date] = available_times
+
+        drugs_and_dates.append(drug_info_dates)
+
+    range_coeff = 15
+
+    count_table = ceil(len(all_dates) / 15)
+
+    dates_for_table = [Paragraph('', styleTitleDrug) for _ in range(3)]
+
+    for count in range(count_table):
+
+        dates_on_one_sheet = all_dates[range_coeff * count:range_coeff * (count + 1)]
+
+        drugs_title = Paragraph('Лекарственный препарат (наименование, лекарственная форма, дозировка, способ введения (применения), лечебное питание, режим', styleTable)
+        start_date = Paragraph('Дата назначения; подпись лечащего врача (врача-специалиста), сделавшего назначение', styleTable)
+        cancel_date = Paragraph('Дата отменены; подпись лечащего врача (врача-специалиста), отменившего назначение', styleTable)
+        marks = Paragraph(
+            'Отметки об исполнении назначения лекарственного препарата, лечебного питания, режима, (дата и время исполнения, подпись медицинского работника, ответственного за исполнение)(время, дата, подпись)',
+            styleTable)
+
+        dates_for_table.extend([VerticalParagraph(f'{x}', style=styleTitleDrug) for x in dates_on_one_sheet])
+
+        dates_for_table.append(Paragraph('Сведения о реакции на применение (при наличии)', styleTable))
+
+        inner_table = [
+            [drugs_title, start_date, cancel_date, marks],
+            dates_for_table,
+            [Paragraph('Режим', styleTitleDrug)],
+            [Paragraph('Лечебное питание', styleTitleDrug)]
+        ]
+
+        for record in drugs_and_dates:
+
+            drug_info = Paragraph(record.get('info'), styleTitleDrug)
+            drug_start_date = Paragraph(list(record.keys())[1], styleTitleDrug)
+            end_date = Paragraph(list(record.keys())[-1], styleTitleDrug)
+            drug_row = [drug_info, drug_start_date, end_date]
+
+            drug_row.extend(['' for _ in range(len(dates_on_one_sheet))])
+
+            for date in list(record.keys())[(range_coeff - 1) * count:(range_coeff - 1) * (count + 1)]:
+                if date in dates_on_one_sheet:
+                    mark = ''
+                    for time in record.get(date):
+                        mark += f'V {time} '
+                    index = dates_on_one_sheet.index(date)
+                    drug_row[index + 3] = Paragraph(mark, styleCheckMark)
+
+            inner_table.append(drug_row)
+
+        signature_row = [Paragraph('Подпись медицинского работника, ответственного за контроль исполнения назначений', styleTable)]
+        inner_table.append(signature_row)
+
+        cols_width = [10 * mm for i in range(len(dates_on_one_sheet) + 4)]
+        cols_width[0] = cols_width[1] = cols_width[2] = cols_width[-1] = 30 * mm
+
+        tbl = Table(inner_table, repeatRows=2, colWidths=cols_width, hAlign='LEFT')
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTRE'),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                    ('BOTTOMPADDING', (1, 2), (2, 8), 8 * mm),
+                    ('TOPPADDING', (0, 0), (-1, -1), 1 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('SPAN', (3, 0), (len(dates_on_one_sheet) + 3, 0)),
+                    ('SPAN', (0, 0), (0, 1)),
+                    ('SPAN', (1, 0), (1, 1)),
+                    ('SPAN', (2, 0), (2, 1)),
+                    ('SPAN', (0, len(inner_table) - 1), (2, len(inner_table) - 1)),
+                ]
+            )
+        )
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 15 * mm))
+
+    doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
