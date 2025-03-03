@@ -749,8 +749,8 @@ def form_02_530(request_data):
         inner_table = [
             [drugs_title, start_date, cancel_date, marks],
             dates_for_table,
-            [Paragraph('Regime', styleTitleDrug)],
-            [Paragraph('Diet', styleTitleDrug)]
+            [Paragraph('Режим', styleTitleDrug)],
+            [Paragraph('Лечебное питание', styleTitleDrug)]
         ]
 
         for record in drugs_and_dates:
