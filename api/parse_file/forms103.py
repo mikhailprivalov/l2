@@ -258,7 +258,7 @@ def update_organization_employee_positions(organization_id: int, employees):
         current_position = positions.get(name=employee["position_title"])
         current_employment_form = employment_forms.filter(title=employee["employment_form"]).first()
         if not current_employment_form:
-            incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вид занятости в справочнике ({employee['employment_form']})"})
+            incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вида занятости в справочнике ({employee['employment_form']})"})
             continue
         current_active_employee_position = EmployeePosition.find_employee_position(True, current_employee, current_position, current_department, employee["tabel_number"])
         if current_active_employee_position:
