@@ -654,7 +654,7 @@ def data_research_exam_patient(request, set_research):
     )
     for pr in patient_results:
         if meta_patients.get(pr.client_id):
-            meta_patients[pr.client_id]["researches"][pr.research_id] = 1
+            meta_patients[pr.client_id]["researches"][pr.research_id] = pr.date_confirm
 
     head_data = {
         "num_card": "№ карты",
@@ -667,7 +667,6 @@ def data_research_exam_patient(request, set_research):
         "snils": "СНИЛС",
         **head_research_data,
     }
-
     file_name = data_xls_save_headers_file(meta_patients, head_data, "Пройденые услуги", "fill_xls_check_research_exam_data")
     return file_name
 
