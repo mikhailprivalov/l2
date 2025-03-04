@@ -26,7 +26,8 @@ class Command(BaseCommand):
             for row in result_upload["result"]["data"]:
                 result_ws.append([row["fio"], row["reason"]])
             dir_tmp = SettingManager.get("dir_param")
-            result_wb.save(f"{dir_tmp}/result_import_employees.xlsx")
-            self.stdout.write(f"Успешная загрузка сотрудников, результаты доступны в {dir_tmp}")
+            save_path = f"{dir_tmp}/result_import_employees.xlsx"
+            result_wb.save(save_path)
+            self.stdout.write(f"Успешная загрузка сотрудников, результаты доступны в {save_path}")
         else:
             self.stdout.write(f"Ошибка загрузки сотрудников: {result_upload['message']}")
