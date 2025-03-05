@@ -110,6 +110,7 @@ urlpatterns = [
     path('cash-register/', include('api.cash_registers.urls')),
     path('statement/', include('api.statement.urls')),
     path('working-time/', include('api.working_time.urls')),
+    path('employees/', include('api.employees.urls')),
     path('get-prices', views.get_prices),
     path('get-price-data', views.get_price_data),
     path('update-price', views.update_price),

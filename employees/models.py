@@ -5,7 +5,7 @@ import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
-from employees.sql_func import get_employees_by_department, get_work_time_by_document
+from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
@@ -203,6 +203,13 @@ class Position(models.Model):
         if Position.objects.filter(hospital_id=hospital_id, name=name).exclude(id=current_id).exists():
             raise ValueError('Должность с таким названием уже существует')
 
+    @staticmethod
+    def get_active(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        positions = [{"id": position.pk, "label": position.name} for position in Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        return positions or []
+
     class Meta:
         verbose_name = 'Должность'
         verbose_name_plural = 'Должности'
@@ -318,7 +325,7 @@ class Department(models.Model):
         if not hospital_id:
             hospital_id = Hospitals.objects.get(is_default=True)
         departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
-        return departments
+        return departments or []
 
     class Meta:
         verbose_name = 'Отдел'
@@ -339,6 +346,11 @@ class TypeWorkTimeEmployee(models.Model):
     class Meta:
         verbose_name = 'Тип занятости'
         verbose_name_plural = 'Типы занятости'
+
+    @staticmethod
+    def get_active():
+        typesWorkTime = [{"id": typeWorkTime.pk, "label": typeWorkTime.title} for typeWorkTime in TypeWorkTimeEmployee.objects.all().order_by('title')]
+        return typesWorkTime or []
 
 
 class EmployeePosition(models.Model):
@@ -435,6 +447,29 @@ class EmployeePosition(models.Model):
             raise ValueError('Такая должность уже существует')
         if rate < 0:
             raise ValueError('Ставка не может быть отрицательной')
+
+    @staticmethod
+    def get_employee_position(org_id: int, department_ids: list, position_ids: list, employment_form_ids: list):
+        department_ids_tuple = tuple(department_ids) if department_ids else tuple([None])
+        position_ids_tuple = tuple(position_ids) if position_ids else tuple([None])
+        employment_form_ids_tuple = tuple(employment_form_ids) if employment_form_ids else tuple([None])
+        employees = get_employee_position(org_id, department_ids_tuple, position_ids_tuple, employment_form_ids_tuple)
+        result = [
+            {
+                "employeeId": employee.employee_position_id,
+                "employmentForm": employee.employment_form,
+                "snils": employee.snils,
+                "tabelNumber": employee.tabel_number,
+                "employeeFio": f"{employee.employee_family} {employee.employee_name} {employee.employee_patronymic}",
+                "department": employee.department_title,
+                "position": employee.position_title,
+                "rate": employee.rate,
+                "dateEmployment": employee.date_employment.strftime("%d.%m.%Y") if employee.date_employment else None,
+                "dateDismissal": employee.date_dismissal.strftime("%d.%m.%Y") if employee.date_dismissal else None,
+            }
+            for employee in employees
+        ]
+        return result
 
     class Meta:
         verbose_name = 'Должность сотрудника'
