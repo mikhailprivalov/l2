@@ -7,7 +7,7 @@ import simplejson as json
 from django.http import HttpRequest
 from reportlab.lib.colors import black
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT
-from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib.pagesizes import A4, landscape, portrait
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
@@ -53,7 +53,7 @@ class VerticalParagraph(Paragraph):
         return self.style.leading, height
 
 
-def form_01(request_data):
+def form_01_old(request_data):
     """
     Температурный лист (АД, Пульс)
     на входе: type=107.01&hosps_pk=[113110]&titles=['Температура (°C)', 'Пульс', 'Давление']
@@ -616,6 +616,174 @@ def form_03(request_data):
         first_pages(canvas, doc)
 
     doc.build(objs, onFirstPage=first_pages, onLaterPages=later_pages)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return pdf
+
+
+def form_01(request_data):
+    """
+    Температурный лист по 530н приказу
+    """
+    num_dir = json.loads(request_data["hosp_pks"])
+    direction_obj = Napravleniya.objects.get(pk=num_dir[0])
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir[0])
+    hosp_nums = ''
+    for i in hosp_nums_obj:
+        hosp_nums = hosp_nums + ' - ' + str(i.get('direction'))
+
+    ind_card = direction_obj.client
+    patient_data = ind_card.get_data_individual()
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, pagesize=portrait(A4), leftMargin=5 * mm, rightMargin=5 * mm, topMargin=13 * mm, bottomMargin=10 * mm,
+        allowSplitting=1, title="Форма {}".format("Лист регистрации показателей жизненно важных функций организма")
+    )
+
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 3.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTable = deepcopy(style)
+    styleTable.alignment = TA_CENTER
+    styleTable.fontSize = 8
+    styleTable.leading = 3.5 * mm
+    styleTable.spaceAfter = 1.0 * mm
+
+    styleCenter = deepcopy(style)
+    styleCenter.alignment = TA_CENTER
+    styleCenter.fontSize = 12
+    styleCenter.leading = 15
+    styleCenter.spaceAfter = 1 * mm
+
+    styleCheckMark = deepcopy(style)
+    styleCheckMark.alignment = TA_CENTER
+    styleCheckMark.fontSize = 6.5
+    styleCheckMark.leading = 2.5 * mm
+    styleCheckMark.spaceAfter = 1.0 * mm
+
+    range_coeff = 18
+    data_temp = get_temperature_list(num_dir[0])
+    temperature_data = data_temp.get('Температура (°C)')
+    count_table = ceil(len(temperature_data.get('xtext')) / range_coeff)
+
+    objs = []
+
+    date_temperature_with_data = {}
+    for date, value in zip(temperature_data.get('xtext'), temperature_data.get('data')):
+        date_only = date.split(' ')[0]
+        time_only = date.split(' ')[1]
+        if date_only not in date_temperature_with_data:
+            date_temperature_with_data[date_only] = [f'{time_only} {value}']
+        else:
+            date_temperature_with_data[date_only].append(f'{time_only} {value}')
+
+    dates = [date for date in date_temperature_with_data for _ in date_temperature_with_data[date]]
+
+    times_values = [time for item in date_temperature_with_data.values() for time in item]
+
+    day_numbers = [Paragraph('', styleCheckMark) for _ in range(len(times_values))]
+    day_number = 0
+    for day in dates:
+        if day in date_temperature_with_data.keys():
+            index = list(date_temperature_with_data.keys()).index(day)
+            day_numbers[day_number] = Paragraph(f'{index + 1}', styleCheckMark)
+        day_number += 1
+
+    values_matrix = [[Paragraph('', styleCheckMark) for _ in range(len(times_values))] for _ in range(8)]
+    time_index = 0
+    for time_value in times_values:
+        temperature = time_value.split(' ')[1]
+        if float(temperature) >= 41:
+            values_matrix[0][time_index] = Paragraph(temperature, styleCheckMark)
+        elif 40 <= float(temperature) < 41:
+            values_matrix[1][time_index] = Paragraph(temperature, styleCheckMark)
+        elif 39 <= float(temperature) < 40:
+            values_matrix[2][time_index] = Paragraph(temperature, styleCheckMark)
+        elif 38 <= float(temperature) < 39:
+            values_matrix[3][time_index] = Paragraph(temperature, styleCheckMark)
+        elif 37 <= float(temperature) < 38:
+            values_matrix[4][time_index] = Paragraph(temperature, styleCheckMark)
+        elif 36 <= float(temperature) < 37:
+            values_matrix[5][time_index] = Paragraph(temperature, styleCheckMark)
+        elif 35 <= float(temperature) < 36:
+            values_matrix[6][time_index] = Paragraph(temperature, styleCheckMark)
+        elif float(temperature) < 35:
+            values_matrix[7][time_index] = Paragraph(temperature, styleCheckMark)
+        time_index += 1
+
+    for count in range(count_table):
+        title_page = [
+            Indenter(left=0 * mm),
+            Spacer(1, 2 * mm),
+            Paragraph('<font fontname="PTAstraSerifBold" size=13>ЛИСТ РЕГИСТРАЦИИ ПОКАЗАТЕЛЕЙ ЖИЗНЕННО ВАЖНЫХ ФУНКЦИЙ ОРГАНИЗМА</font><br/>', styleCenter),
+        ]
+        objs.extend(title_page)
+        objs.append(Spacer(1, 3 * mm))
+        objs.extend([Paragraph('TITLE', styleT),
+                     Spacer(1, 2 * mm),
+                     Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}, возраст {patient_data["age"]}, рост пациента, {patient_data["height"]} см', styleT),
+                     Spacer(1, 2 * mm),
+                     ])
+
+        inner_table = [
+            [Paragraph('Сутки пребывания в стационаре, дневном стационаре', styleTable)] + day_numbers[range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('Дата', styleTable)] + [Paragraph(f'{date}', styleCheckMark) for date in dates][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('Время', styleTable)] + [Paragraph(f'{time.split(" ")[0]}', styleCheckMark) for time in times_values][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('Температура тела, (С°)', styleTable)],
+            [Paragraph('выше 41', styleTable)] + values_matrix[0][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('40 - 40,9', styleTable)] + values_matrix[1][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('39 - 39,9', styleTable)] + values_matrix[2][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('38 - 38,9', styleTable)] + values_matrix[3][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('37 - 37,9', styleTable)] + values_matrix[4][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('36 - 36,9', styleTable)] + values_matrix[5][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('35 - 35,9', styleTable)] + values_matrix[6][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('ниже 35', styleTable)] + values_matrix[7][range_coeff * count:range_coeff * (count + 1)],
+            [Paragraph('Частота дыхания', styleTable)],
+            [Paragraph('SpO2, %', styleTable)],
+            [Paragraph('Масса тела (кг)', styleTable)],
+            [Paragraph('Выпито жидкости (мл)', styleTable)],
+            [Paragraph('Введено жидкостей (в мл) парентерально', styleTable)],
+            [Paragraph('Суточный объем мочи (мл)', styleTable)],
+            [Paragraph('Стул', styleTable)],
+        ]
+
+        cols_width = [10 * mm for _ in range(len(inner_table))]
+        cols_width[0] = 20 * mm
+
+        tbl = Table(inner_table, repeatRows=2, colWidths=cols_width, hAlign='LEFT')
+        tbl.setStyle(
+            TableStyle(
+                [
+                    ('GRID', (0, 0), (-1, -1), 1.0, colors.black),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTRE'),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 3 * mm),
+                    ('BOTTOMPADDING', (1, 2), (2, 8), 8 * mm),
+                    ('TOPPADDING', (0, 0), (-1, -1), 1 * mm),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+                ]
+            )
+        )
+
+        objs.append(tbl)
+        objs.append(Spacer(1, 55 * mm))
+
+    doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
