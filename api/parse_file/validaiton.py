@@ -41,7 +41,7 @@ def check_date(data):
 
 def check_values(value: str, checks: list, value_len: int, return_key: str):
     """
-    Перебирает проверки
+    Перебирает проверки, на входе list с названиями
     not_empty - обязательно значение
     """
     for check in checks:
