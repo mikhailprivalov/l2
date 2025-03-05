@@ -2,7 +2,7 @@ from typing import Union
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from api.parse_file.normalization import normalize_values
-from api.parse_file.validaiton import check_values
+from api.parse_file.validation import check_values
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
 
