@@ -55,9 +55,5 @@ def normalize_values(value: str, actions: list):
         return None
     for action in actions:
         normalize_function = import_string(f"api.parse_file.normalization.{action}")
-        if normalize_function:
-            try:
-                value = normalize_function(value)
-            except Exception:
-                return value
+        value = normalize_function(value)
     return value
