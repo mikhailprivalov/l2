@@ -1,4 +1,6 @@
 import datetime
+
+import petrovna
 from django.utils.module_loading import import_string
 
 
@@ -35,6 +37,17 @@ def check_date(data):
             datetime.datetime.strptime(value, '%Y-%m-%d')
         except ValueError:
             return {"ok": False, "message": "неверная/несуществующая дата"}
+    return {"ok": True, "message": ""}
+
+
+def check_snils(data):
+    value = data["value"]
+    if value:
+        result_check = petrovna.validate_snils(value)
+        if isinstance(result_check, bool) and not result_check:
+            return {"ok": False, "message": "не корректный"}
+        elif isinstance(result_check, tuple):
+            return {"ok": False, "message": "не корректный"}
     return {"ok": True, "message": ""}
 
 

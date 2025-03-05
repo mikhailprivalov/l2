@@ -1,4 +1,6 @@
 from typing import Union
+
+import petrovna
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from api.parse_file.normalization import normalize_values
@@ -162,7 +164,7 @@ def validate_employee_data(normalized_data):
     }
     check_lists = {
         "employment_form": ["not_empty", "max_len"],
-        "snils": ["not_empty", "max_len"],
+        "snils": ["not_empty", "max_len", "snils"],
         "tabel_number": ["not_empty", "max_len"],
         "fio": ["not_empty", "max_len"],
         "department_title": ["not_empty", "max_len"],
