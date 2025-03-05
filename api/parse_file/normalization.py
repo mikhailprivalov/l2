@@ -57,8 +57,6 @@ def normalize_values(value: str, actions: list):
             if normalize_function:
                 try:
                     value = normalize_function(value)
-                    if not value:
-                        return None
                 except Exception:
                     return value
     else:
