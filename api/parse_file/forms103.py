@@ -37,7 +37,7 @@ def parse_work_sheet(ws: Worksheet):
     """
     Разбор xlsx листа из файла
     """
-    result = {"ok": True, "message": "", "result": {}}
+    result = {"ok": True, "message": ""}
     need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
     starts = False
     employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = (
@@ -93,7 +93,7 @@ def parse_work_sheet(ws: Worksheet):
             positions_titles.add(normalized_employee_data["position_title"])
             employees.append(normalized_employee_data)
     if not starts:
-        return {"ok": False, "result": {}, "message": "Не найдены колонка 'Табельный номер'"}
+        return {"ok": False, "message": "Не найдены колонка 'Табельный номер'", "result": {}}
     result["result"] = {"employees": employees, "incorrect_employees": incorrect_employees, "departments_titles": departments_titles, "positions_titles": positions_titles}
     return result
 
