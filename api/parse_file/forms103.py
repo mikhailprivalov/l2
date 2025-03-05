@@ -1,6 +1,4 @@
 from typing import Union
-
-from django.utils.module_loading import import_string
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from api.parse_file.normalization import normalize_values
