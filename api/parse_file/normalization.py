@@ -60,7 +60,7 @@ def normalize_values(value: str, actions: list):
                     if not value:
                         return None
                 except Exception:
-                    return None
+                    return value
     else:
         return None
     return value
