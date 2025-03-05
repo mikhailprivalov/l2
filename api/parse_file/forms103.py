@@ -3,7 +3,7 @@ from typing import Union
 from django.utils.module_loading import import_string
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-from api.parse_file.normalization import string_not_empty
+from api.parse_file.normalization import normalize_values
 from api.parse_file.validaiton import check_values
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
@@ -128,23 +128,10 @@ def normalize_employee_data(**kwargs):
     }
 
     for key in kwargs.keys():
-        value = kwargs[key]
         actions = actions_list.get(key)
-        if string_not_empty(value) and actions:
-            tmp_value = value
-            for action in actions:
-                normalize_function = import_string(f"api.parse_file.normalization.{action}")
-                try:
-                    tmp_value = normalize_function(tmp_value)
-                    if not tmp_value:
-                        result[key] = None
-                        break
-                except Exception:
-                    result[key] = None
-                    break
-            result[key] = tmp_value
-        else:
-            result[key] = None
+        if actions:
+            action_result = normalize_values(kwargs[key], actions)
+            result[key] = action_result
 
     if result["fio"]:
         fio_data = result["fio"].split(" ")
