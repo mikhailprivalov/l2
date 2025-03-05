@@ -52,16 +52,15 @@ def normalize_values(value: str, actions: list):
     Перебирает действия по нормализации
     """
     if string_not_empty(value):
-        tmp_value = value
         for action in actions:
             normalize_function = import_string(f"api.parse_file.normalization.{action}")
             if normalize_function:
                 try:
-                    tmp_value = normalize_function(tmp_value)
-                    if not tmp_value:
+                    value = normalize_function(value)
+                    if not value:
                         return None
                 except Exception:
                     return None
     else:
         return None
-    return tmp_value
+    return value
