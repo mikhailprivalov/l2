@@ -84,9 +84,9 @@ def parse_work_sheet(ws: Worksheet):
                 date_dismissal=cells[date_dismissal_idx],
             )
             validation_result = validate_employee_data(normalized_employee_data)
-            if not validation_result["ok"] and validation_result.get("empty"):
+            if not validation_result.get("ok") and validation_result.get("empty"):
                 continue
-            if not validation_result["ok"]:
+            if not validation_result.get("ok"):
                 incorrect_employees.append(validation_result["data"])
                 continue
             departments_titles.add(normalized_employee_data["department_title"])
