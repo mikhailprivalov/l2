@@ -1,3 +1,4 @@
+import re
 from fractions import Fraction
 
 from django.utils.module_loading import import_string
@@ -5,17 +6,12 @@ from django.utils.module_loading import import_string
 from utils.dates import normalize_dots_date
 
 
-def remove_double_spaces(text: str, return_list: bool = False, no_join: bool = False):
+def remove_double_spaces(text: str):
     """
-    Удаление двойных пробелов и пробелов в начале и конце строки
+    Удаление "лишних" пробелов
     """
-    text_list = text.split(" ")
-    text_list_normalized = [word for word in text_list if word.strip()]
-    if return_list:
-        result = text_list_normalized
-    else:
-        result = " ".join(text_list_normalized)
-    return result
+    text = re.sub(" +", " ", text)
+    return text
 
 
 def string_not_empty(value) -> bool:
@@ -42,7 +38,8 @@ def normalize_date(value: str):
     """
     Нормализует дату, на входе str в %Y-%m-%d %HH:%MM, или %d.%m.%Y
     """
-    value_in_list = remove_double_spaces(value, True)
+    value_within_spaces = remove_double_spaces(value)
+    value_in_list = value_within_spaces.split(" ")
     normalized_value = normalize_dots_date(value_in_list[0])
     return normalized_value
 
