@@ -28,6 +28,8 @@ from reportlab.graphics.widgets.markers import makeMarker
 from datetime import datetime
 from math import ceil
 
+from utils.dates import normalize_date
+
 
 class VerticalParagraph(Paragraph):
     """Вертикальный текст в Paragraph"""
@@ -690,7 +692,7 @@ def form_02(request_data):
     objs = []
 
     objs.extend(title_page)
-    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}  Дата рождения {patient_data["birthday"]}г.', style))
+    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}  Дата рождения {normalize_date(patient_data["birthday"])}г.', style))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph(f'N медицинской карты {num_dir}  Палата______', styleT))
     objs.append(Spacer(1, 2 * mm))
