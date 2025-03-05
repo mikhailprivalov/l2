@@ -290,12 +290,12 @@ def form_01(request_data):
     organization_id = request_data.get("entity_id")
     user = request_data.get("user")
     result_request_check = check_request_data(organization_id, user)
-    if not result_request_check["ok"]:
+    if not result_request_check.get("ok"):
         return result_request_check
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
     result_parse_file = parse_work_sheet(ws)
-    if not result_parse_file["ok"]:
+    if not result_parse_file.get("ok"):
         return result_parse_file
     employees: list = result_parse_file["result"]["employees"]
     incorrect_employees: list = result_parse_file["result"]["incorrect_employees"]
