@@ -16,12 +16,12 @@ def check_request_data(organization_id, user=None):
     result = {"ok": True, "message": ""}
     organization: Union[Hospitals, None] = Hospitals.objects.filter(pk=organization_id).first()
     if not organization:
-        result = {"ok": False, "result": {}, "message": "Такой организации нет"}
+        result = {"ok": False, "message": "Такой организации нет"}
     elif user:
         user_organization: Union[Hospitals, None] = user.doctorprofile.get_hospital()
         user_is_admin = user.is_superuser
         if user_organization.pk != organization.pk and user_is_admin is False:
-            result = {"ok": False, "result": {}, "message": "Запрещено передавать не свою организацию"}
+            result = {"ok": False, "message": "Запрещено передавать не свою организацию"}
     return result
 
 
