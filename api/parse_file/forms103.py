@@ -126,7 +126,7 @@ def normalize_employee_data(**kwargs):
     }
 
     for key in kwargs.keys():
-        action = actions.get(key, None)
+        action = actions.get(key)
         if action:
             action_result = normalize_values(kwargs[key], action)
             result[key] = action_result
