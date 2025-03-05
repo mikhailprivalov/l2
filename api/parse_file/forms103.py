@@ -81,7 +81,7 @@ def parse_work_sheet(ws: Worksheet):
                 "position_title": cells[position_title_idx],
                 "rate": cells[rate_idx],
                 "date_employment": cells[date_employment_idx],
-                "date_dismissal": cells[date_dismissal_idx]
+                "date_dismissal": cells[date_dismissal_idx],
             }
             normalized_employee_data = normalize_employee_data(employee_data)
             validation_result = validate_employee_data(normalized_employee_data)
