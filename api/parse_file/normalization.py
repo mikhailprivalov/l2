@@ -43,30 +43,3 @@ def normalize_date(value: str):
     value_in_list = remove_double_spaces(value, True)
     normalized_value = normalize_dots_date(value_in_list[0])
     return normalized_value
-
-
-def normalize_values(value: str, actions: list):
-    """
-    Перебирает действия по нормализации
-    """
-    normalize_funcs = {
-        "remove_double_spaces": remove_double_spaces,
-        "normalize_snils": normalize_snils,
-        "normalize_rate": normalize_rate,
-        "normalize_date": normalize_date,
-    }
-
-    if string_not_empty(value):
-        tmp_value = value
-        for action in actions:
-            normalize_func = normalize_funcs.get(action)
-            if normalize_func:
-                try:
-                    tmp_value = normalize_func(tmp_value)
-                    if not tmp_value:
-                        return None
-                except Exception:
-                    return None
-    else:
-        return None
-    return tmp_value
