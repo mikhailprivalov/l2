@@ -95,7 +95,7 @@ def parse_work_sheet(ws: Worksheet):
             positions_titles.add(normalized_employee_data["position_title"])
             employees.append(normalized_employee_data)
     if not starts:
-        return {"ok": False, "message": "Не найдены колонка 'Табельный номер'", "result": {}}
+        return {"ok": False, "message": "Не найдена колонка 'Табельный номер'", "result": {}}
     result["result"] = {"employees": employees, "incorrect_employees": incorrect_employees, "departments_titles": departments_titles, "positions_titles": positions_titles}
     return result
 
