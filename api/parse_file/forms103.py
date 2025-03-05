@@ -174,8 +174,8 @@ def validate_employee_data(normalized_data):
         "date_dismissal": ["date"],
     }
     result = {"ok": True, "data": {}}
-    fio = normalized_data["fio"]
-    snils = normalized_data["snils"]
+    fio = normalized_data.get("fio")
+    snils = normalized_data.get("snils")
     name_local = fio if fio else snils
     errors = []
     if not name_local:
@@ -186,8 +186,8 @@ def validate_employee_data(normalized_data):
         value_len = values_lens.get(key)
         ru_key = russian_keys.get(key)
         check_result = check_values(normalized_data[key], checks, value_len, ru_key)
-        if not check_result["ok"]:
-            errors.append(check_result["message"])
+        if not check_result.get("ok"):
+            errors.append(check_result.get("message"))
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}, "empty": False}
     return result
