@@ -1,8 +1,6 @@
 import re
 from fractions import Fraction
-
 from django.utils.module_loading import import_string
-
 from utils.dates import normalize_dots_date
 
 
