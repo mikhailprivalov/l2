@@ -635,6 +635,10 @@ def form_01(request_data):
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
 
+    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
+    hosp_first_num = hosp_nums_obj[0].get("direction")
+    first_inspection = primary_reception_get_data(hosp_first_num)
+
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
     else:
@@ -737,7 +741,7 @@ def form_01(request_data):
         objs.append(Spacer(1, 3 * mm))
         objs.extend([Paragraph('TITLE', styleT),
                      Spacer(1, 2 * mm),
-                     Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}, возраст {patient_data["age"]}, рост пациента, {patient_data["height"]} см', styleT),
+                     Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}, возраст {patient_data["age"]}, рост пациента, {first_inspection["height"]} см', styleT),
                      Spacer(1, 2 * mm),
                      ])
 
