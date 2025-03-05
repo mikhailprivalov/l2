@@ -1,5 +1,7 @@
 import datetime
 
+from django.utils.module_loading import import_string
+
 
 def check_not_empty(data):
     value = data["value"]
@@ -42,20 +44,9 @@ def check_values(value: str, checks: list, value_len: int, return_key: str):
     Перебирает проверки
     not_empty - обязательно значение
     """
-    checks_func = {
-        "not_empty": check_not_empty,
-        "max_len": check_max_len,
-        "rate": check_rate,
-        "date": check_date,
-    }
-
     for check in checks:
-        check_func = checks_func.get(check, None)
-        if check_func:
-            try:
-                result = check_func({"value": value, "max_len": value_len})
-                if not result["ok"]:
-                    return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
-            except Exception as e:
-                return {"ok": False, "message": f"Ошибка проверки, {e}"}
+        check_function = import_string(f"api.parse_file.validation.check_{check}")
+        result = check_function({"value": value, "max_len": value_len})
+        if not result["ok"]:
+            return {"ok": result["ok"], "message": f"{return_key}: {result['message']}"}
     return {"ok": True, "message": ""}
