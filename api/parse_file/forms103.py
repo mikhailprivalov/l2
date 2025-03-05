@@ -1,6 +1,4 @@
 from typing import Union
-
-import petrovna
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from api.parse_file.normalization import normalize_values
