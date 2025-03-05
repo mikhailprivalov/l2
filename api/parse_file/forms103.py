@@ -297,10 +297,11 @@ def form_01(request_data):
     result_parse_file = parse_work_sheet(ws)
     if not result_parse_file.get("ok"):
         return result_parse_file
-    employees: list = result_parse_file["result"]["employees"]
-    incorrect_employees: list = result_parse_file["result"]["incorrect_employees"]
-    departments_titles: set = result_parse_file["result"]["departments_titles"]
-    positions_titles: set = result_parse_file["result"]["positions_titles"]
+    data_result_parse = result_parse_file.get("result")
+    employees: list = data_result_parse.get("employees")
+    incorrect_employees: list = data_result_parse.get("incorrect_employees")
+    departments_titles: set = data_result_parse.get("departments_titles")
+    positions_titles: set = data_result_parse.get("positions_titles")
     update_organization_departments(organization_id, departments_titles)
     update_organization_positions(organization_id, positions_titles)
     result_update = update_organization_employee_positions(organization_id, employees)
