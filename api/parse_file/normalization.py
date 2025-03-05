@@ -51,14 +51,13 @@ def normalize_values(value: str, actions: list):
     """
     Перебирает действия по нормализации
     """
-    if string_not_empty(value):
-        for action in actions:
-            normalize_function = import_string(f"api.parse_file.normalization.{action}")
-            if normalize_function:
-                try:
-                    value = normalize_function(value)
-                except Exception:
-                    return value
-    else:
+    if not string_not_empty(value):
         return None
+    for action in actions:
+        normalize_function = import_string(f"api.parse_file.normalization.{action}")
+        if normalize_function:
+            try:
+                value = normalize_function(value)
+            except Exception:
+                return value
     return value
