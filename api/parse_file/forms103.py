@@ -183,8 +183,8 @@ def validate_employee_data(normalized_data):
         return result
     for key in normalized_data.keys():
         checks = check_lists.get(key, [])
-        value_len = values_lens.get(key, None)
-        ru_key = russian_keys.get(key, None)
+        value_len = values_lens.get(key)
+        ru_key = russian_keys.get(key)
         check_result = check_values(normalized_data[key], checks, value_len, ru_key)
         if not check_result["ok"]:
             errors.append(check_result["message"])
