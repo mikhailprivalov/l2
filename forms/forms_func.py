@@ -435,6 +435,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'Группа крови',
         'Резус принадлежность',
         'Вес',
+        'Рост',
         'Основной диагноз (описание)',
         'Основной диагноз по МКБ',
         'Осложнение основного диагноза (описание)',
@@ -546,6 +547,9 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
                 continue
             if i[3] == 'Вес':
                 weight = i[2]
+                continue
+            if i[3] == 'Рост':
+                height = i[2]
                 continue
             if i[3] == 'Основной диагноз (описание)':
                 final_diagnos = i[2]
@@ -668,6 +672,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'blood_group': blood_group,
         'resus_factor': resus_factor,
         'weight': weight,
+        'height': height,
         'final_diagnos': final_diagnos,
         'other_diagnos': other_diagnos,
         'near_diagnos': near_diagnos,
