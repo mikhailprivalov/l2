@@ -77,4 +77,5 @@ urlpatterns = [
     path('send-messages/', include('integration_framework.send_messages.urls')),
     path('employees/', include('integration_framework.employees.urls')),
     path('statistic/', include('integration_framework.statistic.urls')),
+    path('feedback/', include('integration_framework.feedback.urls')),
 ]
