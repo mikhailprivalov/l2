@@ -656,12 +656,12 @@ def form_01(request_data):
     width, height = portrait(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
     styleT.fontSize = 10
     styleT.leading = 3.5 * mm
-    styleT.face = 'PTAstraSerifReg'
 
     styleTable = deepcopy(style)
     styleTable.alignment = TA_CENTER
@@ -824,12 +824,12 @@ def form_02(request_data):
     width, height = landscape(A4)
     styleSheet = getSampleStyleSheet()
     style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
 
     styleT = deepcopy(style)
     styleT.alignment = TA_LEFT
     styleT.fontSize = 10
     styleT.leading = 3.5 * mm
-    styleT.face = 'PTAstraSerifReg'
 
     styleCenter = deepcopy(style)
     styleCenter.alignment = TA_CENTER
@@ -843,7 +843,7 @@ def form_02(request_data):
     styleTable.leading = 3.5 * mm
     styleTable.spaceAfter = 1.0 * mm
 
-    styleTitleDrug = styleSheet["Italic"]
+    styleTitleDrug = deepcopy(style)
     styleTitleDrug.alignment = TA_CENTER
     styleTitleDrug.fontSize = 8
     styleTitleDrug.leading = 3.5 * mm
