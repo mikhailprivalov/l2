@@ -69,6 +69,15 @@
         </div>
       </div>
     </div>
+    <div class="flex">
+      <UploadFileModal
+        :types-file="['XLSX']"
+        :forms-file="['103.01']"
+        :show-results="true"
+        :entity-id="filters.organizationId"
+        @uploadSuccess="getEmployees"
+      />
+    </div>
     <div class="search">
       <label>Поиск</label>
       <input
@@ -81,7 +90,7 @@
       <VeTable
         :columns="columns"
         :table-data="employeesPagination"
-        max-height="calc(100vh - 241px)"
+        max-height="calc(100vh - 263px)"
       />
       <div
         v-show="employeesPagination.length === 0"
@@ -121,6 +130,7 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import 'vue-easytable/libs/theme-default/index.css';
 import ruRu from '@/locales/ve';
+import UploadFileModal from '@/modals/UploadFileModal.vue';
 
 VeLocale.use(ruRu);
 
@@ -269,6 +279,9 @@ const employeesPagination = computed(() => filteredEmployees.value.slice((page.v
 }
 .filter-item {
   margin: 0 5px;
+}
+.flex {
+  display: flex;
 }
 .search {
   margin-bottom: 10px;

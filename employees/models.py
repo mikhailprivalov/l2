@@ -112,6 +112,18 @@ class Employee(models.Model):
         if Employee.objects.filter(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic).exclude(id=current_id).exists():
             raise ValueError('Такой сотрудник уже существует')
 
+    @staticmethod
+    def find_by_snils(snils: str, hospital_id: int):
+        employee = Employee.objects.filter(snils=snils, hospital_id=hospital_id).first()
+        return employee
+
+    @staticmethod
+    def create_employee(family, name, patronymic, snils, hospital_id: int, return_new: bool = False):
+        new_employee = Employee(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic, snils=snils)
+        new_employee.save()
+        if return_new:
+            return new_employee
+
     class Meta:
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
@@ -209,6 +221,29 @@ class Position(models.Model):
             hospital_id = Hospitals.objects.get(is_default=True)
         positions = [{"id": position.pk, "label": position.name} for position in Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
         return positions or []
+
+    @staticmethod
+    def get_active_titles(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        titles = set(Position.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
+        return titles
+
+    @staticmethod
+    def get_active_positions(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        positions = Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
+        return positions
+
+    @staticmethod
+    def create_position(name: str, hospital_id: int = None, return_new: bool = False):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        new_position = Position(hospital_id=hospital_id, name=name, is_active=True)
+        new_position.save()
+        if return_new:
+            return new_position
 
     class Meta:
         verbose_name = 'Должность'
@@ -326,6 +361,29 @@ class Department(models.Model):
             hospital_id = Hospitals.objects.get(is_default=True)
         departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
         return departments or []
+
+    @staticmethod
+    def get_active_titles(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        titles = set(Department.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
+        return titles
+
+    @staticmethod
+    def get_active_departments(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        departments = Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
+        return departments
+
+    @staticmethod
+    def create_department(name: str, hospital_id: int = None, return_new: bool = False):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        new_department = Department(hospital_id=hospital_id, name=name, is_active=True)
+        new_department.save()
+        if return_new:
+            return new_department
 
     class Meta:
         verbose_name = 'Отдел'
@@ -470,6 +528,11 @@ class EmployeePosition(models.Model):
             for employee in employees
         ]
         return result
+
+    @staticmethod
+    def find_employee_position(active: True, employee: Employee, position: Position, deparment: Department, tabel_number: str):
+        employee_position = EmployeePosition.objects.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
+        return employee_position
 
     class Meta:
         verbose_name = 'Должность сотрудника'
