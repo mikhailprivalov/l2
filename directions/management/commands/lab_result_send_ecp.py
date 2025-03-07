@@ -17,7 +17,7 @@ class Command(BaseCommand):
             available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
             if not available:
                 self.stdout.write({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
-        date = current_time() + relativedelta(days=-100)
+        date = current_time() + relativedelta(days=-1)
         d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False, last_confirmed_at__gte=date)
         directions = [i.pk for i in d_qs]
         res = send_lab_direction_to_ecp(directions)
