@@ -483,7 +483,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
     tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
     allergic_reactions, preliminary_diagnosis = "", ""
     date_diagnosis, time_diagnosis = "", ""
-    whom_transfer_health_data = ""
+    whom_transfer_health_data, height = "", ""
 
     if list_values:
         for i in list_values:

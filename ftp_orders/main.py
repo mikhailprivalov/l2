@@ -793,9 +793,9 @@ def process_push_orders():
             directions = []
             directions_external_executor = []
             if ftp_connection.hospital.is_auto_transfer_hl7_file:
-                directions = Napravleniya.objects.filter(hospital=ftp_connection.hospital, need_order_redirection=True)[:450]
+                directions = Napravleniya.objects.filter(hospital=ftp_connection.hospital, need_order_redirection=True)[:750]
             else:
-                directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
+                directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:750]
             for dir_external in directions_external_executor:
                 if dir_external not in directions:
                     tube_data = []

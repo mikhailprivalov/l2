@@ -635,7 +635,6 @@ def form_01(request_data):
     ind_card = direction_obj.client
     patient_data = ind_card.get_data_individual()
 
-    hosp_nums_obj = hosp_get_hosp_direction(num_dir)
     hosp_first_num = hosp_nums_obj[0].get("direction")
     first_inspection = primary_reception_get_data(hosp_first_num)
 
@@ -864,7 +863,7 @@ def form_02(request_data):
     objs = []
 
     objs.extend(title_page)
-    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}  Дата рождения {normalize_date(patient_data["birthday"])}г.', style))
+    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}  Дата рождения {normalize_date(patient_data["born"])}г.', style))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph(f'N медицинской карты {num_dir}  Палата______', styleT))
     objs.append(Spacer(1, 2 * mm))
