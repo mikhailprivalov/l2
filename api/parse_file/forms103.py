@@ -194,19 +194,19 @@ def validate_employee_data(normalized_data):
         result = {"ok": False, "data": {}, "empty": True}
         return result
 
-    value_invalid = set()
+    invalid_value_fields = set()
 
     for check in checks_lists:
         fields = check.get("fields", set())
         check_funcs = check.get("check_funcs", set())
         for field in fields:
-            if field not in value_invalid:
+            if field not in invalid_value_fields:
                 value = normalized_data.get(field)
                 value_len = values_lens.get(field)
                 ru_key = russian_keys.get(field)
                 check_result = check_values(value, check_funcs, value_len, ru_key)
                 if not check_result.get("ok"):
-                    value_invalid.add(field)
+                    invalid_value_fields.add(field)
                     errors.append(check_result.get("message"))
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}}
