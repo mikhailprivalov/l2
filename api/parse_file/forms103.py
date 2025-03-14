@@ -138,8 +138,6 @@ def normalize_employee_data(employee_data: dict):
             normalized_value = normalize_values(value, normalize_funcs)
             result[field] = normalized_value
 
-    print(result)
-
     if result["fio"]:
         fio_data = result["fio"].split(" ")
         result["family"] = fio_data[0]
