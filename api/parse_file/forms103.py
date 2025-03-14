@@ -161,17 +161,24 @@ def validate_employee_data(normalized_data):
         "department_title": 255,
         "position_title": 128,
     }
-    check_lists = {
-        "employment_form": ["check_not_empty", "check_max_len"],
-        "snils": ["check_not_empty", "check_max_len", "check_snils"],
-        "tabel_number": ["check_not_empty", "check_max_len"],
-        "fio": ["check_not_empty", "check_max_len"],
-        "department_title": ["check_not_empty", "check_max_len"],
-        "position_title": ["check_not_empty", "check_max_len"],
-        "rate": ["check_not_empty", "check_rate"],
-        "date_employment": ["check_not_empty", "check_date"],
-        "date_dismissal": ["check_date"],
-    }
+
+    checks_lists = [
+        {
+            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"}, "check_funcs": {"check_not_empty", "check_max_len"},
+        },
+        {
+            "fields": {"snils"}, "check_funcs": {"check_snils"}
+        },
+        {
+            "fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}
+        },
+        {
+            "fields": {"date_employment"}, "check_funcs": {"check_not_empty"}
+        },
+        {
+            "fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}
+        },
+    ]
     result = {"ok": True, "data": {}}
     fio = normalized_data.get("fio")
     snils = normalized_data.get("snils")
@@ -180,13 +187,17 @@ def validate_employee_data(normalized_data):
     if not name_local:
         result = {"ok": False, "data": {}, "empty": True}
         return result
-    for key in normalized_data.keys():
-        checks = check_lists.get(key, [])
-        value_len = values_lens.get(key)
-        ru_key = russian_keys.get(key)
-        check_result = check_values(normalized_data[key], checks, value_len, ru_key)
-        if not check_result.get("ok"):
-            errors.append(check_result.get("message"))
+
+    for check in checks_lists:
+        fields = check.get("fields", set())
+        check_funcs = check.get("check_funcs", set())
+        for field in fields:
+            value = normalized_data.get(field)
+            value_len = values_lens.get(field)
+            ru_key = russian_keys.get(field)
+            check_result = check_values(value, check_funcs, value_len, ru_key)
+            if not check_result.get("ok"):
+                errors.append(check_result.get("message"))
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}}
     return result

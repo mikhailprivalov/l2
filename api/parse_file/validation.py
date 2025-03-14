@@ -50,7 +50,7 @@ def check_snils(data):
     return {"ok": True, "message": ""}
 
 
-def check_values(value: str, checks_funcs: list, value_len: int, return_key: str):
+def check_values(value: str, checks_funcs, value_len: int, return_key: str):
     """
     Перебирает проверки, на входе list с названиями
     not_empty - обязательно значение
