@@ -130,32 +130,15 @@ def normalize_employee_data(employee_data: dict):
         },
     ]
 
-    actions_list = {
-        "employment_form": ["remove_double_spaces"],
-        "snils": ["normalize_snils"],
-        "tabel_number": ["remove_double_spaces"],
-        "fio": ["remove_double_spaces"],
-        "department_title": ["remove_double_spaces"],
-        "position_title": ["remove_double_spaces"],
-        "rate": ["remove_double_spaces", "normalize_rate"],
-        "date_employment": ["normalize_date"],
-        "date_dismissal": ["normalize_date"],
-    }
-
     for action in actions_lists:
         fields = action.get("fields", set())
         normalize_funcs = action.get("normalize_funcs", set())
-        print(normalize_funcs)
         for field in fields:
             value = employee_data.get(field)
             normalized_value = normalize_values(value, normalize_funcs)
             result[field] = normalized_value
 
-    # for key in employee_data.keys():
-    #     actions = actions_list.get(key)
-    #     if actions:
-    #         action_result = normalize_values(employee_data[key], actions)
-    #         result[key] = action_result
+    print(result)
 
     if result["fio"]:
         fio_data = result["fio"].split(" ")
@@ -213,16 +196,20 @@ def validate_employee_data(normalized_data):
         result = {"ok": False, "data": {}, "empty": True}
         return result
 
+    value_invalid = set()
+
     for check in checks_lists:
         fields = check.get("fields", set())
         check_funcs = check.get("check_funcs", set())
         for field in fields:
-            value = normalized_data.get(field)
-            value_len = values_lens.get(field)
-            ru_key = russian_keys.get(field)
-            check_result = check_values(value, check_funcs, value_len, ru_key)
-            if not check_result.get("ok"):
-                errors.append(check_result.get("message"))
+            if field not in value_invalid:
+                value = normalized_data.get(field)
+                value_len = values_lens.get(field)
+                ru_key = russian_keys.get(field)
+                check_result = check_values(value, check_funcs, value_len, ru_key)
+                if not check_result.get("ok"):
+                    value_invalid.add(field)
+                    errors.append(check_result.get("message"))
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}}
     return result
