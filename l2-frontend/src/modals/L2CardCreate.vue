@@ -273,9 +273,13 @@
           class="col-xs-6"
         >
           <div class="info-row">
-            <template v-if="card.ecp_id">
-              ЕЦП ИД {{ card.ecp_id }}
-            </template>
+            ЕЦП ИД {{ card.ecp_id }}
+            <a
+              href="#"
+              class="a-under"
+              tabindex="-1"
+              @click.prevent="sync_ecp"
+            >синхронизировать</a>
           </div>
         </div>
       </div>
@@ -1724,6 +1728,13 @@ export default {
     async sync_rmis() {
       await this.$store.dispatch(actions.INC_LOADING);
       await patientsPoint.syncRmis(this, 'card_pk');
+      await this.load_data();
+      this.update_card();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
+    async sync_ecp() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.syncEcp(this, 'card_pk');
       await this.load_data();
       this.update_card();
       await this.$store.dispatch(actions.DEC_LOADING);

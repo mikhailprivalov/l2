@@ -84,7 +84,6 @@ class Individual(models.Model):
             logger.exception("Обновление данных для: %s" % self.fio(full=True))
         if c is None:
             from rmis_integration.client import Client
-
             c = Client()
         ok = False
         has_rmis = False
@@ -1361,12 +1360,24 @@ class Card(models.Model):
         else:
             individual_data = self.get_data_individual()
             from ecp_integration.integration import search_patient_ecp_by_fio
-
             ecp_id = search_patient_ecp_by_fio(individual_data)
             if ecp_id:
                 self.individual.ecp_id = ecp_id
                 self.individual.save()
                 return self.individual.ecp_id
+        return None
+
+    def sync_with_ecp(self):
+        ecp_id = self.get_ecp_id()
+        from ecp_integration.integration import search_patient_all_data_ecp_by_person_id
+        patient_data = search_patient_all_data_ecp_by_person_id(ecp_id)
+        phone_num = patient_data.get('PersonPhone_Phone', '')
+        if phone_num:
+            num_phone = Phones.nn(phone_num)
+            self.add_phone(num_phone)
+            self.clear_phones([num_phone])
+            self.phone = num_phone
+            self.save()
         return None
 
     @staticmethod
