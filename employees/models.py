@@ -530,7 +530,7 @@ class EmployeePosition(models.Model):
         return result
 
     @staticmethod
-    def find_employee_position(active: True, employee: Employee, position: Position, deparment: Department, tabel_number: str):
+    def find_employee_position(active: True, employee: Employee, position: Position, deparment: Department, tabel_number):
         employee_position = EmployeePosition.objects.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
         return employee_position
 
