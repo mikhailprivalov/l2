@@ -6810,10 +6810,10 @@ pbkdf2@^3.0.3:
     safe-buffer "^5.0.1"
     sha.js "^2.4.8"
 
-pdfobject@^2.2.8:
-  version "2.2.12"
-  resolved "https://registry.yarnpkg.com/pdfobject/-/pdfobject-2.2.12.tgz#b789e4606b69763f2f3ae501ff003f3db8231943"
-  integrity sha512-D0oyD/sj8j82AMaJhoyMaY1aD5TkbpU3FbJC6w9/cpJlZRpYHqAkutXw1Ca/FKjYPZmTAu58uGIfgOEaDlbY8A==
+pdfobject@^2.3.1:
+  version "2.3.1"
+  resolved "https://registry.yarnpkg.com/pdfobject/-/pdfobject-2.3.1.tgz#ab63000e3c9dd22fd0c07002f7f1bf86b54dd5d7"
+  integrity sha512-vluuGiSDmMGpOvWFGiUY4trNB8aGKLDVxIXuuGHjX0kK3bMxCANUVtLivctE7uejLBScWCnbVarKatFVvdwXaQ==
 
 picocolors@^0.2.1:
   version "0.2.1"
