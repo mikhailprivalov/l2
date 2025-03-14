@@ -158,7 +158,7 @@ def validate_employee_data(normalized_data):
         "snils": 11,
         "tabel_number": 255,
         "fio": 192,
-        "department_title": 128,
+        "department_title": 255,
         "position_title": 128,
     }
     check_lists = {

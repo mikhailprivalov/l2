@@ -257,7 +257,7 @@ class Position(models.Model):
 
 class Department(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=128, verbose_name='Название отдела')
+    name = models.CharField(max_length=255, verbose_name='Название отдела')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
