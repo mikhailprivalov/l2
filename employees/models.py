@@ -540,7 +540,7 @@ class EmployeePosition(models.Model):
         indexes = [
             models.Index(fields=['employee', 'position', 'department', 'rate', 'is_active', 'tabel_number']),
         ]
-        unique_together = ('employee', 'position', 'department', 'is_active')
+        unique_together = ('employee', 'position', 'department', 'is_active', 'tabel_number')
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
 
