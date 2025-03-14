@@ -162,15 +162,15 @@ def validate_employee_data(normalized_data):
         "position_title": 128,
     }
     check_lists = {
-        "employment_form": ["not_empty", "max_len"],
-        "snils": ["not_empty", "max_len", "snils"],
-        "tabel_number": ["not_empty", "max_len"],
-        "fio": ["not_empty", "max_len"],
-        "department_title": ["not_empty", "max_len"],
-        "position_title": ["not_empty", "max_len"],
-        "rate": ["not_empty", "rate"],
-        "date_employment": ["not_empty", "date"],
-        "date_dismissal": ["date"],
+        "employment_form": ["check_not_empty", "check_max_len"],
+        "snils": ["check_not_empty", "check_max_len", "check_snils"],
+        "tabel_number": ["check_not_empty", "check_max_len"],
+        "fio": ["check_not_empty", "check_max_len"],
+        "department_title": ["check_not_empty", "check_max_len"],
+        "position_title": ["check_not_empty", "check_max_len"],
+        "rate": ["check_not_empty", "check_rate"],
+        "date_employment": ["check_not_empty", "check_date"],
+        "date_dismissal": ["check_date"],
     }
     result = {"ok": True, "data": {}}
     fio = normalized_data.get("fio")

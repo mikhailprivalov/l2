@@ -50,13 +50,13 @@ def check_snils(data):
     return {"ok": True, "message": ""}
 
 
-def check_values(value: str, checks: list, value_len: int, return_key: str):
+def check_values(value: str, checks_funcs: list, value_len: int, return_key: str):
     """
     Перебирает проверки, на входе list с названиями
     not_empty - обязательно значение
     """
-    for check in checks:
-        check_function = import_string(f"api.parse_file.validation.check_{check}")
+    for check_func in checks_funcs:
+        check_function = import_string(f"api.parse_file.validation.{check_func}")
         result = check_function({"value": value, "max_len": value_len})
         if not result.get("ok"):
             return {"ok": result.get("ok"), "message": f"{return_key}: {result.get('message')}"}
