@@ -120,22 +120,43 @@ def normalize_employee_data(employee_data: dict):
             "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"}, "normalize_funcs": {"remove_double_spaces"},
         },
         {
-            "fields": {"snils"}, "check_funcs": {"normalize_snils"}
+            "fields": {"snils"}, "normalize_funcs": {"normalize_snils"}
         },
         {
-            "fields": {"rate"}, "check_funcs": {"normalize_rate"}
+            "fields": {"rate"}, "normalize_funcs": {"normalize_rate"}
         },
         {
-            "fields": {"date_employment", "date_dismissal"}, "check_funcs": {"normalize_date"}
+            "fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}
         },
     ]
+
+    actions_list = {
+        "employment_form": ["remove_double_spaces"],
+        "snils": ["normalize_snils"],
+        "tabel_number": ["remove_double_spaces"],
+        "fio": ["remove_double_spaces"],
+        "department_title": ["remove_double_spaces"],
+        "position_title": ["remove_double_spaces"],
+        "rate": ["remove_double_spaces", "normalize_rate"],
+        "date_employment": ["normalize_date"],
+        "date_dismissal": ["normalize_date"],
+    }
+
     for action in actions_lists:
         fields = action.get("fields", set())
         normalize_funcs = action.get("normalize_funcs", set())
+        print(normalize_funcs)
         for field in fields:
             value = employee_data.get(field)
             normalized_value = normalize_values(value, normalize_funcs)
             result[field] = normalized_value
+
+    # for key in employee_data.keys():
+    #     actions = actions_list.get(key)
+    #     if actions:
+    #         action_result = normalize_values(employee_data[key], actions)
+    #         result[key] = action_result
+
     if result["fio"]:
         fio_data = result["fio"].split(" ")
         result["family"] = fio_data[0]
