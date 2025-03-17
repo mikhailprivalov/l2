@@ -330,7 +330,7 @@ def get_paraclini_directions_for_send_ecp_queue(researches, date_start, date_end
             ci.family as patient_family,
             ci.name as patient_name,
             ci.patronymic as patient_patronymic,
-            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YY') as patient_birthday 
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday 
             FROM directions_napravleniya
             LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
             LEFT JOIN clients_card cc on directions_napravleniya.client_id = cc.id

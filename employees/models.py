@@ -257,7 +257,7 @@ class Position(models.Model):
 
 class Department(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=128, verbose_name='Название отдела')
+    name = models.CharField(max_length=255, verbose_name='Название отдела')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -540,7 +540,7 @@ class EmployeePosition(models.Model):
         indexes = [
             models.Index(fields=['employee', 'position', 'department', 'rate', 'is_active', 'tabel_number']),
         ]
-        unique_together = ('employee', 'position', 'department', 'is_active')
+        unique_together = ('employee', 'position', 'department', 'is_active', 'tabel_number')
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
 

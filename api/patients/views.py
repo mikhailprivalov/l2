@@ -934,7 +934,7 @@ def sync_rmis(request):
 def sync_ecp(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
-    card.individual.sync_with_rmis()
+    card.sync_with_ecp()
     return JsonResponse({"ok": True})
 
 
