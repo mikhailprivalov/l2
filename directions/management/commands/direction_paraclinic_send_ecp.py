@@ -27,8 +27,8 @@ class Command(BaseCommand):
         date_end = current_time(only_date=False)
         date_end = date_end.strftime('%Y%m%d %H:%M:%S')
         result = get_paraclini_directions_for_send_ecp_queue(ID_RESERACH_FLG, date_start, date_end)
-        today_date = current_time(only_date=False)
-        today_date = today_date.strftime('d%.m%.Y%')
+        today_date_d = current_time(only_date=False)
+        today_date = today_date_d.strftime('%d.%m.%Y')
         data = [
             {
                 "family": i.patient_family,
