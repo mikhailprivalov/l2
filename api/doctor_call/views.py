@@ -94,7 +94,7 @@ def actual_rows(request):
     card_pk: int = data[0]
 
     if DOC_CALLS_ACTUAL_ROWS_FROM_DATE:
-        from_date = datetime.datetime.strptime(DOC_CALLS_ACTUAL_ROWS_FROM_DATE, '%Y-%m-%d')[:100]
+        from_date = datetime.datetime.strptime(DOC_CALLS_ACTUAL_ROWS_FROM_DATE, '%Y-%m-%d')
     else:
         from_date = current_time()
 
@@ -102,7 +102,7 @@ def actual_rows(request):
 
     rows = list(
         DoctorCall.objects.filter(client_id=card_pk, exec_at__gte=date_from)
-        .order_by('exec_at', 'pk')
+        .order_by('-exec_at', 'pk')
         .values(
             'pk',
             'exec_at',
@@ -118,7 +118,7 @@ def actual_rows(request):
             'purpose',
             'hospital__title',
             'hospital__short_title',
-        )
+        )[:500]
     )
 
     return JsonResponse(rows, safe=False)
