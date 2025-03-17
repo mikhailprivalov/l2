@@ -262,6 +262,11 @@ def create_employee_position(employee_data, employee, department, position, empl
     new_employee_position.save()
 
 
+def find_employee_position(employee_position_query_set, active: bool, employee: Employee, position: Position, deparment: Department, tabel_number: str):
+    employee_position = employee_position_query_set.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
+    return employee_position
+
+
 def update_organization_employee_positions(organization_id: int, employees):
     """
     Обновление и создание трудовых договоров (EmployeePosition)
@@ -271,6 +276,7 @@ def update_organization_employee_positions(organization_id: int, employees):
     departments = Department.get_active_departments(organization_id)
     positions = Position.get_active_positions(organization_id)
     employment_forms = TypeWorkTimeEmployee.objects.all()
+    employee_position_in_organization = EmployeePosition.all_by_organization(organization_id)
     incorrent_employees = []
     for employee in employees:
         snils = employee.get("snils")
@@ -285,11 +291,11 @@ def update_organization_employee_positions(organization_id: int, employees):
         if not current_employment_form:
             incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вида занятости в справочнике ({employment_form})"})
             continue
-        current_active_employee_position = EmployeePosition.find_employee_position(True, current_employee, current_position, current_department, tabel_number)
+        current_active_employee_position = find_employee_position(employee_position_in_organization, True, current_employee, current_position, current_department, tabel_number)
         if current_active_employee_position:
             update_employee_position(current_active_employee_position, employee)
         elif not current_active_employee_position and employee.get("date_dismissal"):
-            current_non_active_employee_position = EmployeePosition.find_employee_position(False, current_employee, current_position, current_department, tabel_number)
+            current_non_active_employee_position = find_employee_position(employee_position_in_organization, False, current_employee, current_position, current_department, tabel_number)
             if not current_non_active_employee_position:
                 create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
         else:
