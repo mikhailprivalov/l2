@@ -87,7 +87,8 @@ def parse_work_sheet(ws: Worksheet):
     }
     checks_lists = [
         {
-            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"}, "check_funcs": {"check_not_empty", "check_max_len"},
+            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"},
+            "check_funcs": {"check_not_empty", "check_max_len"},
         },
         {
             "fields": {"snils"}, "check_funcs": {"check_snils"}
