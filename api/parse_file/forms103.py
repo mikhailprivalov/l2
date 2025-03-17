@@ -61,15 +61,9 @@ def parse_work_sheet(ws: Worksheet):
             "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"},
             "normalize_funcs": {"remove_double_spaces"},
         },
-        {
-            "fields": {"snils"}, "normalize_funcs": {"normalize_snils"}
-        },
-        {
-            "fields": {"rate"}, "normalize_funcs": {"normalize_rate"}
-        },
-        {
-            "fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}
-        },
+        {"fields": {"snils"}, "normalize_funcs": {"normalize_snils"}},
+        {"fields": {"rate"}, "normalize_funcs": {"normalize_rate"}},
+        {"fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}},
     ]
 
     russian_keys = {
