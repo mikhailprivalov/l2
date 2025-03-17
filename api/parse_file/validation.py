@@ -59,8 +59,6 @@ def check_control_summ_snils(snils: str):
     summ = get_snils_summ(snils)
     if summ < 100:
         check_digits = summ
-    elif summ in [100, 101]:
-        check_digits = 0
     else:
         check_digits = summ % 101
         if check_digits == 100:
