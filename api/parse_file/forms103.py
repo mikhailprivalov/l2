@@ -55,6 +55,46 @@ def parse_work_sheet(ws: Worksheet):
     incorrect_employees = []
     departments_titles = set()
     positions_titles = set()
+
+    normalize_actions = [
+        {
+            "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"},
+            "normalize_funcs": {"remove_double_spaces"},
+        },
+        {"fields": {"snils"}, "normalize_funcs": {"normalize_snils"}},
+        {"fields": {"rate"}, "normalize_funcs": {"normalize_rate"}},
+        {"fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}},
+    ]
+
+    russian_keys = {
+        "employment_form": "Вид занятости",
+        "snils": "СНИЛС",
+        "tabel_number": "Табельный номер",
+        "fio": "ФИО",
+        "department_title": "Подразделение",
+        "position_title": "Должность",
+        "rate": "Количество ставок",
+        "date_employment": "Дата приема",
+        "date_dismissal": "Дата увольнения",
+    }
+    values_lens = {
+        "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
+        "snils": 11,
+        "tabel_number": EmployeePosition._meta.get_field("tabel_number").max_length,
+        "fio": sum([Employee._meta.get_field("family").max_length, Employee._meta.get_field("name").max_length, Employee._meta.get_field("patronymic").max_length]),
+        "department_title": Department._meta.get_field("name").max_length,
+        "position_title": Position._meta.get_field("name").max_length,
+    }
+    checks_lists = [
+        {
+            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"},
+            "check_funcs": {"check_not_empty", "check_max_len"},
+        },
+        {"fields": {"snils"}, "check_funcs": {"check_snils"}},
+        {"fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}},
+        {"fields": {"date_employment"}, "check_funcs": {"check_not_empty"}},
+        {"fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}},
+    ]
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -83,8 +123,8 @@ def parse_work_sheet(ws: Worksheet):
                 "date_employment": cells[date_employment_idx],
                 "date_dismissal": cells[date_dismissal_idx],
             }
-            normalized_employee_data = normalize_employee_data(employee_data)
-            validation_result = validate_employee_data(normalized_employee_data)
+            normalized_employee_data = normalize_employee_data(employee_data, normalize_actions)
+            validation_result = validate_employee_data(normalized_employee_data, russian_keys, values_lens, checks_lists)
             if not validation_result.get("ok") and validation_result.get("empty"):
                 continue
             if not validation_result.get("ok"):
@@ -99,7 +139,7 @@ def parse_work_sheet(ws: Worksheet):
     return result
 
 
-def normalize_employee_data(employee_data: dict):
+def normalize_employee_data(employee_data: dict, normalize_funcs_list: list):
     result = {
         "employment_form": None,
         "snils": None,
@@ -114,23 +154,14 @@ def normalize_employee_data(employee_data: dict):
         "date_employment": None,
         "date_dismissal": None,
     }
-    actions_list = {
-        "employment_form": ["remove_double_spaces"],
-        "snils": ["normalize_snils"],
-        "tabel_number": ["remove_double_spaces"],
-        "fio": ["remove_double_spaces"],
-        "department_title": ["remove_double_spaces"],
-        "position_title": ["remove_double_spaces"],
-        "rate": ["remove_double_spaces", "normalize_rate"],
-        "date_employment": ["normalize_date"],
-        "date_dismissal": ["normalize_date"],
-    }
 
-    for key in employee_data.keys():
-        actions = actions_list.get(key)
-        if actions:
-            action_result = normalize_values(employee_data[key], actions)
-            result[key] = action_result
+    for action in normalize_funcs_list:
+        fields = action.get("fields", set())
+        normalize_funcs = action.get("normalize_funcs", set())
+        for field in fields:
+            value = employee_data.get(field)
+            normalized_value = normalize_values(value, normalize_funcs)
+            result[field] = normalized_value
 
     if result["fio"]:
         fio_data = result["fio"].split(" ")
@@ -141,37 +172,7 @@ def normalize_employee_data(employee_data: dict):
     return result
 
 
-def validate_employee_data(normalized_data):
-    russian_keys = {
-        "employment_form": "Вид занятости",
-        "snils": "СНИЛС",
-        "tabel_number": "Табельный номер",
-        "fio": "ФИО",
-        "department_title": "Подразделение",
-        "position_title": "Должность",
-        "rate": "Количество ставок",
-        "date_employment": "Дата приема",
-        "date_dismissal": "Дата увольнения",
-    }
-    values_lens = {
-        "employment_form": 255,
-        "snils": 11,
-        "tabel_number": 255,
-        "fio": 192,
-        "department_title": 128,
-        "position_title": 128,
-    }
-    check_lists = {
-        "employment_form": ["not_empty", "max_len"],
-        "snils": ["not_empty", "max_len", "snils"],
-        "tabel_number": ["not_empty", "max_len"],
-        "fio": ["not_empty", "max_len"],
-        "department_title": ["not_empty", "max_len"],
-        "position_title": ["not_empty", "max_len"],
-        "rate": ["not_empty", "rate"],
-        "date_employment": ["not_empty", "date"],
-        "date_dismissal": ["date"],
-    }
+def validate_employee_data(normalized_data: dict, russian_keys: dict, values_lens: dict, checks_lists: list):
     result = {"ok": True, "data": {}}
     fio = normalized_data.get("fio")
     snils = normalized_data.get("snils")
@@ -180,13 +181,21 @@ def validate_employee_data(normalized_data):
     if not name_local:
         result = {"ok": False, "data": {}, "empty": True}
         return result
-    for key in normalized_data.keys():
-        checks = check_lists.get(key, [])
-        value_len = values_lens.get(key)
-        ru_key = russian_keys.get(key)
-        check_result = check_values(normalized_data[key], checks, value_len, ru_key)
-        if not check_result.get("ok"):
-            errors.append(check_result.get("message"))
+
+    invalid_value_fields = set()
+
+    for check in checks_lists:
+        fields = check.get("fields", set())
+        check_funcs = check.get("check_funcs", set())
+        for field in fields:
+            if field not in invalid_value_fields:
+                value = normalized_data.get(field)
+                value_len = values_lens.get(field)
+                ru_key = russian_keys.get(field)
+                check_result = check_values(value, check_funcs, value_len, ru_key)
+                if not check_result.get("ok"):
+                    invalid_value_fields.add(field)
+                    errors.append(check_result.get("message"))
     if errors:
         result = {"ok": False, "data": {"fio": name_local, "reason": ", ".join(errors)}}
     return result
@@ -241,6 +250,11 @@ def create_employee_position(employee_data, employee, department, position, empl
     new_employee_position.save()
 
 
+def find_employee_position(employee_position_query_set, active: bool, employee: Employee, position: Position, deparment: Department, tabel_number: str):
+    employee_position = employee_position_query_set.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
+    return employee_position
+
+
 def update_organization_employee_positions(organization_id: int, employees):
     """
     Обновление и создание трудовых договоров (EmployeePosition)
@@ -250,6 +264,7 @@ def update_organization_employee_positions(organization_id: int, employees):
     departments = Department.get_active_departments(organization_id)
     positions = Position.get_active_positions(organization_id)
     employment_forms = TypeWorkTimeEmployee.objects.all()
+    employee_position_in_organization = EmployeePosition.all_by_organization(organization_id)
     incorrent_employees = []
     for employee in employees:
         snils = employee.get("snils")
@@ -264,11 +279,11 @@ def update_organization_employee_positions(organization_id: int, employees):
         if not current_employment_form:
             incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вида занятости в справочнике ({employment_form})"})
             continue
-        current_active_employee_position = EmployeePosition.find_employee_position(True, current_employee, current_position, current_department, tabel_number)
+        current_active_employee_position = find_employee_position(employee_position_in_organization, True, current_employee, current_position, current_department, tabel_number)
         if current_active_employee_position:
             update_employee_position(current_active_employee_position, employee)
         elif not current_active_employee_position and employee.get("date_dismissal"):
-            current_non_active_employee_position = EmployeePosition.find_employee_position(False, current_employee, current_position, current_department, tabel_number)
+            current_non_active_employee_position = find_employee_position(employee_position_in_organization, False, current_employee, current_position, current_department, tabel_number)
             if not current_non_active_employee_position:
                 create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
         else:
