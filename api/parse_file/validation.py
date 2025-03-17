@@ -39,13 +39,44 @@ def check_date(data):
     return {"ok": True, "message": ""}
 
 
+def get_snils_numbers_multiped_by_reverse_position(snils):
+    """ Умножает цифры снилс на их позицию с конца (1-ую цифру на 9ую позицию и т.д)"""
+    numbers_snils = snils[:-2]
+    result = [int(numbers_snils[i]) * (9 - i) for i in range(9)]
+    return result
+
+
+def get_snils_summ(snils: str):
+    """
+    Получает сумму цифр снилс
+    """
+    snils_numbers_multiped_position = get_snils_numbers_multiped_by_reverse_position(snils)
+    summ = sum(snils_numbers_multiped_position)
+    return summ
+
+
+def check_control_summ_snils(snils: str):
+    result = False
+    summ = get_snils_summ(snils)
+    check_digits = 0
+    if summ < 100:
+        check_digits = summ
+    elif summ in [100, 101]:
+        result = True
+    else:
+        check_digits = summ % 101
+        if check_digits == 100:
+            check_digits = 0
+    if not result:
+        result = int(snils[-2:]) == check_digits
+    return result
+
+
 def check_snils(data):
     value = data.get("value")
     if value:
-        result_check = petrovna.validate_snils(value)
-        if isinstance(result_check, bool) and not result_check:
-            return {"ok": False, "message": "не корректный"}
-        elif isinstance(result_check, tuple):
+        result_check = check_control_summ_snils(value)
+        if not result_check:
             return {"ok": False, "message": "не корректный"}
     return {"ok": True, "message": ""}
 
