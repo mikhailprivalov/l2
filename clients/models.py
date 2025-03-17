@@ -1370,6 +1370,7 @@ class Card(models.Model):
     def sync_with_ecp(self):
         ecp_id = self.get_ecp_id()
         from ecp_integration.integration import search_patient_all_data_ecp_by_person_id
+
         patient_data = search_patient_all_data_ecp_by_person_id(ecp_id)
         phone_num = patient_data.get('PersonPhone_Phone', '')
         if phone_num:
