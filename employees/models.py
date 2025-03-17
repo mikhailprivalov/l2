@@ -534,6 +534,11 @@ class EmployeePosition(models.Model):
         employee_position = EmployeePosition.objects.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
         return employee_position
 
+    @staticmethod
+    def all_by_organization(org_id: int):
+        employee_positions = EmployeePosition.objects.filter(employee__hospital_id=org_id).select_related('employee')
+        return employee_positions
+
     class Meta:
         verbose_name = 'Должность сотрудника'
         verbose_name_plural = 'Должности сотрудников'
