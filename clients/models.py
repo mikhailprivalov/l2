@@ -84,6 +84,7 @@ class Individual(models.Model):
             logger.exception("Обновление данных для: %s" % self.fio(full=True))
         if c is None:
             from rmis_integration.client import Client
+
             c = Client()
         ok = False
         has_rmis = False
