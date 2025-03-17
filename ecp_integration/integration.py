@@ -133,6 +133,28 @@ def search_patient_ecp_by_person_id(person_id):
     return patient
 
 
+def search_patient_all_data_ecp_by_person_id(person_id):
+    sess_id = request_get_sess_id()
+    result = make_request_get("Person", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)
+    if not result.get('data') or len(result.get('data')) == 0:
+        return None
+    patient = result['data'][0]
+    patient_snils = patient.get("PersonSnils_Snils", "")
+    result = make_request_get(
+        "PersonList",
+        query=f"Sess_id={sess_id}&"
+        f"PersonSurName_SurName={patient['PersonSurName_SurName']}&"
+        f"PersonFirName_FirName={patient['PersonFirName_FirName']}&"
+        f"PersonBirthDay_BirthDay={patient['PersonBirthDay_BirthDay']}&PersonSnils_Snils={patient_snils}",
+        sess_id=sess_id,
+    )
+    individual = result['data'][0]
+    if individual['Person_id'] == patient['Person_id'] and individual['PolisType_id'] in ['2', '4']:
+        patient['enp'] = individual['Polis_Num']
+
+    return patient
+
+
 def search_patient_polis_by_person_id(person_id):
     sess_id = request_get_sess_id()
     result = make_request_get("Polis", query=f"Sess_id={sess_id}&Person_id={person_id}", sess_id=sess_id)

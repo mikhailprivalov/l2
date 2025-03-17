@@ -1369,6 +1369,20 @@ class Card(models.Model):
                 return self.individual.ecp_id
         return None
 
+    def sync_with_ecp(self):
+        ecp_id = self.get_ecp_id()
+        from ecp_integration.integration import search_patient_all_data_ecp_by_person_id
+
+        patient_data = search_patient_all_data_ecp_by_person_id(ecp_id)
+        phone_num = patient_data.get('PersonPhone_Phone', '')
+        if phone_num:
+            num_phone = Phones.nn(phone_num)
+            self.add_phone(num_phone)
+            self.clear_phones([num_phone])
+            self.phone = num_phone
+            self.save()
+        return None
+
     @staticmethod
     def next_l2_n():
         last_l2 = Card.objects.filter(base__internal_type=True, number__regex=r'^\d+$').extra(select={'numberInt': 'CAST(number AS INTEGER)'}).order_by("-numberInt").first()
