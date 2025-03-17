@@ -90,18 +90,10 @@ def parse_work_sheet(ws: Worksheet):
             "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"},
             "check_funcs": {"check_not_empty", "check_max_len"},
         },
-        {
-            "fields": {"snils"}, "check_funcs": {"check_snils"}
-        },
-        {
-            "fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}
-        },
-        {
-            "fields": {"date_employment"}, "check_funcs": {"check_not_empty"}
-        },
-        {
-            "fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}
-        },
+        {"fields": {"snils"}, "check_funcs": {"check_snils"}},
+        {"fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}},
+        {"fields": {"date_employment"}, "check_funcs": {"check_not_empty"}},
+        {"fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}},
     ]
     for row in ws.rows:
         cells = [str(x.value) for x in row]
