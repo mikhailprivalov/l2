@@ -55,6 +55,58 @@ def parse_work_sheet(ws: Worksheet):
     incorrect_employees = []
     departments_titles = set()
     positions_titles = set()
+
+    normalize_actions = [
+        {
+            "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"}, "normalize_funcs": {"remove_double_spaces"},
+        },
+        {
+            "fields": {"snils"}, "normalize_funcs": {"normalize_snils"}
+        },
+        {
+            "fields": {"rate"}, "normalize_funcs": {"normalize_rate"}
+        },
+        {
+            "fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}
+        },
+    ]
+
+    russian_keys = {
+        "employment_form": "Вид занятости",
+        "snils": "СНИЛС",
+        "tabel_number": "Табельный номер",
+        "fio": "ФИО",
+        "department_title": "Подразделение",
+        "position_title": "Должность",
+        "rate": "Количество ставок",
+        "date_employment": "Дата приема",
+        "date_dismissal": "Дата увольнения",
+    }
+    values_lens = {
+        "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
+        "snils": 11,
+        "tabel_number": EmployeePosition._meta.get_field("tabel_number").max_length,
+        "fio": sum([Employee._meta.get_field("family").max_length, Employee._meta.get_field("name").max_length, Employee._meta.get_field("patronymic").max_length]),
+        "department_title": Department._meta.get_field("name").max_length,
+        "position_title": Position._meta.get_field("name").max_length,
+    }
+    checks_lists = [
+        {
+            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"}, "check_funcs": {"check_not_empty", "check_max_len"},
+        },
+        {
+            "fields": {"snils"}, "check_funcs": {"check_snils"}
+        },
+        {
+            "fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}
+        },
+        {
+            "fields": {"date_employment"}, "check_funcs": {"check_not_empty"}
+        },
+        {
+            "fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}
+        },
+    ]
     for row in ws.rows:
         cells = [str(x.value) for x in row]
         if not starts:
@@ -83,8 +135,8 @@ def parse_work_sheet(ws: Worksheet):
                 "date_employment": cells[date_employment_idx],
                 "date_dismissal": cells[date_dismissal_idx],
             }
-            normalized_employee_data = normalize_employee_data(employee_data)
-            validation_result = validate_employee_data(normalized_employee_data)
+            normalized_employee_data = normalize_employee_data(employee_data, normalize_actions)
+            validation_result = validate_employee_data(normalized_employee_data, russian_keys, values_lens, checks_lists)
             if not validation_result.get("ok") and validation_result.get("empty"):
                 continue
             if not validation_result.get("ok"):
@@ -99,7 +151,7 @@ def parse_work_sheet(ws: Worksheet):
     return result
 
 
-def normalize_employee_data(employee_data: dict):
+def normalize_employee_data(employee_data: dict, normalize_funcs_list: list):
     result = {
         "employment_form": None,
         "snils": None,
@@ -115,22 +167,7 @@ def normalize_employee_data(employee_data: dict):
         "date_dismissal": None,
     }
 
-    actions_lists = [
-        {
-            "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"}, "normalize_funcs": {"remove_double_spaces"},
-        },
-        {
-            "fields": {"snils"}, "normalize_funcs": {"normalize_snils"}
-        },
-        {
-            "fields": {"rate"}, "normalize_funcs": {"normalize_rate"}
-        },
-        {
-            "fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}
-        },
-    ]
-
-    for action in actions_lists:
+    for action in normalize_funcs_list:
         fields = action.get("fields", set())
         normalize_funcs = action.get("normalize_funcs", set())
         for field in fields:
@@ -147,44 +184,7 @@ def normalize_employee_data(employee_data: dict):
     return result
 
 
-def validate_employee_data(normalized_data):
-    russian_keys = {
-        "employment_form": "Вид занятости",
-        "snils": "СНИЛС",
-        "tabel_number": "Табельный номер",
-        "fio": "ФИО",
-        "department_title": "Подразделение",
-        "position_title": "Должность",
-        "rate": "Количество ставок",
-        "date_employment": "Дата приема",
-        "date_dismissal": "Дата увольнения",
-    }
-    values_lens = {
-        "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
-        "snils": 11,
-        "tabel_number": EmployeePosition._meta.get_field("tabel_number").max_length,
-        "fio": sum([Employee._meta.get_field("family").max_length, Employee._meta.get_field("name").max_length, Employee._meta.get_field("patronymic").max_length]),
-        "department_title": Department._meta.get_field("name").max_length,
-        "position_title": Position._meta.get_field("name").max_length,
-    }
-
-    checks_lists = [
-        {
-            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"}, "check_funcs": {"check_not_empty", "check_max_len"},
-        },
-        {
-            "fields": {"snils"}, "check_funcs": {"check_snils"}
-        },
-        {
-            "fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}
-        },
-        {
-            "fields": {"date_employment"}, "check_funcs": {"check_not_empty"}
-        },
-        {
-            "fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}
-        },
-    ]
+def validate_employee_data(normalized_data: dict, russian_keys: dict, values_lens: dict, checks_lists: list):
     result = {"ok": True, "data": {}}
     fio = normalized_data.get("fio")
     snils = normalized_data.get("snils")
