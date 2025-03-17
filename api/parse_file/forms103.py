@@ -160,12 +160,12 @@ def validate_employee_data(normalized_data):
         "date_dismissal": "Дата увольнения",
     }
     values_lens = {
-        "employment_form": 255,
+        "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
         "snils": 11,
-        "tabel_number": 255,
-        "fio": 192,
-        "department_title": 255,
-        "position_title": 128,
+        "tabel_number": EmployeePosition._meta.get_field("tabel_number").max_length,
+        "fio": sum([Employee._meta.get_field("family").max_length, Employee._meta.get_field("name").max_length, Employee._meta.get_field("patronymic").max_length]),
+        "department_title": Department._meta.get_field("name").max_length,
+        "position_title": Position._meta.get_field("name").max_length,
     }
 
     checks_lists = [
