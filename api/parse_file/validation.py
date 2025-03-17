@@ -40,7 +40,7 @@ def check_date(data):
 
 
 def get_snils_numbers_multiped_by_reverse_position(snils):
-    """ Умножает цифры снилс на их позицию с конца (1-ую цифру на 9ую позицию и т.д)"""
+    """Умножает цифры снилс на их позицию с конца (1-ую цифру на 9ую позицию и т.д)"""
     numbers_snils = snils[:-2]
     result = [int(numbers_snils[i]) * (9 - i) for i in range(9)]
     return result
