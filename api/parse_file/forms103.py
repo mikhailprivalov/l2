@@ -58,7 +58,8 @@ def parse_work_sheet(ws: Worksheet):
 
     normalize_actions = [
         {
-            "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"}, "normalize_funcs": {"remove_double_spaces"},
+            "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"},
+            "normalize_funcs": {"remove_double_spaces"},
         },
         {
             "fields": {"snils"}, "normalize_funcs": {"normalize_snils"}
