@@ -50,7 +50,9 @@ def get_hospitals_podrazdeleniya(hospital):
 
 def get_all_hospitals():
     from hospitals.models import Hospitals
+
     hospitals_data = Hospitals.objects.values('pk', 'short_title', 'title').all().exclude(hide=True).order_by('title')
+    hospitals_data = hospitals_data.exclude(not_has_price=True)
     return [{"id": x["pk"], "label": x['short_title'] or x['title']} for x in hospitals_data]
 
 
