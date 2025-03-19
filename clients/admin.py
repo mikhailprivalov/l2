@@ -53,7 +53,7 @@ class ScreeningRegPlanAdmin(admin.ModelAdmin):
 
 @admin.register(models.Phones)
 class PhonesAdmin(admin.ModelAdmin):
-    pass
+    search_fields = ('card__number',)
 
 
 @admin.register(models.AgeCache)
