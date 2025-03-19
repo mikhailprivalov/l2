@@ -738,7 +738,7 @@ def form_01(request_data):
         ]
         objs.extend(title_page)
         objs.append(Spacer(1, 3 * mm))
-        objs.extend([Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}, возраст {patient_data["age"]}, рост пациента, {first_inspection["height"]} см', styleT),
+        objs.extend([Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data.get("fio")}, возраст {patient_data.get("age")}, рост пациента, {first_inspection.get("height")} см', styleT),
                      Spacer(1, 2 * mm),
                      ])
 
@@ -861,7 +861,7 @@ def form_02(request_data):
     objs = []
 
     objs.extend(title_page)
-    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data["fio"]}  Дата рождения {normalize_date(patient_data["born"])}г.', style))
+    objs.append(Paragraph(f'Фамилия, имя, отчество (при наличии) {patient_data.get("fio")}  Дата рождения {normalize_date(patient_data.get("born"))}г.', style))
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph(f'N медицинской карты {num_dir}  Палата______', styleT))
     objs.append(Spacer(1, 2 * mm))
