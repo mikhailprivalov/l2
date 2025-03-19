@@ -577,6 +577,7 @@ class FTPConnection:
                     pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price_code_value}"
                     pv.PV1.PV1_7.value = f"{price_code_value}"
                 if direction.istochnik_f.title.lower() == "договор" and "договор" in price.title.lower():
+                    price_code_value = price.symbol_code
                     pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price_code_value}"
                     pv.PV1.PV1_7.value = f"{price_code_value}"
         else:
