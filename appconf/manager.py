@@ -216,8 +216,10 @@ class SettingManager:
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
             "forms_url": SettingManager.forms_url(),
+            "l2_show_external_org_fin_sources": SettingManager.get("l2_show_external_org_fin_sources", default='', default_type='s').split(","),
         }
         cache.set(k, simplejson.dumps(result), 60 * 60 * 8)
+
         return result
 
     @staticmethod

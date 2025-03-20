@@ -42,7 +42,7 @@ def normalize_date(value: str):
     return normalized_value
 
 
-def normalize_values(value: str, actions: list):
+def normalize_values(value: str, actions: set):
     """
     Перебирает действия по нормализации
     """

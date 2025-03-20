@@ -39,24 +39,50 @@ def check_date(data):
     return {"ok": True, "message": ""}
 
 
+def get_snils_numbers_multiped_by_reverse_position(snils):
+    """Умножает цифры снилс на их позицию с конца (1-ую цифру на 9ую позицию и т.д)"""
+    numbers_snils = snils[:-2]
+    result = [int(numbers_snils[i]) * (9 - i) for i in range(9)]
+    return result
+
+
+def get_snils_summ(snils: str):
+    """
+    Получает сумму цифр снилс
+    """
+    snils_numbers_multiped_position = get_snils_numbers_multiped_by_reverse_position(snils)
+    summ = sum(snils_numbers_multiped_position)
+    return summ
+
+
+def check_control_summ_snils(snils: str):
+    summ = get_snils_summ(snils)
+    if summ < 100:
+        check_digits = summ
+    else:
+        check_digits = summ % 101
+        if check_digits == 100:
+            check_digits = 0
+    result = int(snils[-2:]) == check_digits
+    return result
+
+
 def check_snils(data):
     value = data.get("value")
     if value:
-        result_check = petrovna.validate_snils(value)
-        if isinstance(result_check, bool) and not result_check:
-            return {"ok": False, "message": "не корректный"}
-        elif isinstance(result_check, tuple):
+        result_check = check_control_summ_snils(value)
+        if not result_check:
             return {"ok": False, "message": "не корректный"}
     return {"ok": True, "message": ""}
 
 
-def check_values(value: str, checks: list, value_len: int, return_key: str):
+def check_values(value: str, checks_funcs: set, value_len: int, return_key: str):
     """
     Перебирает проверки, на входе list с названиями
     not_empty - обязательно значение
     """
-    for check in checks:
-        check_function = import_string(f"api.parse_file.validation.check_{check}")
+    for check_func in checks_funcs:
+        check_function = import_string(f"api.parse_file.validation.{check_func}")
         result = check_function({"value": value, "max_len": value_len})
         if not result.get("ok"):
             return {"ok": result.get("ok"), "message": f"{return_key}: {result.get('message')}"}
