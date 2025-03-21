@@ -42,7 +42,7 @@ from django.utils import timezone
 from api import sql_func
 from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid
 from api.patients.views import save_dreg
-from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda
+from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda, get_field_lab_result_by_research_and_test
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
@@ -3155,6 +3155,10 @@ def last_field_result(request):
                     is_diag_table = True
                 if not is_diag_table and not result:
                     result = field_get_link_data_by_cda(tuple(field_pks), client_pk, parent_iss=tuple(parent_iss), use_parent_iss='1')
+            if data[1] == "laboratory":
+                lab_research = data[2]
+                days_ago = int(data[4])
+                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=tuple(parent_iss))
             else:
                 field_pks = [data[1]]
 
@@ -3369,6 +3373,26 @@ def field_get_aggregate_operation_data(operations_data):
                 temp_value = result.get('value', ' ')
                 result["value"] = f"{temp_value}\n{value};"
 
+    return result
+
+
+def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
+    result = ""
+    lab_research = json.loads(lab_research)
+    data_lab_research = {}
+    for k, v in lab_research.items():
+        data_lab_research[int(k)] = [int(i) for i in v.split(",")]
+    date_end = utils.current_time()
+    date_start = date_end + relativedelta(days=-days_ago)
+    date_start = datetime.combine(date_start, dtime.min)
+    date_end = datetime.combine(date_end, dtime.max)
+    researhes_ids = data_lab_research.keys()
+    fraction_ids = []
+    for i in data_lab_research.values():
+        fraction_ids.extend(i)
+
+    result1 = get_field_lab_result_by_research_and_test(date_start, date_end, tuple(researhes_ids), tuple(fraction_ids), parent_iss=parent_iss, use_parent_iss='1')
+    print(result1)
     return result
 
 
