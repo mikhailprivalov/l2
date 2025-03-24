@@ -3397,11 +3397,11 @@ def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
         if not final_result.get(i.get("date")):
             final_result[i.get("date")] = i.get("result")
         else:
-            tmp_str = f'{final_result[i.get("date")]}, {i.get("result")}'
+            tmp_str = f'{final_result[i.get("date")]}; {i.get("result")}'
             final_result[i.get("date")] = tmp_str
     result = ""
     for k, v in final_result.items():
-        result = f"{result} {k}: {v};"
+        result = f"{result}\n{k}: {v};"
     return {"value": result}
 
 
