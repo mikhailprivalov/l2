@@ -195,10 +195,10 @@ def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_id
             directions_issledovaniya.research_id as research_id, 
             directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
-            directions_result.value, 
-            directions_result.fraction_id,
-            dr.title as research_title,
-            df.title as fraction_title
+            directions_result.value,  
+            df.title as fraction_title,
+            du.title as unit_title,
+            df.units as unit_title_deprecated
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya 
             ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
@@ -206,6 +206,9 @@ def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_id
             ON directions_issledovaniya.id=directions_result.issledovaniye_id
             LEFT JOIN directory_fractions df on directions_result.fraction_id = df.id
             LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+            
+            LEFT JOIN directory_unit du on df.unit_id = du.id
+            
             WHERE directions_issledovaniya.research_id in %(researhes_ids)s
             and directions_result.fraction_id in %(fraction_ids)s
             and directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s

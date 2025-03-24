@@ -3377,7 +3377,6 @@ def field_get_aggregate_operation_data(operations_data):
 
 
 def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
-    result = ""
     lab_research = json.loads(lab_research)
     data_lab_research = {}
     for k, v in lab_research.items():
@@ -3391,9 +3390,20 @@ def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
     for i in data_lab_research.values():
         fraction_ids.extend(i)
 
-    result1 = get_field_lab_result_by_research_and_test(date_start, date_end, tuple(researhes_ids), tuple(fraction_ids), parent_iss=parent_iss, use_parent_iss='1')
-    print(result1)
-    return result
+    result_sql = get_field_lab_result_by_research_and_test(date_start, date_end, tuple(researhes_ids), tuple(fraction_ids), parent_iss=parent_iss, use_parent_iss='1')
+    final_result = {}
+
+    result = [{"date": i.date_confirm, "result": f"{i.fraction_title}- {i.value}({i.unit_title if i.unit_title else i.unit_title_deprecated})"} for i in result_sql]
+    for i in result:
+        if not final_result.get(i.get("date")):
+            final_result[i.get("date")] = i.get("result")
+        else:
+            tmp_str = f'{final_result[i.get("date")]}, {i.get("result")}'
+            final_result[i.get("date")] = tmp_str
+    result = ""
+    for k, v in final_result.items():
+        result = f"{result} {k}: {v};"
+    return {"value": result}
 
 
 def field_get_aggregate_text_protocol_data(data):
