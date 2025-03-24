@@ -3391,9 +3391,8 @@ def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
         fraction_ids.extend(i)
 
     result_sql = get_field_lab_result_by_research_and_test(date_start, date_end, tuple(researhes_ids), tuple(fraction_ids), parent_iss=parent_iss, use_parent_iss='1')
-    final_result = {}
-
     result = [{"date": i.date_confirm, "result": f"{i.fraction_title}- {i.value}({i.unit_title if i.unit_title else i.unit_title_deprecated})"} for i in result_sql]
+    final_result = {}
     for i in result:
         if not final_result.get(i.get("date")):
             final_result[i.get("date")] = i.get("result")

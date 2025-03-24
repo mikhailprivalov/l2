@@ -193,7 +193,6 @@ def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_id
             """
             SELECT     
             directions_issledovaniya.research_id as research_id, 
-            directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s as time_confirmation,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
             directions_result.value,  
             df.title as fraction_title,
@@ -206,13 +205,11 @@ def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_id
             ON directions_issledovaniya.id=directions_result.issledovaniye_id
             LEFT JOIN directory_fractions df on directions_result.fraction_id = df.id
             LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
-            
             LEFT JOIN directory_unit du on df.unit_id = du.id
-            
             WHERE directions_issledovaniya.research_id in %(researhes_ids)s
-            and directions_result.fraction_id in %(fraction_ids)s
-            and directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s
-            and directions_result.value is not NULL
+            AND directions_result.fraction_id in %(fraction_ids)s
+            AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s
+            AND directions_result.value is not NULL
             AND 
             CASE 
               WHEN %(use_parent_iss)s != '-1' THEN 
