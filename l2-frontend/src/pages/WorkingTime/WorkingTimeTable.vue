@@ -169,13 +169,13 @@ const cellStyleOption = {
     if (column.isWeekend) {
       return 'table-body-cell-weekend';
     }
-    return '';
+    return 'table-body-cell';
   },
   headerCellClass: ({ column }) => {
     if (column.isWeekend) {
       return 'table-header-cell-weekend';
     }
-    return '';
+    return 'table-header-cell';
   },
 };
 const rowStyleOption = {
@@ -209,8 +209,16 @@ const columnHiddenOption = {
 <style lang="scss">
 .table-body-cell-weekend {
   background-color: #cbf2cb !important;
+  padding: 10px 0 !important;
 }
 .table-header-cell-weekend {
   background-color: #cbf2cb !important;
+  padding: 10px 0 !important;
+}
+.table-body-cell {
+  padding: 10px 0 !important;
+}
+.table-header-cell {
+  padding: 10px 0 !important;
 }
 </style>

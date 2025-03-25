@@ -279,7 +279,7 @@ button[disabled] {
   margin: 0;
 }
 .current-time-wh {
-  width: 50px;
+  width: 100%;
   height: 42px;
 }
 </style>
