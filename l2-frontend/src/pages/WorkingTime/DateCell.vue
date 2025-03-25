@@ -18,14 +18,14 @@
       <p class="current-time-text">{{ currentTime }}</p>
       <!-- eslint-enable -->
     </button>
-    <button
-      v-tippy
-      class="transparentButton"
-      title="Скопировать предыдущий"
-      @click="copyPrevTime"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
+<!--    <button-->
+<!--      v-tippy-->
+<!--      class="transparentButton"-->
+<!--      title="Скопировать предыдущий"-->
+<!--      @click="copyPrevTime"-->
+<!--    >-->
+<!--      <i class="fa-solid fa-copy" />-->
+<!--    </button>-->
 
     <div
       id="temp"
