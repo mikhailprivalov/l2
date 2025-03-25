@@ -114,20 +114,14 @@ const getColumns = () => {
       field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'center', width: 20, fixed: 'center',
     },
     {
-      field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 170, fixed: 'left',
+      field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 165, fixed: 'left',
     },
     {
-      field: 'position', key: 'position', title: 'Должность', align: 'center', width: 120, fixed: 'left',
+      field: 'position', key: 'position', title: 'Должность', align: 'center', width: 115, fixed: 'left',
     },
     {
       field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 50,
     },
-    // {
-    //   field: 'normMonth', key: 'normMonth', title: 'Норма', align: 'center', width: 70,
-    // },
-    // {
-    //   field: 'normDay', key: 'normDay', title: 'Смена', align: 'center', width: 70,
-    // },
   ];
   const daysMonth = getMonthDays(props.year, props.month);
   const data = daysMonth.map((col) => {
@@ -139,7 +133,7 @@ const getColumns = () => {
       field: dateString,
       title: dateTitle,
       align: 'center',
-      width: 50,
+      width: 49,
       isWeekend: weekend,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
@@ -155,6 +149,10 @@ const getColumns = () => {
     };
   });
   columnTemplate.push(...data);
+  const totalHoursCol = {
+    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 40,
+  };
+  columnTemplate.push(totalHoursCol);
   columns.value = columnTemplate;
 };
 
