@@ -3,7 +3,7 @@ import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from laboratory.decorators import group_required
-from employees.models import Department, EmployeeWorkingHoursSchedule
+from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument
 
 
 @login_required()
@@ -38,7 +38,11 @@ def update_time(request):
 @group_required('График рабочего времени')
 def create_document(request):
     request_data = json.loads(request.body)
+    doctor_profile = request_data.user.doctorprofile
+    year = request_data.get("year")
+    month = request_data.get("month")
+    department_id = request_data.get("departmentId")
+    TimeTrackingDocument.create_document(year, month, department_id, doctor_profile)
     result = {"ok": True, "message": ""}
-    # result = EmployeeWorkingHoursSchedule.get_work_time(request_data["year"], request_data["month"], request_data["departmentId"])
-    return JsonResponse({"result": result})
+    return JsonResponse(result)
 
