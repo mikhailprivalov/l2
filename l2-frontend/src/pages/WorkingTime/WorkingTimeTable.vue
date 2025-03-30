@@ -56,6 +56,7 @@ import moment from 'moment';
 
 import api from '@/api';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
+import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 
@@ -154,7 +155,24 @@ const getColumns = () => {
       field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 165, fixed: 'left',
     },
     {
-      field: 'position', key: 'position', title: 'Должность', align: 'center', width: 115, fixed: 'left',
+      field: 'position',
+      key: 'position',
+      title: 'Должность',
+      align: 'center',
+      width: 115,
+      fixed: 'left',
+      isPosition: true,
+      renderBodyCell: ({ row, column }, h) => h(
+        VueTippyDiv,
+        {
+          props: {
+            text: row[column.field] ? row[column.field] : '',
+            tippyMaxWidth: '50%',
+            ellipsis: true,
+          },
+          class: 'position-text',
+        },
+      ),
     },
     {
       field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 50,
@@ -203,6 +221,9 @@ const cellStyleOption = {
   bodyCellClass: ({ column }) => {
     if (column.isWeekend) {
       return 'table-body-cell-weekend';
+    }
+    if (column.isPosition) {
+      return 'position-text';
     }
     return 'table-body-cell';
   },
@@ -258,5 +279,13 @@ const columnHiddenOption = {
 }
 .table-header-cell {
   padding: 10px 0 !important;
+}
+.table-body-position-cell {
+  padding: 10px 2px !important;
+}
+.position-text {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 </style>
