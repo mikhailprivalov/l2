@@ -43,15 +43,3 @@ const showTitle = (event) => {
   }
 };
 </script>
-
-<style scoped lang="scss">
-.text {
-  margin: 0;
-}
-.women {
-  color: #ff73ea;
-}
-.man {
-  color: #00bfff;
-}
-</style>
