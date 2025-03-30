@@ -13,19 +13,20 @@
         trigger: 'click',
       }"
       class="transparentButton current-time-wh"
+      @hide="updateTime"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
       <p class="current-time-text">{{ currentTime }}</p>
       <!-- eslint-enable -->
     </button>
-    <button
-      v-tippy
-      class="transparentButton"
-      title="Скопировать предыдущий"
-      @click="copyPrevTime"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
+    <!--    <button-->
+    <!--      v-tippy-->
+    <!--      class="transparentButton"-->
+    <!--      title="Скопировать предыдущий"-->
+    <!--      @click="copyPrevTime"-->
+    <!--    >-->
+    <!--      <i class="fa-solid fa-copy" />-->
+    <!--    </button>-->
 
     <div
       id="temp"
@@ -59,14 +60,6 @@
             type="time"
           >
         </div>
-        <button
-          v-tippy
-          class="transparentButton tp-button"
-          title="Сохранить"
-          @click="updateTime"
-        >
-          <i class="fa-solid fa-save" />
-        </button>
       </div>
       <div class="tp-row">
         <RadioFieldById
@@ -122,9 +115,6 @@ const typesTimeOff = ref([
 const selectedTypeLabel = ref('');
 
 const timeValid = () => {
-  if (!startWork.value && !endWork.value && !selectedTimeOff.value) {
-    return { valid: false, reason: 'Время не выбрано' };
-  }
   if (startWork.value > endWork.value && endWork.value !== '00:00' && !selectedTimeOff.value) {
     return { valid: false, reason: 'Время начала больше времени конца' };
   }
@@ -153,6 +143,21 @@ const timeOff = () => {
   selectedTimeOption.value = null;
 };
 
+const updateTime = async () => {
+  const { valid, reason } = timeValid();
+  if (!valid) {
+    root.$emit('msg', 'error', reason);
+  } else {
+    emit('changeWorkTime', {
+      employeePositionId: props.employeePositionId,
+      date: props.date,
+      startWorkTime: startWork.value,
+      endWorkTime: endWork.value,
+      type: selectedTimeOff.value,
+    });
+  }
+};
+
 watch([startWork, endWork], () => {
   if (startWork.value && endWork.value && selectedTimeOff.value) {
     selectedTimeOff.value = null;
@@ -176,34 +181,11 @@ const appendCurrentTime = () => {
   selectedTimeOption.value = null;
 };
 
-const updateTime = async () => {
-  const { valid, reason } = timeValid();
-  if (!valid) {
-    root.$emit('msg', 'error', reason);
-  } else {
-    await store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('/working-time/update-time', {
-      startWork: `${props.date} ${startWork.value}`,
-      endWork: `${props.date} ${endWork.value}`,
-      type: selectedTimeOff.value,
-      employeePositionId: props.employeePositionId,
-      date: props.date,
-    });
-    await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      emit('changeWorkTime');
-      root.$emit('msg', 'ok', 'Обновлено');
-    } else {
-      root.$emit('msg', 'error', message);
-    }
-  }
-};
-
-const copyPrevTime = () => {
-  if (props.prevWorkTime) {
-    root.$emit('msg', 'ok', 'Скопировано');
-  }
-};
+// const copyPrevTime = () => {
+//   if (props.prevWorkTime) {
+//     root.$emit('msg', 'ok', 'Скопировано');
+//   }
+// };
 
 watch(() => props.workTime, () => {
   appendCurrentTime();

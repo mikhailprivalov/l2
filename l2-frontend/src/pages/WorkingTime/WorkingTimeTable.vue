@@ -131,8 +131,15 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
   return employeesFio.includes(searchTerm);
 }));
 
-const changeWorkTime = async () => {
-  await getEmployeesWorkTime();
+const changeWorkTime = async ({
+  employeePositionId, date, startWorkTime, endWorkTime, type,
+}) => {
+  const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
+  row[date] = {
+    startWorkTime,
+    endWorkTime,
+    type,
+  };
 };
 
 const columns = ref([]);
