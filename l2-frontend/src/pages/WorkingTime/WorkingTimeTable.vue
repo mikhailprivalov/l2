@@ -82,7 +82,7 @@ const filtersFull = computed(() => !!(props.year && props.month && props.departm
 
 const search = ref('');
 
-const noDocument = ref(true);
+const noDocument = ref(false);
 
 const employeesWorkTime = ref([]);
 
