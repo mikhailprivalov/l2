@@ -12,8 +12,10 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      class="transparentButton current-time-wh"
-      @hide="updateTime"
+      :class="cellSelect ? 'transparentButton current-time-wh cell-select' : 'transparentButton current-time-wh'"
+      @hide="updateCellSelect(false)"
+      @hidden="updateTime"
+      @show="updateCellSelect(true)"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
       <p class="current-time-text">{{ currentTime }}</p>
@@ -98,6 +100,11 @@ const props = defineProps({
 });
 
 const root = getCurrentInstance().proxy.$root;
+
+const cellSelect = ref(false);
+const updateCellSelect = (select: boolean) => {
+  cellSelect.value = select;
+};
 const startWork = ref(null);
 const endWork = ref(null);
 const selectedTimeOff = ref(null);
@@ -203,6 +210,10 @@ watch(() => props.workTime, () => {
 }
 .transparentButton:active {
   background-color: #37BC9B;
+  color: #FFFFFF;
+}
+.cell-select {
+  background-color: #434a54;
   color: #FFFFFF;
 }
 button[disabled] {
