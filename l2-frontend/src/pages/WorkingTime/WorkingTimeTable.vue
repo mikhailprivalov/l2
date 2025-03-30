@@ -219,9 +219,6 @@ watch(() => [props.year, props.month], () => {
 
 const cellStyleOption = {
   bodyCellClass: ({ column }) => {
-    if (column.isWeekend) {
-      return 'table-body-cell-weekend';
-    }
     if (column.isPosition) {
       return '';
     }
@@ -266,10 +263,6 @@ const columnHiddenOption = {
 </style>
 
 <style lang="scss">
-.table-body-cell-weekend {
-  background-color: #cbf2cb !important;
-  padding: 10px 0 !important;
-}
 .table-header-cell-weekend {
   background-color: #cbf2cb !important;
   padding: 10px 0 !important;
