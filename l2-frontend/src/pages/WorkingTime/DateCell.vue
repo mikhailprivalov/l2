@@ -1,5 +1,5 @@
 <template>
-  <div class="root">
+  <div>
     <button
       v-tippy="{
         html: '#temp',
@@ -18,14 +18,14 @@
       <p class="current-time-text">{{ currentTime }}</p>
       <!-- eslint-enable -->
     </button>
-<!--    <button-->
-<!--      v-tippy-->
-<!--      class="transparentButton"-->
-<!--      title="Скопировать предыдущий"-->
-<!--      @click="copyPrevTime"-->
-<!--    >-->
-<!--      <i class="fa-solid fa-copy" />-->
-<!--    </button>-->
+    <button
+      v-tippy
+      class="transparentButton"
+      title="Скопировать предыдущий"
+      @click="copyPrevTime"
+    >
+      <i class="fa-solid fa-copy" />
+    </button>
 
     <div
       id="temp"
@@ -212,10 +212,6 @@ watch(() => props.workTime, () => {
 </script>
 
 <style scoped lang="scss">
-.root {
-  display: flex;
-  flex-wrap: nowrap;
-}
 .time-width {
   margin: 0;
 }
