@@ -1,6 +1,16 @@
 <template>
   <div>
-    <div>
+    <div
+      v-if="noDocument && filtersFull"
+      class="create-document"
+    >
+      <button
+        class="btn btn-blue-nb"
+      >
+        Создать график
+      </button>
+    </div>
+    <div v-if="!noDocument && filtersFull">
       <label
         for="search"
         class="filters"
@@ -15,7 +25,6 @@
       class="white-background"
     >
       <VeTable
-        v-show="filteredEmployees.length > 0"
         max-height="calc(100vh - 200px)"
         :columns="columns"
         :table-data="filteredEmployees"
@@ -67,6 +76,8 @@ const props = defineProps({
 });
 
 const search = ref('');
+const noDocument = ref(true);
+const filtersFull = computed(() => !!(props.year && props.month && props.department));
 
 const employeesWorkTime = ref([]);
 
@@ -78,7 +89,12 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  employeesWorkTime.value = result;
+  if (result.length > 0) {
+    employeesWorkTime.value = result;
+    noDocument.value = false;
+  } else {
+    noDocument.value = true;
+  }
 };
 
 watch(() => [props.year, props.month, props.department], () => {
@@ -201,6 +217,9 @@ const columnHiddenOption = {
 }
 .filters {
   margin: 0 10px;
+}
+.create-document {
+  margin: 5px 10px
 }
 </style>
 
