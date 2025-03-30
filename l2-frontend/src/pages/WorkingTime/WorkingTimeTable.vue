@@ -98,6 +98,7 @@ const getEmployeesWorkTime = async () => {
     employeesWorkTime.value = result;
     noDocument.value = false;
   } else {
+    employeesWorkTime.value = [];
     noDocument.value = true;
   }
 };
