@@ -6,6 +6,7 @@
     >
       <button
         class="btn btn-blue-nb"
+        @click="createDocument"
       >
         Создать график
       </button>
@@ -46,7 +47,7 @@
 
 <script setup lang="ts">
 import {
-  computed, ref, watch,
+  computed, getCurrentInstance, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -75,9 +76,13 @@ const props = defineProps({
   },
 });
 
-const search = ref('');
-const noDocument = ref(true);
+const root = getCurrentInstance().proxy.$root;
+
 const filtersFull = computed(() => !!(props.year && props.month && props.department));
+
+const search = ref('');
+
+const noDocument = ref(true);
 
 const employeesWorkTime = ref([]);
 
@@ -94,6 +99,21 @@ const getEmployeesWorkTime = async () => {
     noDocument.value = false;
   } else {
     noDocument.value = true;
+  }
+};
+
+const createDocument = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/create-document', {
+    year: props.year,
+    month: props.month + 1,
+    departmentId: props.department,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
   }
 };
 
