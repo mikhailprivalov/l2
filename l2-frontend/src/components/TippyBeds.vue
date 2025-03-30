@@ -1,25 +1,32 @@
 <template>
-  <component
-    :is="tag"
-    v-tippy="{
-      maxWidth: props.tippyMaxWidth,
-    }"
-    :title="show ? props.text : null"
-    @mouseenter="showTitle"
+  <VueTippyDiv
+    :tag="props.tag"
   >
-    <slot />
-    {{ props.text }}
-  </component>
+    <a
+      v-if="props.link && props.showLink"
+      class="a-under"
+      target="_blank"
+      :href="props.link"
+      :class="props.gender === 'ж' ? 'women' : 'men'"
+    >
+      {{ props.text }}
+    </a>
+    <p
+      v-else
+      class="text"
+    >
+      {{ props.text }}
+    </p>
+  </VueTippyDiv>
 </template>
 
 <script setup lang="ts">
-
-import { ref } from 'vue';
+import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 
 const props = defineProps({
   text: {
     type: [String, undefined, null],
-    required: false,
+    required: true,
   },
   tippyMaxWidth: {
     type: String,
@@ -44,18 +51,6 @@ const props = defineProps({
   },
 });
 
-const show = ref(false);
-
-const showTitle = (event) => {
-  if (event.target.scrollWidth > event.target.clientWidth) {
-    show.value = true;
-  } else {
-    show.value = false;
-    event.target.removeAttribute('data-original-title');
-  }
-};
-
-// eslint-disable-next-line max-len
 </script>
 
 <style scoped lang="scss">
