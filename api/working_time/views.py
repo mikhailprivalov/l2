@@ -32,3 +32,13 @@ def update_time(request):
     date = request_data["date"]
     result = EmployeeWorkingHoursSchedule.update_time(start_work, end_work, type_work, employee_position_id, date)
     return JsonResponse(result)
+
+
+@login_required()
+@group_required('График рабочего времени')
+def create_document(request):
+    request_data = json.loads(request.body)
+    result = {"ok": True, "message": ""}
+    # result = EmployeeWorkingHoursSchedule.get_work_time(request_data["year"], request_data["month"], request_data["departmentId"])
+    return JsonResponse({"result": result})
+
