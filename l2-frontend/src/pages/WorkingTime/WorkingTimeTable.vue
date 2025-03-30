@@ -223,7 +223,7 @@ const cellStyleOption = {
       return 'table-body-cell-weekend';
     }
     if (column.isPosition) {
-      return 'position-text';
+      return '';
     }
     return 'table-body-cell';
   },
