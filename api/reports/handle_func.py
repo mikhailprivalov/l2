@@ -25,7 +25,9 @@ def patologistology_buh(data):
         "Дата рождения": "born_patient",
         "Медицинские услуги": "service_code",
         "Медицинские услуги(платная категория)": "paid_service_code",
+        "Медицинские услуги(поликлиника)": "polyclinic_service_code",
         "Код по МКБ": "mcb10_code",
+        "Тип учреждения": "type_hospital",
     }
     tmp_data = tmp_dict_data.copy()
 
@@ -33,9 +35,17 @@ def patologistology_buh(data):
         if prev_direction != i.direction_id and step != 0:
             if not tmp_data.get("paid_service_code"):
                 tmp_data["paid_service_code"] = "-"
+            if not tmp_data.get("polyclinic_service_code"):
+                tmp_data["polyclinic_service_code"] = "-"
+            if not tmp_data.get("type_hospital"):
+                tmp_data["type_hospital"] = "-"
             result.append(tmp_data.copy())
             tmp_data = tmp_dict_data.copy()
-        tmp_data["direction"] = i.direction_id
+        is_rmis_number = ""
+        if i.rmis_number:
+            is_rmis_number = "e"
+
+        tmp_data["direction"] = f"{i.direction_id} - {is_rmis_number}"
         tmp_data["fin_source"] = i.iss_finsource_title
         tmp_data["doctor_fio"] = f"{i.doctor_family} {i.doctor_name} {i.doctor_patronymic}"
         tmp_data["date_confirm"] = i.date_confirm if i.date_confirm else "-"
@@ -51,5 +61,9 @@ def patologistology_buh(data):
             tmp_data[val] = i.value
     if not tmp_data.get("paid_service_code"):
         tmp_data["paid_service_code"] = "-"
+    if not tmp_data.get("polyclinic_service_code"):
+        tmp_data["polyclinic_service_code"] = "-"
+    if not tmp_data.get("type_hospital"):
+        tmp_data["type_hospital"] = "-"
     result.append(tmp_data.copy())
     return result

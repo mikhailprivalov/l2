@@ -435,6 +435,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'Группа крови',
         'Резус принадлежность',
         'Вес',
+        'Рост',
         'Основной диагноз (описание)',
         'Основной диагноз по МКБ',
         'Осложнение основного диагноза (описание)',
@@ -482,7 +483,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
     tuberculosis, hiv_infection, viral_infections, covid19, syphilis, pediculosis, result_pediculosis_exam = "", "", "", "", "", "", ""
     allergic_reactions, preliminary_diagnosis = "", ""
     date_diagnosis, time_diagnosis = "", ""
-    whom_transfer_health_data = ""
+    whom_transfer_health_data, height = "", ""
 
     if list_values:
         for i in list_values:
@@ -546,6 +547,9 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
                 continue
             if i[3] == 'Вес':
                 weight = i[2]
+                continue
+            if i[3] == 'Рост':
+                height = i[2]
                 continue
             if i[3] == 'Основной диагноз (описание)':
                 final_diagnos = i[2]
@@ -668,6 +672,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
         'blood_group': blood_group,
         'resus_factor': resus_factor,
         'weight': weight,
+        'height': height,
         'final_diagnos': final_diagnos,
         'other_diagnos': other_diagnos,
         'near_diagnos': near_diagnos,
@@ -1261,12 +1266,13 @@ def hosp_get_operation_data(num_dir):
             for field in fields_operation:
                 if (
                     field[3] == 'Название операции'
-                    or (field[3] == 'Название манипуляции')
-                    or (field[3] == 'Наименование оперативного вмешательства (операции)' or (field[3] == 'Наименование услуги'))
+                    or field[3] == 'Название манипуляции'
+                    or field[3] == 'Наименование оперативного вмешательства (операции)'
+                    or field[3] == 'Наименование услуги'
                 ):
                     operation_data['name_operation'] = field[2]
                     continue
-                if field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
+                if field[3] == 'Дата начала' or field[3] == 'Дата проведения' or field[3] == 'Дата начала оперативного вмешательства':
                     operation_data['date'] = normalize_date(field[2])
                     continue
                 if field[3] == 'Время начала':
@@ -1275,18 +1281,18 @@ def hosp_get_operation_data(num_dir):
                 if field[3] == 'Время окончания':
                     operation_data['time_end'] = field[2]
                     continue
-                if field[3] == 'Метод обезболивания' or (field[3] == 'Вид анестезиологического пособия'):
+                if field[3] == 'Метод обезболивания' or field[3] == 'Вид анестезиологического пособия':
                     operation_data['anesthesia method'] = field[2]
                     continue
                 if (
                     field[3] == 'Осложнения'
-                    or (field[3] == 'Реакции и осложнения:')
-                    or (field[3] == 'Осложнения, возникшие в ходе оперативного вмешательства (операции)')
+                    or field[3] == 'Реакции и осложнения'
+                    or field[3] == 'Осложнения, возникшие в ходе оперативного вмешательства (операции)'
                     or field[3] == 'Кровопотеря во время оперативного вмешательства'
                 ):
                     operation_data['complications'] = field[2]
                     continue
-                if field[3] == 'Код операции' or (field[3] == 'Код оперативного вмешательства согласно номенклатуре медицинских услуг') or (field[3] == 'Код услуги'):
+                if field[3] == 'Код операции' or field[3] == 'Код оперативного вмешательства согласно номенклатуре медицинских услуг' or field[3] == 'Код услуги':
                     operation_data['code_operation'] = field[2]
                     continue
                 if field[3] == 'Код манипуляции':

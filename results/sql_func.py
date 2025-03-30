@@ -194,7 +194,8 @@ def check_lab_instrumental_results_by_cards_and_period(cards_id, lab_days_ago_co
             """
                 SELECT
                 dn.client_id as client_id,
-                directions_issledovaniya.research_id
+                directions_issledovaniya.research_id,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id                
                 WHERE 
@@ -212,6 +213,7 @@ def check_lab_instrumental_results_by_cards_and_period(cards_id, lab_days_ago_co
                 'paraclinic_days_ago_confirm': paraclinic_days_ago_confirm,
                 'lab_researches': lab_researches,
                 'paraclinic_researches': paraclinic_researches,
+                'tz': TIME_ZONE,
             },
         )
         rows = namedtuplefetchall(cursor)

@@ -178,7 +178,7 @@
             </td>
           </tr>
           <tr
-            v-if="external_organizations_enabled && canChangeHospitalDirection"
+            v-if="external_organizations_enabled && canChangeHospitalDirection && showExternalOranization"
           >
             <th :class="needSelectHospital && 'has-error-message'">
               Внешняя организация:
@@ -832,11 +832,17 @@ export default {
     contract_source() {
       return this.current_fin.title.toLowerCase().includes('дог');
     },
+    showExternalOranization() {
+      return this.l2_show_external_org_fin_sources.includes(this.current_fin.title.toLowerCase());
+    },
     needShowPriceCategory() {
       return this.l2_price_with_categories && this.pay_source && this.priceCategories.length > 1 && this.show_additions;
     },
     needChangeCase() {
       return this.$store.getters.modules.l2_case && this.kk !== 'stationar' && this.kk !== 'cd';
+    },
+    l2_show_external_org_fin_sources() {
+      return this.$store.getters.modules.l2_show_external_org_fin_sources;
     },
     needRequiredChooseCase() {
       return this.$store.getters.modules.l2_required_choose_caseChoose;
@@ -928,7 +934,7 @@ export default {
       });
     },
     needSelectHospital() {
-      return this.canChangeHospitalDirection && this.hospital_override === -1;
+      return this.canChangeHospitalDirection && this.showExternalOranization && this.hospital_override === -1;
     },
     needSelectCase() {
       return (!this.parentCase && this.needChangeCase && this.research_case === -2 && this.needRequiredChooseCase);

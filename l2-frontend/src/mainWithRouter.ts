@@ -806,6 +806,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/employees',
+      name: 'employees',
+      component: () => import('@/pages/Employees/Employees.vue'),
+      meta: {
+        title: 'Сотрудники',
+        groups: ['Конструктор: Настройка организации'],
+        fullPageLayout: true,
+      },
+    },
+    {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
       component: () => import('@/construct/ConstructRelatedTube.vue'),

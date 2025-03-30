@@ -237,6 +237,7 @@ def menu(request):
                     "nt": True,
                     "access": ["Счет: проект", "Счет: закрытие"],
                 },
+                {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
             ]

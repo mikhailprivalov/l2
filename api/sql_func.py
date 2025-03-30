@@ -163,12 +163,14 @@ def get_field_result_by_cda(client_id, field_ids, count=1, parent_iss=-1, use_pa
             WHERE directions_napravleniya.client_id = %(client_p)s
             and directions_paraclinicresult.field_id in %(field_ids)s
             and directions_issledovaniya.time_confirmation is not NULL
+            and directions_paraclinicresult.value is not NULL
             AND 
-            CASE WHEN %(use_parent_iss)s != '-1' THEN 
+            CASE 
+              WHEN %(use_parent_iss)s != '-1' THEN 
                 directions_napravleniya.parent_id in %(parent_iss)s
-                WHEN %(use_parent_iss)s = '-1' THEN 
-                     directions_issledovaniya.time_confirmation is not Null
-                END
+              WHEN %(use_parent_iss)s = '-1' THEN 
+                directions_issledovaniya.time_confirmation is not Null
+              END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
             """,
             params={
@@ -178,6 +180,53 @@ def get_field_result_by_cda(client_id, field_ids, count=1, parent_iss=-1, use_pa
                 'tz': TIME_ZONE,
                 'parent_iss': parent_iss,
                 'use_parent_iss': use_parent_iss,
+            },
+        )
+
+        row = namedtuplefetchall(cursor)
+    return row
+
+
+def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_ids, fraction_ids, parent_iss=-1, use_parent_iss='-1'):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT     
+            directions_issledovaniya.research_id as research_id, 
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+            directions_result.value,  
+            df.title as fraction_title,
+            du.title as unit_title,
+            df.units as unit_title_deprecated
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya 
+            ON directions_issledovaniya.napravleniye_id=directions_napravleniya.id
+            LEFT JOIN directions_result
+            ON directions_issledovaniya.id=directions_result.issledovaniye_id
+            LEFT JOIN directory_fractions df on directions_result.fraction_id = df.id
+            LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+            LEFT JOIN directory_unit du on df.unit_id = du.id
+            WHERE directions_issledovaniya.research_id in %(researhes_ids)s
+            AND directions_result.fraction_id in %(fraction_ids)s
+            AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s
+            AND directions_result.value is not NULL
+            AND 
+            CASE 
+              WHEN %(use_parent_iss)s != '-1' THEN 
+                directions_napravleniya.parent_id in %(parent_iss)s
+              WHEN %(use_parent_iss)s = '-1' THEN 
+                directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s
+              END
+            ORDER BY directions_issledovaniya.research_id, directions_issledovaniya.time_confirmation
+            """,
+            params={
+                'date_start': date_start,
+                'date_end': date_end,
+                'tz': TIME_ZONE,
+                'parent_iss': parent_iss,
+                'use_parent_iss': use_parent_iss,
+                'researhes_ids': researhes_ids,
+                'fraction_ids': fraction_ids,
             },
         )
 

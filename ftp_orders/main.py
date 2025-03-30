@@ -406,8 +406,11 @@ class FTPConnection:
             self.copy_file(file, FTP_PATH_TO_SAVE)
             self.delete_file(file)
             return
-        fractions_data = get_fsli_fractions_by_research_id(research_id)
-        fractions_fsl = [i.fraction_fsli for i in fractions_data]
+        fractions_fsl = None
+        hl7_with_fractions = SettingManager.get("api_hl7_with_fractions", default='True', default_type='b')
+        if hl7_with_fractions:
+            fractions_data = get_fsli_fractions_by_research_id(research_id)
+            fractions_fsl = [i.fraction_fsli for i in fractions_data]
 
         doctor_family_confirm = obr.OBR_32.OBR_32_2.value
         doctor_name_confirm = obr.OBR_32.OBR_32_3.value
@@ -420,9 +423,9 @@ class FTPConnection:
             is_confirm = False
 
         obxes = hl7_result.ORU_R01_RESPONSE.ORU_R01_ORDER_OBSERVATION.ORU_R01_OBSERVATION
-        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
         result = []
         fsli_error = False
+        fractions = {"fsli": "", "title_fraction": "", "value": "", "refs": "", "units": "", "jpeg": "", "html": "", "doc_confirm": "", "date_confirm": "", "note_data": ""}
 
         for obx in obxes:
             tmp_fractions = fractions.copy()
@@ -460,8 +463,10 @@ class FTPConnection:
                 tmp_fractions["html"] = obx.OBX.obx_5.obx_5_1.value
                 result.append(tmp_fractions.copy())
                 continue
-            tmp_fsli = obx.OBX.obx_3.obx_3_1.value
+            if not hl7_with_fractions:
+                continue
 
+            tmp_fsli = obx.OBX.obx_3.obx_3_1.value
             if tmp_fsli not in fractions_fsl:
                 fsli_error = True
                 continue
@@ -572,6 +577,7 @@ class FTPConnection:
                     pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price_code_value}"
                     pv.PV1.PV1_7.value = f"{price_code_value}"
                 if direction.istochnik_f.title.lower() == "договор" and "договор" in price.title.lower():
+                    price_code_value = price.symbol_code
                     pv.PV1.PV1_20.value = f"Договор^^{price.contract_number}^{price_code_value}"
                     pv.PV1.PV1_7.value = f"{price_code_value}"
         else:
@@ -788,9 +794,9 @@ def process_push_orders():
             directions = []
             directions_external_executor = []
             if ftp_connection.hospital.is_auto_transfer_hl7_file:
-                directions = Napravleniya.objects.filter(hospital=ftp_connection.hospital, need_order_redirection=True)[:450]
+                directions = Napravleniya.objects.filter(hospital=ftp_connection.hospital, need_order_redirection=True)[:750]
             else:
-                directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:50]
+                directions_external_executor = Napravleniya.objects.filter(external_executor_hospital=ftp_connection.hospital, need_order_redirection=True)[:750]
             for dir_external in directions_external_executor:
                 if dir_external not in directions:
                     tube_data = []

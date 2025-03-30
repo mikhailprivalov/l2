@@ -42,7 +42,7 @@ from django.utils import timezone
 from api import sql_func
 from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid
 from api.patients.views import save_dreg
-from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda
+from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda, get_field_lab_result_by_research_and_test
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
@@ -1893,6 +1893,7 @@ def directions_paraclinic_form(request):
                     or iss["research"]["is_global_direction_params"]
                     or iss["research"]["is_expertise"]
                     or iss["research"]["is_monitoring"]
+                    or iss["research"]["is_microbiology"]
                     or iss["research"]["is_treatment"]
                     or iss["research"]["is_stom"]
                 ):
@@ -2301,6 +2302,7 @@ def directions_paraclinic_result(request):
                         or f.title == "Медицинские услуги(поликлиника)"
                         or f.title == "Медицинские услуги(платная категория)"
                         or f.title == "Медицинские услуги"
+                        or f.title == "Тип учреждения"
                     )
                 ):
                     ParaclinicResult.objects.filter(issledovaniye=iss, field__pk=field["pk"]).delete()
@@ -2874,6 +2876,8 @@ def last_field_result(request):
         else:
             district = ""
         result = {"value": district}
+    elif request_data["fieldPk"].find('%patient_card_number') != -1:
+        result = {"value": c.number}
     elif request_data["fieldPk"].find('%hospital') != -1:
         hosp_title = Napravleniya.objects.get(pk=num_dir).hospital_title
         result = {"value": hosp_title}
@@ -3151,6 +3155,10 @@ def last_field_result(request):
                     is_diag_table = True
                 if not is_diag_table and not result:
                     result = field_get_link_data_by_cda(tuple(field_pks), client_pk, parent_iss=tuple(parent_iss), use_parent_iss='1')
+            if data[1] == "laboratory":
+                lab_research = data[2]
+                days_ago = int(data[4])
+                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=tuple(parent_iss))
             else:
                 field_pks = [data[1]]
 
@@ -3176,7 +3184,7 @@ def last_field_result(request):
             paraclinic_field = ParaclinicInputField.objects.filter(cda_option_id__in=cda_id).values_list("pk", flat=True)
             field_pks = list(paraclinic_field)
             field_pks = [i for i in field_pks]
-            result = field_get_link_data_by_cda(tuple(field_pks), client_pk, use_parent_iss='1', days_ago=days_ago)
+            result = field_get_link_data_by_cda(tuple(field_pks), client_pk, days_ago=days_ago)
 
     elif request_data["fieldPk"].find('%control_param#') != -1:
         # %control_param#code#period#find_val
@@ -3366,6 +3374,35 @@ def field_get_aggregate_operation_data(operations_data):
                 result["value"] = f"{temp_value}\n{value};"
 
     return result
+
+
+def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
+    lab_research = json.loads(lab_research)
+    data_lab_research = {}
+    for k, v in lab_research.items():
+        data_lab_research[int(k)] = [int(i) for i in v.split(",")]
+    date_end = utils.current_time()
+    date_start = date_end + relativedelta(days=-days_ago)
+    date_start = datetime.combine(date_start, dtime.min)
+    date_end = datetime.combine(date_end, dtime.max)
+    researhes_ids = data_lab_research.keys()
+    fraction_ids = []
+    for i in data_lab_research.values():
+        fraction_ids.extend(i)
+
+    result_sql = get_field_lab_result_by_research_and_test(date_start, date_end, tuple(researhes_ids), tuple(fraction_ids), parent_iss=parent_iss, use_parent_iss='1')
+    result = [{"date": i.date_confirm, "result": f"{i.fraction_title}- {i.value}({i.unit_title if i.unit_title else i.unit_title_deprecated})"} for i in result_sql]
+    final_result = {}
+    for i in result:
+        if not final_result.get(i.get("date")):
+            final_result[i.get("date")] = i.get("result")
+        else:
+            tmp_str = f'{final_result[i.get("date")]}; {i.get("result")}'
+            final_result[i.get("date")] = tmp_str
+    result = ""
+    for k, v in final_result.items():
+        result = f"{result}\n{k}: {v};"
+    return {"value": result}
 
 
 def field_get_aggregate_text_protocol_data(data):
@@ -3849,14 +3886,11 @@ def tubes_for_get(request):
                     with transaction.atomic():
                         try:
                             # if direction.hospital and direction.hospital.use_self_generate_tube:
+                            hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                             if direction.hospital:
                                 hospital_for_generator_tube = direction.hospital
-                            elif direction.hospital and not direction.external_executor_hospital:
-                                hospital_for_generator_tube = direction.hospital
-                            elif direction.external_executor_hospital:
+                            if direction.external_executor_hospital:
                                 hospital_for_generator_tube = direction.external_executor_hospital
-                            else:
-                                hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                             generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                             generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                             number = generator.get_next_value()

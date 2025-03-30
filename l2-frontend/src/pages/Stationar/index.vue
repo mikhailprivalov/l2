@@ -1685,7 +1685,7 @@ export default {
     async copy_results(row, pk) {
       await this.$store.dispatch(actions.INC_LOADING);
       this.hide_results();
-      const { data } = await directionsPoint.paraclinicDataByFields({ pk });
+      const { data } = await directionsPoint.paraclinicDataByFields({ pk, pk_dest: row.pk });
       this.replace_fields_values(row, data);
       await this.$store.dispatch(actions.DEC_LOADING);
     },
@@ -1765,7 +1765,7 @@ export default {
     replace_fields_values(row, data) {
       for (const g of row.research.groups) {
         for (const f of g.fields) {
-          if (![1, 3, 16, 17, 20, 13, 14, 11].includes(f.field_type)) {
+          if (![1, 3, 16, 17, 20, 11].includes(f.field_type)) {
             f.value = data[f.pk] || '';
           }
         }

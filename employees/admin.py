@@ -3,6 +3,7 @@ from .models import (
     Employee,
     Position,
     Department,
+    TypeWorkTimeEmployee,
     EmployeePosition,
     EmployeeWorkingHoursSchedule,
     WorkDayStatus,
@@ -40,6 +41,17 @@ class DepartmentAdmin(admin.ModelAdmin):
     search_fields = ('hospital', 'name')
     ordering = ('hospital', 'name', 'is_active')
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
+
+
+@admin.register(TypeWorkTimeEmployee)
+class TypeWorkTimeEmployeeAdmin(admin.ModelAdmin):
+    list_display = (
+        'pk',
+        'title',
+    )
+    list_filter = ('title',)
+    search_fields = ('pk', 'title')
+    ordering = ('pk', 'title')
 
 
 @admin.register(EmployeePosition)

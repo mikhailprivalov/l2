@@ -243,6 +243,8 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         "Комментарии к заключению и рекомендации",
         "Врач-консультант",
         "Медицинские услуги(платная категория)",
+        "Медицинские услуги(поликлиника)",
+        "Тип учреждения",
     ]
     result = fields_result_only_title_fields(iss, title_fields, False)
     data = {}
@@ -268,6 +270,10 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         data["Врач-консультант"] = ""
     if not data.get("Медицинские услуги(платная категория)"):
         data["Медицинские услуги(платная категория)"] = ""
+    if not data.get("Медицинские услуги(платная категория)"):
+        data["Медицинские услуги(поликлиника)"] = ""
+    if not data.get("Тип учреждения"):
+        data["Тип учреждения"] = ""
 
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph(f'{open_bold_tag}1. Отделение, направившее биопсийный (операционный) материал:{close_tag_bold}{data["Отделение направившее"]}', style_ml))
@@ -337,6 +343,8 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         med_service = {"code": "", "title": ""}
     if iss.price_category and data.get("Медицинские услуги(платная категория)"):
         med_service = {"code": "", "title": data.get("Медицинские услуги(платная категория)")}
+    if data.get("Тип учреждения") == "Поликлиника" and data.get("Медицинские услуги(поликлиника)"):
+        med_service = {"code": "", "title": data.get("Медицинские услуги(поликлиника)")}
     fwb.append(Paragraph(f'{open_bold_tag}17. Медицинские услуги:{close_tag_bold} {space_symbol * 2}{med_service["code"]} {med_service["title"]}', style_ml))
     category = json.loads(data["Категория сложности"])
     fwb.append(Paragraph(f'{open_bold_tag}18. Категория сложности:{close_tag_bold} {space_symbol * 2}{category["title"]}', style_ml))

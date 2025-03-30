@@ -21,10 +21,12 @@ def patologistology_buh_base(ws1):
         ('Дата регистрации', 17),
         ('Код МКБ 10 заключение ', 12),
         ('Источник ', 12),
+        ('Тип учреждения', 20),
         ('Код оплаты (категория)', 30),
         ('Цель ', 26),
-        ('Код мед услуги и категория сложности', 35),
-        ('Платная категория', 35),
+        ('Код мед услуги и категория сложности', 30),
+        ('Платная категория', 25),
+        ('Поликлиника - код услуги', 25),
         ('Направление', 30),
         ('Врач', 30),
         ('Подтверждено', 30),
@@ -67,22 +69,32 @@ def patologistology_buh_data(ws1, data):
             result_mcb10 = ""
         ws1.cell(row=r, column=7).value = result_mcb10
         ws1.cell(row=r, column=8).value = res["fin_source"]
-        ws1.cell(row=r, column=9).value = res["price_category"]
-        ws1.cell(row=r, column=10).value = res["purpose"]
+        ws1.cell(row=r, column=9).value = res["type_hospital"]
+        ws1.cell(row=r, column=10).value = res["price_category"]
+        ws1.cell(row=r, column=11).value = res["purpose"]
         try:
             service = json.loads(res["service_code"])
             service_code = service.get('code', '')
             service_title = service.get('title', '')
         except:
-            service_code = ""
-            service_title = ""
-        ws1.cell(row=r, column=11).value = f"{service_code} - {service_title}"
-        ws1.cell(row=r, column=12).value = res["paid_service_code"]
-        ws1.cell(row=r, column=13).value = res["direction"]
-        ws1.cell(row=r, column=14).value = res["doctor_fio"]
-        ws1.cell(row=r, column=15).value = res["date_confirm"]
+            service_code, service_title = "", ""
+        paid_service_code = res["paid_service_code"]
+        polyclinic_service_code = res["polyclinic_service_code"]
+        if res["fin_source"] == "ОМС" and res["type_hospital"] == "Поликлиника" and res["polyclinic_service_code"]:
+            service_code, service_title, paid_service_code = "", "", ""
+        elif paid_service_code and res["price_category"]:
+            polyclinic_service_code, service_code, service_title = "", "", ""
+        elif res["fin_source"] == "ОМС" and res["type_hospital"] == "Стационар":
+            polyclinic_service_code, paid_service_code = "", ""
 
-        rows = ws1[f'A{r}:L{r}']
+        ws1.cell(row=r, column=12).value = f"{service_code} - {service_title}"
+        ws1.cell(row=r, column=13).value = paid_service_code
+        ws1.cell(row=r, column=14).value = polyclinic_service_code
+        ws1.cell(row=r, column=15).value = res["direction"]
+        ws1.cell(row=r, column=16).value = res["doctor_fio"]
+        ws1.cell(row=r, column=17).value = res["date_confirm"]
+
+        rows = ws1[f'A{r}:Q{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

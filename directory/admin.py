@@ -155,6 +155,7 @@ class TitleFsli(admin.ModelAdmin):
 
 class HospitalServiceAdmin(admin.ModelAdmin):
     list_display = ('main_research', 'site_type', 'slave_research', 'hide')
+    list_filter = ('site_type',)
 
 
 class ResParaclinicInputField(admin.ModelAdmin):
@@ -372,7 +373,7 @@ admin.site.register(models.GroupCulture)
 admin.site.register(models.GroupAntibiotic)
 admin.site.register(models.Localization, TitleFsli)
 admin.site.register(models.ServiceLocation, TitleHide)
-admin.site.register(models.HospitalService, ResHospitalService)
+admin.site.register(models.HospitalService, HospitalServiceAdmin)
 admin.site.register(models.ScreeningPlan, ScreeningPlanAdmin)
 admin.site.register(models.Unit, UnitAdmin)
 admin.site.register(models.MethodLaboratoryAnalisis)

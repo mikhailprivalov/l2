@@ -5,7 +5,7 @@ import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
-from employees.sql_func import get_employees_by_department, get_work_time_by_document
+from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
@@ -29,6 +29,7 @@ class Employee(models.Model):
     doctorprofile_updated = models.ForeignKey(
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_employee_updated'
     )
+    snils = models.CharField(max_length=11, verbose_name="СНИЛС", help_text='12345678912', default=None, blank=True, null=True)
 
     def __str__(self):
         return f'{self.family} {self.name} {self.patronymic} ({self.hospital})'.strip()
@@ -111,19 +112,31 @@ class Employee(models.Model):
         if Employee.objects.filter(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic).exclude(id=current_id).exists():
             raise ValueError('Такой сотрудник уже существует')
 
+    @staticmethod
+    def find_by_snils(snils: str, hospital_id: int):
+        employee = Employee.objects.filter(snils=snils, hospital_id=hospital_id).first()
+        return employee
+
+    @staticmethod
+    def create_employee(family, name, patronymic, snils, hospital_id: int, return_new: bool = False):
+        new_employee = Employee(hospital_id=hospital_id, family=family, name=name, patronymic=patronymic, snils=snils)
+        new_employee.save()
+        if return_new:
+            return new_employee
+
     class Meta:
         verbose_name = 'Сотрудник'
         verbose_name_plural = 'Сотрудники'
         indexes = [
-            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active']),
+            models.Index(fields=['hospital', 'family', 'name', 'patronymic', 'is_active', 'snils']),
         ]
-        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active')
+        unique_together = ('hospital', 'family', 'name', 'patronymic', 'is_active', 'snils')
         ordering = ('hospital__short_title', 'hospital__title', 'family', 'name', 'patronymic')
 
 
 class Position(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=64, verbose_name='Название должности')
+    name = models.CharField(max_length=128, verbose_name='Название должности')
     is_active = models.BooleanField(default=True, verbose_name='Активна')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -202,6 +215,36 @@ class Position(models.Model):
         if Position.objects.filter(hospital_id=hospital_id, name=name).exclude(id=current_id).exists():
             raise ValueError('Должность с таким названием уже существует')
 
+    @staticmethod
+    def get_active(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        positions = [{"id": position.pk, "label": position.name} for position in Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        return positions or []
+
+    @staticmethod
+    def get_active_titles(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        titles = set(Position.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
+        return titles
+
+    @staticmethod
+    def get_active_positions(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        positions = Position.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
+        return positions
+
+    @staticmethod
+    def create_position(name: str, hospital_id: int = None, return_new: bool = False):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        new_position = Position(hospital_id=hospital_id, name=name, is_active=True)
+        new_position.save()
+        if return_new:
+            return new_position
+
     class Meta:
         verbose_name = 'Должность'
         verbose_name_plural = 'Должности'
@@ -214,7 +257,7 @@ class Position(models.Model):
 
 class Department(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
-    name = models.CharField(max_length=64, verbose_name='Название отдела')
+    name = models.CharField(max_length=255, verbose_name='Название отдела')
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
@@ -317,7 +360,30 @@ class Department(models.Model):
         if not hospital_id:
             hospital_id = Hospitals.objects.get(is_default=True)
         departments = [{"id": department.pk, "label": department.name} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        return departments or []
+
+    @staticmethod
+    def get_active_titles(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        titles = set(Department.objects.filter(is_active=True, hospital_id=hospital_id).values_list('name', flat=True).order_by('name'))
+        return titles
+
+    @staticmethod
+    def get_active_departments(hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        departments = Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
         return departments
+
+    @staticmethod
+    def create_department(name: str, hospital_id: int = None, return_new: bool = False):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        new_department = Department(hospital_id=hospital_id, name=name, is_active=True)
+        new_department.save()
+        if return_new:
+            return new_department
 
     class Meta:
         verbose_name = 'Отдел'
@@ -339,6 +405,11 @@ class TypeWorkTimeEmployee(models.Model):
         verbose_name = 'Тип занятости'
         verbose_name_plural = 'Типы занятости'
 
+    @staticmethod
+    def get_active():
+        typesWorkTime = [{"id": typeWorkTime.pk, "label": typeWorkTime.title} for typeWorkTime in TypeWorkTimeEmployee.objects.all().order_by('title')]
+        return typesWorkTime or []
+
 
 class EmployeePosition(models.Model):
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name='Сотрудник')
@@ -357,6 +428,8 @@ class EmployeePosition(models.Model):
     tabel_number = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Табельный номер", db_index=True)
     type_work_time = models.ForeignKey(TypeWorkTimeEmployee, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
+    date_employment = models.DateField(verbose_name="Дата приема на работу", help_text="2025-01-11", blank=True, null=True, default=None)
+    date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
@@ -433,13 +506,46 @@ class EmployeePosition(models.Model):
         if rate < 0:
             raise ValueError('Ставка не может быть отрицательной')
 
+    @staticmethod
+    def get_employee_position(org_id: int, department_ids: list, position_ids: list, employment_form_ids: list):
+        department_ids_tuple = tuple(department_ids) if department_ids else tuple([None])
+        position_ids_tuple = tuple(position_ids) if position_ids else tuple([None])
+        employment_form_ids_tuple = tuple(employment_form_ids) if employment_form_ids else tuple([None])
+        employees = get_employee_position(org_id, department_ids_tuple, position_ids_tuple, employment_form_ids_tuple)
+        result = [
+            {
+                "employeeId": employee.employee_position_id,
+                "employmentForm": employee.employment_form,
+                "snils": employee.snils,
+                "tabelNumber": employee.tabel_number,
+                "employeeFio": f"{employee.employee_family} {employee.employee_name} {employee.employee_patronymic}",
+                "department": employee.department_title,
+                "position": employee.position_title,
+                "rate": employee.rate,
+                "dateEmployment": employee.date_employment.strftime("%d.%m.%Y") if employee.date_employment else None,
+                "dateDismissal": employee.date_dismissal.strftime("%d.%m.%Y") if employee.date_dismissal else None,
+            }
+            for employee in employees
+        ]
+        return result
+
+    @staticmethod
+    def find_employee_position(active: True, employee: Employee, position: Position, deparment: Department, tabel_number: str):
+        employee_position = EmployeePosition.objects.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
+        return employee_position
+
+    @staticmethod
+    def all_by_organization(org_id: int):
+        employee_positions = EmployeePosition.objects.filter(employee__hospital_id=org_id).select_related('employee')
+        return employee_positions
+
     class Meta:
         verbose_name = 'Должность сотрудника'
         verbose_name_plural = 'Должности сотрудников'
         indexes = [
-            models.Index(fields=['employee', 'position', 'department', 'rate', 'is_active']),
+            models.Index(fields=['employee', 'position', 'department', 'rate', 'is_active', 'tabel_number']),
         ]
-        unique_together = ('employee', 'position', 'department', 'is_active')
+        unique_together = ('employee', 'position', 'department', 'is_active', 'tabel_number')
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
 

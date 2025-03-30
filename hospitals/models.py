@@ -40,7 +40,7 @@ class Hospitals(models.Model):
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
     is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
-    has_price = models.BooleanField(default=False, blank=True, help_text='Прайс для назначивших МО', db_index=True)
+    not_has_price = models.BooleanField(default=False, blank=True, help_text='Без прайса - не выводить в картотеке при выборе услуг', db_index=True)
     # добавить каталог для переноса заказа
     orders_pull_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории получения заказов (ftp://user:password@host.example.com/path)'
@@ -147,6 +147,15 @@ class Hospitals(models.Model):
         if self.title_stamp_customer:
             return os.path.join(MEDIA_ROOT, 'title_stamp_customer_pdf', self.title_stamp_customer)
         return None
+
+    @staticmethod
+    def get_hospitals(hospital_id: int = None):
+        if hospital_id:
+            hospitals = Hospitals.objects.filter(pk=hospital_id)
+        else:
+            hospitals = Hospitals.objects.filter(hide=False).order_by('title')
+        result = [{"id": hospital.pk, "label": hospital.title} for hospital in hospitals]
+        return result
 
     class Meta:
         verbose_name = 'Больница'

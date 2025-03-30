@@ -319,3 +319,30 @@ def get_directions_for_send_ecp_by_dirs(researches, dirs):
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_paraclini_directions_for_send_ecp_queue(researches, date_start, date_end):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_napravleniya.id as napravleniye_id,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday 
+            FROM directions_napravleniya
+            LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
+            LEFT JOIN clients_card cc on directions_napravleniya.client_id = cc.id
+            LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            WHERE 
+            di.research_id in %(researches)s
+            AND
+            directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            and 
+            directions_napravleniya.ecp_direction_number IS NULL
+            """,
+            params={'researches': researches, 'tz': TIME_ZONE, 'd_start': date_start, 'd_end': date_end},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
