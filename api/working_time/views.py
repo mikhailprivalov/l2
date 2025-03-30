@@ -38,7 +38,7 @@ def update_time(request):
 @group_required('График рабочего времени')
 def create_document(request):
     request_data = json.loads(request.body)
-    doctor_profile = request_data.user.doctorprofile
+    doctor_profile = request.user.doctorprofile
     year = request_data.get("year")
     month = request_data.get("month")
     department_id = request_data.get("departmentId")
