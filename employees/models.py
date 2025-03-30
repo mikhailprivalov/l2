@@ -492,7 +492,6 @@ class TimeTrackingDocument(models.Model):
         document.save()
         return document
 
-
     @staticmethod
     def get_time_tracking_document(date_str, department_id):
         date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
