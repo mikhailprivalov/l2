@@ -30,18 +30,6 @@ const props = defineProps({
     required: false,
     default: 'div',
   },
-  showLink: {
-    type: Boolean,
-    required: false,
-  },
-  link: {
-    type: String,
-    required: false,
-  },
-  gender: {
-    type: String,
-    required: false,
-  },
 });
 
 const show = ref(false);
@@ -54,8 +42,6 @@ const showTitle = (event) => {
     event.target.removeAttribute('data-original-title');
   }
 };
-
-// eslint-disable-next-line max-len
 </script>
 
 <style scoped lang="scss">
