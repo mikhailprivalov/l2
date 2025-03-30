@@ -480,14 +480,13 @@ class TimeTrackingDocument(models.Model):
         ).save()
 
     @staticmethod
-    def create_document(year, month, department_id, docprofile):
+    def create_document(year, month, department_id, doc_profile):
         month = datetime.date(year, month, 1)
 
         document = TimeTrackingDocument(
-            doc_confirmation=docprofile,
-            doc_confirmation_string=docprofile.get_full_fio(),
-            time_save=timezone.now(),
-            month_tabel=month,
+            doc_create_id=doc_profile.pk,
+            create_at=timezone.now(),
+            month=month,
             department_id=department_id,
         )
         document.save()
