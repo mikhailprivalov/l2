@@ -80,9 +80,6 @@ import {
 } from 'vue';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
-import * as actions from '@/store/action-types';
-import api from '@/api';
-import { useStore } from '@/store';
 
 const emit = defineEmits(['changeWorkTime']);
 const props = defineProps({
@@ -102,7 +99,6 @@ const props = defineProps({
 });
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
 const startWork = ref(null);
 const endWork = ref(null);
 const selectedTimeOff = ref(null);
