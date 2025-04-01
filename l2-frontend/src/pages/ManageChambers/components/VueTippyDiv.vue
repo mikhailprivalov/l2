@@ -7,21 +7,8 @@
     :title="show ? props.text : null"
     @mouseenter="showTitle"
   >
-    <a
-      v-if="props.link && props.showLink"
-      class="a-under"
-      target="_blank"
-      :href="props.link"
-      :class="props.gender === 'ж' ? 'women' : 'men'"
-    >
-      {{ props.text }}
-    </a>
-    <p
-      v-else
-      class="text"
-    >
-      {{ props.text }}
-    </p>
+    <slot />
+    {{ props.text }}
   </component>
 </template>
 
@@ -32,7 +19,7 @@ import { ref } from 'vue';
 const props = defineProps({
   text: {
     type: [String, undefined, null],
-    required: true,
+    required: false,
   },
   tippyMaxWidth: {
     type: String,
@@ -42,18 +29,6 @@ const props = defineProps({
     type: String,
     required: false,
     default: 'div',
-  },
-  showLink: {
-    type: Boolean,
-    required: false,
-  },
-  link: {
-    type: String,
-    required: false,
-  },
-  gender: {
-    type: String,
-    required: false,
   },
 });
 
@@ -67,18 +42,4 @@ const showTitle = (event) => {
     event.target.removeAttribute('data-original-title');
   }
 };
-
-// eslint-disable-next-line max-len
 </script>
-
-<style scoped lang="scss">
-.text {
-  margin: 0;
-}
-.women {
-  color: #ff73ea;
-}
-.man {
-  color: #00bfff;
-}
-</style>

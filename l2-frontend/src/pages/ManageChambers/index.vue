@@ -174,7 +174,7 @@
                     <div
                       class="info"
                     >
-                      <VueTippyDiv
+                      <TippyBeds
                         v-if="bed.patient.length > 0"
                         :text="bed.patient[0].short_fio"
                         :show-link="userCanGoHistory"
@@ -186,7 +186,7 @@
                         v-if="bed.doctor.length > 0"
                         class="line"
                       >
-                      <VueTippyDiv
+                      <TippyBeds
                         v-if="bed.doctor.length > 0"
                         class="text-size"
                         :text="bed.doctor[0].short_fio"
@@ -308,9 +308,8 @@ import Treeselect from '@riophae/vue-treeselect';
 import * as actions from '@/store/action-types';
 import api from '@/api';
 import { useStore } from '@/store';
-import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import TippyBeds from '@/components/TippyBeds.vue';
 
 interface patientData {
   age: number
