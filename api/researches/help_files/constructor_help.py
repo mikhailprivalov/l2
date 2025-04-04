@@ -58,6 +58,9 @@ constructor_help_message = [
     {"label": "-", "param": "\"@\"", "value": "поиск по ссылке на группу"},
     {"label": "Справка", "param": "  ", "value": "для  типа: \"РАССЧЕТНОЕ\""},
     {"label": "-", "param": "[_sex_]", "value": "пол пациента"},
+    {"label": "-", "param": "%sex_short", "value": "пол пациента М"},
+    {"label": "-", "param": "%sex_full", "value": "пол пациента мужской"},
     {"label": "-", "param": "[_age_]", "value": "возраст пациента"},
+    {"label": "-", "param": "%card_current_hosp", "value": "номер случа и/б"},
     {"label": "-", "param": "правила", "value": "{121212} - в фигурных скобках записываем ссылку на id-поля далее правила синтаксиса JAVASCRIPT. Аналогично для ВИДИМОСТИ и КОНТРОЛя"},
 ]
