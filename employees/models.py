@@ -756,13 +756,6 @@ class EmployeeWorkingHoursSchedule(models.Model):
             result = []
         return result
 
-
-
-
-
-
-
-
     @staticmethod
     def update_time(start_work, end_work, type_work, employee_position_id, date):
         employee_position = EmployeePosition.objects.filter(pk=employee_position_id).first()
