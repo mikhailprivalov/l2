@@ -58,5 +58,4 @@ def create_document(request):
 @group_required('График рабочего времени')
 def get_ref_books(request):
     result = WorkDayStatus.get_workday_statuses(short=True)
-    return JsonResponse(result)
-
+    return JsonResponse({"result": result})

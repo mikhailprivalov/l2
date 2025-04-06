@@ -563,7 +563,7 @@ class WorkDayStatus(models.Model):
 
     @staticmethod
     def get_workday_statuses(short=True):
-        result = [{"id": status.pk, "label": status.short_title} for status in WorkDayStatus.objects.filter(hide=False)]
+        result = [{"id": status.pk, "label": status.short_title if short else status.title} for status in WorkDayStatus.objects.filter(hide=False)]
         return result
 
 
