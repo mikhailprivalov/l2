@@ -223,7 +223,7 @@ watch(() => [props.year, props.month], () => {
 }, { immediate: true });
 
 const cellStyleOption = {
-  bodyCellClass: ({ row, column }) => {
+  bodyCellClass: ({ row }) => {
     const result = [];
     if (row.bidType === 'Внут') {
       result.push('table-body-cell-inner-bid');
