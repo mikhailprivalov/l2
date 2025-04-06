@@ -42,6 +42,8 @@
         :table-data="filteredEmployees"
         :cell-style-option="cellStyleOption"
         :column-hidden-option="columnHiddenOption"
+        :virtual-scroll-option="virtualScrollOption"
+        row-key-field-name="employeePositionId"
         :border-y="true"
         :scroll-width="0"
       />
@@ -294,6 +296,9 @@ const cellStyleOption = {
 };
 const columnHiddenOption = {
   defaultHiddenColumnKeys: ['employeePositionId'],
+};
+const virtualScrollOption = {
+  enable: true,
 };
 
 const save = async () => {
