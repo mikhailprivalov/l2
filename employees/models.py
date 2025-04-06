@@ -741,7 +741,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "employeePositionId": work_time.employee_position_id,
                         "fio": f'{work_time.family} {work_time.name[0]}.{work_time.patronymic[0] + "." if work_time.patronymic else ""}',
                         "position": work_time.position_name,
-                        "bidType": 'осн',
+                        "bidType": work_time.bid_name[:4],
                         **template_days,
                     }
                 if work_time.day:

@@ -48,7 +48,9 @@ def get_employee_work_time(department_id: int, document_id: int):
             employees_department.id as department_id,
             employees_department.name as department_name,
             
-            employees_position.name as position_name, 
+            employees_position.name as position_name,
+            
+            employees_typeworktimeemployee.title as bid_name,
             
             employees_employee.family,
             employees_employee.name, 
@@ -63,6 +65,7 @@ def get_employee_work_time(department_id: int, document_id: int):
             
             FROM employees_employeeposition
             
+            INNER JOIN employees_typeworktimeemployee ON employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
             INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
             INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
             INNER JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
