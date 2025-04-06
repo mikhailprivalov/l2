@@ -167,7 +167,6 @@ const getColumns = () => {
       align: 'center',
       width: 115,
       fixed: 'left',
-      isPosition: true,
       renderBodyCell: ({ row, column }, h) => h(
         VueTippyDiv,
         {
