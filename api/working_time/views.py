@@ -4,7 +4,7 @@ import time
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from laboratory.decorators import group_required
-from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument
+from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus
 
 
 @login_required()
@@ -51,5 +51,13 @@ def create_document(request):
     department_id = request_data.get("departmentId")
     TimeTrackingDocument.create_document(year, month, department_id, doctor_profile)
     result = {"ok": True, "message": ""}
+    return JsonResponse(result)
+
+
+@login_required()
+@group_required('График рабочего времени')
+def get_ref_books(request):
+    request_data = json.loads(request.body)
+    result = WorkDayStatus.get_workday_statuses(short=True)
     return JsonResponse(result)
 

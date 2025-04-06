@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -190,6 +190,19 @@ const getMonthDays = (year: number, month: number) => {
   }
   return days;
 };
+
+const workDayStatuses = ref([]);
+const getRefBooks = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-ref-books');
+  await store.dispatch(actions.DEC_LOADING);
+  workDayStatuses.value = result;
+};
+
+onMounted(async () => {
+  await getRefBooks();
+});
+
 const getColumns = () => {
   const columnTemplate = [
     {
@@ -240,6 +253,7 @@ const getColumns = () => {
             workTime: row[column.field] ? row[column.field] : '',
             employeePositionId: row.employeePositionId,
             date: column.key,
+            workDayStatuses: workDayStatuses.value,
           },
           on: { changeWorkTime },
         },

@@ -561,6 +561,11 @@ class WorkDayStatus(models.Model):
         verbose_name = 'Статус времени для рабочей даты'
         verbose_name_plural = 'Статусы времени для рабочих дат'
 
+    @staticmethod
+    def get_workday_statuses(short=True):
+        result = [{"id": status.pk, "label": status.short_title} for status in WorkDayStatus.objects.filter(hide=False)]
+        return result
+
 
 class TimeTrackingDocument(models.Model):
     create_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время создания")

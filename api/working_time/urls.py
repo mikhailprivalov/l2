@@ -6,4 +6,5 @@ urlpatterns = [
     path('get-work-time', views.get_work_time),
     path('update-time', views.update_time),
     path('create-document', views.create_document),
+    path('get-ref-books', views.get_ref_books),
 ]

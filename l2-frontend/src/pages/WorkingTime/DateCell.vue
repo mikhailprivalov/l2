@@ -65,7 +65,7 @@
       <div class="tp-row">
         <RadioFieldById
           v-model="selectedTimeOff"
-          :variants="typesTimeOff"
+          :variants="props.workDayStatuses"
           :start-null="true"
           @modified="timeOff"
         />
@@ -97,6 +97,10 @@ const props = defineProps({
     type: [String, undefined],
     required: true,
   },
+  workDayStatuses: {
+    type: Array,
+    required: true,
+  },
 });
 
 const root = getCurrentInstance().proxy.$root;
@@ -108,12 +112,12 @@ const updateCellSelect = (select: boolean) => {
 const startWork = ref(null);
 const endWork = ref(null);
 const selectedTimeOff = ref(null);
-const typesTimeOff = ref([
-  { id: 1, label: 'О' },
-  { id: 2, label: 'Б' },
-  { id: 3, label: 'Д' },
-  { id: 4, label: 'П' },
-]);
+// const typesTimeOff = ref([
+//   { id: 1, label: 'О' },
+//   { id: 2, label: 'Б' },
+//   { id: 3, label: 'Д' },
+//   { id: 4, label: 'П' },
+// ]);
 const selectedTypeLabel = ref('');
 
 const timeValid = () => {
@@ -139,7 +143,7 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
 };
 
 const timeOff = () => {
-  selectedTypeLabel.value = typesTimeOff.value.find((type) => type.id === selectedTimeOff.value).label;
+  selectedTypeLabel.value = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value).label;
   startWork.value = null;
   endWork.value = null;
   selectedTimeOption.value = null;
