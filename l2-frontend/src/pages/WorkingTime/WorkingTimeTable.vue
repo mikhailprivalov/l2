@@ -103,6 +103,23 @@ const getEmployeesWorkTime = async () => {
   }
 };
 
+watch(employeesWorkTime, () => {
+  for (const employee of employeesWorkTime.value.slice(0, 1)) {
+    let tmpTotalHours = 0.0;
+    const keys = Object.keys(employee);
+    for (const key of keys) {
+      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+        const currentDay = employee[key];
+        const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
+        const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+        const diffTime = (endTime - startTime) / (1000 * 60 * 60);
+        tmpTotalHours += diffTime;
+      }
+    }
+    employee.totalHours = tmpTotalHours;
+  }
+}, { deep: true });
+
 const createDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/working-time/create-document', {
