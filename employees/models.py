@@ -786,9 +786,28 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return {"ok": True, "message": ""}
 
     @staticmethod
-    def update_time(changed_time):
-        for key, value in changed_time.items():
-            print(key, value)
+    def update_time(department_id: int, year: int, month: int, changed_time: dict):
+        first_date_month = datetime.date(year, month, 1)
+        length_month = calendar.monthrange(year, month)[1]
+        last_date_month = datetime.date(year, month, length_month)
+        document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
+        if not document:
+            return {"ok": False, "message": "Такого документа нет"}
+        for employee_position_id, work_times in changed_time.items():
+            for date, work_time in work_times.items():
+                day = EmployeeWorkingHoursSchedule.objects.filter(
+                    time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date
+                ).first()
+                if day:
+                    day.start = work_time.get("start")
+                    day.end = work_time.get("end")
+                    day.work_day_status = work_time.get("typeId")
+                else:
+                    day = EmployeeWorkingHoursSchedule(
+                        time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date, start=work_time.get("start"), end=work_time.get("end"),
+                        work_day_status_id=work_time.get("typeId")
+                    )
+                day.save()
         return {"ok": True, "message": ""}
 
 

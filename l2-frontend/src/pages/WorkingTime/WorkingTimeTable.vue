@@ -161,13 +161,13 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, type,
+  employeePositionId, date, startWorkTime, endWorkTime, typeId,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
     startWorkTime,
     endWorkTime,
-    type,
+    typeId,
   };
   if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
     changedEmployeesWorkTime.value[employeePositionId] = {};
@@ -175,7 +175,7 @@ const changeWorkTime = async ({
   changedEmployeesWorkTime.value[employeePositionId][date] = {
     startWorkTime,
     endWorkTime,
-    type,
+    typeId,
   };
 };
 
@@ -286,9 +286,13 @@ const save = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/working-time/update-time', {
     changedEmployeesWorkTime: changedEmployeesWorkTime.value,
+    departmentId: props.department,
+    year: props.year,
+    month: props.month + 1,
   });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
     await getEmployeesWorkTime();
   } else {
     root.$emit('msg', 'error', message);

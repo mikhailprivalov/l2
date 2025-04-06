@@ -155,7 +155,7 @@ const updateTime = async () => {
       date: props.date,
       startWorkTime: startWork.value,
       endWorkTime: endWork.value,
-      type: selectedTimeOff.value,
+      typeId: selectedTimeOff.value,
     });
   }
 };
