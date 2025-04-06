@@ -29,7 +29,6 @@
         max-height="calc(100vh - 200px)"
         :columns="columns"
         :table-data="filteredEmployees"
-        :row-style-option="rowStyleOption"
         :cell-style-option="cellStyleOption"
         :column-hidden-option="columnHiddenOption"
         :border-y="true"
@@ -225,11 +224,17 @@ watch(() => [props.year, props.month], () => {
 }, { immediate: true });
 
 const cellStyleOption = {
-  bodyCellClass: ({ column }) => {
-    if (column.isPosition) {
-      return '';
+  bodyCellClass: ({ row, column }) => {
+    const result = [];
+    if (row.bidType === 'Внут') {
+      result.push('table-body-cell-inner-bid');
+    } else if (row.bidType === 'Внеш') {
+      result.push('table-body-cell-outer-bid');
     }
-    return 'table-body-cell';
+    if (!column.isPosition) {
+      result.push('table-body-cell');
+    }
+    return result.join(' ');
   },
   headerCellClass: ({ column }) => {
     if (column.isWeekend) {
@@ -237,9 +242,6 @@ const cellStyleOption = {
     }
     return 'table-header-cell';
   },
-};
-const rowStyleOption = {
-  stripe: true,
 };
 const columnHiddenOption = {
   defaultHiddenColumnKeys: ['employeePositionId'],
@@ -287,5 +289,11 @@ const columnHiddenOption = {
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
+}
+.table-body-cell-inner-bid {
+  background-color: #cbf2cb !important;
+}
+.table-body-cell-outer-bid {
+  background-color: #c7f88a !important;
 }
 </style>
