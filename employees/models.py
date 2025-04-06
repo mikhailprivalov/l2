@@ -757,7 +757,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return result
 
     @staticmethod
-    def update_time(start_work, end_work, type_work, employee_position_id, date):
+    def update_one_day(start_work, end_work, type_work, employee_position_id, date):
         employee_position = EmployeePosition.objects.filter(pk=employee_position_id).first()
         document = TimeTrackingDocument.get_time_tracking_document(date, employee_position.department_id)
         current_hours: EmployeeWorkingHoursSchedule = EmployeeWorkingHoursSchedule.objects.filter(
@@ -783,6 +783,12 @@ class EmployeeWorkingHoursSchedule(models.Model):
                     time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date, start=start_work, end=end_work, work_day_status_id=None
                 )
             current_hours.save()
+        return {"ok": True, "message": ""}
+
+    @staticmethod
+    def update_time(changed_time):
+        for key, value in changed_time.items():
+            print(key, value)
         return {"ok": True, "message": ""}
 
 
