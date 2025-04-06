@@ -5,7 +5,7 @@ import pytz
 from django.db import models
 from django.core.paginator import Paginator
 
-from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position
+from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE
 from laboratory.utils import strfdatetime
@@ -609,6 +609,12 @@ class TimeTrackingDocument(models.Model):
         document = TimeTrackingDocument.objects.filter(month__gte=first_date_month, month__lte=last_date_month, department_id=department_id).last()
         return document
 
+    @staticmethod
+    def get_document(first_date: datetime.date, last_date: datetime.date, department_id: int):
+        document = TimeTrackingDocument.objects.filter(month__gte=first_date, month__lte=last_date, department_id=department_id).last()
+        return document
+
+
 
 class TypeCheckTimeTrackingDocument(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
@@ -678,43 +684,47 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
     @staticmethod
-    def get_employees_template(year: int, month: int, last_date_month: int, department_id: int) -> dict:
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type": ""} for day in range(1, last_date_month + 1)}
-        employees = get_employees_by_department(department_id)
-        employees_template = {}
-        for employee in employees:
-            employees_template[employee.employee_position_id] = template_days.copy()
-            employees_template[employee.employee_position_id].update(
-                {
-                    "employeePositionId": employee.employee_position_id,
-                    "fio": f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}',
-                    "position": employee.position_name,
-                    "bidType": 'осн',
-                    "normMonth": '178',
-                    "normDay": "8",
-                }
-            )
-        return employees_template
+    def get_month_days_template(year: int, month: int, length_month: int):
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type_id": ""} for day in range(1, length_month + 1)}
+        return template_days
 
     @staticmethod
     def get_work_time(year: int, month: int, department_id: int):
         first_date_month = datetime.date(year, month, 1)
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
-        document = TimeTrackingDocument.objects.filter(month__gte=first_date_month, month__lte=last_date_month, department_id=department_id).last()
+        document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
         if document:
-            template_employee = EmployeeWorkingHoursSchedule.get_employees_template(year, month, length_month, department_id)
-            employees_work_time = get_work_time_by_document(document.pk)
-            for work_day in employees_work_time:
-                work_time = template_employee[work_day.employee_position_id][work_day.start.strftime('%Y-%m-%d')].copy()
-                work_time["startWorkTime"] = work_day.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
-                work_time["endWorkTime"] = work_day.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
-                work_time["type"] = work_day.work_day_status_id
-                template_employee[work_day.employee_position_id][work_day.start.strftime('%Y-%m-%d')] = work_time
-            result = [value for value in template_employee.values()]
+            template_days = EmployeeWorkingHoursSchedule.get_month_days_template(year, month, length_month)
+            employees_work_time = get_employee_work_time(department_id, document.pk)
+            result = {}
+            for work_time in employees_work_time:
+                if not result.get(work_time.employee_position_id):
+                    result[work_time.employee_position_id] = {
+                        "employeePositionId": work_time.employee_position_id,
+                        "fio": f'{work_time.family} {work_time.name[0]}.{work_time.patronymic[0] + "." if work_time.patronymic else ""}',
+                        "position": work_time.position_name,
+                        "bidType": 'осн',
+                        **template_days,
+                    }
+                if work_time.day:
+                    tmp_work_time = {
+                        "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else "",
+                        "endWorkTime": work_time.end_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.end_work else "",
+                        "type_id": work_time.work_day_status_id if work_time.work_day_status_id else "",
+                    }
+                    result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
+            result = [value for value in result.values()]
         else:
             result = []
         return result
+
+
+
+
+
+
+
 
     @staticmethod
     def update_time(start_work, end_work, type_work, employee_position_id, date):
