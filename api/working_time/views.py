@@ -18,11 +18,7 @@ def get_departments(request):
 @group_required('График рабочего времени')
 def get_work_time(request):
     request_data = json.loads(request.body)
-    start_time = time.time()
     result = EmployeeWorkingHoursSchedule.get_work_time(request_data["year"], request_data["month"], request_data["departmentId"])
-    end_time = time.time()
-    elipsed_time = end_time - start_time
-    print(elipsed_time)
     return JsonResponse({"result": result})
 
 
