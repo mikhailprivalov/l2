@@ -753,7 +753,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                     tmp_work_time = {
                         "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else "",
                         "endWorkTime": work_time.end_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.end_work else "",
-                        "type_id": work_time.work_day_status_id if work_time.work_day_status_id else "",
+                        "typeId": work_time.work_day_status_id if work_time.work_day_status_id else "",
                     }
                     result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
             result = [value for value in result.values()]

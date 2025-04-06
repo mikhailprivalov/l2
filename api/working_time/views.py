@@ -31,13 +31,6 @@ def update_time(request):
     month = request_data.get("month")
     changed_employee_work_time = request_data.get("changedEmployeesWorkTime")
     result = EmployeeWorkingHoursSchedule.update_time(department_id, year, month, changed_employee_work_time)
-    # start_work = request_data["startWork"]
-    # end_work = request_data["endWork"]
-    # type_work = request_data["type"]
-    # employee_position_id = request_data["employeePositionId"]
-    # date = request_data["date"]
-    # result = EmployeeWorkingHoursSchedule.update_time(start_work, end_work, type_work, employee_position_id, date)
-    result = {"ok": True, "message": ""}
     return JsonResponse(result)
 
 

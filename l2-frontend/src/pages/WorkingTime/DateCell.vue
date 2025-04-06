@@ -112,13 +112,13 @@ const updateCellSelect = (select: boolean) => {
 const startWork = ref(null);
 const endWork = ref(null);
 const selectedTimeOff = ref(null);
-const findTimeOffLabel = () => props.workDayStatuses.find((type) => type.id === selectedTimeOff.value).label;
-// const typesTimeOff = ref([
-//   { id: 1, label: 'О' },
-//   { id: 2, label: 'Б' },
-//   { id: 3, label: 'Д' },
-//   { id: 4, label: 'П' },
-// ]);
+const findTimeOffLabel = () => {
+  const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
+  if (status) {
+    return status.label;
+  }
+  return null;
+};
 const selectedTimeOffLabel = ref('');
 
 const timeValid = () => {
