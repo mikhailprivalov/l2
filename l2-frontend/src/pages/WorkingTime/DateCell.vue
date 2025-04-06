@@ -112,13 +112,14 @@ const updateCellSelect = (select: boolean) => {
 const startWork = ref(null);
 const endWork = ref(null);
 const selectedTimeOff = ref(null);
+const findTimeOffLabel = () => props.workDayStatuses.find((type) => type.id === selectedTimeOff.value).label;
 // const typesTimeOff = ref([
 //   { id: 1, label: 'О' },
 //   { id: 2, label: 'Б' },
 //   { id: 3, label: 'Д' },
 //   { id: 4, label: 'П' },
 // ]);
-const selectedTypeLabel = ref('');
+const selectedTimeOffLabel = ref('');
 
 const timeValid = () => {
   if (startWork.value > endWork.value && endWork.value !== '00:00' && !selectedTimeOff.value) {
@@ -143,7 +144,7 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
 };
 
 const timeOff = () => {
-  selectedTypeLabel.value = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value).label;
+  selectedTimeOffLabel.value = findTimeOffLabel();
   startWork.value = null;
   endWork.value = null;
   selectedTimeOption.value = null;
@@ -167,7 +168,7 @@ const updateTime = async () => {
 watch([startWork, endWork], () => {
   if (startWork.value && endWork.value && selectedTimeOff.value) {
     selectedTimeOff.value = null;
-    selectedTypeLabel.value = '';
+    selectedTimeOffLabel.value = '';
   }
 });
 
@@ -175,7 +176,7 @@ const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return `${startWork.value}\n${endWork.value}`;
   } if (selectedTimeOff.value) {
-    return selectedTypeLabel.value;
+    return selectedTimeOffLabel.value;
   }
   return '--:--\n--:--';
 });
@@ -183,7 +184,8 @@ const currentTime = computed(() => {
 const appendCurrentTime = () => {
   startWork.value = props.workTime.startWorkTime;
   endWork.value = props.workTime.endWorkTime;
-  selectedTimeOff.value = props.workTime.type;
+  selectedTimeOff.value = props.workTime.typeId;
+  selectedTimeOffLabel.value = findTimeOffLabel();
   selectedTimeOption.value = null;
 };
 
