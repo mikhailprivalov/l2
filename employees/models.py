@@ -680,8 +680,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         verbose_name = "Сотрудник - фактическое время за дату"
         verbose_name_plural = "Сотрудники - фактическое время за дату"
 
-    def __str__(self):
-        return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+    # def __str__(self):
+    #     return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
     @staticmethod
     def get_employees_template(year: int, month: int, last_date_month: int, department_id: int) -> dict:
@@ -795,17 +795,19 @@ class EmployeeWorkingHoursSchedule(models.Model):
             return {"ok": False, "message": "Такого документа нет"}
         for employee_position_id, work_times in changed_time.items():
             for date, work_time in work_times.items():
+                start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
+                end = f"{date} {work_time.get('endWorkTime')}" if work_time.get("endWorkTime") else None
+                work_day_status_id = work_time.get("typeId")
                 day = EmployeeWorkingHoursSchedule.objects.filter(
                     time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date
                 ).first()
                 if day:
-                    day.start = work_time.get("start")
-                    day.end = work_time.get("end")
-                    day.work_day_status = work_time.get("typeId")
+                    day.start = start
+                    day.end = end
+                    day.work_day_status = work_day_status_id
                 else:
                     day = EmployeeWorkingHoursSchedule(
-                        time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date, start=work_time.get("start"), end=work_time.get("end"),
-                        work_day_status_id=work_time.get("typeId")
+                        time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date, start=start, end=end, work_day_status_id=work_day_status_id
                     )
                 day.save()
         return {"ok": True, "message": ""}
