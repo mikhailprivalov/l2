@@ -231,9 +231,7 @@ const cellStyleOption = {
     } else if (row.bidType === 'Внеш') {
       result.push('table-body-cell-outer-bid');
     }
-    if (!column.isPosition) {
-      result.push('table-body-cell');
-    }
+    result.push('table-body-cell');
     return result.join(' ');
   },
   headerCellClass: ({ column }) => {
