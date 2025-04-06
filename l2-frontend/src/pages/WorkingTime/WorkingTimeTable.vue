@@ -2,13 +2,23 @@
   <div>
     <div
       v-if="noDocument && filtersFull"
-      class="create-document"
+      class="margins"
     >
       <button
         class="btn btn-blue-nb"
         @click="createDocument"
       >
         Создать график
+      </button>
+    </div>
+    <div
+      v-if="!noDocument && filtersFull"
+      class="margins"
+    >
+      <button
+        class="btn btn-blue-nb"
+      >
+        Сохранить
       </button>
     </div>
     <div v-if="!noDocument && filtersFull">
@@ -280,7 +290,7 @@ const columnHiddenOption = {
 .filters {
   margin: 0 10px;
 }
-.create-document {
+.margins {
   margin: 5px 10px
 }
 </style>
