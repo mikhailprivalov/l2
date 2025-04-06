@@ -17,6 +17,7 @@
     >
       <button
         class="btn btn-blue-nb"
+        @click="save"
       >
         Сохранить
       </button>
@@ -95,6 +96,7 @@ const search = ref('');
 const noDocument = ref(false);
 
 const employeesWorkTime = ref([]);
+const changedEmployeesWorkTime = ref({});
 
 const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -111,6 +113,7 @@ const getEmployeesWorkTime = async () => {
     employeesWorkTime.value = [];
     noDocument.value = true;
   }
+  changedEmployeesWorkTime.value = {};
 };
 
 watch(employeesWorkTime, () => {
@@ -162,6 +165,14 @@ const changeWorkTime = async ({
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
+    startWorkTime,
+    endWorkTime,
+    type,
+  };
+  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
+    changedEmployeesWorkTime.value[employeePositionId] = {};
+  }
+  changedEmployeesWorkTime.value[employeePositionId][date] = {
     startWorkTime,
     endWorkTime,
     type,
@@ -270,6 +281,20 @@ const cellStyleOption = {
 const columnHiddenOption = {
   defaultHiddenColumnKeys: ['employeePositionId'],
 };
+
+const save = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/update-time', {
+    changedEmployeesWorkTime: changedEmployeesWorkTime.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
 </script>
 
 <style scoped lang="scss">
