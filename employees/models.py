@@ -684,12 +684,49 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
     @staticmethod
+    def get_employees_template(year: int, month: int, last_date_month: int, department_id: int) -> dict:
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type": ""} for day in range(1, last_date_month + 1)}
+        employees = get_employees_by_department(department_id)
+        employees_template = {}
+        for employee in employees:
+            employees_template[employee.employee_position_id] = template_days.copy()
+            employees_template[employee.employee_position_id].update(
+                {
+                    "employeePositionId": employee.employee_position_id,
+                    "fio": f'{employee.family} {employee.name[0]}.{employee.patronymic[0] + "." if employee.patronymic else ""}',
+                    "position": employee.position_name,
+                    "bidType": 'осн',
+                }
+            )
+        return employees_template
+
+    @staticmethod
+    def get_work_time(year: int, month: int, department_id: int):
+        first_date_month = datetime.date(year, month, 1)
+        length_month = calendar.monthrange(year, month)[1]
+        last_date_month = datetime.date(year, month, length_month)
+        document = TimeTrackingDocument.objects.filter(month__gte=first_date_month, month__lte=last_date_month, department_id=department_id).last()
+        if document:
+            template_employee = EmployeeWorkingHoursSchedule.get_employees_template(year, month, length_month, department_id)
+            employees_work_time = get_work_time_by_document(document.pk)
+            for work_day in employees_work_time:
+                work_time = template_employee[work_day.employee_position_id][work_day.start.strftime('%Y-%m-%d')].copy()
+                work_time["startWorkTime"] = work_day.start.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+                work_time["endWorkTime"] = work_day.end.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M')
+                work_time["type"] = work_day.work_day_status_id
+                template_employee[work_day.employee_position_id][work_day.start.strftime('%Y-%m-%d')] = work_time
+            result = [value for value in template_employee.values()]
+        else:
+            result = []
+        return result
+
+    @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
         template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type_id": ""} for day in range(1, length_month + 1)}
         return template_days
 
     @staticmethod
-    def get_work_time(year: int, month: int, department_id: int):
+    def get_work_time_employee(year: int, month: int, department_id: int):
         first_date_month = datetime.date(year, month, 1)
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
