@@ -684,8 +684,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         verbose_name = "Сотрудник - фактическое время за дату"
         verbose_name_plural = "Сотрудники - фактическое время за дату"
 
-    # def __str__(self):
-    #     return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+    def __str__(self):
+        return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
     @staticmethod
     def get_employees_template(year: int, month: int, last_date_month: int, department_id: int) -> dict:
