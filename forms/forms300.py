@@ -21,7 +21,8 @@ def form_01(request_data):
     user = request_data.get('user')
     hospital = request_data.get('hospital')
     disable_date = request_data.get('disable_date')
-    logger.info(form_type, department_id, year, month, user, hospital, disable_date)
+    employee_work_time = request_data.get('employee_work_time')
+    logger.info(form_type, department_id, year, month, user, hospital, disable_date, employee_work_time)
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')

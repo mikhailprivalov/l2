@@ -1,6 +1,8 @@
 import json
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+
+from forms.forms300 import form_01
 from laboratory.decorators import group_required
 from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus
 
@@ -48,4 +50,13 @@ def create_document(request):
 @group_required('График рабочего времени')
 def get_ref_books(request):
     result = WorkDayStatus.get_workday_statuses(short=True)
+    return JsonResponse({"result": result})
+
+
+@login_required()
+@group_required('График рабочего времени')
+def print_document(request):
+    request_data = json.loads(request.body)
+    employees_work_time = request_data.get("employeesWorkTime")
+    result = form_01(request_data={"employeesWorkTime": employees_work_time})
     return JsonResponse({"result": result})
