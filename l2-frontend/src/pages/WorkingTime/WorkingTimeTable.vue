@@ -333,7 +333,7 @@ const save = async () => {
 const printDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/print-document', {
-    employeesWorkTime: employeesWorkTime.value;
+    employeesWorkTime: employeesWorkTime.value,
   });
   await store.dispatch(actions.DEC_LOADING);
   window.open(result, '_blank');
