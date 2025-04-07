@@ -44,32 +44,24 @@ def get_employee_work_time(department_id: int, document_id: int):
             """
             SELECT 
             employees_employeeposition.id as employee_position_id,
-            
             employees_department.id as department_id,
             employees_department.name as department_name,
-            
             employees_position.name as position_name,
-            
             employees_typeworktimeemployee.title as bid_name,
-            
             employees_employee.family,
             employees_employee.name, 
             employees_employee.patronymic,
-            
             work_time_table.time_tracking_document_id,
             work_time_table.work_time_id,
             work_time_table.day,
             work_time_table.start_work,
             work_time_table.end_work,
             work_time_table.work_day_status_id
-            
             FROM employees_employeeposition
-            
             INNER JOIN employees_typeworktimeemployee ON employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
             INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
             INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
             INNER JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
-            
             LEFT JOIN 
               (SELECT 
                   employees_employeeWorkingHoursSchedule.employee_position_id,
@@ -81,7 +73,6 @@ def get_employee_work_time(department_id: int, document_id: int):
                   employees_employeeWorkingHoursSchedule.work_day_status_id 
              FROM employees_employeeWorkingHoursSchedule WHERE time_tracking_document_id = %(document_id)s) as work_time_table 
             ON work_time_table.employee_position_id = employees_employeeposition.id
-            
             WHERE department_id = %(department_id)s  and employees_employeeposition.is_active = true
             ORDER BY family
         """,
