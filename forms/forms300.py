@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 def form_01(request_data):
-    logger.info('Мы печатаем')
     form_type = request_data.get("type")
     department_id = request_data.get('department_id')
     year = request_data.get('year')
@@ -23,6 +22,7 @@ def form_01(request_data):
     user = request_data.get('user')
     hospital = request_data.get('hospital')
     disable_date = request_data.get('disable_date')
+    logger.info(form_type, department_id, year, month, user, hospital, disable_date)
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
