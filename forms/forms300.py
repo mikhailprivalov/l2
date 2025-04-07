@@ -8,14 +8,21 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate,
+from reportlab.platypus import SimpleDocTemplate
 from laboratory.settings import FONTS_FOLDER
 
 logger = logging.getLogger(__name__)
 
+
 def form_01(request_data):
     logger.info('Мы печатаем')
-
+    form_type = request_data.get("type")
+    department_id = request_data.get('department_id')
+    year = request_data.get('year')
+    month = request_data.get('month')
+    user = request_data.get('user')
+    hospital = request_data.get('hospital')
+    disable_date = request_data.get('disable_date')
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
@@ -34,4 +41,4 @@ def form_01(request_data):
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
-    return None
+    return pdf

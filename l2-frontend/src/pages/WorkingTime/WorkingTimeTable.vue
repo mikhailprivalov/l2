@@ -331,7 +331,7 @@ const save = async () => {
 };
 
 const printDocument = () => {
-  window.open(`/forms/pdf?type=300.01&department_id=${props.department}&year=${props.year}&month=${props.month}`, '_blank');
+  window.open(`/forms/pdf?type=300.01&department_id=${props.department}&year=${props.year}&month=${props.month + 1}`, '_blank');
 };
 
 </script>
