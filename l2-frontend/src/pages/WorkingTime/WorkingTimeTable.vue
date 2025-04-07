@@ -383,9 +383,9 @@ const printDocument = () => {
   text-overflow: ellipsis !important;
 }
 .table-body-cell-inner-bid {
-  background-color: #cbf2cb !important;
+  background-color: #def7de !important;
 }
 .table-body-cell-outer-bid {
-  background-color: #c7f88a !important;
+  background-color: #dae5c1 !important;
 }
 </style>
