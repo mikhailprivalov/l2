@@ -21,14 +21,14 @@
       <p class="current-time-text">{{ currentTime }}</p>
       <!-- eslint-enable -->
     </button>
-    <button
-      v-tippy
-      class="transparentButton"
-      title="Скопировать предыдущий"
-      @click="copyPrevTime"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
+<!--    <button-->
+<!--      v-tippy-->
+<!--      class="transparentButton"-->
+<!--      title="Скопировать предыдущий"-->
+<!--      @click="copyPrevTime"-->
+<!--    >-->
+<!--      <i class="fa-solid fa-copy" />-->
+<!--    </button>-->
     <div
       id="temp"
       class="tp"
@@ -191,9 +191,9 @@ const appendCurrentTime = () => {
   selectedTimeOption.value = null;
 };
 
-const copyPrevTime = () => {
-  root.$emit('msg', 'ok', 'Скопировано');
-};
+// const copyPrevTime = () => {
+//   root.$emit('msg', 'ok', 'Скопировано');
+// };
 
 watch(() => props.workTime, () => {
   appendCurrentTime();
@@ -262,7 +262,7 @@ button[disabled] {
     background-color: #f5f5f5;
   }
   &.active {
-      background-color: #d9f1d7;
+      background-color: #ddf3fe;
   }
 }
 .current-time-text {
