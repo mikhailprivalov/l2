@@ -38,6 +38,7 @@ def form_01(request_data):
     styleSheet = getSampleStyleSheet()
     objs = []
     style = styleSheet["Normal"]
+
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
