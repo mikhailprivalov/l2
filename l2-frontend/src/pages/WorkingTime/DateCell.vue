@@ -123,6 +123,8 @@ const selectedTimeOffLabel = ref('');
 
 const timeValid = () => {
   if (startWork.value > endWork.value && endWork.value !== '00:00' && !selectedTimeOff.value) {
+    startWork.value = '';
+    endWork.value = '';
     return { valid: false, reason: 'Время начала больше времени конца' };
   }
   return { valid: true, reason: '' };
