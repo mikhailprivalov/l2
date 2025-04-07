@@ -332,11 +332,11 @@ const save = async () => {
 
 const printDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('/working-time/update-time', {
-    changedEmployeesWorkTime: changedEmployeesWorkTime.value,
+  const { result } = await api('/working-time/print-document', {
+    employeesWorkTime: employeesWorkTime.value;
   });
   await store.dispatch(actions.DEC_LOADING);
-  window.open(`/forms/pdf?type=300.01&department_id=${props.department}&year=${props.year}&month=${props.month + 1}`, '_blank');
+  window.open(result, '_blank');
 };
 
 </script>
