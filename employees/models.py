@@ -620,7 +620,6 @@ class TimeTrackingDocument(models.Model):
         return document
 
 
-
 class TypeCheckTimeTrackingDocument(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
     hide = models.BooleanField(default=False, db_index=True)
@@ -803,9 +802,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                 start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
                 end = f"{date} {work_time.get('endWorkTime')}" if work_time.get("endWorkTime") else None
                 work_day_status_id = work_time.get("typeId")
-                day = EmployeeWorkingHoursSchedule.objects.filter(
-                    time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date
-                ).first()
+                day = EmployeeWorkingHoursSchedule.objects.filter(time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date).first()
                 if day:
                     day.start = start
                     day.end = end

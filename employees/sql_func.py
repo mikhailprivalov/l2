@@ -85,7 +85,7 @@ def get_employee_work_time(department_id: int, document_id: int):
             WHERE department_id = %(department_id)s  and employees_employeeposition.is_active = true
             ORDER BY family
         """,
-            params={"department_id": department_id, "document_id": document_id}
+            params={"department_id": department_id, "document_id": document_id},
         )
         row = namedtuplefetchall(cursor)
         return row
