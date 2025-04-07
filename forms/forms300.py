@@ -1,0 +1,37 @@
+import logging
+import locale
+import os.path
+import sys
+from io import BytesIO
+from reportlab.lib.pagesizes import A4, portrait
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate,
+from laboratory.settings import FONTS_FOLDER
+
+logger = logging.getLogger(__name__)
+
+def form_01(request_data):
+    logger.info('Мы печатаем')
+
+
+    if sys.platform == 'win32':
+        locale.setlocale(locale.LC_ALL, 'rus_rus')
+    else:
+        locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="Форма {}".format("025/у"))
+    width, height = portrait(A4)
+    styleSheet = getSampleStyleSheet()
+    objs = []
+    style = styleSheet["Normal"]
+    doc.build(objs)
+    pdf = buffer.getvalue()
+    buffer.close()
+    return None

@@ -1,25 +1,28 @@
 <template>
   <div>
     <div
-      v-if="noDocument && filtersFull"
-      class="margins"
+      class="flex margins"
     >
       <button
+        v-if="noDocument && filtersFull"
         class="btn btn-blue-nb"
         @click="createDocument"
       >
         Создать график
       </button>
-    </div>
-    <div
-      v-if="!noDocument && filtersFull"
-      class="margins"
-    >
       <button
+        v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
         @click="save"
       >
         Сохранить
+      </button>
+      <button
+        v-if="!noDocument && filtersFull"
+        class="btn btn-blue-nb"
+        @click="printDocument"
+      >
+        PDF
       </button>
     </div>
     <div v-if="!noDocument && filtersFull">
@@ -327,6 +330,10 @@ const save = async () => {
   }
 };
 
+const printDocument = () => {
+  window.open(`/forms/pdf?type=300.01&department_id=${props.department}&year=${props.year}&month=${props.month}`, '_blank');
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -349,6 +356,10 @@ const save = async () => {
 }
 .margins {
   margin: 5px 10px
+}
+.flex {
+  display: flex;
+  gap: 10px;
 }
 </style>
 
