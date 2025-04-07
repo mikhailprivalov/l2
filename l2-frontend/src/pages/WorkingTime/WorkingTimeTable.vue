@@ -37,13 +37,15 @@
       class="white-background"
     >
       <VeTable
-        max-height="calc(100vh - 200px)"
+        max-height="calc(100vh - 240px)"
         :columns="columns"
         :table-data="filteredEmployees"
         :cell-style-option="cellStyleOption"
         :column-hidden-option="columnHiddenOption"
         :virtual-scroll-option="virtualScrollOption"
         row-key-field-name="employeePositionId"
+        :cell-selection-option="cellSelectionOption"
+        :row-style-option="rowStyleOption"
         :border-y="true"
         :scroll-width="0"
       />
@@ -300,7 +302,14 @@ const columnHiddenOption = {
 const virtualScrollOption = {
   enable: true,
 };
-
+const cellSelectionOption = {
+  enable: false,
+};
+const rowStyleOption = {
+  hoverHighlight: false,
+  clickHighlight: false,
+  stripe: false,
+};
 const save = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/working-time/update-time', {
