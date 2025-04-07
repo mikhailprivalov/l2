@@ -735,6 +735,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
         document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
+        result = []
         if document:
             template_days = EmployeeWorkingHoursSchedule.get_month_days_template(year, month, length_month)
             employees_work_time = get_employee_work_time(department_id, document.pk)
@@ -756,8 +757,6 @@ class EmployeeWorkingHoursSchedule(models.Model):
                     }
                     result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
             result = [value for value in result.values()]
-        else:
-            result = []
         return result
 
     @staticmethod
