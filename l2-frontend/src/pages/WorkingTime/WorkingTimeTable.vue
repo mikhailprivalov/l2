@@ -330,7 +330,12 @@ const save = async () => {
   }
 };
 
-const printDocument = () => {
+const printDocument = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/update-time', {
+    changedEmployeesWorkTime: changedEmployeesWorkTime.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
   window.open(`/forms/pdf?type=300.01&department_id=${props.department}&year=${props.year}&month=${props.month + 1}`, '_blank');
 };
 
@@ -365,7 +370,7 @@ const printDocument = () => {
 
 <style lang="scss">
 .table-header-cell-weekend {
-  background-color: #cbf2cb !important;
+  background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
 .table-body-cell {
@@ -383,9 +388,9 @@ const printDocument = () => {
   text-overflow: ellipsis !important;
 }
 .table-body-cell-inner-bid {
-  background-color: #039372 !important;
+  background-color: #ddf3fe !important;
 }
 .table-body-cell-outer-bid {
-  background-color: #039372 !important;
+  background-color: #ddf3fe !important;
 }
 </style>

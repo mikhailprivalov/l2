@@ -217,7 +217,7 @@ watch(() => props.workTime, () => {
   border: none;
 }
 .transparentButton:active {
-  background-color: #37BC9B;
+  background-color: #1061bb;
   color: #FFFFFF;
 }
 .cell-select {
