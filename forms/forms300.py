@@ -3,8 +3,7 @@ import locale
 import os.path
 import sys
 from io import BytesIO
-from reportlab.lib.pagesizes import A4, portrait
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
