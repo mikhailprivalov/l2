@@ -41,8 +41,7 @@ def create_document(request):
     month = request_data.get("month")
     department_id = request_data.get("departmentId")
     TimeTrackingDocument.create_document(year, month, department_id, doctor_profile)
-    result = {"ok": True, "message": ""}
-    return JsonResponse(result)
+    return JsonResponse({"ok": True, "message": ""})
 
 
 @login_required()
