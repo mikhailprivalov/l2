@@ -213,10 +213,10 @@ onMounted(async () => {
 const getColumns = () => {
   const columnTemplate = [
     {
-      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'center', width: 20, fixed: 'center',
+      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'left', width: 20, fixed: 'center',
     },
     {
-      field: 'fio', key: 'fio', title: 'ФИО', align: 'center', width: 165, fixed: 'left',
+      field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 165, fixed: 'left',
     },
     {
       field: 'position',
@@ -383,9 +383,9 @@ const printDocument = () => {
   text-overflow: ellipsis !important;
 }
 .table-body-cell-inner-bid {
-  background-color: #def7de !important;
+  background-color: #039372 !important;
 }
 .table-body-cell-outer-bid {
-  background-color: #dae5c1 !important;
+  background-color: #039372 !important;
 }
 </style>
