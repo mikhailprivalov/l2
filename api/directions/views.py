@@ -43,7 +43,7 @@ from api import sql_func
 from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda, get_field_lab_result_by_research_and_test
-from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data
+from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data, hosp_get_curent_hosp_dir
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
 from clients.models import Card, Individual, DispensaryReg, BenefitReg
@@ -2938,6 +2938,9 @@ def last_field_result(request):
         result = {"value": sex}
     elif request_data["fieldPk"].find('%sex_short') != -1:
         result = {"value": data['sex']}
+    elif request_data["fieldPk"].find('%card_current_hosp') != -1:
+        card_current_hosp = hosp_get_curent_hosp_dir(request_data["iss_pk"])
+        result = {"value": card_current_hosp}
     elif request_data["fieldPk"].find('%mother_snils') != -1:
         result = {"value": mother_data['snils']}
     elif request_data["fieldPk"].find('%polis_enp') != -1:

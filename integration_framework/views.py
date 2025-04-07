@@ -313,11 +313,13 @@ def direction_data(request):
             except Exception:
                 additional_data_create_direction = None
 
+    date_direction_create = direction.data_sozdaniya.strftime("%d.%m.%Y")
     return Response(
         {
             "ok": True,
             "pk": pk,
             "createdAt": direction.data_sozdaniya,
+            "createdAtAsStr": date_direction_create,
             "patient": {
                 "id": card.pk,
                 **card.get_data_individual(full_empty=True, only_json_serializable=True),
