@@ -82,6 +82,8 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     address = ind_data['main_address']
     fwb.append(Paragraph(f'Регистрация по месту жительства: {address}', style))
     fwb.append(Paragraph(f"Страховой полис серия: _______ №{polis_num}", style))
+    if polis_issue.lower().find('без полиса') != -1:
+        polis_issue = ""
     fwb.append(Paragraph(f"Страховая компания (наименование): {polis_issue}", style))
     fwb.append(Paragraph(f"Направляется в: {data['Куда направляется']}", style))
     fwb.append(Paragraph("Дата приема _______________________ Время приема _________________", style))
