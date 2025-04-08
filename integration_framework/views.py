@@ -388,6 +388,11 @@ def issledovaniye_data(request):
     ignore_fsli = request.GET.get("ignoreFsli") == "true"
     need_ecp_code = request.GET.get("needEcpCode") == "true"
     i = directions.Issledovaniya.objects.get(pk=pk)
+    if i.research.podrazdeleniye__p_type != 2:
+        return Response(
+            {"ok": False, "ignore_sample": ignore_sample, "type": "is not laboratory"}
+        )
+
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     if ignore_fsli:
         results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__not_send_odli=True)
@@ -405,45 +410,64 @@ def issledovaniye_data(request):
         )
 
     results_data = []
+    ecpResearchId = None
+    if i.research.is_paraclinic and i.research.is_lab:
+        ecp_data = i.research.auto_register_on_rmis_location.split("#")
+        if len(ecp_data) > 1:
+            ecpResearchId = ecp_data[0]
+            value = ""
+            for group in ParaclinicInputGroups.objects.filter(research=i.research).order_by("order"):
+                results = directions.ParaclinicResult.objects.filter(issledovaniye=i, field__group=group).exclude(value="").order_by("field__order")
+                for r in results:
+                    value = f"{value} {r.field.title}- {r.value}"
 
-    for r in results:
-        if r.value in ["", None]:
-            continue
-        refs = r.calc_normal(only_ref=True, raw_ref=False)
 
-        if isinstance(refs, ResultRight):
-            if refs.mode == ResultRight.MODE_CONSTANT:
-                refs = [refs.const_orig]
-            else:
-                refs_list = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
-                if refs_list[0] == "-inf":
-                    refs = [f"до {refs_list[1]}"]
-                elif refs_list[1] == "inf":
-                    refs = [f"от {refs_list[0]}"]
-                elif refs_list[0] == refs_list[1]:
+            results_data.append(
+                {
+                    "pk": "",
+                    "value": value,
+                    "ecpId": ecp_data[1],
+                }
+            )
+    else:
+        for r in results:
+            if r.value in ["", None]:
+                continue
+            refs = r.calc_normal(only_ref=True, raw_ref=False)
+
+            if isinstance(refs, ResultRight):
+                if refs.mode == ResultRight.MODE_CONSTANT:
                     refs = [refs.const_orig]
                 else:
-                    refs = refs_list
-        else:
-            refs = [r.calc_normal(only_ref=True) or ""]
+                    refs_list = [str(refs.range.val_from.value), str(refs.range.val_to.value)]
+                    if refs_list[0] == "-inf":
+                        refs = [f"до {refs_list[1]}"]
+                    elif refs_list[1] == "inf":
+                        refs = [f"от {refs_list[0]}"]
+                    elif refs_list[0] == refs_list[1]:
+                        refs = [refs.const_orig]
+                    else:
+                        refs = refs_list
+            else:
+                refs = [r.calc_normal(only_ref=True) or ""]
 
-        norm = r.calc_normal()
+            norm = r.calc_normal()
 
-        u = r.fraction.get_unit()
-        if not REFERENCE_ODLI:
-            refs = [""]
-        results_data.append(
-            {
-                "pk": r.pk,
-                "fsli": r.fraction.get_fsli_code(),
-                "value": r.value.replace(",", "."),
-                "units": r.get_units(),
-                "unitCode": u.code if u else None,
-                "ref": refs,
-                "interpretation": "N" if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else "A",
-                "ecpId": r.fraction.get_ecp_code(),
-            }
-        )
+            u = r.fraction.get_unit()
+            if not REFERENCE_ODLI:
+                refs = [""]
+            results_data.append(
+                {
+                    "pk": r.pk,
+                    "fsli": r.fraction.get_fsli_code(),
+                    "value": r.value.replace(",", "."),
+                    "units": r.get_units(),
+                    "unitCode": u.code if u else None,
+                    "ref": refs,
+                    "interpretation": "N" if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else "A",
+                    "ecpId": r.fraction.get_ecp_code(),
+                }
+            )
 
     time_confirmation = i.time_confirmation_local
 
@@ -480,7 +504,7 @@ def issledovaniye_data(request):
             "comments": i.lab_comment,
             "isGistology": i.research.is_gistology,
             "isParaclinic": i.research.is_paraclinic,
-            "ecpResearchId": i.research.ecp_id,
+            "ecpResearchId": ecpResearchId if ecpResearchId else i.research.ecp_id,
         }
     )
 
