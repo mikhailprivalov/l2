@@ -419,8 +419,7 @@ def issledovaniye_data(request):
             for group in ParaclinicInputGroups.objects.filter(research=i.research).order_by("order"):
                 results = directions.ParaclinicResult.objects.filter(issledovaniye=i, field__group=group).exclude(value="").order_by("field__order")
                 for r in results:
-                    value = f"{value} {r.field.title}- {r.value}"
-
+                    value = f"{value} {r.field.title}-{r.value};"
 
             results_data.append(
                 {
