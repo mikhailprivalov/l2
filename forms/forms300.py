@@ -7,7 +7,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus import SimpleDocTemplate, Paragraph
 from laboratory.settings import FONTS_FOLDER
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def form_01(request_data):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="График рабочего времени")
     objs = []
-
+    objs.append(Paragraph('some text'))
     doc.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
