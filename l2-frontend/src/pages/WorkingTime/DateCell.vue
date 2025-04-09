@@ -18,17 +18,22 @@
       @show="updateCellSelect(true)"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
-      <p class="current-time-text" :class="currentTime.empty ? 'opacity-text' : ''">{{ currentTime.text }}</p>
+      <p
+        class="current-time-text"
+        :class="currentTime.empty ? 'opacity-text' : ''"
+      >
+        {{ currentTime.text }}
+      </p>
       <!-- eslint-enable -->
     </button>
-<!--    <button-->
-<!--      v-tippy-->
-<!--      class="transparentButton"-->
-<!--      title="Скопировать предыдущий"-->
-<!--      @click="copyPrevTime"-->
-<!--    >-->
-<!--      <i class="fa-solid fa-copy" />-->
-<!--    </button>-->
+    <!--    <button-->
+    <!--      v-tippy-->
+    <!--      class="transparentButton"-->
+    <!--      title="Скопировать предыдущий"-->
+    <!--      @click="copyPrevTime"-->
+    <!--    >-->
+    <!--      <i class="fa-solid fa-copy" />-->
+    <!--    </button>-->
     <div
       id="temp"
       class="tp"
