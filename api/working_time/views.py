@@ -1,7 +1,6 @@
-import base64
 import json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse, FileResponse
+from django.http import JsonResponse, HttpResponse
 
 from forms.forms300 import form_01
 from laboratory.decorators import group_required
