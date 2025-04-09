@@ -18,7 +18,7 @@
       @show="updateCellSelect(true)"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
-      <p class="current-time-text">{{ currentTime }}</p>
+      <p class="current-time-text" :class="currentTime.empty ? 'opacity-text' : ''">{{ currentTime.text }}</p>
       <!-- eslint-enable -->
     </button>
 <!--    <button-->
@@ -176,11 +176,11 @@ watch([startWork, endWork], () => {
 
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
-    return `${startWork.value}\n${endWork.value}`;
+    return { text: `${startWork.value}\n${endWork.value}`, time: true };
   } if (selectedTimeOff.value) {
-    return selectedTimeOffLabel.value;
+    return { text: selectedTimeOffLabel.value, timeOff: true };
   }
-  return '--:--\n--:--';
+  return { text: '--:--\n--:--', empty: true };
 });
 
 const appendCurrentTime = () => {
@@ -271,5 +271,8 @@ button[disabled] {
 .current-time-wh {
   width: 100%;
   height: 42px;
+}
+.opacity-text {
+  opacity: 0.3;
 }
 </style>
