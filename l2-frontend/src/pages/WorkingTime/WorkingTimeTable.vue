@@ -332,17 +332,16 @@ const save = async () => {
 };
 
 const printDocument = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const customAPi = axios.create({
+  const apiForBlob = axios.create({
     baseURL: `${window.location.origin}/api`,
+    responseType: 'blob',
   });
-  const result = await customAPi.post('/working-time/print-document', {
+  await store.dispatch(actions.INC_LOADING);
+  const result = await apiForBlob.post('/working-time/print-document', {
     employeesWorkTime: employeesWorkTime.value,
-  }, { responseType: 'blob' });
+  });
   await store.dispatch(actions.DEC_LOADING);
-  console.log(result.data);
-  const blob = new Blob([result.data], { type: 'application/pdf' });
-  const urlFile = URL.createObjectURL(blob);
+  const urlFile = URL.createObjectURL(result.data);
   window.open(urlFile);
 };
 
