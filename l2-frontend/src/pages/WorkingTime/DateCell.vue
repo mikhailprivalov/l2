@@ -1,5 +1,5 @@
 <template>
-  <div class="root">
+  <div>
     <button
       v-tippy="{
         html: '#temp',
@@ -12,21 +12,28 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      class="transparentButton current-time-wh"
+      :class="cellSelect ? 'transparentButton current-time-wh cell-select' : 'transparentButton current-time-wh'"
+      @hide="updateCellSelect(false)"
+      @hidden="updateTime"
+      @show="updateCellSelect(true)"
     >
       <!-- eslint-disable vue/singleline-html-element-content-newline -->
-      <p class="current-time-text">{{ currentTime }}</p>
+      <p
+        class="current-time-text"
+        :class="currentTime.empty ? 'opacity-text' : ''"
+      >
+        {{ currentTime.text }}
+      </p>
       <!-- eslint-enable -->
     </button>
-    <button
-      v-tippy
-      class="transparentButton"
-      title="Скопировать предыдущий"
-      @click="copyPrevTime"
-    >
-      <i class="fa-solid fa-copy" />
-    </button>
-
+    <!--    <button-->
+    <!--      v-tippy-->
+    <!--      class="transparentButton"-->
+    <!--      title="Скопировать предыдущий"-->
+    <!--      @click="copyPrevTime"-->
+    <!--    >-->
+    <!--      <i class="fa-solid fa-copy" />-->
+    <!--    </button>-->
     <div
       id="temp"
       class="tp"
@@ -59,19 +66,11 @@
             type="time"
           >
         </div>
-        <button
-          v-tippy
-          class="transparentButton tp-button"
-          title="Сохранить"
-          @click="updateTime"
-        >
-          <i class="fa-solid fa-save" />
-        </button>
       </div>
       <div class="tp-row">
         <RadioFieldById
           v-model="selectedTimeOff"
-          :variants="typesTimeOff"
+          :variants="props.workDayStatuses"
           :start-null="true"
           @modified="timeOff"
         />
@@ -87,9 +86,6 @@ import {
 } from 'vue';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
-import * as actions from '@/store/action-types';
-import api from '@/api';
-import { useStore } from '@/store';
 
 const emit = defineEmits(['changeWorkTime']);
 const props = defineProps({
@@ -106,26 +102,34 @@ const props = defineProps({
     type: [String, undefined],
     required: true,
   },
+  workDayStatuses: {
+    type: Array,
+    required: true,
+  },
 });
 
 const root = getCurrentInstance().proxy.$root;
-const store = useStore();
+
+const cellSelect = ref(false);
+const updateCellSelect = (select: boolean) => {
+  cellSelect.value = select;
+};
 const startWork = ref(null);
 const endWork = ref(null);
 const selectedTimeOff = ref(null);
-const typesTimeOff = ref([
-  { id: 1, label: 'О' },
-  { id: 2, label: 'Б' },
-  { id: 3, label: 'Д' },
-  { id: 4, label: 'П' },
-]);
-const selectedTypeLabel = ref('');
+const findTimeOffLabel = () => {
+  const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
+  if (status) {
+    return status.label;
+  }
+  return null;
+};
+const selectedTimeOffLabel = ref('');
 
 const timeValid = () => {
-  if (!startWork.value && !endWork.value && !selectedTimeOff.value) {
-    return { valid: false, reason: 'Время не выбрано' };
-  }
   if (startWork.value > endWork.value && endWork.value !== '00:00' && !selectedTimeOff.value) {
+    startWork.value = '';
+    endWork.value = '';
     return { valid: false, reason: 'Время начала больше времени конца' };
   }
   return { valid: true, reason: '' };
@@ -147,32 +151,9 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
 };
 
 const timeOff = () => {
-  selectedTypeLabel.value = typesTimeOff.value.find((type) => type.id === selectedTimeOff.value).label;
+  selectedTimeOffLabel.value = findTimeOffLabel();
   startWork.value = null;
   endWork.value = null;
-  selectedTimeOption.value = null;
-};
-
-watch([startWork, endWork], () => {
-  if (startWork.value && endWork.value && selectedTimeOff.value) {
-    selectedTimeOff.value = null;
-    selectedTypeLabel.value = '';
-  }
-});
-
-const currentTime = computed(() => {
-  if (startWork.value && endWork.value) {
-    return `${startWork.value}\n${endWork.value}`;
-  } if (selectedTimeOff.value) {
-    return selectedTypeLabel.value;
-  }
-  return '--:--\n--:--';
-});
-
-const appendCurrentTime = () => {
-  startWork.value = props.workTime.startWorkTime;
-  endWork.value = props.workTime.endWorkTime;
-  selectedTimeOff.value = props.workTime.type;
   selectedTimeOption.value = null;
 };
 
@@ -181,29 +162,43 @@ const updateTime = async () => {
   if (!valid) {
     root.$emit('msg', 'error', reason);
   } else {
-    await store.dispatch(actions.INC_LOADING);
-    const { ok, message } = await api('/working-time/update-time', {
-      startWork: `${props.date} ${startWork.value}`,
-      endWork: `${props.date} ${endWork.value}`,
-      type: selectedTimeOff.value,
+    emit('changeWorkTime', {
       employeePositionId: props.employeePositionId,
       date: props.date,
+      startWorkTime: startWork.value,
+      endWorkTime: endWork.value,
+      typeId: selectedTimeOff.value,
     });
-    await store.dispatch(actions.DEC_LOADING);
-    if (ok) {
-      emit('changeWorkTime');
-      root.$emit('msg', 'ok', 'Обновлено');
-    } else {
-      root.$emit('msg', 'error', message);
-    }
   }
 };
 
-const copyPrevTime = () => {
-  if (props.prevWorkTime) {
-    root.$emit('msg', 'ok', 'Скопировано');
+watch([startWork, endWork], () => {
+  if (startWork.value && endWork.value && selectedTimeOff.value) {
+    selectedTimeOff.value = null;
+    selectedTimeOffLabel.value = '';
   }
+});
+
+const currentTime = computed(() => {
+  if (startWork.value && endWork.value) {
+    return { text: `${startWork.value}\n${endWork.value}`, time: true };
+  } if (selectedTimeOff.value) {
+    return { text: selectedTimeOffLabel.value, timeOff: true };
+  }
+  return { text: '--:--\n--:--', empty: true };
+});
+
+const appendCurrentTime = () => {
+  startWork.value = props.workTime.startWorkTime;
+  endWork.value = props.workTime.endWorkTime;
+  selectedTimeOff.value = props.workTime.typeId;
+  selectedTimeOffLabel.value = findTimeOffLabel();
+  selectedTimeOption.value = null;
 };
+
+// const copyPrevTime = () => {
+//   root.$emit('msg', 'ok', 'Скопировано');
+// };
 
 watch(() => props.workTime, () => {
   appendCurrentTime();
@@ -212,10 +207,6 @@ watch(() => props.workTime, () => {
 </script>
 
 <style scoped lang="scss">
-.root {
-  display: flex;
-  flex-wrap: nowrap;
-}
 .time-width {
   margin: 0;
 }
@@ -231,7 +222,11 @@ watch(() => props.workTime, () => {
   border: none;
 }
 .transparentButton:active {
-  background-color: #37BC9B;
+  background-color: #1061bb;
+  color: #FFFFFF;
+}
+.cell-select {
+  background-color: #434a54;
   color: #FFFFFF;
 }
 button[disabled] {
@@ -272,14 +267,17 @@ button[disabled] {
     background-color: #f5f5f5;
   }
   &.active {
-      background-color: #d9f1d7;
+      background-color: #ddf3fe;
   }
 }
 .current-time-text {
   margin: 0;
 }
 .current-time-wh {
-  width: 50px;
+  width: 100%;
   height: 42px;
+}
+.opacity-text {
+  opacity: 0.3;
 }
 </style>
