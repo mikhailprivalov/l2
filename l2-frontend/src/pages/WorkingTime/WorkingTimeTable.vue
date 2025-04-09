@@ -346,9 +346,6 @@ const printDocument = async () => {
   const blob = new Blob([arr], { type: 'application/pdf' });
   const urlFile = URL.createObjectURL(blob);
   window.open(urlFile);
-  // const blob = new Blob(result);
-  // console.log(blob);
-  // window.open(result, '_blank');
 };
 
 </script>

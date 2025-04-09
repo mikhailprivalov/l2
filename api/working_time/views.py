@@ -63,9 +63,3 @@ def print_document(request):
     base64_encoded = base64.b64encode(result_bytes)
     base64_string = base64_encoded.decode('utf-8')
     return JsonResponse({"result": base64_string})
-    # response = HttpResponse(content_type='application/pdf')
-    # response['Content-Disposition'] = 'inline; filename="form-' + 'document' + '.pdf"'
-    # response.write(form_01(request_data={"employeesWorkTime": employees_work_time}))
-
-    # return response
-    # result_bytes = form_01(request_data={"employeesWorkTime": employees_work_time})
