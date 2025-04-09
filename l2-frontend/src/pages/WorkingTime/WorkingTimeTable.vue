@@ -10,6 +10,18 @@
       >
         Создать график
       </button>
+    </div>
+    <div
+      v-if="!noDocument && filtersFull"
+      class="flex"
+    >
+      <div class="search">
+        <input
+          v-model.trim="search"
+          class="form-control"
+          placeholder="Поиск работника"
+        >
+      </div>
       <button
         v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
@@ -24,17 +36,6 @@
       >
         PDF
       </button>
-    </div>
-    <div v-if="!noDocument && filtersFull">
-      <label
-        for="search"
-        class="filters"
-      >Поиск сотрудника</label>
-      <input
-        id="search"
-        v-model.trim="search"
-        class="form-control"
-      >
     </div>
     <div
       class="white-background"
@@ -52,11 +53,21 @@
         :border-y="true"
         :scroll-width="0"
       />
-      <div
-        v-show="filteredEmployees.length === 0"
-        class="empty-list"
-      >
-        Нет записей
+      <div class="flex flex-end">
+        <button
+          v-if="!noDocument && filtersFull"
+          class="btn btn-blue-nb"
+          @click="save"
+        >
+          Сохранить
+        </button>
+        <button
+          v-if="!noDocument && filtersFull"
+          class="btn btn-blue-nb"
+          @click.prevent="printDocument()"
+        >
+          PDF
+        </button>
       </div>
     </div>
   </div>
@@ -371,6 +382,12 @@ const printDocument = async () => {
 .flex {
   display: flex;
   gap: 10px;
+}
+.flex-end {
+  justify-content: flex-end;
+}
+.search {
+  flex: 1;
 }
 </style>
 
