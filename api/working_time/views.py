@@ -59,7 +59,8 @@ def get_ref_books(request):
 def print_document(request):
     request_data = json.loads(request.body)
     employees_work_time = request_data.get("employeesWorkTime")
-    result_bytes = form_01(request_data={"employeesWorkTime": employees_work_time})
-    base64_encoded = base64.b64encode(result_bytes)
-    base64_string = base64_encoded.decode('utf-8')
-    return JsonResponse({"result": base64_string})
+    result = form_01(request_data={"employeesWorkTime": employees_work_time})
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="form-' + '.pdf"'
+    response.write(result)
+    return response

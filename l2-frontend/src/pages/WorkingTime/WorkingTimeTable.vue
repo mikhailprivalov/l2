@@ -70,7 +70,7 @@ import { VeTable } from 'vue-easytable';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment';
-import * as url from 'url';
+import axios from 'axios';
 
 import api from '@/api';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
@@ -333,17 +333,15 @@ const save = async () => {
 
 const printDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/print-document', {
-    employeesWorkTime: employeesWorkTime.value,
+  const customAPi = axios.create({
+    baseURL: `${window.location.origin}/api`,
   });
+  const result = await customAPi.post('/working-time/print-document', {
+    employeesWorkTime: employeesWorkTime.value,
+  }, { responseType: 'blob' });
   await store.dispatch(actions.DEC_LOADING);
-  const binStr = atob(result);
-  const len = binStr.length;
-  const arr = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    arr[i] = binStr.charCodeAt(i);
-  }
-  const blob = new Blob([arr], { type: 'application/pdf' });
+  console.log(result.data);
+  const blob = new Blob([result.data], { type: 'application/pdf' });
   const urlFile = URL.createObjectURL(blob);
   window.open(urlFile);
 };
