@@ -20,7 +20,7 @@
       <button
         v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
-        @click="printDocument"
+        @click.prevent="printDocument()"
       >
         PDF
       </button>
@@ -70,6 +70,7 @@ import { VeTable } from 'vue-easytable';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment';
+import * as url from 'url';
 
 import api from '@/api';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
@@ -336,7 +337,18 @@ const printDocument = async () => {
     employeesWorkTime: employeesWorkTime.value,
   });
   await store.dispatch(actions.DEC_LOADING);
-  window.open(result, '_blank');
+  const binStr = atob(result);
+  const len = binStr.length;
+  const arr = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    arr[i] = binStr.charCodeAt(i);
+  }
+  const blob = new Blob([arr], { type: 'application/pdf' });
+  const urlFile = URL.createObjectURL(blob);
+  window.open(urlFile);
+  // const blob = new Blob(result);
+  // console.log(blob);
+  // window.open(result, '_blank');
 };
 
 </script>

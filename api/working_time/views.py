@@ -1,6 +1,7 @@
+import base64
 import json
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 
 from forms.forms300 import form_01
 from laboratory.decorators import group_required
@@ -58,5 +59,13 @@ def get_ref_books(request):
 def print_document(request):
     request_data = json.loads(request.body)
     employees_work_time = request_data.get("employeesWorkTime")
-    result = form_01(request_data={"employeesWorkTime": employees_work_time})
-    return JsonResponse({"result": result})
+    result_bytes = form_01(request_data={"employeesWorkTime": employees_work_time})
+    base64_encoded = base64.b64encode(result_bytes)
+    base64_string = base64_encoded.decode('utf-8')
+    return JsonResponse({"result": base64_string})
+    # response = HttpResponse(content_type='application/pdf')
+    # response['Content-Disposition'] = 'inline; filename="form-' + 'document' + '.pdf"'
+    # response.write(form_01(request_data={"employeesWorkTime": employees_work_time}))
+
+    # return response
+    # result_bytes = form_01(request_data={"employeesWorkTime": employees_work_time})
