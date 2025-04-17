@@ -136,7 +136,7 @@ const getEmployeesWorkTime = async () => {
 };
 
 watch(employeesWorkTime, () => {
-  for (const employee of employeesWorkTime.value.slice(0, 1)) {
+  for (const employee of employeesWorkTime.value) {
     let tmpTotalHours = 0.0;
     const keys = Object.keys(employee);
     for (const key of keys) {
