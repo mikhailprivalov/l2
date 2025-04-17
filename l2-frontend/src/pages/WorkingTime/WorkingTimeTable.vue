@@ -144,8 +144,11 @@ watch(employeesWorkTime, () => {
         const currentDay = employee[key];
         const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
         const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-        const diffTime = (endTime - startTime) / (1000 * 60 * 60);
-        tmpTotalHours += diffTime;
+        const { typeId } = currentDay;
+        if (!typeId) {
+          const diffTime = (endTime - startTime) / (1000 * 60 * 60);
+          tmpTotalHours += diffTime;
+        }
       }
     }
     employee.totalHours = tmpTotalHours;
