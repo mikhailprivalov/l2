@@ -151,7 +151,7 @@ watch(employeesWorkTime, () => {
         }
       }
     }
-    employee.totalHours = tmpTotalHours;
+    employee.totalHours = tmpTotalHours.toFixed(1);
   }
 }, { deep: true });
 

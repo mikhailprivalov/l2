@@ -125,7 +125,7 @@ const findTimeOffLabel = () => {
 const selectedTimeOffLabel = ref('');
 
 const timeValid = () => {
-  if (startWork.value > endWork.value && endWork.value !== '00:00' && !selectedTimeOff.value) {
+  if (startWork.value > endWork.value && !selectedTimeOff.value) {
     startWork.value = '';
     endWork.value = '';
     return { valid: false, reason: 'Время начала больше времени конца' };
@@ -137,7 +137,7 @@ const selectedTimeOption = ref(null);
 const timeOptions = ref([
   { id: 1, startWork: '08:00', endWork: '16:30' },
   { id: 2, startWork: '08:00', endWork: '15:48' },
-  { id: 3, startWork: '15:48', endWork: '00:00' },
+  { id: 3, startWork: '15:48', endWork: '23:59' },
   { id: 4, startWork: '19:48', endWork: '21:00' },
   { id: 5, startWork: '14:48', endWork: '16:00' },
 ]);
