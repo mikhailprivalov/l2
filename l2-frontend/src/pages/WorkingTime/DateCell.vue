@@ -62,6 +62,7 @@
             v-model="endWork"
             class="form-control"
             type="time"
+            max="23:59"
           >
         </div>
       </div>
@@ -174,6 +175,12 @@ watch([startWork, endWork], () => {
   if (startWork.value && endWork.value && selectedTimeOff.value) {
     selectedTimeOff.value = null;
     selectedTimeOffLabel.value = '';
+  }
+});
+
+watch(endWork, () => {
+  if (endWork.value === '00:00') {
+    endWork.value = '23:59';
   }
 });
 
