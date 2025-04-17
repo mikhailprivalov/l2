@@ -21,9 +21,7 @@
       <p
         class="current-time-text"
         :class="currentTime.empty ? 'opacity-text' : ''"
-      >
-        {{ currentTime.text }}
-      </p>
+      >{{ currentTime.text }}</p>
       <!-- eslint-enable -->
     </button>
     <!--    <button-->
@@ -64,6 +62,7 @@
             v-model="endWork"
             class="form-control"
             type="time"
+            max="23:59"
           >
         </div>
       </div>
@@ -127,7 +126,7 @@ const findTimeOffLabel = () => {
 const selectedTimeOffLabel = ref('');
 
 const timeValid = () => {
-  if (startWork.value > endWork.value && endWork.value !== '00:00' && !selectedTimeOff.value) {
+  if (startWork.value > endWork.value && !selectedTimeOff.value) {
     startWork.value = '';
     endWork.value = '';
     return { valid: false, reason: 'Время начала больше времени конца' };
@@ -139,7 +138,7 @@ const selectedTimeOption = ref(null);
 const timeOptions = ref([
   { id: 1, startWork: '08:00', endWork: '16:30' },
   { id: 2, startWork: '08:00', endWork: '15:48' },
-  { id: 3, startWork: '15:48', endWork: '00:00' },
+  { id: 3, startWork: '15:48', endWork: '23:59' },
   { id: 4, startWork: '19:48', endWork: '21:00' },
   { id: 5, startWork: '14:48', endWork: '16:00' },
 ]);
@@ -176,6 +175,12 @@ watch([startWork, endWork], () => {
   if (startWork.value && endWork.value && selectedTimeOff.value) {
     selectedTimeOff.value = null;
     selectedTimeOffLabel.value = '';
+  }
+});
+
+watch(endWork, () => {
+  if (endWork.value === '00:00') {
+    endWork.value = '23:59';
   }
 });
 

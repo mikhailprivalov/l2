@@ -136,7 +136,7 @@ const getEmployeesWorkTime = async () => {
 };
 
 watch(employeesWorkTime, () => {
-  for (const employee of employeesWorkTime.value.slice(0, 1)) {
+  for (const employee of employeesWorkTime.value) {
     let tmpTotalHours = 0.0;
     const keys = Object.keys(employee);
     for (const key of keys) {
@@ -144,11 +144,14 @@ watch(employeesWorkTime, () => {
         const currentDay = employee[key];
         const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
         const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-        const diffTime = (endTime - startTime) / (1000 * 60 * 60);
-        tmpTotalHours += diffTime;
+        const { typeId } = currentDay;
+        if (!typeId) {
+          const diffTime = (endTime - startTime) / (1000 * 60 * 60);
+          tmpTotalHours += diffTime;
+        }
       }
     }
-    employee.totalHours = tmpTotalHours;
+    employee.totalHours = tmpTotalHours.toFixed(1);
   }
 }, { deep: true });
 
