@@ -1744,6 +1744,7 @@ def directions_paraclinic_form(request):
                         "is_form": i.research.is_form,
                         "is_stom": i.research.is_stom,
                         "isAux": i.research.is_aux,
+                        "is_case": i.research.is_case,
                         "is_expertise": i.research.is_expertise,
                         "is_direction_params": i.research.is_direction_params,
                         "is_global_direction_params": i.research.is_global_direction_params,
@@ -1896,6 +1897,7 @@ def directions_paraclinic_form(request):
                     or iss["research"]["is_microbiology"]
                     or iss["research"]["is_treatment"]
                     or iss["research"]["is_stom"]
+                    or iss["research"]["is_case"]
                 ):
                     iss = {
                         **iss,

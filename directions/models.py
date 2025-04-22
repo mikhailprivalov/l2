@@ -1601,7 +1601,7 @@ class Napravleniya(models.Model):
                             result["message"] = "Данный мониторинг уже создан"
                             return result
 
-                    if case_id > -2:
+                    if case_id > -2 and not issledovaniye_case_id:
                         if case_id == -1:
                             napravleniye_case = Napravleniya.gen_napravleniye(
                                 client_id,
