@@ -62,6 +62,7 @@ def get_researches_details(pk, templates_department_pk=None):
         response["direction_current_params"] = res.direction_params_id or -1
         response["direction_current_expertise"] = res.expertise_params_id or -1
         response["is_global_direction_params"] = res.is_global_direction_params
+        response["is_case_params"] = res.is_case_params
         response["is_paraclinic"] = res.is_paraclinic
         response["type_period"] = res.type_period
         response["assigned_to_params"] = []
