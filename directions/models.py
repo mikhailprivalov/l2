@@ -1631,6 +1631,13 @@ class Napravleniya(models.Model):
                             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
                             issledovaniye_case.save()
                             issledovaniye_case_id = issledovaniye_case.pk
+                            if current_global_direction_params:
+                                if current_global_direction_params.get('groups', None):
+                                    groups_data = current_global_direction_params.get('groups')
+                                    group_target = groups_data[0]
+                                    group_obj = directory.ParaclinicInputGroups.objects.filter(pk=group_target.get("pk", -1)).first()
+                                    if group_obj and group_obj.research.is_case_params:
+                                        DirectionParamsResult.save_direction_params(napravleniye_case, current_global_direction_params)
                         elif case_id > 0:
                             issledovaniye_case_id = case_id
 

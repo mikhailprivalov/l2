@@ -446,6 +446,7 @@ def researches_update(request):
         auto_register_on_rmis_location = request_data.get("autoRegisterRmisLocation", "")
         schedule_title = request_data.get("schedule_title", "").strip()
         is_global_direction_params = request_data.get("is_global_direction_params", False)
+        is_case_params = request_data.get("is_case_params", False)
         code = request_data.get("code", "").strip()
         internal_code = request_data.get("internal_code", "").strip()
         try:
@@ -542,6 +543,7 @@ def researches_update(request):
                     direction_params=researche_direction_current_params,
                     expertise_params_id=direction_current_expertise,
                     is_global_direction_params=is_global_direction_params,
+                    is_case_params=is_case_params,
                     has_own_form_result=own_form_result,
                     show_more_services=show_more_services,
                     nsi_id=current_nsi_research_code,
@@ -598,6 +600,7 @@ def researches_update(request):
                 res.direction_params = researche_direction_current_params
                 res.expertise_params_id = direction_current_expertise
                 res.is_global_direction_params = is_global_direction_params
+                res.is_case_params = is_case_params
                 res.has_own_form_result = own_form_result
                 res.show_more_services = show_more_services and not res.is_microbiology and not res.is_form
                 res.nsi_id = current_nsi_research_code

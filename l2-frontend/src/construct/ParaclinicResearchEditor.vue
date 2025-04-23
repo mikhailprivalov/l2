@@ -47,6 +47,16 @@
             style="height: 34px;text-align: left;"
           >
             <input
+              v-model="is_case_params"
+              type="checkbox"
+            > Это случай
+          </label>
+          <label
+            v-if="ex_dep === 12"
+            class="input-group-addon"
+            style="height: 34px;text-align: left;"
+          >
+            <input
               v-model="is_global_direction_params"
               type="checkbox"
             > Глобальный
@@ -1373,6 +1383,7 @@ export default {
       schedule_title: '',
       short_title: '',
       is_global_direction_params: false,
+      is_case_params: false,
       code: '',
       internal_code: '',
       uet_refferal_doc: '',
@@ -1808,6 +1819,7 @@ export default {
       this.autoRegisterRmisLocation = '';
       this.schedule_title = '';
       this.is_global_direction_params = false;
+      this.is_case_params = false;
       this.code = '';
       this.info = '';
       this.hide = false;
@@ -1828,7 +1840,7 @@ export default {
         this.short_title = data.short_title;
         this.autoRegisterRmisLocation = data.autoRegisterRmisLocation;
         this.schedule_title = data.schedule_title;
-        this.is_global_direction_params = data.is_global_direction_params;
+        this.is_case_params = data.is_case_params;
         this.code = data.code;
         this.internal_code = data.internal_code;
         this.uet_refferal_doc = data.uet_refferal_doc;
@@ -1885,6 +1897,7 @@ export default {
         'autoRegisterRmisLocation',
         'schedule_title',
         'is_global_direction_params',
+        'is_case_params',
         'code',
         'hide',
         'templatesByDepartment',
