@@ -38,13 +38,13 @@
     >
       <div class="tp-row">
         <div
-          v-for="option in timeOptions"
+          v-for="option in props.timeOptions"
           :key="option.id"
           class="variant"
           :class="selectedTimeOption === option.id && 'active'"
-          @click="selectTime(option.id, option.startWork, option.endWork)"
+          @click="selectTime(option.id, option.start, option.end)"
         >
-          {{ `${option.startWork}-${option.endWork}` }}
+          {{ `${option.start}-${option.end}` }}
         </div>
       </div>
       <div class="tp-row">
@@ -105,6 +105,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  timeOptions: {
+    type: Array,
+    required: true,
+  },
 });
 
 const root = getCurrentInstance().proxy.$root;
@@ -135,13 +139,13 @@ const timeValid = () => {
 };
 
 const selectedTimeOption = ref(null);
-const timeOptions = ref([
-  { id: 1, startWork: '08:00', endWork: '16:30' },
-  { id: 2, startWork: '08:00', endWork: '15:48' },
-  { id: 3, startWork: '15:48', endWork: '23:59' },
-  { id: 4, startWork: '19:48', endWork: '21:00' },
-  { id: 5, startWork: '14:48', endWork: '16:00' },
-]);
+// const timeOptions = ref([
+//   { id: 1, startWork: '08:00', endWork: '16:30' },
+//   { id: 2, startWork: '08:00', endWork: '15:48' },
+//   { id: 3, startWork: '15:48', endWork: '23:59' },
+//   { id: 4, startWork: '19:48', endWork: '21:00' },
+//   { id: 5, startWork: '14:48', endWork: '16:00' },
+// ]);
 
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
