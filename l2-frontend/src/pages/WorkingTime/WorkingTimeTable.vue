@@ -148,11 +148,10 @@ watch(employeesWorkTime, () => {
         const { typeId } = currentDay;
         if (!typeId) {
           const diffTime = (endTime - startTime) / (1000 * 60 * 60);
-          tmpTotalHours += diffTime;
+          tmpTotalHours += (diffTime - lunchDuration);
         }
       }
     }
-    tmpTotalHours -= lunchDuration;
     employee.totalHours = tmpTotalHours.toFixed(1);
   }
 }, { deep: true });
