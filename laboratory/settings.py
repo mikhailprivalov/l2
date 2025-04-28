@@ -470,7 +470,7 @@ PAY_FIN_SOURCE_ID = None
 CHAMBER_DOCTOR_GROUP_ID = None
 DEFECT_VARIANTS = []
 
-# Продолжительность обеда по должностям {"position_name": 30}
+# Продолжительность обеда по должностям {"position_name": duration in minutes}
 LUNCH_DURATION_BY_POSITIONS = {}
 
 try:
