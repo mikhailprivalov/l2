@@ -756,6 +756,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "fio": f'{work_time.family} {work_time.name[0]}.{work_time.patronymic[0] + "." if work_time.patronymic else ""}',
                         "position": work_time.position_name,
                         "bidType": work_time.bid_name[:4],
+                        "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name),
                         **template_days,
                     }
                 if work_time.day:
