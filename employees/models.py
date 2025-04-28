@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from typing import Union
 
 import pytz
 from django.db import models
@@ -7,7 +8,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS
 from laboratory.utils import strfdatetime
 from slog.models import Log
 from users.models import DoctorProfile
@@ -548,6 +549,14 @@ class EmployeePosition(models.Model):
         ]
         unique_together = ('employee', 'position', 'department', 'is_active', 'tabel_number')
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
+
+    @staticmethod
+    def get_lunch_duration(duration: Union[int, None], position: str):
+        if duration is not None:
+            local_duration = duration
+        else:
+            local_duration = LUNCH_DURATION_BY_POSITIONS.get(position)
+        return local_duration
 
 
 class WorkDayStatus(models.Model):
