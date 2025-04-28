@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from typing import Union
 
 import pytz
 from django.db import models
@@ -7,7 +8,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS
 from laboratory.utils import strfdatetime
 from slog.models import Log
 from users.models import DoctorProfile
@@ -430,6 +431,7 @@ class EmployeePosition(models.Model):
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
     date_employment = models.DateField(verbose_name="Дата приема на работу", help_text="2025-01-11", blank=True, null=True, default=None)
     date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
+    lunch_duration = models.IntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
@@ -547,6 +549,14 @@ class EmployeePosition(models.Model):
         ]
         unique_together = ('employee', 'position', 'department', 'is_active', 'tabel_number')
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
+
+    @staticmethod
+    def get_lunch_duration(duration: Union[int, None], position: str):
+        if duration is not None:
+            local_duration = duration
+        else:
+            local_duration = LUNCH_DURATION_BY_POSITIONS.get(position)
+        return local_duration
 
 
 class WorkDayStatus(models.Model):
@@ -746,6 +756,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "fio": f'{work_time.family} {work_time.name[0]}.{work_time.patronymic[0] + "." if work_time.patronymic else ""}',
                         "position": work_time.position_name,
                         "bidType": work_time.bid_name[:4],
+                        "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name),
                         **template_days,
                     }
                 if work_time.day:

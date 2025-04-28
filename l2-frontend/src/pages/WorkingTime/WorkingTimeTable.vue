@@ -139,15 +139,15 @@ watch(employeesWorkTime, () => {
   for (const employee of employeesWorkTime.value) {
     let tmpTotalHours = 0.0;
     const keys = Object.keys(employee);
+    const lunchDuration = employee.lunchDuration / 60;
     for (const key of keys) {
       if (moment(key, 'YYYY-MM-DD', true).isValid()) {
         const currentDay = employee[key];
-        const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-        const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-        const { typeId } = currentDay;
-        if (!typeId) {
+        if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
+          const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
+          const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
           const diffTime = (endTime - startTime) / (1000 * 60 * 60);
-          tmpTotalHours += diffTime;
+          tmpTotalHours += (diffTime - lunchDuration);
         }
       }
     }
