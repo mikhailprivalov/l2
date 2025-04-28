@@ -139,6 +139,7 @@ watch(employeesWorkTime, () => {
   for (const employee of employeesWorkTime.value) {
     let tmpTotalHours = 0.0;
     const keys = Object.keys(employee);
+    const lunchDuration = employee.lunchDuration / 60;
     for (const key of keys) {
       if (moment(key, 'YYYY-MM-DD', true).isValid()) {
         const currentDay = employee[key];
@@ -151,6 +152,7 @@ watch(employeesWorkTime, () => {
         }
       }
     }
+    tmpTotalHours -= lunchDuration;
     employee.totalHours = tmpTotalHours.toFixed(1);
   }
 }, { deep: true });
