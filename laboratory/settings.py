@@ -470,6 +470,9 @@ PAY_FIN_SOURCE_ID = None
 CHAMBER_DOCTOR_GROUP_ID = None
 DEFECT_VARIANTS = []
 
+# Продолжительность обеда по должностям {"position_name": 30}
+LUNCH_DURATION_BY_POSITIONS = {}
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
