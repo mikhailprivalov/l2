@@ -552,9 +552,11 @@ class EmployeePosition(models.Model):
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
     @staticmethod
-    def get_lunch_duration(duration: Union[int, None], position: str):
+    def get_lunch_duration(duration: Union[int, None], position: str, duration_by_department: Union[int, None]):
         if duration is not None:
             local_duration = duration
+        elif duration_by_department is not None:
+            local_duration = duration_by_department
         else:
             local_duration = LUNCH_DURATION_BY_POSITIONS.get(position)
         return local_duration
