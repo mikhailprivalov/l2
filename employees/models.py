@@ -269,6 +269,7 @@ class Department(models.Model):
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_department_updated'
     )
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
+    lunch_duration = models.IntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
 
     def __str__(self):
         return self.name
