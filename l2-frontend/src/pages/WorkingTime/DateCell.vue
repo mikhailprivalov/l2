@@ -190,7 +190,6 @@ const appendCurrentTime = () => {
   selectedTimeOption.value = null;
 };
 
-
 watch(() => props.workTime, () => {
   appendCurrentTime();
 }, { immediate: true });
