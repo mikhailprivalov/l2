@@ -47,6 +47,7 @@ def get_employee_work_time(department_id: int, document_id: int):
             employees_employeeposition.lunch_duration,
             employees_department.id as department_id,
             employees_department.name as department_name,
+            employees_department.lunch_duration as lunch_duration_by_department,
             employees_position.name as position_name,
             employees_typeworktimeemployee.title as bid_name,
             employees_employee.family,
