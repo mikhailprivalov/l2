@@ -24,14 +24,6 @@
       >{{ currentTime.text }}</p>
       <!-- eslint-enable -->
     </button>
-    <!--    <button-->
-    <!--      v-tippy-->
-    <!--      class="transparentButton"-->
-    <!--      title="Скопировать предыдущий"-->
-    <!--      @click="copyPrevTime"-->
-    <!--    >-->
-    <!--      <i class="fa-solid fa-copy" />-->
-    <!--    </button>-->
     <div
       id="temp"
       class="tp"
@@ -139,13 +131,6 @@ const timeValid = () => {
 };
 
 const selectedTimeOption = ref(null);
-// const timeOptions = ref([
-//   { id: 1, startWork: '08:00', endWork: '16:30' },
-//   { id: 2, startWork: '08:00', endWork: '15:48' },
-//   { id: 3, startWork: '15:48', endWork: '23:59' },
-//   { id: 4, startWork: '19:48', endWork: '21:00' },
-//   { id: 5, startWork: '14:48', endWork: '16:00' },
-// ]);
 
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
@@ -205,9 +190,6 @@ const appendCurrentTime = () => {
   selectedTimeOption.value = null;
 };
 
-// const copyPrevTime = () => {
-//   root.$emit('msg', 'ok', 'Скопировано');
-// };
 
 watch(() => props.workTime, () => {
   appendCurrentTime();
