@@ -114,6 +114,7 @@ const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time
 const search = ref('');
 
 const noDocument = ref(false);
+const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
@@ -126,14 +127,16 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  if (result.length > 0) {
-    employeesWorkTime.value = result;
+  const { data, blocked } = result;
+  if (data.length > 0) {
+    employeesWorkTime.value = data;
     noDocument.value = false;
   } else {
     employeesWorkTime.value = [];
     noDocument.value = true;
   }
   changedEmployeesWorkTime.value = {};
+  documentBlocked.value = blocked;
 };
 
 watch(employeesWorkTime, () => {
