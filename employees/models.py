@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT
 from laboratory.utils import strfdatetime
 from slog.models import Log
 from users.models import DoctorProfile
@@ -585,6 +585,7 @@ class TimeTrackingDocument(models.Model):
     month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
     department = models.ForeignKey(Department, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     doc_create = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
+    blocked = models.DateField(default=None, null=True, help_text="2025-05-21", verbose_name="День блокировки графика")
 
     class Meta:
         verbose_name = "График-документ"
@@ -605,13 +606,15 @@ class TimeTrackingDocument(models.Model):
 
     @staticmethod
     def create_document(year, month, department_id, doc_profile):
-        month = datetime.date(year, month, 1)
+        month_date = datetime.date(year, month, 1)
+        blocked = datetime.date(year, month, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT)
 
         document = TimeTrackingDocument(
             doc_create_id=doc_profile.pk,
             create_at=timezone.now(),
-            month=month,
+            month=month_date,
             department_id=department_id,
+            blocked=blocked
         )
         document.save()
         return document
