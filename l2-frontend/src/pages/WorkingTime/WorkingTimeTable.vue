@@ -337,19 +337,23 @@ const rowStyleOption = {
   stripe: false,
 };
 const save = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('/working-time/update-time', {
-    changedEmployeesWorkTime: changedEmployeesWorkTime.value,
-    departmentId: props.department,
-    year: props.year,
-    month: props.month + 1,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Сохранено');
-    await getEmployeesWorkTime();
+  if (!documentBlocked.value) {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/working-time/update-time', {
+      changedEmployeesWorkTime: changedEmployeesWorkTime.value,
+      departmentId: props.department,
+      year: props.year,
+      month: props.month + 1,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Сохранено');
+      await getEmployeesWorkTime();
+    } else {
+      root.$emit('msg', 'error', message);
+    }
   } else {
-    root.$emit('msg', 'error', message);
+    root.$emit('msg', 'error', 'Документ заблокирован');
   }
 };
 
