@@ -25,6 +25,7 @@
       <button
         v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
+        :disabled="documentBlocked"
         @click="save"
       >
         Сохранить
@@ -57,6 +58,7 @@
         <button
           v-if="!noDocument && filtersFull"
           class="btn btn-blue-nb"
+          :disabled="documentBlocked"
           @click="save"
         >
           Сохранить
@@ -281,6 +283,7 @@ const getColumns = () => {
             date: column.key,
             workDayStatuses: workDayStatuses.value,
             timeOptions: timeOptions.value,
+            disabled: documentBlocked,
           },
           on: { changeWorkTime },
         },
