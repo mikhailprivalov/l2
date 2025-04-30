@@ -109,6 +109,7 @@ const props = defineProps({
 const root = getCurrentInstance().proxy.$root;
 
 const filtersFull = computed(() => !!(props.year && props.month && props.department));
+const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time_variants));
 
 const search = ref('');
 
@@ -276,6 +277,7 @@ const getColumns = () => {
             employeePositionId: row.employeePositionId,
             date: column.key,
             workDayStatuses: workDayStatuses.value,
+            timeOptions: timeOptions.value,
           },
           on: { changeWorkTime },
         },
