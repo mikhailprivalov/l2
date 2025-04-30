@@ -627,7 +627,6 @@ class TimeTrackingDocument(models.Model):
             return {"ok": False, "message": "Документ заблокирован"}
         return {"ok": True, "message": ""}
 
-
     @staticmethod
     def get_time_tracking_document(date_str, department_id):
         date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
