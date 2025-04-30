@@ -472,6 +472,8 @@ DEFECT_VARIANTS = []
 
 # Продолжительность обеда по должностям {"position_name": duration in minutes}
 LUNCH_DURATION_BY_POSITIONS = {}
+# День блокировки графика по умолчанию
+TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
