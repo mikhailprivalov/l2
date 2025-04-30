@@ -620,6 +620,15 @@ class TimeTrackingDocument(models.Model):
         return document
 
     @staticmethod
+    def check_document(document):
+        if not document:
+            return {"ok": False, "message": "Такого документа нет"}
+        if document.blocked:
+            return {"ok": False, "message": "Документ заблокирован"}
+        return {"ok": True, "message": ""}
+
+
+    @staticmethod
     def get_time_tracking_document(date_str, department_id):
         date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
         year = date.year
@@ -813,8 +822,9 @@ class EmployeeWorkingHoursSchedule(models.Model):
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
         document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
-        if not document:
-            return {"ok": False, "message": "Такого документа нет"}
+        result_check = TimeTrackingDocument.check_document(document)
+        if not result_check.get("ok"):
+            return result_check
         for employee_position_id, work_times in changed_time.items():
             for date, work_time in work_times.items():
                 start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
