@@ -269,6 +269,7 @@ class Department(models.Model):
         'users.DoctorProfile', on_delete=models.CASCADE, blank=True, null=True, verbose_name='Профиль пользователя, обновившего запись', related_name='employees_department_updated'
     )
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
+    lunch_duration = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
 
     def __str__(self):
         return self.name
@@ -431,7 +432,7 @@ class EmployeePosition(models.Model):
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
     date_employment = models.DateField(verbose_name="Дата приема на работу", help_text="2025-01-11", blank=True, null=True, default=None)
     date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
-    lunch_duration = models.IntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
+    lunch_duration = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
@@ -551,9 +552,11 @@ class EmployeePosition(models.Model):
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
     @staticmethod
-    def get_lunch_duration(duration: Union[int, None], position: str):
+    def get_lunch_duration(duration: Union[int, None], position: str, duration_by_department: Union[int, None]):
         if duration is not None:
             local_duration = duration
+        elif duration_by_department is not None:
+            local_duration = duration_by_department
         else:
             local_duration = LUNCH_DURATION_BY_POSITIONS.get(position)
         return local_duration
@@ -756,7 +759,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "fio": f'{work_time.family} {work_time.name[0]}.{work_time.patronymic[0] + "." if work_time.patronymic else ""}',
                         "position": work_time.position_name,
                         "bidType": work_time.bid_name[:4],
-                        "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name),
+                        "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name, work_time.lunch_duration_by_department),
                         **template_days,
                     }
                 if work_time.day:
