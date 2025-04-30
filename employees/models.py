@@ -8,8 +8,8 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employees_by_department, get_work_time_by_document, get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS
-from laboratory.utils import strfdatetime
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT
+from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
 from utils.dates import try_strptime
@@ -585,6 +585,7 @@ class TimeTrackingDocument(models.Model):
     month = models.DateField(help_text="Месяц учета", db_index=True, default=None, blank=True, null=True)
     department = models.ForeignKey(Department, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL)
     doc_create = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
+    blocked = models.DateField(default=None, null=True, help_text="2025-05-21", verbose_name="День блокировки графика")
 
     class Meta:
         verbose_name = "График-документ"
@@ -605,16 +606,26 @@ class TimeTrackingDocument(models.Model):
 
     @staticmethod
     def create_document(year, month, department_id, doc_profile):
-        month = datetime.date(year, month, 1)
+        month_date = datetime.date(year, month, 1)
+        blocked = datetime.date(year, month, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT)
 
         document = TimeTrackingDocument(
             doc_create_id=doc_profile.pk,
             create_at=timezone.now(),
-            month=month,
+            month=month_date,
             department_id=department_id,
+            blocked=blocked
         )
         document.save()
         return document
+
+    @staticmethod
+    def check_document(document):
+        if not document:
+            return {"ok": False, "message": "Такого документа нет"}
+        if document.blocked:
+            return {"ok": False, "message": "Документ заблокирован"}
+        return {"ok": True, "message": ""}
 
     @staticmethod
     def get_time_tracking_document(date_str, department_id):
@@ -748,6 +759,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         last_date_month = datetime.date(year, month, length_month)
         document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
         result = []
+        document_blocked = False
         if document:
             template_days = EmployeeWorkingHoursSchedule.get_month_days_template(year, month, length_month)
             employees_work_time = get_employee_work_time(department_id, document.pk)
@@ -770,7 +782,9 @@ class EmployeeWorkingHoursSchedule(models.Model):
                     }
                     result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
             result = [value for value in result.values()]
-        return result
+            if document.blocked:
+                document_blocked = current_time(True) >= document.blocked
+        return {"data": result, "blocked": document_blocked}
 
     @staticmethod
     def update_one_day(start_work, end_work, type_work, employee_position_id, date):
@@ -807,8 +821,9 @@ class EmployeeWorkingHoursSchedule(models.Model):
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
         document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
-        if not document:
-            return {"ok": False, "message": "Такого документа нет"}
+        result_check = TimeTrackingDocument.check_document(document)
+        if not result_check.get("ok"):
+            return result_check
         for employee_position_id, work_times in changed_time.items():
             for date, work_time in work_times.items():
                 start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None

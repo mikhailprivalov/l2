@@ -12,6 +12,7 @@
         placement: 'bottom',
         trigger: 'click',
       }"
+      :disabled="props.disabled"
       :class="cellSelect ? 'transparentButton current-time-wh cell-select' : 'transparentButton current-time-wh'"
       @hide="updateCellSelect(false)"
       @hidden="updateTime"
@@ -100,6 +101,10 @@ const props = defineProps({
   timeOptions: {
     type: Array,
     required: true,
+  },
+  disabled: {
+    type: Boolean,
+    required: false,
   },
 });
 

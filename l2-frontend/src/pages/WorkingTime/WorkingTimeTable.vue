@@ -25,6 +25,7 @@
       <button
         v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
+        :disabled="documentBlocked"
         @click="save"
       >
         Сохранить
@@ -57,6 +58,7 @@
         <button
           v-if="!noDocument && filtersFull"
           class="btn btn-blue-nb"
+          :disabled="documentBlocked"
           @click="save"
         >
           Сохранить
@@ -114,6 +116,7 @@ const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time
 const search = ref('');
 
 const noDocument = ref(false);
+const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
@@ -126,14 +129,16 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  if (result.length > 0) {
-    employeesWorkTime.value = result;
+  const { data, blocked } = result;
+  if (data.length > 0) {
+    employeesWorkTime.value = data;
     noDocument.value = false;
   } else {
     employeesWorkTime.value = [];
     noDocument.value = true;
   }
   changedEmployeesWorkTime.value = {};
+  documentBlocked.value = blocked;
 };
 
 watch(employeesWorkTime, () => {
@@ -278,6 +283,7 @@ const getColumns = () => {
             date: column.key,
             workDayStatuses: workDayStatuses.value,
             timeOptions: timeOptions.value,
+            disabled: documentBlocked,
           },
           on: { changeWorkTime },
         },
@@ -331,19 +337,23 @@ const rowStyleOption = {
   stripe: false,
 };
 const save = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('/working-time/update-time', {
-    changedEmployeesWorkTime: changedEmployeesWorkTime.value,
-    departmentId: props.department,
-    year: props.year,
-    month: props.month + 1,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    root.$emit('msg', 'ok', 'Сохранено');
-    await getEmployeesWorkTime();
+  if (!documentBlocked.value) {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/working-time/update-time', {
+      changedEmployeesWorkTime: changedEmployeesWorkTime.value,
+      departmentId: props.department,
+      year: props.year,
+      month: props.month + 1,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Сохранено');
+      await getEmployeesWorkTime();
+    } else {
+      root.$emit('msg', 'error', message);
+    }
   } else {
-    root.$emit('msg', 'error', message);
+    root.$emit('msg', 'error', 'Документ заблокирован');
   }
 };
 
