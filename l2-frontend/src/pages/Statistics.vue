@@ -253,7 +253,7 @@
             :key="PARAMS_TYPES.TYPES_REPORT"
             class="input-group"
           >
-            <span class="input-group-addon">Тип:</span>
+            <span class="input-group-addon">Тип отчета:</span>
             <treeselect
               v-model="values.typeReport"
               class="treeselect-noborder treeselect-wide"
