@@ -29,6 +29,7 @@ from laboratory.settings import (
     TYPE_COMPANY_SET_DIRECTION_PDF,
     MEDEXAM_FIN_SOURCE_TITLE,
 )
+from statistic.models import TypeReport
 from utils.response import status_response
 
 from django.core.validators import validate_email
@@ -3187,6 +3188,13 @@ def add_factor(request):
 def get_research_sets(request):
     sets = [{"id": set_research.pk, "label": set_research.title} for set_research in SetResearch.objects.all().order_by("title")]
     return JsonResponse({"data": sets})
+
+
+@login_required
+@group_required("Конструктор: Настройка организации")
+def get_types_report(request):
+    types = [{"id": type_report.code, "label": type_report.title} for type_report in TypeReport.objects.all().order_by("title")]
+    return JsonResponse({"data": types})
 
 
 @login_required

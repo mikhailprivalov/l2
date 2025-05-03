@@ -249,6 +249,22 @@
             />
           </div>
           <div
+            v-if="checkReportParam(PARAMS_TYPES.TYPES_REPORT)"
+            :key="PARAMS_TYPES.TYPES_REPORT"
+            class="input-group"
+          >
+            <span class="input-group-addon">Тип:</span>
+            <treeselect
+              v-model="values.typeReport"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="typesReport"
+              :clearable="true"
+              placeholder="Тип отчета"
+            />
+          </div>
+          <div
             v-if="checkReportParam(PARAMS_TYPES.TYPE_DEPARTMENT)"
             :key="PARAMS_TYPES.TYPE_DEPARTMENT"
             class="input-group"
@@ -481,6 +497,7 @@ const PARAMS_TYPES = {
   USER_OR_DEP: 'USER_OR_DEP',
   FIN_SOURCE: 'FIN_SOURCE',
   RESEARCH_SETS: 'RESEARCH_SETS',
+  TYPES_REPORT: 'TYPES_REPORT',
   LOAD_FILE: 'LOAD_FILE',
   RESEARCH: 'RESEARCH',
   RESEARCH_CREATE: 'RESEARCH_CREATE',
@@ -591,7 +608,13 @@ const STATS_CATEGORIES = {
       consolidate: {
         groups: ['Статистика-профосмотры'],
         title: 'Сводный',
-        params: [PARAMS_TYPES.COMPANY, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.RESEARCH_SETS, PARAMS_TYPES.DATE_RANGE],
+        params: [
+          PARAMS_TYPES.COMPANY,
+          PARAMS_TYPES.FIN_SOURCE,
+          PARAMS_TYPES.RESEARCH_SETS,
+          PARAMS_TYPES.TYPES_REPORT,
+          PARAMS_TYPES.DATE_RANGE,
+        ],
         url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
             + 'company=<company>&research-set=<research-set>',
       },
@@ -716,6 +739,7 @@ const getVaues = () => ({
   users: [],
   finSource: -1,
   researchSet: null,
+  typeReport: null,
   typeDepartment: null,
   depByType: null,
   user: null,
@@ -759,6 +783,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       users: [],
       companies: [],
       researchSets: [],
+      typesReport: [],
       typeDepartments: [],
       disabled_categories: [],
       disabled_reports: [],
@@ -790,6 +815,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
     this.loadUsers();
     this.loadCompanies();
     this.loadResearchSets();
+    this.loadTypesReport();
     this.loadTypeDepartments();
     this.loadPurposes();
     this.loadResultTreatment();
@@ -817,6 +843,8 @@ export default class Statistics extends Vue {
   companies: any[];
 
   researchSets: any[];
+
+  typesReport: any[];
 
   typeDepartments: any[];
 
@@ -889,6 +917,13 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { data } = await this.$api('/get-research-sets');
     this.researchSets = data;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadTypesReport() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { data } = await this.$api('/get-types-report');
+    this.typesReport = data;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
