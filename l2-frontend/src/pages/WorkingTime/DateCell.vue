@@ -230,7 +230,7 @@ watch(selectedShift, () => {
       const nextDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 0, 0);
       exceedingTime.value = end - nextDay;
     } else {
-      endWork.value = `${end.getHours()} : ${end.getMinutes()}`;
+      endWork.value = end.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
   }
 });
