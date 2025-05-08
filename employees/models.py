@@ -742,7 +742,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                 end = f"{date} {work_time.get('endWorkTime')}" if work_time.get("endWorkTime") else None
                 if work_time.get("endWorkTime") == '00:00':
                     tmp_end = datetime.datetime.strptime(end, "%Y-%m-%d %H:%M")
-                    end_date = tmp_end.today() + datetime.timedelta(days=1)
+                    end_date = tmp_end.date() + datetime.timedelta(days=1)
                     end = end_date.strftime("%Y-%m-%d %H:%M")
                 work_day_status_id = work_time.get("typeId")
                 day = EmployeeWorkingHoursSchedule.objects.filter(time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date).first()
