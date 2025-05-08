@@ -72,11 +72,19 @@
             class="end-variants"
           />
           <input
+            v-if="selectedEndVariant === 'time'"
             v-model="endWork"
             class="form-control"
             type="time"
             max="23:59"
           >
+          <Treeselect
+            v-else
+            v-model="selectedShift"
+            class="treeselect-34px"
+            :options="shifts"
+            placeholder="Смена"
+          />
         </div>
       </div>
       <div class="tp-row">
@@ -96,6 +104,9 @@ import {
   computed,
   getCurrentInstance, ref, watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
@@ -213,6 +224,14 @@ const endTimeVariants = ref([
 ]);
 const selectedEndVariant = ref('time');
 
+const shifts = ref([
+  { id: '8', label: '8 ч.' },
+  { id: '7.8', label: '7.8 ч.' },
+  { id: '16', label: '16 ч.' },
+  { id: '16.2', label: '16.2 ч.' },
+]);
+const selectedShift = ref(null);
+
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return { text: `${startWork.value}\n${endWork.value}`, time: true };
@@ -326,5 +345,8 @@ button[disabled] {
 .end-variants {
   height: 19px;
   margin-bottom: 5px;
+}
+::v-deep .vue-treeselect__control {
+  border-color: #aab2bd;
 }
 </style>
