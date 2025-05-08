@@ -182,7 +182,7 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, typeId,
+  employeePositionId, date, startWorkTime, endWorkTime, typeId, exceedingTime
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
@@ -190,14 +190,26 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
-  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
-    changedEmployeesWorkTime.value[employeePositionId] = {};
-  }
   changedEmployeesWorkTime.value[employeePositionId][date] = {
     startWorkTime,
     endWorkTime,
     typeId,
   };
+  if (exceedingTime) {
+    const day = new Date(exceedingTime);
+    const nextDayString = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+    const start = `${day.getHours()}:${day.getMinutes()}`;
+    row[nextDayString] = {
+      startWorkTime: start,
+      endWorkTime: null,
+      typeId,
+    };
+    changedEmployeesWorkTime.value[employeePositionId][day] = {
+      startWorkTime: start,
+      endWorkTime: null,
+      typeId,
+    };
+  }
 };
 
 const columns = ref([]);
