@@ -54,7 +54,7 @@
       />
       <div class="flex flex-end">
         <button
-          v-if="!noDocument && filtersFull"
+          v-if="documentCreated && !documentBlocked"
           class="btn btn-blue-nb"
           :disabled="documentBlocked"
           @click="save"
@@ -62,7 +62,6 @@
           Сохранить
         </button>
         <button
-          v-if="!noDocument && filtersFull"
           class="btn btn-blue-nb"
           @click.prevent="printDocument()"
         >
