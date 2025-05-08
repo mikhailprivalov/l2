@@ -88,6 +88,7 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
+import {end} from "@popperjs/core";
 
 const store = useStore();
 
@@ -182,7 +183,7 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, typeId, exceedingTime
+  employeePositionId, date, startWorkTime, endWorkTime, typeId, exceedingTime,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
