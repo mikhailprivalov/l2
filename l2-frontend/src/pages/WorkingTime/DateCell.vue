@@ -233,7 +233,7 @@ watch(selectedShift, () => {
 });
 
 const currentTime = computed(() => {
-  if (startWork.value && endWork.value) {
+  if (startWork.value || endWork.value) {
     return { text: `${startWork.value}\n${endWork.value}`, time: true };
   } if (selectedTimeOff.value) {
     return { text: selectedTimeOffLabel.value, timeOff: true };

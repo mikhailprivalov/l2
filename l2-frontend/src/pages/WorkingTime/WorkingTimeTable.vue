@@ -204,12 +204,12 @@ const changeWorkTime = async ({
     const nextDayStart = moment(nextDay).format('HH:mm');
     row[nextDayString] = {
       startWorkTime: nextDayStart,
-      endWorkTime: null,
+      endWorkTime: '',
       typeId,
     };
     changedEmployeesWorkTime.value[employeePositionId][nextDayString] = {
       startWorkTime: nextDayStart,
-      endWorkTime: null,
+      endWorkTime: '',
       typeId,
     };
   }
