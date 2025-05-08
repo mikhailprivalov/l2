@@ -76,7 +76,6 @@
             v-model="endWork"
             class="form-control"
             type="time"
-            max="23:59"
           >
           <Treeselect
             v-else
@@ -148,6 +147,7 @@ const updateCellSelect = (select: boolean) => {
 };
 const startWork = ref(null);
 const endWork = ref(null);
+const exceedingTime = ref(null);
 const selectedTimeOff = ref(null);
 const findTimeOffLabel = () => {
   const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
@@ -157,15 +157,6 @@ const findTimeOffLabel = () => {
   return null;
 };
 const selectedTimeOffLabel = ref('');
-
-const timeValid = () => {
-  if (startWork.value > endWork.value && !selectedTimeOff.value) {
-    startWork.value = '';
-    endWork.value = '';
-    return { valid: false, reason: 'Время начала больше времени конца' };
-  }
-  return { valid: true, reason: '' };
-};
 
 const selectedTimeOption = ref(null);
 
@@ -192,30 +183,20 @@ const timeOff = () => {
 };
 
 const updateTime = async () => {
-  const { valid, reason } = timeValid();
-  if (!valid) {
-    root.$emit('msg', 'error', reason);
-  } else {
-    emit('changeWorkTime', {
-      employeePositionId: props.employeePositionId,
-      date: props.date,
-      startWorkTime: startWork.value,
-      endWorkTime: endWork.value,
-      typeId: selectedTimeOff.value,
-    });
-  }
+  emit('changeWorkTime', {
+    employeePositionId: props.employeePositionId,
+    date: props.date,
+    startWorkTime: startWork.value,
+    endWorkTime: endWork.value,
+    typeId: selectedTimeOff.value,
+    exceedingTime: exceedingTime.value,
+  });
 };
 
 watch([startWork, endWork], () => {
   if (startWork.value && endWork.value && selectedTimeOff.value) {
     selectedTimeOff.value = null;
     selectedTimeOffLabel.value = '';
-  }
-});
-
-watch(endWork, () => {
-  if (endWork.value === '00:00') {
-    endWork.value = '23:59';
   }
 });
 
@@ -232,6 +213,19 @@ const shifts = ref([
   { id: '16.2', label: '16.2 ч.' },
 ]);
 const selectedShift = ref(null);
+
+watch(selectedShift, () => {
+  if (selectedShift.value) {
+    const start = new Date(`${props.date} ${startWork.value}`);
+    const end = new Date(start.getTime() + (selectedShift.value * 60 * 60 * 1000));
+    if (end.getDate() > start.getDate()) {
+      endWork.value = '00:00';
+      exceedingTime.value = end - new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    } else {
+      endWork.value = `${end.getHours()} : ${end.getMinutes()}`;
+    }
+  }
+});
 
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
