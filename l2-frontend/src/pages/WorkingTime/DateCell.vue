@@ -83,6 +83,7 @@
             v-model="selectedShift"
             class="treeselect-34px"
             :options="shifts"
+            :disabled="!startWork"
             placeholder="Смена"
           />
         </div>
