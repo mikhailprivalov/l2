@@ -4,7 +4,7 @@
       class="flex margins"
     >
       <button
-        v-if="noDocument && filtersFull"
+        v-if="!documentCreated && filtersFull"
         class="btn btn-blue-nb"
         @click="createDocument"
       >
@@ -12,7 +12,7 @@
       </button>
     </div>
     <div
-      v-if="!noDocument && filtersFull"
+      v-if="documentCreated && filtersFull"
       class="flex"
     >
       <div class="search">
@@ -23,15 +23,13 @@
         >
       </div>
       <button
-        v-if="!noDocument && filtersFull"
+        v-if="documentCreated && !documentBlocked"
         class="btn btn-blue-nb"
-        :disabled="documentBlocked"
         @click="save"
       >
         Сохранить
       </button>
       <button
-        v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
         @click.prevent="printDocument()"
       >
@@ -115,7 +113,7 @@ const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time
 
 const search = ref('');
 
-const noDocument = ref(false);
+const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
@@ -131,7 +129,7 @@ const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.DEC_LOADING);
   const { data, documentIsBlocked, documentIsCreated } = result;
   employeesWorkTime.value = data;
-  noDocument.value = documentIsCreated;
+  documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
 };
