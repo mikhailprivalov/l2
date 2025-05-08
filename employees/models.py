@@ -700,7 +700,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
         result = []
         document_blocked = False
-        if document:
+        document_created = True if document else False
+        if document_created:
             template_days = EmployeeWorkingHoursSchedule.get_month_days_template(year, month, length_month)
             employees_work_time = get_employee_work_time(department_id, document.pk)
             result = {}
@@ -724,7 +725,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
             result = [value for value in result.values()]
             if document.blocked:
                 document_blocked = current_time(True) >= document.blocked
-        return {"data": result, "blocked": document_blocked}
+        return {"data": result, "documentIsBlocked": document_blocked, "documentIsCreated": document_created}
 
     @staticmethod
     def update_time(department_id: int, year: int, month: int, changed_time: dict):

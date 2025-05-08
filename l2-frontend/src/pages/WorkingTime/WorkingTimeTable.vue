@@ -129,16 +129,11 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const { data, blocked } = result;
-  if (data.length > 0) {
-    employeesWorkTime.value = data;
-    noDocument.value = false;
-  } else {
-    employeesWorkTime.value = [];
-    noDocument.value = true;
-  }
+  const { data, documentIsBlocked, documentIsCreated } = result;
+  employeesWorkTime.value = data;
+  noDocument.value = documentIsCreated;
+  documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
-  documentBlocked.value = blocked;
 };
 
 watch(employeesWorkTime, () => {
