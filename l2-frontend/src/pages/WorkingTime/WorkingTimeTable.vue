@@ -199,17 +199,17 @@ const changeWorkTime = async ({
   };
   console.log(nextDayStartWork);
   if (nextDayStartWork) {
-    const day = nextDayStartWork;
-    const nextDayString = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
-    const start = day.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    const nextDay = nextDayStartWork;
+    const nextDayString = moment(nextDay).format('YYYY-MM-DD');
+    const nextDayStart = moment(nextDay).format('HH:mm');
     console.log(nextDayString);
     row[nextDayString] = {
-      startWorkTime: start,
+      startWorkTime: nextDayStart,
       endWorkTime: null,
       typeId,
     };
-    changedEmployeesWorkTime.value[employeePositionId][day] = {
-      startWorkTime: start,
+    changedEmployeesWorkTime.value[employeePositionId][nextDayString] = {
+      startWorkTime: nextDayStart,
       endWorkTime: null,
       typeId,
     };
