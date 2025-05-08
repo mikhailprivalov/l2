@@ -202,7 +202,6 @@ const changeWorkTime = async ({
     const nextDay = nextDayStartWork;
     const nextDayString = moment(nextDay).format('YYYY-MM-DD');
     const nextDayStart = moment(nextDay).format('HH:mm');
-    console.log(nextDayString);
     row[nextDayString] = {
       startWorkTime: nextDayStart,
       endWorkTime: null,
