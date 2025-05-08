@@ -197,10 +197,12 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
+  console.log(exceedingTime);
   if (exceedingTime) {
     const day = new Date(exceedingTime);
     const nextDayString = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
-    const start = `${day.getHours()}:${day.getMinutes()}`;
+    const start = day.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    console.log(nextDayString);
     row[nextDayString] = {
       startWorkTime: start,
       endWorkTime: null,

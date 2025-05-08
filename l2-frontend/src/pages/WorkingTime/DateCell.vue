@@ -101,8 +101,7 @@
 
 <script setup lang="ts">
 import {
-  computed,
-  getCurrentInstance, ref, watch,
+  computed, getCurrentInstance, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -147,7 +146,7 @@ const updateCellSelect = (select: boolean) => {
 };
 const startWork = ref(null);
 const endWork = ref(null);
-const exceedingTime = ref(null);
+const nextDayStartWork = ref(null);
 const selectedTimeOff = ref(null);
 const findTimeOffLabel = () => {
   const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
@@ -186,8 +185,8 @@ const updateTime = async () => {
   if (endWork.value < startWork.value && endWork.value !== '00:00') {
     const start = new Date(`${props.date} ${startWork.value}`);
     const nextDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0);
-    const end = new Date(`${nextDay.toISOString().split('T')[0]} ${endWork.value}`);
-    exceedingTime.value = end - nextDay;
+    const endTime = endWork.value.split(':');
+    nextDayStartWork.value = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), endTime[0], endTime[1]);
     endWork.value = '00:00';
   }
   emit('changeWorkTime', {
@@ -196,7 +195,7 @@ const updateTime = async () => {
     startWorkTime: startWork.value,
     endWorkTime: endWork.value,
     typeId: selectedTimeOff.value,
-    exceedingTime: exceedingTime.value,
+    nextDayStartWork: nextDayStartWork.value,
   });
 };
 
@@ -227,8 +226,7 @@ watch(selectedShift, () => {
     const end = new Date(start.getTime() + (Number(selectedShift.value) * 60 * 60 * 1000));
     if (end.getDate() > start.getDate()) {
       endWork.value = '00:00';
-      const nextDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 0, 0);
-      exceedingTime.value = end - nextDay;
+      nextDayStartWork.value = end;
     } else {
       endWork.value = end.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     }
