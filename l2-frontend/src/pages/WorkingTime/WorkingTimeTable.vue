@@ -197,17 +197,11 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
-  console.log(nextDayStartWork);
   if (nextDayStartWork) {
     const nextDay = nextDayStartWork;
     const nextDayString = moment(nextDay).format('YYYY-MM-DD');
     const nextDayStart = moment(nextDay).format('HH:mm');
     row[nextDayString] = {
-      startWorkTime: nextDayStart,
-      endWorkTime: '',
-      typeId,
-    };
-    changedEmployeesWorkTime.value[employeePositionId][nextDayString] = {
       startWorkTime: nextDayStart,
       endWorkTime: '',
       typeId,
