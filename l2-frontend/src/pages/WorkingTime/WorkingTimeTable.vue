@@ -283,7 +283,7 @@ const getColumns = () => {
             date: column.key,
             workDayStatuses: workDayStatuses.value,
             timeOptions: timeOptions.value,
-            disabled: documentBlocked,
+            disabled: documentBlocked.value,
           },
           on: { changeWorkTime },
         },
