@@ -190,6 +190,9 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
+  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
+    changedEmployeesWorkTime.value[employeePositionId] = {};
+  }
   changedEmployeesWorkTime.value[employeePositionId][date] = {
     startWorkTime,
     endWorkTime,
