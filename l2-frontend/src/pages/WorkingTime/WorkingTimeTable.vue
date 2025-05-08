@@ -88,7 +88,6 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
-import {end} from "@popperjs/core";
 
 const store = useStore();
 

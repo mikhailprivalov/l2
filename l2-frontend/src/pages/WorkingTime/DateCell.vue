@@ -184,7 +184,11 @@ const timeOff = () => {
 
 const updateTime = async () => {
   if (endWork.value < startWork.value && endWork.value !== '00:00') {
-
+    const start = new Date(`${props.date} ${startWork.value}`);
+    const nextDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0);
+    const end = new Date(`${nextDay.toISOString().split('T')[0]} ${endWork.value}`);
+    exceedingTime.value = end - nextDay;
+    endWork.value = '00:00';
   }
   emit('changeWorkTime', {
     employeePositionId: props.employeePositionId,
@@ -223,7 +227,8 @@ watch(selectedShift, () => {
     const end = new Date(start.getTime() + (Number(selectedShift.value) * 60 * 60 * 1000));
     if (end.getDate() > start.getDate()) {
       endWork.value = '00:00';
-      exceedingTime.value = end - new Date(end.getFullYear(), end.getMonth(), end.getDate(), 0, 0);
+      const nextDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 0, 0);
+      exceedingTime.value = end - nextDay;
     } else {
       endWork.value = `${end.getHours()} : ${end.getMinutes()}`;
     }
