@@ -100,7 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import {computed, getCurrentInstance, ref, watch,} from 'vue';
+import {
+  computed, getCurrentInstance, ref, watch,
+} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';

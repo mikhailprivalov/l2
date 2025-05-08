@@ -181,7 +181,7 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, typeId, exceedingTime,
+  employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayStartWork,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
@@ -197,9 +197,9 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
-  console.log(exceedingTime);
-  if (exceedingTime) {
-    const day = new Date(exceedingTime);
+  console.log(nextDayStartWork);
+  if (nextDayStartWork) {
+    const day = nextDayStartWork;
     const nextDayString = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
     const start = day.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
     console.log(nextDayString);
