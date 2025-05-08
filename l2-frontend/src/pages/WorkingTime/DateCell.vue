@@ -66,7 +66,11 @@
           >
         </div>
         <div class="exact-time">
-          <label class="tp-label">Конец</label>
+          <RadioFieldById
+            v-model="selectedEndVariant"
+            :variants="endTimeVariants"
+            class="end-variants"
+          />
           <input
             v-model="endWork"
             class="form-control"
@@ -203,6 +207,12 @@ watch(endWork, () => {
   }
 });
 
+const endTimeVariants = ref([
+  { id: 'time', label: 'Конец' },
+  { id: 'shift', label: 'Смена' },
+]);
+const selectedEndVariant = ref('time');
+
 const currentTime = computed(() => {
   if (startWork.value && endWork.value) {
     return { text: `${startWork.value}\n${endWork.value}`, time: true };
@@ -312,5 +322,9 @@ button[disabled] {
 }
 .space-between {
   justify-content: space-between;
+}
+.end-variants {
+  height: 19px;
+  margin-bottom: 5px;
 }
 </style>
