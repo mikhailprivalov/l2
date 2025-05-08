@@ -101,11 +101,11 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, ref, watch,
+  computed, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
-
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import moment from 'moment';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
@@ -137,8 +137,6 @@ const props = defineProps({
     required: false,
   },
 });
-
-const root = getCurrentInstance().proxy.$root;
 
 const cellSelect = ref(false);
 const updateCellSelect = (select: boolean) => {
@@ -227,7 +225,7 @@ watch(selectedShift, () => {
       endWork.value = '00:00';
       nextDayStartWork.value = end;
     } else {
-      endWork.value = end.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+      endWork.value = moment(end).format('HH:mm');
     }
   }
 });
