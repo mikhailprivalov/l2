@@ -40,6 +40,22 @@
           {{ `${option.start}-${option.end}` }}
         </div>
       </div>
+      <div class="tp-row space-between">
+        <div class="copy-text">Прошлые</div>
+        <div class="margin-left-right">
+          <input
+            v-model="countDaysCopy"
+            class="form-control copy-count"
+            type="number"
+            min="1"
+            max="31"
+          >
+        </div>
+        <div class="copy-text">дней</div>
+        <div class="margin-left-right">
+          <button class="btn btn-blue-nb copy-button">Скопировать</button>
+        </div>
+      </div>
       <div class="tp-row">
         <div class="exact-time">
           <label class="tp-label">Начало</label>
@@ -143,6 +159,15 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
   endWork.value = endTime;
 };
 
+const countDaysCopy = ref(1);
+watch(countDaysCopy, () => {
+  if (countDaysCopy.value < 1) {
+    countDaysCopy.value = 1;
+  } else if (countDaysCopy.value > 31) {
+    countDaysCopy.value = 31;
+  }
+});
+
 const timeOff = () => {
   selectedTimeOffLabel.value = findTimeOffLabel();
   startWork.value = null;
@@ -229,14 +254,9 @@ button[disabled] {
   background-color: transparent !important;
   color: grey !important;
 }
-.tp-button {
-  width: 35px;
-  height: 34px;
-  margin-top: 24px;
-}
 .tp {
-  height: 150px;
-  width: 254px;
+  height: auto;
+  width: 280px;
 }
 
 .tp-row {
@@ -257,6 +277,7 @@ button[disabled] {
   padding: 0 1px;
   border: 1px solid grey;
   border-radius: 6px;
+  flex: 30%;
 
   &:hover {
     background-color: #f5f5f5;
@@ -274,5 +295,22 @@ button[disabled] {
 }
 .opacity-text {
   opacity: 0.3;
+}
+.margin-left-right {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+.copy-button {
+  padding: 3px;
+}
+.copy-count {
+  padding: 0 6px;
+  height: 28px;
+}
+.copy-text {
+  padding: 4px 0;
+}
+.space-between {
+  justify-content: space-between;
 }
 </style>
