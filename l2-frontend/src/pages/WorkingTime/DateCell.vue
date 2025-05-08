@@ -100,9 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed, getCurrentInstance, ref, watch,
-} from 'vue';
+import {computed, getCurrentInstance, ref, watch,} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -184,9 +182,8 @@ const timeOff = () => {
 const updateTime = async () => {
   if (endWork.value < startWork.value && endWork.value !== '00:00') {
     const start = new Date(`${props.date} ${startWork.value}`);
-    const nextDay = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, 0, 0);
     const endTime = endWork.value.split(':');
-    nextDayStartWork.value = new Date(nextDay.getFullYear(), nextDay.getMonth(), nextDay.getDate(), endTime[0], endTime[1]);
+    nextDayStartWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
     endWork.value = '00:00';
   }
   emit('changeWorkTime', {
