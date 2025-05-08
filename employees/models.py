@@ -689,7 +689,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type_id": ""} for day in range(1, length_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": ""} for day in range(1, length_month + 1)}
         return template_days
 
     @staticmethod
