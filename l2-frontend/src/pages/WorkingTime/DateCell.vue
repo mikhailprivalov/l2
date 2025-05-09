@@ -18,7 +18,7 @@
       @hidden="updateTime"
       @show="updateCellSelect(true)"
     >
-      <!-- eslint-disable vue/singleline-html-element-content-newline -->
+      <!-- eslint-disable vue/singleline-html-element-content-newline vue/multiline-html-element-content-newline -->
       <p
         class="current-time-text"
         :class="currentTime.empty ? 'opacity-text' : ''"
