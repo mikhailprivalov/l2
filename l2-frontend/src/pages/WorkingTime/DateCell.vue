@@ -224,7 +224,9 @@ const selectedShift = ref(null);
 watch(selectedShift, () => {
   if (selectedShift.value) {
     const start = new Date(`${props.date} ${startWork.value}`);
-    const end = new Date(start.getTime() + (Number(selectedShift.value) * 60 * 60 * 1000));
+    const shiftInMinutes = Number(selectedShift.value) * 60;
+    const shiftWithLunch = shiftInMinutes - props.lunchDuration;
+    const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));
     if (end.getDate() > start.getDate()) {
       endWork.value = '00:00';
       nextDayStartWork.value = end;
