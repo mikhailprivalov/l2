@@ -474,6 +474,8 @@ DEFECT_VARIANTS = []
 LUNCH_DURATION_BY_POSITIONS = {}
 # День блокировки графика по умолчанию
 TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
+# Варианты смен [{"id": "16.2", "label": "16.2 ч."}]
+SHIFTS = []
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

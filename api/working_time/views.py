@@ -5,6 +5,7 @@ from django.http import JsonResponse, HttpResponse
 from forms.forms300 import form_01
 from laboratory.decorators import group_required
 from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus
+from laboratory.settings import SHIFTS
 
 
 @login_required()
@@ -49,8 +50,9 @@ def create_document(request):
 @login_required()
 @group_required('График рабочего времени')
 def get_ref_books(request):
-    result = WorkDayStatus.get_workday_statuses(short=True)
-    return JsonResponse({"result": result})
+    work_day_statuses = WorkDayStatus.get_workday_statuses(short=True)
+    shifts = SHIFTS
+    return JsonResponse({"workDayStatuses": work_day_statuses, "shifts": shifts})
 
 
 @login_required()
