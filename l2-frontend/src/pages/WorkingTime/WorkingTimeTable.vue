@@ -286,6 +286,7 @@ const getColumns = () => {
             workDayStatuses: workDayStatuses.value,
             timeOptions: timeOptions.value,
             disabled: documentBlocked.value,
+            lunchDuration: row.lunchDuration,
           },
           on: { changeWorkTime },
         },

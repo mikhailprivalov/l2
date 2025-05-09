@@ -136,6 +136,10 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  lunchDuration: {
+    type: Number,
+    required: true,
+  },
 });
 
 const cellSelect = ref(false);
