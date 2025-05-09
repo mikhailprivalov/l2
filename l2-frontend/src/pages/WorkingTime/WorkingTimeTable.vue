@@ -143,7 +143,12 @@ watch(employeesWorkTime, () => {
         const currentDay = employee[key];
         if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
           const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-          const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+          let endTime;
+          if (currentDay.endWorkTime === '00:00') {
+            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
+          } else {
+            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+          }
           const diffTime = (endTime - startTime) / (1000 * 60 * 60);
           tmpTotalHours += (diffTime - lunchDuration);
         }
