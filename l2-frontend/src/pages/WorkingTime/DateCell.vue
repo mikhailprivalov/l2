@@ -81,7 +81,7 @@
             v-else
             v-model="selectedShift"
             class="treeselect-34px"
-            :options="shifts"
+            :options="props.shiftsVariants"
             :disabled="!startWork"
             placeholder="Смена"
           />
@@ -125,6 +125,10 @@ const props = defineProps({
     required: true,
   },
   workDayStatuses: {
+    type: Array,
+    required: true,
+  },
+  shiftsVariants: {
     type: Array,
     required: true,
   },
@@ -212,13 +216,6 @@ const endTimeVariants = ref([
   { id: 'shift', label: 'Смена' },
 ]);
 const selectedEndVariant = ref('time');
-
-const shifts = ref([
-  { id: '8', label: '8 ч.' },
-  { id: '7.8', label: '7.8 ч.' },
-  { id: '16', label: '16 ч.' },
-  { id: '16.2', label: '16.2 ч.' },
-]);
 const selectedShift = ref(null);
 
 watch(selectedShift, () => {

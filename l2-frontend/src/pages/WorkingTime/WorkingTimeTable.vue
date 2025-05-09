@@ -226,12 +226,14 @@ const getMonthDays = (year: number, month: number) => {
   return days;
 };
 
+const shiftsVariants = ref([]);
 const workDayStatuses = ref([]);
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-ref-books');
+  const result = await api('/working-time/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
-  workDayStatuses.value = result;
+  workDayStatuses.value = result.workDayStatuses;
+  shiftsVariants.value = result.shiftsVariants;
 };
 
 onMounted(async () => {
@@ -289,6 +291,7 @@ const getColumns = () => {
             employeePositionId: row.employeePositionId,
             date: column.key,
             workDayStatuses: workDayStatuses.value,
+            shiftsVariants: shiftsVariants.value,
             timeOptions: timeOptions.value,
             disabled: documentBlocked.value,
             lunchDuration: row.lunchDuration,
