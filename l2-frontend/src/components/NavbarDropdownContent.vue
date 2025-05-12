@@ -29,23 +29,17 @@
   </div>
 </template>
 
-<script lang="ts">
-import Vue from 'vue';
-import Component from 'vue-class-component';
-import { mapGetters } from 'vuex';
+<script setup lang="ts">
+import { computed, getCurrentInstance } from 'vue';
 
-@Component({
-  computed: mapGetters(['menu', 'version']),
-})
-export default class NavbarDropdownContent extends Vue {
-  version: string | null;
+import { useStore } from '@/store';
 
-  menu: any;
-
-  get system() {
-    return this.$systemTitle();
-  }
-}
+const store = useStore();
+const menu = computed(() => store.getters.menu);
+const version = computed(() => store.getters.version);
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const instance = getCurrentInstance()!.proxy;
+const system = computed(() => instance.$systemTitle());
 </script>
 
 <style lang="scss" scoped>

@@ -129,7 +129,7 @@
             style="cursor: pointer"
           >
             <input
-              :checked="card.new_individual || individuals.length === 0"
+              :checked="card.new_individual || (individuals && individuals.length === 0)"
               type="checkbox"
               @click="toggleNewIndividual"
             > –
@@ -155,7 +155,7 @@
             <template v-if="l2_tfoms">
               и ТФОМС
             </template>
-            : {{ individuals.length }}
+            : {{ individuals?.length || 0 }}
           </div>
         </div>
         <div
@@ -171,7 +171,7 @@
           </div>
         </div>
         <div
-          v-if="!card.new_individual && individuals.length > 0"
+          v-if="!card.new_individual && individuals?.length"
           class="col-xs-12"
         >
           <div

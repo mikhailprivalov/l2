@@ -1,6 +1,9 @@
 <template>
   <div style="height: 100%; width: 100%; position: relative">
-    <div class="top-picker">
+    <div
+      class="top-picker"
+      :class="{ 'hide-type-picker': !!hideTypePicker }"
+    >
       <button
         v-if="types.length > 1"
         class="btn btn-blue-nb btn-ell dropdown-toggle bt1"
@@ -27,7 +30,7 @@
         </li>
       </ul>
       <button
-        v-if="types.length === 1"
+        v-if="types.length === 1 && !hideTypePicker"
         class="btn btn-blue-nb btn-ell"
         type="button"
         style="width: 135px; border-radius: 0"
@@ -369,6 +372,10 @@ export default {
       default() {
         return [];
       },
+    },
+    hideTypePicker: {
+      type: Boolean,
+      default: false,
     },
   },
   data() {
@@ -977,6 +984,10 @@ export default {
 
 .top-inner-right {
   right: 120px;
+}
+
+.hide-type-picker .top-inner {
+  left: 0;
 }
 
 .top-inner-select,
