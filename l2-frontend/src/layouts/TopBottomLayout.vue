@@ -8,7 +8,7 @@
       <slot name="top" />
     </div>
     <div
-      :class="$style.bottom"
+      :class="[$style.bottom, props.bottomScrollable && $style.scrollable]"
       :style="bottomStyle"
     >
       <slot name="bottom" />
@@ -23,10 +23,18 @@ const props = withDefaults(defineProps<{
   topHeightPx?: number,
   topPaddingPx?: number,
   topScrollable?: boolean,
+  bottomScrollable?: boolean,
   hideTop?: boolean,
+  /**
+   * Включает режим разделения пополам: top и bottom по 50% высоты
+   */
+  splitHalf?: boolean,
 }>(), { topHeightPx: 100 });
 
 const topStyle = computed(() => {
+  if (props.splitHalf) {
+    return { height: '50%' };
+  }
   const style: Record<string, string> = { height: `${props.topHeightPx}px` };
 
   if (props.topPaddingPx) {
@@ -35,7 +43,12 @@ const topStyle = computed(() => {
 
   return style;
 });
-const bottomStyle = computed(() => ({ top: props.hideTop ? '0' : topStyle.value.height }));
+const bottomStyle = computed(() => {
+  if (props.splitHalf) {
+    return { top: '50%', height: '50%' };
+  }
+  return { top: props.hideTop ? '0' : topStyle.value.height };
+});
 </script>
 
 <style module lang="scss">
@@ -66,5 +79,10 @@ const bottomStyle = computed(() => ({ top: props.hideTop ? '0' : topStyle.value.
 
 .bottom {
   bottom: 0;
+}
+
+// splitHalf режим: top и bottom по 50%
+:global(.split-half) .top {
+  border-bottom: none;
 }
 </style>

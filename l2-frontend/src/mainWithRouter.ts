@@ -837,6 +837,15 @@ const router = new Router({
       meta: {},
     },
     {
+      path: '/ui/request-creation',
+      name: 'request_creation',
+      component: () => import('@/pages/RequestCreation/index.vue'),
+      meta: {
+        title: 'Создание и исполнение заявок',
+        groups: ['Создание и исполнение заявок'],
+      },
+    },
+    {
       path: '*',
       redirect: (to) => ({ name: '404', hash: to.fullPath }),
       meta: {},

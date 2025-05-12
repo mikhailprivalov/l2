@@ -26,6 +26,7 @@ import VueTippy from './vue-tippy-2.1.3/dist/vue-tippy.min';
 import api from './api';
 import ReplaceAppendModal from './ui-cards/ReplaceAppendModal.vue';
 import FormulateObjectSelect from './fields/FormulateObjectSelect.vue';
+import FormulateL2RadioField from './fields/FormulateL2RadioField.vue';
 
 moment.locale('ru');
 
@@ -60,6 +61,7 @@ export default (): void => {
   Vue.use(PortalVue);
   Vue.use(VueFullscreen);
   Vue.component('FormulateObjectSelect', FormulateObjectSelect);
+  Vue.component('FormulateL2RadioField', FormulateL2RadioField);
   Vue.use(VueFormulate, {
     plugins: [ru],
     locale: 'ru',
@@ -70,6 +72,10 @@ export default (): void => {
         slotProps: {
           component: ['formType'],
         },
+      },
+      'l2-radio': {
+        classification: 'id',
+        component: 'FormulateL2RadioField',
       },
     },
   });
