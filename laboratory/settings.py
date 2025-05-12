@@ -437,7 +437,7 @@ ALLOWED_FORMS_FILE = {
     "102.01": False,
     "103.01": False,
 }
-
+TYPE_REPORT_FORMS = {}
 EXCLUDE_TYPE_RESEARCH = {
     "is_laboratory": False,
     "is_paraclinic": False,

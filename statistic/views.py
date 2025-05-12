@@ -34,6 +34,7 @@ from . import structure_sheet
 import datetime
 import calendar
 import openpyxl
+from django.utils.module_loading import import_string
 from .report import (
     call_patient,
     swab_covid,
@@ -78,7 +79,7 @@ from laboratory.settings import (
     RESEARCH_SPECIAL_REPORT,
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
-    UNLIMIT_PERIOD_STATISTIC_GROUP,
+    UNLIMIT_PERIOD_STATISTIC_GROUP, TYPE_REPORT_FORMS,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
@@ -1840,6 +1841,13 @@ def statistic_xls(request):
         end_date = datetime.datetime.combine(d2, datetime.time.max)
 
         type_fin = request_data.get("fin")
+        type_report = request_data.get("type-report")
+        xlsx_form = None
+        if type_report:
+            use_form = TYPE_REPORT_FORMS.get(type_report)
+            if use_form:
+                xlsx_form = import_string(f'statistic.forms.{use_form}')
+
         title_fin = IstochnikiFinansirovaniya.objects.filter(pk=type_fin).first()
         set_research = int(request_data.get("research-set", -1))
         company_id = int(request_data.get("company", -1))
@@ -1865,8 +1873,21 @@ def statistic_xls(request):
                 company_title = company.title
             else:
                 company_title = ""
-            ws, start_research_column = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
-            ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
+
+            if xlsx_form:
+                hospital_id = request.user.doctorprofile.hospital_id
+                hospital = Hospitals.objects.filter(id=hospital_id).first()
+                data = {
+                    "start_date": date_start_o,
+                    "end_date": date_end_o,
+                    "customer": company_title,
+                    "custom_research": head_data,
+                    "executor": hospital.title
+                }
+                ws = xlsx_form(ws, data)
+            else:
+                ws, start_research_column = consolidates.consolidate_research_sets_base(ws, d1, d2, title_fin.title, head_data, company_title, head_data_coast)
+                ws = consolidates.consolidate_research_sets_fill_data(ws, query, def_value_data, start_research_column)
         else:
             def_value_data = {k: 0 for k in head_data.keys()}
             researche_ids = (-1,)

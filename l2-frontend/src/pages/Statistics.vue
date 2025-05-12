@@ -616,7 +616,7 @@ const STATS_CATEGORIES = {
           PARAMS_TYPES.DATE_RANGE,
         ],
         url: '/statistic/xls?type=statistics-consolidate&fin=<fin-source>&date-start=<date-start>&date-end=<date-end>&'
-            + 'company=<company>&research-set=<research-set>',
+            + 'company=<company>&research-set=<research-set>&type-report=<type-report>',
       },
       registryProfit: {
         groups: ['Статистика-реестр начислений'],
@@ -1071,6 +1071,13 @@ export default class Statistics extends Vue {
           url = url.replace('<research-set>', -1);
         }
         url = url.replace('<research-set>', this.values.researchSet);
+      }
+
+      if (this.PARAMS_TYPES.TYPES_REPORT === p) {
+        if (_.isNil(this.values.typeReport)) {
+          url = url.replace('<type-report>', -1);
+        }
+        url = url.replace('<type-report>', this.values.typeReport);
       }
 
       if (this.PARAMS_TYPES.TYPE_DEPARTMENT === p) {

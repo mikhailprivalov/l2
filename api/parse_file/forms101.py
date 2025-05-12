@@ -332,6 +332,7 @@ def form_01(request_data):
             patient_updated = add_factors_data(patient_card, normalize_row["position"], harmful_factors_data, normalize_row["examination_date"], company_inn, normalize_row["department"])
             if not patient_updated["ok"]:
                 incorrect_patients.append({"fio": cells[fio_idx], "reason": f"Сохранение не удалось, ошибка: {patient_updated['message']}"})
+
     result = {
         "colData": columns,
         "data": incorrect_patients,
