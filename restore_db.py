@@ -4,12 +4,12 @@ import subprocess
 import importlib.util
 
 if len(sys.argv) < 2:
-    print('Использование: python restore_db.py <путь_к_sql_файлу>')
+    print('Использование: python restore_db.py <путь_к_sql_файлу>')  # noqa: T001
     sys.exit(1)
 
 sql_path = sys.argv[1]
 if not os.path.isfile(sql_path):
-    print(f'Файл не найден: {sql_path}')
+    print(f'Файл не найден: {sql_path}')  # noqa: T001
     sys.exit(1)
 
 settings_path = os.path.join('laboratory', 'local_settings.py')
@@ -19,23 +19,16 @@ spec.loader.exec_module(settings)
 
 db = settings.DATABASES['default']
 
-psql_cmd = [
-    'psql',
-    '-h', db['HOST'],
-    '-p', str(db['PORT']),
-    '-U', db['USER'],
-    '-d', db['NAME'],
-    '-f', sql_path
-]
+psql_cmd = ['psql', '-h', db['HOST'], '-p', str(db['PORT']), '-U', db['USER'], '-d', db['NAME'], '-f', sql_path]
 
 env = os.environ.copy()
 if db['PASSWORD']:
     env['PGPASSWORD'] = db['PASSWORD']
 
-print('Восстанавливаю базу данных...')
+print('Восстанавливаю базу данных...')  # noqa: T001
 try:
     subprocess.run(psql_cmd, check=True, env=env)
-    print('База данных успешно восстановлена!')
+    print('База данных успешно восстановлена!')  # noqa: T001
 except subprocess.CalledProcessError as e:
-    print('Ошибка при восстановлении базы данных!')
-    sys.exit(e.returncode) 
+    print('Ошибка при восстановлении базы данных!')  # noqa: T001
+    sys.exit(e.returncode)
