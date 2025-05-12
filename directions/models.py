@@ -549,6 +549,7 @@ class Napravleniya(models.Model):
     external_organization = models.ForeignKey(ExternalOrganization, default=None, blank=True, null=True, help_text='Внешняя организация', on_delete=models.SET_NULL)
     harmful_factor = models.CharField(max_length=255, blank=True, default='')
     workplace = models.CharField(max_length=255, blank=True, default='', db_index=True)
+    work_place_db = models.ForeignKey('contracts.Company', blank=True, null=True, default=None, on_delete=models.SET_NULL, help_text="Место работы на момент создания направления")
     hospital = models.ForeignKey(Hospitals, default=None, blank=True, null=True, on_delete=models.SET_NULL)
     id_in_hospital = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='Номер документа во внешней организации')
     is_external = models.BooleanField(default=False, blank=True, null=True)
@@ -1140,6 +1141,7 @@ class Napravleniya(models.Model):
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
         dir.workplace = client.work_place_db.title if client.work_place_db else client.work_place
+        dir.work_place_db = client.work_place_db if client.work_place_db else None
         if for_rmis:
             dir.rmis_number = rmis_data.get("rmis_number")
             dir.imported_from_rmis = True
@@ -3058,6 +3060,10 @@ class ParaclinicResult(models.Model):
             paraclinic_result_obj.save()
 
         return paraclinic_result_obj
+
+    class Meta:
+        verbose_name = 'Результат описательный'
+        verbose_name_plural = 'Результаты описательные'
 
 
 class DirectionParamsResult(models.Model):

@@ -474,6 +474,7 @@ DEFECT_VARIANTS = []
 LUNCH_DURATION_BY_POSITIONS = {}
 # День блокировки графика по умолчанию
 TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
+CDA_ID_FOR_DATE_CLOSE_CASE = -1
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

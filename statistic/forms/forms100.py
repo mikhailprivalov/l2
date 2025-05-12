@@ -4,6 +4,7 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from directory.models import Researches
 from utils.dates import normalize_date
+from statistic.forms.forms100_sql_func import closed_company_cases_by_date
 
 
 def form_01(ws1, data):
@@ -22,8 +23,10 @@ def form_01(ws1, data):
         "custom_fields": ["ФЛГ", "ФГДС", "ЭЭГ", "Тонометрия (старше 40 лет)",	"Маммография"],
         "executor": 'ОГАУЗ "ИГКБ № 9"',
         "customer": 'АО "Иркутсккабель" ',
-
     }
+
+    closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'])
+    closed_cases_id_for_company =
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]

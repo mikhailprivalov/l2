@@ -85,7 +85,7 @@ from laboratory.settings import (
     REMD_EXCLUDE_RESEARCH,
     SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE,
     DICOM_SERVERS,
-    TUBE_MAX_RESEARCH_WITH_SHARE,
+    TUBE_MAX_RESEARCH_WITH_SHARE, CDA_ID_FOR_DATE_CLOSE_CASE,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -2336,6 +2336,10 @@ def directions_paraclinic_result(request):
                         val = {}
                     f_result.value_json = val
                 f_result.client = iss.napravleniye.client
+                print(f.cda_option_id)
+                if f.cda_option_id == CDA_ID_FOR_DATE_CLOSE_CASE:
+                    iss.medical_examination = datetime.strptime(field["value"], "%Y-%m-%d").date()
+
                 f_result.save()
                 if "Протокол для оператора" in g:
                     IssledovaniyaResultLaborant.save_result_operator(iss, f, f.field_type, field["value"], request.user.doctorprofile)

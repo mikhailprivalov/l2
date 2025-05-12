@@ -1866,8 +1866,11 @@ def statistic_xls(request):
             else:
                 price = title_fin.contracts.price
                 research_coast = PriceCoast.get_coast_by_researches(price, list(def_value_data.keys()))
-            query = sql_func.statistics_by_research_sets_company(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
-            head_data_coast = {k: research_coast.get(k, "") for k, v in head_data.items()}
+
+            if not xlsx_form:
+                query = sql_func.statistics_by_research_sets_company(start_date, end_date, type_fin, tuple(def_value_data.keys()), company_id)
+                head_data_coast = {k: research_coast.get(k, "") for k, v in head_data.items()}
+
             if company_id > 0:
                 company = Company.objects.get(pk=company_id)
                 company_title = company.title
@@ -1880,9 +1883,11 @@ def statistic_xls(request):
                 data = {
                     "start_date": date_start_o,
                     "end_date": date_end_o,
-                    "customer": company_title,
+                    "customer_title": company_title,
+                    "customer_id": company_id,
                     "custom_research": head_data,
-                    "executor": hospital.title
+                    "executor": hospital.title,
+                    "research_coast": research_coast,
                 }
                 ws = xlsx_form(ws, data)
             else:
