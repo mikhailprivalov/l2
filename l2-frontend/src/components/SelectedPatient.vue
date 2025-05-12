@@ -14,42 +14,53 @@
       style="display: inline-block"
     >
       <div class="param">
-        {{ card.fio }}
+        {{ props.card.fio }}
       </div>
       <div class="param">
-        {{ card.sex.toUpperCase() }}
+        {{ props.card.sex.toUpperCase() }}
       </div>
       <div class="param">
-        {{ card.age }}
+        {{ props.card.age }}
       </div>
       <div class="param">
-        {{ card.bd }}
+        {{ props.card.bd }}
       </div>
       <div class="param">
-        <strong v-if="!card.is_rmis">Карта:</strong><strong v-else>РМИС ID:</strong>
+        <strong v-if="!props.card.is_rmis">Карта:</strong><strong v-else>РМИС ID:</strong>
       </div>
       <div class="param">
-        {{ card.num }}
+        {{ props.card.num }}
       </div>
       <div
-        v-if="!card.is_rmis"
+        v-if="!props.card.is_rmis"
         class="param"
       >
-        {{ card.base }}
+        {{ props.card.base }}
       </div>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'SelectedPatient',
-  props: {
-    card: {
-      type: Object,
-    },
+<script setup lang="ts">
+import { PropType } from 'vue';
+
+interface Card {
+  pk: number;
+  fio: string;
+  sex: string;
+  age: string | number;
+  bd: string;
+  is_rmis: boolean;
+  num: string | number;
+  base?: string;
+}
+
+const props = defineProps({
+  card: {
+    type: Object as PropType<Card>,
+    required: true,
   },
-};
+});
 </script>
 
 <style lang="scss" scoped>
