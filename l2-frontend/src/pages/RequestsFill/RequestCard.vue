@@ -5,15 +5,21 @@
     <div>{{ props.request.clinic }}</div>
     <div class="research-row">
       <div class="row">
-        <div class="col-xs-7">
+        <div class="col-xs-5">
           {{ props.request.datetime }}
         </div>
-        <div class="col-xs-5 text-right">
+        <div class="col-xs-7 text-right">
           <span
             class="fill-status"
             :class="props.request.waitFill ? 'fill-status--wait' : 'fill-status--done'"
           >
             {{ props.request.waitFill ? 'Ожидает' : 'Заполнено' }}
+            <button
+              v-if="props.request.waitFill"
+              class="btn btn-sm btn-blue-nb"
+            >
+              принять
+            </button>
           </span>
         </div>
       </div>
@@ -54,6 +60,11 @@ const props = defineProps<{ request: Request }>();
 .fill-status {
   font-size: 12px;
   font-weight: 500;
+
+  .btn {
+    padding: 3px;
+    margin-left: 5px;
+  }
 }
 .fill-status--wait {
   color: #1448f4;
