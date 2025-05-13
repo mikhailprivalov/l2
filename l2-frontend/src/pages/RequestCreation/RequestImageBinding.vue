@@ -172,7 +172,7 @@ watch(equipmentList, async (newVal) => {
   flex-direction: column;
   height: 100%;
   width: 100%;
-  max-width: 800px;
+  max-width: 600px;
 }
 .image-binding-header {
   display: flex;
