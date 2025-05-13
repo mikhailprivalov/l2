@@ -8,47 +8,37 @@
       >
         <div class="request-fields">
           <FormulateInput
-            class="third-width"
+            class="half-width"
             type="date"
             name="date"
             label="Дата исследования"
             placeholder="ДД.ММ.ГГГГ"
           />
           <FormulateInput
-            class="third-width"
+            class="half-width"
             type="number"
             name="dose"
-            label="Эффективная доза"
+            label="Доза"
             placeholder="мЗв"
-          />
-          <FormulateInput
-            class="third-width"
-            type="l2-radio"
-            name="priority"
-            label="‎ "
-            :variants="[{ id: 'planned', label: 'Планово' }, { id: 'cito', label: 'Cito' }]"
-          />
-        </div>
-        <div class="request-fields">
-          <FormulateInput
-            class="half-width"
-            type="l2-radio"
-            name="contrast"
-            label="‎ "
-            :variants="[{ id: 'without-contrast', label: 'Без контраста' }, { id: 'with-contrast', label: 'С контрастом' }]"
           />
           <FormulateInput
             class="half-width"
             type="number"
             name="contrastAmount"
-            label="Введено контраста"
+            label="Объем контраста"
             placeholder="Объём, мг"
+          />
+          <FormulateInput
+            class="third-width cito-checkbox"
+            type="checkbox"
+            name="cito"
+            label="Cito"
           />
         </div>
         <div class="request-fields">
           <FormulateInput
             class="full-width"
-            type="text"
+            type="textarea"
             name="anamnesis"
             label="Краткий анамнез"
             placeholder="Анамнез"
@@ -171,6 +161,11 @@ watch(() => props.value, (val) => {
 .full-width {
   flex: 0 0 100%;
   max-width: 100%;
+}
+
+.cito-checkbox {
+  display: flex;
+  max-width: 76px;
 }
 
 ::v-deep .formulate-input .formulate-input-element {

@@ -2,7 +2,7 @@
   <div :class="$style.root">
     <div
       v-if="!props.hideTop"
-      :class="[$style.top, props.topScrollable && $style.scrollable]"
+      :class="topClass"
       :style="topStyle"
     >
       <slot name="top" />
@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, useCssModule } from 'vue';
 
 const props = withDefaults(defineProps<{
   topHeightPx?: number,
@@ -29,7 +29,13 @@ const props = withDefaults(defineProps<{
    * Включает режим разделения пополам: top и bottom по 50% высоты
    */
   splitHalf?: boolean,
+  /**
+   * Отключает нижнюю границу у top
+   */
+  noBorder?: boolean,
 }>(), { topHeightPx: 100 });
+
+const $style = useCssModule();
 
 const topStyle = computed(() => {
   if (props.splitHalf) {
@@ -49,6 +55,12 @@ const bottomStyle = computed(() => {
   }
   return { top: props.hideTop ? '0' : topStyle.value.height };
 });
+
+const topClass = computed(() => [
+  $style.top,
+  props.topScrollable && $style.scrollable,
+  props.noBorder && $style.noBorder,
+]);
 </script>
 
 <style module lang="scss">
@@ -74,6 +86,10 @@ const bottomStyle = computed(() => {
     overflow-x: auto;
     overflow-y: visible;
     white-space: nowrap;
+  }
+
+  &.noBorder {
+    border-bottom: none;
   }
 }
 

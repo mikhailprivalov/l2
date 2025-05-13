@@ -154,6 +154,12 @@ def menu(request):
                     "access": ["Создание и исполнение заявок"],
                 },
                 {
+                    "url": '/ui/requests-fill',
+                    "title": "Заполнение заявок",
+                    "nt": False,
+                    "access": ["Заполнение заявок"],
+                },
+                {
                     "url": '/ui/extra-notification',
                     "title": "Экстренные извещения",
                     "nt": False,
