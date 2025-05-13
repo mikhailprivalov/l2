@@ -1880,11 +1880,13 @@ def statistic_xls(request):
             if xlsx_form:
                 hospital_id = request.user.doctorprofile.hospital_id
                 hospital = Hospitals.objects.filter(id=hospital_id).first()
+                date_start_o = normalize_dots_date(date_start_o)
+                date_end_o = normalize_dots_date(date_end_o)
                 data = {
                     "start_date": date_start_o,
                     "end_date": date_end_o,
                     "customer_title": company_title,
-                    "customer_id": company_id,
+                    "company_id": company_id,
                     "custom_research": head_data,
                     "executor": hospital.title,
                     "research_coast": research_coast,

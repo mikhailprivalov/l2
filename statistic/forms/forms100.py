@@ -26,7 +26,6 @@ def form_01(ws1, data):
     }
 
     closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'])
-    closed_cases_id_for_company =
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]
@@ -35,7 +34,7 @@ def form_01(ws1, data):
 
     ws1.merge_cells("A9:Q9")
     megre_cell = ws1["A9"]
-    megre_cell.value = f"Заказчик: {data['customer']}"
+    megre_cell.value = f"Заказчик: {data['customer_title']}"
     megre_cell.style = style_border2
 
     ws1.merge_cells("A10:Q10")
