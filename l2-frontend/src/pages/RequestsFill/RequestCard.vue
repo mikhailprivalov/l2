@@ -2,7 +2,7 @@
   <div
     class="direction"
   >
-    <div>{{ props.request.patient }}</div>
+    <div>{{ props.request.clinic }}</div>
     <div class="research-row">
       <div class="row">
         <div class="col-xs-7">
@@ -27,7 +27,7 @@
 <script setup lang="ts">
 export type Request = {
   id: number;
-  patient: string;
+  clinic: string;
   datetime: string;
   research: string;
   cardId: number;
