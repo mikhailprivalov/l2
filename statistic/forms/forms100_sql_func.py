@@ -9,9 +9,19 @@ def closed_company_cases_by_date(d_start, d_end, company_id):
             """
             SELECT 
             dn.id as direction_num,
-            directions_issledovaniya.id as issledovaniye_id
+            directions_issledovaniya.id as issledovaniye_id,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic,
+            ci.sex,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday,
+            cph.harmful_factor_id as factor_id
+            
             FROM directions_issledovaniya 
             LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
+            LEFT JOIN clients_card cc on cc.id=dn.client_id
+            LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            RIGHT JOIN clients_patientharmfullfactor cph on cc.id = cph.card_id
             WHERE
             dn.work_place_db_id = %(company_id)s
             AND directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s

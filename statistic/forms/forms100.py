@@ -2,6 +2,8 @@ from copy import deepcopy
 import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
+
+from clients.sql_func import research_by_harmfull_factor_id
 from directory.models import Researches
 from utils.dates import normalize_date
 from statistic.forms.forms100_sql_func import closed_company_cases_by_date
@@ -26,6 +28,29 @@ def form_01(ws1, data):
     }
 
     closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'])
+    structure_data = {}
+    factors_ids = set()
+    for i in closed_id:
+        if not structure_data.get(i.direction_num):
+            structure_data[i.direction_num] = {"fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}", "sex": i.sex, "birthday": i.patient_birthday, "factors": [i.factor_id]}
+        else:
+            structure_data[i.direction_num]["factors"].append(i.factor_id)
+        factors_ids.add(i.factor_id)
+
+    for k, v in structure_data.items():
+        print(k, v)
+
+    researches_harmfull_factors = research_by_harmfull_factor_id(tuple(factors_ids))
+    researches_harmfull_data = {}
+    for i in researches_harmfull_factors:
+        if not researches_harmfull_data.get(i.harmfull_factor_id):
+            researches_harmfull_data[i.harmfull_factor_id] = [i.research_id]
+        else:
+            researches_harmfull_data[i.harmfull_factor_id].append(i.research_id)
+
+
+
+
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]
