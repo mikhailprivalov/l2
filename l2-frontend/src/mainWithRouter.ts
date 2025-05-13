@@ -846,6 +846,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/requests-fill',
+      name: 'requests_fill',
+      component: () => import('@/pages/RequestsFill/index.vue'),
+      meta: {
+        title: 'Заполнение заявок',
+        groups: ['Заполнение заявок'],
+      },
+    },
+    {
       path: '*',
       redirect: (to) => ({ name: '404', hash: to.fullPath }),
       meta: {},

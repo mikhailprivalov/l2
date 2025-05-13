@@ -1,6 +1,6 @@
 <template>
   <PageInnerLayout>
-    <TwoSidedLayout :left-width-px="540">
+    <TwoSidedLayout :left-width-px="800">
       <template #left>
         <TopBottomLayout :top-height-px="300">
           <template #top>
@@ -87,7 +87,7 @@ const defaultRequestFields = () => ({
   contrast: '',
   contrastAmount: '',
   dose: '',
-  priority: '',
+  cito: false,
   anamnesis: '',
   comment: '',
   files: [] as any[],
