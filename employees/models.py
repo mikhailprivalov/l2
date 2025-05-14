@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -593,7 +593,7 @@ class TimeTrackingDocument(models.Model):
     @staticmethod
     def create_document(year, month, department_id, doc_profile):
         month_date = datetime.date(year, month, 1)
-        blocked = datetime.date(year, month, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT)
+        blocked = datetime.date(year, month, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT)
 
         document = TimeTrackingDocument(
             doc_create_id=doc_profile.pk,
