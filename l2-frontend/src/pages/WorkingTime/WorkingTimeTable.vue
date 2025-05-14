@@ -52,9 +52,10 @@
         :border-y="true"
         :scroll-width="0"
       />
-      <div class="flex flex-end">
+      <div v-if="documentCreated && filtersFull" class="flex">
+        <div class="search"></div>
         <button
-          v-if="documentCreated && !documentBlocked"
+          v-if="!documentBlocked"
           class="btn btn-blue-nb"
           :disabled="documentBlocked"
           @click="save"
@@ -413,10 +414,13 @@ const printDocument = async () => {
   justify-content: flex-end;
 }
 .search {
-  flex: 1;
+  width: 760px;
 }
 .block-margin {
   margin: 0 10px;
+}
+.button-bottom {
+  width: 770px;
 }
 </style>
 
