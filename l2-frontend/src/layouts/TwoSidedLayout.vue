@@ -1,6 +1,9 @@
 <template>
   <div :class="$style.root">
-    <div :class="$style.left">
+    <div
+      :class="$style.left"
+      :style="leftStyle"
+    >
       <slot name="left" />
     </div>
     <div :class="[$style.right, props.lightRight && $style.light]">
@@ -10,9 +13,16 @@
 </template>
 
 <script lang="ts" setup>
+import { computed } from 'vue';
+
 const props = defineProps<{
   lightRight?: boolean;
+  leftWidthPx?: number;
 }>();
+
+const leftStyle = computed(() => ({
+  width: `${props.leftWidthPx ?? 320}px`,
+}));
 </script>
 
 <style module lang="scss">
@@ -37,7 +47,6 @@ const props = defineProps<{
 .left {
   border-right: 1px solid #646d78;
   padding: 0;
-  width: 320px;
 }
 
 .right {

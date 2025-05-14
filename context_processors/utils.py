@@ -148,6 +148,18 @@ def menu(request):
                 {"url": '/ui/list-wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/ui/doc-call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
                 {
+                    "url": '/ui/request-creation',
+                    "title": "Создание и исполнение заявок",
+                    "nt": False,
+                    "access": ["Создание и исполнение заявок"],
+                },
+                {
+                    "url": '/ui/requests-fill',
+                    "title": "Заполнение заявок",
+                    "nt": False,
+                    "access": ["Заполнение заявок"],
+                },
+                {
                     "url": '/ui/extra-notification',
                     "title": "Экстренные извещения",
                     "nt": False,

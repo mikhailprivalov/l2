@@ -147,4 +147,5 @@ urlpatterns = [
     path('add-control-param', views.add_control_param),
     path('update-order-param', views.update_order_param),
     path('get-departments-with-exclude', views.get_departments_with_exclude),
+    path('requests/', include('api.requests.urls')),
 ]

@@ -6,7 +6,10 @@
     >
       <div
         class="panel panel-flt"
-        :class="{'ignore-body': ignoreBody}"
+        :class="{
+          'ignore-body': ignoreBody,
+          'withoutFooter': showFooter === 'true'
+        }"
         :style="{
           minWidth,
           maxWidth,
@@ -15,8 +18,7 @@
           width,
           height,
           marginLeft: marginLeftRight,
-          marginRight: marginLeftRight,
-          withoutFooter: showFooter === 'true',
+          marginRight: marginLeftRight
         }"
       >
         <div class="panel-heading">
@@ -69,72 +71,71 @@
   </transition>
 </template>
 
-<script lang="ts">
-export default {
-  name: 'Modal',
-  props: {
-    'show-footer': {
-      required: false,
-      default: 'false',
-    },
-    'white-bg': {
-      required: false,
-      default: 'false',
-    },
-    'overflow-unset': {
-      required: false,
-      default: 'false',
-    },
-    'min-width': {
-      required: false,
-      default: '30%',
-    },
-    'max-width': {
-      required: false,
-      default: '100%',
-    },
-    width: {
-      required: false,
-      default: 'auto',
-    },
-    height: {
-      required: false,
-      default: 'auto',
-    },
-    'margin-top': {
-      required: false,
-      default: '15px',
-    },
-    alignSelf: {
-      required: false,
-      default: 'flex-start',
-    },
-    'no-close': {
-      required: false,
-      default: false,
-      type: Boolean,
-    },
-    marginLeftRight: {
-      required: false,
-      default: '41px',
-    },
-    resultsEditor: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
-    zIndex: {
-      type: Number,
-      required: false,
-      default: null,
-    },
-    ignoreBody: {
-      type: Boolean,
-      required: false,
-      default: false,
-    },
+<script setup lang="ts">
+defineProps({
+  showFooter: {
+    required: false,
+    default: 'false',
   },
-};
+  whiteBg: {
+    required: false,
+    default: 'false',
+  },
+  overflowUnset: {
+    required: false,
+    default: 'false',
+  },
+  minWidth: {
+    required: false,
+    default: '30%',
+  },
+  maxWidth: {
+    required: false,
+    default: '100%',
+  },
+  width: {
+    required: false,
+    default: 'auto',
+  },
+  height: {
+    required: false,
+    default: 'auto',
+  },
+  marginTop: {
+    required: false,
+    default: '15px',
+  },
+  alignSelf: {
+    required: false,
+    default: 'flex-start',
+  },
+  noClose: {
+    required: false,
+    default: false,
+    type: Boolean,
+  },
+  marginLeftRight: {
+    required: false,
+    default: '41px',
+  },
+  resultsEditor: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  zIndex: {
+    type: Number,
+    required: false,
+    default: null,
+  },
+  ignoreBody: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+});
+
+defineEmits(['close']);
 </script>
 
 <style scoped>

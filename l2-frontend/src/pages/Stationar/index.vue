@@ -332,7 +332,7 @@
           v-for="d in list_directions"
           :key="d.pk"
           class="top-block direction-block"
-          :class="{ confirmed: Boolean(d.confirm), another_color: Boolean(d.another_color),  active: opened_form_pk === d.pk }"
+          :class="{ confirmed: Boolean(d.confirm), another_color: Boolean(d.another_color), active: opened_form_pk === d.pk }"
           @click="open_form(d)"
         >
           <span>

@@ -9,9 +9,9 @@
         type="button"
         data-toggle="dropdown"
         style="width: 115px;text-align: left!important;font-size: 12px;height: 34px;padding-right: 1px;"
-        :title="selected_base.title"
+        :title="selectedBase.title"
       >
-        {{ selected_base.title }}
+        {{ selectedBase.title }}
       </button>
       <ul class="dropdown-menu">
         <li
@@ -21,7 +21,7 @@
         >
           <a
             href="#"
-            @click.prevent="select_base(row.pk)"
+            @click.prevent="selectBase(row.pk)"
           >{{ row.title }}</a>
         </li>
       </ul>
@@ -39,7 +39,7 @@
       <button
         class="btn last btn-blue-nb nbr"
         type="button"
-        :disabled="!query_valid || inLoading"
+        :disabled="!queryValid || inLoading"
         @click="search"
       >
         <i class="fa fa-search" />
@@ -49,7 +49,7 @@
       v-show="showModal"
       ref="modal"
       show-footer="true"
-      @close="hide_modal"
+      @close="hideModal"
     >
       <span slot="header">Найдено несколько карт</span>
       <div slot="body">
@@ -73,10 +73,10 @@
           </thead>
           <tbody>
             <tr
-              v-for="(row, i) in founded_cards"
+              v-for="(row, i) in foundedCards"
               :key="row.num"
               class="cursor-pointer"
-              @click="select_card(i)"
+              @click="selectCard(i)"
             >
               <td class="text-center">
                 {{ row.type_title }}
@@ -100,227 +100,218 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import {
+  computed,
+  getCurrentInstance,
+  onMounted,
+  ref,
+  watch,
+} from 'vue';
+
+import { useStore } from '@/store';
 import Modal from '@/ui-cards/Modal.vue';
 import * as actions from '@/store/action-types';
 import patientsPoint from '@/api/patients-point';
 
-export default {
-  name: 'CardSearch',
-  components: { Modal },
-  props: {
-    value: {},
-  },
-  data() {
-    return {
-      base: -1,
-      query: '',
-      founded_cards: [],
-      selected_card: {},
-      showModal: false,
-      loaded: false,
-    };
-  },
-  computed: {
-    bases() {
-      return this.$store.getters.bases;
-    },
-    basesFiltered() {
-      return this.$store.getters.bases.filter(row => !row.hide && row.pk !== this.selected_base.pk);
-    },
-    selected_base() {
-      for (const b of this.bases) {
-        if (b.pk === this.base) {
-          return b;
-        }
-      }
-      return {
-        title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: [],
-      };
-    },
-    normalized_query() {
-      return this.query.trim();
-    },
-    query_valid() {
-      return this.normalized_query.length > 0;
-    },
-    inLoading() {
-      return this.$store.getters.inLoading;
-    },
-  },
-  watch: {
-    bases() {
-      this.check_base();
-    },
-  },
-  created() {
-    this.check_base();
+defineProps<{ value?: any }>();
+const store = useStore();
 
-    this.$store.watch((state) => state.bases, () => {
-      this.check_base();
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const instance = getCurrentInstance()!.proxy;
+
+const base = ref(-1);
+const query = ref('');
+const foundedCards = ref<any[]>([]);
+const selectedCard = ref<any>({});
+const showModal = ref(false);
+const loaded = ref(false);
+
+const bases = computed(() => store.getters.bases);
+const selectedBase = computed(() => {
+  for (const b of bases.value) {
+    if (b.pk === base.value) {
+      return b;
+    }
+  }
+  return {
+    title: 'Не выбрана база', pk: -1, hide: false, history_number: false, fin_sources: [],
+  };
+});
+const basesFiltered = computed(() => bases.value.filter((row: any) => !row.hide && row.pk !== selectedBase.value.pk));
+const normalizedQuery = computed(() => query.value.trim());
+const queryValid = computed(() => normalizedQuery.value.length > 0);
+const inLoading = computed(() => store.getters.inLoading);
+
+function emitInput() {
+  let pk = -1;
+  if ('pk' in selectedCard.value) {
+    pk = selectedCard.value.pk;
+  }
+  if (pk === -1) {
+    instance.$emit('input', {
+      pk: -1,
+      num: '',
+      base: '',
+      base_pk: -1,
+      is_rmis: false,
+      fio: '',
+      sex: '',
+      bd: '',
+      age: '',
     });
+    return;
+  }
+  instance.$emit('input', {
+    pk,
+    num: selectedCard.value.num,
+    base: selectedBase.value.title,
+    base_pk: selectedBase.value.pk,
+    is_rmis: selectedCard.value.is_rmis,
+    fio: [selectedCard.value.family, selectedCard.value.name, selectedCard.value.twoname].join(' ').trim(),
+    sex: selectedCard.value.sex,
+    bd: selectedCard.value.birthday,
+    age: selectedCard.value.age,
+  });
+}
 
-    this.$root.$on('search', () => {
-      this.search();
-    });
-  },
-  methods: {
-    hide_modal() {
-      this.showModal = false;
-      if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none';
-      }
-    },
-    select_base(pk) {
-      this.base = pk;
-      this.emit_input();
-      this.search();
-    },
-    select_card(index) {
-      this.hide_modal();
-      this.selected_card = this.founded_cards[index];
-      this.emit_input();
-      this.loaded = true;
-      this.$root.$emit('patient-picker:select_card');
-    },
-    clear() {
-      this.loaded = false;
-      this.selected_card = {};
-      this.history_num = '';
-      this.founded_cards = [];
-      if (this.query.includes('card_pk:')) {
-        this.query = '';
-      }
-      this.emit_input();
-    },
-    emit_input() {
-      let pk = -1;
-      if ('pk' in this.selected_card) {
-        pk = this.selected_card.pk;
-      }
-      if (pk === -1) {
-        this.$emit('input', {
-          pk: -1,
-          num: '',
-          base: '',
-          base_pk: -1,
-          is_rmis: false,
-          fio: '',
-          sex: '',
-          bd: '',
-          age: '',
-        });
-        return;
-      }
-      this.$emit('input', {
-        pk,
-        num: this.selected_card.num,
-        base: this.selected_base.title,
-        base_pk: this.selected_base.pk,
-        is_rmis: this.selected_card.is_rmis,
-        fio: [this.selected_card.family, this.selected_card.name, this.selected_card.twoname].join(' ').trim(),
-        sex: this.selected_card.sex,
-        bd: this.selected_card.birthday,
-        age: this.selected_card.age,
-      });
-    },
-    check_base() {
-      if (this.base === -1 && this.bases.length > 0) {
-        const params = new URLSearchParams(window.location.search);
-        const rmisUid = params.get('rmis_uid');
-        const basePk = params.get('base_pk');
-        const cardPk = params.get('card_pk');
-        const ofname = params.get('ofname');
-        const ofnameDep = params.get('ofname_dep');
-        const q = params.get('q');
+function hideModal() {
+  showModal.value = false;
+  const modalRef = instance.$refs.modal;
+  if (modalRef && 'modal' in Modal) {
+    (modalRef as any).$el.style.display = 'none';
+  } else if (modalRef && 'style' in modalRef) {
+    (modalRef as HTMLElement).style.display = 'none';
+  }
+}
 
-        if (rmisUid) {
-          window.history.pushState('', '', window.location.href.split('?')[0]);
-          for (const row of this.bases) {
-            if (row.code === 'Р') {
-              this.base = row.pk;
-              this.query = rmisUid;
-              this.search_after_loading = true;
-              break;
-            }
-          }
-          if (this.base === -1) {
-            this.base = this.bases[0].pk;
-          }
-        } else if (basePk) {
-          window.history.pushState('', '', window.location.href.split('?')[0]);
-          if (ofname) {
-            this.ofname_to_set = ofname;
-          }
-          if (ofnameDep) {
-            this.ofname_to_set_dep = ofnameDep;
-          }
-          for (const row of this.bases) {
-            if (row.pk === parseInt(basePk, 10)) {
-              this.base = row.pk;
-              break;
-            }
-          }
-          if (this.base === -1) {
-            this.base = this.bases[0].pk;
-          }
-          if (cardPk) {
-            this.query = `card_pk:${cardPk}`;
-            this.search_after_loading = true;
-          }
-        } else if (q) {
-          window.history.pushState('', '', window.location.href.split('?')[0]);
+function clear() {
+  loaded.value = false;
+  selectedCard.value = {};
+  foundedCards.value = [];
+  if (query.value.includes('card_pk:')) {
+    query.value = '';
+  }
+  emitInput();
+}
 
-          for (const b of this.bases) {
-            if (b.internal_type) {
-              this.base = b.pk;
-              break;
-            }
-          }
+function selectCard(index: number) {
+  hideModal();
+  selectedCard.value = foundedCards.value[index];
+  emitInput();
+  loaded.value = true;
+  instance.$root.$emit('patient-picker:select_card');
+}
 
-          if (this.base === -1) {
-            this.base = this.bases[0].pk;
-          }
-          this.query = q;
-          this.search_after_loading = true;
-        } else {
-          this.base = this.bases[0].pk;
+function checkBase() {
+  if (base.value === -1 && bases.value.length > 0) {
+    const params = new URLSearchParams(window.location.search);
+    const rmisUid = params.get('rmis_uid');
+    const basePk = params.get('base_pk');
+    const cardPk = params.get('card_pk');
+    const ofname = params.get('ofname');
+    const ofnameDep = params.get('ofname_dep');
+    const q = params.get('q');
+
+    if (rmisUid) {
+      window.history.pushState('', '', window.location.href.split('?')[0]);
+      for (const row of bases.value) {
+        if (row.code === 'Р') {
+          base.value = row.pk;
+          query.value = rmisUid;
+          break;
         }
-        window.$(this.$refs.q).focus();
-        this.emit_input();
       }
-    },
-    search() {
-      this.search_after_loading = false;
-      if (!this.query_valid || this.inLoading) return;
-      this.check_base();
-      window.$('input').each(function () {
-        window.$(this).trigger('blur');
-      });
-      this.clear();
-      this.$store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Поиск карты' });
-      patientsPoint.searchCard(this.base, this.query, true).then((result) => {
-        if (result.results) {
-          this.founded_cards = result.results;
-          if (this.founded_cards.length > 1) {
-            this.$refs.modal.$el.style.display = 'flex';
-            this.showModal = true;
-          } else if (this.founded_cards.length === 1) {
-            this.select_card(0);
-          } else {
-            this.$root.$emit('msg', 'error', 'Не найдено\nКарт по такому запросу не найдено');
-          }
-        } else {
-          this.$root.$emit('msg', 'error', 'Ошибка на сервере');
+      if (base.value === -1) {
+        base.value = bases.value[0].pk;
+      }
+    } else if (basePk) {
+      window.history.pushState('', '', window.location.href.split('?')[0]);
+      for (const row of bases.value) {
+        if (row.pk === parseInt(basePk, 10)) {
+          base.value = row.pk;
+          break;
         }
-      }).catch((error) => {
-        this.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
-      }).finally(() => {
-        this.$store.dispatch(actions.DISABLE_LOADING);
-      });
-    },
-  },
-};
+      }
+      if (base.value === -1) {
+        base.value = bases.value[0].pk;
+      }
+      if (cardPk) {
+        query.value = `card_pk:${cardPk}`;
+      }
+    } else if (q) {
+      window.history.pushState('', '', window.location.href.split('?')[0]);
+      for (const b of bases.value) {
+        if (b.internal_type) {
+          base.value = b.pk;
+          break;
+        }
+      }
+      if (base.value === -1) {
+        base.value = bases.value[0].pk;
+      }
+      query.value = q;
+    } else {
+      base.value = bases.value[0].pk;
+    }
+    window.$(instance.$refs.q).focus();
+    emitInput();
+  }
+}
+
+function search() {
+  if (!queryValid.value || inLoading.value) return;
+  checkBase();
+  window.$('input').each(function () {
+    window.$(this).trigger('blur');
+  });
+  clear();
+  store.dispatch(actions.ENABLE_LOADING, { loadingLabel: 'Поиск карты' });
+  patientsPoint.searchCard(base.value, query.value, true).then((result: any) => {
+    if (result.results) {
+      foundedCards.value = result.results;
+      if (foundedCards.value.length > 1) {
+        const modalRef = instance.$refs.modal;
+        if (modalRef && 'modal' in Modal) {
+          (modalRef as any).$el.style.display = 'flex';
+        } else if (modalRef && 'style' in modalRef) {
+          (modalRef as HTMLElement).style.display = 'flex';
+        }
+        showModal.value = true;
+      } else if (foundedCards.value.length === 1) {
+        selectCard(0);
+      } else {
+        instance.$root.$emit('msg', 'error', 'Не найдено\nКарт по такому запросу не найдено');
+      }
+    } else {
+      instance.$root.$emit('msg', 'error', 'Ошибка на сервере');
+    }
+  }).catch((error: any) => {
+    instance.$root.$emit('msg', 'error', `Ошибка на сервере\n${error.message}`);
+  }).finally(() => {
+    store.dispatch(actions.DISABLE_LOADING);
+  });
+}
+
+function selectBase(pk: number) {
+  base.value = pk;
+  emitInput();
+  search();
+}
+
+watch(bases, () => {
+  checkBase();
+});
+
+onMounted(() => {
+  checkBase();
+  store.watch((state: any) => state.bases, () => {
+    checkBase();
+  });
+  instance.$root.$on('search', () => {
+    search();
+  });
+});
 </script>
 
 <style lang="scss">

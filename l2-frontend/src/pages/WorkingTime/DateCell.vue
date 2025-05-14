@@ -22,7 +22,9 @@
       <p
         class="current-time-text"
         :class="currentTime.empty ? 'opacity-text' : ''"
-      >{{ currentTime.text }}</p>
+      >
+        {{ currentTime.text }}
+      </p>
       <!-- eslint-enable -->
     </button>
     <div

@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import {
   computed,
-  getCurrentInstance, onMounted, ref, watch,
+  onMounted, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -147,7 +147,6 @@ interface employeeData {
   dateDismissal: string,
 }
 
-const root = getCurrentInstance().proxy.$root;
 const store = useStore();
 
 const userOrganizationId = computed(() => store.getters.user_data.hospital);
