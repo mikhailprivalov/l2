@@ -41,7 +41,9 @@
         </div>
       </div>
       <div class="tp-row space-between">
-        <div class="copy-text">Прошлые</div>
+        <div class="copy-text">
+          Прошлые
+        </div>
         <div class="margin-left-right">
           <input
             v-model="countDaysCopy"
@@ -51,9 +53,13 @@
             max="31"
           >
         </div>
-        <div class="copy-text">дней</div>
+        <div class="copy-text">
+          дней
+        </div>
         <div class="margin-left-right">
-          <button class="btn btn-blue-nb copy-button">Скопировать</button>
+          <button class="btn btn-blue-nb copy-button">
+            Скопировать
+          </button>
         </div>
       </div>
       <div class="tp-row">
