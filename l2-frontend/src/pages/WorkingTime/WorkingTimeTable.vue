@@ -307,9 +307,13 @@ const getColumns = () => {
   });
   columnTemplate.push(...data);
   const totalHoursCol = {
-    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 40,
+    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 35,
+  };
+  const totalHoursWithMinCol = {
+    field: 'totalHoursWithMin', key: 'totalHoursWithMin', title: 'Все', align: 'center', width: 35,
   };
   columnTemplate.push(totalHoursCol);
+  columnTemplate.push(totalHoursWithMinCol);
   columns.value = columnTemplate;
 };
 
@@ -322,15 +326,15 @@ watch(() => [props.year, props.month], () => {
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
     const result = [];
-    if (row.bidType === 'Внут') {
+    if (row.bidType === 'Вну') {
       result.push('table-body-cell-inner-bid');
-    } else if (row.bidType === 'Внеш') {
+    } else if (row.bidType === 'Вне') {
       result.push('table-body-cell-outer-bid');
     }
-    if (column.key !== 'fio') {
-      result.push('table-body-cell');
-    } else {
+    if (column.key === 'fio') {
       result.push('table-body-name-cell');
+    } else {
+      result.push('table-body-cell');
     }
     return result.join(' ');
   },
