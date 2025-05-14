@@ -272,7 +272,7 @@ const getColumns = () => {
       ),
     },
     {
-      field: 'bidType', key: 'bidType', title: 'Тип', align: 'left', width: 50,
+      field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 40,
     },
   ];
   const daysMonth = getMonthDays(props.year, props.month);
@@ -336,7 +336,7 @@ const cellStyleOption = {
   },
   headerCellClass: ({ column }) => {
     const result = [];
-    const nonDateKey = ['fio', 'position', 'bidType'];
+    const nonDateKey = ['fio', 'position'];
     if (column.isWeekend) {
       result.push('table-header-cell-weekend');
     } else if (nonDateKey.includes(column.key)) {
