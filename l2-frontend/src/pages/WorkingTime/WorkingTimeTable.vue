@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="block-margin">
     <div
       class="flex margins"
     >
@@ -414,6 +414,9 @@ const printDocument = async () => {
 }
 .search {
   flex: 1;
+}
+.block-margin {
+  margin: 0 10px;
 }
 </style>
 
