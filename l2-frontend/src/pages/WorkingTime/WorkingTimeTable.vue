@@ -272,7 +272,7 @@ const getColumns = () => {
       ),
     },
     {
-      field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 40,
+      field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 30,
     },
   ];
   const daysMonth = getMonthDays(props.year, props.month);
@@ -307,10 +307,10 @@ const getColumns = () => {
   });
   columnTemplate.push(...data);
   const totalHoursCol = {
-    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 35,
+    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 30,
   };
   const totalHoursWithMinCol = {
-    field: 'totalHoursWithMin', key: 'totalHoursWithMin', title: 'Все', align: 'center', width: 35,
+    field: 'totalHoursWithMin', key: 'totalHoursWithMin', title: 'Все', align: 'center', width: 30,
   };
   columnTemplate.push(totalHoursCol);
   columnTemplate.push(totalHoursWithMinCol);
