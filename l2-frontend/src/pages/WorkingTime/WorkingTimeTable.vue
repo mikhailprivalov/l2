@@ -52,8 +52,11 @@
         :border-y="true"
         :scroll-width="0"
       />
-      <div v-if="documentCreated && filtersFull" class="flex">
-        <div class="search"></div>
+      <div
+        v-if="documentCreated && filtersFull"
+        class="flex"
+      >
+        <div class="search" />
         <button
           v-if="!documentBlocked"
           class="btn btn-blue-nb"
