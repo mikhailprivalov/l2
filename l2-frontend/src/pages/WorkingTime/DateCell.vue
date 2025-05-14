@@ -13,19 +13,17 @@
         trigger: 'click',
       }"
       :disabled="props.disabled"
-      :class="cellSelect ? 'transparentButton current-time-wh cell-select' : 'transparentButton current-time-wh'"
+      :class="cellSelect ? 'transparentButton current-time-btn cell-select' : 'transparentButton current-time-btn'"
       @hide="updateCellSelect(false)"
       @hidden="updateTime"
       @show="updateCellSelect(true)"
     >
-      <!-- eslint-disable vue/singleline-html-element-content-newline vue/multiline-html-element-content-newline -->
-      <p
+      <span
         class="current-time-text"
         :class="currentTime.empty ? 'opacity-text' : ''"
       >
-        {{ currentTime.text }}
-      </p>
-      <!-- eslint-enable -->
+        {{ currentTime.start }} <br> {{ currentTime.end }}
+      </span>
     </button>
     <div
       id="temp"
@@ -237,15 +235,15 @@ watch(selectedShift, () => {
 
 const currentTime = computed(() => {
   if (startWork.value && !endWork.value) {
-    return { text: `${startWork.value}\n--:--`, time: true };
+    return { start: startWork.value, end: '--:--', time: true };
   }
   if (startWork.value && endWork.value) {
-    return { text: `${startWork.value}\n${endWork.value}`, time: true };
+    return { start: startWork.value, end: endWork.value, time: true };
   }
   if (selectedTimeOff.value) {
-    return { text: selectedTimeOffLabel.value, timeOff: true };
+    return { start: selectedTimeOffLabel.value, end: '', timeOff: true };
   }
-  return { text: '--:--\n--:--', empty: true };
+  return { start: '--:--', end: '--:--', empty: true };
 });
 
 const appendCurrentTime = () => {
@@ -324,10 +322,12 @@ button[disabled] {
 }
 .current-time-text {
   margin: 0;
+  white-space: normal;
 }
-.current-time-wh {
+.current-time-btn {
   width: 100%;
   height: 42px;
+  padding: 1px 0;
 }
 .opacity-text {
   opacity: 0.3;
