@@ -256,7 +256,7 @@ const getColumns = () => {
       field: 'position',
       key: 'position',
       title: 'Должность',
-      align: 'center',
+      align: 'left',
       width: 115,
       fixed: 'left',
       renderBodyCell: ({ row, column }, h) => h(
@@ -272,7 +272,7 @@ const getColumns = () => {
       ),
     },
     {
-      field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 50,
+      field: 'bidType', key: 'bidType', title: 'Тип', align: 'left', width: 50,
     },
   ];
   const daysMonth = getMonthDays(props.year, props.month);
@@ -320,21 +320,31 @@ watch(() => [props.year, props.month], () => {
 }, { immediate: true });
 
 const cellStyleOption = {
-  bodyCellClass: ({ row }) => {
+  bodyCellClass: ({ row, column }) => {
     const result = [];
     if (row.bidType === 'Внут') {
       result.push('table-body-cell-inner-bid');
     } else if (row.bidType === 'Внеш') {
       result.push('table-body-cell-outer-bid');
     }
-    result.push('table-body-cell');
+    if (column.key !== 'fio') {
+      result.push('table-body-cell');
+    } else {
+      result.push('table-body-name-cell');
+    }
     return result.join(' ');
   },
   headerCellClass: ({ column }) => {
+    const result = [];
+    const nonDateKey = ['fio', 'position', 'bidType'];
     if (column.isWeekend) {
-      return 'table-header-cell-weekend';
+      result.push('table-header-cell-weekend');
+    } else if (nonDateKey.includes(column.key)) {
+      result.push('table-header-non-date-cell');
+    } else {
+      result.push('table-header-cell');
     }
-    return 'table-header-cell';
+    return result.join(' ');
   },
 };
 const columnHiddenOption = {
@@ -438,8 +448,11 @@ const printDocument = async () => {
 .table-header-cell {
   padding: 10px 0 !important;
 }
-.table-body-position-cell {
-  padding: 10px 2px !important;
+.table-header-non-date-cell {
+  padding: 10px 12px !important;
+}
+.table-body-name-cell {
+  padding: 10px 0 10px 12px !important;
 }
 .position-text {
   white-space: nowrap !important;
