@@ -1,11 +1,7 @@
-from copy import deepcopy
-import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 from clients.sql_func import researches_by_harmfull_factor_id
-from directory.models import Researches
-from utils.dates import normalize_date
 from statistic.forms.forms100_sql_func import closed_company_cases_by_date, directions_by_parent_cases_issledovaniye, search_value_where_done_custom_research
 
 
@@ -29,6 +25,7 @@ def form_01(ws1, data):
     # получить ЗАКРЫТЫЕ случаи за дату по компании
     closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'])
 
+    # стр-ра по закрытм случаям
     # {"id_case_iss": {"fio": "", "sex": "", "birthday": "", "factors": "",
     #                  "custom_researches": {"id_research": "Да|Нет", "id_research": "Да|Нет"},
     #                  "result_researches": {
@@ -52,13 +49,11 @@ def form_01(ws1, data):
         factors_ids.add(i.factor_id)
         cases_issledovaniye_ids[i.issledovaniye_id] = i.direction_num
 
-    for k, v in closed_case_structure_data.items():
-        print(k, v)
-
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_ids))
-
+    # структура уникальных услуг для всех пациентов по все факторам
     harmfull_factors_research_id_title = {i.research_id: i.research_title for i in researches_harmfull_factors}
 
+    # структура факторы - услуги {factor_id: [research_id, research_id]}
     researches_harmfull_data = {}
     for i in researches_harmfull_factors:
         if not researches_harmfull_data.get(i.harmfull_factor_id):
@@ -67,21 +62,18 @@ def form_01(ws1, data):
             researches_harmfull_data[i.harmfull_factor_id].append(i.research_id)
 
     cases_iss = tuple(cases_issledovaniye_ids.keys())
-    print(cases_iss)
     # получить все исследования, у к-рых в направлении родитель ссылка на случай
     result_iss_id = directions_by_parent_cases_issledovaniye(cases_iss)
-    for i in result_iss_id:
-        print(i)
+
 
     # выполненные исследование все для всех пациентов
     research_issledovaniye_ids = [i.iss_id for i in result_iss_id]
 
-    # поиск результатов для кастомных услуг среди результатов, где оказана услуга
+    # поиск результатов для кастомных услуг среди результатов, в каком учреждении оказана услуга
     result_where_done_custom_research_sql = search_value_where_done_custom_research(tuple(research_issledovaniye_ids), tuple(custom_research_ids))
 
-    # взять значения, где пройдено обследование по исследованию
+    # взять значения, в каком учреждении пройдено обследование по исследованию
     result_where_done_custom_research = {i.issledovaniye_id: i.result_value for i in result_where_done_custom_research_sql}
-
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]
