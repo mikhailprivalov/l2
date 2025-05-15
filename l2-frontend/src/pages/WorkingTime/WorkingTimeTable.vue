@@ -139,9 +139,11 @@ const getEmployeesWorkTime = async () => {
 
 watch(employeesWorkTime, () => {
   for (const employee of employeesWorkTime.value) {
-    let tmpTotalHours = 0.0;
+    let totalDiffTime = 0;
+    // let totalHoursDecimal = 0.0;
+    // let totalMin = 0;
     const keys = Object.keys(employee);
-    const lunchDuration = employee.lunchDuration / 60;
+    const lunchDuration = employee.lunchDuration * 60 * 1000;
     for (const key of keys) {
       if (moment(key, 'YYYY-MM-DD', true).isValid()) {
         const currentDay = employee[key];
@@ -153,12 +155,17 @@ watch(employeesWorkTime, () => {
           } else {
             endTime = new Date(`${key} ${currentDay.endWorkTime}`);
           }
-          const diffTime = (endTime - startTime) / (1000 * 60 * 60);
-          tmpTotalHours += (diffTime - lunchDuration);
+          const dayDiffTime = endTime - startTime - lunchDuration;
+          totalDiffTime += dayDiffTime;
         }
       }
     }
-    employee.totalHours = tmpTotalHours.toFixed(1);
+    const totalDiffSec = totalDiffTime / (1000 * 60);
+    const totalHoursDecimal = totalDiffSec / 60;
+    const totalHours = Math.trunc(totalHoursDecimal);
+    const totalMin = totalDiffSec % 60;
+    employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
+    employee.totalHours = `${totalHours}ч ${totalMin}м`;
   }
 }, { deep: true });
 
@@ -307,10 +314,10 @@ const getColumns = () => {
   });
   columnTemplate.push(...data);
   const totalHoursCol = {
-    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 30, fixed: 'right',
+    field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
   const totalHoursWithMinCol = {
-    field: 'totalHoursWithMin', key: 'totalHoursWithMin', title: 'Все', align: 'center', width: 30, fixed: 'right',
+    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
   columnTemplate.push(totalHoursCol);
   columnTemplate.push(totalHoursWithMinCol);
