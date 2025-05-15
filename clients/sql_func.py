@@ -74,7 +74,7 @@ def last_results_researches_by_time_ago(client_id, researches, date_start, date_
     return rows
 
 
-def research_by_harmfull_factor_id(factors_id):
+def researches_by_harmfull_factor_id(factors_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
