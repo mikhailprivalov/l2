@@ -317,7 +317,7 @@ const getColumns = () => {
     field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
   const totalHoursWithMinCol = {
-    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 30, fixed: 'right',
+    field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 30, fixed: 'right',
   };
   columnTemplate.push(totalHoursCol);
   columnTemplate.push(totalHoursWithMinCol);
