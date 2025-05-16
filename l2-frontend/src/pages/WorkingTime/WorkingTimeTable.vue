@@ -4,7 +4,7 @@
       class="flex margins"
     >
       <button
-        v-if="noDocument && filtersFull"
+        v-if="!documentCreated && filtersFull"
         class="btn btn-blue-nb"
         @click="createDocument"
       >
@@ -12,7 +12,7 @@
       </button>
     </div>
     <div
-      v-if="!noDocument && filtersFull"
+      v-if="documentCreated && filtersFull"
       class="flex"
     >
       <div class="search">
@@ -23,15 +23,13 @@
         >
       </div>
       <button
-        v-if="!noDocument && filtersFull"
+        v-if="documentCreated && !documentBlocked"
         class="btn btn-blue-nb"
-        :disabled="documentBlocked"
         @click="save"
       >
         Сохранить
       </button>
       <button
-        v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
         @click.prevent="printDocument()"
       >
@@ -56,7 +54,7 @@
       />
       <div class="flex flex-end">
         <button
-          v-if="!noDocument && filtersFull"
+          v-if="documentCreated && !documentBlocked"
           class="btn btn-blue-nb"
           :disabled="documentBlocked"
           @click="save"
@@ -64,7 +62,6 @@
           Сохранить
         </button>
         <button
-          v-if="!noDocument && filtersFull"
           class="btn btn-blue-nb"
           @click.prevent="printDocument()"
         >
@@ -115,7 +112,7 @@ const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time
 
 const search = ref('');
 
-const noDocument = ref(false);
+const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
@@ -129,16 +126,11 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const { data, blocked } = result;
-  if (data.length > 0) {
-    employeesWorkTime.value = data;
-    noDocument.value = false;
-  } else {
-    employeesWorkTime.value = [];
-    noDocument.value = true;
-  }
+  const { data, documentIsBlocked, documentIsCreated } = result;
+  employeesWorkTime.value = data;
+  documentCreated.value = documentIsCreated;
+  documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
-  documentBlocked.value = blocked;
 };
 
 watch(employeesWorkTime, () => {
@@ -151,7 +143,12 @@ watch(employeesWorkTime, () => {
         const currentDay = employee[key];
         if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
           const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-          const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+          let endTime;
+          if (currentDay.endWorkTime === '00:00') {
+            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
+          } else {
+            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+          }
           const diffTime = (endTime - startTime) / (1000 * 60 * 60);
           tmpTotalHours += (diffTime - lunchDuration);
         }
@@ -189,7 +186,7 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, typeId,
+  employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayStartWork,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
@@ -205,6 +202,16 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
+  if (nextDayStartWork) {
+    const nextDay = nextDayStartWork;
+    const nextDayString = moment(nextDay).format('YYYY-MM-DD');
+    const nextDayStart = moment(nextDay).format('HH:mm');
+    row[nextDayString] = {
+      startWorkTime: nextDayStart,
+      endWorkTime: '',
+      typeId,
+    };
+  }
 };
 
 const columns = ref([]);
@@ -219,12 +226,14 @@ const getMonthDays = (year: number, month: number) => {
   return days;
 };
 
+const shiftsVariants = ref([]);
 const workDayStatuses = ref([]);
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-ref-books');
+  const result = await api('/working-time/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
-  workDayStatuses.value = result;
+  workDayStatuses.value = result.workDayStatuses;
+  shiftsVariants.value = result.shiftsVariants;
 };
 
 onMounted(async () => {
@@ -282,8 +291,10 @@ const getColumns = () => {
             employeePositionId: row.employeePositionId,
             date: column.key,
             workDayStatuses: workDayStatuses.value,
+            shiftsVariants: shiftsVariants.value,
             timeOptions: timeOptions.value,
-            disabled: documentBlocked,
+            disabled: documentBlocked.value,
+            lunchDuration: row.lunchDuration,
           },
           on: { changeWorkTime },
         },

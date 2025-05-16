@@ -18,7 +18,7 @@
       @hidden="updateTime"
       @show="updateCellSelect(true)"
     >
-      <!-- eslint-disable vue/singleline-html-element-content-newline -->
+      <!-- eslint-disable vue/singleline-html-element-content-newline vue/multiline-html-element-content-newline -->
       <p
         class="current-time-text"
         :class="currentTime.empty ? 'opacity-text' : ''"
@@ -42,6 +42,22 @@
           {{ `${option.start}-${option.end}` }}
         </div>
       </div>
+      <div class="tp-row space-between">
+        <div class="copy-text">Прошлые</div>
+        <div class="margin-left-right">
+          <input
+            v-model="countDaysCopy"
+            class="form-control copy-count"
+            type="number"
+            min="1"
+            max="31"
+          >
+        </div>
+        <div class="copy-text">дней</div>
+        <div class="margin-left-right">
+          <button class="btn btn-blue-nb copy-button">Скопировать</button>
+        </div>
+      </div>
       <div class="tp-row">
         <div class="exact-time">
           <label class="tp-label">Начало</label>
@@ -52,13 +68,25 @@
           >
         </div>
         <div class="exact-time">
-          <label class="tp-label">Конец</label>
+          <RadioFieldById
+            v-model="selectedEndVariant"
+            :variants="endTimeVariants"
+            class="end-variants"
+          />
           <input
+            v-if="selectedEndVariant === 'time'"
             v-model="endWork"
             class="form-control"
             type="time"
-            max="23:59"
           >
+          <Treeselect
+            v-else
+            v-model="selectedShift"
+            class="treeselect-34px"
+            :options="props.shiftsVariants"
+            :disabled="!startWork"
+            placeholder="Смена"
+          />
         </div>
       </div>
       <div class="tp-row">
@@ -75,9 +103,11 @@
 
 <script setup lang="ts">
 import {
-  computed,
-  getCurrentInstance, ref, watch,
+  computed, ref, watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import moment from 'moment';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
@@ -100,6 +130,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  shiftsVariants: {
+    type: Array,
+    required: true,
+  },
   timeOptions: {
     type: Array,
     required: true,
@@ -108,9 +142,11 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+  lunchDuration: {
+    type: Number,
+    required: true,
+  },
 });
-
-const root = getCurrentInstance().proxy.$root;
 
 const cellSelect = ref(false);
 const updateCellSelect = (select: boolean) => {
@@ -118,6 +154,7 @@ const updateCellSelect = (select: boolean) => {
 };
 const startWork = ref(null);
 const endWork = ref(null);
+const nextDayStartWork = ref(null);
 const selectedTimeOff = ref(null);
 const findTimeOffLabel = () => {
   const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
@@ -128,15 +165,6 @@ const findTimeOffLabel = () => {
 };
 const selectedTimeOffLabel = ref('');
 
-const timeValid = () => {
-  if (startWork.value > endWork.value && !selectedTimeOff.value) {
-    startWork.value = '';
-    endWork.value = '';
-    return { valid: false, reason: 'Время начала больше времени конца' };
-  }
-  return { valid: true, reason: '' };
-};
-
 const selectedTimeOption = ref(null);
 
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
@@ -144,6 +172,15 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
   startWork.value = startTime;
   endWork.value = endTime;
 };
+
+const countDaysCopy = ref(1);
+watch(countDaysCopy, () => {
+  if (countDaysCopy.value < 1) {
+    countDaysCopy.value = 1;
+  } else if (countDaysCopy.value > 31) {
+    countDaysCopy.value = 31;
+  }
+});
 
 const timeOff = () => {
   selectedTimeOffLabel.value = findTimeOffLabel();
@@ -153,18 +190,20 @@ const timeOff = () => {
 };
 
 const updateTime = async () => {
-  const { valid, reason } = timeValid();
-  if (!valid) {
-    root.$emit('msg', 'error', reason);
-  } else {
-    emit('changeWorkTime', {
-      employeePositionId: props.employeePositionId,
-      date: props.date,
-      startWorkTime: startWork.value,
-      endWorkTime: endWork.value,
-      typeId: selectedTimeOff.value,
-    });
+  if ((startWork.value && endWork.value) && endWork.value < startWork.value && endWork.value !== '00:00') {
+    const start = new Date(`${props.date} ${startWork.value}`);
+    const endTime = endWork.value.split(':');
+    nextDayStartWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
+    endWork.value = '00:00';
   }
+  emit('changeWorkTime', {
+    employeePositionId: props.employeePositionId,
+    date: props.date,
+    startWorkTime: startWork.value,
+    endWorkTime: endWork.value,
+    typeId: selectedTimeOff.value,
+    nextDayStartWork: nextDayStartWork.value,
+  });
 };
 
 watch([startWork, endWork], () => {
@@ -174,16 +213,36 @@ watch([startWork, endWork], () => {
   }
 });
 
-watch(endWork, () => {
-  if (endWork.value === '00:00') {
-    endWork.value = '23:59';
+const endTimeVariants = ref([
+  { id: 'time', label: 'Конец' },
+  { id: 'shift', label: 'Смена' },
+]);
+const selectedEndVariant = ref('time');
+const selectedShift = ref(null);
+
+watch(selectedShift, () => {
+  if (selectedShift.value) {
+    const start = new Date(`${props.date} ${startWork.value}`);
+    const shiftInMinutes = Number(selectedShift.value) * 60;
+    const shiftWithLunch = shiftInMinutes + props.lunchDuration;
+    const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));
+    if (end.getDate() > start.getDate()) {
+      endWork.value = '00:00';
+      nextDayStartWork.value = end;
+    } else {
+      endWork.value = moment(end).format('HH:mm');
+    }
   }
 });
 
 const currentTime = computed(() => {
+  if (startWork.value && !endWork.value) {
+    return { text: `${startWork.value}\n--:--`, time: true };
+  }
   if (startWork.value && endWork.value) {
     return { text: `${startWork.value}\n${endWork.value}`, time: true };
-  } if (selectedTimeOff.value) {
+  }
+  if (selectedTimeOff.value) {
     return { text: selectedTimeOffLabel.value, timeOff: true };
   }
   return { text: '--:--\n--:--', empty: true };
@@ -231,14 +290,9 @@ button[disabled] {
   background-color: transparent !important;
   color: grey !important;
 }
-.tp-button {
-  width: 35px;
-  height: 34px;
-  margin-top: 24px;
-}
 .tp {
-  height: 150px;
-  width: 254px;
+  height: auto;
+  width: 280px;
 }
 
 .tp-row {
@@ -259,6 +313,7 @@ button[disabled] {
   padding: 0 1px;
   border: 1px solid grey;
   border-radius: 6px;
+  flex: 30%;
 
   &:hover {
     background-color: #f5f5f5;
@@ -276,5 +331,29 @@ button[disabled] {
 }
 .opacity-text {
   opacity: 0.3;
+}
+.margin-left-right {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+.copy-button {
+  padding: 3px;
+}
+.copy-count {
+  padding: 0 6px;
+  height: 28px;
+}
+.copy-text {
+  padding: 4px 0;
+}
+.space-between {
+  justify-content: space-between;
+}
+.end-variants {
+  height: 19px;
+  margin-bottom: 5px;
+}
+::v-deep .vue-treeselect__control {
+  border-color: #aab2bd;
 }
 </style>

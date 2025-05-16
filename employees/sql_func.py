@@ -25,7 +25,7 @@ def get_employee_work_time(department_id: int, document_id: int):
             work_time_table.end_work,
             work_time_table.work_day_status_id
             FROM employees_employeeposition
-            INNER JOIN employees_typeworktimeemployee ON employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
+            LEFT JOIN employees_typeworktimeemployee ON employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
             INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
             INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
             INNER JOIN employees_department ON employees_employeeposition.department_id = employees_department.id

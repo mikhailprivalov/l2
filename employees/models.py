@@ -8,7 +8,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -593,7 +593,7 @@ class TimeTrackingDocument(models.Model):
     @staticmethod
     def create_document(year, month, department_id, doc_profile):
         month_date = datetime.date(year, month, 1)
-        blocked = datetime.date(year, month, TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT)
+        blocked = datetime.date(year, month, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT)
 
         document = TimeTrackingDocument(
             doc_create_id=doc_profile.pk,
@@ -607,9 +607,10 @@ class TimeTrackingDocument(models.Model):
 
     @staticmethod
     def check_document(document):
+        current_day = current_time(True)
         if not document:
             return {"ok": False, "message": "Такого документа нет"}
-        if document.blocked:
+        if current_day >= document.blocked:
             return {"ok": False, "message": "Документ заблокирован"}
         return {"ok": True, "message": ""}
 
@@ -688,7 +689,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "type_id": ""} for day in range(1, length_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": ""} for day in range(1, length_month + 1)}
         return template_days
 
     @staticmethod
@@ -699,7 +700,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
         result = []
         document_blocked = False
-        if document:
+        document_created = True if document else False
+        if document_created:
             template_days = EmployeeWorkingHoursSchedule.get_month_days_template(year, month, length_month)
             employees_work_time = get_employee_work_time(department_id, document.pk)
             result = {}
@@ -709,21 +711,21 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "employeePositionId": work_time.employee_position_id,
                         "fio": f'{work_time.family} {work_time.name[0]}.{work_time.patronymic[0] + "." if work_time.patronymic else ""}',
                         "position": work_time.position_name,
-                        "bidType": work_time.bid_name[:4],
+                        "bidType": work_time.bid_name[:4] if work_time.bid_name else "",
                         "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name, work_time.lunch_duration_by_department),
                         **template_days,
                     }
                 if work_time.day:
                     tmp_work_time = {
-                        "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else "",
-                        "endWorkTime": work_time.end_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.end_work else "",
-                        "typeId": work_time.work_day_status_id if work_time.work_day_status_id else "",
+                        "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else None,
+                        "endWorkTime": work_time.end_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.end_work else None,
+                        "typeId": work_time.work_day_status_id if work_time.work_day_status_id else None,
                     }
                     result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
             result = [value for value in result.values()]
             if document.blocked:
                 document_blocked = current_time(True) >= document.blocked
-        return {"data": result, "blocked": document_blocked}
+        return {"data": result, "documentIsBlocked": document_blocked, "documentIsCreated": document_created}
 
     @staticmethod
     def update_time(department_id: int, year: int, month: int, changed_time: dict):
@@ -738,6 +740,10 @@ class EmployeeWorkingHoursSchedule(models.Model):
             for date, work_time in work_times.items():
                 start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
                 end = f"{date} {work_time.get('endWorkTime')}" if work_time.get("endWorkTime") else None
+                if work_time.get("endWorkTime") == '00:00':
+                    tmp_end = datetime.datetime.strptime(end, "%Y-%m-%d %H:%M")
+                    end_date = tmp_end.date() + datetime.timedelta(days=1)
+                    end = end_date.strftime("%Y-%m-%d %H:%M")
                 work_day_status_id = work_time.get("typeId")
                 day = EmployeeWorkingHoursSchedule.objects.filter(time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date).first()
                 if day:
