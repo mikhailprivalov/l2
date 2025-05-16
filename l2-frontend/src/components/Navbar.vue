@@ -35,7 +35,7 @@
           to="/ui/menu"
         >
           <span class="navbar-brand">
-            <small>{{ fioShort }}</small>
+            <small>{{ fio_short }}</small>
           </span>
         </router-link>
         <span
@@ -128,7 +128,7 @@
             </button>
           </li>
           <li v-else>
-            <span class="navbar-brand org-title"> Организация: {{ userHospitalTitle || orgTitle }} </span>
+            <span class="navbar-brand org-title"> Организация: {{ user_hospital_title || $orgTitle() }} </span>
           </li>
           <ChatsButton v-if="chatsEnabled" />
         </ul>
@@ -154,7 +154,7 @@
           v-if="authenticated"
           class="navbar-brand"
         >
-          <small>{{ fioShort }}</small>
+          <small>{{ fio_short }}</small>
         </span>
         <span
           v-else
@@ -184,54 +184,99 @@
   </nav>
 </template>
 
-<script setup lang="ts">
-import { computed, getCurrentInstance } from 'vue';
+<script lang="ts">
+import Vue from 'vue';
+import Component from 'vue-class-component';
+import { mapGetters } from 'vuex';
 
-import { useStore } from '@/store';
 import NavbarDropdownContent from '@/components/NavbarDropdownContent.vue';
 import ShiftButton from '@/ui-cards/CashRegisters/ShiftButton.vue';
 
-const CardReader = () => import('@/ui-cards/CardReader.vue');
-const ExtendedPatientSearch = () => import('@/ui-cards/ExtendedPatientSearch/index.vue');
-const CreateDescriptiveDirection = () => import('@/ui-cards/CreateDescriptiveDirection.vue');
-const ExpertiseStatus = () => import('@/ui-cards/ExpertiseStatus.vue');
-const RmisLink = () => import('@/ui-cards/RmisLink.vue');
-const Favorites = () => import('@/ui-cards/Favorites.vue');
-const PrintQueue = () => import('@/ui-cards/PrintQueue.vue');
-const HelpLinkField = () => import('@/ui-cards/HelpLinkField.vue');
-const OperationPlans = () => import('@/ui-cards/OperationPlans.vue');
-const LaboratoryHeader = () => import('@/ui-cards/LaboratoryHeader.vue');
-const LaboratorySelector = () => import('@/ui-cards/LaboratorySelector.vue');
-const ChatsButton = () => import('@/ui-cards/ChatsButton.vue');
-const EcpSchedule = () => import('@/ui-cards/EcpSchedule.vue');
+@Component({
+  computed: mapGetters([
+    'inLoading',
+    'loadingLabel',
+    'loaderInHeader',
+    'authenticated',
+    'fio_short',
+    'user_hospital_title',
+    'hasNewVersion',
+  ]),
+  components: {
+    ShiftButton,
+    NavbarDropdownContent,
+    CardReader: () => import('@/ui-cards/CardReader.vue'),
+    ExtendedPatientSearch: () => import('@/ui-cards/ExtendedPatientSearch/index.vue'),
+    CreateDescriptiveDirection: () => import('@/ui-cards/CreateDescriptiveDirection.vue'),
+    ExpertiseStatus: () => import('@/ui-cards/ExpertiseStatus.vue'),
+    RmisLink: () => import('@/ui-cards/RmisLink.vue'),
+    Favorites: () => import('@/ui-cards/Favorites.vue'),
+    PrintQueue: () => import('@/ui-cards/PrintQueue.vue'),
+    HelpLinkField: () => import('@/ui-cards/HelpLinkField.vue'),
+    OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
+    LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),
+    LaboratorySelector: () => import('@/ui-cards/LaboratorySelector.vue'),
+    ChatsButton: () => import('@/ui-cards/ChatsButton.vue'),
+    EcpSchedule: () => import('@/ui-cards/EcpSchedule.vue'),
+  },
+})
+export default class Navbar extends Vue {
+  authenticated: boolean;
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-const instance = getCurrentInstance()!.proxy;
-const store = useStore();
-const route = instance.$route;
+  inLoading: boolean;
 
-const authenticated = computed(() => store.getters.authenticated);
-const inLoading = computed(() => store.getters.inLoading);
-const loadingLabel = computed(() => store.getters.loadingLabel);
-const loaderInHeader = computed(() => store.getters.loaderInHeader);
-const fioShort = computed(() => store.getters.fio_short);
-const userHospitalTitle = computed(() => store.getters.user_hospital_title);
-const hasNewVersion = computed(() => store.getters.hasNewVersion);
-const chatsEnabled = computed(() => store.getters.chatsEnabled);
-const l2CashEnabled = computed(() => store.getters.modules.l2_cash);
+  loadingLabel: string;
 
-const orgTitle = instance.$orgTitle();
-const system = instance.$systemTitle();
-const asVI = instance.$asVI();
-const l2LogoClass = instance.$l2LogoClass();
+  hasNewVersion: boolean;
 
-const meta = computed(() => route.meta || {});
-const metaTitle = computed(() => String(route.meta?.title || ''));
-const loading = computed(() => inLoading.value && loaderInHeader.value);
-const loadingText = computed(() => (loadingLabel.value || 'Загрузка').toUpperCase());
+  loaderInHeader: boolean;
 
-function reload() {
-  window.location.reload();
+  fio_short: string;
+
+  user_hospital_title: string | null;
+
+  $orgTitle: () => string;
+
+  get system() {
+    return this.$systemTitle();
+  }
+
+  get asVI() {
+    return this.$asVI();
+  }
+
+  get l2LogoClass() {
+    return this.$l2LogoClass();
+  }
+
+  get loading() {
+    return this.inLoading && this.loaderInHeader;
+  }
+
+  get loadingText() {
+    return (this.loadingLabel || 'Загрузка').toUpperCase();
+  }
+
+  get meta() {
+    return this.$route?.meta || {};
+  }
+
+  get metaTitle() {
+    return String(this.$route?.meta?.title || '');
+  }
+
+  get chatsEnabled() {
+    return this.$store.getters.chatsEnabled;
+  }
+
+  get l2CashEnabled() {
+    return this.$store.getters.modules.l2_cash;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  reload() {
+    window.location.reload();
+  }
 }
 </script>
 
