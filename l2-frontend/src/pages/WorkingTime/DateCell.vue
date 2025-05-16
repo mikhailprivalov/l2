@@ -44,7 +44,7 @@
         <div class="copy-text">
           Прошлые
         </div>
-        <div class="margin-left-right">
+        <div>
           <input
             v-model="countDaysCopy"
             class="form-control copy-count"
@@ -56,8 +56,8 @@
         <div class="copy-text">
           дней
         </div>
-        <div class="margin-left-right">
-          <button class="btn btn-blue-nb copy-button">
+        <div>
+          <button class="btn btn-blue-nb copy-button nbr">
             Скопировать
           </button>
         </div>
@@ -337,10 +337,6 @@ button[disabled] {
 }
 .opacity-text {
   opacity: 0.3;
-}
-.margin-left-right {
-  margin-left: 2px;
-  margin-right: 2px;
 }
 .copy-button {
   padding: 3px;
