@@ -194,7 +194,7 @@ const timeOff = () => {
 };
 
 const updateTime = async () => {
-  if ((startWork.value && endWork.value) && endWork.value < startWork.value && endWork.value !== '00:00') {
+  if ((startWork.value && endWork.value) && endWork.value <= startWork.value && endWork.value !== '00:00') {
     const start = new Date(`${props.date} ${startWork.value}`);
     const endTime = endWork.value.split(':');
     nextDayStartWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
