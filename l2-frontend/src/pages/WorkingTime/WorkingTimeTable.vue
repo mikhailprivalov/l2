@@ -257,7 +257,7 @@ const getColumns = () => {
       field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'left', width: 20, fixed: 'center',
     },
     {
-      field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 165, fixed: 'left',
+      field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 160, fixed: 'left',
     },
     {
       field: 'position',
@@ -292,7 +292,7 @@ const getColumns = () => {
       field: dateString,
       title: dateTitle,
       align: 'center',
-      width: 49,
+      width: 47,
       isWeekend: weekend,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
@@ -317,7 +317,7 @@ const getColumns = () => {
     field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
   const totalHoursWithMinCol = {
-    field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 30, fixed: 'right',
+    field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 42, fixed: 'right',
   };
   columnTemplate.push(totalHoursCol);
   columnTemplate.push(totalHoursWithMinCol);
