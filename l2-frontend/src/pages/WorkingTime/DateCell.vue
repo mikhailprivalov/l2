@@ -218,10 +218,10 @@ watch([startWork, endWork], () => {
 });
 
 const endTimeVariants = ref([
-  { id: 'time', label: 'Конец' },
   { id: 'shift', label: 'Смена' },
+  { id: 'time', label: 'Конец' },
 ]);
-const selectedEndVariant = ref('time');
+const selectedEndVariant = ref('shift');
 const selectedShift = ref(null);
 
 watch(selectedShift, () => {
