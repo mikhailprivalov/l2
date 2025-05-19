@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <div class="block-margin">
     <div
       class="flex margins"
     >
       <button
-        v-if="noDocument && filtersFull"
+        v-if="!documentCreated && filtersFull"
         class="btn btn-blue-nb"
         @click="createDocument"
       >
@@ -12,7 +12,7 @@
       </button>
     </div>
     <div
-      v-if="!noDocument && filtersFull"
+      v-if="documentCreated && filtersFull"
       class="flex"
     >
       <div class="search">
@@ -23,15 +23,13 @@
         >
       </div>
       <button
-        v-if="!noDocument && filtersFull"
+        v-if="documentCreated && !documentBlocked"
         class="btn btn-blue-nb"
-        :disabled="documentBlocked"
         @click="save"
       >
         Сохранить
       </button>
       <button
-        v-if="!noDocument && filtersFull"
         class="btn btn-blue-nb"
         @click.prevent="printDocument()"
       >
@@ -54,9 +52,13 @@
         :border-y="true"
         :scroll-width="0"
       />
-      <div class="flex flex-end">
+      <div
+        v-if="documentCreated && filtersFull"
+        class="flex"
+      >
+        <div class="search" />
         <button
-          v-if="!noDocument && filtersFull"
+          v-if="!documentBlocked"
           class="btn btn-blue-nb"
           :disabled="documentBlocked"
           @click="save"
@@ -64,7 +66,6 @@
           Сохранить
         </button>
         <button
-          v-if="!noDocument && filtersFull"
           class="btn btn-blue-nb"
           @click.prevent="printDocument()"
         >
@@ -115,7 +116,7 @@ const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time
 
 const search = ref('');
 
-const noDocument = ref(false);
+const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
@@ -129,35 +130,42 @@ const getEmployeesWorkTime = async () => {
     departmentId: props.department,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const { data, blocked } = result;
-  if (data.length > 0) {
-    employeesWorkTime.value = data;
-    noDocument.value = false;
-  } else {
-    employeesWorkTime.value = [];
-    noDocument.value = true;
-  }
+  const { data, documentIsBlocked, documentIsCreated } = result;
+  employeesWorkTime.value = data;
+  documentCreated.value = documentIsCreated;
+  documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
-  documentBlocked.value = blocked;
 };
 
 watch(employeesWorkTime, () => {
   for (const employee of employeesWorkTime.value) {
-    let tmpTotalHours = 0.0;
+    let totalDiffTime = 0;
+    // let totalHoursDecimal = 0.0;
+    // let totalMin = 0;
     const keys = Object.keys(employee);
-    const lunchDuration = employee.lunchDuration / 60;
+    const lunchDuration = employee.lunchDuration * 60 * 1000;
     for (const key of keys) {
       if (moment(key, 'YYYY-MM-DD', true).isValid()) {
         const currentDay = employee[key];
         if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
           const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-          const endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-          const diffTime = (endTime - startTime) / (1000 * 60 * 60);
-          tmpTotalHours += (diffTime - lunchDuration);
+          let endTime;
+          if (currentDay.endWorkTime === '00:00') {
+            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
+          } else {
+            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+          }
+          const dayDiffTime = endTime - startTime - lunchDuration;
+          totalDiffTime += dayDiffTime;
         }
       }
     }
-    employee.totalHours = tmpTotalHours.toFixed(1);
+    const totalDiffSec = totalDiffTime / (1000 * 60);
+    const totalHoursDecimal = totalDiffSec / 60;
+    const totalHours = Math.trunc(totalHoursDecimal);
+    const totalMin = totalDiffSec % 60;
+    employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
+    employee.totalHours = `${totalHours}ч ${totalMin}м`;
   }
 }, { deep: true });
 
@@ -189,7 +197,7 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, typeId,
+  employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayStartWork,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
@@ -205,6 +213,16 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
+  if (nextDayStartWork) {
+    const nextDay = nextDayStartWork;
+    const nextDayString = moment(nextDay).format('YYYY-MM-DD');
+    const nextDayStart = moment(nextDay).format('HH:mm');
+    row[nextDayString] = {
+      startWorkTime: nextDayStart,
+      endWorkTime: '',
+      typeId,
+    };
+  }
 };
 
 const columns = ref([]);
@@ -219,12 +237,14 @@ const getMonthDays = (year: number, month: number) => {
   return days;
 };
 
+const shiftsVariants = ref([]);
 const workDayStatuses = ref([]);
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-ref-books');
+  const result = await api('/working-time/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
-  workDayStatuses.value = result;
+  workDayStatuses.value = result.workDayStatuses;
+  shiftsVariants.value = result.shiftsVariants;
 };
 
 onMounted(async () => {
@@ -237,13 +257,13 @@ const getColumns = () => {
       field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'left', width: 20, fixed: 'center',
     },
     {
-      field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 165, fixed: 'left',
+      field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 160, fixed: 'left',
     },
     {
       field: 'position',
       key: 'position',
       title: 'Должность',
-      align: 'center',
+      align: 'left',
       width: 115,
       fixed: 'left',
       renderBodyCell: ({ row, column }, h) => h(
@@ -259,7 +279,7 @@ const getColumns = () => {
       ),
     },
     {
-      field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 50,
+      field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 30, fixed: 'left',
     },
   ];
   const daysMonth = getMonthDays(props.year, props.month);
@@ -272,7 +292,7 @@ const getColumns = () => {
       field: dateString,
       title: dateTitle,
       align: 'center',
-      width: 49,
+      width: 47,
       isWeekend: weekend,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
@@ -282,8 +302,10 @@ const getColumns = () => {
             employeePositionId: row.employeePositionId,
             date: column.key,
             workDayStatuses: workDayStatuses.value,
+            shiftsVariants: shiftsVariants.value,
             timeOptions: timeOptions.value,
-            disabled: documentBlocked,
+            disabled: documentBlocked.value,
+            lunchDuration: row.lunchDuration,
           },
           on: { changeWorkTime },
         },
@@ -292,9 +314,13 @@ const getColumns = () => {
   });
   columnTemplate.push(...data);
   const totalHoursCol = {
-    field: 'totalHours', key: 'totalHours', title: 'Все', align: 'center', width: 40,
+    field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
+  };
+  const totalHoursWithMinCol = {
+    field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 42, fixed: 'right',
   };
   columnTemplate.push(totalHoursCol);
+  columnTemplate.push(totalHoursWithMinCol);
   columns.value = columnTemplate;
 };
 
@@ -305,21 +331,31 @@ watch(() => [props.year, props.month], () => {
 }, { immediate: true });
 
 const cellStyleOption = {
-  bodyCellClass: ({ row }) => {
+  bodyCellClass: ({ row, column }) => {
     const result = [];
-    if (row.bidType === 'Внут') {
+    if (row.bidType === 'Вну') {
       result.push('table-body-cell-inner-bid');
-    } else if (row.bidType === 'Внеш') {
+    } else if (row.bidType === 'Вне') {
       result.push('table-body-cell-outer-bid');
     }
-    result.push('table-body-cell');
+    if (column.key === 'fio') {
+      result.push('table-body-name-cell');
+    } else {
+      result.push('table-body-cell');
+    }
     return result.join(' ');
   },
   headerCellClass: ({ column }) => {
+    const result = [];
+    const nonDateKey = ['fio', 'position'];
     if (column.isWeekend) {
-      return 'table-header-cell-weekend';
+      result.push('table-header-cell-weekend');
+    } else if (nonDateKey.includes(column.key)) {
+      result.push('table-header-non-date-cell');
+    } else {
+      result.push('table-header-cell');
     }
-    return 'table-header-cell';
+    return result.join(' ');
   },
 };
 const columnHiddenOption = {
@@ -402,7 +438,13 @@ const printDocument = async () => {
   justify-content: flex-end;
 }
 .search {
-  flex: 1;
+  width: 760px;
+}
+.block-margin {
+  margin: 0 10px;
+}
+.button-bottom {
+  width: 770px;
 }
 </style>
 
@@ -417,8 +459,11 @@ const printDocument = async () => {
 .table-header-cell {
   padding: 10px 0 !important;
 }
-.table-body-position-cell {
-  padding: 10px 2px !important;
+.table-header-non-date-cell {
+  padding: 10px 12px !important;
+}
+.table-body-name-cell {
+  padding: 10px 0 10px 12px !important;
 }
 .position-text {
   white-space: nowrap !important;

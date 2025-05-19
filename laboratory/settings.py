@@ -473,6 +473,9 @@ DEFECT_VARIANTS = []
 # Продолжительность обеда по должностям {"position_name": duration in minutes}
 LUNCH_DURATION_BY_POSITIONS = {}
 # День блокировки графика по умолчанию
+DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
+# Варианты смен [{"id": "16.2", "label": "16.2 ч."}]
+SHIFTS_VARIANTS = []
 TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 CDA_ID_FOR_DATE_CLOSE_CASE = -1
 CDA_ID_FOR_WHERE_SERVICE_DONE = -1
