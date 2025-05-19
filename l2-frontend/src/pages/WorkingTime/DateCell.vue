@@ -13,19 +13,17 @@
         trigger: 'click',
       }"
       :disabled="props.disabled"
-      :class="cellSelect ? 'transparentButton current-time-wh cell-select' : 'transparentButton current-time-wh'"
+      :class="cellSelect ? 'transparentButton current-time-btn cell-select' : 'transparentButton current-time-btn'"
       @hide="updateCellSelect(false)"
       @hidden="updateTime"
       @show="updateCellSelect(true)"
     >
-      <!-- eslint-disable vue/singleline-html-element-content-newline vue/multiline-html-element-content-newline -->
-      <p
+      <span
         class="current-time-text"
         :class="currentTime.empty ? 'opacity-text' : ''"
       >
-        {{ currentTime.text }}
-      </p>
-      <!-- eslint-enable -->
+        {{ currentTime.start }} <br> {{ currentTime.end }}
+      </span>
     </button>
     <div
       id="temp"
@@ -43,8 +41,10 @@
         </div>
       </div>
       <div class="tp-row space-between">
-        <div class="copy-text">Прошлые</div>
-        <div class="margin-left-right">
+        <div class="copy-text">
+          Прошлые
+        </div>
+        <div>
           <input
             v-model="countDaysCopy"
             class="form-control copy-count"
@@ -53,9 +53,13 @@
             max="31"
           >
         </div>
-        <div class="copy-text">дней</div>
-        <div class="margin-left-right">
-          <button class="btn btn-blue-nb copy-button">Скопировать</button>
+        <div class="copy-text">
+          дней
+        </div>
+        <div>
+          <button class="btn btn-blue-nb copy-button nbr">
+            Скопировать
+          </button>
         </div>
       </div>
       <div class="tp-row">
@@ -190,7 +194,7 @@ const timeOff = () => {
 };
 
 const updateTime = async () => {
-  if ((startWork.value && endWork.value) && endWork.value < startWork.value && endWork.value !== '00:00') {
+  if ((startWork.value && endWork.value) && endWork.value <= startWork.value && endWork.value !== '00:00') {
     const start = new Date(`${props.date} ${startWork.value}`);
     const endTime = endWork.value.split(':');
     nextDayStartWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
@@ -214,10 +218,10 @@ watch([startWork, endWork], () => {
 });
 
 const endTimeVariants = ref([
-  { id: 'time', label: 'Конец' },
   { id: 'shift', label: 'Смена' },
+  { id: 'time', label: 'Конец' },
 ]);
-const selectedEndVariant = ref('time');
+const selectedEndVariant = ref('shift');
 const selectedShift = ref(null);
 
 watch(selectedShift, () => {
@@ -237,15 +241,15 @@ watch(selectedShift, () => {
 
 const currentTime = computed(() => {
   if (startWork.value && !endWork.value) {
-    return { text: `${startWork.value}\n--:--`, time: true };
+    return { start: startWork.value, end: '--:--', time: true };
   }
   if (startWork.value && endWork.value) {
-    return { text: `${startWork.value}\n${endWork.value}`, time: true };
+    return { start: startWork.value, end: endWork.value, time: true };
   }
   if (selectedTimeOff.value) {
-    return { text: selectedTimeOffLabel.value, timeOff: true };
+    return { start: selectedTimeOffLabel.value, end: '', timeOff: true };
   }
-  return { text: '--:--\n--:--', empty: true };
+  return { start: '--:--', end: '--:--', empty: true };
 });
 
 const appendCurrentTime = () => {
@@ -324,17 +328,15 @@ button[disabled] {
 }
 .current-time-text {
   margin: 0;
+  white-space: normal;
 }
-.current-time-wh {
+.current-time-btn {
   width: 100%;
   height: 42px;
+  padding: 1px 0;
 }
 .opacity-text {
   opacity: 0.3;
-}
-.margin-left-right {
-  margin-left: 2px;
-  margin-right: 2px;
 }
 .copy-button {
   padding: 3px;
