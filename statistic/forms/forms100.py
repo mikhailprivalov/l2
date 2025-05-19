@@ -64,7 +64,11 @@ def form_01(ws1, data):
     cases_iss = tuple(cases_issledovaniye_ids.keys())
     # получить все исследования, у к-рых в направлении родитель ссылка на случай
     result_iss_id = directions_by_parent_cases_issledovaniye(cases_iss)
+    for i in result_iss_id:
+        print(f"ISS-{i.iss_id} Parent - {i.parent_case_iss_id}")
 
+    for k, v in closed_case_structure_data.items():
+        print(f"{k}--{v}")
 
     # выполненные исследование все для всех пациентов
     research_issledovaniye_ids = [i.iss_id for i in result_iss_id]
