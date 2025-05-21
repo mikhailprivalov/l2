@@ -10,7 +10,7 @@ def closed_company_cases_by_date(d_start, d_end, company_id):
             """
             SELECT 
             dn.id as direction_num,
-            directions_issledovaniya.id as issledovaniye_id,
+            directions_issledovaniya.id as case_issledovaniye_id,
             ci.family as patient_family,
             ci.name as patient_name,
             ci.patronymic as patient_patronymic,
