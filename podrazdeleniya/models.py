@@ -67,6 +67,7 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
     hosp_research_default = models.ForeignKey(
         'directory.Researches', blank=True, default=None, null=True, verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны", on_delete=models.CASCADE
     )
+    is_structure_data_in_protocol = models.BooleanField(default=False, help_text="Только структурированные текст в протоколе для всех пользователей подразделения")
 
     def get_title(self):
         return self.short_title or self.title

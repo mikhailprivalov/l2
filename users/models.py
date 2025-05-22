@@ -122,6 +122,7 @@ class DoctorProfile(models.Model):
         on_delete=models.CASCADE,
     )
     dismissed = models.BooleanField(default=False, help_text="Уволен")
+    is_structure_data_in_protocol = models.BooleanField(default=False, help_text="Только структурированные текст в протоколе")
 
     @staticmethod
     def get_system_profile():

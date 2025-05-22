@@ -614,7 +614,7 @@ def result_print(request):
                                 has_any_signature = True
                                 break
                     fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature)
-                elif not protocol_plain_text:
+                elif not protocol_plain_text or request.user.doctorprofile.is_structure_data_in_protocol or request.user.doctorprofile.podrazdeleniye.is_structure_data_in_protocol:
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone, med_certificate)
                 else:
                     fwb = plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate)
