@@ -499,7 +499,7 @@ def primary_reception_get_data(hosp_first_num, site_type=0):
             if i[3] == 'Побочное действие лекарств (непереносимость)':
                 medicament_allergy = i[2]
                 continue
-            if i[3] == 'Кем направлен больной':
+            if i[3] == 'Кем направлен больной' or i[3] == 'Наименование медицинской организации':
                 who_directed = i[2]
                 continue
             if (i[3]).strip() == 'Вид госпитализации':
