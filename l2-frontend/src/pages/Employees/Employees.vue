@@ -259,6 +259,10 @@ const filteredEmployees = computed(() => employees.value.filter(employee => {
 
 const employeesPagination = computed(() => filteredEmployees.value.slice((page.value - 1)
   * pageSize.value, page.value * pageSize.value));
+
+watch(search, () => {
+  pageNumberChange(1);
+});
 </script>
 
 <style scoped lang="scss">
