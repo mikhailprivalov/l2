@@ -112,7 +112,8 @@ const props = defineProps({
 const root = getCurrentInstance().proxy.$root;
 
 const filtersFull = computed(() => !!(props.year && props.month && props.department));
-const timeOptions = computed(() => JSON.parse(store.getters.modules.working_time_variants));
+const timeOptions = computed(() => (store.getters.modules.working_time_variants
+  ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
 const search = ref('');
 
