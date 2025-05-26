@@ -158,8 +158,6 @@ const getEmployeesWorkTime = async () => {
 watch(employeesWorkTime, () => {
   for (const employee of employeesWorkTime.value) {
     let totalDiffTime = 0;
-    // let totalHoursDecimal = 0.0;
-    // let totalMin = 0;
     const keys = Object.keys(employee);
     const lunchDuration = employee.lunchDuration * 60 * 1000;
     for (const key of keys) {
