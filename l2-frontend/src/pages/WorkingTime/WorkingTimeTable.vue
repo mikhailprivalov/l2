@@ -123,6 +123,23 @@ const documentBlocked = ref(false);
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
 
+const updateChangedEmployeesWorkTime = (
+  employeePositionId: number,
+  date: string,
+  startWorkTime: string,
+  endWorkTime: string,
+  typeId: number,
+) => {
+  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
+    changedEmployeesWorkTime.value[employeePositionId] = {};
+  }
+  changedEmployeesWorkTime.value[employeePositionId][date] = {
+    startWorkTime,
+    endWorkTime,
+    typeId,
+  };
+};
+
 const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/get-work-time', {
@@ -198,7 +215,7 @@ const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee
 }));
 
 const changeWorkTime = async ({
-  employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayStartWork,
+  employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   row[date] = {
@@ -206,23 +223,17 @@ const changeWorkTime = async ({
     endWorkTime,
     typeId,
   };
-  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
-    changedEmployeesWorkTime.value[employeePositionId] = {};
-  }
-  changedEmployeesWorkTime.value[employeePositionId][date] = {
-    startWorkTime,
-    endWorkTime,
-    typeId,
-  };
-  if (nextDayStartWork) {
-    const nextDay = nextDayStartWork;
+  updateChangedEmployeesWorkTime(employeePositionId, date, startWorkTime, endWorkTime, typeId);
+  if (nextDayEndWork) {
+    const nextDay = nextDayEndWork;
     const nextDayString = moment(nextDay).format('YYYY-MM-DD');
-    const nextDayStart = moment(nextDay).format('HH:mm');
+    const nextDayEnd = moment(nextDay).format('HH:mm');
     row[nextDayString] = {
-      startWorkTime: nextDayStart,
-      endWorkTime: '',
+      startWorkTime: '00:00',
+      endWorkTime: nextDayEnd,
       typeId,
     };
+    updateChangedEmployeesWorkTime(employeePositionId, nextDayString, '00:00', nextDayEnd, typeId);
   }
 };
 
