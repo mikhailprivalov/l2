@@ -88,7 +88,7 @@ def form_01(ws1, data):
     result_where_done_custom_research_sql = search_value_where_done_custom_research(tuple(research_issledovaniye_ids), tuple(custom_research_ids))
 
     # взять значения, в каком учреждении пройдено обследование по исследованию
-    result_where_done_custom_research = {i.issledovaniye_id: i.result_value for i in result_where_done_custom_research_sql}
+    result_where_done_custom_research = {i.issledovaniye_id: ix.result_value for i in result_where_done_custom_research_sql}
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]

@@ -64,6 +64,7 @@ def search_value_where_done_custom_research(research_issledovaniye_ids, research
             """
             SELECT 
             directions_paraclinicresult.issledovaniye_id,
+            di.research_id as research_id,
             directions_paraclinicresult.value as result_value
             FROM directions_paraclinicresult
             LEFT JOIN directory_paraclinicinputfield dp on directions_paraclinicresult.field_id = dp.id
