@@ -158,7 +158,7 @@ const updateCellSelect = (select: boolean) => {
 };
 const startWork = ref(null);
 const endWork = ref(null);
-const nextDayStartWork = ref(null);
+const nextDayEndWork = ref(null);
 const selectedTimeOff = ref(null);
 const findTimeOffLabel = () => {
   const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
@@ -197,7 +197,7 @@ const updateTime = async () => {
   if ((startWork.value && endWork.value) && endWork.value <= startWork.value && endWork.value !== '00:00') {
     const start = new Date(`${props.date} ${startWork.value}`);
     const endTime = endWork.value.split(':');
-    nextDayStartWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
+    nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
     endWork.value = '00:00';
   }
   emit('changeWorkTime', {
@@ -206,7 +206,7 @@ const updateTime = async () => {
     startWorkTime: startWork.value,
     endWorkTime: endWork.value,
     typeId: selectedTimeOff.value,
-    nextDayStartWork: nextDayStartWork.value,
+    nextDayEndWork: nextDayEndWork.value,
   });
 };
 
@@ -232,7 +232,7 @@ watch(selectedShift, () => {
     const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));
     if (end.getDate() > start.getDate()) {
       endWork.value = '00:00';
-      nextDayStartWork.value = end;
+      nextDayEndWork.value = end;
     } else {
       endWork.value = moment(end).format('HH:mm');
     }
