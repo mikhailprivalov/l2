@@ -264,7 +264,7 @@ onMounted(async () => {
 const getColumns = () => {
   const columnTemplate = [
     {
-      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'left', width: 20, fixed: 'center',
+      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'left', width: 20,
     },
     {
       field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 160, fixed: 'left',
