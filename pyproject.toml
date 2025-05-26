@@ -14,7 +14,6 @@ description = ""
 authors = ["Mikhail Privalov <n5250@ya.ru>"]
 license = "MIT"
 readme = "README.md"
-package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
