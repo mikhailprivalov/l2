@@ -19,7 +19,7 @@ class Employee(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
     family = models.CharField(max_length=64, verbose_name='Фамилия')
     name = models.CharField(max_length=64, verbose_name='Имя')
-    patronymic = models.CharField(max_length=64, verbose_name='Отчество')
+    patronymic = models.CharField(max_length=64, verbose_name='Отчество', blank=True, null=True)
     is_active = models.BooleanField(default=True, verbose_name='Активен')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
