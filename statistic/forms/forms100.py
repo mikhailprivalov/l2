@@ -19,7 +19,7 @@ def form_01(ws1, data):
     print("data")
     print(data)
     custom_research = data["custom_research"]
-    custom_researches_id = {i: 1 for i in custom_research.keys()}
+    custom_researches_id = {i: 0 for i in custom_research.keys()}
     custom_researches_title = list(custom_research.values())
 
     data1 = {
@@ -68,7 +68,7 @@ def form_01(ws1, data):
                 "factors": [i.factor_id],
                 "custom_researches": custom_researches_id.copy(),
                 "result_researches": {
-                    research_id: {"price": 0, "date_confirm": "", "iss_id": "", "where_done": "1"}
+                    research_id: {"price": 0, "date_confirm": "", "iss_id": ""}
                     for research_id in researches_harmfull_data.get(i.factor_id)
                 }
             }
@@ -99,11 +99,12 @@ def form_01(ws1, data):
     research_issledovaniye_ids = [i.iss_id for i in result_iss_id]
 
     # поиск результатов для кастомных услуг среди результатов, в каком учреждении оказана услуга
-    result_where_done_custom_research_sql = search_value_where_done_custom_research(tuple(research_issledovaniye_ids), tuple(harmfull_factors_research_id_title.keys()))
+    result_where_done_custom_research_sql = search_value_where_done_custom_research(tuple(research_issledovaniye_ids), tuple(custom_research.keys()))
 
     # взять значения, в каком учреждении пройдено обследование по исследованию
     result_where_done_custom_research = {i.issledovaniye_id: {"research_id": i.research_id, "value": i.result_value} for i in result_where_done_custom_research_sql}
-
+    print("result_where_done_custom_research")
+    print(result_where_done_custom_research)
 
     for k, v in closed_case_structure_data.items():
         print(f"{k}--{v}")
@@ -114,22 +115,26 @@ def form_01(ws1, data):
             if closed_case_structure_data[k]["result_researches"].get(i.get("research_id")):
                 closed_case_structure_data[k]["result_researches"][i.get("research_id")]["date_confirm"] = i.get("date_confirm")
                 closed_case_structure_data[k]["result_researches"][i.get("research_id")]["iss_id"] = i.get("iss_id")
-                closed_case_structure_data[k]["result_researches"][i.get("research_id")]["where_done"] = result_where_done_custom_research[i.get("iss_id")]["value"]
+                if i.get("date_confirm"):
+                    closed_case_structure_data[k]["result_researches"][i.get("research_id")]["where_done"] = 1
+                else:
+                    closed_case_structure_data[k]["result_researches"][i.get("research_id")]["where_done"] = 0
 
-            if result_where_done_custom_research[i.get("iss_id")]["research_id"] in custom_research_ids:
-                closed_case_structure_data[k]["custom_researches"][result_where_done_custom_research[i.get("iss_id")]["research_id"]] = result_where_done_custom_research[
-                    i.get("iss_id")]["value"]
-
+            if result_where_done_custom_research.get(i.get("iss_id")):
+                if result_where_done_custom_research.get(i.get("iss_id"))["research_id"] in custom_research_ids:
+                    target_research_id = result_where_done_custom_research[i.get("iss_id")]["research_id"]
+                    where_done = result_where_done_custom_research[i.get("iss_id")]["value"]
+                    if where_done.lower() == "да":
+                        result_where_done = 0
+                    else:
+                        result_where_done = 1
+                    closed_case_structure_data[k]["custom_researches"][target_research_id] = result_where_done
+                    if closed_case_structure_data[k]["result_researches"].get(target_research_id):
+                        closed_case_structure_data[k]["result_researches"][target_research_id]["where_done"] = result_where_done
 
     print("final structure")
     for k, v in closed_case_structure_data.items():
         print(k, v)
-
-
-
-
-
-
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]
