@@ -1,7 +1,8 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
-from clients.sql_func import researches_by_harmfull_factor_id
+from clients.models import HarmfulFactor
+from clients.sql_func import researches_by_harmfull_factor_id, harmfull_factor_data
 from statistic.forms.forms100_sql_func import closed_company_cases_by_date, directions_by_parent_cases_issledovaniye, search_value_where_done_custom_research
 
 
@@ -16,8 +17,6 @@ def form_01(ws1, data):
     bd = Side(style="thin", color="000000")
     style_border2.font = Font(bold=False, size=12)
     style_border2.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
-    print("data")
-    print(data)
     custom_research = data["custom_research"]
     custom_researches_id = {i: 0 for i in custom_research.keys()}
     custom_researches_title = list(custom_research.values())
@@ -28,16 +27,13 @@ def form_01(ws1, data):
         "customer": 'АО "Иркутсккабель" ',
     }
     # получить ЗАКРЫТЫЕ случаи за дату по компании
-    print(data)
     closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'])
-    print("closed_id")
-    print(closed_id)
+
     factors_id = set([i.factor_id for i in closed_id])
-    print("factors_id")
-    print(factors_id)
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
     harmfull_factors_research_id_title = {i.research_id: i.research_title for i in researches_harmfull_factors}
+    research_id_is_doc_refferal = set([i.research_id for i in researches_harmfull_factors if i.is_doc_refferal])
 
     # структура факторы - услуги {factor_id: [research_id, research_id]}
     researches_harmfull_data = {}
@@ -59,6 +55,8 @@ def form_01(ws1, data):
     factors_ids = set()
     cases_issledovaniye_ids = {}
     custom_research_ids = data["custom_research"].keys()
+    harmfull_factors = harmfull_factor_data()
+    harmfull_factors_id_title = {i.id: i.title for i in harmfull_factors }
     for i in closed_id:
         if not closed_case_structure_data.get(i.case_issledovaniye_id):
             closed_case_structure_data[i.case_issledovaniye_id] = {
@@ -66,17 +64,31 @@ def form_01(ws1, data):
                 "sex": i.sex,
                 "birthday": i.patient_birthday,
                 "factors": [i.factor_id],
+                "factors_title": [harmfull_factors_id_title.get(i.factor_id)],
                 "custom_researches": custom_researches_id.copy(),
                 "result_researches": {
-                    research_id: {"price": 0, "date_confirm": "", "iss_id": ""}
+                    research_id: {
+                        "price": 0,
+                        "date_confirm": "",
+                        "iss_id": "",
+                        "where_done": 0,
+                        "research_title": harmfull_factors_research_id_title.get(research_id)
+                    }
                     for research_id in researches_harmfull_data.get(i.factor_id)
                 }
             }
         else:
             closed_case_structure_data[i.case_issledovaniye_id]["factors"].append(i.factor_id)
+            closed_case_structure_data[i.case_issledovaniye_id]["factors_title"].append(harmfull_factors_id_title.get(i.factor_id))
 
             closed_case_structure_data[i.case_issledovaniye_id]["result_researches"].update({
-                    research_id: {"price": 0, "date_confirm": "", "iss_id": ""}
+                    research_id: {
+                        "price": 0,
+                        "date_confirm": "",
+                        "iss_id": "",
+                        "where_done": 0,
+                        "research_title": harmfull_factors_research_id_title.get(research_id)
+                    }
                     for research_id in researches_harmfull_data.get(i.factor_id)
                 })
 
@@ -103,22 +115,24 @@ def form_01(ws1, data):
 
     # взять значения, в каком учреждении пройдено обследование по исследованию
     result_where_done_custom_research = {i.issledovaniye_id: {"research_id": i.research_id, "value": i.result_value} for i in result_where_done_custom_research_sql}
-    print("result_where_done_custom_research")
-    print(result_where_done_custom_research)
+    total_sum_by_specialist = {}
+    total_sum_by_instrumental_and_lab = {}
 
     for k, v in closed_case_structure_data.items():
-        print(f"{k}--{v}")
-        print("case_researches")
-        print(closed_case_structure_data[k]["result_researches"])
         for i in result_iss_id_structure_by_parent[k]:
-            print(i.get("research_id"), "--", i.get("date_confirm"))
-            if closed_case_structure_data[k]["result_researches"].get(i.get("research_id")):
-                closed_case_structure_data[k]["result_researches"][i.get("research_id")]["date_confirm"] = i.get("date_confirm")
-                closed_case_structure_data[k]["result_researches"][i.get("research_id")]["iss_id"] = i.get("iss_id")
+            result_where_done = None
+            current_research_id = i.get("research_id")
+            if closed_case_structure_data[k]["result_researches"].get(current_research_id):
+                closed_case_structure_data[k]["result_researches"][current_research_id]["date_confirm"] = i.get("date_confirm")
+                closed_case_structure_data[k]["result_researches"][current_research_id]["iss_id"] = i.get("iss_id")
                 if i.get("date_confirm"):
-                    closed_case_structure_data[k]["result_researches"][i.get("research_id")]["where_done"] = 1
+                    result_where_done = 1
+                    closed_case_structure_data[k]["result_researches"][current_research_id]["where_done"] = result_where_done
                 else:
-                    closed_case_structure_data[k]["result_researches"][i.get("research_id")]["where_done"] = 0
+                    result_where_done = 0
+                    closed_case_structure_data[k]["result_researches"][current_research_id]["where_done"] = result_where_done
+            if data["research_coast"].get(current_research_id):
+                closed_case_structure_data[k]["result_researches"][current_research_id]["price"] = data["research_coast"].get(current_research_id)
 
             if result_where_done_custom_research.get(i.get("iss_id")):
                 if result_where_done_custom_research.get(i.get("iss_id"))["research_id"] in custom_research_ids:
@@ -132,9 +146,25 @@ def form_01(ws1, data):
                     if closed_case_structure_data[k]["result_researches"].get(target_research_id):
                         closed_case_structure_data[k]["result_researches"][target_research_id]["where_done"] = result_where_done
 
+            if result_where_done == 1:
+                if current_research_id in research_id_is_doc_refferal:
+                    if not total_sum_by_specialist.get(current_research_id):
+                        total_sum_by_specialist[current_research_id] = 1
+                    else:
+                        total_sum_by_specialist[current_research_id] += 1
+                else:
+                    if not total_sum_by_instrumental_and_lab.get(current_research_id):
+                        total_sum_by_instrumental_and_lab[current_research_id] = 1
+                    else:
+                        total_sum_by_instrumental_and_lab[current_research_id] += 1
+
+
     print("final structure")
     for k, v in closed_case_structure_data.items():
         print(k, v)
+
+    print(total_sum_by_specialist)
+    print(total_sum_by_instrumental_and_lab)
 
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]

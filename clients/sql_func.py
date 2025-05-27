@@ -81,7 +81,8 @@ def researches_by_harmfull_factor_id(factors_id):
             SELECT 
             clients_harmfulfactor.id as harmfull_factor_id,
             dr.title as research_title,
-            dr.id as research_id
+            dr.id as research_id,
+            dr.is_doc_refferal
             FROM clients_harmfulfactor
             RIGHT JOIN users_assignmentresearches uar on clients_harmfulfactor.template_id = uar.template_id
             Left Join directory_researches dr on uar.research_id = dr.id
@@ -92,5 +93,21 @@ def researches_by_harmfull_factor_id(factors_id):
             params={'factors_id': factors_id},
         )
 
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def harmfull_factor_data():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            id,
+            title
+            FROM clients_harmfulfactor
+            
+            ORDER BY id
+            """,
+        )
         rows = namedtuplefetchall(cursor)
     return rows

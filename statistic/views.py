@@ -1878,6 +1878,8 @@ def statistic_xls(request):
                 company_title = ""
 
             if xlsx_form:
+                research_coast = PriceCoast.get_coast_by_prce(price)
+                print(research_coast)
                 hospital_id = request.user.doctorprofile.hospital_id
                 hospital = Hospitals.objects.filter(id=hospital_id).first()
                 date_start_o = normalize_dots_date(date_start_o)
