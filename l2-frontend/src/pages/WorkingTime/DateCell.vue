@@ -40,28 +40,28 @@
           {{ `${option.start}-${option.end}` }}
         </div>
       </div>
-      <div class="tp-row space-between">
-        <div class="copy-text">
-          Прошлые
-        </div>
-        <div>
-          <input
-            v-model="countDaysCopy"
-            class="form-control copy-count"
-            type="number"
-            min="1"
-            max="31"
-          >
-        </div>
-        <div class="copy-text">
-          дней
-        </div>
-        <div>
-          <button class="btn btn-blue-nb copy-button nbr">
-            Скопировать
-          </button>
-        </div>
-      </div>
+      <!--      <div class="tp-row space-between">-->
+      <!--        <div class="copy-text">-->
+      <!--          Прошлые-->
+      <!--        </div>-->
+      <!--        <div>-->
+      <!--          <input-->
+      <!--            v-model="countDaysCopy"-->
+      <!--            class="form-control copy-count"-->
+      <!--            type="number"-->
+      <!--            min="1"-->
+      <!--            max="31"-->
+      <!--          >-->
+      <!--        </div>-->
+      <!--        <div class="copy-text">-->
+      <!--          дней-->
+      <!--        </div>-->
+      <!--        <div>-->
+      <!--          <button class="btn btn-blue-nb copy-button nbr">-->
+      <!--            Скопировать-->
+      <!--          </button>-->
+      <!--        </div>-->
+      <!--      </div>-->
       <div class="tp-row">
         <div class="exact-time">
           <label class="tp-label">Начало</label>
@@ -158,7 +158,7 @@ const updateCellSelect = (select: boolean) => {
 };
 const startWork = ref(null);
 const endWork = ref(null);
-const nextDayStartWork = ref(null);
+const nextDayEndWork = ref(null);
 const selectedTimeOff = ref(null);
 const findTimeOffLabel = () => {
   const status = props.workDayStatuses.find((type) => type.id === selectedTimeOff.value);
@@ -197,7 +197,7 @@ const updateTime = async () => {
   if ((startWork.value && endWork.value) && endWork.value <= startWork.value && endWork.value !== '00:00') {
     const start = new Date(`${props.date} ${startWork.value}`);
     const endTime = endWork.value.split(':');
-    nextDayStartWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
+    nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
     endWork.value = '00:00';
   }
   emit('changeWorkTime', {
@@ -206,7 +206,7 @@ const updateTime = async () => {
     startWorkTime: startWork.value,
     endWorkTime: endWork.value,
     typeId: selectedTimeOff.value,
-    nextDayStartWork: nextDayStartWork.value,
+    nextDayEndWork: nextDayEndWork.value,
   });
 };
 
@@ -232,7 +232,7 @@ watch(selectedShift, () => {
     const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));
     if (end.getDate() > start.getDate()) {
       endWork.value = '00:00';
-      nextDayStartWork.value = end;
+      nextDayEndWork.value = end;
     } else {
       endWork.value = moment(end).format('HH:mm');
     }
