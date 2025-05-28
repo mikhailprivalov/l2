@@ -5,21 +5,25 @@
         v-tippy
         class="fa-solid fa-copy"
         title="Сверху"
+        @click="copyTop"
       />
       <i
         v-tippy
         class="fa-solid fa-paste"
         title="Из"
+        @click="copyFrom"
       />
       <i
         v-tippy
         class="fa-solid fa-xmark clear"
         title="Очистить"
+        @click="clear"
       />
     </div>
     <VueTippyDiv
       :tag="props.tag"
       :text="props.text"
+      :tippy-max-width="props.tippyMaxWidth"
       class="position-text"
     />
   </div>
@@ -44,6 +48,17 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['copyTop', 'copyFrom', 'clear']);
+
+const copyTop = () => {
+  emit('copyTop');
+};
+const copyFrom = () => {
+  emit('copyFrom');
+};
+const clear = () => {
+  emit('clear');
+};
 </script>
 
 <style scoped lang="scss">
