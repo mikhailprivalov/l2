@@ -1,9 +1,21 @@
 <template>
   <div class="position">
     <div class="top-icons">
-      <i class="fa-solid fa-copy" />
-      <i class="fa-solid fa-paste" />
-      <i class="fa-solid fa-xmark" />
+      <i
+        v-tippy
+        class="fa-solid fa-copy"
+        title="Сверху"
+      />
+      <i
+        v-tippy
+        class="fa-solid fa-paste"
+        title="Из"
+      />
+      <i
+        v-tippy
+        class="fa-solid fa-xmark clear"
+        title="Очистить"
+      />
     </div>
     <VueTippyDiv
       :tag="props.tag"
@@ -52,5 +64,8 @@ const props = defineProps({
   text-overflow: ellipsis;
   height: 48px;
   padding-top: 7px;
+}
+.clear {
+  color: red;
 }
 </style>
