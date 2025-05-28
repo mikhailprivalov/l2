@@ -260,8 +260,25 @@ const copyTop = ({ rowIndex }) => {
     }
   }
 };
-const copyFrom = ({ rowIndex }) => {
-  console.log('copyFrom', rowIndex);
+const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
+  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+    === employeePositionId);
+  const selectedEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+    === selectedEmployeePositionId);
+  const keys = Object.keys(currentEmployeePosition);
+  for (const key of keys) {
+    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+      currentEmployeePosition[key] = { ...selectedEmployeePosition[key] };
+      updateChangedEmployeesWorkTime(
+        currentEmployeePosition.employeePositionId,
+        key,
+        null,
+        null,
+        null,
+        { ...selectedEmployeePosition[key] },
+      );
+    }
+  }
 };
 const clear = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
