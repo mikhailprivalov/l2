@@ -193,10 +193,11 @@ def form_01(ws1, data):
     columns2 = [(i, 7) for i in custom_researches_title]
     columns.extend(columns2)
 
-    start_colums_for_custom_filed = 7
+    start_column_for_custom_filed = 7
     list_researches = list(custom_researches_id.keys())
     # номер столбца для custom researches
-    custom_researches_id_number_columns = {i: start_colums_for_custom_filed + list_researches.index(i) for i in list_researches}
+    custom_researches_id_number_columns = {i: start_column_for_custom_filed + list_researches.index(i) for i in list_researches}
+    end_column_for_custom_filed = start_column_for_custom_filed + len(list_researches)
 
     columns3 = [
         ("Дата оказания услуги", 10),
@@ -205,6 +206,7 @@ def form_01(ws1, data):
         ("Муж", 6),
         ("Жен", 6),
         ("Номер позиции вредности веществ по Приказу №29н", 11),
+
         ("Специалисты, обследования", 15),
         ("Кол-во, чел", 6),
         ("Тариф, руб.", 12),
@@ -217,5 +219,60 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=idx).value = column[0]
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
+
+    row += 1
+
+    step = 1
+    for i in closed_case_structure_data.values():
+        print(i)
+        ws1.cell(row=row, column=1).value = step
+        ws1.cell(row=row, column=2).value = "Договор"
+        ws1.cell(row=row, column=3).value = i.get("fio")
+        ws1.cell(row=row, column=4).value = i.get("birthday")
+        sex = i.get("sex")
+        ws1.cell(row=row, column=5).value = sex
+        ws1.cell(row=row, column=6).value = "Вид медосмотра"
+
+        for k, v in i["custom_researches"].items():
+            col_custom = custom_researches_id_number_columns.get(k)
+            ws1.cell(row=row, column=col_custom).value = v
+
+        col_sex_male = end_column_for_custom_filed + 3
+        ws1.cell(row=row, column=col_sex_male).value = 1 if sex == "м" else 0
+
+        col_sex_female = end_column_for_custom_filed + 4
+        ws1.cell(row=row, column=col_sex_female).value = 1 if sex == "ж" else 0
+
+        col_factors = end_column_for_custom_filed + 5
+        factors_title = i.get("factors_title")
+        current_row = row
+        for k in factors_title:
+            ws1.cell(row=current_row, column=col_factors).value = k
+            current_row += 1
+
+        for k, v in i["result_researches"].items():
+            col_date = end_column_for_custom_filed
+            ws1.cell(row=row, column=col_date).value = v.get("date_confirm")
+            col_dig = end_column_for_custom_filed + 1
+            ws1.cell(row=row, column=col_dig).value = "Z10.01"
+
+            col_research_code = end_column_for_custom_filed + 2
+            ws1.cell(row=row, column=col_research_code).value = "Код услуги"
+
+            col_title = end_column_for_custom_filed + 6
+            ws1.cell(row=row, column=col_title).value = v.get("research_title")
+            where_done_col = col_title + 1
+            ws1.cell(row=row, column=where_done_col).value = v.get("where_done")
+            price_col = col_title + 2
+            ws1.cell(row=row, column=price_col).value = v.get("price")
+            sum_research_col = col_title + 3
+            ws1.cell(row=row, column=sum_research_col).value = f'={get_column_letter(where_done_col)}{row}*{get_column_letter(price_col)}{row}'
+            row += 1
+        ws1.cell(row=row, column=1).value = "Итого"
+        row += 1
+
+        step +=1
+
+
 
     return ws1
