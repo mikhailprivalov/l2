@@ -280,11 +280,9 @@ const getColumns = () => {
         PositionCell,
         {
           props: {
-            tag: 'div',
             text: row[column.field] ? row[column.field] : '',
             tippyMaxWidth: '50%',
           },
-          class: 'position-text',
         },
       ),
     },
@@ -350,6 +348,8 @@ const cellStyleOption = {
     }
     if (column.key === 'fio') {
       result.push('table-body-name-cell');
+    } else if (column.key === 'position') {
+      result.push('table-body-position-cell');
     } else {
       result.push('table-body-cell');
     }
@@ -475,10 +475,9 @@ const printDocument = async () => {
 .table-body-name-cell {
   padding: 10px 0 10px 12px !important;
 }
-.position-text {
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+.table-body-position-cell {
+  padding: 0 !important;
+  white-space: normal !important;
 }
 .table-body-cell-inner-bid {
   background-color: #ddf3fe !important;

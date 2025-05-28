@@ -1,14 +1,16 @@
 <template>
-  <VueTippyDiv
-    :tag="props.tag"
-    :text="props.text"
-  >
+  <div class="position">
     <div class="top-icons">
       <i class="fa-solid fa-copy" />
       <i class="fa-solid fa-paste" />
       <i class="fa-solid fa-xmark" />
     </div>
-  </VueTippyDiv>
+    <VueTippyDiv
+      :tag="props.tag"
+      :text="props.text"
+      class="position-text"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -33,6 +35,9 @@ const props = defineProps({
 </script>
 
 <style scoped lang="scss">
+.position {
+  height: 100%;
+}
 .text {
   margin: 0;
 }
@@ -40,5 +45,12 @@ const props = defineProps({
   display: flex;
   justify-content: flex-end;
   gap: 5px;
+}
+.position-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  height: 48px;
+  padding-top: 7px;
 }
 </style>
