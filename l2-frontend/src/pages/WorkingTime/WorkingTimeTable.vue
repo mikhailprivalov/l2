@@ -126,18 +126,23 @@ const changedEmployeesWorkTime = ref({});
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
   date: string,
-  startWorkTime: string,
-  endWorkTime: string,
-  typeId: number,
+  startWorkTime: string = null,
+  endWorkTime: string = null,
+  typeId: number = null,
+  fullData: object = null,
 ) => {
   if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
     changedEmployeesWorkTime.value[employeePositionId] = {};
   }
-  changedEmployeesWorkTime.value[employeePositionId][date] = {
-    startWorkTime,
-    endWorkTime,
-    typeId,
-  };
+  if (fullData) {
+    changedEmployeesWorkTime.value[employeePositionId][date] = fullData;
+  } else {
+    changedEmployeesWorkTime.value[employeePositionId][date] = {
+      startWorkTime,
+      endWorkTime,
+      typeId,
+    };
+  }
 };
 
 const getEmployeesWorkTime = async () => {
@@ -236,7 +241,24 @@ const changeWorkTime = async ({
 };
 
 const copyTop = ({ rowIndex }) => {
-  console.log('copyTop', rowIndex);
+  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
+  const prevFilteredEmployeePosition = filteredEmployees.value[rowIndex - 1];
+  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+    === currentFilteredEmployeePosition.employeePositionId);
+  const keys = Object.keys(currentEmployeePosition);
+  for (const key of keys) {
+    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+      currentEmployeePosition[key] = { ...prevFilteredEmployeePosition[key] };
+      updateChangedEmployeesWorkTime(
+        currentEmployeePosition.employeePositionId,
+        key,
+        null,
+        null,
+        null,
+        { ...prevFilteredEmployeePosition[key] },
+      );
+    }
+  }
 };
 const copyFrom = ({ rowIndex }) => {
   console.log('copyFrom', rowIndex);
