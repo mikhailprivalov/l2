@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import {ref, watch} from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
@@ -92,6 +92,12 @@ const copy = (copyType: string) => {
 
 const selectedEmployeePosition = ref(null);
 
+watch(selectedEmployeePosition, () => {
+  if (selectedEmployeePosition.value) {
+    copy('copyFrom');
+  }
+  selectedEmployeePosition.value = null;
+});
 const normalizer = (node) => ({
   id: node.employeePositionId,
   label: node.fio,
