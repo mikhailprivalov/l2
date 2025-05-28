@@ -5,23 +5,22 @@
         v-tippy
         class="fa-solid fa-copy"
         title="Сверху"
-        @click="copy('copyTop')"
+        @click="copyTop"
       />
       <i
+        ref="from"
         v-tippy="{
-          html: '#tempCopyFrom',
+          html: `#tempCopyFrom${props.rowIndex}`,
           arrow: true,
           reactive: true,
           interactive: true,
           animation: 'fade',
           duration: 0,
           theme: 'light',
-          placement: 'top',
+          placement: 'bottom',
           trigger: 'click',
         }"
         class="fa-solid fa-paste"
-        title="Из"
-        @click="copy('copyFrom')"
       />
       <i
         v-tippy
@@ -37,11 +36,11 @@
       class="position-text"
     />
     <div
-      id="tempCopyFrom"
+      :id="`tempCopyFrom${rowIndex}`"
       class="tp"
     >
       <Treeselect
-        v-model="selectedEmployeePosition"
+        v-model="selectedEmployeePositionId"
         class="treeselect-34px"
         :options="props.employeePositions"
         placeholder="Работник"
@@ -52,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue';
+import { ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
@@ -76,6 +75,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  employeePositionId: {
+    type: Number,
+    required: true,
+  },
   employeePositions: {
     type: Array,
     required: true,
@@ -83,20 +86,29 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['copyTop', 'copyFrom', 'clear']);
-
-const copy = (copyType: string) => {
+const copyTop = () => {
   if (props.rowIndex !== 0) {
-    emit(copyType, { rowIndex: props.rowIndex });
+    emit('copyTop', { rowIndex: props.rowIndex });
   }
 };
 
-const selectedEmployeePosition = ref(null);
+const from = ref(null);
+const selectedEmployeePositionId = ref(null);
+const copyFrom = () => {
+  emit('copyFrom', {
+    employeePositionId: props.employeePositionId,
+    selectedEmployeePositionId:
+    selectedEmployeePositionId.value,
+  });
+};
 
-watch(selectedEmployeePosition, () => {
-  if (selectedEmployeePosition.value) {
-    copy('copyFrom');
+watch(selectedEmployeePositionId, () => {
+  if (selectedEmployeePositionId.value) {
+    copyFrom();
+    selectedEmployeePositionId.value = null;
+    // eslint-disable-next-line no-underscore-dangle
+    from.value._tippy.hide();
   }
-  selectedEmployeePosition.value = null;
 });
 const normalizer = (node) => ({
   id: node.employeePositionId,
