@@ -88,9 +88,9 @@ import axios from 'axios';
 
 import api from '@/api';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
-import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
+import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
 
 const store = useStore();
 
@@ -277,12 +277,12 @@ const getColumns = () => {
       width: 115,
       fixed: 'left',
       renderBodyCell: ({ row, column }, h) => h(
-        VueTippyDiv,
+        PositionCell,
         {
           props: {
+            tag: 'div',
             text: row[column.field] ? row[column.field] : '',
             tippyMaxWidth: '50%',
-            ellipsis: true,
           },
           class: 'position-text',
         },
