@@ -749,7 +749,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                 if day:
                     day.start = start
                     day.end = end
-                    day.work_day_status = work_day_status_id
+                    day.work_day_status_id = work_day_status_id
                 else:
                     day = EmployeeWorkingHoursSchedule(
                         time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date, start=start, end=end, work_day_status_id=work_day_status_id
