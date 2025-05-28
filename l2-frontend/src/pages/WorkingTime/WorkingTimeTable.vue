@@ -235,6 +235,16 @@ const changeWorkTime = async ({
   }
 };
 
+const copyTop = ({ employeePositionId }) => {
+  console.log('copyTop', employeePositionId);
+};
+const copyFrom = ({ employeePositionId }) => {
+  console.log('copyFrom', employeePositionId);
+};
+const clear = ({ employeePositionId }) => {
+  console.log('clear', employeePositionId);
+};
+
 const columns = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
@@ -282,6 +292,12 @@ const getColumns = () => {
           props: {
             text: row[column.field] ? row[column.field] : '',
             tippyMaxWidth: '50%',
+            employeePositionId: row.employeePositionId,
+          },
+          on: {
+            copyTop,
+            copyFrom,
+            clear,
           },
         },
       ),
