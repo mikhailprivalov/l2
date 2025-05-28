@@ -8,7 +8,17 @@
         @click="copy('copyTop')"
       />
       <i
-        v-tippy
+        v-tippy="{
+          html: '#tempCopyFrom',
+          arrow: true,
+          reactive: true,
+          interactive: true,
+          animation: 'fade',
+          duration: 0,
+          theme: 'light',
+          placement: 'top',
+          trigger: 'click',
+        }"
         class="fa-solid fa-paste"
         title="Из"
         @click="copy('copyFrom')"
@@ -26,11 +36,27 @@
       :tippy-max-width="props.tippyMaxWidth"
       class="position-text"
     />
+    <div
+      id="tempCopyFrom"
+      class="tp"
+    >
+      <Treeselect
+        v-model="selectedEmployeePosition"
+        class="treeselect-34px"
+        :options="props.employeePositions"
+        placeholder="Работник"
+        :normalizer="normalizer"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 const props = defineProps({
   text: {
@@ -50,6 +76,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  employeePositions: {
+    type: Array,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['copyTop', 'copyFrom', 'clear']);
@@ -59,6 +89,13 @@ const copy = (copyType: string) => {
     emit(copyType, { rowIndex: props.rowIndex });
   }
 };
+
+const selectedEmployeePosition = ref(null);
+
+const normalizer = (node) => ({
+  id: node.employeePositionId,
+  label: node.fio,
+});
 const clear = () => {
   emit('clear', { rowIndex: props.rowIndex });
 };
@@ -82,6 +119,10 @@ const clear = () => {
   text-overflow: ellipsis;
   height: 48px;
   padding-top: 7px;
+}
+.tp {
+  height: auto;
+  width: 150px;
 }
 .clear {
   color: red;

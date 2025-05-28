@@ -332,6 +332,7 @@ const getColumns = () => {
             text: row[column.field] ? row[column.field] : '',
             tippyMaxWidth: '50%',
             rowIndex,
+            employeePositions: employeesWorkTime.value,
           },
           on: {
             copyTop,
