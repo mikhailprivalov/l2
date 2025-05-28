@@ -264,7 +264,24 @@ const copyFrom = ({ rowIndex }) => {
   console.log('copyFrom', rowIndex);
 };
 const clear = ({ rowIndex }) => {
-  console.log('clear', rowIndex);
+  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
+  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+    === currentFilteredEmployeePosition.employeePositionId);
+  const keys = Object.keys(currentEmployeePosition);
+  const emptyData = { startWorkTime: '', endWorkTime: '', typeId: null };
+  for (const key of keys) {
+    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+      currentEmployeePosition[key] = { ...emptyData };
+      updateChangedEmployeesWorkTime(
+        currentEmployeePosition.employeePositionId,
+        key,
+        null,
+        null,
+        null,
+        { ...emptyData },
+      );
+    }
+  }
 };
 
 const columns = ref([]);
