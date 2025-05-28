@@ -147,8 +147,8 @@ const props = defineProps({
     required: false,
   },
   lunchDuration: {
-    type: [Number, null],
-    required: true,
+    type: Number,
+    required: false,
   },
 });
 
