@@ -36,8 +36,9 @@ const props = defineProps({
 .text {
   margin: 0;
 }
-//.top-buttons {
-//  display: flex;
-//  justify-content: flex-end;
-//}
+.top-icons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 5px;
+}
 </style>
