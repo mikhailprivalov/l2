@@ -45,6 +45,7 @@
         :options="props.employeePositions"
         placeholder="Работник"
         :normalizer="normalizer"
+        :clearable="false"
       />
     </div>
   </div>
