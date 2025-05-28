@@ -235,14 +235,14 @@ const changeWorkTime = async ({
   }
 };
 
-const copyTop = ({ employeePositionId }) => {
-  console.log('copyTop', employeePositionId);
+const copyTop = ({ rowIndex }) => {
+  console.log('copyTop', rowIndex);
 };
-const copyFrom = ({ employeePositionId }) => {
-  console.log('copyFrom', employeePositionId);
+const copyFrom = ({ rowIndex }) => {
+  console.log('copyFrom', rowIndex);
 };
-const clear = ({ employeePositionId }) => {
-  console.log('clear', employeePositionId);
+const clear = ({ rowIndex }) => {
+  console.log('clear', rowIndex);
 };
 
 const columns = ref([]);
@@ -286,13 +286,13 @@ const getColumns = () => {
       align: 'left',
       width: 115,
       fixed: 'left',
-      renderBodyCell: ({ row, column }, h) => h(
+      renderBodyCell: ({ row, column, rowIndex }, h) => h(
         PositionCell,
         {
           props: {
             text: row[column.field] ? row[column.field] : '',
             tippyMaxWidth: '50%',
-            employeePositionId: row.employeePositionId,
+            rowIndex,
           },
           on: {
             copyTop,
