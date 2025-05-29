@@ -64,6 +64,12 @@
       <!--      </div>-->
       <div class="tp-row">
         <div class="exact-time">
+          <i
+            v-tippy
+            class="fa-solid fa-xmark clear"
+            title="Очистить"
+            @click="clear"
+          />
           <label class="tp-label">Начало</label>
           <input
             v-model="startWork"
@@ -148,7 +154,7 @@ const props = defineProps({
   },
   lunchDuration: {
     type: Number,
-    required: true,
+    required: false,
   },
 });
 
@@ -171,6 +177,14 @@ const selectedTimeOffLabel = ref('');
 
 const selectedTimeOption = ref(null);
 
+const clear = () => {
+  startWork.value = null;
+  endWork.value = null;
+  selectedTimeOff.value = null;
+  selectedTimeOffLabel.value = '';
+  nextDayEndWork.value = null;
+  selectedTimeOption.value = null;
+};
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
   startWork.value = startTime;
@@ -208,6 +222,7 @@ const updateTime = async () => {
     typeId: selectedTimeOff.value,
     nextDayEndWork: nextDayEndWork.value,
   });
+  nextDayEndWork.value = null;
 };
 
 watch([startWork, endWork], () => {
@@ -357,5 +372,8 @@ button[disabled] {
 }
 ::v-deep .vue-treeselect__control {
   border-color: #aab2bd;
+}
+.clear {
+  color: red
 }
 </style>
