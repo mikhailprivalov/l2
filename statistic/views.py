@@ -1879,7 +1879,6 @@ def statistic_xls(request):
 
             if xlsx_form:
                 research_coast = PriceCoast.get_coast_by_prce(price)
-                print(research_coast)
                 hospital_id = request.user.doctorprofile.hospital_id
                 hospital = Hospitals.objects.filter(id=hospital_id).first()
                 date_start_o = normalize_dots_date(date_start_o)
@@ -1892,6 +1891,7 @@ def statistic_xls(request):
                     "custom_research": head_data,
                     "executor": hospital.title,
                     "research_coast": research_coast,
+                    "contract_number": price.contract_number
                 }
                 ws = xlsx_form(ws, data)
             else:

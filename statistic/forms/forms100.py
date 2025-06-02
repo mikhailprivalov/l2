@@ -3,7 +3,8 @@ from openpyxl.utils import get_column_letter
 
 from clients.models import HarmfulFactor
 from clients.sql_func import researches_by_harmfull_factor_id, harmfull_factor_data
-from statistic.forms.forms100_sql_func import closed_company_cases_by_date, directions_by_parent_cases_issledovaniye, search_value_where_done_custom_research
+from statistic.forms.forms100_sql_func import closed_company_cases_by_date, directions_by_parent_cases_issledovaniye, search_value_where_done_custom_research, \
+    search_value_type_medical_inspection
 
 
 def form_01(ws1, data):
@@ -32,7 +33,7 @@ def form_01(ws1, data):
     factors_id = set([i.factor_id for i in closed_id])
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
-    harmfull_factors_research_id_title = {i.research_id: i.research_title for i in researches_harmfull_factors}
+    harmfull_factors_research_id_title = {i.research_id: {"title": i.research_title, "code": i.code, "internal_code": i.internal_code}for i in researches_harmfull_factors}
     research_id_is_doc_refferal = set([i.research_id for i in researches_harmfull_factors if i.is_doc_refferal])
 
     # структура факторы - услуги {factor_id: [research_id, research_id]}
@@ -66,13 +67,16 @@ def form_01(ws1, data):
                 "factors": [i.factor_id],
                 "factors_title": [harmfull_factors_id_title.get(i.factor_id)],
                 "custom_researches": custom_researches_id.copy(),
+                "type_inspection": "-",
                 "result_researches": {
                     research_id: {
                         "price": 0,
                         "date_confirm": "",
                         "iss_id": "",
                         "where_done": 0,
-                        "research_title": harmfull_factors_research_id_title.get(research_id)
+                        "research_title": harmfull_factors_research_id_title.get(research_id)["title"],
+                        "code": harmfull_factors_research_id_title.get(research_id)["code"],
+                        "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"]
                     }
                     for research_id in researches_harmfull_data.get(i.factor_id)
                 }
@@ -87,7 +91,9 @@ def form_01(ws1, data):
                         "date_confirm": "",
                         "iss_id": "",
                         "where_done": 0,
-                        "research_title": harmfull_factors_research_id_title.get(research_id)
+                        "research_title": harmfull_factors_research_id_title.get(research_id)["title"],
+                        "code": harmfull_factors_research_id_title.get(research_id)["code"],
+                        "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"]
                     }
                     for research_id in researches_harmfull_data.get(i.factor_id)
                 })
@@ -113,12 +119,16 @@ def form_01(ws1, data):
     # поиск результатов для кастомных услуг среди результатов, в каком учреждении оказана услуга
     result_where_done_custom_research_sql = search_value_where_done_custom_research(tuple(research_issledovaniye_ids), tuple(custom_research.keys()))
 
+    result_type_medical_inspection_sql = search_value_type_medical_inspection(tuple(cases_iss))
+    result_type_medical_inspection = {i.issledovaniye_id: i.result_value for i in result_type_medical_inspection_sql}
+
     # взять значения, в каком учреждении пройдено обследование по исследованию
     result_where_done_custom_research = {i.issledovaniye_id: {"research_id": i.research_id, "value": i.result_value} for i in result_where_done_custom_research_sql}
     total_sum_by_specialist = {}
     total_sum_by_instrumental_and_lab = {}
 
     for k, v in closed_case_structure_data.items():
+        closed_case_structure_data[k]["type_inspection"] = result_type_medical_inspection.get(k)
         for i in result_iss_id_structure_by_parent[k]:
             result_where_done = None
             current_research_id = i.get("research_id")
@@ -157,7 +167,6 @@ def form_01(ws1, data):
                         total_sum_by_instrumental_and_lab[current_research_id] = 1
                     else:
                         total_sum_by_instrumental_and_lab[current_research_id] += 1
-
 
     print("final structure")
     for k, v in closed_case_structure_data.items():
@@ -214,7 +223,8 @@ def form_01(ws1, data):
     ]
     columns.extend(columns3)
 
-    row = 13
+    start_row = 13
+    row = start_row
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=row, column=idx).value = column[0]
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
@@ -223,15 +233,16 @@ def form_01(ws1, data):
     row += 1
 
     step = 1
+    sum_research_col = 1
     for i in closed_case_structure_data.values():
         print(i)
         ws1.cell(row=row, column=1).value = step
-        ws1.cell(row=row, column=2).value = "Договор"
+        ws1.cell(row=row, column=2).value = data.get("contract_number")
         ws1.cell(row=row, column=3).value = i.get("fio")
         ws1.cell(row=row, column=4).value = i.get("birthday")
         sex = i.get("sex")
         ws1.cell(row=row, column=5).value = sex
-        ws1.cell(row=row, column=6).value = "Вид медосмотра"
+        ws1.cell(row=row, column=6).value = i.get("type_inspection")
 
         for k, v in i["custom_researches"].items():
             col_custom = custom_researches_id_number_columns.get(k)
@@ -257,7 +268,7 @@ def form_01(ws1, data):
             ws1.cell(row=row, column=col_dig).value = "Z10.01"
 
             col_research_code = end_column_for_custom_filed + 2
-            ws1.cell(row=row, column=col_research_code).value = "Код услуги"
+            ws1.cell(row=row, column=col_research_code).value = v.get("code")
 
             col_title = end_column_for_custom_filed + 6
             ws1.cell(row=row, column=col_title).value = v.get("research_title")
@@ -270,9 +281,44 @@ def form_01(ws1, data):
             row += 1
         ws1.cell(row=row, column=1).value = "Итого"
         row += 1
+        step += 1
 
-        step +=1
+    columns = [
+        ("Специалисты", 30),
+        ("Кол-во человек", 12),
+        ("Цена", 15),
+        ("Стоимость", 20),
+    ]
+    row = start_row
+    col = sum_research_col + 2
+    for idx, column in enumerate(columns, 1):
+        ws1.cell(row=row, column=idx + col).value = column[0]
+        ws1.column_dimensions[get_column_letter(idx + col)].width = column[1]
+        ws1.cell(row=row, column=idx + col).style = style_border
 
+    for k, v in total_sum_by_specialist.items():
+        row += 1
+        ws1.cell(row=row, column=1 + col).value = harmfull_factors_research_id_title.get(k)["title"]
+        ws1.cell(row=row, column=2 + col).value = v
+        ws1.cell(row=row, column=3 + col).value = data["research_coast"].get(k)
+        ws1.cell(row=row, column=4 + col).value = f'={get_column_letter(2 + col)}{row}*{get_column_letter(3 + col)}{row}'
+    row += 1
+    ws1.cell(row=row, column=3 + col).value = "Итого"
+    ws1.cell(row=row, column=4 + col).value = f'=SUM({get_column_letter(4 + col)}{start_row + 1}:{get_column_letter(4 + col)}{row - 1})'
 
+    row += 1
+    second_total_sum_start_row = row
+    for k, v in total_sum_by_instrumental_and_lab.items():
+        row += 1
+        ws1.cell(row=row, column=1 + col).value = harmfull_factors_research_id_title.get(k)["title"]
+        ws1.cell(row=row, column=2 + col).value = v
+        ws1.cell(row=row, column=3 + col).value = data["research_coast"].get(k)
+        ws1.cell(row=row, column=4 + col).value = f'={get_column_letter(2 + col)}{row}*{get_column_letter(3 + col)}{row}'
+        for i in range(col + 1, col + 5):
+            ws1.cell(row=row, column=i).style = style_border
+
+    row += 1
+    ws1.cell(row=row, column=3 + col).value = "Итого"
+    ws1.cell(row=row, column=4 + col).value = f'=SUM({get_column_letter(4 + col)}{second_total_sum_start_row + 1}:{get_column_letter(4 + col)}{row - 1})'
 
     return ws1

@@ -82,7 +82,9 @@ def researches_by_harmfull_factor_id(factors_id):
             clients_harmfulfactor.id as harmfull_factor_id,
             dr.title as research_title,
             dr.id as research_id,
-            dr.is_doc_refferal
+            dr.is_doc_refferal,
+            dr.code,
+            dr.internal_code
             FROM clients_harmfulfactor
             RIGHT JOIN users_assignmentresearches uar on clients_harmfulfactor.template_id = uar.template_id
             Left Join directory_researches dr on uar.research_id = dr.id

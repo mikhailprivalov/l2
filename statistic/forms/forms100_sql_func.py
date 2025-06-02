@@ -1,5 +1,5 @@
 from django.db import connection
-from laboratory.settings import TIME_ZONE, RESEARCH_ID_CLOSE_CASE, CDA_ID_FOR_WHERE_SERVICE_DONE
+from laboratory.settings import TIME_ZONE, RESEARCH_ID_CLOSE_CASE, CDA_ID_FOR_WHERE_SERVICE_DONE, CDA_ID_FOR_TYPE_MEDICAL_INSPECTION
 from utils.db import namedtuplefetchall
 from laboratory.settings import TIME_ZONE
 
@@ -79,6 +79,29 @@ def search_value_where_done_custom_research(research_issledovaniye_ids, research
             
             """,
             params={'research_issledovaniye_ids': research_issledovaniye_ids, 'CDA_ID_FOR_WHERE_SERVICE_DONE': CDA_ID_FOR_WHERE_SERVICE_DONE, 'research_ids': research_ids},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def search_value_type_medical_inspection(research_issledovaniye_ids):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            directions_paraclinicresult.issledovaniye_id,
+            di.research_id as research_id,
+            directions_paraclinicresult.value as result_value
+            FROM directions_paraclinicresult
+            LEFT JOIN directory_paraclinicinputfield dp on directions_paraclinicresult.field_id = dp.id
+            LEFT JOIN directions_issledovaniya di on directions_paraclinicresult.issledovaniye_id = di.id
+            WHERE
+            directions_paraclinicresult.issledovaniye_id in %(research_issledovaniye_ids)s
+            AND
+            dp.cda_option_id = %(CDA_ID_FOR_TYPE_MEDICAL_INSPECTION)s
+            """,
+            params={'research_issledovaniye_ids': research_issledovaniye_ids, 'CDA_ID_FOR_TYPE_MEDICAL_INSPECTION': CDA_ID_FOR_TYPE_MEDICAL_INSPECTION},
         )
 
         rows = namedtuplefetchall(cursor)
