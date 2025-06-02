@@ -77,7 +77,7 @@ def form_01(ws1, data):
                         "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"],
                     }
                     for research_id in researches_harmfull_data.get(i.factor_id)
-                }
+                },
             }
         else:
             closed_case_structure_data[i.case_issledovaniye_id]["factors"].append(i.factor_id)
