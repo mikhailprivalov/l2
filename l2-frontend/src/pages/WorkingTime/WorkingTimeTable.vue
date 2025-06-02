@@ -12,29 +12,15 @@
       </button>
     </div>
     <div
-      v-if="documentCreated && filtersFull"
-      class="flex"
+      v-if="documentCreated && filtersFull && checkedRow.length > 0"
     >
-      <div class="search">
-        <input
-          v-model.trim="search"
-          class="form-control"
-          placeholder="Поиск работника"
-        >
-      </div>
-      <button
-        v-if="documentCreated && !documentBlocked"
-        class="btn btn-blue-nb"
-        @click="save"
-      >
-        Сохранить
-      </button>
-      <button
-        class="btn btn-blue-nb"
-        @click.prevent="printDocument()"
-      >
-        PDF
-      </button>
+      <TemplateTable
+        :year="props.year"
+        :month="props.month"
+        :shifts-variants="shiftsVariants"
+        :time-options="timeOptions"
+        :work-day-statuses="workDayStatuses"
+      />
     </div>
     <div
       class="white-background"
@@ -92,6 +78,7 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import { useStore } from '@/store';
 import * as actions from '@/store/action-types';
 import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
+import TemplateTable from '@/pages/WorkingTime/TemplateTable.vue';
 
 const store = useStore();
 
