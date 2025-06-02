@@ -83,7 +83,8 @@ def form_01(ws1, data):
             closed_case_structure_data[i.case_issledovaniye_id]["factors"].append(i.factor_id)
             closed_case_structure_data[i.case_issledovaniye_id]["factors_title"].append(harmfull_factors_id_title.get(i.factor_id))
 
-            closed_case_structure_data[i.case_issledovaniye_id]["result_researches"].update({
+            closed_case_structure_data[i.case_issledovaniye_id]["result_researches"].update(
+                {
                     research_id: {
                         "price": 0,
                         "date_confirm": "",
