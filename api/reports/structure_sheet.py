@@ -2,6 +2,8 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils.cell import get_column_letter
 import json
 
+from utils.dates import normalize_date
+
 
 def patologistology_buh_base(ws1):
     style_border = NamedStyle(name="style_border")
@@ -30,6 +32,7 @@ def patologistology_buh_base(ws1):
         ('Направление', 30),
         ('Врач', 30),
         ('Подтверждено', 30),
+        ('Дата забора', 30),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -93,8 +96,9 @@ def patologistology_buh_data(ws1, data):
         ws1.cell(row=r, column=15).value = res["direction"]
         ws1.cell(row=r, column=16).value = res["doctor_fio"]
         ws1.cell(row=r, column=17).value = res["date_confirm"]
+        ws1.cell(row=r, column=18).value = normalize_date(res["date_get"])
 
-        rows = ws1[f'A{r}:Q{r}']
+        rows = ws1[f'A{r}:R{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

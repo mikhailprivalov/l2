@@ -86,6 +86,7 @@ from laboratory.settings import (
     SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE,
     DICOM_SERVERS,
     TUBE_MAX_RESEARCH_WITH_SHARE,
+    CDA_ID_FOR_DATE_CLOSE_CASE,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -1657,7 +1658,7 @@ def directions_paraclinic_form(request):
                 "individual_pk": d.client.individual_id,
                 "has_dreg": DispensaryReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
                 "has_benefit": BenefitReg.objects.filter(date_end__isnull=True, card=d.client).exists(),
-                "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title),
+                "doc": "" if not d.doc else (d.doc.get_fio(dots=True) + ", " + d.doc.podrazdeleniye.title if d.doc.podrazdeleniye else ""),
                 "imported_from_rmis": d.imported_from_rmis,
                 "imported_org": "" if not d.imported_org else d.imported_org.title,
                 "base": d.client.base_id,
@@ -2336,6 +2337,9 @@ def directions_paraclinic_result(request):
                         val = {}
                     f_result.value_json = val
                 f_result.client = iss.napravleniye.client
+                if f.cda_option_id == CDA_ID_FOR_DATE_CLOSE_CASE:
+                    iss.medical_examination = datetime.strptime(field["value"], "%Y-%m-%d").date()
+
                 f_result.save()
                 if "Протокол для оператора" in g:
                     IssledovaniyaResultLaborant.save_result_operator(iss, f, f.field_type, field["value"], request.user.doctorprofile)

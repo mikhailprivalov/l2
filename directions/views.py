@@ -1181,6 +1181,7 @@ def create_case_by_cards(cards):
                 case_by_direction=True,
                 plan_start_date=plan_start_date_case,
             )
+
         if number_directons:
             number_directons = [i for i in number_directons]
         else:

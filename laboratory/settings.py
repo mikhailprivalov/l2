@@ -437,7 +437,7 @@ ALLOWED_FORMS_FILE = {
     "102.01": False,
     "103.01": False,
 }
-
+TYPE_REPORT_FORMS = {}
 EXCLUDE_TYPE_RESEARCH = {
     "is_laboratory": False,
     "is_paraclinic": False,
@@ -460,7 +460,7 @@ EXCLUDE_TYPE_RESEARCH = {
     "is_complex": False,
 }
 
-RMIS_MIDDLE_SERVER_ADDRESS = 'http://127.0.0.1:3000'
+RMIS_MIDDLE_SERVER_ADDRESS = 'http://127.0.0.1:3001'
 RMIS_MIDDLE_SERVER_TOKEN = 'token'
 
 CASH_REGISTER_SERVER_ADDRESS = 'http://127.0.0.1:3000'
@@ -476,6 +476,11 @@ LUNCH_DURATION_BY_POSITIONS = {}
 DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 # Варианты смен [{"id": "16.2", "label": "16.2 ч."}]
 SHIFTS_VARIANTS = []
+TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
+CDA_ID_FOR_DATE_CLOSE_CASE = -1
+CDA_ID_FOR_WHERE_SERVICE_DONE = -1
+CDA_ID_FOR_TYPE_MEDICAL_INSPECTION = -1
+RESEARCH_ID_CLOSE_CASE = (-1,)
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

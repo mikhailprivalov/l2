@@ -96,7 +96,7 @@ class CdaFields(models.Model):
     is_extract = models.BooleanField(default=False, blank=True, help_text="Это выписка", db_index=True)
 
     def __str__(self):
-        return f"{self.code} - {self.title}"
+        return f"{self.pk} - {self.title}"
 
     @staticmethod
     def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):

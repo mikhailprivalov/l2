@@ -36,6 +36,7 @@ from .models import (
     NapravleniyaHL7LinkFiles,
     ComplexResearchAccountPerson,
     StatementDocument,
+    ParaclinicResult,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -340,6 +341,18 @@ class ResultAdmin(admin.ModelAdmin):
     )
 
 
+class ParaclinicResultAdmin(admin.ModelAdmin):
+    autocomplete_fields = ('issledovaniye',)
+    list_display = (
+        'issledovaniye',
+        'field',
+        'value',
+    )
+    search_fields = ('issledovaniye__napravleniye__pk',)
+
+    list_filter = ('field__cda_option',)
+
+
 class ResStatementDocument(admin.ModelAdmin):
     list_display = (
         'person_who_create',
@@ -349,6 +362,7 @@ class ResStatementDocument(admin.ModelAdmin):
 
 admin.site.register(TubesRegistration)
 admin.site.register(Result, ResultAdmin)
+admin.site.register(ParaclinicResult, ParaclinicResultAdmin)
 admin.site.register(FrequencyOfUseResearches)
 admin.site.register(CustomResearchOrdering)
 admin.site.register(ExternalOrganization)

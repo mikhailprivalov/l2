@@ -72,3 +72,44 @@ def last_results_researches_by_time_ago(client_id, researches, date_start, date_
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def researches_by_harmfull_factor_id(factors_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            clients_harmfulfactor.id as harmfull_factor_id,
+            dr.title as research_title,
+            dr.id as research_id,
+            dr.is_doc_refferal,
+            dr.code,
+            dr.internal_code
+            FROM clients_harmfulfactor
+            RIGHT JOIN users_assignmentresearches uar on clients_harmfulfactor.template_id = uar.template_id
+            Left Join directory_researches dr on uar.research_id = dr.id
+            WHERE
+            clients_harmfulfactor.id in %(factors_id)s
+            ORDER BY harmfull_factor_id, research_title
+            """,
+            params={'factors_id': factors_id},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def harmfull_factor_data():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            id,
+            title
+            FROM clients_harmfulfactor
+            
+            ORDER BY id
+            """,
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

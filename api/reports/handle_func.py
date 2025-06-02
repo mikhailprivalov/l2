@@ -28,6 +28,7 @@ def patologistology_buh(data):
         "Медицинские услуги(поликлиника)": "polyclinic_service_code",
         "Код по МКБ": "mcb10_code",
         "Тип учреждения": "type_hospital",
+        "Дата забора": "date_get",
     }
     tmp_data = tmp_dict_data.copy()
 
