@@ -85,7 +85,8 @@ from laboratory.settings import (
     REMD_EXCLUDE_RESEARCH,
     SHOW_EXAMINATION_DATE_IN_PARACLINIC_RESULT_PAGE,
     DICOM_SERVERS,
-    TUBE_MAX_RESEARCH_WITH_SHARE, CDA_ID_FOR_DATE_CLOSE_CASE,
+    TUBE_MAX_RESEARCH_WITH_SHARE,
+    CDA_ID_FOR_DATE_CLOSE_CASE,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
