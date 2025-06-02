@@ -36,7 +36,7 @@ from .models import (
     NapravleniyaHL7LinkFiles,
     ComplexResearchAccountPerson,
     StatementDocument,
-    ParaclinicResult
+    ParaclinicResult,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
