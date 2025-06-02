@@ -47,6 +47,7 @@
         :column-hidden-option="columnHiddenOption"
         :virtual-scroll-option="virtualScrollOption"
         row-key-field-name="employeePositionId"
+        :checkbox-option="checkboxOption"
         :cell-selection-option="cellSelectionOption"
         :row-style-option="rowStyleOption"
         :border-y="true"
@@ -330,7 +331,10 @@ onMounted(async () => {
 const getColumns = () => {
   const columnTemplate = [
     {
-      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'left', width: 20,
+      field: 'checkbox', key: 'checkbox', type: 'checkbox', title: '', align: 'center', width: 25,
+    },
+    {
+      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'center', width: 20,
     },
     {
       field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 160, fixed: 'left',
@@ -425,6 +429,8 @@ const cellStyleOption = {
       result.push('table-body-name-cell');
     } else if (column.key === 'position') {
       result.push('table-body-position-cell');
+    } else if (column.key === 'checkbox') {
+      result.push('table-checkbox-cell');
     } else {
       result.push('table-body-cell');
     }
@@ -437,6 +443,8 @@ const cellStyleOption = {
       result.push('table-header-weekend-cell');
     } else if (nonDateKey.includes(column.key)) {
       result.push('table-header-non-date-cell');
+    } else if (column.key === 'checkbox') {
+      result.push('table-checkbox-cell');
     } else {
       result.push('table-header-cell');
     }
@@ -456,6 +464,14 @@ const rowStyleOption = {
   hoverHighlight: false,
   clickHighlight: false,
   stripe: false,
+};
+const checkboxOption = {
+  selectedRowChange: ({ row, isSelected, selectedRowKeys }) => {
+    console.log(row, isSelected, selectedRowKeys);
+  },
+  selectedAllChange: ({ isSelected, selectedRowKeys }) => {
+    console.log(isSelected, selectedRowKeys);
+  },
 };
 const save = async () => {
   if (!documentBlocked.value) {
@@ -560,5 +576,8 @@ const printDocument = async () => {
 }
 .table-body-bid-cell {
   font-style: italic !important;
+}
+.table-checkbox-cell {
+  padding: 10px 5px !important;
 }
 </style>
