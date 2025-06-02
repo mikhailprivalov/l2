@@ -74,7 +74,7 @@ def form_01(ws1, data):
                         "where_done": 0,
                         "research_title": harmfull_factors_research_id_title.get(research_id)["title"],
                         "code": harmfull_factors_research_id_title.get(research_id)["code"],
-                        "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"]
+                        "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"],
                     }
                     for research_id in researches_harmfull_data.get(i.factor_id)
                 }
