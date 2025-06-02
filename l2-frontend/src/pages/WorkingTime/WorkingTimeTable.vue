@@ -418,6 +418,9 @@ const cellStyleOption = {
     if (row.bidType !== 'Осн') {
       result.push('table-body-bid-cell');
     }
+    if (column.isWeekend) {
+      result.push('table-body-weekend-cell');
+    }
     if (column.key === 'fio') {
       result.push('table-body-name-cell');
     } else if (column.key === 'position') {
@@ -431,7 +434,7 @@ const cellStyleOption = {
     const result = [];
     const nonDateKey = ['fio', 'position'];
     if (column.isWeekend) {
-      result.push('table-header-cell-weekend');
+      result.push('table-header-weekend-cell');
     } else if (nonDateKey.includes(column.key)) {
       result.push('table-header-non-date-cell');
     } else {
@@ -531,7 +534,11 @@ const printDocument = async () => {
 </style>
 
 <style lang="scss">
-.table-header-cell-weekend {
+.table-body-weekend-cell {
+  background-color: #b6e3ff !important;
+  padding: 10px 0 !important;
+}
+.table-header-weekend-cell {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
