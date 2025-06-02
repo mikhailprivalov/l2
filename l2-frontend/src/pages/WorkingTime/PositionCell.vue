@@ -3,7 +3,7 @@
     <div class="top-icons">
       <i
         v-tippy
-        class="fa-solid fa-copy"
+        class="fa-solid fa-copy icon-color"
         title="Сверху"
         @click="copyTop"
       />
@@ -20,11 +20,11 @@
           placement: 'bottom',
           trigger: 'click',
         }"
-        class="fa-solid fa-paste"
+        class="fa-solid fa-paste icon-color"
       />
       <i
         v-tippy
-        class="fa-solid fa-xmark clear"
+        class="fa-solid fa-xmark icon-color"
         title="Очистить"
         @click="clear"
       />
@@ -143,7 +143,7 @@ const clear = () => {
   height: auto;
   width: 150px;
 }
-.clear {
-  color: red;
+.icon-color {
+  color: #636e7e;
 }
 </style>
