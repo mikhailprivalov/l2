@@ -168,13 +168,6 @@ def form_01(ws1, data):
                     else:
                         total_sum_by_instrumental_and_lab[current_research_id] += 1
 
-    print("final structure")
-    for k, v in closed_case_structure_data.items():
-        print(k, v)
-
-    print(total_sum_by_specialist)
-    print(total_sum_by_instrumental_and_lab)
-
     ws1.merge_cells("A8:Q8")
     megre_cell = ws1["A8"]
     megre_cell.value = f"Спецификация {data['executor']}"
@@ -235,7 +228,6 @@ def form_01(ws1, data):
     step = 1
     sum_research_col = 1
     for i in closed_case_structure_data.values():
-        print(i)
         ws1.cell(row=row, column=1).value = step
         ws1.cell(row=row, column=2).value = data.get("contract_number")
         ws1.cell(row=row, column=3).value = i.get("fio")

@@ -1147,9 +1147,6 @@ def create_case_by_cards(cards):
                 case_by_direction=True,
                 plan_start_date=plan_start_date_case,
             )
-            print("result")
-            print(result)
-            print(case_issledovaniye_number)
         else:
             napravleniye_case = Napravleniya.gen_napravleniye(
                 card_id,

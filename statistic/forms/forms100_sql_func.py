@@ -1,12 +1,10 @@
 from django.db import connection
-from laboratory.settings import TIME_ZONE, RESEARCH_ID_CLOSE_CASE, CDA_ID_FOR_WHERE_SERVICE_DONE, CDA_ID_FOR_TYPE_MEDICAL_INSPECTION
+from laboratory.settings import RESEARCH_ID_CLOSE_CASE, CDA_ID_FOR_WHERE_SERVICE_DONE, CDA_ID_FOR_TYPE_MEDICAL_INSPECTION
 from utils.db import namedtuplefetchall
 from laboratory.settings import TIME_ZONE
 
 
 def closed_company_cases_by_date(d_start, d_end, company_id):
-    print("d_start, d_end, company_id")
-    print(d_start, d_end, company_id)
     with connection.cursor() as cursor:
         cursor.execute(
             """

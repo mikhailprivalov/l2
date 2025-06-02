@@ -2336,7 +2336,6 @@ def directions_paraclinic_result(request):
                         val = {}
                     f_result.value_json = val
                 f_result.client = iss.napravleniye.client
-                print(f.cda_option_id)
                 if f.cda_option_id == CDA_ID_FOR_DATE_CLOSE_CASE:
                     iss.medical_examination = datetime.strptime(field["value"], "%Y-%m-%d").date()
 
