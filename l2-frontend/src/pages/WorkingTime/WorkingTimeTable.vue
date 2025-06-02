@@ -415,10 +415,8 @@ watch(() => [props.year, props.month], () => {
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
     const result = [];
-    if (row.bidType === 'Вну') {
-      result.push('table-body-cell-inner-bid');
-    } else if (row.bidType === 'Вне') {
-      result.push('table-body-cell-outer-bid');
+    if (row.bidType !== 'Осн') {
+      result.push('table-body-bid-cell');
     }
     if (column.key === 'fio') {
       result.push('table-body-name-cell');
@@ -553,10 +551,7 @@ const printDocument = async () => {
   padding: 0 !important;
   white-space: normal !important;
 }
-.table-body-cell-inner-bid {
-  background-color: #ddf3fe !important;
-}
-.table-body-cell-outer-bid {
-  background-color: #ddf3fe !important;
+.table-body-bid-cell {
+  font-style: italic !important;
 }
 </style>
