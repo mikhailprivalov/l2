@@ -79,7 +79,8 @@ from laboratory.settings import (
     RESEARCH_SPECIAL_REPORT,
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
-    UNLIMIT_PERIOD_STATISTIC_GROUP, TYPE_REPORT_FORMS,
+    UNLIMIT_PERIOD_STATISTIC_GROUP,
+    TYPE_REPORT_FORMS,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
