@@ -31,7 +31,7 @@ def form_01(ws1, data):
     factors_id = set([i.factor_id for i in closed_id])
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
-    harmfull_factors_research_id_title = {i.research_id: {"title": i.research_title, "code": i.code, "internal_code": i.internal_code}for i in researches_harmfull_factors}
+    harmfull_factors_research_id_title = {i.research_id: {"title": i.research_title, "code": i.code, "internal_code": i.internal_code} for i in researches_harmfull_factors}
     research_id_is_doc_refferal = set([i.research_id for i in researches_harmfull_factors if i.is_doc_refferal])
 
     # структура факторы - услуги {factor_id: [research_id, research_id]}
