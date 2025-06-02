@@ -416,6 +416,8 @@ watch(() => [props.year, props.month], () => {
   }
 }, { immediate: true });
 
+const checkedRow = ref([]);
+
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
     const result = [];
@@ -466,11 +468,11 @@ const rowStyleOption = {
   stripe: false,
 };
 const checkboxOption = {
-  selectedRowChange: ({ row, isSelected, selectedRowKeys }) => {
-    console.log(row, isSelected, selectedRowKeys);
+  selectedRowChange: ({ selectedRowKeys }) => {
+    checkedRow.value = selectedRowKeys;
   },
-  selectedAllChange: ({ isSelected, selectedRowKeys }) => {
-    console.log(isSelected, selectedRowKeys);
+  selectedAllChange: ({ selectedRowKeys }) => {
+    checkedRow.value = selectedRowKeys;
   },
 };
 const save = async () => {
