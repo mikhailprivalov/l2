@@ -95,7 +95,8 @@ def form_01(ws1, data):
                         "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"]
                     }
                     for research_id in researches_harmfull_data.get(i.factor_id)
-                })
+                }
+            )
 
         factors_ids.add(i.factor_id)
         cases_issledovaniye_ids[i.case_issledovaniye_id] = i.direction_num
