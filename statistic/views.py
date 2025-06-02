@@ -79,7 +79,8 @@ from laboratory.settings import (
     RESEARCH_SPECIAL_REPORT,
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
-    UNLIMIT_PERIOD_STATISTIC_GROUP, TYPE_REPORT_FORMS,
+    UNLIMIT_PERIOD_STATISTIC_GROUP,
+    TYPE_REPORT_FORMS,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
@@ -1891,7 +1892,7 @@ def statistic_xls(request):
                     "custom_research": head_data,
                     "executor": hospital.title,
                     "research_coast": research_coast,
-                    "contract_number": price.contract_number
+                    "contract_number": price.contract_number,
                 }
                 ws = xlsx_form(ws, data)
             else:
