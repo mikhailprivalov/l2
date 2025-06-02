@@ -1892,7 +1892,7 @@ def statistic_xls(request):
                     "custom_research": head_data,
                     "executor": hospital.title,
                     "research_coast": research_coast,
-                    "contract_number": price.contract_number
+                    "contract_number": price.contract_number,
                 }
                 ws = xlsx_form(ws, data)
             else:
