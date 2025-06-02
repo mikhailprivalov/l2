@@ -388,7 +388,7 @@ def issledovaniye_data(request):
     ignore_fsli = request.GET.get("ignoreFsli") == "true"
     need_ecp_code = request.GET.get("needEcpCode") == "true"
     i = directions.Issledovaniya.objects.get(pk=pk)
-    if i.research.podrazdeleniye__p_type != 2:
+    if i.research.podrazdeleniye.p_type != 2:
         return Response({"ok": False, "ignore_sample": ignore_sample, "type": "is not laboratory"})
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()

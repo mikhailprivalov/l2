@@ -2,7 +2,18 @@ import logging
 import socket
 from functools import reduce
 from directions.models import Issledovaniya, Napravleniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_SERVERS, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER
+from laboratory.settings import (
+    DICOM_SEARCH_TAGS,
+    DICOM_SERVER,
+    DICOM_SERVERS,
+    DICOM_PORT,
+    DICOM_ADDRESS,
+    DICOM_SERVER_DELETE,
+    ACSN_MODE,
+    REMOTE_DICOM_SERVER,
+    REMOTE_DICOM_PEER,
+    WEB_PLUGIN_FOR_DICOM_STONE,
+)
 import requests
 import simplejson as json
 
@@ -47,7 +58,11 @@ def search_dicom_study(direction=None):
             if len(DICOM_SERVERS) > 1:
                 return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
             else:
-                return f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
+                if WEB_PLUGIN_FOR_DICOM_STONE:
+                    dicom_link_web = f"{DICOM_SERVER}/stone-webviewer/index.html?study={dicom_study['study_instance_uid_tag']}"
+                else:
+                    dicom_link_web = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
+                return dicom_link_web
         else:
             if not check_server_port(DICOM_ADDRESS, DICOM_PORT):
                 return ''
@@ -66,14 +81,16 @@ def search_dicom_study(direction=None):
                     Issledovaniya.objects.filter(napravleniye_id=direction).update(study_instance_uid=dicom_study_link[0], study_instance_uid_tag=dicom_study_link[1])
                     try:
                         d: Napravleniya = Napravleniya.objects.filter(pk=direction).first()
-
                         if d:
                             d.send_task_result()
                     except Exception as e:
                         print('FAIL send_task_result')  # noqa: T001
                         print(e)  # noqa: T001
-
-                    return f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link[0]}'
+                    if WEB_PLUGIN_FOR_DICOM_STONE:
+                        dicom_link_web = f'{DICOM_SERVER}/stone-webviewer/index.html?study={dicom_study_link[1]}'
+                    else:
+                        dicom_link_web = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link[0]}'
+                    return dicom_link_web
 
             except Exception as e:
                 print(e)  # noqa: T001
