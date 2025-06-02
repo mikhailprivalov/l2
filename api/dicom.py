@@ -2,8 +2,18 @@ import logging
 import socket
 from functools import reduce
 from directions.models import Issledovaniya, Napravleniya
-from laboratory.settings import DICOM_SEARCH_TAGS, DICOM_SERVER, DICOM_SERVERS, DICOM_PORT, DICOM_ADDRESS, DICOM_SERVER_DELETE, ACSN_MODE, REMOTE_DICOM_SERVER, REMOTE_DICOM_PEER, \
-    WEB_PLUGIN_FOR_DICOM_STONE
+from laboratory.settings import (
+    DICOM_SEARCH_TAGS,
+    DICOM_SERVER,
+    DICOM_SERVERS,
+    DICOM_PORT,
+    DICOM_ADDRESS,
+    DICOM_SERVER_DELETE,
+    ACSN_MODE,
+    REMOTE_DICOM_SERVER,
+    REMOTE_DICOM_PEER,
+    WEB_PLUGIN_FOR_DICOM_STONE,
+)
 import requests
 import simplejson as json
 
