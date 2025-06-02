@@ -51,7 +51,7 @@ def form_01(ws1, data):
     cases_issledovaniye_ids = {}
     custom_research_ids = data["custom_research"].keys()
     harmfull_factors = harmfull_factor_data()
-    harmfull_factors_id_title = {i.id: i.title for i in harmfull_factors }
+    harmfull_factors_id_title = {i.id: i.title for i in harmfull_factors}
     for i in closed_id:
         if not closed_case_structure_data.get(i.case_issledovaniye_id):
             closed_case_structure_data[i.case_issledovaniye_id] = {
