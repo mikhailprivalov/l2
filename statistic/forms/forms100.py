@@ -2,8 +2,12 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 from clients.sql_func import researches_by_harmfull_factor_id, harmfull_factor_data
-from statistic.forms.forms100_sql_func import closed_company_cases_by_date, directions_by_parent_cases_issledovaniye, search_value_where_done_custom_research, \
-    search_value_type_medical_inspection
+from statistic.forms.forms100_sql_func import (
+    closed_company_cases_by_date,
+    directions_by_parent_cases_issledovaniye,
+    search_value_where_done_custom_research,
+    search_value_type_medical_inspection,
+)
 
 
 def form_01(ws1, data):
