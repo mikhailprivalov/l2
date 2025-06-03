@@ -318,7 +318,7 @@ onMounted(async () => {
 const getColumns = () => {
   const columnTemplate = [
     {
-      field: 'checkbox', key: 'checkbox', type: 'checkbox', title: '', align: 'center', width: 25,
+      field: 'checkbox', key: 'checkbox', type: 'checkbox', title: '', align: 'center', width: 25, fixed: 'left',
     },
     {
       field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'center', width: 20,
