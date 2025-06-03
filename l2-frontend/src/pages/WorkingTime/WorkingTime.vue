@@ -381,7 +381,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   // calculateTotal(currentEmployeePosition.employeePositionId);
 };
 const clear = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = employeesWorkTime.value[rowIndex];
+  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
