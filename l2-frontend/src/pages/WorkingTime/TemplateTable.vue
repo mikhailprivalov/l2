@@ -6,6 +6,7 @@
     :border-y="true"
     :scroll-width="0"
     :show-header="false"
+    :row-style-option="rowStyleOption"
   />
 </template>
 
@@ -178,6 +179,11 @@ const cellStyleOption = {
     result.push('table-header-cell');
     return result.join(' ');
   },
+};
+const rowStyleOption = {
+  hoverHighlight: false,
+  clickHighlight: false,
+  stripe: false,
 };
 </script>
 
