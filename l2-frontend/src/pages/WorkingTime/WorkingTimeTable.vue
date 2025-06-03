@@ -567,6 +567,6 @@ const printDocument = async () => {
   font-style: italic !important;
 }
 .table-checkbox-cell {
-  padding: 10px 5px !important;
+  padding: 10px 5px 5px 5px !important;
 }
 </style>
