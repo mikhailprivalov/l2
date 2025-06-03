@@ -130,7 +130,7 @@ const props = defineProps({
   },
   employeePositionId: {
     type: Number,
-    required: true,
+    required: false,
   },
   date: {
     type: [String, undefined],
