@@ -192,7 +192,6 @@ const filters = ref({
 });
 
 const changeFilterFio = (searchValue: string) => {
-  console.log('fdfd');
   filters.value.fio = searchValue;
 };
 
@@ -208,10 +207,9 @@ const filterEmployees = () => {
   });
 };
 
-watch(() => filters, () => {
-  console.log('событие');
+watch(filters, () => {
   filterEmployees();
-});
+}, { deep: true });
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -432,11 +430,11 @@ const getColumns = () => {
       align: 'left',
       width: 160,
       fixed: 'left',
-      renderHeaderCell: (h) => h(
+      renderHeaderCell: ({ column }, h) => h(
         SearchEmployees,
         {
           props: {
-            columnText: 'ФИО',
+            columnText: column.title,
           },
           on: {
             input: changeFilterFio,
