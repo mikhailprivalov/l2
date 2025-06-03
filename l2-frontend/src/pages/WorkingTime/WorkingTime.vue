@@ -63,7 +63,7 @@
         <VeTable
           max-height="calc(100vh - 240px)"
           :columns="columns"
-          :table-data="filteredEmployees"
+          :table-data="employeesWorkTime"
           :cell-style-option="cellStyleOption"
           :column-hidden-option="columnHiddenOption"
           :virtual-scroll-option="virtualScrollOption"
@@ -178,8 +178,6 @@ const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value 
 const timeOptions = computed(() => (store.getters.modules.working_time_variants
   ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
-const search = ref('');
-
 const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
@@ -274,12 +272,6 @@ watch([selectedYear, selectedMonth, selectedDepartment], () => {
   }
 }, { immediate: true });
 
-const filteredEmployees = computed(() => employeesWorkTime.value.filter(employee => {
-  const employeesFio = employee.fio?.toLowerCase();
-  const searchTerm = search.value.toLowerCase();
-  return employeesFio.includes(searchTerm);
-}));
-
 const changeWorkTime = async ({
   employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
 }) => {
@@ -304,21 +296,19 @@ const changeWorkTime = async ({
 };
 
 const copyTop = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
-  const prevFilteredEmployeePosition = filteredEmployees.value[rowIndex - 1];
-  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-    === currentFilteredEmployeePosition.employeePositionId);
+  const currentEmployeePosition = employeesWorkTime.value[rowIndex];
+  const prevEmployeePosition = employeesWorkTime.value[rowIndex - 1];
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
     if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-      currentEmployeePosition[key] = { ...prevFilteredEmployeePosition[key] };
+      currentEmployeePosition[key] = { ...prevEmployeePosition[key] };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
         key,
         null,
         null,
         null,
-        { ...prevFilteredEmployeePosition[key] },
+        { ...prevEmployeePosition[key] },
       );
     }
   }
@@ -344,9 +334,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   }
 };
 const clear = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
-  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-    === currentFilteredEmployeePosition.employeePositionId);
+  const currentEmployeePosition = employeesWorkTime.value[rowIndex];
   const keys = Object.keys(currentEmployeePosition);
   const emptyData = { startWorkTime: '', endWorkTime: '', typeId: null };
   for (const key of keys) {
