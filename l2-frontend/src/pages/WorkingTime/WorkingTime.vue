@@ -63,7 +63,7 @@
         <VeTable
           max-height="calc(100vh - 240px)"
           :columns="columns"
-          :table-data="employeesWorkTime"
+          :table-data="filteredEmployees"
           :cell-style-option="cellStyleOption"
           :column-hidden-option="columnHiddenOption"
           :virtual-scroll-option="virtualScrollOption"
@@ -118,6 +118,8 @@ import * as actions from '@/store/action-types';
 import TemplateTable from '@/pages/WorkingTime/TemplateTable.vue';
 import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
+// import SearchEmployees from '@/pages/WorkingTime/SearchEmployees.vue';
+import SearchEmployees from '@/pages/WorkingTime/SearchEmployees.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -183,6 +185,9 @@ const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
+
+const filteredEmployees = ref([]);
+const searchValue = ref('');
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -417,10 +422,27 @@ const getColumns = () => {
       field: 'checkbox', key: 'checkbox', type: 'checkbox', title: '', align: 'center', width: 25, fixed: 'left',
     },
     {
-      field: 'employeePositionId', key: 'employeePositionId', title: '№', align: 'center', width: 20,
+      field: 'employeePositionId',
+      key: 'employeePositionId',
+      title: '№',
+      align: 'center',
+      width: 20,
     },
     {
-      field: 'fio', key: 'fio', title: 'ФИО', align: 'left', width: 160, fixed: 'left',
+      field: 'fio',
+      key: 'fio',
+      title: 'ФИО',
+      align: 'left',
+      width: 160,
+      fixed: 'left',
+      renderHeaderCell: ({ column }, h) => h(
+        SearchEmployees,
+        {
+          props: {
+            columnText: 'ФИО',
+          },
+        },
+      ),
     },
     {
       field: 'position',
