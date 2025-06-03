@@ -96,6 +96,9 @@ const changeTemplateTime = async ({
     };
   }
 };
+const fillInTemplate = () => {
+  emit('fillInTemplate', { templateData: templateData.value });
+};
 
 const getColumns = () => {
   const columnTemplate = [
@@ -175,9 +178,6 @@ const cellStyleOption = {
     result.push('table-header-cell');
     return result.join(' ');
   },
-};
-const fillInTemplate = () => {
-  emit('fillInTemplate', { templateData: templateData.value });
 };
 </script>
 
