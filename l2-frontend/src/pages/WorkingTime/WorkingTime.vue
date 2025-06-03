@@ -119,7 +119,7 @@ import TemplateTable from '@/pages/WorkingTime/TemplateTable.vue';
 import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
-import PositionHeader from "@/pages/WorkingTime/PositionHeader.vue";
+import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -449,7 +449,7 @@ const getColumns = () => {
       align: 'left',
       width: 115,
       fixed: 'left',
-      renderHeaderCell: ({ column }, h) => h(PositionHeader),
+      renderHeaderCell: ({ column }, h) => h(PositionHeader, { props: { columnText: column.title } }),
       renderBodyCell: ({ row, column, rowIndex }, h) => h(
         PositionCell,
         {
