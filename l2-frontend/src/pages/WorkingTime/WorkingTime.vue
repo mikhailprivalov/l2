@@ -264,35 +264,6 @@ watch(employeesWorkTime, () => {
   }
 }, { deep: true });
 
-// const calculateTotal = (employeePositionId: number) => {
-//   const employee = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId ===
-//   employeePositionId);
-//   let totalDiffTime = 0;
-//   const keys = Object.keys(employee);
-//   const lunchDuration = employee.lunchDuration * 60 * 1000;
-//   for (const key of keys) {
-//     if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-//       const currentDay = employee[key];
-//       if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
-//         const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-//         let endTime;
-//         if (currentDay.endWorkTime === '00:00') {
-//           endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
-//         } else {
-//           endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-//         }
-//         const dayDiffTime = endTime - startTime - lunchDuration;
-//         totalDiffTime += dayDiffTime;
-//       }
-//     }
-//   }
-//   const totalDiffSec = totalDiffTime / (1000 * 60);
-//   const totalHoursDecimal = totalDiffSec / 60;
-//   const totalHours = Math.trunc(totalHoursDecimal);
-//   const totalMin = totalDiffSec % 60;
-//   employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
-//   employee.totalHours = `${totalHours}ч ${totalMin}м`;
-// };
 const createDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/working-time/create-document', {
@@ -357,7 +328,6 @@ const copyTop = ({ rowIndex }) => {
       );
     }
   }
-  // calculateTotal(currentEmployeePosition.employeePositionId);
 };
 const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
@@ -378,7 +348,6 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
       );
     }
   }
-  // calculateTotal(currentEmployeePosition.employeePositionId);
 };
 const clear = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
@@ -399,7 +368,6 @@ const clear = ({ rowIndex }) => {
       );
     }
   }
-  // calculateTotal(currentEmployeePosition.employeePositionId);
 };
 
 const columns = ref([]);
@@ -447,7 +415,7 @@ const getColumns = () => {
       align: 'left',
       width: 160,
       fixed: 'left',
-      renderHeaderCell: ({ column }, h) => h(
+      renderHeaderCell: (h) => h(
         SearchEmployees,
         {
           props: {

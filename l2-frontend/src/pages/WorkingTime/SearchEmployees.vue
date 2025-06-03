@@ -27,7 +27,6 @@ const emit = defineEmits(['input']);
 const searchValue = ref('');
 
 const input = () => {
-  console.log('отправляем ');
   emit('input', searchValue.value);
 };
 const debouncedInput = debounce(input, 300);
