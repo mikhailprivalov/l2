@@ -27,8 +27,15 @@ from hospitals.models import Hospitals
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement, hosp_get_operation_data, \
-    primary_reception_get_data_by_cda
+from .forms_func import (
+    get_doc_results,
+    get_finaldata_talon,
+    primary_reception_get_data,
+    hosp_extract_get_data,
+    hosp_patient_movement,
+    hosp_get_operation_data,
+    primary_reception_get_data_by_cda,
+)
 from .forms_func import closed_bl
 from api.stationar.stationar_func import hosp_get_hosp_direction
 
