@@ -54,6 +54,7 @@
           :time-options="timeOptions"
           :work-day-statuses="workDayStatuses"
           :department-lunch-duration="lunchDurationSelectedDepartment"
+          @fill-in-template="fillInTemplateData"
         />
       </div>
       <div
@@ -478,6 +479,12 @@ watch([selectedYear, selectedMonth], () => {
 }, { immediate: true });
 
 const checkedRow = ref([]);
+
+const fillInTemplateData = ({ templateData }) => {
+  console.log('авав');
+  console.log(checkedRow.value);
+  console.log(templateData);
+};
 
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
