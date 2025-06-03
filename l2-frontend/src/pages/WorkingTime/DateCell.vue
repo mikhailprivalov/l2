@@ -155,6 +155,7 @@ const props = defineProps({
   lunchDuration: {
     type: Number,
     required: false,
+    default: 0,
   },
 });
 
@@ -243,7 +244,7 @@ watch(selectedShift, () => {
   if (selectedShift.value) {
     const start = new Date(`${props.date} ${startWork.value}`);
     const shiftInMinutes = Number(selectedShift.value) * 60;
-    const shiftWithLunch = shiftInMinutes + (props.lunchDuration ? props.lunchDuration : 0);
+    const shiftWithLunch = shiftInMinutes + props.lunchDuration;
     const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));
     if (end.getDate() > start.getDate()) {
       endWork.value = '00:00';
