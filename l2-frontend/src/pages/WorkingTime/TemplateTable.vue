@@ -132,14 +132,18 @@ const getColumns = () => {
     };
   });
   columnTemplate.push(...data);
-  const totalHoursCol = {
-    field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
+  const endTable = {
+    field: 'total', key: 'total', title: '', align: 'center', width: 72, fixed: 'right',
   };
-  const totalHoursWithMinCol = {
-    field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 42, fixed: 'right',
-  };
-  columnTemplate.push(totalHoursCol);
-  columnTemplate.push(totalHoursWithMinCol);
+  // const totalHoursCol = {
+  //   field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
+  // };
+  // const totalHoursWithMinCol = {
+  //   field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 42, fixed: 'right',
+  // };
+  // columnTemplate.push(totalHoursCol);
+  // columnTemplate.push(totalHoursWithMinCol);
+  columnTemplate.push(endTable);
   columns.value = columnTemplate;
 };
 onMounted(() => {
