@@ -340,19 +340,21 @@ const changeWorkTime = async ({
 };
 
 const copyTop = ({ rowIndex }) => {
-  const currentEmployeePosition = employeesWorkTime.value[rowIndex];
-  const prevEmployeePosition = employeesWorkTime.value[rowIndex - 1];
+  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
+  const prevFilteredEmployeePosition = employeesWorkTime.value[rowIndex - 1];
+  const currentEmployeePosition = employeesWorkTime.value.find(employee => employee.employeePositionId
+    === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
     if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-      currentEmployeePosition[key] = { ...prevEmployeePosition[key] };
+      currentEmployeePosition[key] = { ...prevFilteredEmployeePosition[key] };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
         key,
         null,
         null,
         null,
-        { ...prevEmployeePosition[key] },
+        { ...prevFilteredEmployeePosition[key] },
       );
     }
   }
@@ -380,7 +382,9 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   // calculateTotal(currentEmployeePosition.employeePositionId);
 };
 const clear = ({ rowIndex }) => {
-  const currentEmployeePosition = employeesWorkTime.value[rowIndex];
+  const currentFilteredEmployeePosition = employeesWorkTime.value[rowIndex];
+  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+    === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
   const emptyData = { startWorkTime: '', endWorkTime: '', typeId: null };
   for (const key of keys) {
