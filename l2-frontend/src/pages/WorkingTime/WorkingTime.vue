@@ -188,6 +188,14 @@ const changedEmployeesWorkTime = ref({});
 
 const filteredEmployees = ref([]);
 
+const filterEmployees = (searchValue: string) => {
+  console.log(searchValue);
+  const searchTerm = searchValue.toLowerCase();
+  filteredEmployees.value = employeesWorkTime.value.filter(employee => {
+    const employeeFio = employee.fio?.toLowerCase();
+    return employeeFio.includes(searchTerm);
+  });
+};
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -224,6 +232,7 @@ const getEmployeesWorkTime = async () => {
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
+  filteredEmployees.value = employeesWorkTime.value.slice(0);
 };
 
 watch(employeesWorkTime, () => {
@@ -440,6 +449,9 @@ const getColumns = () => {
         {
           props: {
             columnText: 'ФИО',
+          },
+          on: {
+            input: filterEmployees,
           },
         },
       ),

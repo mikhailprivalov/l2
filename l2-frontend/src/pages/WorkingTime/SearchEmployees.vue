@@ -25,6 +25,7 @@ const emit = defineEmits(['input']);
 const searchValue = ref('');
 
 watch(searchValue, () => {
+  console.log('отправляем событие');
   emit('input', searchValue.value);
 });
 </script>
