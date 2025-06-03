@@ -189,7 +189,6 @@ const changedEmployeesWorkTime = ref({});
 const filteredEmployees = ref([]);
 
 const filterEmployees = (searchValue: string) => {
-  console.log(searchValue);
   const searchTerm = searchValue.toLowerCase();
   filteredEmployees.value = employeesWorkTime.value.filter(employee => {
     const employeeFio = employee.fio?.toLowerCase();
@@ -341,7 +340,7 @@ const changeWorkTime = async ({
 
 const copyTop = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
-  const prevFilteredEmployeePosition = employeesWorkTime.value[rowIndex - 1];
+  const prevFilteredEmployeePosition = filteredEmployees.value[rowIndex - 1];
   const currentEmployeePosition = employeesWorkTime.value.find(employee => employee.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
