@@ -252,7 +252,8 @@ watch(employeesWorkTime, () => {
 }, { deep: true });
 
 // const calculateTotal = (employeePositionId: number) => {
-//   const employee = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
+//   const employee = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId ===
+//   employeePositionId);
 //   let totalDiffTime = 0;
 //   const keys = Object.keys(employee);
 //   const lunchDuration = employee.lunchDuration * 60 * 1000;
