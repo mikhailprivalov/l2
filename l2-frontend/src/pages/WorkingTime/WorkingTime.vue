@@ -186,15 +186,32 @@ const documentBlocked = ref(false);
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
 
+const filters = ref({
+  fio: '',
+  positions: [],
+});
+
+const changeFilterFio = (searchValue: string) => {
+  console.log('fdfd');
+  filters.value.fio = searchValue;
+};
+
 const filteredEmployees = ref([]);
 
-const filterEmployees = (searchValue: string) => {
-  const searchTerm = searchValue.toLowerCase();
+const filterEmployees = () => {
+  const searchedFio = filters.value.fio.toLowerCase();
+  const searchedPositions = filters.value.positions;
   filteredEmployees.value = employeesWorkTime.value.filter(employee => {
     const employeeFio = employee.fio?.toLowerCase();
-    return employeeFio.includes(searchTerm);
+    const employeePosition = employee.position;
+    return employeeFio.includes(searchedFio) && (searchedPositions.length === 0 || searchedPositions.includes(employeePosition));
   });
 };
+
+watch(() => filters, () => {
+  console.log('событие');
+  filterEmployees();
+});
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -422,7 +439,7 @@ const getColumns = () => {
             columnText: 'ФИО',
           },
           on: {
-            input: filterEmployees,
+            input: changeFilterFio,
           },
         },
       ),
