@@ -10,7 +10,7 @@
       <i
         ref="from"
         v-tippy="{
-          html: `#tempCopyFrom${props.rowIndex}`,
+          html: `#tempCopyFrom${props.employeePositionId}`,
           arrow: true,
           reactive: true,
           interactive: true,
@@ -36,7 +36,7 @@
       class="position-text"
     />
     <div
-      :id="`tempCopyFrom${rowIndex}`"
+      :id="`tempCopyFrom${props.employeePositionId}`"
       class="tp"
     >
       <Treeselect
