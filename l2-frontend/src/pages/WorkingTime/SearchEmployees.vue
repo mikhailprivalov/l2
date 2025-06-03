@@ -6,13 +6,14 @@
     <input
       v-model="searchValue"
       class="form-control"
+      @input="debouncedInput"
     >
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import {debounce} from "lodash";
+import { debounce } from 'lodash';
 
 const props = defineProps({
   columnText: {
@@ -26,11 +27,10 @@ const emit = defineEmits(['input']);
 const searchValue = ref('');
 
 const input = () => {
+  console.log('отправляем ');
   emit('input', searchValue.value);
 };
-watch(searchValue, () => {
-  debounce(input, 300);
-});
+const debouncedInput = debounce(input, 300);
 </script>
 
 <style scoped lang="scss">
