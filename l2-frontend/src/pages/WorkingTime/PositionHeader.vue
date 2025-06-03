@@ -1,7 +1,7 @@
 <template>
-  <div>
-    <p>{{ props.columnText }}</p>
-    <i class="fa fa-filter" />
+  <div class="column-row">
+    <p class="column-text">{{ props.columnText }}</p>
+    <i class="fa fa-filter column-icon" />
   </div>
 </template>
 
@@ -15,5 +15,16 @@ const props = defineProps({
 </script>
 
 <style scoped lang="scss">
-
+.column-row {
+  display: flex;
+  gap: 2px;
+  padding: 7px 0;
+}
+.column-text {
+  margin: 0;
+}
+.column-icon {
+  padding: 3px;
+  color: #636e7e;
+}
 </style>
