@@ -118,8 +118,7 @@ import * as actions from '@/store/action-types';
 import TemplateTable from '@/pages/WorkingTime/TemplateTable.vue';
 import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
-// import SearchEmployees from '@/pages/WorkingTime/SearchEmployees.vue';
-import SearchEmployees from '@/pages/WorkingTime/SearchEmployees.vue';
+import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -431,7 +430,7 @@ const getColumns = () => {
       width: 160,
       fixed: 'left',
       renderHeaderCell: ({ column }, h) => h(
-        SearchEmployees,
+        FioHeader,
         {
           props: {
             columnText: column.title,
