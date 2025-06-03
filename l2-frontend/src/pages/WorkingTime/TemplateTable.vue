@@ -16,6 +16,7 @@ import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment/moment';
 
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
+import FillingCell from '@/pages/WorkingTime/FillingCell.vue';
 
 const props = defineProps({
   year: {
@@ -98,7 +99,21 @@ const changeTemplateTime = async ({
 const getColumns = () => {
   const columnTemplate = [
     {
-      field: 'button', key: 'button', title: '', align: 'center', width: 330, fixed: 'left',
+      field: 'button',
+      key: 'button',
+      title: '',
+      align: 'center',
+      width: 330,
+      fixed: 'left',
+      renderBodyCell: ({ row, column }, h) => h(
+        FillingCell,
+        {
+          props: {
+            workTime: row[column.field] ? row[column.field] : '',
+          },
+          on: { changeWorkTime: changeTemplateTime },
+        },
+      ),
     },
   ];
   const daysMonth = getMonthDays(props.year, props.month);
