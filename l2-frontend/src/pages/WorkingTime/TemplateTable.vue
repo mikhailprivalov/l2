@@ -45,6 +45,7 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['fillInTemplate']);
 const monthDays = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
@@ -111,7 +112,7 @@ const getColumns = () => {
           props: {
             workTime: row[column.field] ? row[column.field] : '',
           },
-          on: { changeWorkTime: changeTemplateTime },
+          on: { fill: fillInTemplate },
         },
       ),
     },
@@ -174,6 +175,9 @@ const cellStyleOption = {
     result.push('table-header-cell');
     return result.join(' ');
   },
+};
+const fillInTemplate = () => {
+  emit('fillInTemplate', { templateData: templateData.value });
 };
 </script>
 
