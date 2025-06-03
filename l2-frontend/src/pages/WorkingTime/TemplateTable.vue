@@ -124,7 +124,7 @@ const getColumns = () => {
             shiftsVariants: props.shiftsVariants,
             timeOptions: props.timeOptions,
             disabled: false,
-            lunchDuration: row.lunchDuration,
+            lunchDuration: props.departmentLunchDuration,
           },
           on: { changeWorkTime: changeTemplateTime },
         },
