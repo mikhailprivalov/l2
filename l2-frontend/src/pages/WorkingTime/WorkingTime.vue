@@ -481,9 +481,24 @@ watch([selectedYear, selectedMonth], () => {
 const checkedRow = ref([]);
 
 const fillInTemplateData = ({ templateData }) => {
-  console.log('авав');
-  console.log(checkedRow.value);
-  console.log(templateData);
+  for (const employeePosition of employeesWorkTime.value) {
+    if (checkedRow.value.includes(employeePosition.employeePositionId)) {
+      const keys = Object.keys(employeePosition);
+      for (const key of keys) {
+        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+          employeePosition[key] = { ...templateData[key] };
+          updateChangedEmployeesWorkTime(
+            employeePosition.employeePositionId,
+            key,
+            null,
+            null,
+            null,
+            { ...templateData[key] },
+          );
+        }
+      }
+    }
+  }
 };
 
 const cellStyleOption = {

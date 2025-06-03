@@ -97,7 +97,7 @@ const changeTemplateTime = async ({
   }
 };
 const fillInTemplate = () => {
-  emit('fillInTemplate', { templateData: templateData.value });
+  emit('fillInTemplate', { templateData: templateData.value[0] });
 };
 
 const getColumns = () => {
