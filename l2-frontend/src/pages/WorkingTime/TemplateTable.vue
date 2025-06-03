@@ -38,6 +38,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  departmentLunchDuration: {
+    type: Number,
+    required: true,
+  },
 });
 
 const monthDays = ref([]);

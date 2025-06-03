@@ -28,6 +28,9 @@
           :clearable="false"
         />
       </div>
+      <div class="filters department-lunch">
+        <label>Обед подразделения: {{ lunchDurationSelectedDepartment }} м.</label>
+      </div>
     </div>
     <div class="block-margin">
       <div
@@ -50,6 +53,7 @@
           :shifts-variants="shiftsVariants"
           :time-options="timeOptions"
           :work-day-statuses="workDayStatuses"
+          :department-lunch-duration="lunchDurationSelectedDepartment"
         />
       </div>
       <div
@@ -147,6 +151,7 @@ const getYears = (yearStart = 2023) => {
 };
 
 const selectedDepartment = ref(null);
+const lunchDurationSelectedDepartment = ref(0);
 const departments = ref([]);
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -154,6 +159,14 @@ const getDepartments = async () => {
   await store.dispatch(actions.DEC_LOADING);
   departments.value = result;
 };
+const findDepartmentLunchDuration = () => {
+  const currentDepartment = departments.value.find(department => department.id === selectedDepartment.value);
+  lunchDurationSelectedDepartment.value = currentDepartment.lunchDuration ? currentDepartment.lunchDuration : 0;
+};
+
+watch(selectedDepartment, () => {
+  findDepartmentLunchDuration();
+});
 
 onMounted(() => {
   getDepartments();
@@ -582,6 +595,9 @@ const printDocument = async () => {
 .year-width {
   width: 100px;
 }
+.department-lunch {
+  width: 200px;
+}
 .department-width {
   width: 490px;
 }
@@ -593,7 +609,7 @@ const printDocument = async () => {
   align-items: center;
   justify-content: center;
 }
-empty-list {
+.empty-list {
   display: flex;
   align-items: center;
   justify-content: center;
