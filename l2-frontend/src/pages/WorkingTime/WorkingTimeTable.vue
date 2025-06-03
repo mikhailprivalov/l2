@@ -12,7 +12,7 @@
       </button>
     </div>
     <div
-      v-if="documentCreated && filtersFull && checkedRow.length > 0"
+      v-if="documentCreated && filtersFull"
     >
       <TemplateTable
         :year="props.year"
