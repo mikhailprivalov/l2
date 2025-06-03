@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const props = defineProps({
   columnText: {
@@ -20,7 +20,13 @@ const props = defineProps({
   },
 });
 
+const emit = defineEmits(['input']);
+
 const searchValue = ref('');
+
+watch(searchValue, () => {
+  emit('input', searchValue.value);
+});
 </script>
 
 <style scoped lang="scss">

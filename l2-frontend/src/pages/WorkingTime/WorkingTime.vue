@@ -187,7 +187,7 @@ const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
 
 const filteredEmployees = ref([]);
-const searchValue = ref('');
+
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
