@@ -5,6 +5,7 @@
     :cell-style-option="cellStyleOption"
     :border-y="true"
     :scroll-width="0"
+    :show-header="false"
   />
 </template>
 
