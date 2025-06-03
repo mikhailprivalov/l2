@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import {debounce} from "lodash";
 
 const props = defineProps({
   columnText: {
@@ -24,9 +25,11 @@ const emit = defineEmits(['input']);
 
 const searchValue = ref('');
 
-watch(searchValue, () => {
-  console.log('отправляем событие');
+const input = () => {
   emit('input', searchValue.value);
+};
+watch(searchValue, () => {
+  debounce(input, 300);
 });
 </script>
 
