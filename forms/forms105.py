@@ -27,7 +27,8 @@ from hospitals.models import Hospitals
 from laboratory import utils
 from laboratory.settings import FONTS_FOLDER
 from utils import tree_directions
-from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement, hosp_get_operation_data
+from .forms_func import get_doc_results, get_finaldata_talon, primary_reception_get_data, hosp_extract_get_data, hosp_patient_movement, hosp_get_operation_data, \
+    primary_reception_get_data_by_cda
 from .forms_func import closed_bl
 from api.stationar.stationar_func import hosp_get_hosp_direction
 
@@ -642,6 +643,23 @@ def form_03(request_data):
         doc_fio = hosp_extract_data['doc_fio']
         manager_depart = hosp_extract_data['manager_depart']
 
+    primary_reception_data_by_cda = primary_reception_get_data_by_cda(hosp_first_num)
+    result_by_cda = primary_reception_data_by_cda.get("result_by_cda")
+    who_directed = result_by_cda.get("п.п.-Организация направитель") if result_by_cda.get("п.п.-Организация направитель") else primary_reception_data.get('who_directed', "")
+    who_delivered = result_by_cda.get("п.п.-Кем доставлен") if result_by_cda.get("п.п.-Кем доставлен") else primary_reception_data.get("Кем доставлен", "")
+    diagnos_who_directed = result_by_cda.get("п.п.-Ds при направлении") if result_by_cda.get("п.п.-Ds при направлении") else primary_reception_data.get('Ds при направлении', "")
+    diagnos_entered = result_by_cda.get("п.п.-Ds приемного отделения") if result_by_cda.get("п.п.-Ds приемного отделения") else primary_reception_data.get('Диагноз приемного отделения', "")
+    count = result_by_cda.get("п.п.-Количество")
+    type_hospitalized = None
+    hospitalized = hospitalized
+    if count:
+        type_hospitalized = result_by_cda.get("п.п.-Форма помощи")
+    if count and type_hospitalized:
+        hospitalized = f"{count}; {type_hospitalized}"
+
+    time_start_ill = primary_reception_data['time_start_ill']
+    disability = result_by_cda.get("п.п.-Инвалидность") if result_by_cda.get("п.п.-Инвалидность") else ""
+
     title_page = [
         Indenter(left=0 * mm),
         Spacer(1, 8 * mm),
@@ -664,15 +682,15 @@ def form_03(request_data):
         Paragraph('Выдан: {}'.format(patient_data['oms']['polis_issued']), style),
         Paragraph('9. Вид оплаты: ОМС', style),
         Paragraph('10. Социальный статус: {}'.format(primary_reception_data['social_status']), style),
-        Paragraph('11. Категория льготности: {}'.format(primary_reception_data['category_privilege']), style),
-        Paragraph('12. Кем направлен больной: {}'.format(primary_reception_data['who_directed']), style),
-        Paragraph('13. Кем доставлен: _________________________________ Код______ Номер наряда__________', style),
-        Paragraph('14. Диагноз направившего учреждения: {}'.format(primary_reception_data['diagnos_who_directed']), style),
+        Paragraph(f'11. Категория льготности: {disability}', style),
+        Paragraph(f'12. Кем направлен больной: {who_directed}', style),
+        Paragraph(f'13. Кем доставлен: {who_delivered}', style),
+        Paragraph(f'14. Диагноз направившего учреждения: {diagnos_who_directed}', style),
         Paragraph('14.1 Состояние при поступлении: {}'.format(primary_reception_data['state']), style),
-        Paragraph('15. Диагноз приемного отделения:{}'.format(primary_reception_data['diagnos_entered']), style),
+        Paragraph(f'15. Диагноз приемного отделения:{diagnos_entered}', style),
         Paragraph('16. Доставлен в состоянии опьянения: Алкогольного — 1; Наркотического — 2.', style),
         Paragraph('17. Госпитализирован по поводу данного заболевания в текущем году: {}'.format(hospitalized), style),
-        Paragraph('18.Доставлен в стационар от начала заболевания(получения травмы): {}'.format(primary_reception_data['time_start_ill']), style),
+        Paragraph(f'18.Доставлен в стационар от начала заболевания(получения травмы): {time_start_ill}', style),
         Paragraph('19. Травма: {}'.format(primary_reception_data['type_trauma']), style),
         Paragraph('20. Дата поступления в приемное отделение:______________ Время__________', style),
         Paragraph(
