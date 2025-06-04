@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { VeTable } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment/moment';
@@ -161,6 +161,12 @@ const getColumns = () => {
 onMounted(() => {
   getColumns();
 });
+
+watch(() => [props.year, props.month], () => {
+  if (props.year && props.month) {
+    getColumns();
+  }
+}, { immediate: true });
 
 const cellStyleOption = {
   bodyCellClass: ({ column }) => {
