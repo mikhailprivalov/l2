@@ -554,12 +554,15 @@ const fillInTemplateData = ({ templateData }) => {
 };
 
 const sortChange = (params) => {
-  employeesWorkTime.value.sort((a, b) => {
+  filteredEmployees.value.sort((first, second) => {
     if (params.position) {
+      const firstPosition = first.position.toLowerCase();
+      const secondPosition = second.position.toLowerCase();
       if (params.position === 'asc') {
-        return a.position - b.positions;
-      } if (params.position === 'desc') {
-        return b.position - a.position;
+        return firstPosition.localeCompare(secondPosition);
+      }
+      if (params.position === 'desc') {
+        return secondPosition.localeCompare(firstPosition);
       }
       return 0;
     }
