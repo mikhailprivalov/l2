@@ -71,7 +71,6 @@
           :checkbox-option="checkboxOption"
           :cell-selection-option="cellSelectionOption"
           :row-style-option="rowStyleOption"
-          :sort-option="sortOption"
           :border-y="true"
           :scroll-width="0"
         />
@@ -294,6 +293,22 @@ watch(employeesWorkTime, () => {
   }
 }, { deep: true });
 
+const sortChange = (sortType: string) => {
+  filteredEmployees.value.sort((first, second) => {
+    const firstPosition = first.position.toLowerCase();
+    const secondPosition = second.position.toLowerCase();
+    const firstFio = first.fio.toLowerCase();
+    const secondFio = second.fio.toLowerCase();
+    if (sortType === 'asc') {
+      return firstPosition.localeCompare(secondPosition);
+    }
+    if (sortType === 'desc') {
+      return secondPosition.localeCompare(firstPosition);
+    }
+    return firstFio.localeCompare(secondFio);
+  });
+};
+
 const createDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('/working-time/create-document', {
@@ -450,13 +465,13 @@ const getColumns = () => {
       align: 'left',
       width: 115,
       fixed: 'left',
-      sortBy: '',
       renderHeaderCell: ({ column }, h) => h(
         PositionHeader,
         {
           props: { columnText: column.title, employeePositions: employeesWorkTime.value },
           on: {
             input: changeFilterPositions,
+            sort: sortChange,
           },
         },
       ),
@@ -553,23 +568,6 @@ const fillInTemplateData = ({ templateData }) => {
   }
 };
 
-const sortChange = (params) => {
-  filteredEmployees.value.sort((first, second) => {
-    if (params.position) {
-      const firstPosition = first.position.toLowerCase();
-      const secondPosition = second.position.toLowerCase();
-      if (params.position === 'asc') {
-        return firstPosition.localeCompare(secondPosition);
-      }
-      if (params.position === 'desc') {
-        return secondPosition.localeCompare(firstPosition);
-      }
-      return 0;
-    }
-    return 0;
-  });
-};
-
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
     const result = [];
@@ -625,12 +623,6 @@ const checkboxOption = {
   },
   selectedAllChange: ({ selectedRowKeys }) => {
     checkedRow.value = selectedRowKeys;
-  },
-};
-const sortOption = {
-  sortChange: (params) => {
-    console.log('sortChange', params);
-    sortChange(params);
   },
 };
 

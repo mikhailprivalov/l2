@@ -18,6 +18,21 @@
       class="fa column-icon"
       :class="selectedPositionIds.length > 0 ? 'fa-filter-circle-xmark': 'fa-filter'"
     />
+    <i
+      v-if="currentSort === 'none'"
+      class="fa fa-sort column-icon"
+      @click="changeSort"
+    />
+    <i
+      v-else-if="currentSort === 'asc'"
+      class="fa fa-sort-up column-icon"
+      @click="changeSort"
+    />
+    <i
+      v-else
+      class="fa fa-sort-down column-icon"
+      @click="changeSort"
+    />
     <div
       id="tempPositionFilter"
       class="tp"
@@ -62,7 +77,7 @@ const props = defineProps({
     default: () => [],
   },
 });
-const emit = defineEmits(['input']);
+const emit = defineEmits(['input', 'sort']);
 
 const selectedPositionIds = ref([]);
 
@@ -84,6 +99,21 @@ watch(() => props.employeePositions, () => {
 const normalizer = (node) => ({
   id: node.position,
   label: node.position,
+});
+
+const sortVariant = ref(['asc', 'desc', 'none']);
+const currentSort = ref('none');
+const changeSort = () => {
+  const currentIndex = sortVariant.value.indexOf(currentSort.value);
+  if (currentIndex === 2) {
+    [currentSort.value] = sortVariant.value;
+  } else {
+    currentSort.value = sortVariant.value[currentIndex + 1];
+  }
+};
+
+watch(currentSort, () => {
+  emit('sort', currentSort.value);
 });
 </script>
 
