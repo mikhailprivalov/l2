@@ -66,7 +66,7 @@
         <div class="exact-time">
           <i
             v-tippy
-            class="fa-solid fa-xmark clear"
+            class="fa-solid fa-xmark icon-color"
             title="Очистить"
             @click="clear"
           />
@@ -374,7 +374,7 @@ button[disabled] {
 ::v-deep .vue-treeselect__control {
   border-color: #aab2bd;
 }
-.clear {
-  color: red
+.icon-color {
+  color: #636e7e;
 }
 </style>
