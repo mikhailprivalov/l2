@@ -12,7 +12,7 @@ from laboratory.settings import (
     ACSN_MODE,
     REMOTE_DICOM_SERVER,
     REMOTE_DICOM_PEER,
-    WEB_PLUGIN_FOR_DICOM_STONE,
+    WEB_PLUGIN_LINK_STUDY,
 )
 import requests
 import simplejson as json
@@ -58,8 +58,8 @@ def search_dicom_study(direction=None):
             if len(DICOM_SERVERS) > 1:
                 return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
             else:
-                if WEB_PLUGIN_FOR_DICOM_STONE:
-                    dicom_link_web = f"{DICOM_SERVER}/stone-webviewer/index.html?study={dicom_study['study_instance_uid_tag']}"
+                if WEB_PLUGIN_LINK_STUDY:
+                    dicom_link_web = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid_tag']}"
                 else:
                     dicom_link_web = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
                 return dicom_link_web
@@ -86,8 +86,8 @@ def search_dicom_study(direction=None):
                     except Exception as e:
                         print('FAIL send_task_result')  # noqa: T001
                         print(e)  # noqa: T001
-                    if WEB_PLUGIN_FOR_DICOM_STONE:
-                        dicom_link_web = f'{DICOM_SERVER}/stone-webviewer/index.html?study={dicom_study_link[1]}'
+                    if WEB_PLUGIN_LINK_STUDY:
+                        dicom_link_web = f'{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study_link[1]}'
                     else:
                         dicom_link_web = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link[0]}'
                     return dicom_link_web
