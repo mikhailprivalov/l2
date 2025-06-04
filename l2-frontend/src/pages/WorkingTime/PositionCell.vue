@@ -46,7 +46,17 @@
         placeholder="Работник"
         :normalizer="normalizer"
         :clearable="false"
-      />
+      >
+        <label
+          slot="option-label"
+          slot-scope="{ node }"
+          v-tippy="{
+            maxWidth: '50%'
+          }"
+          class="treeselect-options"
+          :title="node.label"
+        > {{ node.label }}</label>
+      </Treeselect>
     </div>
   </div>
 </template>
@@ -145,5 +155,12 @@ const clear = () => {
 }
 .icon-color {
   color: #636e7e;
+}
+.treeselect-options {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-bottom: 0;
+  padding-top: 6px;
 }
 </style>
