@@ -61,7 +61,7 @@
         class="white-background"
       >
         <VeTable
-          max-height="calc(100vh - 240px)"
+          max-height="calc(100vh - 290px)"
           :columns="columns"
           :table-data="filteredEmployees"
           :cell-style-option="cellStyleOption"
