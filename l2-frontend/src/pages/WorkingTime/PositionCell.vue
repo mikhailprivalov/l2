@@ -10,7 +10,7 @@
       <i
         ref="from"
         v-tippy="{
-          html: `#tempCopyFrom${props.rowIndex}`,
+          html: `#tempCopyFrom${props.employeePositionId}`,
           arrow: true,
           reactive: true,
           interactive: true,
@@ -36,7 +36,7 @@
       class="position-text"
     />
     <div
-      :id="`tempCopyFrom${rowIndex}`"
+      :id="`tempCopyFrom${props.employeePositionId}`"
       class="tp"
     >
       <Treeselect
@@ -46,7 +46,17 @@
         placeholder="Работник"
         :normalizer="normalizer"
         :clearable="false"
-      />
+      >
+        <label
+          slot="option-label"
+          slot-scope="{ node }"
+          v-tippy="{
+            maxWidth: '50%'
+          }"
+          class="treeselect-options"
+          :title="node.label"
+        > {{ node.label }}</label>
+      </Treeselect>
     </div>
   </div>
 </template>
@@ -113,7 +123,7 @@ watch(selectedEmployeePositionId, () => {
 });
 const normalizer = (node) => ({
   id: node.employeePositionId,
-  label: node.fio,
+  label: `${node.fio} (${node.bidType})`,
 });
 const clear = () => {
   emit('clear', { rowIndex: props.rowIndex });
@@ -145,5 +155,12 @@ const clear = () => {
 }
 .icon-color {
   color: #636e7e;
+}
+.treeselect-options {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-bottom: 0;
+  padding-top: 6px;
 }
 </style>

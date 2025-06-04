@@ -66,7 +66,7 @@
         <div class="exact-time">
           <i
             v-tippy
-            class="fa-solid fa-xmark clear"
+            class="fa-solid fa-xmark icon-color"
             title="Очистить"
             @click="clear"
           />
@@ -130,7 +130,7 @@ const props = defineProps({
   },
   employeePositionId: {
     type: Number,
-    required: true,
+    required: false,
   },
   date: {
     type: [String, undefined],
@@ -155,6 +155,7 @@ const props = defineProps({
   lunchDuration: {
     type: Number,
     required: false,
+    default: 0,
   },
 });
 
@@ -373,7 +374,7 @@ button[disabled] {
 ::v-deep .vue-treeselect__control {
   border-color: #aab2bd;
 }
-.clear {
-  color: red
+.icon-color {
+  color: #636e7e;
 }
 </style>
