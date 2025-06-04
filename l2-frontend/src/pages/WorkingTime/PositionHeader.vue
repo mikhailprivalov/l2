@@ -15,7 +15,8 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      class="fa fa-filter column-icon"
+      class="fa column-icon"
+      :class="selectedPositionIds.length > 0 ? 'fa-filter-circle-xmark': 'fa-filter'"
     />
     <div
       id="tempPositionFilter"
@@ -99,7 +100,6 @@ const normalizer = (node) => ({
   width: 150px;
 }
 .treeselect-options {
-  //font-size: 12px;
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
