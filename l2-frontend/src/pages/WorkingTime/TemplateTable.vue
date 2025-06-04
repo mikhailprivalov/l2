@@ -121,7 +121,7 @@ const getColumns = () => {
       ),
     },
   ];
-  const daysMonth = getMonthDays(props.year, props.month);
+  const daysMonth = [...monthDays.value];
   const data = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
