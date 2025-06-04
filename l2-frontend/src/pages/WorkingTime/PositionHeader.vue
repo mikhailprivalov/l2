@@ -29,6 +29,7 @@
         class="treeselect-34px"
         placeholder="Должности"
         :multiple="true"
+        :always-open="true"
       >
         <label
           slot="option-label"
@@ -64,6 +65,10 @@ const props = defineProps({
 const emit = defineEmits(['input']);
 
 const selectedPositionIds = ref([]);
+
+watch(selectedPositionIds, () => {
+  emit('input', selectedPositionIds.value);
+});
 const positions = ref([]);
 watch(() => props.employeePositions, () => {
   selectedPositionIds.value = [];

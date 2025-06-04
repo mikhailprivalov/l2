@@ -194,6 +194,9 @@ const filters = ref({
 const changeFilterFio = (searchValue: string) => {
   filters.value.fio = searchValue;
 };
+const changeFilterPositions = (selectedPosition: object[]) => {
+  filters.value.positions = selectedPosition;
+};
 
 const filteredEmployees = ref([]);
 
@@ -453,6 +456,9 @@ const getColumns = () => {
         PositionHeader,
         {
           props: { columnText: column.title, employeePositions: employeesWorkTime.value },
+          on: {
+            input: changeFilterPositions,
+          },
         },
       ),
       renderBodyCell: ({ row, column, rowIndex }, h) => h(
