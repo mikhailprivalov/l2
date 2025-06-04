@@ -1,6 +1,8 @@
 <template>
   <div class="column-row">
-    <p class="column-text">{{ props.columnText }}</p>
+    <p class="column-text">
+      {{ props.columnText }}
+    </p>
     <i class="fa fa-filter column-icon" />
   </div>
 </template>
