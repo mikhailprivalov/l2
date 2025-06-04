@@ -463,7 +463,7 @@ const getColumns = () => {
       key: 'position',
       title: 'Должность',
       align: 'left',
-      width: 115,
+      width: 130,
       fixed: 'left',
       renderHeaderCell: ({ column }, h) => h(
         PositionHeader,

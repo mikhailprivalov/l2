@@ -101,7 +101,7 @@ const getColumns = () => {
       key: 'button',
       title: '',
       align: 'center',
-      width: 330,
+      width: 345,
       fixed: 'left',
       renderBodyCell: ({ row, column }, h) => h(
         FillingCell,
