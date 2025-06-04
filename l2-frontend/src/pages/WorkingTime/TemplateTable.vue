@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { VeTable } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment/moment';
