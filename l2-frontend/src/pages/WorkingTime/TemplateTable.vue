@@ -58,9 +58,6 @@ const getMonthDays = (year: number, month: number) => {
   }
   return days;
 };
-onMounted(() => {
-  monthDays.value = getMonthDays(props.year, props.month);
-});
 const columns = ref([]);
 
 const templateData = ref([]);
@@ -72,10 +69,6 @@ const createTemplateData = () => {
   }
   templateData.value = [{ ...result }];
 };
-
-onMounted(() => {
-  createTemplateData();
-});
 
 const changeTemplateTime = async ({
   date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
@@ -158,13 +151,12 @@ const getColumns = () => {
   columnTemplate.push(endTable);
   columns.value = columnTemplate;
 };
-onMounted(() => {
-  getColumns();
-});
 
 watch(() => [props.year, props.month], () => {
   if (props.year && props.month) {
+    monthDays.value = getMonthDays(props.year, props.month);
     getColumns();
+    createTemplateData();
   }
 }, { immediate: true });
 
