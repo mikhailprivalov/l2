@@ -449,7 +449,12 @@ const getColumns = () => {
       align: 'left',
       width: 115,
       fixed: 'left',
-      renderHeaderCell: ({ column }, h) => h(PositionHeader, { props: { columnText: column.title } }),
+      renderHeaderCell: ({ column }, h) => h(
+        PositionHeader,
+        {
+          props: { columnText: column.title, employeePositions: employeesWorkTime.value },
+        },
+      ),
       renderBodyCell: ({ row, column, rowIndex }, h) => h(
         PositionCell,
         {
