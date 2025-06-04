@@ -113,7 +113,7 @@ watch(selectedEmployeePositionId, () => {
 });
 const normalizer = (node) => ({
   id: node.employeePositionId,
-  label: node.fio,
+  label: `${node.fio} (${node.bidType})`,
 });
 const clear = () => {
   emit('clear', { rowIndex: props.rowIndex });
