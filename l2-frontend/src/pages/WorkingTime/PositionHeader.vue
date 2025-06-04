@@ -23,18 +23,28 @@
     >
       <Treeselect
         v-model="selectedPositionIds"
-        :options="props.employeePosition"
+        :options="positions"
+        :normalizer="normalizer"
         class="treeselect-34px"
         placeholder="Должности"
-        :normalizer="normalizer"
         :multiple="true"
-      />
+      >
+        <label
+          slot="option-label"
+          slot-scope="{ node }"
+          v-tippy="{
+            maxWidth: '50%'
+          }"
+          class="treeselect-options"
+          :title="node.label"
+        > {{ node.label }}</label>
+      </Treeselect>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -47,12 +57,24 @@ const props = defineProps({
   employeePositions: {
     type: Array,
     required: true,
+    default: () => [],
   },
 });
 const emit = defineEmits(['input']);
 
-const selectedPositionIds = ref('');
-
+const selectedPositionIds = ref([]);
+const positions = ref([]);
+watch(() => props.employeePositions, () => {
+  selectedPositionIds.value = [];
+  positions.value = props.employeePositions.filter(employee => {
+    const isDuplicate = positions.value.includes(employee.position);
+    if (!isDuplicate) {
+      positions.value.push(employee.position);
+      return true;
+    }
+    return false;
+  });
+});
 const normalizer = (node) => ({
   id: node.position,
   label: node.position,
@@ -75,5 +97,13 @@ const normalizer = (node) => ({
 .tp {
   height: auto;
   width: 150px;
+}
+.treeselect-options {
+  //font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  margin-bottom: 0;
+  padding-top: 6px;
 }
 </style>
