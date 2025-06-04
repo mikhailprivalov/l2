@@ -71,6 +71,7 @@
           :checkbox-option="checkboxOption"
           :cell-selection-option="cellSelectionOption"
           :row-style-option="rowStyleOption"
+          :sort-option="sortOption"
           :border-y="true"
           :scroll-width="0"
         />
@@ -162,6 +163,16 @@ const getDepartments = async () => {
   await store.dispatch(actions.DEC_LOADING);
   departments.value = result;
 };
+
+const shiftsVariants = ref([]);
+const workDayStatuses = ref([]);
+const getRefBooks = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const result = await api('/working-time/get-ref-books');
+  await store.dispatch(actions.DEC_LOADING);
+  workDayStatuses.value = result.workDayStatuses;
+  shiftsVariants.value = result.shiftsVariants;
+};
 const findDepartmentLunchDuration = () => {
   const currentDepartment = departments.value.find(department => department.id === selectedDepartment.value);
   lunchDurationSelectedDepartment.value = currentDepartment.lunchDuration ? currentDepartment.lunchDuration : 0;
@@ -174,6 +185,7 @@ watch(selectedDepartment, () => {
 onMounted(() => {
   getDepartments();
   getYears();
+  getRefBooks();
 });
 
 const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value && selectedDepartment.value));
@@ -400,20 +412,6 @@ const getMonthDays = (year: number, month: number) => {
   return days;
 };
 
-const shiftsVariants = ref([]);
-const workDayStatuses = ref([]);
-const getRefBooks = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const result = await api('/working-time/get-ref-books');
-  await store.dispatch(actions.DEC_LOADING);
-  workDayStatuses.value = result.workDayStatuses;
-  shiftsVariants.value = result.shiftsVariants;
-};
-
-onMounted(async () => {
-  await getRefBooks();
-});
-
 const getColumns = () => {
   const columnTemplate = [
     {
@@ -452,6 +450,7 @@ const getColumns = () => {
       align: 'left',
       width: 115,
       fixed: 'left',
+      sortBy: '',
       renderHeaderCell: ({ column }, h) => h(
         PositionHeader,
         {
@@ -554,6 +553,20 @@ const fillInTemplateData = ({ templateData }) => {
   }
 };
 
+const sortChange = (params) => {
+  employeesWorkTime.value.sort((a, b) => {
+    if (params.position) {
+      if (params.position === 'asc') {
+        return a.position - b.positions;
+      } if (params.position === 'desc') {
+        return b.position - a.position;
+      }
+      return 0;
+    }
+    return 0;
+  });
+};
+
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
     const result = [];
@@ -611,6 +624,13 @@ const checkboxOption = {
     checkedRow.value = selectedRowKeys;
   },
 };
+const sortOption = {
+  sortChange: (params) => {
+    console.log('sortChange', params);
+    sortChange(params);
+  },
+};
+
 const save = async () => {
   if (!documentBlocked.value) {
     await store.dispatch(actions.INC_LOADING);
