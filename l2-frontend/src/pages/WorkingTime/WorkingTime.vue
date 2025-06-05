@@ -545,7 +545,7 @@ watch([selectedYear, selectedMonth], () => {
   }
 }, { immediate: true });
 
-const cellStyleOption = {
+const cellStyleOption = ref({
   bodyCellClass: ({ row, column }) => {
     const result = [];
     if (row.bidType !== 'Осн') {
@@ -579,21 +579,21 @@ const cellStyleOption = {
     }
     return result.join(' ');
   },
-};
-const columnHiddenOption = {
+});
+const columnHiddenOption = ref({
   defaultHiddenColumnKeys: ['employeePositionId'],
-};
-const virtualScrollOption = {
+});
+const virtualScrollOption = ref({
   enable: true,
-};
-const cellSelectionOption = {
+});
+const cellSelectionOption = ref({
   enable: false,
-};
-const rowStyleOption = {
+});
+const rowStyleOption = ref({
   hoverHighlight: false,
   clickHighlight: false,
   stripe: false,
-};
+});
 const checkboxOption = ref({
   selectedRowKeys: [],
   selectedRowChange: ({ selectedRowKeys }) => {
