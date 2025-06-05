@@ -160,7 +160,7 @@ watch(() => [props.year, props.month], () => {
   }
 }, { immediate: true });
 
-const cellStyleOption = {
+const cellStyleOption = ref({
   bodyCellClass: ({ column }) => {
     const result = [];
     if (column.isWeekend) {
@@ -177,12 +177,12 @@ const cellStyleOption = {
     result.push('table-header-cell');
     return result.join(' ');
   },
-};
-const rowStyleOption = {
+});
+const rowStyleOption = ref({
   hoverHighlight: false,
   clickHighlight: false,
   stripe: false,
-};
+});
 </script>
 
 <style scoped lang="scss">
