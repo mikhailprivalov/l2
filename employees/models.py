@@ -360,7 +360,8 @@ class Department(models.Model):
     def get_active(hospital_id: int = None):
         if not hospital_id:
             hospital_id = Hospitals.objects.get(is_default=True)
-        departments = [{"id": department.pk, "label": department.name, "lunchDuration": department.lunch_duration} for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')]
+        departments = [{"id": department.pk, "label": department.name, "lunchDuration": department.lunch_duration} for department in Department.objects.filter(is_active=True,
+                        hospital_id=hospital_id).order_by('name')]
         return departments or []
 
     @staticmethod
