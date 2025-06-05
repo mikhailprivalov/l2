@@ -221,9 +221,9 @@ const filterEmployees = () => {
   });
 };
 
-watch(filters, () => {
-  filterEmployees();
-}, { deep: true });
+// watch(filters, () => {
+//   filterEmployees();
+// }, { deep: true });
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -545,29 +545,6 @@ watch([selectedYear, selectedMonth], () => {
   }
 }, { immediate: true });
 
-const checkedRow = ref([]);
-
-const fillInTemplateData = ({ templateData }) => {
-  for (const employeePosition of employeesWorkTime.value) {
-    if (checkedRow.value.includes(employeePosition.employeePositionId)) {
-      const keys = Object.keys(employeePosition);
-      for (const key of keys) {
-        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-          employeePosition[key] = { ...templateData[key] };
-          updateChangedEmployeesWorkTime(
-            employeePosition.employeePositionId,
-            key,
-            null,
-            null,
-            null,
-            { ...templateData[key] },
-          );
-        }
-      }
-    }
-  }
-};
-
 const cellStyleOption = {
   bodyCellClass: ({ row, column }) => {
     const result = [];
@@ -617,14 +594,41 @@ const rowStyleOption = {
   clickHighlight: false,
   stripe: false,
 };
-const checkboxOption = {
+const checkboxOption = ref({
+  selectedRowKeys: [],
   selectedRowChange: ({ selectedRowKeys }) => {
-    checkedRow.value = selectedRowKeys;
+    checkboxOption.value.selectedRowKeys = selectedRowKeys;
   },
   selectedAllChange: ({ selectedRowKeys }) => {
-    checkedRow.value = selectedRowKeys;
+    checkboxOption.value.selectedRowKeys = selectedRowKeys;
   },
+});
+
+const fillInTemplateData = ({ templateData }) => {
+  for (const employeePosition of employeesWorkTime.value) {
+    if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
+      const keys = Object.keys(employeePosition);
+      for (const key of keys) {
+        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+          employeePosition[key] = { ...templateData[key] };
+          updateChangedEmployeesWorkTime(
+            employeePosition.employeePositionId,
+            key,
+            null,
+            null,
+            null,
+            { ...templateData[key] },
+          );
+        }
+      }
+    }
+  }
 };
+
+watch(filters, () => {
+  filterEmployees();
+  checkboxOption.value.selectedRowKeys = [];
+}, { deep: true, immediate: true });
 
 const save = async () => {
   if (!documentBlocked.value) {
