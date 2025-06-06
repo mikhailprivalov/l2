@@ -331,12 +331,12 @@ watch([filters, sorts], () => {
 const filteredAndSortedEmployees = computed(() => {
   const searchedFio = filters.value.fio.toLowerCase();
   const searchedPositions = filters.value.positions;
-  const filterEmployees = employeesWorkTime.value.filter(employee => {
+  const filteredEmployees = employeesWorkTime.value.filter(employee => {
     const employeeFio = employee.fio?.toLowerCase();
     const employeePosition = employee.position;
     return employeeFio.includes(searchedFio) && (searchedPositions.length === 0 || searchedPositions.includes(employeePosition));
   });
-  return filterEmployees.sort((first, second) => {
+  return filteredEmployees.sort((first, second) => {
     const firstPosition = first.position.toLowerCase();
     const secondPosition = second.position.toLowerCase();
     const firstFio = first.fio.toLowerCase();
