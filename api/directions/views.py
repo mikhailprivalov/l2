@@ -11,7 +11,7 @@ from django.core.paginator import Paginator
 from barcodes.views import tubes
 from cash_registers.models import Cheque
 from cda.integration import cdator_gen_xml, render_cda
-from contracts.models import PriceCategory, PriceCoast, PriceName, Company
+from contracts.models import PriceCategory, PriceCoast, PriceName, Company, MedicalExamination
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook, CdaFields
 from integration_framework.common_func import directions_pdf_result
@@ -3235,6 +3235,12 @@ def last_field_result(request):
             parent_iss = tuple([i['issledovaniye'] for i in hosp_dirs])
         vital_result = get_vital_param_in_hosp(client_pk, parent_iss, param_code)
         result = {"value": vital_result}
+    elif request_data["fieldPk"].find('%type_medexam') != -1:
+        medexam_type_result = ""
+        medexam_data = MedicalExamination.objects.filter(napravleniye_id=num_dir).first()
+        if medexam_data and medexam_data.type_medexam:
+            medexam_type_result = medexam_data.type_medexam
+        result = {"value": medexam_type_result}
     else:
         field_pks = [request_data["fieldPk"]]
         logical_or = True

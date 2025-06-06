@@ -28,6 +28,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from transliterate import translit
 
 import directory.models as directory
+from contracts.models import MedicalExamination
 from directions.sql_func import get_researches_by_number_directions
 from users.models import DoctorProfile
 from api.sql_func import search_case_by_card_date
@@ -1161,6 +1162,10 @@ def create_case_by_cards(cards):
 
             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_start_date_case)
             issledovaniye_case.save()
+            current_exam = MedicalExamination.objects.filter(card=card, plan_start_date=plan_start_date_case).first()
+            current_exam.napravleniye = napravleniye_case
+            current_exam.save()
+
             result = Napravleniya.gen_napravleniya_by_issledovaniya(
                 card_id,
                 "",

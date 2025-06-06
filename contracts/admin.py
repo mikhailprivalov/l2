@@ -90,7 +90,7 @@ class ResMedicalExamination(admin.ModelAdmin):
     list_display = ('card', 'company', 'date')
     list_display_links = ('card', 'company', 'date')
     list_filter = ('company', 'date')
-    raw_id_fields = ('card',)
+    raw_id_fields = ('card', 'napravleniye',)
     autocomplete_fields = ('card',)
 
 
