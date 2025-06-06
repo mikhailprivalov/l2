@@ -195,6 +195,57 @@ const documentBlocked = ref(false);
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
 
+const getEmployeesWorkTime = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-work-time', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+    departmentId: selectedDepartment.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  const { data, documentIsBlocked, documentIsCreated } = result;
+  employeesWorkTime.value = data;
+  documentCreated.value = documentIsCreated;
+  documentBlocked.value = documentIsBlocked;
+  changedEmployeesWorkTime.value = {};
+};
+
+watch(employeesWorkTime, () => {
+  for (const employee of employeesWorkTime.value) {
+    let totalDiffTime = 0;
+    const keys = Object.keys(employee);
+    const lunchDuration = employee.lunchDuration * 60 * 1000;
+    for (const key of keys) {
+      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+        const currentDay = employee[key];
+        if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
+          const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
+          let endTime;
+          if (currentDay.endWorkTime === '00:00') {
+            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
+          } else {
+            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
+          }
+          const dayDiffTime = endTime - startTime - lunchDuration;
+          totalDiffTime += dayDiffTime;
+        }
+      }
+    }
+    const totalDiffSec = totalDiffTime / (1000 * 60);
+    const totalHoursDecimal = totalDiffSec / 60;
+    const totalHours = Math.trunc(totalHoursDecimal);
+    const totalMin = totalDiffSec % 60;
+    employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
+    employee.totalHours = `${totalHours}ч ${totalMin}м`;
+  }
+}, { deep: true });
+
+watch([selectedYear, selectedMonth, selectedDepartment], () => {
+  if (selectedYear.value && selectedMonth.value && selectedDepartment.value) {
+    getEmployeesWorkTime();
+  }
+}, { immediate: true });
+
 const cellStyleOption = ref({
   bodyCellClass: ({ row, column }) => {
     const result = [];
@@ -259,22 +310,23 @@ const filters = ref({
   positions: [],
 });
 
-const sorts = ref('none');
+const changeFilterFio = (searchValue: string) => {
+  filters.value.fio = searchValue;
+};
 
-watch([filters, sorts], () => {
-  checkboxOption.value.selectedRowKeys = [];
-}, { deep: true });
+const changeFilterPositions = (selectedPosition: object[]) => {
+  filters.value.positions = selectedPosition;
+};
+
+const sorts = ref('none');
 
 const sortChange = (sortType: string) => {
   sorts.value = sortType;
 };
 
-const changeFilterFio = (searchValue: string) => {
-  filters.value.fio = searchValue;
-};
-const changeFilterPositions = (selectedPosition: object[]) => {
-  filters.value.positions = selectedPosition;
-};
+watch([filters, sorts], () => {
+  checkboxOption.value.selectedRowKeys = [];
+}, { deep: true });
 
 const filteredAndSortedEmployees = computed(() => {
   const searchedFio = filters.value.fio.toLowerCase();
@@ -320,72 +372,6 @@ const updateChangedEmployeesWorkTime = (
     };
   }
 };
-
-const getEmployeesWorkTime = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-work-time', {
-    year: selectedYear.value,
-    month: selectedMonth.value + 1,
-    departmentId: selectedDepartment.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  const { data, documentIsBlocked, documentIsCreated } = result;
-  employeesWorkTime.value = data;
-  documentCreated.value = documentIsCreated;
-  documentBlocked.value = documentIsBlocked;
-  changedEmployeesWorkTime.value = {};
-};
-
-watch(employeesWorkTime, () => {
-  for (const employee of employeesWorkTime.value) {
-    let totalDiffTime = 0;
-    const keys = Object.keys(employee);
-    const lunchDuration = employee.lunchDuration * 60 * 1000;
-    for (const key of keys) {
-      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-        const currentDay = employee[key];
-        if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
-          const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-          let endTime;
-          if (currentDay.endWorkTime === '00:00') {
-            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
-          } else {
-            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-          }
-          const dayDiffTime = endTime - startTime - lunchDuration;
-          totalDiffTime += dayDiffTime;
-        }
-      }
-    }
-    const totalDiffSec = totalDiffTime / (1000 * 60);
-    const totalHoursDecimal = totalDiffSec / 60;
-    const totalHours = Math.trunc(totalHoursDecimal);
-    const totalMin = totalDiffSec % 60;
-    employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
-    employee.totalHours = `${totalHours}ч ${totalMin}м`;
-  }
-}, { deep: true });
-
-const createDocument = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('/working-time/create-document', {
-    year: selectedYear.value,
-    month: selectedMonth.value + 1,
-    departmentId: selectedDepartment.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    await getEmployeesWorkTime();
-  } else {
-    root.$emit('msg', 'error', message);
-  }
-};
-
-watch([selectedYear, selectedMonth, selectedDepartment], () => {
-  if (selectedYear.value && selectedMonth.value && selectedDepartment.value) {
-    getEmployeesWorkTime();
-  }
-}, { immediate: true });
 
 const changeWorkTime = async ({
   employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
@@ -472,6 +458,7 @@ const clear = ({ rowIndex }) => {
 };
 
 const columns = ref([]);
+
 const getMonthDays = (year: number, month: number) => {
   const days = [];
   const currentMonth = month;
@@ -640,6 +627,21 @@ const save = async () => {
     }
   } else {
     root.$emit('msg', 'error', 'Документ заблокирован');
+  }
+};
+
+const createDocument = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/create-document', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+    departmentId: selectedDepartment.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
   }
 };
 
