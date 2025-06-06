@@ -289,9 +289,11 @@ class MedicalExamination(models.Model):
     card = models.ForeignKey(Card, help_text="Карта пациента", db_index=True, on_delete=models.CASCADE)
     company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text="Дата мед. осмотра", db_index=True)
+    type_medexam = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="Тип медосмотра", db_index=True)
+    napravleniye = models.ForeignKey('directions.Napravleniya', null=True, help_text='Случай-направление', db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        return f"{self.card} - {self.company} - {self.date}"
+        return f"{self.card} - {self.company} - {self.date} - {self.type_medexam}"
 
     @staticmethod
     def get_by_date(date: str, company_id: int, month: bool = False) -> list[dict]:
@@ -366,14 +368,15 @@ class MedicalExamination(models.Model):
         return result
 
     @staticmethod
-    def save_examination(card: Card, company: Company, date: str):
+    def save_examination(card: Card, company: Company, date: str, type_medexam: str):
         current_exam = MedicalExamination.objects.filter(card=card).first()
         if current_exam:
             current_exam.company = company
             current_exam.date = date
+            current_exam.type_medexam = type_medexam
             current_exam.save()
         else:
-            MedicalExamination(card=card, company=company, date=date).save()
+            MedicalExamination(card=card, company=company, date=date, type_medexam=type_medexam).save()
 
     @staticmethod
     def get_date(card_pk: int):
@@ -384,15 +387,16 @@ class MedicalExamination(models.Model):
         return result
 
     @staticmethod
-    def update_date(card_pk: int, date: str):
+    def update_date(card_pk: int, date: str, type_medexam: str):
         current_exam = MedicalExamination.objects.filter(card_id=card_pk).first()
         if current_exam:
             current_exam.date = date
+            current_exam.type_medexam = type_medexam
             current_exam.save()
         elif date != "":
             card = Card.objects.filter(pk=card_pk).first()
             if card.work_place_db:
-                MedicalExamination.save_examination(card, card.work_place_db, date)
+                MedicalExamination.save_examination(card, card.work_place_db, date, type_medexam)
 
     class Meta:
         verbose_name = "Медицинский осмотр"
