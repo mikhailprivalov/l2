@@ -197,6 +197,65 @@ const documentBlocked = ref(false);
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
 
+const cellStyleOption = ref({
+  bodyCellClass: ({ row, column }) => {
+    const result = [];
+    if (row.bidType !== 'Осн') {
+      result.push('table-body-bid-cell');
+    }
+    if (column.isWeekend) {
+      result.push('table-body-weekend-cell');
+    }
+    if (column.key === 'fio') {
+      result.push('table-body-name-cell');
+    } else if (column.key === 'position') {
+      result.push('table-body-position-cell');
+    } else if (column.key === 'checkbox') {
+      result.push('table-checkbox-cell');
+    } else {
+      result.push('table-body-cell');
+    }
+    return result.join(' ');
+  },
+  headerCellClass: ({ column }) => {
+    const result = [];
+    const nonDateKey = ['fio', 'position'];
+    if (column.isWeekend) {
+      result.push('table-header-weekend-cell');
+    } else if (nonDateKey.includes(column.key)) {
+      result.push('table-header-non-date-cell');
+    } else if (column.key === 'checkbox') {
+      result.push('table-checkbox-cell');
+    } else {
+      result.push('table-header-cell');
+    }
+    return result.join(' ');
+  },
+});
+const columnHiddenOption = ref({
+  defaultHiddenColumnKeys: ['employeePositionId'],
+});
+const virtualScrollOption = ref({
+  enable: true,
+});
+const cellSelectionOption = ref({
+  enable: false,
+});
+const rowStyleOption = ref({
+  hoverHighlight: false,
+  clickHighlight: false,
+  stripe: false,
+});
+const checkboxOption = ref({
+  selectedRowKeys: [],
+  selectedRowChange: ({ selectedRowKeys }) => {
+    checkboxOption.value.selectedRowKeys = selectedRowKeys;
+  },
+  selectedAllChange: ({ selectedRowKeys }) => {
+    checkboxOption.value.selectedRowKeys = selectedRowKeys;
+  },
+});
+
 const filters = ref({
   fio: '',
   positions: [],
@@ -220,6 +279,11 @@ const filterEmployees = () => {
     return employeeFio.includes(searchedFio) && (searchedPositions.length === 0 || searchedPositions.includes(employeePosition));
   });
 };
+
+watch(filters, () => {
+  filterEmployees();
+  checkboxOption.value.selectedRowKeys = [];
+}, { deep: true, immediate: true });
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -303,6 +367,7 @@ const sortChange = (sortType: string) => {
     }
     return firstFio.localeCompare(secondFio);
   });
+  checkboxOption.value.selectedRowKeys = [];
 };
 
 const createDocument = async () => {
@@ -540,65 +605,6 @@ watch([selectedYear, selectedMonth], () => {
   }
 }, { immediate: true });
 
-const cellStyleOption = ref({
-  bodyCellClass: ({ row, column }) => {
-    const result = [];
-    if (row.bidType !== 'Осн') {
-      result.push('table-body-bid-cell');
-    }
-    if (column.isWeekend) {
-      result.push('table-body-weekend-cell');
-    }
-    if (column.key === 'fio') {
-      result.push('table-body-name-cell');
-    } else if (column.key === 'position') {
-      result.push('table-body-position-cell');
-    } else if (column.key === 'checkbox') {
-      result.push('table-checkbox-cell');
-    } else {
-      result.push('table-body-cell');
-    }
-    return result.join(' ');
-  },
-  headerCellClass: ({ column }) => {
-    const result = [];
-    const nonDateKey = ['fio', 'position'];
-    if (column.isWeekend) {
-      result.push('table-header-weekend-cell');
-    } else if (nonDateKey.includes(column.key)) {
-      result.push('table-header-non-date-cell');
-    } else if (column.key === 'checkbox') {
-      result.push('table-checkbox-cell');
-    } else {
-      result.push('table-header-cell');
-    }
-    return result.join(' ');
-  },
-});
-const columnHiddenOption = ref({
-  defaultHiddenColumnKeys: ['employeePositionId'],
-});
-const virtualScrollOption = ref({
-  enable: true,
-});
-const cellSelectionOption = ref({
-  enable: false,
-});
-const rowStyleOption = ref({
-  hoverHighlight: false,
-  clickHighlight: false,
-  stripe: false,
-});
-const checkboxOption = ref({
-  selectedRowKeys: [],
-  selectedRowChange: ({ selectedRowKeys }) => {
-    checkboxOption.value.selectedRowKeys = selectedRowKeys;
-  },
-  selectedAllChange: ({ selectedRowKeys }) => {
-    checkboxOption.value.selectedRowKeys = selectedRowKeys;
-  },
-});
-
 const fillInTemplateData = ({ templateData }) => {
   for (const employeePosition of employeesWorkTime.value) {
     if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
@@ -619,11 +625,6 @@ const fillInTemplateData = ({ templateData }) => {
     }
   }
 };
-
-watch(filters, () => {
-  filterEmployees();
-  checkboxOption.value.selectedRowKeys = [];
-}, { deep: true, immediate: true });
 
 const save = async () => {
   if (!documentBlocked.value) {
