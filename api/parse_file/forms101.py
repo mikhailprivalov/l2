@@ -159,7 +159,7 @@ def add_factors_data(patient_card: Card, position: str, factors_data: list, exam
         return {"ok": False, "message": e}
 
 
-def normalize_med_exam_data(snils: str, fio: str, birthday: str, gender: str, inn_company: str, code_harmful: str, position: str, examination_date: str, department: str):
+def normalize_med_exam_data(snils: str, fio: str, birthday: str, gender: str, inn_company: str, code_harmful: str, position: str, examination_date: str, department: str, type_medexam: str):
     result = {
         "snils": None,
         "fio": None,
@@ -173,6 +173,7 @@ def normalize_med_exam_data(snils: str, fio: str, birthday: str, gender: str, in
         "position": None,
         "examination_date": None,
         "department": None,
+        "type_medexam": None,
     }
     if snils and snils != "None":
         result["snils"] = snils.replace("-", "").replace(" ", "")
@@ -198,6 +199,8 @@ def normalize_med_exam_data(snils: str, fio: str, birthday: str, gender: str, in
         result["examination_date"] = examination_date.split(" ")[0]
     if department and department != "None":
         result["department"] = department
+    if type_medexam and type_medexam != "None":
+        result["type_medexam"] = type_medexam
     return result
 
 
@@ -236,6 +239,9 @@ def validate_med_exam_data(normalize_data: dict, inn_company) -> dict:
         errors.append("Дата мед. осмотра: неверная/несуществующая дата")
     if not normalize_data["department"]:
         errors.append("Подразделение не указано")
+    if not normalize_data["type_medexam"] in ["периодический", "предварительный"]:
+        errors.append("Тип медосмотра не верный")
+
     if not normalize_data["gender"] in ["м", "ж"]:
         errors.append("Пол указан не верно")
     if normalize_data["position"] and len(normalize_data["position"]) > 128:
@@ -274,7 +280,8 @@ def form_01(request_data):
     ws = wb[wb.sheetnames[0]]
     starts = False
     incorrect_patients = []
-    snils_idx, fio_idx, birthday_idx, gender_idx, inn_company_idx, code_harmful_idx, position_idx, examination_date_idx, department_idx = (
+    snils_idx, fio_idx, birthday_idx, gender_idx, inn_company_idx, code_harmful_idx, position_idx, examination_date_idx, department_idx, type_medexam_idx = (
+        None,
         None,
         None,
         None,
@@ -285,7 +292,7 @@ def form_01(request_data):
         None,
         None,
     )
-    need_col_name = {"снилс", "фио", "дата рождения", "пол", "инн организации", "код вредности", "должность", "дата мед. осмотра", "подразделение"}
+    need_col_name = {"снилс", "фио", "дата рождения", "пол", "инн организации", "код вредности", "должность", "дата мед. осмотра", "подразделение", "тип медосмотра"}
     for index, row in enumerate(ws.rows, 1):
         cells = [str(x.value) for x in row]
         if not starts:
@@ -301,6 +308,7 @@ def form_01(request_data):
                 position_idx = cells.index("должность")
                 examination_date_idx = cells.index("дата мед. осмотра")
                 department_idx = cells.index("подразделение")
+                type_medexam_idx = cells.index("тип медосмотра")
                 starts = True
         else:
             snils = cells[snils_idx].strip()
@@ -312,8 +320,9 @@ def form_01(request_data):
             position = cells[position_idx].strip()
             examination_date = cells[examination_date_idx].strip()
             department = cells[department_idx].strip()
+            type_medexam = cells[type_medexam_idx].strip()
 
-            normalize_row = normalize_med_exam_data(snils, fio, birthday, gender, inn_company, code_harmful, position, examination_date, department)
+            normalize_row = normalize_med_exam_data(snils, fio, birthday, gender, inn_company, code_harmful, position, examination_date, department, type_medexam)
             check_result = validate_med_exam_data(normalize_row, company_inn)
             if not check_result["ok"] and check_result.get("empty"):
                 continue
