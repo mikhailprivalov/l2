@@ -343,8 +343,9 @@ def form_01(request_data):
             harmful_factors_data, incorrect_factor = find_factors(normalize_row["codes_harmful"])
             if incorrect_factor:
                 incorrect_patients.append({"fio": normalize_row["fio"], "reason": f"Неверные факторы: {incorrect_factor}"})
-            patient_updated = add_factors_data(patient_card, normalize_row["position"], harmful_factors_data, normalize_row["examination_date"], company_inn, normalize_row["department"],
-                                               normalize_row["type_medexam"])
+            patient_updated = add_factors_data(
+                patient_card, normalize_row["position"], harmful_factors_data, normalize_row["examination_date"], company_inn, normalize_row["department"], normalize_row["type_medexam"]
+            )
             if not patient_updated["ok"]:
                 incorrect_patients.append({"fio": cells[fio_idx], "reason": f"Сохранение не удалось, ошибка: {patient_updated['message']}"})
 
