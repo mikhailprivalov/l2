@@ -333,7 +333,13 @@ def form_01(request_data):
 
             patient_card = search_patient(normalize_row["snils"], user, normalize_row["family"], normalize_row["name"], normalize_row["patronymic"], normalize_row["birthday"])
             if patient_card is None:
-                patient_card = create_patient(normalize_row["family"], normalize_row["name"], normalize_row["patronymic"], normalize_row["birthday"], normalize_row["gender"],)
+                patient_card = create_patient(
+                    normalize_row["family"],
+                    normalize_row["name"],
+                    normalize_row["patronymic"],
+                    normalize_row["birthday"],
+                    normalize_row["gender"],
+                )
             harmful_factors_data, incorrect_factor = find_factors(normalize_row["codes_harmful"])
             if incorrect_factor:
                 incorrect_patients.append({"fio": normalize_row["fio"], "reason": f"Неверные факторы: {incorrect_factor}"})
