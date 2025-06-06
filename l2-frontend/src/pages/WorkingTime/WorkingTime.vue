@@ -396,6 +396,27 @@ const changeWorkTime = async ({
   }
 };
 
+const fillInTemplateData = ({ templateData }) => {
+  for (const employeePosition of employeesWorkTime.value) {
+    if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
+      const keys = Object.keys(employeePosition);
+      for (const key of keys) {
+        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+          employeePosition[key] = { ...templateData[key] };
+          updateChangedEmployeesWorkTime(
+            employeePosition.employeePositionId,
+            key,
+            null,
+            null,
+            null,
+            { ...templateData[key] },
+          );
+        }
+      }
+    }
+  }
+};
+
 const copyTop = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
   const prevFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex - 1];
@@ -587,27 +608,6 @@ watch([selectedYear, selectedMonth], () => {
     getColumns();
   }
 }, { immediate: true });
-
-const fillInTemplateData = ({ templateData }) => {
-  for (const employeePosition of employeesWorkTime.value) {
-    if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
-      const keys = Object.keys(employeePosition);
-      for (const key of keys) {
-        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-          employeePosition[key] = { ...templateData[key] };
-          updateChangedEmployeesWorkTime(
-            employeePosition.employeePositionId,
-            key,
-            null,
-            null,
-            null,
-            { ...templateData[key] },
-          );
-        }
-      }
-    }
-  }
-};
 
 const save = async () => {
   if (!documentBlocked.value) {
