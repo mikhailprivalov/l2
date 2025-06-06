@@ -63,7 +63,7 @@
         <VeTable
           max-height="calc(100vh - 290px)"
           :columns="columns"
-          :table-data="filteredEmployees"
+          :table-data="filteredAndSortedEmployees"
           :cell-style-option="cellStyleOption"
           :column-hidden-option="columnHiddenOption"
           :virtual-scroll-option="virtualScrollOption"
@@ -101,9 +101,7 @@
 
 <script setup lang="ts">
 import {
-  computed,
-  getCurrentInstance,
-  onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
@@ -197,56 +195,6 @@ const documentBlocked = ref(false);
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
 
-const filters = ref({
-  fio: '',
-  positions: [],
-});
-
-const changeFilterFio = (searchValue: string) => {
-  filters.value.fio = searchValue;
-};
-const changeFilterPositions = (selectedPosition: object[]) => {
-  filters.value.positions = selectedPosition;
-};
-
-const filteredEmployees = ref([]);
-
-const filterEmployees = () => {
-  const searchedFio = filters.value.fio.toLowerCase();
-  const searchedPositions = filters.value.positions;
-  filteredEmployees.value = employeesWorkTime.value.filter(employee => {
-    const employeeFio = employee.fio?.toLowerCase();
-    const employeePosition = employee.position;
-    return employeeFio.includes(searchedFio) && (searchedPositions.length === 0 || searchedPositions.includes(employeePosition));
-  });
-};
-
-// watch(filters, () => {
-//   filterEmployees();
-// }, { deep: true });
-
-const updateChangedEmployeesWorkTime = (
-  employeePositionId: number,
-  date: string,
-  startWorkTime: string = null,
-  endWorkTime: string = null,
-  typeId: number = null,
-  fullData: object = null,
-) => {
-  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
-    changedEmployeesWorkTime.value[employeePositionId] = {};
-  }
-  if (fullData) {
-    changedEmployeesWorkTime.value[employeePositionId][date] = fullData;
-  } else {
-    changedEmployeesWorkTime.value[employeePositionId][date] = {
-      startWorkTime,
-      endWorkTime,
-      typeId,
-    };
-  }
-};
-
 const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result } = await api('/working-time/get-work-time', {
@@ -260,7 +208,6 @@ const getEmployeesWorkTime = async () => {
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
-  filteredEmployees.value = employeesWorkTime.value.slice(0);
 };
 
 watch(employeesWorkTime, () => {
@@ -293,42 +240,138 @@ watch(employeesWorkTime, () => {
   }
 }, { deep: true });
 
-const sortChange = (sortType: string) => {
-  filteredEmployees.value.sort((first, second) => {
-    const firstPosition = first.position.toLowerCase();
-    const secondPosition = second.position.toLowerCase();
-    const firstFio = first.fio.toLowerCase();
-    const secondFio = second.fio.toLowerCase();
-    if (sortType === 'asc') {
-      return firstPosition.localeCompare(secondPosition);
-    }
-    if (sortType === 'desc') {
-      return secondPosition.localeCompare(firstPosition);
-    }
-    return firstFio.localeCompare(secondFio);
-  });
-};
-
-const createDocument = async () => {
-  await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('/working-time/create-document', {
-    year: selectedYear.value,
-    month: selectedMonth.value + 1,
-    departmentId: selectedDepartment.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  if (ok) {
-    await getEmployeesWorkTime();
-  } else {
-    root.$emit('msg', 'error', message);
-  }
-};
-
 watch([selectedYear, selectedMonth, selectedDepartment], () => {
   if (selectedYear.value && selectedMonth.value && selectedDepartment.value) {
     getEmployeesWorkTime();
   }
 }, { immediate: true });
+
+const cellStyleOption = ref({
+  bodyCellClass: ({ row, column }) => {
+    const result = [];
+    if (row.bidType !== 'Осн') {
+      result.push('table-body-bid-cell');
+    }
+    if (column.isWeekend) {
+      result.push('table-body-weekend-cell');
+    }
+    if (column.key === 'fio') {
+      result.push('table-body-name-cell');
+    } else if (column.key === 'position') {
+      result.push('table-body-position-cell');
+    } else if (column.key === 'checkbox') {
+      result.push('table-checkbox-cell');
+    } else {
+      result.push('table-body-cell');
+    }
+    return result.join(' ');
+  },
+  headerCellClass: ({ column }) => {
+    const result = [];
+    const nonDateKey = ['fio', 'position'];
+    if (column.isWeekend) {
+      result.push('table-header-weekend-cell');
+    } else if (nonDateKey.includes(column.key)) {
+      result.push('table-header-non-date-cell');
+    } else if (column.key === 'checkbox') {
+      result.push('table-checkbox-cell');
+    } else {
+      result.push('table-header-cell');
+    }
+    return result.join(' ');
+  },
+});
+const columnHiddenOption = ref({
+  defaultHiddenColumnKeys: ['employeePositionId'],
+});
+const virtualScrollOption = ref({
+  enable: true,
+});
+const cellSelectionOption = ref({
+  enable: false,
+});
+const rowStyleOption = ref({
+  hoverHighlight: false,
+  clickHighlight: false,
+  stripe: false,
+});
+const checkboxOption = ref({
+  selectedRowKeys: [],
+  selectedRowChange: ({ selectedRowKeys }) => {
+    checkboxOption.value.selectedRowKeys = selectedRowKeys;
+  },
+  selectedAllChange: ({ selectedRowKeys }) => {
+    checkboxOption.value.selectedRowKeys = selectedRowKeys;
+  },
+});
+
+const filters = ref({
+  fio: '',
+  positions: [],
+});
+
+const changeFilterFio = (searchValue: string) => {
+  filters.value.fio = searchValue;
+};
+
+const changeFilterPositions = (selectedPosition: object[]) => {
+  filters.value.positions = selectedPosition;
+};
+
+const sorts = ref('none');
+
+const sortChange = (sortType: string) => {
+  sorts.value = sortType;
+};
+
+watch([filters, sorts], () => {
+  checkboxOption.value.selectedRowKeys = [];
+}, { deep: true });
+
+const filteredAndSortedEmployees = computed(() => {
+  const searchedFio = filters.value.fio.toLowerCase();
+  const searchedPositions = filters.value.positions;
+  const filteredEmployees = employeesWorkTime.value.filter(employee => {
+    const employeeFio = employee.fio?.toLowerCase();
+    const employeePosition = employee.position;
+    return employeeFio.includes(searchedFio) && (searchedPositions.length === 0 || searchedPositions.includes(employeePosition));
+  });
+  return filteredEmployees.sort((first, second) => {
+    const firstPosition = first.position.toLowerCase();
+    const secondPosition = second.position.toLowerCase();
+    const firstFio = first.fio.toLowerCase();
+    const secondFio = second.fio.toLowerCase();
+    if (sorts.value === 'asc') {
+      return firstPosition.localeCompare(secondPosition);
+    }
+    if (sorts.value === 'desc') {
+      return secondPosition.localeCompare(firstPosition);
+    }
+    return firstFio.localeCompare(secondFio);
+  });
+});
+
+const updateChangedEmployeesWorkTime = (
+  employeePositionId: number,
+  date: string,
+  startWorkTime: string = null,
+  endWorkTime: string = null,
+  typeId: number = null,
+  fullData: object = null,
+) => {
+  if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
+    changedEmployeesWorkTime.value[employeePositionId] = {};
+  }
+  if (fullData) {
+    changedEmployeesWorkTime.value[employeePositionId][date] = fullData;
+  } else {
+    changedEmployeesWorkTime.value[employeePositionId][date] = {
+      startWorkTime,
+      endWorkTime,
+      typeId,
+    };
+  }
+};
 
 const changeWorkTime = async ({
   employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
@@ -351,12 +394,32 @@ const changeWorkTime = async ({
     };
     updateChangedEmployeesWorkTime(employeePositionId, nextDayString, '00:00', nextDayEnd, typeId);
   }
-  // calculateTotal(employeePositionId);
+};
+
+const fillInTemplateData = ({ templateData }) => {
+  for (const employeePosition of employeesWorkTime.value) {
+    if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
+      const keys = Object.keys(employeePosition);
+      for (const key of keys) {
+        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+          employeePosition[key] = { ...templateData[key] };
+          updateChangedEmployeesWorkTime(
+            employeePosition.employeePositionId,
+            key,
+            null,
+            null,
+            null,
+            { ...templateData[key] },
+          );
+        }
+      }
+    }
+  }
 };
 
 const copyTop = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
-  const prevFilteredEmployeePosition = filteredEmployees.value[rowIndex - 1];
+  const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
+  const prevFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex - 1];
   const currentEmployeePosition = employeesWorkTime.value.find(employee => employee.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
@@ -395,7 +458,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   }
 };
 const clear = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
+  const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
@@ -416,6 +479,7 @@ const clear = ({ rowIndex }) => {
 };
 
 const columns = ref([]);
+
 const getMonthDays = (year: number, month: number) => {
   const days = [];
   const currentMonth = month;
@@ -545,91 +609,6 @@ watch([selectedYear, selectedMonth], () => {
   }
 }, { immediate: true });
 
-const cellStyleOption = ref({
-  bodyCellClass: ({ row, column }) => {
-    const result = [];
-    if (row.bidType !== 'Осн') {
-      result.push('table-body-bid-cell');
-    }
-    if (column.isWeekend) {
-      result.push('table-body-weekend-cell');
-    }
-    if (column.key === 'fio') {
-      result.push('table-body-name-cell');
-    } else if (column.key === 'position') {
-      result.push('table-body-position-cell');
-    } else if (column.key === 'checkbox') {
-      result.push('table-checkbox-cell');
-    } else {
-      result.push('table-body-cell');
-    }
-    return result.join(' ');
-  },
-  headerCellClass: ({ column }) => {
-    const result = [];
-    const nonDateKey = ['fio', 'position'];
-    if (column.isWeekend) {
-      result.push('table-header-weekend-cell');
-    } else if (nonDateKey.includes(column.key)) {
-      result.push('table-header-non-date-cell');
-    } else if (column.key === 'checkbox') {
-      result.push('table-checkbox-cell');
-    } else {
-      result.push('table-header-cell');
-    }
-    return result.join(' ');
-  },
-});
-const columnHiddenOption = ref({
-  defaultHiddenColumnKeys: ['employeePositionId'],
-});
-const virtualScrollOption = ref({
-  enable: true,
-});
-const cellSelectionOption = ref({
-  enable: false,
-});
-const rowStyleOption = ref({
-  hoverHighlight: false,
-  clickHighlight: false,
-  stripe: false,
-});
-const checkboxOption = ref({
-  selectedRowKeys: [],
-  selectedRowChange: ({ selectedRowKeys }) => {
-    checkboxOption.value.selectedRowKeys = selectedRowKeys;
-  },
-  selectedAllChange: ({ selectedRowKeys }) => {
-    checkboxOption.value.selectedRowKeys = selectedRowKeys;
-  },
-});
-
-const fillInTemplateData = ({ templateData }) => {
-  for (const employeePosition of employeesWorkTime.value) {
-    if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
-      const keys = Object.keys(employeePosition);
-      for (const key of keys) {
-        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-          employeePosition[key] = { ...templateData[key] };
-          updateChangedEmployeesWorkTime(
-            employeePosition.employeePositionId,
-            key,
-            null,
-            null,
-            null,
-            { ...templateData[key] },
-          );
-        }
-      }
-    }
-  }
-};
-
-watch(filters, () => {
-  filterEmployees();
-  checkboxOption.value.selectedRowKeys = [];
-}, { deep: true, immediate: true });
-
 const save = async () => {
   if (!documentBlocked.value) {
     await store.dispatch(actions.INC_LOADING);
@@ -648,6 +627,21 @@ const save = async () => {
     }
   } else {
     root.$emit('msg', 'error', 'Документ заблокирован');
+  }
+};
+
+const createDocument = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/create-document', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+    departmentId: selectedDepartment.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
   }
 };
 
