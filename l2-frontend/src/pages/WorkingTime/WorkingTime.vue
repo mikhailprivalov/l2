@@ -221,10 +221,6 @@ const filterEmployees = () => {
   });
 };
 
-// watch(filters, () => {
-//   filterEmployees();
-// }, { deep: true });
-
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
   date: string,
