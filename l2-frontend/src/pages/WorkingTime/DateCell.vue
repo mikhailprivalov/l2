@@ -40,28 +40,6 @@
           {{ `${option.start}-${option.end}` }}
         </div>
       </div>
-      <!--      <div class="tp-row space-between">-->
-      <!--        <div class="copy-text">-->
-      <!--          Прошлые-->
-      <!--        </div>-->
-      <!--        <div>-->
-      <!--          <input-->
-      <!--            v-model="countDaysCopy"-->
-      <!--            class="form-control copy-count"-->
-      <!--            type="number"-->
-      <!--            min="1"-->
-      <!--            max="31"-->
-      <!--          >-->
-      <!--        </div>-->
-      <!--        <div class="copy-text">-->
-      <!--          дней-->
-      <!--        </div>-->
-      <!--        <div>-->
-      <!--          <button class="btn btn-blue-nb copy-button nbr">-->
-      <!--            Скопировать-->
-      <!--          </button>-->
-      <!--        </div>-->
-      <!--      </div>-->
       <div class="tp-row">
         <div class="exact-time">
           <i
