@@ -347,7 +347,6 @@ const changeWorkTime = async ({
     };
     updateChangedEmployeesWorkTime(employeePositionId, nextDayString, '00:00', nextDayEnd, typeId);
   }
-  // calculateTotal(employeePositionId);
 };
 
 const copyTop = ({ rowIndex }) => {
