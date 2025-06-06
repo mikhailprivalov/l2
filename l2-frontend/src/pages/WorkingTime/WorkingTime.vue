@@ -63,7 +63,7 @@
         <VeTable
           max-height="calc(100vh - 290px)"
           :columns="columns"
-          :table-data="filteredEmployees"
+          :table-data="filteredAndSortedEmployees"
           :cell-style-option="cellStyleOption"
           :column-hidden-option="columnHiddenOption"
           :virtual-scroll-option="virtualScrollOption"
@@ -101,9 +101,7 @@
 
 <script setup lang="ts">
 import {
-  computed,
-  getCurrentInstance,
-  onMounted, ref, watch,
+  computed, getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
@@ -261,6 +259,16 @@ const filters = ref({
   positions: [],
 });
 
+const sorts = ref('none');
+
+watch([filters, sorts], () => {
+  checkboxOption.value.selectedRowKeys = [];
+}, { deep: true });
+
+const sortChange = (sortType: string) => {
+  sorts.value = sortType;
+};
+
 const changeFilterFio = (searchValue: string) => {
   filters.value.fio = searchValue;
 };
@@ -268,22 +276,28 @@ const changeFilterPositions = (selectedPosition: object[]) => {
   filters.value.positions = selectedPosition;
 };
 
-const filteredEmployees = ref([]);
-
-const filterEmployees = () => {
+const filteredAndSortedEmployees = computed(() => {
   const searchedFio = filters.value.fio.toLowerCase();
   const searchedPositions = filters.value.positions;
-  filteredEmployees.value = employeesWorkTime.value.filter(employee => {
+  const filterEmployees = employeesWorkTime.value.filter(employee => {
     const employeeFio = employee.fio?.toLowerCase();
     const employeePosition = employee.position;
     return employeeFio.includes(searchedFio) && (searchedPositions.length === 0 || searchedPositions.includes(employeePosition));
   });
-};
-
-watch(filters, () => {
-  filterEmployees();
-  checkboxOption.value.selectedRowKeys = [];
-}, { deep: true, immediate: true });
+  return filterEmployees.sort((first, second) => {
+    const firstPosition = first.position.toLowerCase();
+    const secondPosition = second.position.toLowerCase();
+    const firstFio = first.fio.toLowerCase();
+    const secondFio = second.fio.toLowerCase();
+    if (sorts.value === 'asc') {
+      return firstPosition.localeCompare(secondPosition);
+    }
+    if (sorts.value === 'desc') {
+      return secondPosition.localeCompare(firstPosition);
+    }
+    return firstFio.localeCompare(secondFio);
+  });
+});
 
 const updateChangedEmployeesWorkTime = (
   employeePositionId: number,
@@ -320,7 +334,6 @@ const getEmployeesWorkTime = async () => {
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
-  filteredEmployees.value = employeesWorkTime.value.slice(0);
 };
 
 watch(employeesWorkTime, () => {
@@ -352,23 +365,6 @@ watch(employeesWorkTime, () => {
     employee.totalHours = `${totalHours}ч ${totalMin}м`;
   }
 }, { deep: true });
-
-const sortChange = (sortType: string) => {
-  filteredEmployees.value.sort((first, second) => {
-    const firstPosition = first.position.toLowerCase();
-    const secondPosition = second.position.toLowerCase();
-    const firstFio = first.fio.toLowerCase();
-    const secondFio = second.fio.toLowerCase();
-    if (sortType === 'asc') {
-      return firstPosition.localeCompare(secondPosition);
-    }
-    if (sortType === 'desc') {
-      return secondPosition.localeCompare(firstPosition);
-    }
-    return firstFio.localeCompare(secondFio);
-  });
-  checkboxOption.value.selectedRowKeys = [];
-};
 
 const createDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -415,8 +411,8 @@ const changeWorkTime = async ({
 };
 
 const copyTop = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
-  const prevFilteredEmployeePosition = filteredEmployees.value[rowIndex - 1];
+  const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
+  const prevFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex - 1];
   const currentEmployeePosition = employeesWorkTime.value.find(employee => employee.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
@@ -455,7 +451,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   }
 };
 const clear = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredEmployees.value[rowIndex];
+  const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
   const keys = Object.keys(currentEmployeePosition);
