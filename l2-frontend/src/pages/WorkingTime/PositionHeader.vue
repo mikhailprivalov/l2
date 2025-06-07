@@ -63,8 +63,7 @@
         class="treeselect-34px"
         placeholder="Сортировать"
         :always-open="true"
-      >
-      </Treeselect>
+      />
     </div>
   </div>
 </template>
