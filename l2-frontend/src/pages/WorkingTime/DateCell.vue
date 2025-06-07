@@ -1,5 +1,22 @@
 <template>
-  <div>
+  <div class="cell">
+    <div
+      v-if="props.showAdditionalButtons"
+      class="additional-buttons"
+    >
+      <i
+        v-tippy
+        class="fa-solid fa-copy icon-color"
+        title="Предыдущую заполненную"
+        @click="copyPrevFilled"
+      />
+      <i
+        v-tippy
+        class="fa-solid fa-xmark icon-color"
+        title="Очистить"
+        @click="clear"
+      />
+    </div>
     <button
       v-tippy="{
         html: '#temp',
@@ -25,6 +42,12 @@
         {{ currentTime.start }} <br> {{ currentTime.end }}
       </span>
     </button>
+    <span
+      v-if="props.dateTitle"
+      class="opacity-text date-title"
+    >
+      {{ props.dateTitle }}
+    </span>
     <div
       id="temp"
       class="tp"
@@ -99,12 +122,12 @@ import moment from 'moment';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
-const emit = defineEmits(['changeWorkTime']);
+const emit = defineEmits(['changeWorkTime', 'copyPrevFilled']);
 const props = defineProps({
   workTime: {
     type: [Object, String],
     required: true,
-    default: '',
+    default: () => ({}),
   },
   employeePositionId: {
     type: Number,
@@ -114,26 +137,40 @@ const props = defineProps({
     type: [String, undefined],
     required: true,
   },
+  dateTitle: {
+    type: String,
+    required: false,
+    default: null,
+  },
   workDayStatuses: {
     type: Array,
     required: true,
+    default: () => [],
   },
   shiftsVariants: {
     type: Array,
     required: true,
+    default: () => [],
   },
   timeOptions: {
     type: Array,
     required: true,
+    default: () => [],
   },
   disabled: {
     type: Boolean,
     required: false,
+    default: false,
   },
   lunchDuration: {
     type: Number,
     required: false,
     default: 0,
+  },
+  showAdditionalButtons: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
 });
 
@@ -163,6 +200,14 @@ const clear = () => {
   selectedTimeOffLabel.value = '';
   nextDayEndWork.value = null;
   selectedTimeOption.value = null;
+  emit('changeWorkTime', {
+    employeePositionId: props.employeePositionId,
+    date: props.date,
+    startWorkTime: startWork.value,
+    endWorkTime: endWork.value,
+    typeId: selectedTimeOff.value,
+    nextDayEndWork: nextDayEndWork.value,
+  });
 };
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
@@ -235,13 +280,13 @@ watch(selectedShift, () => {
 
 const currentTime = computed(() => {
   if (startWork.value && !endWork.value) {
-    return { start: startWork.value, end: '--:--', time: true };
+    return { start: startWork.value, end: '--:--', empty: false };
   }
   if (startWork.value && endWork.value) {
-    return { start: startWork.value, end: endWork.value, time: true };
+    return { start: startWork.value, end: endWork.value, empty: false };
   }
   if (selectedTimeOff.value) {
-    return { start: selectedTimeOffLabel.value, end: '', timeOff: true };
+    return { start: selectedTimeOffLabel.value, end: '', empty: false };
   }
   return { start: '--:--', end: '--:--', empty: true };
 });
@@ -257,6 +302,10 @@ const appendCurrentTime = () => {
 watch(() => props.workTime, () => {
   appendCurrentTime();
 }, { immediate: true });
+
+const copyPrevFilled = () => {
+  emit('copyPrevFilled', { date: props.date });
+};
 
 </script>
 
@@ -354,5 +403,20 @@ button[disabled] {
 }
 .icon-color {
   color: #636e7e;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0
+}
+.date-title {
+  margin: 0 auto;
+  white-space: normal;
+}
+.additional-buttons {
+  display: flex;
+  gap: 5px;
+  margin: 0 auto;
 }
 </style>

@@ -45,7 +45,7 @@
         </button>
       </div>
       <div
-        v-if="documentCreated && filtersFull"
+        v-show="documentCreated && filtersFull"
       >
         <TemplateTable
           :year="selectedYear"
@@ -76,19 +76,19 @@
         />
         <div
           v-if="documentCreated && filtersFull"
-          class="flex"
+          class="buttons-bottom"
         >
           <div class="search" />
           <button
             v-if="!documentBlocked"
-            class="btn btn-blue-nb"
+            class="btn btn-blue-nb nbr"
             :disabled="documentBlocked"
             @click="save"
           >
             Сохранить
           </button>
           <button
-            class="btn btn-blue-nb"
+            class="btn btn-blue-nb nbr"
             @click.prevent="printDocument()"
           >
             PDF
@@ -268,7 +268,7 @@ const cellStyleOption = ref({
   },
   headerCellClass: ({ column }) => {
     const result = [];
-    const nonDateKey = ['fio', 'position'];
+    const nonDateKey = ['position'];
     if (column.isWeekend) {
       result.push('table-header-weekend-cell');
     } else if (nonDateKey.includes(column.key)) {
@@ -415,6 +415,7 @@ const fillInTemplateData = ({ templateData }) => {
       }
     }
   }
+  checkboxOption.value.selectedRowKeys = [];
 };
 
 const copyTop = ({ rowIndex }) => {
@@ -510,12 +511,10 @@ const getColumns = () => {
       align: 'left',
       width: 160,
       fixed: 'left',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       renderHeaderCell: ({ column }, h) => h(
         FioHeader,
         {
-          props: {
-            columnText: column.title,
-          },
           on: {
             input: changeFilterFio,
           },
@@ -529,10 +528,11 @@ const getColumns = () => {
       align: 'left',
       width: 130,
       fixed: 'left',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       renderHeaderCell: ({ column }, h) => h(
         PositionHeader,
         {
-          props: { columnText: column.title, employeePositions: employeesWorkTime.value },
+          props: { employeePositions: employeesWorkTime.value },
           on: {
             input: changeFilterPositions,
             sort: sortChange,
@@ -666,9 +666,6 @@ const printDocument = async () => {
   width: 100%;
   margin: 0 auto;
 }
-.flex {
-  display: flex;
-}
 .four-col {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -733,6 +730,9 @@ const printDocument = async () => {
 .button-bottom {
   width: 770px;
 }
+.buttons-bottom {
+  display: flex;
+}
 </style>
 
 <style lang="scss">
@@ -740,12 +740,19 @@ const printDocument = async () => {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
+.template-table-body-weekend-cell {
+  background-color: #b6e3ff !important;
+  padding: 0 !important;
+}
 .table-header-weekend-cell {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
 .table-body-cell {
   padding: 10px 0 !important;
+}
+.template-table-body-cell {
+  padding: 0 !important;
 }
 .table-header-cell {
   padding: 10px 0 !important;
