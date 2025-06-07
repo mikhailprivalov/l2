@@ -12,13 +12,6 @@
 import { ref } from 'vue';
 import { debounce } from 'lodash';
 
-const props = defineProps({
-  columnText: {
-    type: String,
-    required: true,
-  },
-});
-
 const emit = defineEmits(['input']);
 
 const searchValue = ref('');

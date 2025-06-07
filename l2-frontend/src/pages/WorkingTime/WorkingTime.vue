@@ -511,12 +511,10 @@ const getColumns = () => {
       align: 'left',
       width: 160,
       fixed: 'left',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       renderHeaderCell: ({ column }, h) => h(
         FioHeader,
         {
-          props: {
-            columnText: column.title,
-          },
           on: {
             input: changeFilterFio,
           },
