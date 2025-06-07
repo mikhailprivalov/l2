@@ -126,7 +126,7 @@ const props = defineProps({
   workTime: {
     type: [Object, String],
     required: true,
-    default: '',
+    default: () => ({}),
   },
   employeePositionId: {
     type: Number,
@@ -139,22 +139,27 @@ const props = defineProps({
   dateTitle: {
     type: String,
     required: false,
+    default: null,
   },
   workDayStatuses: {
     type: Array,
     required: true,
+    default: () => [],
   },
   shiftsVariants: {
     type: Array,
     required: true,
+    default: () => [],
   },
   timeOptions: {
     type: Array,
     required: true,
+    default: () => [],
   },
   disabled: {
     type: Boolean,
     required: false,
+    default: false,
   },
   lunchDuration: {
     type: Number,
