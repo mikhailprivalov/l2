@@ -45,7 +45,7 @@
         </button>
       </div>
       <div
-        v-if="documentCreated && filtersFull"
+        v-show="documentCreated && filtersFull"
       >
         <TemplateTable
           :year="selectedYear"
