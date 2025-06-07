@@ -31,7 +31,10 @@
         {{ currentTime.start }} <br> {{ currentTime.end }}
       </span>
     </button>
-    <div class="additional-buttons">
+    <div
+      v-if="props.showAdditionalButtons"
+      class="additional-buttons"
+    >
       <i
         v-tippy
         class="fa-solid fa-copy icon-color"
@@ -157,6 +160,11 @@ const props = defineProps({
     type: Number,
     required: false,
     default: 0,
+  },
+  showAdditionalButtons: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
 });
 

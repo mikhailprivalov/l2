@@ -139,6 +139,7 @@ const getColumns = () => {
             timeOptions: props.timeOptions,
             disabled: false,
             lunchDuration: props.departmentLunchDuration,
+            showAdditionalButtons: true,
           },
           on: { changeWorkTime: changeTemplateTime },
         },
