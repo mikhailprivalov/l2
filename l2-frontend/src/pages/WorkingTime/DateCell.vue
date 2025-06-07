@@ -271,13 +271,13 @@ watch(selectedShift, () => {
 
 const currentTime = computed(() => {
   if (startWork.value && !endWork.value) {
-    return { start: startWork.value, end: '--:--', time: true };
+    return { start: startWork.value, end: '--:--', empty: false };
   }
   if (startWork.value && endWork.value) {
-    return { start: startWork.value, end: endWork.value, time: true };
+    return { start: startWork.value, end: endWork.value, empty: false };
   }
   if (selectedTimeOff.value) {
-    return { start: selectedTimeOffLabel.value, end: '', timeOff: true };
+    return { start: selectedTimeOffLabel.value, end: '', empty: false };
   }
   return { start: '--:--', end: '--:--', empty: true };
 });
