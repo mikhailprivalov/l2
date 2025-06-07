@@ -415,6 +415,7 @@ const fillInTemplateData = ({ templateData }) => {
       }
     }
   }
+  checkboxOption.value.selectedRowKeys = [];
 };
 
 const copyTop = ({ rowIndex }) => {
@@ -666,9 +667,6 @@ const printDocument = async () => {
   width: 100%;
   margin: 0 auto;
 }
-//.flex {
-//  display: flex;
-//}
 .four-col {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
