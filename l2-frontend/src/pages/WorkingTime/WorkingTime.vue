@@ -76,19 +76,19 @@
         />
         <div
           v-if="documentCreated && filtersFull"
-          class="flex"
+          class="buttons-bottom"
         >
           <div class="search" />
           <button
             v-if="!documentBlocked"
-            class="btn btn-blue-nb"
+            class="btn btn-blue-nb nbr"
             :disabled="documentBlocked"
             @click="save"
           >
             Сохранить
           </button>
           <button
-            class="btn btn-blue-nb"
+            class="btn btn-blue-nb nbr"
             @click.prevent="printDocument()"
           >
             PDF
@@ -666,9 +666,9 @@ const printDocument = async () => {
   width: 100%;
   margin: 0 auto;
 }
-.flex {
-  display: flex;
-}
+//.flex {
+//  display: flex;
+//}
 .four-col {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -732,6 +732,9 @@ const printDocument = async () => {
 }
 .button-bottom {
   width: 770px;
+}
+.buttons-bottom {
+  display: flex;
 }
 </style>
 

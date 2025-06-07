@@ -1,13 +1,13 @@
 <template>
   <div class="flex">
     <button
-      class="btn btn-blue-nb"
+      class="btn btn-blue-nb nbr"
       @click="fill"
     >
       Заполнить по шаблону
     </button>
     <button
-      class="btn btn-blue-nb"
+      class="btn btn-blue-nb nbr"
       @click="clear"
     >
       Очистить шаблон
@@ -30,5 +30,6 @@ const clear = () => {
 <style scoped lang="scss">
 .flex {
   display: flex;
+  margin: 0 auto;
 }
 </style>
