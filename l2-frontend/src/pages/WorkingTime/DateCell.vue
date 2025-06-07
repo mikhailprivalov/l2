@@ -200,6 +200,14 @@ const clear = () => {
   selectedTimeOffLabel.value = '';
   nextDayEndWork.value = null;
   selectedTimeOption.value = null;
+  emit('changeWorkTime', {
+    employeePositionId: props.employeePositionId,
+    date: props.date,
+    startWorkTime: startWork.value,
+    endWorkTime: endWork.value,
+    typeId: selectedTimeOff.value,
+    nextDayEndWork: nextDayEndWork.value,
+  });
 };
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
