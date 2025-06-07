@@ -31,6 +31,19 @@
         {{ currentTime.start }} <br> {{ currentTime.end }}
       </span>
     </button>
+    <div class="additional-buttons">
+      <i
+        v-tippy
+        class="fa-solid fa-copy icon-color"
+        title="Предыдущую заполненную"
+      />
+      <i
+        v-tippy
+        class="fa-solid fa-xmark icon-color"
+        title="Очистить"
+        @click="clear"
+      />
+    </div>
     <div
       id="temp"
       class="tp"
@@ -374,5 +387,10 @@ button[disabled] {
 .date-title {
   margin: 0 auto;
   white-space: normal;
+}
+.additional-buttons {
+  display: flex;
+  gap: 5px;
+  margin: 0 auto;
 }
 </style>
