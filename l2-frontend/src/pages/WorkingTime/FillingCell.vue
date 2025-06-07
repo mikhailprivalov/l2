@@ -30,6 +30,6 @@ const clear = () => {
 <style scoped lang="scss">
 .flex {
   display: flex;
-  margin: 0 auto;
+  justify-content: center;
 }
 </style>
