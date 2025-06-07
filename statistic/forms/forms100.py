@@ -1,7 +1,10 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
+from clients.models import HarmfulFactor
 from clients.sql_func import researches_by_harmfull_factor_id, harmfull_factor_data
+from laboratory.settings import CONTROL_AGE_MEDEXAM
+from laboratory.utils import current_year
 from statistic.forms.forms100_sql_func import (
     closed_company_cases_by_date,
     directions_by_parent_cases_issledovaniye,
@@ -26,9 +29,25 @@ def form_01(ws1, data):
     custom_researches_title = list(custom_research.values())
 
     # получить ЗАКРЫТЫЕ случаи за дату по компании
-    closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'])
+    last_date_year = f"{current_year()}-12-31"
+    closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'], last_date_year)
 
-    factors_id = set([i.factor_id for i in closed_id])
+    male = CONTROL_AGE_MEDEXAM.get("м")
+    female = CONTROL_AGE_MEDEXAM.get("ж")
+    adds_harmfull_male_title = set()
+    adds_harmfull_female_title = set()
+    for i in closed_id:
+        if i.sex == "м":
+            for k in sorted(male.keys()):
+                if i.age_year < k:
+                    adds_harmfull_male_title.add(male[k])
+        if i.sex == "ж":
+            for k in sorted(female.keys()):
+                if i.age_year < k:
+                    adds_harmfull_female_title.add(female[k])
+
+    adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_male_title, *adds_harmfull_female_title})}
+    factors_id = {*set([i.factor_id for i in closed_id]), *adds_harmfull.values()}
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
     harmfull_factors_research_id_title = {i.research_id: {"title": i.research_title, "code": i.code, "internal_code": i.internal_code} for i in researches_harmfull_factors}
@@ -62,6 +81,7 @@ def form_01(ws1, data):
                 "fio": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
                 "sex": i.sex,
                 "birthday": i.patient_birthday,
+                "age_year": i.age_year,
                 "factors": [i.factor_id],
                 "factors_title": [harmfull_factors_id_title.get(i.factor_id)],
                 "custom_researches": custom_researches_id.copy(),
@@ -100,6 +120,46 @@ def form_01(ws1, data):
 
         factors_ids.add(i.factor_id)
         cases_issledovaniye_ids[i.case_issledovaniye_id] = i.direction_num
+
+    for v in closed_case_structure_data.values():
+        if v["sex"] == "м":
+            for k in sorted(male.keys()):
+                if v["age_year"] < k and researches_harmfull_data.get(adds_harmfull.get(male[k])):
+                    v["factors_title"].append(male[k])
+                    v["result_researches"].update(
+                        {
+                            research_id: {
+                                "price": 0,
+                                "date_confirm": "",
+                                "iss_id": "",
+                                "where_done": 0,
+                                "research_title": harmfull_factors_research_id_title.get(research_id)["title"],
+                                "code": harmfull_factors_research_id_title.get(research_id)["code"],
+                                "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"],
+                            }
+                            for research_id in researches_harmfull_data.get(adds_harmfull.get(male[k]))
+                        }
+                    )
+                    break
+        if v["sex"] == "ж":
+            for k in sorted(female.keys()):
+                if v["age_year"] < k and researches_harmfull_data.get(adds_harmfull.get(female[k])):
+                    v["factors_title"].append(female[k])
+                    v["result_researches"].update(
+                        {
+                            research_id: {
+                                "price": 0,
+                                "date_confirm": "",
+                                "iss_id": "",
+                                "where_done": 0,
+                                "research_title": harmfull_factors_research_id_title.get(research_id)["title"],
+                                "code": harmfull_factors_research_id_title.get(research_id)["code"],
+                                "internal_code": harmfull_factors_research_id_title.get(research_id)["internal_code"],
+                            }
+                            for research_id in researches_harmfull_data.get(adds_harmfull.get(female[k]))
+                        }
+                    )
+                    break
 
     cases_iss = tuple(cases_issledovaniye_ids.keys())
     # получить все исследования, у к-рых в направлении родитель ссылка на случай

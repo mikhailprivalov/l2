@@ -1111,8 +1111,8 @@ def create_case_by_cards(cards):
     for card in cards:
         card_id = card.get("card_id")
         researches = card.get("research")
-        plan_start_date_case = normalize_dots_date(card.get("date"))
-        plan_start_date_case = f"{plan_start_date_case} 00:00:00"
+        medexam_start_date = normalize_dots_date(card.get("date"))
+        plan_start_date_case = f"{medexam_start_date} 00:00:00"
         result_search_case = search_case_by_card_date(card_id, plan_start_date_case, research_case.pk, 1)
         case_issledovaniye_number, case_direction_number = None, None
         for i in result_search_case:
@@ -1121,7 +1121,7 @@ def create_case_by_cards(cards):
             break
         financing_source = IstochnikiFinansirovaniya.objects.filter(title__in=["Профосмотр", "Юрлицо"]).first()
 
-        if case_issledovaniye_number:
+        if case_issledovaniye_number and len(Napravleniya.objects.values_list("id", flat=True).filter(parent_case_id=case_issledovaniye_number)) > 0:
             number_directons = Napravleniya.objects.values_list("id", flat=True).filter(parent_case_id=case_issledovaniye_number)
             researches_sql = get_researches_by_number_directions(tuple(number_directons))
             current_researches_case = set([i.research_id for i in researches_sql])
@@ -1162,7 +1162,7 @@ def create_case_by_cards(cards):
 
             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_start_date_case)
             issledovaniye_case.save()
-            current_exam = MedicalExamination.objects.filter(card=card, plan_start_date=plan_start_date_case).first()
+            current_exam = MedicalExamination.objects.filter(card_id=card_id, date=medexam_start_date).first()
             current_exam.napravleniye = napravleniye_case
             current_exam.save()
 

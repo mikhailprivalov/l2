@@ -4,7 +4,7 @@ from utils.db import namedtuplefetchall
 from laboratory.settings import TIME_ZONE
 
 
-def closed_company_cases_by_date(d_start, d_end, company_id):
+def closed_company_cases_by_date(d_start, d_end, company_id, current_year_last_date):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -16,6 +16,7 @@ def closed_company_cases_by_date(d_start, d_end, company_id):
             ci.patronymic as patient_patronymic,
             ci.sex,
             to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday,
+            date_part('year', age(timestamp %(current_year_last_date)s, ci.birthday)) as age_year,
             cph.harmful_factor_id as factor_id
             
             FROM directions_issledovaniya
@@ -29,7 +30,8 @@ def closed_company_cases_by_date(d_start, d_end, company_id):
             AND directions_issledovaniya.research_id = %(research_id_case)s
             ORDER BY directions_issledovaniya.medical_examination
             """,
-            params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE, 'company_id': company_id, 'research_id_case': RESEARCH_ID_CLOSE_CASE},
+            params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE, 'company_id': company_id, 'research_id_case': RESEARCH_ID_CLOSE_CASE,
+                    'current_year_last_date': current_year_last_date},
         )
 
         rows = namedtuplefetchall(cursor)
