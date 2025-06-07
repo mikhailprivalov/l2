@@ -1,11 +1,22 @@
 <template>
   <div class="cell">
-    <span
-      v-if="props.dateTitle"
-      class="opacity-text date-title"
+    <div
+      v-if="props.showAdditionalButtons"
+      class="additional-buttons"
     >
-      {{ props.dateTitle }}
-    </span>
+      <i
+        v-tippy
+        class="fa-solid fa-copy icon-color"
+        title="Предыдущую заполненную"
+        @click="copyPrevFilled"
+      />
+      <i
+        v-tippy
+        class="fa-solid fa-xmark icon-color"
+        title="Очистить"
+        @click="clear"
+      />
+    </div>
     <button
       v-tippy="{
         html: '#temp',
@@ -31,23 +42,12 @@
         {{ currentTime.start }} <br> {{ currentTime.end }}
       </span>
     </button>
-    <div
-      v-if="props.showAdditionalButtons"
-      class="additional-buttons"
+    <span
+      v-if="props.dateTitle"
+      class="opacity-text date-title"
     >
-      <i
-        v-tippy
-        class="fa-solid fa-copy icon-color"
-        title="Предыдущую заполненную"
-        @click="copyPrevFilled"
-      />
-      <i
-        v-tippy
-        class="fa-solid fa-xmark icon-color"
-        title="Очистить"
-        @click="clear"
-      />
-    </div>
+      {{ props.dateTitle }}
+    </span>
     <div
       id="temp"
       class="tp"
