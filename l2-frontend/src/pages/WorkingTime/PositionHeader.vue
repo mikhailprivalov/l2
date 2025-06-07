@@ -64,10 +64,6 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 const props = defineProps({
-  columnText: {
-    type: String,
-    required: true,
-  },
   employeePositions: {
     type: Array,
     required: true,

@@ -528,10 +528,11 @@ const getColumns = () => {
       align: 'left',
       width: 130,
       fixed: 'left',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       renderHeaderCell: ({ column }, h) => h(
         PositionHeader,
         {
-          props: { columnText: column.title, employeePositions: employeesWorkTime.value },
+          props: { employeePositions: employeesWorkTime.value },
           on: {
             input: changeFilterPositions,
             sort: sortChange,
