@@ -1,5 +1,6 @@
 <template>
   <div>
+    <span class="opacity-text"> {{ props.dateTitle }} </span>
     <button
       v-tippy="{
         html: '#temp',
@@ -113,6 +114,10 @@ const props = defineProps({
   date: {
     type: [String, undefined],
     required: true,
+  },
+  dateTitle: {
+    type: String,
+    required: false,
   },
   workDayStatuses: {
     type: Array,

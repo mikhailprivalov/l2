@@ -133,6 +133,7 @@ const getColumns = () => {
             workTime: row[column.field] ? row[column.field] : '',
             employeePositionId: row.employeePositionId,
             date: column.key,
+            dateTitle,
             workDayStatuses: props.workDayStatuses,
             shiftsVariants: props.shiftsVariants,
             timeOptions: props.timeOptions,
