@@ -2,7 +2,7 @@
   <div>
     <input
       v-model="searchValue"
-      class="form-control"
+      class="form-control nbr"
       @input="debouncedInput"
     >
   </div>
