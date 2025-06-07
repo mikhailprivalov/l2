@@ -111,6 +111,10 @@ const fillInTemplate = () => {
   emit('fillInTemplate', { templateData: templateData.value[0] });
 };
 
+const clearTemplate = () => {
+  createTemplateData();
+};
+
 const getColumns = () => {
   const columnTemplate = [
     {
@@ -126,7 +130,7 @@ const getColumns = () => {
           props: {
             workTime: row[column.field] ? row[column.field] : '',
           },
-          on: { fill: fillInTemplate },
+          on: { fill: fillInTemplate, clear: clearTemplate },
         },
       ),
     },
