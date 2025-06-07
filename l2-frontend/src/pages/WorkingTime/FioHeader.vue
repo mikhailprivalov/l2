@@ -1,8 +1,5 @@
 <template>
-  <div class="column-row">
-    <p class="column-text">
-      {{ props.columnText }}
-    </p>
+  <div>
     <input
       v-model="searchValue"
       class="form-control"
@@ -33,11 +30,4 @@ const debouncedInput = debounce(input, 300);
 </script>
 
 <style scoped lang="scss">
-.column-row {
-  display: flex;
-  gap: 2px
-}
-.column-text {
-  margin: 7px 0;
-}
 </style>

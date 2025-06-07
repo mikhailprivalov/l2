@@ -1,8 +1,5 @@
 <template>
   <div class="column-row">
-    <p class="column-text">
-      {{ props.columnText }}
-    </p>
     <i
       v-tippy="{
         html: `#tempPositionFilter`,

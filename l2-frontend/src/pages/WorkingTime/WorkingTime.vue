@@ -268,7 +268,7 @@ const cellStyleOption = ref({
   },
   headerCellClass: ({ column }) => {
     const result = [];
-    const nonDateKey = ['fio', 'position'];
+    const nonDateKey = ['position'];
     if (column.isWeekend) {
       result.push('table-header-weekend-cell');
     } else if (nonDateKey.includes(column.key)) {
