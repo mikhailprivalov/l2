@@ -1,6 +1,11 @@
 <template>
-  <div>
-    <span class="opacity-text"> {{ props.dateTitle }} </span>
+  <div class="cell">
+    <span
+      v-if="props.dateTitle"
+      class="opacity-text date-title"
+    >
+      {{ props.dateTitle }}
+    </span>
     <button
       v-tippy="{
         html: '#temp',
@@ -359,5 +364,15 @@ button[disabled] {
 }
 .icon-color {
   color: #636e7e;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0
+}
+.date-title {
+  margin: 0 auto;
+  white-space: normal;
 }
 </style>
