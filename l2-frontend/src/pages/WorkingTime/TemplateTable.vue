@@ -90,8 +90,29 @@ const changeTemplateTime = async ({
     };
   }
 };
+
+const copyPrevFilledCell = ({ date }) => {
+  const currentDay = new Date(date);
+  const currentTemplateData = templateData.value[0];
+  const sortedKeys = Object.keys(currentTemplateData)
+    .filter(key => new Date(key) < currentDay)
+    .sort((a, b) => new Date(b) - new Date(a));
+  for (const key of sortedKeys) {
+    const keyData = currentTemplateData[key];
+    const keyValues = Object.values(keyData).filter(value => value);
+    if (keyValues.length > 0) {
+      currentTemplateData[date] = { ...keyData };
+      break;
+    }
+  }
+};
+
 const fillInTemplate = () => {
   emit('fillInTemplate', { templateData: templateData.value[0] });
+};
+
+const clearTemplate = () => {
+  createTemplateData();
 };
 
 const getColumns = () => {
@@ -109,7 +130,7 @@ const getColumns = () => {
           props: {
             workTime: row[column.field] ? row[column.field] : '',
           },
-          on: { fill: fillInTemplate },
+          on: { fill: fillInTemplate, clear: clearTemplate },
         },
       ),
     },
@@ -133,13 +154,15 @@ const getColumns = () => {
             workTime: row[column.field] ? row[column.field] : '',
             employeePositionId: row.employeePositionId,
             date: column.key,
+            dateTitle,
             workDayStatuses: props.workDayStatuses,
             shiftsVariants: props.shiftsVariants,
             timeOptions: props.timeOptions,
             disabled: false,
             lunchDuration: props.departmentLunchDuration,
+            showAdditionalButtons: true,
           },
-          on: { changeWorkTime: changeTemplateTime },
+          on: { changeWorkTime: changeTemplateTime, copyPrevFilled: copyPrevFilledCell },
         },
       ),
     };
@@ -164,17 +187,9 @@ const cellStyleOption = ref({
   bodyCellClass: ({ column }) => {
     const result = [];
     if (column.isWeekend) {
-      result.push('table-body-weekend-cell');
+      result.push('template-table-body-weekend-cell');
     }
-    result.push('table-body-cell');
-    return result.join(' ');
-  },
-  headerCellClass: ({ column }) => {
-    const result = [];
-    if (column.isWeekend) {
-      result.push('table-header-weekend-cell');
-    }
-    result.push('table-header-cell');
+    result.push('template-table-body-cell');
     return result.join(' ');
   },
 });
