@@ -39,6 +39,7 @@
         v-tippy
         class="fa-solid fa-copy icon-color"
         title="Предыдущую заполненную"
+        @click="copyPrevFilled"
       />
       <i
         v-tippy
@@ -121,7 +122,7 @@ import moment from 'moment';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
-const emit = defineEmits(['changeWorkTime']);
+const emit = defineEmits(['changeWorkTime', 'copyPrevFilled']);
 const props = defineProps({
   workTime: {
     type: [Object, String],
@@ -293,6 +294,10 @@ const appendCurrentTime = () => {
 watch(() => props.workTime, () => {
   appendCurrentTime();
 }, { immediate: true });
+
+const copyPrevFilled = () => {
+  emit('copyPrevFilled', { date: props.date });
+};
 
 </script>
 

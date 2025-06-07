@@ -90,6 +90,23 @@ const changeTemplateTime = async ({
     };
   }
 };
+
+const copyPrevFilledCell = ({ date }) => {
+  const currentDay = new Date(date);
+  const currentTemplateData = templateData.value[0];
+  const sortedKeys = Object.keys(currentTemplateData)
+    .filter(key => new Date(key) < currentDay)
+    .sort((a, b) => new Date(b) - new Date(a));
+  for (const key of sortedKeys) {
+    const keyData = currentTemplateData[key];
+    const keyValues = Object.values(keyData).filter(value => value);
+    if (keyValues.length > 0) {
+      currentTemplateData[date] = { ...keyData };
+      break;
+    }
+  }
+};
+
 const fillInTemplate = () => {
   emit('fillInTemplate', { templateData: templateData.value[0] });
 };
@@ -141,7 +158,7 @@ const getColumns = () => {
             lunchDuration: props.departmentLunchDuration,
             showAdditionalButtons: true,
           },
-          on: { changeWorkTime: changeTemplateTime },
+          on: { changeWorkTime: changeTemplateTime, copyPrevFilled: copyPrevFilledCell },
         },
       ),
     };
