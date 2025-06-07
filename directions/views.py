@@ -1162,12 +1162,7 @@ def create_case_by_cards(cards):
 
             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False, plan_start_date=plan_start_date_case)
             issledovaniye_case.save()
-            print("#####")
-            print(plan_start_date_case)
-            print(card_id)
-
             current_exam = MedicalExamination.objects.filter(card_id=card_id, date=medexam_start_date).first()
-            print(current_exam)
             current_exam.napravleniye = napravleniye_case
             current_exam.save()
 
