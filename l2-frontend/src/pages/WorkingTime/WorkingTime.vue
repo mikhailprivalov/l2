@@ -740,12 +740,19 @@ const printDocument = async () => {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
+.template-table-weekend-cell {
+  background-color: #b6e3ff !important;
+  padding: 0!important;
+}
 .table-header-weekend-cell {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
 .table-body-cell {
   padding: 10px 0 !important;
+}
+.template-table-body-cell {
+  padding: 0 !important;
 }
 .table-header-cell {
   padding: 10px 0 !important;

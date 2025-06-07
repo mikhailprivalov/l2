@@ -164,17 +164,9 @@ const cellStyleOption = ref({
   bodyCellClass: ({ column }) => {
     const result = [];
     if (column.isWeekend) {
-      result.push('table-body-weekend-cell');
+      result.push('template-table-body-weekend-cell');
     }
-    result.push('table-body-cell');
-    return result.join(' ');
-  },
-  headerCellClass: ({ column }) => {
-    const result = [];
-    if (column.isWeekend) {
-      result.push('table-header-weekend-cell');
-    }
-    result.push('table-header-cell');
+    result.push('template-table-body-cell');
     return result.join(' ');
   },
 });
