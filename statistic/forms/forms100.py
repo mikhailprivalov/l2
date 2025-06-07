@@ -46,12 +46,7 @@ def form_01(ws1, data):
                 if i.age_year < k:
                     adds_harmfull_female_title.add(female[k])
 
-    # adds_harmfull_male = set(HarmfulFactor.objects.values_list("id", flat=True).filter(title__in=adds_harmfull_male_title))
-    # adds_harmfull_female = set(HarmfulFactor.objects.values_list("id", flat=True).filter(title__in=adds_harmfull_female_title))
-
     adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_male_title, *adds_harmfull_female_title})}
-
-
     factors_id = {*set([i.factor_id for i in closed_id]), *adds_harmfull.values()}
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
@@ -127,7 +122,6 @@ def form_01(ws1, data):
         cases_issledovaniye_ids[i.case_issledovaniye_id] = i.direction_num
 
     for v in closed_case_structure_data.values():
-        print(v)
         if v["sex"] == "м":
             for k in sorted(male.keys()):
                 if v["age_year"] < k and researches_harmfull_data.get(adds_harmfull.get(male[k])):
