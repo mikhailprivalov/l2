@@ -274,7 +274,7 @@ const cellStyleOption = ref({
     } else if (nonDateKey.includes(column.key)) {
       result.push('table-header-non-date-cell');
     } else if (column.key === 'checkbox') {
-      result.push('table-checkbox-cell');
+      result.push('table-header-checkbox-cell');
     } else {
       result.push('table-header-cell');
     }
@@ -733,6 +733,9 @@ const printDocument = async () => {
 .buttons-bottom {
   display: flex;
 }
+::v-deep .ve-table-header-tr {
+  height: 34px !important;
+}
 </style>
 
 <style lang="scss">
@@ -746,7 +749,8 @@ const printDocument = async () => {
 }
 .table-header-weekend-cell {
   background-color: #b6e3ff !important;
-  padding: 10px 0 !important;
+  padding: 0 !important;
+  height: 20px !important;
 }
 .table-body-cell {
   padding: 10px 0 !important;
@@ -755,10 +759,12 @@ const printDocument = async () => {
   padding: 0 !important;
 }
 .table-header-cell {
-  padding: 10px 0 !important;
+  padding: 0 !important;
+  height: 20px !important;
 }
 .table-header-non-date-cell {
-  padding: 10px 12px !important;
+  padding: 0 12px !important;
+  height: 20px !important;
 }
 .table-body-name-cell {
   padding: 10px 0 10px 12px !important;
@@ -769,6 +775,9 @@ const printDocument = async () => {
 }
 .table-body-bid-cell {
   font-style: italic !important;
+}
+.table-header-checkbox-cell {
+  padding: 0 5px 0 5px !important;
 }
 .table-checkbox-cell {
   padding: 10px 5px 5px 5px !important;
