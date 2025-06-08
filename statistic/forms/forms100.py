@@ -3,7 +3,7 @@ from openpyxl.utils import get_column_letter
 
 from clients.models import HarmfulFactor
 from clients.sql_func import researches_by_harmfull_factor_id, harmfull_factor_data
-from laboratory.settings import CONTROL_AGE_MEDEXAM
+from laboratory.settings import CONTROL_AGE_MEDEXAM, CONTROL_AGE_MEDEXAM_MALE, CONTROL_AGE_MEDEXAM_FEMALE
 from laboratory.utils import current_year
 from statistic.forms.forms100_sql_func import (
     closed_company_cases_by_date,
@@ -34,19 +34,8 @@ def form_01(ws1, data):
 
     male = CONTROL_AGE_MEDEXAM.get("м")
     female = CONTROL_AGE_MEDEXAM.get("ж")
-    adds_harmfull_male_title = set()
-    adds_harmfull_female_title = set()
-    for i in closed_id:
-        if i.sex == "м":
-            for k in sorted(male.keys()):
-                if i.age_year < k:
-                    adds_harmfull_male_title.add(male[k])
-        if i.sex == "ж":
-            for k in sorted(female.keys()):
-                if i.age_year < k:
-                    adds_harmfull_female_title.add(female[k])
-
-    adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_male_title, *adds_harmfull_female_title})}
+    adds_harmfull_title = set([CONTROL_AGE_MEDEXAM_MALE[i.age_year] if i.sex == "м" else CONTROL_AGE_MEDEXAM_FEMALE[i.age_year] for i in closed_id])
+    adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_title})}
     factors_id = {*set([i.factor_id for i in closed_id]), *adds_harmfull.values()}
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
