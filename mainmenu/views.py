@@ -8,14 +8,13 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie
 from clients.models import CardBase
 
 import directory.models as directory
 from directions.models import IstochnikiFinansirovaniya, TubesRegistration, Issledovaniya, Napravleniya
 from laboratory import VERSION
 from laboratory.decorators import group_required
-from laboratory.utils import strdatetime
 from podrazdeleniya.models import Podrazdeleniya
 from users.models import DoctorProfile
 from utils.dates import try_parse_range
@@ -33,12 +32,7 @@ def dashboard(request):
 @group_required("Просмотр журнала")
 @ensure_csrf_cookie
 def view_log(request):
-    import slog.models as slog
-
-    types = []
-    for t in slog.Log.TYPES:
-        types.append({"pk": t[0], "val": t[1]})
-    return render(request, 'dashboard/manage_view_log.html', {"users": DoctorProfile.objects.all().order_by("fio"), "types": types})
+    return redirect('/ui/logs')
 
 
 @login_required
@@ -46,55 +40,6 @@ def view_log(request):
 @ensure_csrf_cookie
 def profiles(request):
     return redirect('/ui/profiles')
-
-
-@csrf_exempt
-@login_required
-@group_required("Просмотр журнала")
-def load_logs(request):
-    import slog.models as slog
-
-    result = {"data": []}
-
-    if request.method == "POST":
-        check_new = int(request.POST["checknew"])
-        states = json.loads(request.POST["searchdata"])
-    else:
-        check_new = int(request.GET["checknew"])
-        states = json.loads(request.GET["searchdata"])
-
-    obj = slog.Log.objects.all()
-    if states["user"] > -1:
-        obj = obj.filter(user__pk=states["user"])
-    if states["user"] == -2:
-        obj = obj.filter(user__isnull=True)
-
-    if states["type"] != -1:
-        obj = obj.filter(type=states["type"])
-    if states["pk"] != "-1":
-        obj = obj.filter(key__contains=states["pk"])
-
-    if check_new == 0:
-        offset = int(request.POST.get("offset", request.GET.get("offset", 0)))
-        size = int(request.POST.get("size", request.GET.get("size", 0)))
-        rows = obj.order_by("-pk")[offset : size + offset]
-    else:
-        pkgt = int(request.POST.get("last_n", request.GET.get("last_n", 0)))
-        rows = obj.filter(pk__gt=pkgt).order_by("pk")
-    for row in rows:
-        tmp_object = {
-            "id": row.pk,
-            "user_fio": "Система" if not row.user else (row.user.get_fio() + ", " + row.user.user.username),
-            "user_pk": row.user_id or "",
-            "key": row.key,
-            "body": row.body,
-            "type": row.get_type_display(),
-            "time": strdatetime(row.time),
-        }
-        result["data"].append(tmp_object)
-
-    result["s"] = states
-    return JsonResponse(result)
 
 
 def researches_control(request):

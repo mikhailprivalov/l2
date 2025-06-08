@@ -4,11 +4,8 @@ const path = require('path');
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 
 const assetsPath = path.resolve(__dirname, '../assets/');
-const smp = new SpeedMeasurePlugin();
 
 function addSassCacheLoader(rule) {
   rule
@@ -91,6 +88,6 @@ module.exports = {
   ],
   publicPath: '/static/webpack_bundles/',
   outputDir: path.resolve(assetsPath, 'webpack_bundles'),
-  configureWebpack: process.env.NODE_ENV === 'production' ? configWebpack : smp.wrap(configWebpack),
+  configureWebpack: configWebpack,
   runtimeCompiler: true,
 };

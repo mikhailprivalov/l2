@@ -101,7 +101,7 @@ def menu(request):
                 },
                 {"url": "/ui/departments", "title": "Управление подразделениями", "nt": False, "access": ["Создание и редактирование пользователей"]},
                 {"url": "/ui/profiles", "title": "Профили пользователей", "nt": False, "access": ["Создание и редактирование пользователей"]},
-                {"url": "/mainmenu/view_log", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
+                {"url": "/ui/logs", "title": "Просмотр журнала", "nt": False, "access": ["Просмотр журнала"]},
                 {"url": "/admin", "title": "Администрирование L2", "nt": False, "access": []},
                 {
                     "url": "/ui/direction-visit",

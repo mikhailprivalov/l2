@@ -68,13 +68,13 @@ up:
 	/bin/bash update-version.sh
 
 npm_install:
-	yarn --cwd l2-frontend
+	yarn --cwd l2-frontend --ignore-engines
 
 npm_install_cached:
-	yarn --prefer-offline --cwd l2-frontend
+	yarn --prefer-offline --cwd l2-frontend --ignore-engines
 
 poetry_bootstrap:
-	poetry install
+	poetry install --no-root
 
 git_commit_up:
 	git commit -a -m "Up version"

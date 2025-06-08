@@ -209,8 +209,6 @@ function checkBase() {
     const rmisUid = params.get('rmis_uid');
     const basePk = params.get('base_pk');
     const cardPk = params.get('card_pk');
-    const ofname = params.get('ofname');
-    const ofnameDep = params.get('ofname_dep');
     const q = params.get('q');
 
     if (rmisUid) {
