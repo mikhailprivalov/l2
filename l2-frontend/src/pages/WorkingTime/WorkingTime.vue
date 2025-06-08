@@ -735,7 +735,7 @@ const printDocument = async () => {
   gap: 5px;
 }
 ::v-deep .ve-table-header-tr {
-  height: 34px !important;
+  height: 35px !important;
 }
 </style>
 
