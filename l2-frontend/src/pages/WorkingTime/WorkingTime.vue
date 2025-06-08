@@ -751,7 +751,6 @@ const printDocument = async () => {
 .table-header-weekend-cell {
   background-color: #b6e3ff !important;
   padding: 0 !important;
-  height: 20px !important;
 }
 .table-body-cell {
   padding: 10px 0 !important;
@@ -761,11 +760,9 @@ const printDocument = async () => {
 }
 .table-header-cell {
   padding: 0 !important;
-  height: 20px !important;
 }
 .table-header-non-date-cell {
   padding: 0 12px !important;
-  height: 20px !important;
 }
 .table-body-name-cell {
   padding: 10px 0 10px 12px !important;
