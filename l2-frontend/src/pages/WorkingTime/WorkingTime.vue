@@ -78,17 +78,16 @@
           v-if="documentCreated && filtersFull"
           class="buttons-bottom"
         >
-          <div class="search" />
           <button
             v-if="!documentBlocked"
-            class="btn btn-blue-nb nbr"
+            class="btn btn-blue-nb"
             :disabled="documentBlocked"
             @click="save"
           >
             Сохранить
           </button>
           <button
-            class="btn btn-blue-nb nbr"
+            class="btn btn-blue-nb"
             @click.prevent="printDocument()"
           >
             PDF
@@ -732,6 +731,8 @@ const printDocument = async () => {
 }
 .buttons-bottom {
   display: flex;
+  justify-content: flex-end;
+  gap: 5px;
 }
 ::v-deep .ve-table-header-tr {
   height: 34px !important;

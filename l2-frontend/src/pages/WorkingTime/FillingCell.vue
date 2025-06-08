@@ -1,13 +1,13 @@
 <template>
   <div class="flex">
     <button
-      class="btn btn-blue-nb nbr"
+      class="btn btn-blue-nb"
       @click="fill"
     >
       Заполнить по шаблону
     </button>
     <button
-      class="btn btn-blue-nb nbr"
+      class="btn btn-blue-nb"
       @click="clear"
     >
       Очистить шаблон
@@ -31,5 +31,8 @@ const clear = () => {
 .flex {
   display: flex;
   justify-content: center;
+  gap: 5px;
+  height: 100%;
+  align-items: flex-start;
 }
 </style>
