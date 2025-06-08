@@ -11,5 +11,13 @@ export default () => {
     dec() {
       store.dispatch(actions.DEC_LOADING).then();
     },
+    global: {
+      inc() {
+        store.dispatch(actions.INC_G_LOADING).then();
+      },
+      dec() {
+        store.dispatch(actions.DEC_G_LOADING).then();
+      },
+    },
   };
 };

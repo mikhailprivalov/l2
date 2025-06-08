@@ -10,7 +10,6 @@ urlpatterns = [
     path('from', views.dashboard_from),
     path('directions', views.directions),
     path('view_log', views.view_log),
-    path('view_logs', views.load_logs),
     path('users/count', views.users_count),
     path('results_history', views.results_history),
     path('results_report', views.results_report),

@@ -539,6 +539,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/logs',
+      name: 'logs',
+      component: () => import('@/pages/Logs.vue'),
+      meta: {
+        title: 'Просмотр журнала',
+        groups: ['Просмотр журнала'],
+      },
+    },
+    {
       path: '/ui/stationar',
       name: 'stationar',
       component: () => import('@/pages/Stationar/index.vue'),
