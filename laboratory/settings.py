@@ -484,6 +484,7 @@ CDA_ID_FOR_WHERE_SERVICE_DONE = -1
 CDA_ID_FOR_TYPE_MEDICAL_INSPECTION = -1
 RESEARCH_ID_CLOSE_CASE = (-1,)
 WEB_PLUGIN_LINK_STUDY = None
+URL_SEND_ECP_DIRECTION = "empty"
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

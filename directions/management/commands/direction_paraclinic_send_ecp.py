@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 
 from directions.sql_func import get_paraclini_directions_for_send_ecp_queue
-from laboratory.settings import ID_RESERACH_FLG
+from laboratory.settings import ID_RESERACH_FLG, URL_SEND_ECP_DIRECTION
 from laboratory.utils import current_time
 from django.core.management.base import BaseCommand
 
@@ -14,7 +14,10 @@ class Command(BaseCommand):
     help = "Отправить лабораторные результаты в ЕЦП"
 
     def handle(self, *args, **kwargs):
-        base = SettingManager.get_api_ecp_base_url()
+        if URL_SEND_ECP_DIRECTION:
+            base = URL_SEND_ECP_DIRECTION
+        else:
+            base = SettingManager.get_api_ecp_base_url()
         if base != 'empty':
             available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
             if not available:
