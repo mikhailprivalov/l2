@@ -3158,6 +3158,7 @@ class MicrobiologyResultCultureAntibiotic(models.Model):
     antibiotic_amount = models.CharField(max_length=30, help_text='Дозировка антибиотика', default='', blank=True)
     sensitivity = models.CharField(max_length=1, choices=SENSITIVITIES, help_text="Чувствительность")
     dia = models.CharField(max_length=64, help_text='Диаметр')
+    mic = models.CharField(max_length=64, default=None, blank=True, null=True,  help_text='MIC')
 
     class Meta:
         verbose_name = 'Результат-культура-антибиотик'
