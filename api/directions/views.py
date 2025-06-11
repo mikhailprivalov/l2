@@ -1838,6 +1838,7 @@ def directions_paraclinic_form(request):
                                     "resultPk": ar.pk,
                                     "sri": ar.sensitivity,
                                     "dia": ar.dia,
+                                    "mic": ar.mic,
                                 }
                             )
 
@@ -2454,6 +2455,7 @@ def directions_paraclinic_result(request):
                                 antibiotic_id=ar['pk'],
                                 sensitivity=ar['sri'],
                                 dia=ar['dia'],
+                                mic=ar['mic'],
                                 antibiotic_amount=ar.get('amount', ''),
                             )
                         else:
@@ -2461,6 +2463,7 @@ def directions_paraclinic_result(request):
                             anti.antibiotic_id = ar['pk']
                             anti.sensitivity = ar['sri']
                             anti.dia = ar['dia']
+                            anti.mic = ar['mic']
                             anti.antibiotic_amount = ar.get('amount', '')
                         anti.save()
                         has_anti.append(anti.pk)
