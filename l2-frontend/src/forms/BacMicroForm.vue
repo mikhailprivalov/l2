@@ -1,7 +1,7 @@
 <template>
   <div class="group">
-    <div class="group-title">
-      Микроорганизмы
+    <div class="group-title group-title-micro">
+      <span>Микроорганизмы</span>
       <div
         v-if="!confirmed"
         class="input-select flex-select"
@@ -74,6 +74,7 @@
                   />
                   <button
                     class="btn btn-blue-nb"
+                    :disabled="!bactery.selectedSet"
                     @click="loadSet(bactery)"
                   >
                     Загрузить набор
@@ -84,7 +85,7 @@
                     v-model="bactery.selectedAntibiotic"
                     :clearable="false"
                     label="title"
-                    :options="antibiotics.groupsObj[bactery.selectedGroup.pk]"
+                    :options="antibiotics.groupsObj?.[bactery.selectedGroup.pk]"
                     :searchable="true"
                     class="inner-select"
                     placeholder="Выберите антибиотик"
@@ -93,6 +94,7 @@
                   />
                   <button
                     class="btn btn-blue-nb"
+                    :disabled="!bactery.selectedAntibiotic"
                     @click="loadAntibiotic(bactery)"
                   >
                     Добавить
@@ -104,7 +106,7 @@
               <div class="left">
                 <table
                   class="table table-bordered table-condensed"
-                  style="max-width: 665px;margin-top: 15px"
+                  style="max-width: 800px;margin-top: 15px"
                 >
                   <colgroup>
                     <col
@@ -113,8 +115,8 @@
                     >
                     <col>
                     <col style="width: 90px">
-                    <col style="width: 74px">
                     <col style="width: 148px">
+                    <col style="width: 100px">
                     <col style="width: 100px">
                   </colgroup>
                   <thead>
@@ -131,6 +133,7 @@
                       <th />
                       <th>Чувствительность</th>
                       <th>Диаметр</th>
+                      <th>MIC</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -181,18 +184,26 @@
                           :readonly="confirmed"
                         >
                       </td>
+                      <td class="cl-td">
+                        <input
+                          v-model="a.mic"
+                          class="form-control"
+                          maxlength="64"
+                          :readonly="confirmed"
+                        >
+                      </td>
                     </tr>
                     <tr v-if="bactery.antibiotics.length === 0">
                       <td
                         v-if="!confirmed"
-                        colspan="5"
+                        colspan="6"
                         class="text-center"
                       >
                         антибиотики не выбраны
                       </td>
                       <td
                         v-else
-                        colspan="4"
+                        colspan="5"
                         class="text-center"
                       >
                         антибиотики не выбраны
@@ -292,6 +303,32 @@ const getDefaultElement = () => ({
   title: '',
 });
 
+const DEFAULT_SRI_VALUES = ['S', 'R', 'I'];
+const DEFAULT_KOE_VALUE = '';
+const DEFAULT_COMMENTS_VALUE = '';
+
+const createDefaultBactery = (selectedBactery, selectedGroup, antibioticsData) => ({
+  resultPk: -1,
+  bacteryPk: selectedBactery.pk,
+  bacteryTitle: selectedBactery.title,
+  bacteryGroupTitle: selectedGroup.title,
+  selectedGroup: antibioticsData.groups[0],
+  selectedAntibiotic: antibioticsData.groupsObj[antibioticsData.groups[0].pk][0],
+  selectedSet: antibioticsData.sets[0],
+  antibiotics: [],
+  koe: DEFAULT_KOE_VALUE,
+  comments: DEFAULT_COMMENTS_VALUE,
+});
+
+const createDefaultAntibiotic = (pk) => ({
+  pk,
+  resultPk: -1,
+  sri: 'S',
+  dia: '',
+  amount: '',
+  mic: '',
+});
+
 export default {
   name: 'BacMicroForm',
   components: {
@@ -318,7 +355,7 @@ export default {
   },
   data() {
     return {
-      sri: ['S', 'R', 'I'],
+      sri: DEFAULT_SRI_VALUES,
       val: [...this.value],
       bacteriesGroups: [],
       bacteries: [],
@@ -381,24 +418,21 @@ export default {
       this.selectedBactery = this.bacteries[0] || getDefaultElement();
       await this.$store.dispatch(actions.DEC_LOADING);
     },
+    isBacteryAlreadyAdded(bacteryPk) {
+      return this.bacteriesResult.some(bactery => bactery.bacteryPk === bacteryPk);
+    },
     addBactery() {
-      for (const bactery of this.bacteriesResult) {
-        if (bactery.bacteryPk === this.selectedBactery.pk) {
-          return;
-        }
+      if (this.isBacteryAlreadyAdded(this.selectedBactery.pk)) {
+        return;
       }
-      this.bacteriesResult.push({
-        resultPk: -1,
-        bacteryPk: this.selectedBactery.pk,
-        bacteryTitle: this.selectedBactery.title,
-        bacteryGroupTitle: this.selectedGroup.title,
-        selectedGroup: this.antibiotics.groups[0],
-        selectedAntibiotic: this.antibiotics.groupsObj[this.antibiotics.groups[0].pk][0],
-        selectedSet: this.antibiotics.sets[0],
-        antibiotics: [],
-        koe: '',
-        comments: '',
-      });
+
+      const newBactery = createDefaultBactery(
+        this.selectedBactery,
+        this.selectedGroup,
+        this.antibiotics,
+      );
+
+      this.bacteriesResult.push(newBactery);
     },
     async deleteBac(pk) {
       try {
@@ -421,20 +455,16 @@ export default {
     loadAntibiotic(bactery) {
       this.addAntibiotic(bactery, bactery.selectedAntibiotic.pk);
     },
+    isAntibioticAlreadyAdded(bactery, pk) {
+      return bactery.antibiotics.some(a => a.pk === pk);
+    },
     addAntibiotic(bactery, pk) {
-      for (const a of bactery.antibiotics) {
-        if (a.pk === pk) {
-          return;
-        }
+      if (this.isAntibioticAlreadyAdded(bactery, pk)) {
+        return;
       }
 
-      bactery.antibiotics.push({
-        pk,
-        resultPk: -1,
-        sri: 'S',
-        dia: '',
-        amount: '',
-      });
+      const newAntibiotic = createDefaultAntibiotic(pk);
+      bactery.antibiotics.push(newAntibiotic);
     },
     updateSelectedAntibiotic(bactery) {
       // eslint-disable-next-line no-param-reassign,prefer-destructuring
@@ -462,7 +492,8 @@ export default {
   padding-left: 5px;
   margin-top: -5px;
   margin-bottom: -5px;
-  width: 539px;
+  width: calc(100% - 274px);
+  height: 30px;
   display: inline-flex;
   flex-wrap: nowrap;
   justify-content: stretch;
@@ -480,6 +511,10 @@ export default {
       flex: 0 0 210px;
       max-width: 210px;
     }
+    &:nth-child(2) {
+      flex: 1 1 300px;
+      max-width: 300px;
+    }
     &:last-child {
       flex: 1;
     }
@@ -488,6 +523,18 @@ export default {
 
     ::v-deep .vs__dropdown-toggle {
       border-radius: 0 !important;
+    }
+  }
+}
+
+.inner-select {
+  ::v-deep {
+    input {
+      font-size: 14px;
+    }
+
+    &.vs--single.vs--open .vs__selected {
+      position: relative;
     }
   }
 }
@@ -546,13 +593,13 @@ export default {
   z-index: 1;
 
   .row {
-    max-width: 700px;
+    max-width: 1000px;
   }
 
   .two,
   .three {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: stretch;
     align-content: stretch;
     align-items: stretch;
@@ -561,10 +608,18 @@ export default {
   .two {
     padding-right: 5px;
     border-right: 1px solid lightgray;
+
+    .inner-select {
+      flex: 1 1 100%;
+    }
   }
 
   .three {
     padding-left: 5px;
+
+    .inner-select {
+      flex: 1 1 100%;
+    }
   }
 
   .inner-select,
@@ -630,5 +685,12 @@ export default {
 .bactery-msg {
   padding: 20px;
   text-align: center;
+}
+
+.group-title-micro {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  align-items: flex-start;
 }
 </style>
