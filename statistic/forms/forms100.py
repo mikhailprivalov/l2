@@ -275,7 +275,13 @@ def form_01(ws1, data):
 
     step = 1
     sum_research_col = 1
+    total_sum_rows_value = "="
+    total_sum_sex_male = "="
+    total_sum_sex_female = "="
+    col_sex_male = ""
+    col_sex_female = ""
     for i in closed_case_structure_data.values():
+        start_row_for_sum = row
         ws1.cell(row=row, column=1).value = step
         ws1.cell(row=row, column=2).value = data.get("contract_number")
         ws1.cell(row=row, column=3).value = i.get("fio")
@@ -290,9 +296,11 @@ def form_01(ws1, data):
 
         col_sex_male = end_column_for_custom_filed + 3
         ws1.cell(row=row, column=col_sex_male).value = 1 if sex == "м" else 0
+        total_sum_sex_male = f"{total_sum_sex_male}{get_column_letter(col_sex_male)}{row}+"
 
         col_sex_female = end_column_for_custom_filed + 4
         ws1.cell(row=row, column=col_sex_female).value = 1 if sex == "ж" else 0
+        total_sum_sex_female = f"{total_sum_sex_female}{get_column_letter(col_sex_female)}{row}+"
 
         col_factors = end_column_for_custom_filed + 5
         factors_title = i.get("factors_title")
@@ -320,8 +328,20 @@ def form_01(ws1, data):
             ws1.cell(row=row, column=sum_research_col).value = f'={get_column_letter(where_done_col)}{row}*{get_column_letter(price_col)}{row}'
             row += 1
         ws1.cell(row=row, column=1).value = "Итого"
+        ws1.cell(row=row, column=sum_research_col).value = f'=SUM({get_column_letter(sum_research_col)}{start_row_for_sum}:{get_column_letter(sum_research_col)}{row - 1})'
+        total_sum_rows_value = f"{total_sum_rows_value}{get_column_letter(sum_research_col)}{row}+"
+
         row += 1
         step += 1
+    ws1.cell(row=row, column=1).value = "Итого по всем"
+    total_sum_rows_value = total_sum_rows_value.rstrip("+")
+    ws1.cell(row=row, column=sum_research_col).value = total_sum_rows_value
+
+    total_sum_sex_male = total_sum_sex_male.rstrip("+")
+    total_sum_sex_female = total_sum_sex_female.rstrip("+")
+
+    ws1.cell(row=row, column=col_sex_male).value = total_sum_sex_male
+    ws1.cell(row=row, column=col_sex_female).value = total_sum_sex_female
 
     columns = [
         ("Специалисты", 30),
