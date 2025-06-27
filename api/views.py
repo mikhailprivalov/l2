@@ -438,6 +438,7 @@ def endpoint(request):
                                                     antibiotic=anti_obj,
                                                     sensitivity=anti_r.get("RSI"),
                                                     dia=anti_r.get("dia", ""),
+                                                    mic=anti_r.get("mic", "") or None,
                                                     antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
