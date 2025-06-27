@@ -656,9 +656,8 @@ def directions_history(request):
                     if len(DICOM_SERVERS) > 1:
                         pacs = check_dicom_study_instance_uid(DICOM_SERVERS, i[21])
                     else:
-                        if WEB_PLUGIN_LINK_STUDY:
-                            dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye_id=dir).first()
-                            pacs = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid_tag']}"
+                        if WEB_PLUGIN_LINK_STUDY and i[38]:
+                            pacs = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={i[38]}"
                         else:
                             pacs = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}"
                 else:
