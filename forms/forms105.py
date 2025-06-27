@@ -654,8 +654,8 @@ def form_03(request_data):
     result_by_cda = primary_reception_data_by_cda.get("result_by_cda")
     who_directed = result_by_cda.get("п.п.-Организация направитель") if result_by_cda.get("п.п.-Организация направитель") else primary_reception_data.get('who_directed', "")
     who_delivered = result_by_cda.get("п.п.-Кем доставлен") if result_by_cda.get("п.п.-Кем доставлен") else primary_reception_data.get("Кем доставлен", "")
-    diagnos_who_directed = result_by_cda.get("п.п.-Ds при направлении") if result_by_cda.get("п.п.-Ds при направлении") else primary_reception_data.get('Ds при направлении', "")
-    diagnos_entered = result_by_cda.get("п.п.-Ds приемного отделения") if result_by_cda.get("п.п.-Ds приемного отделения") else primary_reception_data.get('Диагноз приемного отделения', "")
+    diagnos_who_directed = result_by_cda.get("п.п.-Ds при направлении") if result_by_cda.get("п.п.-Ds при направлении") else primary_reception_data.get('diagnos_who_directed', "")
+    diagnos_entered = result_by_cda.get("п.п.-Основное Ds мкб") if result_by_cda.get("п.п.-Основное Ds мкб") else primary_reception_data.get('Диагноз приемного отделения', "")
     count = result_by_cda.get("п.п.-Количество")
     type_hospitalized = None
     hospitalized = hospitalized
