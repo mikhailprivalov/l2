@@ -308,11 +308,7 @@ class MedicalExamination(models.Model):
             date_start = date
             date_end = date
         last_date_year = f"{current_year()}-12-31"
-        date_start = "2025-07-01 00:00:00"
-        date_end = "2025-07-31 23:59:00"
-        print(company_id, date_start, date_end, last_date_year)
         examination_data = get_examination_data(company_id, date_start, date_end, last_date_year)
-        print(examination_data)
         male = CONTROL_AGE_MEDEXAM.get("м")
         female = CONTROL_AGE_MEDEXAM.get("ж")
         patient_result = {}
