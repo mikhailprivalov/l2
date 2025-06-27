@@ -1180,8 +1180,10 @@ def hosp_get_operation_data(num_dir):
         for i in hosp_operation:
             # найти протоколы по типу операции
             if (
-                    i.get('research_title').lower().find('операции') != -1 or i.get('research_title').lower().find('манипул') != -1 or i.get('research_title').lower().find(
-                'реабилитации') != -1 or i.get('research_title').lower().find('трансфузи') != -1
+                i.get('research_title').lower().find('операции') != -1
+                or i.get('research_title').lower().find('манипул') != -1
+                or i.get('research_title').lower().find('реабилитации') != -1
+                or i.get('research_title').lower().find('трансфузи') != -1
             ) and i['date_confirm']:
                 operation_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
     titles_field = [
