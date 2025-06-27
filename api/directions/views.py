@@ -87,6 +87,7 @@ from laboratory.settings import (
     DICOM_SERVERS,
     TUBE_MAX_RESEARCH_WITH_SHARE,
     CDA_ID_FOR_DATE_CLOSE_CASE,
+    WEB_PLUGIN_LINK_STUDY,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -656,7 +657,10 @@ def directions_history(request):
                     if len(DICOM_SERVERS) > 1:
                         pacs = check_dicom_study_instance_uid(DICOM_SERVERS, i[21])
                     else:
-                        pacs = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}'
+                        if WEB_PLUGIN_LINK_STUDY and i[38]:
+                            pacs = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={i[38]}"
+                        else:
+                            pacs = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}"
                 else:
                     pacs = None
             has_hosp = False
