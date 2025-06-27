@@ -1,7 +1,7 @@
 {"header": [
   {"text": "МЕДИЦИНСКАЯ КАРТА ПАЦИЕНТА,", "style": "styleCenter"},
   {"text": "ПОЛУЧАЮЩЕГО МЕДИЦННСКУЮ ПОМОЩЬ", "style": "styleCenter"},
-  {"text": "В СТАЦИОНАРНЫХ УСЛОВНЯХ, В УСЛОВИЯХ ДНЕВНОГО СТАЦИОНАРА", "style": "styleCenter"},
+  {"text": "В СТАЦИОНАРНЫХ УСЛОВИЯХ, В УСЛОВИЯХ ДНЕВНОГО СТАЦИОНАРА", "style": "styleCenter"},
   {"text": "№","vars": "[p_card_num, hosp_nums]", "style": "styleCenter"}
   ],
 "body_paragraphs": [
