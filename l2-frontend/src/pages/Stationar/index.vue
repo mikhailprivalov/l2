@@ -29,7 +29,7 @@
           <div class="inner-card">
             <a
               v-if="!every"
-              :href="`/forms/pdf?type=106.01&dir_pk=${direction}`"
+              :href="`/forms/pdf?type=106.02&dir_pk=${direction}`"
               class="a-under"
               target="_blank"
               style="float: right"
@@ -84,19 +84,10 @@
             class="inner-card"
           >
             <a
-              :href="`/forms/pdf?type=106.01&dir_pk=${direction}`"
-              class="a-under"
-              target="_blank"
-            > 003/у </a>
-          </div>
-          <div
-            class="inner-card"
-          >
-            <a
               :href="`/forms/pdf?type=106.02&dir_pk=${direction}`"
               class="a-under"
               target="_blank"
-            > 530 (003/у) </a>
+            > 003/у </a>
           </div>
           <div
             v-if="!every"
