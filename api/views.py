@@ -432,7 +432,14 @@ def endpoint(request):
                                             if anti_obj and anti_r.get("RSI"):
                                                 a_name = anti_r.get("name", "").replace("µg", "мг")
                                                 a_name_parts = a_name.split()
-                                                a_name = a_name_parts[-2] + " " + a_name_parts[-1]
+                                                if len(a_name_parts) > 1:
+                                                    a_name = a_name_parts[-2] + " " + a_name_parts[-1]
+                                                else:
+                                                    a_name = ''
+
+                                                if not re.search(r'\d', a_name):
+                                                    a_name = ''
+
                                                 anti_result = directions.MicrobiologyResultCultureAntibiotic(
                                                     result_culture=culture_result,
                                                     antibiotic=anti_obj,
