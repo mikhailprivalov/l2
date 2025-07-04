@@ -27,8 +27,8 @@ def check_need_col(cols: list, need_cols: set):
     """
     Проверяет что все необходимые колонки есть
     """
-    other_need_cols = set(set(cols) - need_cols)
-    if len(other_need_cols) + len(need_cols) != len(cols):
+    remains_need_cols = set(need_cols - set(cols))
+    if remains_need_cols:
         return False
     return True
 
@@ -95,8 +95,12 @@ def parse_work_sheet(ws: Worksheet):
         {"fields": {"date_employment"}, "check_funcs": {"check_not_empty"}},
         {"fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}},
     ]
+    step = 0
     for row in ws.rows:
         cells = [str(x.value) for x in row]
+        step += 1
+        if step < 5:
+            print(cells)
         if not starts:
             if "Табельный номер" in cells:
                 if not check_need_col(cells, need_col_name):
@@ -291,6 +295,37 @@ def update_organization_employee_positions(organization_id: int, employees):
     return {"ok": True, "message": "", "data": incorrent_employees}
 
 
+def unmerge_cells(work_sheet: Worksheet):
+    merged_cells = list(work_sheet.merged_cells.ranges)
+    for merged_range in merged_cells:
+        work_sheet.unmerge_cells(str(merged_range))
+
+
+def delete_cols(work_sheet: Worksheet, nums_col: set):
+    for col in nums_col:
+        work_sheet.delete_cols(col, 1)
+
+
+def prepare_employee_file(work_sheet: Worksheet):
+    """
+    Предварительная обработка файла с работниками
+    """
+    a2_cell = work_sheet['A2'].value
+    if a2_cell == "Личные данные сотрудников":
+        unmerge_cells(work_sheet)
+        work_sheet.delete_rows(1, 8)
+        # nums_columns_to_delete = {17, 16, 14, 13, 12, 11, 10, 9, 7, 6, 5, 3, 2}
+        # nums_columns_to_delete = {17, 16, 14, 13, 12, 11, 10, 9, 7, 6, 5, 3, 2}
+        # delete_cols(work_sheet, nums_columns_to_delete)
+        step = 0
+        # for row in work_sheet.rows:
+        #     cells = [str(x.value) for x in row]
+        #     print(cells)
+        #     step += 1
+        #     if step == 3:
+        #         break
+
+
 def form_01(request_data):
     """
     Загрузка сотрудников организации
@@ -309,6 +344,7 @@ def form_01(request_data):
         return result_request_check
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
+    prepare_employee_file(ws)
     result_parse_file = parse_work_sheet(ws)
     if not result_parse_file.get("ok"):
         return result_parse_file
