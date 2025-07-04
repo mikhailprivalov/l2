@@ -95,12 +95,8 @@ def parse_work_sheet(ws: Worksheet):
         {"fields": {"date_employment"}, "check_funcs": {"check_not_empty"}},
         {"fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}},
     ]
-    step = 0
     for row in ws.rows:
         cells = [str(x.value) for x in row]
-        step += 1
-        if step < 5:
-            print(cells)
         if not starts:
             if "Табельный номер" in cells:
                 if not check_need_col(cells, need_col_name):
@@ -301,7 +297,7 @@ def unmerge_cells(work_sheet: Worksheet):
         work_sheet.unmerge_cells(str(merged_range))
 
 
-def delete_cols(work_sheet: Worksheet, nums_col: set):
+def delete_cols(work_sheet: Worksheet, nums_col):
     for col in nums_col:
         work_sheet.delete_cols(col, 1)
 
@@ -314,16 +310,8 @@ def prepare_employee_file(work_sheet: Worksheet):
     if a2_cell == "Личные данные сотрудников":
         unmerge_cells(work_sheet)
         work_sheet.delete_rows(1, 8)
-        # nums_columns_to_delete = {17, 16, 14, 13, 12, 11, 10, 9, 7, 6, 5, 3, 2}
-        # nums_columns_to_delete = {17, 16, 14, 13, 12, 11, 10, 9, 7, 6, 5, 3, 2}
-        # delete_cols(work_sheet, nums_columns_to_delete)
-        step = 0
-        # for row in work_sheet.rows:
-        #     cells = [str(x.value) for x in row]
-        #     print(cells)
-        #     step += 1
-        #     if step == 3:
-        #         break
+        nums_columns_to_delete = [17, 16, 14, 13, 12, 11, 10, 9, 7, 6, 5, 3, 2]
+        delete_cols(work_sheet, nums_columns_to_delete)
 
 
 def form_01(request_data):
