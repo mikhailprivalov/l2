@@ -286,7 +286,7 @@ def get_applications(request):
     return JsonResponse(
         {
             "applications": [
-                *([{"id": -1, "label": "Все приложения"}] if len(rows) > 1 else []),
+                {"id": -1, "label": "Все приложения"},
                 *[{"id": a.id, "label": a.name} for a in rows],
             ],
         }
