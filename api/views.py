@@ -423,6 +423,11 @@ def endpoint(request):
                                         comments = "\n".join(
                                             [c["text"] for c in comments if not c["text"].startswith("S:") and not c["text"].startswith("R:") and not c["text"].startswith("I:")]
                                         )
+                                        if app.phenotype_to_comments and phenotype:
+                                            if comments:
+                                                comments += "\n\n"
+                                            comments += "Фенотипы:\n"
+                                            comments += "\n".join([f"Код: {ph['code']}, Название: {ph['name']}" for ph in phenotype])
                                         culture_result = directions.MicrobiologyResultCulture(issledovaniye=iss, culture=culture, comments=comments)
                                         culture_result.save()
 
@@ -449,14 +454,15 @@ def endpoint(request):
                                                     antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
-                                        for ph in phenotype:
-                                            phen_obj = Phenotype.objects.filter(lis=ph["code"], hide=False).first()
-                                            if phen_obj and not directions.MicrobiologyResultPhenotype.objects.filter(result_culture=culture_result, phenotype=phen_obj).exists():
-                                                phen_result = directions.MicrobiologyResultPhenotype(
-                                                    result_culture=culture_result,
-                                                    phenotype=phen_obj,
-                                                )
-                                                phen_result.save()
+                                        if not app.phenotype_to_comments:
+                                            for ph in phenotype:
+                                                phen_obj = Phenotype.objects.filter(lis=ph["code"], hide=False).first()
+                                                if phen_obj and not directions.MicrobiologyResultPhenotype.objects.filter(result_culture=culture_result, phenotype=phen_obj).exists():
+                                                    phen_result = directions.MicrobiologyResultPhenotype(
+                                                        result_culture=culture_result,
+                                                        phenotype=phen_obj,
+                                                    )
+                                                    phen_result.save()
                     result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)

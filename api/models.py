@@ -41,6 +41,7 @@ class Application(models.Model):
     is_background_worker = models.BooleanField(default=False)
     unlimited_access = models.BooleanField(default=False, help_text="Доступ без ограничений")
     can_load_file_result = models.BooleanField(default=False, help_text="Результаты загружаются файлом")
+    phenotype_to_comments = models.BooleanField(default=False, help_text="Фенотипы в комментарии")
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:
