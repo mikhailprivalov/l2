@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.db.models.functions import Coalesce
 from django.db.models import Value, Q
 
+from api.models import Application
 from hospitals.models import Hospitals
 from laboratory.decorators import group_required
 from laboratory.utils import strdatetime
@@ -184,6 +185,10 @@ def get_logs(request):
     if last_id is not None:
         last_id = int(last_id)
 
+    application_id = data.get("applicationId")
+    if application_id is not None:
+        application_id = int(application_id)
+
     size = 40
 
     key = data.get("key")
@@ -197,7 +202,7 @@ def get_logs(request):
     more_than_one_hospital = list(Hospitals.objects.filter(hide=False).values_list("pk", flat=True)[:2])
     show_org_title = for_all_orgs or (has_access_to_all_orgs and len(more_than_one_hospital) > 1)
 
-    base_query = Log.objects.select_related("user__user", "user__hospital")
+    base_query = Log.objects.select_related("user__user", "user__hospital", "application")
 
     if for_all_orgs or has_access_to_all_orgs:
         if for_all_orgs:
@@ -210,6 +215,9 @@ def get_logs(request):
     else:
         rows = base_query.filter(user__hospital_id=user_org_id)
 
+    if not has_access_to_all_orgs:
+        rows = rows.filter(Q(application__isnull=True) | Q(application__hospitals__id=user_org_id))
+
     if user_id is not None:
         if user_id >= 0:
             rows = rows.filter(user_id=user_id)
@@ -221,6 +229,9 @@ def get_logs(request):
 
     if key:
         rows = rows.filter(key__contains=key)
+
+    if application_id is not None and application_id >= 0:
+        rows = rows.filter(application_id=application_id)
 
     if after_id is not None:
         rows = rows.filter(pk__gt=after_id)
@@ -243,6 +254,14 @@ def get_logs(request):
                 "id": row.user.hospital_id if row.user and row.user.hospital else None,
                 "title": (row.user.hospital.safe_short_title if row.user and row.user.hospital else "Система") if show_org_title else None,
             },
+            "application": (
+                {
+                    "id": row.application_id,
+                    "label": row.application.name if row.application else None,
+                }
+                if row.application
+                else None
+            ),
             "key": row.key,
             "body": row.body,
             "type": row.get_type_display(),
@@ -251,3 +270,24 @@ def get_logs(request):
         result.append(tmp_object)
 
     return JsonResponse({"logs": result})
+
+
+@login_required
+@group_required("Просмотр журнала")
+def get_applications(request):
+    has_access_to_all_orgs = request.user.is_superuser or request.user.is_staff
+    rows = Application.objects.filter(active=True)
+
+    if not has_access_to_all_orgs:
+        rows = rows.filter(hospitals__id=request.user.doctorprofile.get_hospital_id())
+
+    rows = rows.order_by("name")
+
+    return JsonResponse(
+        {
+            "applications": [
+                *([{"id": -1, "label": "Все приложения"}] if len(rows) > 1 else []),
+                *[{"id": a.id, "label": a.name} for a in rows],
+            ],
+        }
+    )

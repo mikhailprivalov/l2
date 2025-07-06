@@ -262,12 +262,12 @@ def send(request):
                             fraction_result.issledovaniye.save()
                             if issled not in pks:
                                 pks.append(issled)
-            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
+            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None, application=app).save()
             result["ok"] = True
         elif not directions.TubesRegistration.objects.filter(number=resdict["pk"]).exists():
             if dpk > -1:
                 resdict["pk"] = dpk
-            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
+            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None, application=app).save()
     except Exception as e:
         logger.exception(e)
         result = {"ok": False, "message": "Серверная ошибка"}
@@ -497,7 +497,7 @@ def endpoint(request):
             result["body"] = "API app banned " + api_key
     else:
         result["body"] = "API key is incorrect"
-    slog.Log(key=pk, type=6000, body=json.dumps({"data": data, "answer": result}), user=None).save()
+    slog.Log(key=pk, type=6000, body=json.dumps({"data": data, "answer": result}), user=None, application=app).save()
     return JsonResponse(result)
 
 

@@ -32,7 +32,7 @@ class Application(models.Model):
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
-    hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
+    hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True, db_index=True)
     companies = models.ManyToManyField('contracts.Company', blank=True)
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
