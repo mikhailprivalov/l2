@@ -290,7 +290,7 @@ class MedicalExamination(models.Model):
     company = models.ForeignKey(Company, help_text="Компания", db_index=True, on_delete=models.CASCADE)
     date = models.DateField(help_text="Дата мед. осмотра", db_index=True)
     type_medexam = models.CharField(max_length=15, blank=True, null=True, default=None, help_text="Тип медосмотра", db_index=True)
-    napravleniye = models.ForeignKey('directions.Napravleniya', null=True, help_text='Случай-направление', db_index=True, on_delete=models.SET_NULL)
+    napravleniye = models.ForeignKey('directions.Napravleniya', blank=True, default=None, null=True, help_text='Случай-направление', db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         return f"{self.card} - {self.company} - {self.date} - {self.type_medexam}"

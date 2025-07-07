@@ -229,6 +229,7 @@ class Log(models.Model):
     key = models.CharField(max_length=2047)
     type = models.IntegerField(choices=TYPES)
     body = models.TextField()
+    application = models.ForeignKey('api.Application', on_delete=models.SET_NULL, blank=True, null=True, default=None, db_index=True)
     user = models.ForeignKey(DoctorProfile, on_delete=models.SET_NULL, blank=True, null=True)
     time = models.DateTimeField(auto_now=True)
 

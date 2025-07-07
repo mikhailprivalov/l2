@@ -596,14 +596,12 @@ class TimeTrackingDocument(models.Model):
     @staticmethod
     def create_document(year, month, department_id, doc_profile):
         month_date = datetime.date(year, month, 1)
-        blocked = datetime.date(year, month, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT)
 
         document = TimeTrackingDocument(
             doc_create_id=doc_profile.pk,
             create_at=timezone.now(),
             month=month_date,
             department_id=department_id,
-            blocked=blocked
         )
         document.save()
         return document

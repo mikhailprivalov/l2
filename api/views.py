@@ -262,12 +262,12 @@ def send(request):
                             fraction_result.issledovaniye.save()
                             if issled not in pks:
                                 pks.append(issled)
-            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None).save()
+            slog.Log(key=appkey, type=22, body=json.dumps(resdict), user=None, application=app).save()
             result["ok"] = True
         elif not directions.TubesRegistration.objects.filter(number=resdict["pk"]).exists():
             if dpk > -1:
                 resdict["pk"] = dpk
-            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None).save()
+            slog.Log(key=resdict["pk"], type=23, body=json.dumps(resdict), user=None, application=app).save()
     except Exception as e:
         logger.exception(e)
         result = {"ok": False, "message": "Серверная ошибка"}
@@ -423,6 +423,11 @@ def endpoint(request):
                                         comments = "\n".join(
                                             [c["text"] for c in comments if not c["text"].startswith("S:") and not c["text"].startswith("R:") and not c["text"].startswith("I:")]
                                         )
+                                        if app.phenotype_to_comments and phenotype:
+                                            if comments:
+                                                comments += "\n\n"
+                                            comments += "Фенотипы:\n"
+                                            comments += "\n".join([f"Код: {ph['code']}, Название: {ph['name']}" for ph in phenotype])
                                         culture_result = directions.MicrobiologyResultCulture(issledovaniye=iss, culture=culture, comments=comments)
                                         culture_result.save()
 
@@ -432,23 +437,32 @@ def endpoint(request):
                                             if anti_obj and anti_r.get("RSI"):
                                                 a_name = anti_r.get("name", "").replace("µg", "мг")
                                                 a_name_parts = a_name.split()
-                                                a_name = a_name_parts[-2] + " " + a_name_parts[-1]
+                                                if len(a_name_parts) > 1:
+                                                    a_name = a_name_parts[-2] + " " + a_name_parts[-1]
+                                                else:
+                                                    a_name = ''
+
+                                                if not re.search(r'\d', a_name):
+                                                    a_name = ''
+
                                                 anti_result = directions.MicrobiologyResultCultureAntibiotic(
                                                     result_culture=culture_result,
                                                     antibiotic=anti_obj,
                                                     sensitivity=anti_r.get("RSI"),
                                                     dia=anti_r.get("dia", ""),
+                                                    mic=anti_r.get("mic", "") or None,
                                                     antibiotic_amount=a_name,
                                                 )
                                                 anti_result.save()
-                                        for ph in phenotype:
-                                            phen_obj = Phenotype.objects.filter(lis=ph["code"], hide=False).first()
-                                            if phen_obj and not directions.MicrobiologyResultPhenotype.objects.filter(result_culture=culture_result, phenotype=phen_obj).exists():
-                                                phen_result = directions.MicrobiologyResultPhenotype(
-                                                    result_culture=culture_result,
-                                                    phenotype=phen_obj,
-                                                )
-                                                phen_result.save()
+                                        if not app.phenotype_to_comments:
+                                            for ph in phenotype:
+                                                phen_obj = Phenotype.objects.filter(lis=ph["code"], hide=False).first()
+                                                if phen_obj and not directions.MicrobiologyResultPhenotype.objects.filter(result_culture=culture_result, phenotype=phen_obj).exists():
+                                                    phen_result = directions.MicrobiologyResultPhenotype(
+                                                        result_culture=culture_result,
+                                                        phenotype=phen_obj,
+                                                    )
+                                                    phen_result.save()
                     result["body"] = "{} {} {} {} {}".format(dw, pk, iss_pk, json.dumps(oks), direction is not None)
                 else:
                     result["body"] = "pk '{}' is not exists".format(pk_s)
@@ -483,7 +497,7 @@ def endpoint(request):
             result["body"] = "API app banned " + api_key
     else:
         result["body"] = "API key is incorrect"
-    slog.Log(key=pk, type=6000, body=json.dumps({"data": data, "answer": result}), user=None).save()
+    slog.Log(key=pk, type=6000, body=json.dumps({"data": data, "answer": result}), user=None, application=app).save()
     return JsonResponse(result)
 
 
