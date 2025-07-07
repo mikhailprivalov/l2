@@ -769,6 +769,7 @@ const printDocument = async () => {
 }
 .table-body-position-cell {
   padding: 0 !important;
+  white-space: normal !important;
 }
 .table-body-bid-cell {
   font-style: italic !important;
