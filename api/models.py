@@ -32,7 +32,7 @@ class Application(models.Model):
     direction_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами направлений")
     decimal_places = models.PositiveIntegerField(default=4)
     places_type = models.CharField(max_length=10, default=PLACES_FRACTION, choices=PLACES)
-    hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True)
+    hospitals = models.ManyToManyField('hospitals.Hospitals', blank=True, db_index=True)
     companies = models.ManyToManyField('contracts.Company', blank=True)
     is_superuser = False
     tube_work = models.BooleanField(default=False, help_text="Работа с номерами, пришедшими с анализатора как с номерами пробирок")
@@ -41,6 +41,7 @@ class Application(models.Model):
     is_background_worker = models.BooleanField(default=False)
     unlimited_access = models.BooleanField(default=False, help_text="Доступ без ограничений")
     can_load_file_result = models.BooleanField(default=False, help_text="Результаты загружаются файлом")
+    phenotype_to_comments = models.BooleanField(default=False, help_text="Фенотипы в комментарии")
 
     def auto_set_places(self, rel: "RelationFractionASTM", value: Union[str, float, int]) -> str:
         if rel.full_round:
