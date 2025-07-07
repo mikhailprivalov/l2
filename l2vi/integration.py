@@ -5,6 +5,7 @@ from urllib.parse import urljoin, urlencode
 import requests
 
 from appconf.manager import SettingManager
+from laboratory.settings import API_SERVER_SEND_PARACLINIC_DIRECTION
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ def send_lab_direction_to_ecp(directions) -> dict:
 
 
 def send_paraclinic_direction_to_ecp(directions) -> dict:
-    url = SettingManager.get_api_ecp_base_url()
+    url = API_SERVER_SEND_PARACLINIC_DIRECTION
     return make_request(f"{url}/send-paraclinic-direction", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
 
 

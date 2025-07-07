@@ -388,8 +388,6 @@ def issledovaniye_data(request):
     ignore_fsli = request.GET.get("ignoreFsli") == "true"
     need_ecp_code = request.GET.get("needEcpCode") == "true"
     i = directions.Issledovaniya.objects.get(pk=pk)
-    if i.research.podrazdeleniye.p_type != 2:
-        return Response({"ok": False, "ignore_sample": ignore_sample, "type": "is not laboratory"})
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
     if ignore_fsli:
@@ -410,14 +408,21 @@ def issledovaniye_data(request):
     results_data = []
     ecpResearchId = None
     if i.research.is_paraclinic and i.research.is_lab:
-        ecp_data = i.research.auto_register_on_rmis_location.split("#")
+        ecp_data = (i.research.auto_register_on_rmis_location).split("#")
         if len(ecp_data) > 1:
             ecpResearchId = ecp_data[0]
             value = ""
             for group in ParaclinicInputGroups.objects.filter(research=i.research).order_by("order"):
                 results = directions.ParaclinicResult.objects.filter(issledovaniye=i, field__group=group).exclude(value="").order_by("field__order")
+                group_title = group.title
+                step = 0
+
                 for r in results:
-                    value = f"{value} {r.field.title}-{r.value};"
+                    if step == 0:
+                        value = f"{value} {group_title.upper()} {r.field.title}-{r.value};"
+                    else:
+                        value = f"{value} {r.field.title}-{r.value};"
+                        step += 1
 
             results_data.append(
                 {
