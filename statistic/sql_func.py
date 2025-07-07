@@ -462,6 +462,7 @@ def lab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
             SELECT
                 to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS confirm_time,
                 directions_issledovaniya.napravleniye_id as direction_number,
+                to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create,
                 users_doctorprofile.family as doc_family,
                 users_doctorprofile.name as doc_name,
                 users_doctorprofile.patronymic as doc_patronymic,
@@ -474,9 +475,15 @@ def lab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                 clients_individual.sex as patient_sex,
                 clients_card.main_address as patient_main_address,
                 directions_napravleniya.parent_id as parent,
+                to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_create_direction,
                 directions_istochnikifinansirovaniya.title as fin_source,
                 df.title as field_title,
-                directions_result.value as field_value
+                directions_result.value as field_value,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') as time_confirm,
+                dc.family as doc_confirm_family,
+                dc.name as doc_confirm_name,
+                dc.patronymic as doc_confirm_patronymic
                 FROM directions_result
                 LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_result.issledovaniye_id
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
@@ -484,6 +491,7 @@ def lab_result_statistics_research(research_id, d_s, d_e, filter_hospital_id):
                 LEFT JOIN clients_individual ON clients_individual.id=clients_card.individual_id
                 LEFT JOIN hospitals_hospitals on directions_napravleniya.hospital_id = hospitals_hospitals.id
                 LEFT JOIN users_doctorprofile ON directions_napravleniya.doc_id=users_doctorprofile.id
+                LEFT JOIN users_doctorprofile dc ON directions_issledovaniya.doc_confirmation_id=dc.id
                 LEFT JOIN directions_istochnikifinansirovaniya ON directions_napravleniya.istochnik_f_id=directions_istochnikifinansirovaniya.id
                 LEFT JOIN directory_fractions df on directions_result.fraction_id = df.id 
                 WHERE 
