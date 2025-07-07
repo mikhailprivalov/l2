@@ -53,6 +53,16 @@
               </template>
             </template>
           </Treeselect>
+          <Treeselect
+            v-model="selectedApplication"
+            class="treeselect-noborder treeselect-34px"
+            :options="applications"
+            :multiple="false"
+            :disable-branch-nodes="true"
+            :append-to-body="true"
+            :clearable="false"
+            placeholder="Выберите приложение"
+          />
           <input
             v-model="searchKey"
             type="text"
@@ -114,6 +124,12 @@
                 >
                   <strong>ключ:</strong> {{ formatKey(log.key) }}
                 </div>
+                <div
+                  v-if="log.application"
+                  :class="$style.logApplication"
+                >
+                  <strong>приложение:</strong> {{ log.application.label || log.application.id }}
+                </div>
               </div>
               <div :class="$style.logBody">
                 <Collapse>
@@ -145,6 +161,15 @@
         </div>
       </template>
     </TopBottomLayout>
+
+    <button
+      v-show="showScrollToTop"
+      :class="$style.scrollToTopButton"
+      title="Наверх"
+      @click="scrollToTop"
+    >
+      <i class="fa fa-arrow-up" />
+    </button>
   </PageInnerLayout>
 </template>
 
@@ -192,6 +217,10 @@ type Log = {
     id: number;
     title?: string | null;
   };
+  application: {
+    id: number;
+    label?: string | null;
+  } | null;
   key: string;
   body: string;
   type: string;
@@ -207,6 +236,9 @@ const selectedUser = ref<number>(-1);
 const types = ref<SelectTypeWithChildren[]>([]);
 const selectedType = ref<number>(-1);
 
+const applications = ref<SelectType[]>([]);
+const selectedApplication = ref<number>(-1);
+
 const searchKey = ref<string>('');
 
 const logs = ref<Log[]>([]);
@@ -216,6 +248,7 @@ const hasMore = ref(true);
 const lastId = ref<number | null>(null);
 const pollingInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const logsContainer = ref<HTMLElement | null>(null);
+const showScrollToTop = ref(false);
 
 const loadUsers = async () => {
   const usersData = await api('logs/users', { orgId: selectedOrg.value }).then(result => result.users);
@@ -227,15 +260,18 @@ const loadUsers = async () => {
 };
 
 const loadSearchParams = async () => {
-  const [logTypes, orgsData] = await Promise.all([
+  const [logTypes, orgsData, applicationsData] = await Promise.all([
     api('logs/types').then(result => result.types),
     api('logs/orgs').then(result => result.orgs),
+    api('logs/applications').then(result => result.applications),
     loadUsers(),
   ]);
   orgs.value = orgsData;
   selectedOrg.value = orgsData[0].id;
   types.value = logTypes;
   selectedType.value = logTypes[0].id;
+  applications.value = applicationsData;
+  selectedApplication.value = applicationsData[0].id;
 };
 
 const stopPolling = () => {
@@ -263,6 +299,7 @@ const loadLogs = async (options: {
       userId: selectedUser.value,
       typeId: selectedType.value,
       key: searchKey.value || undefined,
+      applicationId: selectedApplication.value,
     };
 
     if (append && lastId.value) {
@@ -316,6 +353,8 @@ const handleScroll = async () => {
 
   const { scrollTop, scrollHeight, clientHeight } = logsContainer.value;
 
+  showScrollToTop.value = scrollTop > 0;
+
   if (scrollTop === 0) {
     startPolling();
   } else {
@@ -326,6 +365,12 @@ const handleScroll = async () => {
 
   if (scrollHeight - scrollTop - clientHeight < 100) {
     await loadLogs({ append: true });
+  }
+};
+
+const scrollToTop = () => {
+  if (logsContainer.value) {
+    logsContainer.value.scrollTo({ top: 0 });
   }
 };
 
@@ -368,7 +413,7 @@ const applyFilters = async () => {
 
 const debouncedApplyFilters = debounce(applyFilters, 300);
 
-watch([selectedOrg, selectedUser, selectedType], applyFilters);
+watch([selectedOrg, selectedUser, selectedType, selectedApplication], applyFilters);
 
 watch(searchKey, debouncedApplyFilters);
 
@@ -505,13 +550,18 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-.logKey {
+.logKey, .logApplication {
   background: #fff3cd;
   border-left: 4px solid #ffc107;
   padding: 8px 12px;
   margin: 0;
-  font-size: 14px;
+  font-size: 12px;
   border-radius: 0 4px 4px 0;
+}
+
+.logApplication {
+  background: #cde4ff;
+  border-left: 4px solid #007bff;
 }
 
 .logBody {
@@ -562,5 +612,28 @@ onUnmounted(() => {
   padding: 20px;
   color: #adb5bd;
   font-style: italic;
+}
+
+.scrollToTopButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: white;
+  color: #6c757d;
+  border: 1px solid #e9ecef;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
 }
 </style>
