@@ -23,6 +23,10 @@ def custom_lab_research_field_fractions(query_sql):
                 "Адрес": i.patient_main_address,
                 "Леч врач": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
                 "Подтверждено": i.confirm_time,
+                "Исполнитель": f"{i.doc_confirm_family} {i.doc_confirm_name} {i.doc_confirm_patronymic}",
+                "Дата создания": i.date_create,
+                "Дата подтверждения": i.date_confirm,
+                "Время подтверждения": i.time_confirm,
             }
         tmp_result[i.field_title] = i.field_value
         if i.field_title not in custom_fields:
@@ -30,7 +34,7 @@ def custom_lab_research_field_fractions(query_sql):
         step += 1
         prev_direction = i.direction_number
     result.append(tmp_result.copy())
-    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Леч врач"]
+    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Леч врач", "Исполнитель", "Дата создания", "Дата подтверждения", "Время подтверждения"]
     fields.extend(custom_fields)
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
@@ -56,6 +60,10 @@ def lab_result_research_base(ws1, d1, d2, result_query, research_title):
         ('Возраст', 10),
         ('Адрес', 40),
         ("Леч врач", 40),
+        ("Исполнитель", 40),
+        ("Дата создания", 40),
+        ("Дата подтверждения", 40),
+        ("Время подтверждения", 40),
     ]
 
     columns2 = [(i, 25) for i in result_query["custom_fields"]]
