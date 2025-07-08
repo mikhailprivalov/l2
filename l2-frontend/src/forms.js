@@ -16,6 +16,7 @@ export default [
     isGroup: true,
     title: 'Согласия',
     forms: [
+      { url: '/forms/pdf?type=101.32&card_pk={card}', title: 'Профосмотр', type: '101.32' },
       { url: '/forms/pdf?type=101.25&card_pk={card}', title: 'Согласие на почечную терапию', type: '101.25' },
       { url: '/forms/pdf?type=101.24&card_pk={card}', title: 'Согласие на переливание крови', type: '101.24' },
       { url: '/forms/pdf?type=101.23&card_pk={card}', title: 'Согласие на телемедицинскую консультацию', type: '101.23' },
