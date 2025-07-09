@@ -191,7 +191,10 @@ def form_01(ws1, data):
                     result_where_done = 0
                     closed_case_structure_data[k]["result_researches"][current_research_id]["where_done"] = result_where_done
             if data["research_coast"].get(current_research_id):
-                closed_case_structure_data[k]["result_researches"][current_research_id]["price"] = data["research_coast"].get(current_research_id)
+                try:
+                    closed_case_structure_data[k]["result_researches"][current_research_id]["price"] = data["research_coast"].get(current_research_id)
+                except:
+                    closed_case_structure_data[k]["result_researches"][current_research_id]["price"] = -1
 
             if result_where_done_custom_research.get(i.get("iss_id")):
                 if result_where_done_custom_research.get(i.get("iss_id"))["research_id"] in custom_research_ids:
