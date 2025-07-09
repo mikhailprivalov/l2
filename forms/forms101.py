@@ -7412,7 +7412,6 @@ def form_32(request_data):
                           'необходимого для завершения взаиморасчетов по оплате оказанной мне до этого медицинской помощи.', styleSign))
     objs.append(Paragraph('Подпись субъекта персональных данных __________________________________<font face="Symbola" size=18>\u2713</font>', styleSign))
 
-
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.restoreState()
