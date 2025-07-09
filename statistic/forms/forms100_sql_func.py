@@ -27,6 +27,7 @@ def closed_company_cases_by_date(d_start, d_end, company_id, current_year_last_d
             WHERE
             dn.work_place_db_id = %(company_id)s
             AND directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            AND directions_issledovaniya.time_confirmation is not Null
             AND directions_issledovaniya.research_id = %(research_id_case)s
             ORDER BY directions_issledovaniya.medical_examination
             """,
@@ -51,6 +52,7 @@ def directions_by_parent_cases_issledovaniye(cases_issledovaniye_ids):
             LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
             WHERE 
             directions_issledovaniya.napravleniye_id in (SELECT id from directions_napravleniya where directions_napravleniya.parent_case_id in %(cases_issledovaniye_ids)s)
+            AND directions_issledovaniya.time_confirmation IS NOT NULL
             ORDER BY dn.parent_case_id
             """,
             params={'cases_issledovaniye_ids': cases_issledovaniye_ids, 'tz': TIME_ZONE},

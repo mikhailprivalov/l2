@@ -790,10 +790,13 @@ def patients_save_harmful_factors(request):
     tb_data = request_data.get('tb_data', '')
     card_pk = int(request_data.get('card_pk', -1))
     date_med_exam = request_data.get('dateMedExam')
+    type_medexam = request_data.get('typeMedexam')
     if len(tb_data) < 1:
         return JsonResponse({'message': 'Ошибка в количестве'})
     if date_med_exam:
-        MedicalExamination.update_date(card_pk, date_med_exam)
+        if not type_medexam:
+            type_medexam="предварительный"
+        MedicalExamination.update_date(card_pk, date_med_exam, type_medexam)
     result = PatientHarmfullFactor.save_card_harmful_factor(card_pk, tb_data)
     if result:
         return JsonResponse({'ok': True, 'message': 'Сохранено'})
