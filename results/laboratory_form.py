@@ -331,10 +331,15 @@ def default_lab_form(fwb, interactive_text_field, pw, direction, styleSheet, dir
                 j = 0
                 if Result.objects.filter(issledovaniye=iss, fraction=f).exists():
                     result = Result.objects.filter(issledovaniye=iss, fraction=f).order_by("-pk")[0].value
-
                     if result == "":
                         continue
-                    jo = json.loads(result)["rows"]
+                    try:
+                        jo_tmp = json.loads(result)
+                        jo = jo_tmp.get("rows")
+                    except:
+                        continue
+                    if not jo:
+                        continue
                     for key, val in jo.items():
                         if val["title"] != "":
                             data = []

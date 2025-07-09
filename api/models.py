@@ -48,7 +48,7 @@ class Application(models.Model):
             return str(round(value))
         if self.places_type != Application.PLACES_AS_IS:
             if self.places_type == Application.PLACES_FRACTION and rel.signs_after_point:
-                return f'{value:.{rel.signs_after_point}f}'.rstrip('0').rstrip('.')
+                return f'{value:.{rel.signs_after_point}f}'.rstrip('.')
             elif self.places_type == Application.PLACES_APP or (self.places_type == Application.PLACES_FRACTION and not rel.signs_after_point):
                 return f'{value:.{self.decimal_places}f}'.rstrip('0').rstrip('.')
             elif self.places_type == Application.PLACES_BOTH_MIN:
