@@ -235,7 +235,7 @@ def get_researches():
             is_slave_hospital, is_citology, is_gistology, is_direction_params, is_form, is_global_direction_params, is_application, is_monitoring, is_expertise,is_aux, is_case, is_complex  
             FROM directory_researches
             LEFT JOIN podrazdeleniya_podrazdeleniya ON directory_researches.podrazdeleniye_id = podrazdeleniya_podrazdeleniya.id
-            WHERE directory_researches.hide=False and podrazdeleniya_podrazdeleniya.p_type != 0
+            WHERE directory_researches.hide=False and (directory_researches.podrazdeleniye_id IS NULL or podrazdeleniya_podrazdeleniya.p_type != 0)
             ORDER BY internal_code
         """,
         )
