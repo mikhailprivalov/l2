@@ -7407,10 +7407,12 @@ def form_32(request_data):
     current_date = strfdatetime(current_time(only_date=True), "%d.%m.%Y")
     objs.append(Paragraph(f'Потребитель(пациент)____________________<font face="Symbola" size=18>\u2713</font> /______________________ Дата: {current_date}', styleSign))
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph(
-        f"Информированное добровольное согласие потребителя (пациента) о предоставлении платных<br/>медицинских услуг при оказании медицинской помощи в {hospital_name}",
-        styleCenterBold,
-    ))
+    objs.append(
+        Paragraph(
+            f"Информированное добровольное согласие потребителя (пациента) о предоставлении платных<br/>медицинских услуг при оказании медицинской помощи в {hospital_name}",
+            styleCenterBold,
+        )
+    )
     objs.append(Paragraph(f'Я, {person_data["fio"]}&nbsp; {date_individual_born} г. рождения, Зарегистрированный(ая) по адресу: {person_data["main_address"]}', styleSign))
     styleLeft = deepcopy(style)
     styleLeft.alignment = TA_LEFT
