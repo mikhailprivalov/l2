@@ -441,7 +441,7 @@ def default_title_result_form(direction, doc, date_t, has_paraclinic, individual
             tube = TubesRegistration.objects.filter(issledovaniya__napravleniye=direction).first()
             if tube and (tube.time_get or tube.time_recive):
                 data += [["Забор биоматериала:", strfdatetime((tube.time_get or tube.time_recive), "%d.%m.%Y %H:%M")]]
-        elif not direction.imported_from_rmis and not is_extract and direction.doc and not is_form:
+        elif not direction.imported_from_rmis and not is_extract and direction.doc and not is_form and SettingManager.get("show_treating_doctor_in_result", default='true', default_type='b'):
             data.append(["Врач:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
         elif direction.doc and is_form:
             data.append(["Создал:", "<font>%s<br/>%s</font>" % (direction.doc.get_fio(), direction.get_doc_podrazdeleniye_title())])
