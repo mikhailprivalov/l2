@@ -31,7 +31,6 @@ def form_01(ws1, data):
     style_border3.font = Font(bold=False, size=10)
     style_border3.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
 
-
     custom_research = data["custom_research"]
     custom_researches_id = {i: 0 for i in custom_research.keys()}
     custom_researches_title = list(custom_research.values())
