@@ -24,6 +24,14 @@ def form_01(ws1, data):
     bd = Side(style="thin", color="000000")
     style_border2.font = Font(bold=False, size=12)
     style_border2.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
+
+    style_border3 = NamedStyle(name="style_border3")
+    bd = Side(style="thin", color="000000")
+    style_border3.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border3.font = Font(bold=False, size=10)
+    style_border3.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
+
+
     custom_research = data["custom_research"]
     custom_researches_id = {i: 0 for i in custom_research.keys()}
     custom_researches_title = list(custom_research.values())
@@ -37,6 +45,7 @@ def form_01(ws1, data):
     adds_harmfull_title = set([CONTROL_AGE_MEDEXAM_MALE[i.age_year] if i.sex == "м" else CONTROL_AGE_MEDEXAM_FEMALE[i.age_year] for i in closed_id])
     adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_title})}
     factors_id = {*set([i.factor_id for i in closed_id]), *adds_harmfull.values()}
+
     researches_harmfull_factors = researches_by_harmfull_factor_id(tuple(factors_id))
     # структура уникальных услуг для всех пациентов по все факторам
     harmfull_factors_research_id_title = {i.research_id: {"title": i.research_title, "code": i.code, "internal_code": i.internal_code} for i in researches_harmfull_factors}
@@ -72,6 +81,7 @@ def form_01(ws1, data):
                 "birthday": i.patient_birthday,
                 "age_year": i.age_year,
                 "date_end": i.date_end,
+                "fact_year": i.fact_year,
                 "factors": [i.factor_id],
                 "factors_title": [harmfull_factors_id_title.get(i.factor_id)],
                 "custom_researches": custom_researches_id.copy(),
@@ -250,7 +260,7 @@ def form_01(ws1, data):
     columns2 = [(i, 7) for i in custom_researches_title]
     columns.extend(columns2)
 
-    start_column_for_custom_filed = 7
+    start_column_for_custom_filed = 9
     list_researches = list(custom_researches_id.keys())
     # номер столбца для custom researches
     custom_researches_id_number_columns = {i: start_column_for_custom_filed + list_researches.index(i) for i in list_researches}
@@ -292,9 +302,9 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=2).value = data.get("contract_number")
         ws1.cell(row=row, column=3).value = i.get("fio")
         ws1.cell(row=row, column=4).value = i.get("birthday")
-        sex = i.get("sex")
-        ws1.cell(row=row, column=5).value = "-"
+        ws1.cell(row=row, column=5).value = i.get("fact_year")
         ws1.cell(row=row, column=6).value = i.get("date_end")
+        sex = i.get("sex")
         ws1.cell(row=row, column=7).value = sex
         ws1.cell(row=row, column=8).value = i.get("type_inspection")
 
@@ -317,6 +327,8 @@ def form_01(ws1, data):
             ws1.cell(row=current_row, column=col_factors).value = k
             current_row += 1
 
+        col_title = None
+        where_done_col = None
         for k, v in i["result_researches"].items():
             col_date = end_column_for_custom_filed
             ws1.cell(row=row, column=col_date).value = v.get("date_confirm")
@@ -336,6 +348,9 @@ def form_01(ws1, data):
             ws1.cell(row=row, column=sum_research_col).value = f'={get_column_letter(where_done_col)}{row}*{get_column_letter(price_col)}{row}'
             row += 1
         ws1.cell(row=row, column=1).value = "Итого"
+        if col_title and where_done_col:
+            ws1.cell(row=row, column=col_title).value = "Итого"
+            ws1.cell(row=row, column=where_done_col).value =1
         ws1.cell(row=row, column=sum_research_col).value = f'=SUM({get_column_letter(sum_research_col)}{start_row_for_sum}:{get_column_letter(sum_research_col)}{row - 1})'
         total_sum_rows_value = f"{total_sum_rows_value}{get_column_letter(sum_research_col)}{row}+"
 
@@ -350,6 +365,12 @@ def form_01(ws1, data):
 
     ws1.cell(row=row, column=col_sex_male).value = total_sum_sex_male
     ws1.cell(row=row, column=col_sex_female).value = total_sum_sex_female
+    col_man_total = col_sex_female + 3
+    ws1.cell(row=row, column=col_man_total).value = f"={get_column_letter(col_sex_male)}{row}+{get_column_letter(col_sex_female)}{row}"
+
+    for current_row in range(start_row + 1, row + 1):
+        for current_col in range(1, sum_research_col + 1):
+            ws1.cell(row=current_row, column=current_col).style = style_border3
 
     columns = [
         ("Специалисты", 30),
