@@ -17,7 +17,8 @@ def closed_company_cases_by_date(d_start, d_end, company_id, current_year_last_d
             ci.sex,
             to_char(ci.birthday AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as patient_birthday,
             date_part('year', age(timestamp %(current_year_last_date)s, ci.birthday)) as age_year,
-            cph.harmful_factor_id as factor_id
+            cph.harmful_factor_id as factor_id,
+            to_char(directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_end
             
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id

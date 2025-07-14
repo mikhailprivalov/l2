@@ -71,6 +71,7 @@ def form_01(ws1, data):
                 "sex": i.sex,
                 "birthday": i.patient_birthday,
                 "age_year": i.age_year,
+                "date_end": i.date_end,
                 "factors": [i.factor_id],
                 "factors_title": [harmfull_factors_id_title.get(i.factor_id)],
                 "custom_researches": custom_researches_id.copy(),
@@ -240,6 +241,8 @@ def form_01(ws1, data):
         ("№ Договора", 20),
         ("ФИО", 40),
         ("Дата рождения", 10),
+        ("Возраст", 10),
+        ("Дата окончания", 10),
         ("Пол", 8),
         ("Вид медосмотра (периодическмй / предварительный и т.д.)", 11),
     ]
@@ -290,8 +293,10 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=3).value = i.get("fio")
         ws1.cell(row=row, column=4).value = i.get("birthday")
         sex = i.get("sex")
-        ws1.cell(row=row, column=5).value = sex
-        ws1.cell(row=row, column=6).value = i.get("type_inspection")
+        ws1.cell(row=row, column=5).value = "-"
+        ws1.cell(row=row, column=6).value = i.get("date_end")
+        ws1.cell(row=row, column=7).value = sex
+        ws1.cell(row=row, column=8).value = i.get("type_inspection")
 
         for k, v in i["custom_researches"].items():
             col_custom = custom_researches_id_number_columns.get(k)
