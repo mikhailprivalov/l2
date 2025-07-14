@@ -349,7 +349,7 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=1).value = "Итого"
         if col_title and where_done_col:
             ws1.cell(row=row, column=col_title).value = "Итого"
-            ws1.cell(row=row, column=where_done_col).value =1
+            ws1.cell(row=row, column=where_done_col).value = 1
         ws1.cell(row=row, column=sum_research_col).value = f'=SUM({get_column_letter(sum_research_col)}{start_row_for_sum}:{get_column_letter(sum_research_col)}{row - 1})'
         total_sum_rows_value = f"{total_sum_rows_value}{get_column_letter(sum_research_col)}{row}+"
 
