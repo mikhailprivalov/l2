@@ -185,6 +185,26 @@ def get_result_value_iss(iss_pk, research_pk, titles_field):
     return row
 
 
+def get_result_value_iss_namedtuple(iss_pk, research_pk, titles_field):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+        WITH
+           t_field AS (SELECT "id", title, cda_option_id FROM directory_paraclinicinputfield
+           WHERE group_id in (SELECT "id" FROM directory_paraclinicinputgroups WHERE research_id=%(id_research)s)
+             AND title = ANY(ARRAY[%(titles_field)s]))
+
+            SELECT field_id, issledovaniye_id, "value", title, cda_option_id FROM public.directions_paraclinicresult
+            LEFT JOIN t_field ON directions_paraclinicresult.field_id = t_field.id
+            where field_id in (SELECT "id" FROM t_field) and issledovaniye_id = %(id_iss)s
+         """,
+            params={'id_iss': iss_pk, 'id_research': research_pk, 'titles_field': titles_field},
+        )
+        row = namedtuplefetchall(cursor)
+    return row
+
+
+
 def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
     with connection.cursor() as cursor:
         cursor.execute(

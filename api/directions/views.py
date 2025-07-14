@@ -119,7 +119,7 @@ from .sql_func import (
     get_template_field_by_department,
 )
 from api.stationar.stationar_func import hosp_get_hosp_direction, hosp_get_text_iss
-from forms.forms_func import hosp_get_operation_data
+from forms.forms_func import hosp_get_operation_data, hosp_get_tranfusion_data
 from medical_certificates.models import ResearchesCertificate, MedicalCertificates
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
@@ -3051,6 +3051,18 @@ def last_field_result(request):
         main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
         operations_data = hosp_get_operation_data(main_hosp_dir['direction'])
         field_is_aggregate_operation = True
+    elif request_data["fieldPk"].find('%transfusion') != -1:
+        # получить все направления в истории по типу hosp
+        main_hosp_dir = hosp_get_hosp_direction(num_dir)[0]
+        operations_data = hosp_get_tranfusion_data(main_hosp_dir['direction'])
+        val = ""
+        for op_d in operations_data:
+            if not val:
+                val = op_d
+                continue
+            else:
+                val = f"{val}\n{op_d};"
+        result = {"value": val}
     elif request_data["fieldPk"].find('%directionparam') != -1:
         id_field = request_data["fieldPk"].split(":")
         val = DirectionParamsResult.objects.values_list('value', flat=True).filter(napravleniye_id=num_dir, field_id=id_field[1]).first()

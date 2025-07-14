@@ -98,6 +98,7 @@ const DB_LINKS = {
   '%work_department': 'Подразделение места работы пациента',
   '%harmful_factor': 'Фактор вредности пациента',
   '%proto_operation': 'proto_operation',
+  '%transfusion': 'трансфузии в стационарном с верхнего уровня',
   '%proto_description': 'proto_description',
   '%doc_position': 'Должность врача',
   '%mother_family': 'Мать-Фамилия',
