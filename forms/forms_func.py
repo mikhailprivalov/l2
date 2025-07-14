@@ -16,10 +16,10 @@ from directory.models import Researches
 from external_system.models import CdaFields
 from external_system.sql_func import cda_data_by_title
 from laboratory import utils
-from laboratory.settings import MEDEXAM_FIN_SOURCE_TITLE, CDA_TITLES_FIELDS_PRIMARY_RESEARCH, CDA_TITLES_FIELDS_EXTRACT_RESEARCH
+from laboratory.settings import MEDEXAM_FIN_SOURCE_TITLE, CDA_TITLES_FIELDS_PRIMARY_RESEARCH, CDA_TITLES_FIELDS_EXTRACT_RESEARCH, CDA_TITLES_FIELDS_TRANSFUSION
 from laboratory.utils import strdate
 from api.stationar.stationar_func import hosp_get_data_direction, check_transfer_epicrisis
-from api.stationar.sql_func import get_result_value_iss, get_title_fields_by_cda_relation
+from api.stationar.sql_func import get_result_value_iss, get_title_fields_by_cda_relation, get_result_value_iss_namedtuple
 from utils.dates import normalize_date
 import json
 
@@ -1363,6 +1363,42 @@ def hosp_get_operation_data(num_dir):
             operation_result.append(operation_data.copy())
 
     return operation_result
+
+
+def hosp_get_tranfusion_data(num_dir):
+    hosp_operation = hosp_get_data_direction(num_dir, site_type=3, type_service='None', level=-1)
+    transfusion_iss_research = []
+    if hosp_operation:
+        for i in hosp_operation:
+            # найти протоколы по типу трансфузии
+            if (i.get('research_title').lower().find('трансфузи') != -1) and i['date_confirm']:
+                transfusion_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
+    titles_field = None
+    if CDA_TITLES_FIELDS_TRANSFUSION:
+        cda_ids_data = cda_data_by_title(tuple(CDA_TITLES_FIELDS_EXTRACT_RESEARCH))
+        titles_field = [i.title for i in cda_ids_data]
+    list_values = []
+
+    if titles_field and transfusion_iss_research and hosp_operation:
+        for i in transfusion_iss_research:
+            list_values.append(get_result_value_iss_namedtuple(i['iss'], i['research'], titles_field))
+
+        transfusion_result = []
+        for fields_operation in list_values:
+            if len(fields_operation) < 1:
+                continue
+
+            operation_data = {}
+
+            iss_obj = Issledovaniya.objects.filter(pk=fields_operation.issledovaniye_id).first()
+            if not iss_obj.time_confirmation:
+                continue
+            for field in fields_operation:
+                if field.title in titles_field:
+                    operation_data["title"] = field.value
+            transfusion_result.append(operation_data.copy())
+
+    return transfusion_result
 
 
 def closed_bl(hosp_num_dir):

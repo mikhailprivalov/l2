@@ -36,6 +36,7 @@ constructor_help_message = [
     {"label": "-", "param": "%harmful_factor", "value": "Факторы вредности пациента из карты"},
     {"label": "-", "param": "%harmfull_factors", "value": "Факторы вредности из отдельной модели"},
     {"label": "-", "param": "%proto_operation", "value": "Сведения об операциях в стационарном случае"},
+    {"label": "-", "param": "%transfusion", "value": "Трнсфузии в стационарном случае"},
     {"label": "-", "param": "%directionparam:11212", "value": "Из параметра Направление ссылка на id-поля 11212"},
     {"label": "-", "param": "%direction#date_visit_date", "value": "Дата регистрации направления/посещения пациента"},
     {"label": "-", "param": "%direction#time_visit_date", "value": "Время регистрации направления/посещения пациента"},
