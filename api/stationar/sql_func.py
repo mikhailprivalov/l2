@@ -204,7 +204,6 @@ def get_result_value_iss_namedtuple(iss_pk, research_pk, titles_field):
     return row
 
 
-
 def get_result_temperature_list(iss_pk_list, research_pk, titles_field):
     with connection.cursor() as cursor:
         cursor.execute(

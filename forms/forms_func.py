@@ -1370,9 +1370,8 @@ def hosp_get_tranfusion_data(num_dir):
     transfusion_iss_research = []
     if hosp_operation:
         for i in hosp_operation:
-            # найти протоколы по типу операции
-            if (i.get('research_title').lower().find('трансфузи') != -1
-            ) and i['date_confirm']:
+            # найти протоколы по типу трансфузии
+            if (i.get('research_title').lower().find('трансфузи') != -1) and i['date_confirm']:
                 transfusion_iss_research.append({'iss': i['iss'], 'research': i['research_id']})
     titles_field = None
     if CDA_TITLES_FIELDS_TRANSFUSION:
@@ -1380,7 +1379,6 @@ def hosp_get_tranfusion_data(num_dir):
         titles_field = [i.title for i in cda_ids_data]
     list_values = []
 
-    operation_result = []
     if titles_field and transfusion_iss_research and hosp_operation:
         for i in transfusion_iss_research:
             list_values.append(get_result_value_iss_namedtuple(i['iss'], i['research'], titles_field))
