@@ -308,169 +308,6 @@ def form_02(request_data):
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('\"___\"____________{} {} _____________________ /______________________ /'.format(date_year, 30 * space_bottom), styleSign))
     objs.append(Paragraph('{} (подпись) '.format(57 * space_bottom), style))
-    objs.append(PageBreak())
-
-    styleCenterMin = deepcopy(styleCenter)
-    styleCenterMin.fontSize = 8
-
-    styleRightMin = deepcopy(styleCenterMin)
-    styleRightMin.alignment = TA_RIGHT
-
-    styleHeader = deepcopy(style)
-    styleHeader.fontName = "PTAstraSerifBold"
-    styleHeader.fontSize = 14
-    styleHeader.leading = 14
-    styleHeader.alignment = TA_CENTER
-    styleLeft.firstLineIndent = 0
-
-    space = 3 * mm
-
-    objs.append(Paragraph('Приложение 1 к приказу №130 от 26.06.23', style=styleRightMin))
-    objs.append(Paragraph('<b>ИНФОРМИРОВАННОЕ ДОБРОВОЛЬНОЕ СОГЛАСИЕ НА МЕДИЦИНСКОЕ ВМЕШАТЕЛЬСТВО</b>', style=styleHeader))
-    objs.append(Spacer(1, space))
-
-    date_individual_born = pytils.dt.ru_strftime(u"\"%d\" %B %Y", inflected=True, date=datetime.datetime.strptime(person_data['born'], '%d.%m.%Y').date())
-    objs.append(Paragraph(f"Я, нижеподписавшийся(аяся) {person_data['fio']}&nbsp; {date_individual_born} г. рождения", styleLeft))
-    objs.append(Paragraph(f"Зарегистрированный(ая) по адресу: {person_data['main_address']}", styleLeft))
-    objs.append(Paragraph(f"Проживающий(ая) по адресу: {person_data['fact_address']}", styleLeft))
-    objs.append(
-        Paragraph(f"Документ, удостоверяющий личность {person_data['type_doc']}: серия <u> {person_data['passport_serial']}</u> номер: <u>{person_data['passport_num']}</u>", styleLeft)
-    )
-    objs.append(Paragraph(f"Выдан: {person_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
-    objs.append(Spacer(1, 5))
-
-    if agent_status:
-        opinion = [
-            Paragraph(f'Являюсь законным представителем ({ind_card.get_who_is_agent_display()}) {who_patient}:', styleLeft),
-            Paragraph(f"{patient_data['fio']}&nbsp; {patient_data['born']} г. Рождения", styleLeft),
-            Paragraph(f"Зарегистрированный(ая) по адресу: {patient_data['main_address']}", styleLeft),
-            Paragraph(f"Проживающий(ая) по адресу: {patient_data['fact_address']}", styleLeft),
-        ]
-        # Проверить возраст пациента при наличии представителя (ребёнок|взрослый)
-        if patient_data['age'] < SettingManager.get("child_age_before", default='15', default_type='i'):
-            opinion.append(
-                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия <u>{patient_data['bc_serial']}</u> номер <u>{patient_data['bc_num']}</u>", styleLeft)
-            )
-            opinion.append(Paragraph(f"Выдан: {patient_data['bc_date_start']} {person_data['bc_issued']}", styleLeft))
-        else:
-            opinion.append(
-                Paragraph(f"Документ, удостоверяющий личность {patient_data['type_doc']}: серия {patient_data['passport_serial']} номер {patient_data['passport_num']}", styleLeft)
-            )
-            opinion.append(Paragraph(f"Выдан: {patient_data['passport_date_start']} {person_data['passport_issued']}", styleLeft))
-
-        objs.extend(opinion)
-
-    objs.append(Spacer(1, space))
-    if agent_status:
-        person_data = p_agent.get_data_individual()
-        patient_status = 'представляемому'
-        patient_status_genitive_case = 'представляемого'
-        patient_status_creative_case = 'представляемым'
-        patient_status_pronoun_genitive_case = 'его'
-    else:
-        person_data = patient_data
-        patient_status = 'мне'
-        patient_status_genitive_case = 'меня'
-        patient_status_creative_case = 'мною'
-        patient_status_pronoun_genitive_case = 'моего'
-    objs.append(
-        Paragraph(
-            f'- Мне согласно моей воли даны полные и всесторонние разъяснения о характере, степени тяжести и возможных осложнениях {patient_status_pronoun_genitive_case} заболевания',
-            style,
-        )
-    )
-    objs.append(Paragraph(f'- Я ознакомлен(а) с распорядком и правилами лечебно-охранительного режима, установленного в <b>{hospital_name}</b>, и обязуюсь их соблюдать;', style))
-    objs.append(Paragraph(f'- Добровольно даю свое согласие на проведение {patient_status}, в соответствии с назначениями врача:', style))
-    objs.append(Paragraph('1. Опрос (жалобы, анамнез), объективное обследование', style))
-    objs.append(Paragraph('2. Осмотр узкими специалистами (включая неинвазивные методы диагностики)', style))
-    objs.append(Paragraph('3. Лабораторные методы исследования, в том числе в сторонних организациях на основе заключенных договоров.', style))
-    objs.append(Paragraph('4. Функциональные методы исследования.', style))
-    objs.append(Paragraph('5. Физиотерапевтическое лечение (в том числе медицинский массаж и лечебная физкультура), введение лекарственных препаратов', style))
-    objs.append(Paragraph('6. Рентгенологические методы исследования', style))
-    objs.append(Paragraph('Необходимость других методов обследования и лечения будет мне разъяснена дополнительно;', style))
-    objs.append(
-        Paragraph(
-            '- Я информирован(а) о целях, характере и неблагоприятных эффектах диагностических и лечебных процедур, возможности непреднамеренного причинения вреда здоровью, а '
-            f'также о том, что предстоит делать {patient_status} во время их проведения;',
-            style,
-        )
-    )
-    objs.append(Paragraph(f'- Я осознаю что {patient_status} необходимо следовать назначениям (рекомендациям) врача', style))
-    objs.append(Paragraph('- Я осознаю что отказ от назначенного обследования и лечения могут осложнить процесс лечения и отрицательно сказаться на состоянии здоровья', style))
-    objs.append(
-        Paragraph(
-            '- Я поставил(а) в известность врача обо всех проблемах, связанных со здоровьем, в том числе об аллергических проявлениях или индивидуальной непереносимости '
-            f'лекарственных препаратов, обо всех перенесенных {patient_status_creative_case} и известных мне травмах, операциях, заболеваниях, об  вредных факторах, воздействующих на '
-            f'{patient_status_genitive_case} во время жизнедеятельности, о принимаемых лекарственных средствах, о наследственности, а также об употреблении алкоголя, наркотических и '
-            'токсических средств;',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            'Cогласен(на)/Не согласен(на) на осмотр другими медицинскими работниками и студентами медицинских вузов и колледжей исключительно в медицинских, научных или обучающих целях с '
-            'учетом сохранения врачебной тайны;',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '- Я согласен(а) и разрешаю врачу/ Не согласен(на) в случае необходимости, опубликовать информацию о моем лечении в научных и образовательных целях, в сопровождении иллюстраций '
-            'и описательных текстов, при условии сохранения врачебной тайны и персональных данных; ',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '- Разрешаю в случае необходимости осуществлять обмен  данными о пациенте (медицинскими данными) с другими медицинскими организациями, НИИ, медицинскими ВУЗАМИ и СУЗАми. ',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            'Ознакомлен(а) и согласен(на) со всеми пунктами настоящего документа, положения которого мне разъяснены, мною поняты, и добровольно даю свое согласие на '
-            f'обследование и лечение {patient_status_genitive_case} в предложенном объеме; ',
-            style,
-        )
-    )
-    objs.append(
-        Paragraph(
-            '- Разрешаю, в случае необходимости, предоставить информацию о диагнозе, степени тяжести и характере заболевания моим родственникам, законным представителям и следующим '
-            'гражданам:',
-            style,
-        )
-    )
-    objs.append(Spacer(1, 2 * space))
-    objs.append(HRFlowable(width=190 * mm, color=colors.black))
-    objs.append(Spacer(1, space))
-    objs.append(Paragraph('- Разрешаю посещение в лечебном учреждении представляемого ребенка следующим гражданам: ', style))
-    objs.append(Spacer(1, 2 * space))
-    objs.append(HRFlowable(width=190 * mm, color=colors.black))
-    objs.append(Spacer(1, 2 * space))
-
-    space_bottom = ' &nbsp;'
-
-    objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph(f"{person_data['fio']}", styleCenter))
-    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph(f'(подпись){22 * space_bottom}(Ф.И.О. гражданина или законного представителя гражданина){30 * space_bottom}', styleCenterMin))
-
-    objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph(f'{space_bottom}', style))
-    objs.append(HRFlowable(width=190 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black))
-    objs.append(Paragraph(f'(подпись){33 * space_bottom}(Ф.И.О. медицинского работника){43 * space_bottom}', styleCenterMin))
-
-    objs.append(Spacer(1, 5 * mm))
-
-    styleSign = deepcopy(style)
-    styleSign.fontSize = 8
-    styleSign.firstLineIndent = 0
-
-    date_now = pytils.dt.ru_strftime(u"%d %B %Y", inflected=True, date=datetime.datetime.now())
-    objs.append(Spacer(1, 5 * mm))
-    objs.append(Paragraph(f'{4 * space_bottom}{date_now} г.', style))
-    objs.append(HRFlowable(width=46 * mm, spaceAfter=0.3 * mm, spaceBefore=0.5 * mm, color=colors.black, hAlign=TA_LEFT))
-    objs.append(Paragraph(f'{7 * space_bottom}(дата оформления)', styleSign))
 
     def first_pages(canvas, document):
         canvas.saveState()
@@ -4923,6 +4760,20 @@ def form_18(request_data):
     objs.append(Paragraph('', style))
     doc.build(objs)
     pdf = buffer.getvalue()
+
+    http_params = {
+        **dict(request_data.items()),
+        "user": request_data["user"],
+        "card_pk": request_data["card_pk"],
+        "hospital": request_data["hospital"],
+    }
+    related_form = RELATED_AGREES_FORMS_TOGETHER.get('forms.form101.form_18')
+    if related_form:
+        for rf in related_form:
+            pdf = join_two_pdf_data(import_string(rf), http_params, request_data['user'], buffer, ind_card, "get")
+            buffer = BytesIO()
+            buffer.write(pdf)
+
     buffer.close()
     return pdf
 
