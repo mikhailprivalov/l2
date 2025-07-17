@@ -201,6 +201,5 @@ class EquipmentReceive(models.Model):
     )
     time_reset_link = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время анулирвоания свзязи')
 
-
     def __str__(self):
         return f"{self.napravleniye} {self.study_instance_uid_tag} {self.doc_save_link}"

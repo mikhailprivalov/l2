@@ -12,4 +12,3 @@ class Equipment(models.Model):
     class Meta:
         verbose_name = "Оборудование"
         verbose_name_plural = "Оборудования"
-
