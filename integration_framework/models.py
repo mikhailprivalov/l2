@@ -183,7 +183,7 @@ class IPLimitter(models.Model):
 
 
 class EquipmentReceive(models.Model):
-    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag")
+    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
