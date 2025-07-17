@@ -68,6 +68,7 @@ INSTALLED_APPS = (
     'results_feed.apps.ResultsFeedConfig',
     'document_management',
     'cash_registers',
+    'equipment',
 )
 
 MIDDLEWARE = [

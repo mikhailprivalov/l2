@@ -2654,6 +2654,20 @@ class IssledovaniyaFiles(models.Model):
         verbose_name_plural = 'Файлы на исследования'
 
 
+def get_file_path_napravleniya(instance: 'IssledovaniyaFiles', filename):
+    return os.path.join('issledovaniya_files', str(instance.issledovaniye.pk), str(uuid.uuid4()), filename)
+
+
+class NapravleniyaFiles(models.Model):
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    uploaded_file = models.FileField(upload_to=get_file_path_napravleniya, blank=True, null=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Файл для направления'
+        verbose_name_plural = 'Файлы для направлений'
+
+
 class IssledovaniyaResultLaborant(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Исследование, для которого сохранен результат', on_delete=models.CASCADE)
