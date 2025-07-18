@@ -4,7 +4,6 @@ import uuid
 from django.contrib.auth.models import Group
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
-from django.db.models import Q
 from jsonfield import JSONField
 
 from directory.sql_func import get_constructor_edit_access_by_research_id

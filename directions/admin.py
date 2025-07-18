@@ -37,6 +37,7 @@ from .models import (
     ComplexResearchAccountPerson,
     StatementDocument,
     ParaclinicResult,
+    NapravleniyaFiles,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -272,6 +273,15 @@ class ResIssledovaniyaFiles(admin.ModelAdmin):
     search_fields = ('issledovaniye__pk',)
 
 
+class ResNapravleniyaFiles(admin.ModelAdmin):
+    list_display = (
+        'napravleniye',
+        'uploaded_file',
+        'created_at',
+    )
+    search_fields = ('napravleniye__pk',)
+
+
 class ResIssledovaniyaResultLaborant(admin.ModelAdmin):
     list_display = (
         'issledovaniye',
@@ -383,6 +393,7 @@ admin.site.register(MonitoringSumFieldTotal)
 admin.site.register(NapravleniyaHL7LinkFiles, NapravleniyaHL7FilesAdmin)
 admin.site.register(AdditionNapravleniya, ResAdditionNapravleniya)
 admin.site.register(IssledovaniyaFiles, ResIssledovaniyaFiles)
+admin.site.register(NapravleniyaFiles, ResNapravleniyaFiles)
 admin.site.register(IssledovaniyaResultLaborant, ResIssledovaniyaResultLaborant)
 admin.site.register(MicrobiologyResultCulture, MicrobiologyResultCultureAdmin)
 admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmin)

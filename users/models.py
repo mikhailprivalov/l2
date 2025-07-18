@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.core.cache import cache
 
 from appconf.manager import SettingManager
+from equipment.models import Equipment
 from laboratory.redis import get_redis_client
 from laboratory.settings import EMAIL_HOST, MEDIA_ROOT
 from podrazdeleniya.models import Podrazdeleniya
@@ -494,6 +495,18 @@ class DoctorProfile(models.Model):
     class Meta:
         verbose_name = 'Профиль пользователя L2'
         verbose_name_plural = 'Профили пользователей L2'
+
+
+class DoctorProfileEquipment(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
+    equipment = models.ForeignKey(Equipment, null=True, blank=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.doc} {self.equipment}"
+
+    class Meta:
+        verbose_name = 'Пользователь-оборудование'
+        verbose_name_plural = 'Пользователи-оборудование'
 
 
 class AssignmentTemplates(models.Model):
