@@ -14,7 +14,7 @@
           placement: 'bottom',
           trigger: 'click',
         }"
-        class="fa-solid fa-arrow-circle-o-right icon-color"
+        class="fa-solid fa-arrow-right icon-color"
       />
     </div>
     <VueTippyDiv
@@ -27,17 +27,30 @@
       :id="`tempTransferTo${props.employeePositionId}`"
       class="tp"
     >
-      <input
-        class="form-control"
-        type="date"
-      >
+      <div class="date-transfer">
+        <input
+          v-model="dateTransfer"
+          class="form-control"
+          type="date"
+        >
+        <button
+          class="btn btn-blue-nb"
+          @click="employeeTransfer"
+        >
+          <i class="fa fa-save" />
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 
+import { ref } from 'vue';
+
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
+
+const emit = defineEmits(['employeeTransfer']);
 
 const props = defineProps({
   text: {
@@ -58,6 +71,12 @@ const props = defineProps({
     required: true,
   },
 });
+
+const dateTransfer = ref(null);
+
+const employeeTransfer = () => {
+  emit('employeeTransfer', { employeePositionId: props.employeePositionId, date: dateTransfer.value });
+};
 </script>
 
 <style scoped lang="scss">
@@ -78,9 +97,13 @@ const props = defineProps({
 }
 .tp {
   height: auto;
-  width: 150px;
+  width: 180px;
 }
 .icon-color {
   color: #636e7e;
+}
+.date-transfer {
+  display: flex;
+  gap: 5px;
 }
 </style>

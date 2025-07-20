@@ -117,6 +117,7 @@ import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
+import FioCell from '@/pages/WorkingTime/FioCell.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -478,6 +479,11 @@ const clear = ({ rowIndex }) => {
   }
 };
 
+const employeeTransfer = ({ employeePositionId, date }) => {
+  console.log(employeePositionId);
+  console.log(date);
+};
+
 const columns = ref([]);
 
 const getMonthDays = (year: number, month: number) => {
@@ -516,6 +522,19 @@ const getColumns = () => {
         {
           on: {
             input: changeFilterFio,
+          },
+        },
+      ),
+      renderBodyCell: ({ row, column }, h) => h(
+        FioCell,
+        {
+          props: {
+            text: row[column.field] ? row[column.field] : '',
+            tippyMaxWidth: '50%',
+            employeePositionId: row.employeePositionId,
+          },
+          on: {
+            employeeTransfer,
           },
         },
       ),
@@ -765,7 +784,8 @@ const printDocument = async () => {
   padding: 0 12px !important;
 }
 .table-body-name-cell {
-  padding: 10px 0 10px 12px !important;
+  padding: 0 0 0 12px !important;
+  white-space: normal !important;
 }
 .table-body-position-cell {
   padding: 0 !important;
