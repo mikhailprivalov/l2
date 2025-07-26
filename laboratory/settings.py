@@ -17,6 +17,33 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_HSTS_SECONDS = 1
 X_FRAME_OPTIONS = 'ALLOWALL'
 CORS_ALLOW_ALL_ORIGINS = True
+
+# Performance optimizations
+USE_GZIP = True
+GZIP_CONTENT_TYPES = (
+    'text/css',
+    'text/javascript',
+    'application/javascript',
+    'application/x-javascript',
+    'text/plain',
+    'text/xml',
+    'application/json',
+    'application/xml',
+    'application/xml+rss',
+    'text/html',
+)
+
+# Static files compression
+COMPRESS_ENABLED = not DEBUG
+COMPRESS_OFFLINE = True
+COMPRESS_CSS_FILTERS = [
+    'compressor.filters.css_default.CssAbsoluteFilter',
+    'compressor.filters.cssmin.rCSSMinFilter',
+]
+COMPRESS_JS_FILTERS = [
+    'compressor.filters.jsmin.JSMinFilter',
+]
+
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -73,9 +100,10 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'django.middleware.gzip.GZipMiddleware',  # Add gzip compression
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
@@ -92,6 +120,11 @@ AUTHENTICATION_BACKENDS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ['integration_framework.authentication.TokenAuthentication'],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 50,
 }
 
 ROOT_URLCONF = 'laboratory.urls'
@@ -125,6 +158,7 @@ CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_NAME = 'csrftoken'
 
+# Database optimizations
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -133,12 +167,39 @@ DATABASES = {
         'PASSWORD': '123456',
         'HOST': '127.0.0.1',
         'PORT': '5432',
+        'OPTIONS': {
+            'MAX_CONNS': 20,
+            'connect_timeout': 10,
+            'options': '-c statement_timeout=30000'  # 30 second query timeout
+        },
+        'CONN_MAX_AGE': 600,  # Connection pooling
     }
 }
 
+# Enhanced caching configuration
 CACHES = {
-    'default': {'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache', 'LOCATION': '127.0.0.1:11211', 'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG")},
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'KEY_PREFIX': 'lis' + ("" if not DEBUG else "_DBG"),
+        'TIMEOUT': 300,  # 5 minutes default
+        'OPTIONS': {
+            'MAX_ENTRIES': 10000,
+            'CULL_FREQUENCY': 3,
+        }
+    },
+    'sessions': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'KEY_PREFIX': 'lis_sessions' + ("" if not DEBUG else "_DBG"),
+        'TIMEOUT': 3600,  # 1 hour for sessions
+    }
 }
+
+# Use cached sessions for better performance
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+SESSION_CACHE_ALIAS = 'sessions'
+
 LANGUAGE_CODE = 'ru-ru'
 DATE_FORMAT = 'd.m.Y'
 DATE_FORMAT_SHORT = 'd.m.y'
@@ -158,65 +219,88 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+# Static files optimization
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
 FONTS_FOLDER = os.path.join(BASE_DIR, 'assets', 'fonts')
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 FIXTURE_DIRS = [os.path.join(BASE_DIR, 'fixtures')]
 AUTH_PROFILE_MODULE = 'users.models.DoctorsProfile'
+
+# Optimized logging configuration
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'},
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
     },
     'filters': {
         'requestdata': {
             '()': 'utils.filters.RequestDataFilter',
         },
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
     },
     'handlers': {
-        'file': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
+        'file': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.FileHandler',
+            'filters': ['requestdata'],
+            'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'),
+            'formatter': 'base'
         },
+        'console': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler',
+        }
     },
     'loggers': {
         'django.request': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file', 'mail_admins'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
             'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['console'] if DEBUG else [],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
         },
     },
 }
 
-SESSION_SAVE_EVERY_REQUEST = True
+# Optimized session settings
+SESSION_SAVE_EVERY_REQUEST = False  # Only save when modified
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_AGE = 15 * 60 * 60
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not DEBUG
 
 MAX_RMIS_THREADS = 10
 
 RMIS_UPLOAD_WAIT_TIME_SECS = 8
-RMIS_UPLOAD_WAIT_LONG_TIME_SECS = 300
-RMIS_UPLOAD_COUNT_TO_REFRESH_CLIENT = 40
-RMIS_UPLOAD_COUNT = 20
 
-DOC_CALL_SYNC_WAIT_TIME_SECS = 8
-DOC_CALL_SYNC_WAIT_LONG_TIME_SECS = 300
+# Performance settings
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-RMIS_PROXY = None
-FIAS_PROXY = None
-AFTER_DATE = None
-AFTER_DATE_HOLTER = None
-
-MAX_DOC_CALL_EXTERNAL_REQUESTS_PER_DAY = 3
-
-PREFETCH_DEBUG = False
-PREFETCH_ENABLED = False
-PREFETCH_MAX_THREADS = 15
-
-LOG_SQL = False
+# Database query optimization
+QUERY_TIMEOUT = 30  # seconds
+FORCE_CACHALOT = False
+LOG_SQL = DEBUG
 
 
 class DisableMigrations(object):

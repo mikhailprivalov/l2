@@ -17,13 +17,137 @@ registerVue();
 Vue.use(Router);
 Vue.use(VueMeta);
 
+// Lazy load components with chunk names for better debugging
+const LoginPage = () => import(/* webpackChunkName: "auth" */ '@/pages/LoginPage.vue');
+const MenuPage = () => import(/* webpackChunkName: "menu" */ '@/pages/MenuPage.vue');
+const Directions = () => import(/* webpackChunkName: "directions" */ '@/pages/Directions.vue');
+const ResultsDepartment = () => import(/* webpackChunkName: "results" */ '@/pages/ResultsDepartment.vue');
+const TransferCard = () => import(/* webpackChunkName: "transfer" */ '@/pages/TransferDocument/TransferCard.vue');
+
+// Construct module lazy loading
+const ConstructMenu = () => import(/* webpackChunkName: "construct-core" */ '@/construct/ConstructMenu.vue');
+const ConstructLaboratory = () => import(/* webpackChunkName: "construct-lab" */ '@/construct/ConstructLaboratory.vue');
+const ConstructParaclinic = () => import(/* webpackChunkName: "construct-para" */ '@/construct/ConstructParaclinic.vue');
+const ConstructTubes = () => import(
+  /* webpackChunkName: "construct-tubes" */ '@/construct/ConstructTubes/ConstructTubes.vue'
+);
+const ConstructEmployees = () => import(
+  /* webpackChunkName: "construct-emp" */ '@/construct/ConstructEmployees.vue'
+);
+const ConstructTemplates = () => import(
+  /* webpackChunkName: "construct-tmpl" */ '@/construct/ConstructTemplates.vue'
+);
+const ConstructBacteria = () => import(
+  /* webpackChunkName: "construct-bact" */ '@/construct/ConstructBacteria.vue'
+);
+const ConstructCompany = () => import(
+  /* webpackChunkName: "construct-company" */ '@/construct/ConstructCompany.vue'
+);
+const ConstructOrg = () => import(
+  /* webpackChunkName: "construct-org" */ '@/construct/ConstructOrg.vue'
+);
+const ConstructScreening = () => import(
+  /* webpackChunkName: "construct-screen" */ '@/construct/ConstructScreening.vue'
+);
+const ConstructPrice = () => import(
+  /* webpackChunkName: "construct-price" */ '@/construct/ConstructPrice.vue'
+);
+const ConstructComplexServices = () => import(
+  /* webpackChunkName: "construct-complex" */ '@/construct/ConstructComplexServices.vue'
+);
+const ConstructDistinct = () => import(
+  /* webpackChunkName: "construct-distinct" */ '@/construct/ConstructDistrict.vue'
+);
+const ConstructHarmfulFactor = () => import(
+  /* webpackChunkName: "construct-harmful" */ '@/construct/ConstructHarmfulFactor.vue'
+);
+const ConstructControlParam = () => import(
+  /* webpackChunkName: "construct-control" */ '@/construct/ConstructControlParam.vue'
+);
+const ConstructResearchSets = () => import(
+  /* webpackChunkName: "construct-sets" */ '@/construct/ConstuctResearchSets.vue'
+);
+const ConstructRelatedTube = () => import(
+  /* webpackChunkName: "construct-related" */ '@/construct/ConstructRelatedTube.vue'
+);
+const ConstructDispensaryPlan = () => import(
+  /* webpackChunkName: "construct-dispensary" */ '@/construct/ConstructDispensaryPlan.vue'
+);
+const ConstructRoutePerformService = () => import(
+  /* webpackChunkName: "construct-route" */ '@/construct/ConstructRoutePerformService.vue'
+);
+
+// Laboratory and results modules
+const LaboratoryResults = () => import(
+  /* webpackChunkName: "lab-results" */ '@/pages/LaboratoryResults/index.vue'
+);
+const ResultsParaclinic = () => import(
+  /* webpackChunkName: "results-para" */ '@/pages/ResultsParaclinic.vue'
+);
+const ResultsReport = () => import(
+  /* webpackChunkName: "results-report" */ '@/pages/ResultsReport.vue'
+);
+const ResultsPreview = () => import(
+  /* webpackChunkName: "results-preview" */ '@/pages/ResultsPreview.vue'
+);
+
+// Statistics and reports
+const Statistics = () => import(/* webpackChunkName: "statistics" */ '@/pages/Statistics.vue');
+const StatisticsTickets = () => import(
+  /* webpackChunkName: "stats-tickets" */ '@/pages/StatisticsTickets.vue'
+);
+const StatisticsReport = () => import(
+  /* webpackChunkName: "stats-report" */ '@/pages/StatisticsReport/index.vue'
+);
+
+// Hospital and patient management
+const Stationar = () => import(/* webpackChunkName: "hospital" */ '@/pages/Stationar/index.vue');
+const PlanHospitalization = () => import(
+  /* webpackChunkName: "plan-hosp" */ '@/pages/PlanHospitalization/index.vue'
+);
+const PlanOperations = () => import(
+  /* webpackChunkName: "plan-ops" */ '@/pages/PlanOperations/index.vue'
+);
+const PlanPharmacotherapy = () => import(
+  /* webpackChunkName: "plan-pharma" */ '@/pages/PlanPharmacotherapy/index.vue'
+);
+
+// Schedule and time management
+const Schedule = () => import(/* webpackChunkName: "schedule" */ '@/pages/Schedule/index.vue');
+const WorkingTime = () => import(
+  /* webpackChunkName: "work-time" */ '@/pages/WorkingTime/WorkingTime.vue'
+);
+
+// Other core modules - lazy loaded with appropriate chunks
+const Directories = () => import(
+  /* webpackChunkName: "directories" */ '@/pages/Directories/index.vue'
+);
+const BiomaterialGet = () => import(
+  /* webpackChunkName: "biomaterial" */ '@/pages/BiomaterialGet.vue'
+);
+const ReceiveOneByOne = () => import(
+  /* webpackChunkName: "receive" */ '@/pages/ReceiveOneByOne.vue'
+);
+const ReceiveByDirection = () => import(
+  /* webpackChunkName: "receive-dir" */ '@/pages/ReceiveByDirection.vue'
+);
+const ReceiveJournal = () => import(
+  /* webpackChunkName: "receive-journal" */ '@/pages/ReceiveJournal.vue'
+);
+const RequestCreation = () => import(
+  /* webpackChunkName: "request-create" */ '@/pages/RequestCreation/index.vue'
+);
+const RequestsFill = () => import(
+  /* webpackChunkName: "request-fill" */ '@/pages/RequestsFill/index.vue'
+);
+
 const router = new Router({
   mode: 'history',
   routes: [
     {
       path: '/ui/login',
       name: 'login',
-      component: () => import('@/pages/LoginPage.vue'),
+      component: LoginPage,
       meta: {
         allowWithoutLogin: true,
         title: 'Вход в систему',
@@ -32,7 +156,7 @@ const router = new Router({
     {
       path: '/ui/menu',
       name: 'menu',
-      component: () => import('@/pages/MenuPage.vue'),
+      component: MenuPage,
       meta: {
         narrowLayout: true,
         title: 'Разделы',
@@ -41,7 +165,7 @@ const router = new Router({
     {
       path: '/ui/directions',
       name: 'directions',
-      component: () => import('@/pages/Directions.vue'),
+      component: Directions,
       meta: {
         title: 'Направления и картотека',
         groups: [
@@ -59,7 +183,7 @@ const router = new Router({
     {
       path: '/ui/results-by-department-or-doctor',
       name: 'results_department',
-      component: () => import('@/pages/ResultsDepartment.vue'),
+      component: ResultsDepartment,
       meta: {
         title: 'Печать по отделению или врачу',
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
@@ -68,7 +192,7 @@ const router = new Router({
     {
       path: '/ui/transfer-card',
       name: 'transfer_card',
-      component: () => import('@/pages/TransferDocument/TransferCard.vue'),
+      component: TransferCard,
       meta: {
         title: 'Движение карт',
         groups: ['Лечащий врач', 'Оператор лечащего врача'],
@@ -79,7 +203,7 @@ const router = new Router({
     {
       path: '/ui/construct/menu',
       name: 'construct_menu',
-      component: () => import('@/construct/ConstructMenu.vue'),
+      component: ConstructMenu,
       meta: {
         title: 'Конструктор справочника',
         groups: [
@@ -98,65 +222,102 @@ const router = new Router({
     {
       path: '/ui/construct/laboratory',
       name: 'construct_laboratory',
-      component: () => import('@/construct/ConstructLaboratory.vue'),
+      component: ConstructLaboratory,
       meta: {
-        title: 'Лабораторные исследования',
-        fullPageLayout: true,
+        title: 'Конструктор: Лабораторные исследования',
         groups: ['Конструктор: Лабораторные исследования'],
+        fullPageLayout: true,
       },
     },
     {
-      path: '/ui/construct/screening',
-      name: 'construct_screening',
-      component: () => import('@/construct/ConstructScreening.vue'),
+      path: '/ui/construct/paraclinic',
+      name: 'construct_paraclinic',
+      component: ConstructParaclinic,
       meta: {
-        title: 'Настройка скрининга',
-        groups: ['Конструктор: Настройка скрининга'],
+        title: 'Конструктор: Параклинические исследования',
+        groups: ['Конструктор: Параклинические (описательные) исследования'],
+        fullPageLayout: true,
       },
     },
     {
-      path: '/ui/construct/org',
-      name: 'construct_org',
-      component: () => import('@/construct/ConstructOrg.vue'),
+      path: '/ui/construct/consultations',
+      name: 'construct_consultations',
+      component: ConstructParaclinic, // Use ConstructParaclinic for consultations
       meta: {
-        title: 'Настройка организации',
-        groups: ['Конструктор: Настройка организации'],
+        title: 'Конструктор: Консультации',
+        groups: ['Конструктор: Консультации'],
+        fullPageLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/tubes',
+      name: 'construct_tubes',
+      component: ConstructTubes,
+      meta: {
+        title: 'Конструктор: Ёмкости для биоматериала',
+        groups: ['Конструктор: Ёмкости для биоматериала'],
         narrowLayout: true,
       },
     },
     {
       path: '/ui/construct/employees',
       name: 'construct_employees',
-      component: () => import('@/construct/ConstructEmployees.vue'),
+      component: ConstructEmployees,
       meta: {
-        title: 'Управление сотрудниками',
+        title: 'Конструктор: Сотрудники',
         groups: ['Конструктор: Настройка организации'],
         fullPageLayout: true,
       },
     },
     {
-      path: '/ui/construct/price',
-      name: 'construct_price',
-      component: () => import('@/construct/ConstructPrice.vue'),
+      path: '/ui/construct/templates',
+      name: 'construct_templates',
+      component: ConstructTemplates,
       meta: {
-        title: 'Настройка прайсов',
-        groups: ['Конструктор: Настройка организации'],
+        title: 'Конструктор: Шаблоны',
+        groups: [
+          'Конструктор: Лабораторные исследования',
+          'Конструктор: Параклинические (описательные) исследования',
+          'Конструктор: Консультации',
+          'Конструктор: Настройка организации',
+        ],
         narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/bacteria',
+      name: 'construct_bacteria',
+      component: ConstructBacteria,
+      meta: {
+        title: 'Конструктор: Бактерии и антибиотики',
+        groups: ['Конструктор: Лабораторные исследования'],
+        fullPageLayout: true,
       },
     },
     {
       path: '/ui/construct/company',
       name: 'construct_company',
-      component: () => import('@/construct/ConstructCompany.vue'),
+      component: ConstructCompany,
       meta: {
-        title: 'Настройка компаний',
+        title: 'Конструктор: Контрагенты',
         groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/org',
+      name: 'construct_org',
+      component: ConstructOrg,
+      meta: {
+        title: 'Конструктор: Настройка организации',
+        groups: ['Конструктор: Настройка организации'],
+        narrowLayout: true,
       },
     },
     {
       path: '/ui/construct/harmful-factor',
       name: 'harmful_factor',
-      component: () => import('@/construct/ConstructHarmfulFactor.vue'),
+      component: ConstructHarmfulFactor,
       meta: {
         title: 'Факторы вредности',
         groups: ['Конструктор: Факторы вредности'],
@@ -166,7 +327,7 @@ const router = new Router({
     {
       path: '/ui/construct/research-sets',
       name: 'research_sets',
-      component: () => import('@/construct/ConstuctResearchSets.vue'),
+      component: ConstructResearchSets,
       meta: {
         title: 'Наборы исследований',
         groups: ['Конструктор: Настройка организации'],
@@ -176,7 +337,7 @@ const router = new Router({
     {
       path: '/ui/construct/patient-control-param',
       name: 'construct_patient_control_param',
-      component: () => import('@/construct/ConstructControlParam.vue'),
+      component: ConstructControlParam,
       meta: {
         title: 'Контролируемые параметры пациентов',
         groups: ['Конструктор: Контролируемые параметры пациентов'],
@@ -186,7 +347,7 @@ const router = new Router({
     {
       path: '/ui/construct/route-perform-service',
       name: 'construct_route_perform_service',
-      component: () => import('@/construct/ConstructRoutePerformService.vue'),
+      component: ConstructRoutePerformService,
       meta: {
         title: 'Маршрут исследований',
         groups: ['Конструктор: Маршрут исследований'],
@@ -196,7 +357,7 @@ const router = new Router({
     {
       path: '/ui/construct/complex-services',
       name: 'construct_complex',
-      component: () => import('@/construct/ConstructComplexServices.vue'),
+      component: ConstructComplexServices,
       meta: {
         title: 'Комплексные услуги',
         groups: ['Конструктор: Комплексные услуги'],
@@ -206,7 +367,7 @@ const router = new Router({
     {
       path: '/ui/construct/district',
       name: 'construct_district',
-      component: () => import('@/construct/ConstructDistrict.vue'),
+      component: ConstructDistinct,
       meta: {
         title: 'Настройка участков',
         groups: ['Конструктор: Настройка организации'],
@@ -216,7 +377,7 @@ const router = new Router({
     {
       path: '/ui/construct/tubes',
       name: 'construct_tubes',
-      component: () => import('@/construct/ConstructTubes/ConstructTubes.vue'),
+      component: ConstructTubes,
       meta: {
         title: 'Ёмкости для биоматериала (н)',
         groups: ['Конструктор: Ёмкости для биоматериала'],
@@ -256,7 +417,7 @@ const router = new Router({
     {
       path: '/ui/statistics/report/:id?',
       name: 'statistics_report',
-      component: () => import('@/pages/StatisticsReport/index.vue'),
+      component: StatisticsReport,
       meta: {
         allowWithoutLogin: true,
         hideHeaderWithoutLogin: true,
@@ -267,7 +428,7 @@ const router = new Router({
     {
       path: '/ui/results/descriptive',
       name: 'results_descriptive',
-      component: () => import('@/pages/ResultsParaclinic.vue'),
+      component: ResultsParaclinic,
       meta: {
         title: 'Ввод описательных результатов',
         groups: ['Врач параклиники', 'Врач консультаций', 'Заполнение мониторингов', 'Свидетельство о смерти-доступ'],
@@ -302,7 +463,7 @@ const router = new Router({
     {
       path: '/ui/schedule',
       name: 'schedule',
-      component: () => import('@/pages/Schedule/index.vue'),
+      component: Schedule,
       meta: {
         title: 'Расписание',
         groups: [
@@ -320,7 +481,7 @@ const router = new Router({
     {
       path: '/ui/biomaterial/get',
       name: 'biomaterial_get',
-      component: () => import('@/pages/BiomaterialGet.vue'),
+      component: BiomaterialGet,
       meta: {
         title: 'Забор биоматериала',
         groups: ['Заборщик биоматериала'],
@@ -329,7 +490,7 @@ const router = new Router({
     {
       path: '/ui/statistic',
       name: 'statistic',
-      component: () => import('@/pages/Statistics.vue'),
+      component: Statistics,
       meta: {
         title: 'Статистика',
         groups: [
@@ -374,7 +535,7 @@ const router = new Router({
     {
       path: '/ui/plan-hospitalization',
       name: 'plan_hospitalization',
-      component: () => import('@/pages/PlanHospitalization/index.vue'),
+      component: PlanHospitalization,
       meta: {
         title: 'План госпитализации',
         groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача'],
@@ -436,7 +597,7 @@ const router = new Router({
     {
       path: '/ui/construct/descriptive',
       name: 'construct-descriptive',
-      component: () => import('@/construct/ConstructParaclinic.vue'),
+      component: ConstructParaclinic,
       meta: {
         title: 'Описательные протоколы и консультации',
         fullPageLayout: true,
@@ -450,7 +611,7 @@ const router = new Router({
     {
       path: '/ui/construct/templates',
       name: 'construct-templates',
-      component: () => import('@/construct/ConstructTemplates.vue'),
+      component: ConstructTemplates,
       meta: {
         title: 'Настройка шаблонов назначений',
         fullPageLayout: true,
@@ -462,7 +623,7 @@ const router = new Router({
     {
       path: '/ui/construct/bacteria',
       name: 'construct-bacteria',
-      component: () => import('@/construct/ConstructBacteria.vue'),
+      component: ConstructBacteria,
       meta: {
         title: 'Настройка бактерий и антибиотиков',
         groups: [
@@ -473,7 +634,7 @@ const router = new Router({
     {
       path: '/ui/construct/dispensary-plan',
       name: 'construct-dispensary-plan',
-      component: () => import('@/construct/ConstructDispensaryPlan.vue'),
+      component: ConstructDispensaryPlan,
       meta: {
         title: 'Д-учет настройка обследований',
         groups: [
@@ -484,7 +645,7 @@ const router = new Router({
     {
       path: '/ui/statistics-tickets',
       name: 'statistics-tickets',
-      component: () => import('@/pages/StatisticsTickets.vue'),
+      component: StatisticsTickets,
       meta: {
         title: 'Статталоны',
         groups: [
@@ -497,7 +658,7 @@ const router = new Router({
     {
       path: '/ui/plan-operations',
       name: 'plan-operations',
-      component: () => import('@/pages/PlanOperations/index.vue'),
+      component: PlanOperations,
       meta: {
         title: 'План операций',
         narrowLayout: true,
@@ -514,7 +675,7 @@ const router = new Router({
     {
       path: '/ui/results-report',
       name: 'results-report',
-      component: () => import('@/pages/ResultsReport.vue'),
+      component: ResultsReport,
       meta: {
         title: 'Отчёт по результатам',
         groups: [
@@ -550,7 +711,7 @@ const router = new Router({
     {
       path: '/ui/stationar',
       name: 'stationar',
-      component: () => import('@/pages/Stationar/index.vue'),
+      component: Stationar,
       meta: {
         title: 'Стационар',
         groups: [
@@ -608,7 +769,7 @@ const router = new Router({
     {
       path: '/ui/plan-pharmacotherapy',
       name: 'plan-pharmacotherapy',
-      component: () => import('@/pages/PlanPharmacotherapy/index.vue'),
+      component: PlanPharmacotherapy,
       meta: {
         title: 'Процедурный лист',
         groups: [
@@ -620,7 +781,7 @@ const router = new Router({
     {
       path: '/ui/laboratory/results',
       name: 'laboratory-results',
-      component: () => import('@/pages/LaboratoryResults/index.vue'),
+      component: LaboratoryResults,
       meta: {
         title: 'Лабораторные результаты',
         groups: [
@@ -666,7 +827,7 @@ const router = new Router({
     {
       path: '/ui/receive/one-by-one',
       name: 'receive-one-by-one',
-      component: () => import('@/pages/ReceiveOneByOne.vue'),
+      component: ReceiveOneByOne,
       meta: {
         title: 'Приём биоматериала по одному',
         narrowLayout: true,
@@ -679,7 +840,7 @@ const router = new Router({
     {
       path: '/ui/receive/by-direction',
       name: 'receive-by-direction',
-      component: () => import('@/pages/ReceiveByDirection.vue'),
+      component: ReceiveByDirection,
       meta: {
         title: 'Поступление',
         narrowLayout: true,
@@ -692,7 +853,7 @@ const router = new Router({
     {
       path: '/ui/directories',
       name: 'directories',
-      component: () => import('@/pages/Directories/index.vue'),
+      component: Directories,
       meta: {
         title: 'Справочники',
         module: 'l2_dynamic_directories',
@@ -714,7 +875,7 @@ const router = new Router({
     {
       path: '/ui/receive/journal',
       name: 'receive-journal',
-      component: () => import('@/pages/ReceiveJournal.vue'),
+      component: ReceiveJournal,
       meta: {
         narrowLayout: true,
         title: 'Журнал приёма',
@@ -737,7 +898,7 @@ const router = new Router({
     {
       path: '/ui/results/preview',
       name: 'results-preview',
-      component: () => import('@/pages/ResultsPreview.vue'),
+      component: ResultsPreview,
       meta: {
         emptyLayout: true,
         title: 'Предварительный просмотр бланков результатов',
@@ -807,7 +968,7 @@ const router = new Router({
     {
       path: '/ui/working-time',
       name: 'WorkingTime',
-      component: () => import('@/pages/WorkingTime/WorkingTime.vue'),
+      component: WorkingTime,
       meta: {
         narrowLayout: false,
         title: 'График рабочего времени',
@@ -827,7 +988,7 @@ const router = new Router({
     {
       path: '/ui/construct/related-tube/:id',
       name: 'construct-related-tube',
-      component: () => import('@/construct/ConstructRelatedTube.vue'),
+      component: ConstructRelatedTube,
       meta: {
         emptyLayout: true,
         title: 'Управление ёмкостями фракций',
@@ -848,7 +1009,7 @@ const router = new Router({
     {
       path: '/ui/request-creation',
       name: 'request_creation',
-      component: () => import('@/pages/RequestCreation/index.vue'),
+      component: RequestCreation,
       meta: {
         title: 'Создание и исполнение заявок',
         groups: ['Создание и исполнение заявок'],
@@ -857,7 +1018,7 @@ const router = new Router({
     {
       path: '/ui/requests-fill',
       name: 'requests_fill',
-      component: () => import('@/pages/RequestsFill/index.vue'),
+      component: RequestsFill,
       meta: {
         title: 'Заполнение заявок',
         groups: ['Заполнение заявок'],
