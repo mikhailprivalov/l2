@@ -53,7 +53,7 @@ def main():
                             f.write(chunk)
                             f.flush()
                             done = int(50 * f.tell() / total_length)
-                            sys.stdout.write("\r[%s%s] %s%%" % ('=' * done, ' ' * (50-done), round(100 * f.tell() / total_length, 2)))
+                            sys.stdout.write("\r[%s%s] %s%%" % ('=' * done, ' ' * (50 - done), round(100 * f.tell() / total_length, 2)))
                             sys.stdout.flush()
                     print()
                     if response.status_code == 200:

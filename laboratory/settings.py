@@ -167,11 +167,7 @@ DATABASES = {
         'PASSWORD': '123456',
         'HOST': '127.0.0.1',
         'PORT': '5432',
-        'OPTIONS': {
-            'MAX_CONNS': 20,
-            'connect_timeout': 10,
-            'options': '-c statement_timeout=30000'  # 30 second query timeout
-        },
+        'OPTIONS': {'MAX_CONNS': 20, 'connect_timeout': 10, 'options': '-c statement_timeout=30000'},  # 30 second query timeout
         'CONN_MAX_AGE': 600,  # Connection pooling
     }
 }
@@ -186,14 +182,14 @@ CACHES = {
         'OPTIONS': {
             'MAX_ENTRIES': 10000,
             'CULL_FREQUENCY': 3,
-        }
+        },
     },
     'sessions': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
         'LOCATION': '127.0.0.1:11211',
         'KEY_PREFIX': 'lis_sessions' + ("" if not DEBUG else "_DBG"),
         'TIMEOUT': 3600,  # 1 hour for sessions
-    }
+    },
 }
 
 # Use cached sessions for better performance
@@ -254,7 +250,7 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filters': ['requestdata'],
             'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'),
-            'formatter': 'base'
+            'formatter': 'base',
         },
         'console': {
             'level': 'DEBUG' if DEBUG else 'INFO',
@@ -265,7 +261,7 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler',
-        }
+        },
     },
     'loggers': {
         'django.request': {

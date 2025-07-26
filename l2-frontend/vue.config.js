@@ -135,7 +135,7 @@ const configWebpack = {
   ],
   resolve: {
     alias: {
-      'vue$': 'vue/dist/vue.runtime.esm.js',
+      vue$: 'vue/dist/vue.runtime.esm.js',
     },
   },
 };
@@ -181,6 +181,7 @@ module.exports = {
       .use('thread-loader')
       .loader('thread-loader')
       .options({
+        // eslint-disable-next-line global-require
         workers: require('os').cpus().length - 1,
       }),
     // Enable tree shaking for CSS
@@ -194,5 +195,6 @@ module.exports = {
   runtimeCompiler: true,
   productionSourceMap: false,
   // Enable parallel processing
+  // eslint-disable-next-line global-require
   parallel: require('os').cpus().length > 1,
 };

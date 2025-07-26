@@ -46,12 +46,6 @@ const ConstructCompany = () => import(
 const ConstructOrg = () => import(
   /* webpackChunkName: "construct-org" */ '@/construct/ConstructOrg.vue'
 );
-const ConstructScreening = () => import(
-  /* webpackChunkName: "construct-screen" */ '@/construct/ConstructScreening.vue'
-);
-const ConstructPrice = () => import(
-  /* webpackChunkName: "construct-price" */ '@/construct/ConstructPrice.vue'
-);
 const ConstructComplexServices = () => import(
   /* webpackChunkName: "construct-complex" */ '@/construct/ConstructComplexServices.vue'
 );

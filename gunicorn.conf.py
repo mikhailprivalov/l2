@@ -46,21 +46,27 @@ limit_request_line = 9086
 limit_request_fields = 100
 limit_request_field_size = 8190
 
+
 # Performance tuning
 def when_ready(server):
     server.log.info("Server is ready. Spawning workers")
 
+
 def worker_int(worker):
     worker.log.info("worker received INT or QUIT signal")
+
 
 def pre_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
 
+
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
 
+
 def post_worker_init(worker):
     worker.log.info("Worker initialized (pid: %s)", worker.pid)
+
 
 def worker_abort(worker):
     worker.log.info("Worker received SIGABRT signal")
