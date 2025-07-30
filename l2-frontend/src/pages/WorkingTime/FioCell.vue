@@ -73,9 +73,13 @@ const props = defineProps({
 });
 
 const dateTransfer = ref(null);
+const transfer = ref(null);
 
 const employeeTransfer = () => {
   emit('employeeTransfer', { employeePositionId: props.employeePositionId, date: dateTransfer.value });
+  dateTransfer.value = null;
+  // eslint-disable-next-line no-underscore-dangle
+  transfer.value._tippy.hide();
 };
 </script>
 
