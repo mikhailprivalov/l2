@@ -479,9 +479,19 @@ const clear = ({ rowIndex }) => {
   }
 };
 
-const employeeTransfer = ({ employeePositionId, date }) => {
-  console.log(employeePositionId);
-  console.log(date);
+const employeeTransfer = async ({ employeePositionId, date }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/employee-transfer', {
+    employeePositionId,
+    date,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
 };
 
 const columns = ref([]);

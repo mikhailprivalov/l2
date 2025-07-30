@@ -564,6 +564,15 @@ class EmployeePosition(models.Model):
             local_duration = LUNCH_DURATION_BY_POSITIONS.get(position)
         return local_duration
 
+    @staticmethod
+    def employee_transfer(employee_position_id: int, date: str):
+        employee_position: EmployeePosition = EmployeePosition.objects.filter(pk=employee_position_id).first()
+        if not employee_position:
+            return {"ok": False, "message": "Такого работника нет"}
+        employee_position.date_transfer = date
+        employee_position.save()
+        return {"ok": True, "message": ""}
+
 
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
