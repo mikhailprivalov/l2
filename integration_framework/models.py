@@ -9,6 +9,7 @@ from django.db import models
 
 from directory.models import Researches
 from hospitals.models import Hospitals
+from users.models import DoctorProfile
 from utils.models import ChoiceArrayField
 
 
@@ -179,3 +180,26 @@ class IPLimitter(models.Model):
     def check_limit(ip):
         IPLimitter.add_ip(ip)
         return not IPLimitter.is_limit(ip)
+
+
+class EquipmentReceive(models.Model):
+    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
+    name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
+    patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
+    birthday = models.DateField(help_text="Дата рождения", db_index=True)
+    sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
+    patient_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
+    order_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в результате")
+    doc_save_link = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="doc_save_link", db_index=True, help_text='Пользователь связавший снимок с заказом', on_delete=models.SET_NULL
+    )
+    time_save_link = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время создания связи')
+    doc_reset_link = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="doc_reset_link", db_index=True, help_text='Пользователь анулировавший связь', on_delete=models.SET_NULL
+    )
+    time_reset_link = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время анулирвоания свзязи')
+
+    def __str__(self):
+        return f"{self.napravleniye} {self.study_instance_uid_tag} {self.doc_save_link}"

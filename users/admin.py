@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import DoctorProfile, AssignmentTemplates, AssignmentResearches, Speciality, Position, AvailableResearchByGroup, DistrictResearchLimitAssign
+from .models import DoctorProfile, AssignmentTemplates, DoctorProfileEquipment, AssignmentResearches, Speciality, Position, AvailableResearchByGroup, DistrictResearchLimitAssign
 
 
 class DocAdmin(admin.ModelAdmin):
@@ -32,6 +32,17 @@ class ResPosition(admin.ModelAdmin):
     list_display_links = ('title', 'n3_id',)
 
 
+class ResDoctorProfileEquipment(admin.ModelAdmin):
+    list_display = (
+        'doctor_profile',
+        'equipment',
+    )
+    list_display_links = (
+        'doctor_profile',
+        'equipment',
+    )
+
+
 admin.site.register(DoctorProfile, DocAdmin)
 admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
 admin.site.register(AssignmentResearches)
@@ -40,3 +51,4 @@ admin.site.register(AvailableResearchByGroup)
 
 admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
 admin.site.register(Position, ResPosition)
+admin.site.register(DoctorProfileEquipment, ResDoctorProfileEquipment)

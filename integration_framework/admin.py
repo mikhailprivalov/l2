@@ -44,7 +44,21 @@ class CrieOrderAdmin(admin.ModelAdmin):
     search_fields = ('local_direction',)
 
 
+class EquipmentReceiveAdmin(admin.ModelAdmin):
+    list_display = (
+        'study_instance_uid_tag',
+        'napravleniye',
+        'time_save_link',
+    )
+    list_display_links = (
+        'study_instance_uid_tag',
+        'napravleniye',
+    )
+    search_fields = ('napravleniye__pk',)
+
+
 admin.site.register(models.IntegrationResearches, ResIntertationResearches)
+admin.site.register(models.EquipmentReceive, EquipmentReceiveAdmin)
 admin.site.register(models.ExternalService, ExternalServiceAdmin)
 admin.site.register(models.CrieOrder, CrieOrderAdmin)
 admin.site.register(models.ExternalServiceRights)
