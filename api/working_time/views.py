@@ -6,7 +6,6 @@ from forms.forms300 import form_01
 from laboratory.decorators import group_required
 from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition
 from laboratory.settings import SHIFTS_VARIANTS
-from utils.response import status_response
 
 
 @login_required()
