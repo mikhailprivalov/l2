@@ -255,6 +255,9 @@ const cellStyleOption = ref({
     if (column.isWeekend) {
       result.push('table-body-weekend-cell');
     }
+    if (row[column.key]?.blocked) {
+      result.push('table-body-blocked-cell');
+    }
     if (column.key === 'fio') {
       result.push('table-body-name-cell');
     } else if (column.key === 'position') {
@@ -783,6 +786,9 @@ const printDocument = async () => {
 }
 .table-body-cell {
   padding: 10px 0 !important;
+}
+.table-body-blocked-cell {
+  background: linear-gradient(rgba(200,200,200,0.4), rgba(200,200,200,0.4));
 }
 .template-table-body-cell {
   padding: 0 !important;
