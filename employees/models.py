@@ -1,6 +1,6 @@
 import calendar
 import datetime
-from typing import Union
+from typing import Union, Optional
 
 import pytz
 from django.db import models
@@ -574,7 +574,7 @@ class EmployeePosition(models.Model):
         return {"ok": True, "message": ""}
 
     @staticmethod
-    def checking_blocked_date(date: str, date_dismissal: datetime.date, date_transfer: datetime.date) -> bool:
+    def checking_blocked_date(date: str, date_dismissal: Optional[datetime.date], date_transfer: Optional[datetime.date]) -> bool:
         current_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         other_dates = [date_dismissal, date_transfer]
         return any(current_date >= day for day in other_dates if day)
