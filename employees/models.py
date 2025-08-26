@@ -733,7 +733,12 @@ class EmployeeWorkingHoursSchedule(models.Model):
                     }
                     # TODO Добавить фильтрацию, не получать в sql работников которые перевелись до начала месяца документа
                     if work_time.date_dismissal or work_time.date_transfer:
-                        result[work_time.employee_position_id].update({date: {**values, "blocked": EmployeePosition.checking_blocked_date(date, work_time.date_dismissal, work_time.date_transfer)} for date, values in template_days.items()})
+                        result[work_time.employee_position_id].update(
+                            {
+                                date: {**values, "blocked": EmployeePosition.checking_blocked_date(date, work_time.date_dismissal, work_time.date_transfer)}
+                                for date, values in template_days.items()
+                            }
+                        )
                     else:
                         result[work_time.employee_position_id].update(template_days)
                 if work_time.day:
