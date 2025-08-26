@@ -573,6 +573,12 @@ class EmployeePosition(models.Model):
         employee_position.save()
         return {"ok": True, "message": ""}
 
+    @staticmethod
+    def checking_blocked_date(date: str, date_dismissal: datetime.date, date_transfer: datetime.date) -> bool:
+        current_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        other_dates = [date_dismissal, date_transfer]
+        return any(current_date >= day for day in other_dates if day)
+
 
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
@@ -700,7 +706,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": ""} for day in range(1, length_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": "", "blocked": False} for day in range(1, length_month + 1)}
         return template_days
 
     @staticmethod
@@ -724,8 +730,11 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "position": work_time.position_name,
                         "bidType": work_time.bid_name[:3] if work_time.bid_name else "",
                         "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name, work_time.lunch_duration_by_department),
-                        **template_days,
                     }
+                    if work_time.date_dismissal or work_time.date_transfer:
+                        result[work_time.employee_position_id].update({date: {**values, "blocked": EmployeePosition.checking_blocked_date(date, work_time.date_dismissal, work_time.date_transfer)} for date, values in template_days.items()})
+                    else:
+                        result[work_time.employee_position_id].update(template_days)
                 if work_time.day:
                     tmp_work_time = {
                         "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else None,
