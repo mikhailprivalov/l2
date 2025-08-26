@@ -788,7 +788,7 @@ const printDocument = async () => {
   padding: 10px 0 !important;
 }
 .table-body-blocked-cell {
-  background: linear-gradient(rgba(200,200,200,0.4), rgba(200,200,200,0.4));
+  background: linear-gradient(rgba(101,109,120,0.4), rgba(101,109,120,0.4));
 }
 .template-table-body-cell {
   padding: 0 !important;
