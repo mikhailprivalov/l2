@@ -741,7 +741,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "endWorkTime": work_time.end_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.end_work else None,
                         "typeId": work_time.work_day_status_id if work_time.work_day_status_id else None,
                     }
-                    result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
+                    result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')].update(tmp_work_time)
             result = [value for value in result.values()]
             if document.blocked:
                 document_blocked = current_time(True) >= document.blocked
