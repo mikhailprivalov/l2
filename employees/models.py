@@ -627,7 +627,7 @@ class TimeTrackingDocument(models.Model):
         current_day = current_time(True)
         if not document:
             return {"ok": False, "message": "Такого документа нет"}
-        if current_day >= document.blocked:
+        if document.blocked and current_day >= document.blocked:
             return {"ok": False, "message": "Документ заблокирован"}
         return {"ok": True, "message": ""}
 
