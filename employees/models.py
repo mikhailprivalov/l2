@@ -731,6 +731,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "bidType": work_time.bid_name[:3] if work_time.bid_name else "",
                         "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name, work_time.lunch_duration_by_department),
                     }
+                    # TODO Добавить фильтрацию, не получать в sql работников которые перевелись до начала месяца документа
                     if work_time.date_dismissal or work_time.date_transfer:
                         result[work_time.employee_position_id].update({date: {**values, "blocked": EmployeePosition.checking_blocked_date(date, work_time.date_dismissal, work_time.date_transfer)} for date, values in template_days.items()})
                     else:
