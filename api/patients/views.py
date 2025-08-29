@@ -9,9 +9,11 @@ import simplejson as json
 from django.contrib.auth.decorators import login_required
 from django.core.validators import validate_email
 
+from api.dicom import check_server_port
 from api.models import Application
 from api.patients.common_func import get_card_control_param
 from ecp_integration.integration import search_patient_ecp_by_person_id
+from l2vi.integration import search_patient_to_ecp
 from laboratory.decorators import group_required
 from django.core.exceptions import ValidationError
 from django.db import transaction, connections
@@ -223,10 +225,28 @@ def patients_search_card(request):
         objects = list(Individual.objects.filter(document__number=query, document__document_type__title='СНИЛС'))
     elif not p4i:
         if inc_tfoms:
+            from_tfoms = None
             t_parts = re.search(p_tfoms, query.lower()).groups()
             t_bd = "{}-{}-{}".format(t_parts[7], t_parts[6], t_parts[5])
+            if SettingManager.get("search_patient_ecp", default="false", default_type="b"):
+                base = SettingManager.get_api_ecp_base_url()
+                if base != 'empty':
+                    available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+                    if not available:
+                        return {"error": True, "message": "Cервер Е не доступен"}
+                    else:
+                        bodyData = {
+                            "family": t_parts[0],
+                            "name": t_parts[1],
+                            "patronymic": t_parts[2],
+                            "birthday": f"{t_parts[5]}.{t_parts[6]}.{t_parts[7]}",
+                            "login": request.user.doctorprofile.rmis_login,
+                            "password": request.user.doctorprofile.rmis_password
+                        }
+                        from_tfoms = search_patient_to_ecp(bodyData)
+            else:
+                from_tfoms = match_patient(t_parts[0], t_parts[1], t_parts[2], t_bd)
 
-            from_tfoms = match_patient(t_parts[0], t_parts[1], t_parts[2], t_bd)
 
             if isinstance(from_tfoms, list):
                 for t_row in from_tfoms:

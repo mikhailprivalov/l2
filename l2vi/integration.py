@@ -52,6 +52,11 @@ def send_lab_direction_to_ecp(directions) -> dict:
     return make_request(f"{url}/send-lab-result-ecp", data=json.dumps({"directions": directions}), gen_url=False, auth_token="a-super-secret-key")
 
 
+def search_patient_to_ecp(data) -> dict:
+    url = SettingManager.get_api_ecp_base_url()
+    return make_request(f"{url}/patient-search-ecp", data=json.dumps(data), gen_url=False, auth_token="a-super-secret-key")
+
+
 def send_paraclinic_direction_to_ecp(directions) -> dict:
     url = API_SERVER_SEND_PARACLINIC_DIRECTION
     return make_request(f"{url}/send-paraclinic-direction", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
