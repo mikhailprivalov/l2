@@ -29,7 +29,7 @@
         placement: 'bottom',
         trigger: 'click',
       }"
-      :disabled="props.disabled"
+      :disabled="props.documentBlocked || props.workTime.blocked"
       :class="cellSelect ? 'transparentButton current-time-btn cell-select' : 'transparentButton current-time-btn'"
       @hide="updateCellSelect(false)"
       @hidden="updateTime"
@@ -157,7 +157,7 @@ const props = defineProps({
     required: true,
     default: () => [],
   },
-  disabled: {
+  documentBlocked: {
     type: Boolean,
     required: false,
     default: false,

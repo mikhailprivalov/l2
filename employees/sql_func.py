@@ -10,6 +10,8 @@ def get_employee_work_time(department_id: int, document_id: int):
             SELECT 
             employees_employeeposition.id as employee_position_id,
             employees_employeeposition.lunch_duration,
+            employees_employeeposition.date_dismissal,
+            employees_employeeposition.date_transfer,
             employees_department.id as department_id,
             employees_department.name as department_name,
             employees_department.lunch_duration as lunch_duration_by_department,

@@ -4,7 +4,7 @@ from django.http import JsonResponse, HttpResponse
 
 from forms.forms300 import form_01
 from laboratory.decorators import group_required
-from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus
+from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition
 from laboratory.settings import SHIFTS_VARIANTS
 
 
@@ -65,3 +65,13 @@ def print_document(request):
     response['Content-Disposition'] = 'inline; filename="form-' + '.pdf"'
     response.write(result)
     return response
+
+
+@login_required()
+@group_required('График рабочего времени')
+def employee_transfer(request):
+    request_data = json.loads(request.body)
+    employee_position_id = request_data.get("employeePositionId")
+    date_transfer = request_data.get("date")
+    result = EmployeePosition.employee_transfer(employee_position_id, date_transfer)
+    return JsonResponse(result)

@@ -33,8 +33,14 @@ class ResPosition(admin.ModelAdmin):
 
 
 class ResDoctorProfileEquipment(admin.ModelAdmin):
-    list_display = ('doctor_profile', 'equipment',)
-    list_display_links = ('doctor_profile', 'equipment',)
+    list_display = (
+        'doctor_profile',
+        'equipment',
+    )
+    list_display_links = (
+        'doctor_profile',
+        'equipment',
+    )
 
 
 admin.site.register(DoctorProfile, DocAdmin)

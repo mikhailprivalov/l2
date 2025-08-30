@@ -117,6 +117,7 @@ import PositionCell from '@/pages/WorkingTime/PositionCell.vue';
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
+import FioCell from '@/pages/WorkingTime/FioCell.vue';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -253,6 +254,9 @@ const cellStyleOption = ref({
     }
     if (column.isWeekend) {
       result.push('table-body-weekend-cell');
+    }
+    if (row[column.key]?.blocked) {
+      result.push('table-body-blocked-cell');
     }
     if (column.key === 'fio') {
       result.push('table-body-name-cell');
@@ -478,6 +482,21 @@ const clear = ({ rowIndex }) => {
   }
 };
 
+const employeeTransfer = async ({ employeePositionId, date }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/employee-transfer', {
+    employeePositionId,
+    date,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
 const columns = ref([]);
 
 const getMonthDays = (year: number, month: number) => {
@@ -516,6 +535,19 @@ const getColumns = () => {
         {
           on: {
             input: changeFilterFio,
+          },
+        },
+      ),
+      renderBodyCell: ({ row, column }, h) => h(
+        FioCell,
+        {
+          props: {
+            text: row[column.field] ? row[column.field] : '',
+            tippyMaxWidth: '50%',
+            employeePositionId: row.employeePositionId,
+          },
+          on: {
+            employeeTransfer,
           },
         },
       ),
@@ -582,7 +614,7 @@ const getColumns = () => {
             workDayStatuses: workDayStatuses.value,
             shiftsVariants: shiftsVariants.value,
             timeOptions: timeOptions.value,
-            disabled: documentBlocked.value,
+            documentBlocked: documentBlocked.value,
             lunchDuration: row.lunchDuration,
           },
           on: { changeWorkTime },
@@ -755,6 +787,9 @@ const printDocument = async () => {
 .table-body-cell {
   padding: 10px 0 !important;
 }
+.table-body-blocked-cell {
+  background: linear-gradient(rgba(101,109,120,0.4), rgba(101,109,120,0.4));
+}
 .template-table-body-cell {
   padding: 0 !important;
 }
@@ -765,7 +800,8 @@ const printDocument = async () => {
   padding: 0 12px !important;
 }
 .table-body-name-cell {
-  padding: 10px 0 10px 12px !important;
+  padding: 0 0 0 12px !important;
+  white-space: normal !important;
 }
 .table-body-position-cell {
   padding: 0 !important;

@@ -1,6 +1,6 @@
 import calendar
 import datetime
-from typing import Union
+from typing import Union, Optional
 
 import pytz
 from django.db import models
@@ -435,6 +435,7 @@ class EmployeePosition(models.Model):
     date_employment = models.DateField(verbose_name="Дата приема на работу", help_text="2025-01-11", blank=True, null=True, default=None)
     date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
     lunch_duration = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
+    date_transfer = models.DateField(verbose_name="Дата перевода", help_text="2025-02-01", blank=True, null=True, default=None)
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
@@ -563,6 +564,21 @@ class EmployeePosition(models.Model):
             local_duration = LUNCH_DURATION_BY_POSITIONS.get(position)
         return local_duration
 
+    @staticmethod
+    def employee_transfer(employee_position_id: int, date: str):
+        employee_position: EmployeePosition = EmployeePosition.objects.filter(pk=employee_position_id).first()
+        if not employee_position:
+            return {"ok": False, "message": "Такого работника нет"}
+        employee_position.date_transfer = date
+        employee_position.save()
+        return {"ok": True, "message": ""}
+
+    @staticmethod
+    def checking_blocked_date(date: str, date_dismissal: Optional[datetime.date], date_transfer: Optional[datetime.date]) -> bool:
+        current_date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
+        other_dates = [date_dismissal, date_transfer]
+        return any(current_date >= day for day in other_dates if day)
+
 
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
@@ -611,7 +627,7 @@ class TimeTrackingDocument(models.Model):
         current_day = current_time(True)
         if not document:
             return {"ok": False, "message": "Такого документа нет"}
-        if current_day >= document.blocked:
+        if document.blocked and current_day >= document.blocked:
             return {"ok": False, "message": "Документ заблокирован"}
         return {"ok": True, "message": ""}
 
@@ -690,7 +706,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": ""} for day in range(1, length_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": "", "blocked": False} for day in range(1, length_month + 1)}
         return template_days
 
     @staticmethod
@@ -714,15 +730,24 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "position": work_time.position_name,
                         "bidType": work_time.bid_name[:3] if work_time.bid_name else "",
                         "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name, work_time.lunch_duration_by_department),
-                        **template_days,
                     }
+                    # TODO Добавить фильтрацию, не получать в sql работников которые перевелись до начала месяца документа
+                    if work_time.date_dismissal or work_time.date_transfer:
+                        result[work_time.employee_position_id].update(
+                            {
+                                date: {**values, "blocked": EmployeePosition.checking_blocked_date(date, work_time.date_dismissal, work_time.date_transfer)}
+                                for date, values in template_days.items()
+                            }
+                        )
+                    else:
+                        result[work_time.employee_position_id].update(template_days)
                 if work_time.day:
                     tmp_work_time = {
                         "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else None,
                         "endWorkTime": work_time.end_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.end_work else None,
                         "typeId": work_time.work_day_status_id if work_time.work_day_status_id else None,
                     }
-                    result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')] = tmp_work_time
+                    result[work_time.employee_position_id][work_time.day.strftime('%Y-%m-%d')].update(tmp_work_time)
             result = [value for value in result.values()]
             if document.blocked:
                 document_blocked = current_time(True) >= document.blocked
