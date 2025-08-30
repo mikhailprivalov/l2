@@ -247,7 +247,6 @@ def patients_search_card(request):
             else:
                 from_tfoms = match_patient(t_parts[0], t_parts[1], t_parts[2], t_bd)
 
-
             if isinstance(from_tfoms, list):
                 for t_row in from_tfoms:
                     if isinstance(t_row, dict):
