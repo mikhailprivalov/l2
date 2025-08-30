@@ -241,7 +241,7 @@ def patients_search_card(request):
                             "patronymic": t_parts[2],
                             "birthday": f"{t_parts[5]}.{t_parts[6]}.{t_parts[7]}",
                             "login": request.user.doctorprofile.rmis_login,
-                            "password": request.user.doctorprofile.rmis_password
+                            "password": request.user.doctorprofile.rmis_password,
                         }
                         from_tfoms = search_patient_to_ecp(bodyData)
             else:
