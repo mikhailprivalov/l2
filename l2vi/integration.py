@@ -49,7 +49,12 @@ def send_cda_xml(pk: int, xml: str) -> dict:
 
 def send_lab_direction_to_ecp(directions) -> dict:
     url = SettingManager.get_api_ecp_base_url()
-    return make_request(f"{url}/send-lab-result-ecp", data=json.dumps({"directions": directions}), gen_url=False, auth_token="a-super-secret-key")
+    path = SettingManager.get("endpoint_ecp_send_lab", default='', default_type='s')
+    enpoint = 'send-lab-result-ecp'
+    if path:
+        enpoint = path
+
+    return make_request(f"{url}/{enpoint}", data=json.dumps({"directions": directions}), gen_url=False, auth_token="a-super-secret-key")
 
 
 def search_patient_to_ecp(data) -> dict:
