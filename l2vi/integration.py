@@ -49,7 +49,7 @@ def send_cda_xml(pk: int, xml: str) -> dict:
 
 def send_lab_direction_to_ecp(directions) -> dict:
     url = SettingManager.get_api_ecp_base_url()
-    path = SettingManager.get("send_lab_by_login", default='', default_type='s')
+    path = SettingManager.get("endpoint_ecp_send_lab", default='', default_type='s')
     enpoint = 'send-lab-result-ecp'
     if path:
         enpoint = path
