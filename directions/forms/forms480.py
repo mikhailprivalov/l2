@@ -62,7 +62,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
-        renderPDF.draw(dir_code, c, 157 * mm, 259 * mm)
+        renderPDF.draw(dir_code, c, 146 * mm, 259 * mm)
 
         objs = []
         if dir.hospital:
@@ -73,7 +73,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [
             [
                 Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-                Paragraph('<font size=9 >Код формы по ОКУД:<br/>Код организации по ОКПО: <br/>' 'Медицинская документация<br/>Учетная форма № 014/у</font>', styleT),
+                Paragraph('<font size=9 >Код формы по ОКУД:<br/>' 'Медицинская документация<br/>Учетная форма № 014/у<br/>Утверждена приказом Министерства<br/> зравоохранения Российской Федерации<br/>от 14 апреля 2025г. № 207н</font>', styleT),
             ],
         ]
 
@@ -82,7 +82,7 @@ def form_01(c: Canvas, dir: Napravleniya):
             TableStyle(
                 [
                     ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
-                    ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
+                    ('LEFTPADDING', (1, 0), (-1, -1), 43 * mm),
                     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ]
             )
