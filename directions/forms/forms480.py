@@ -73,8 +73,12 @@ def form_01(c: Canvas, dir: Napravleniya):
         opinion = [
             [
                 Paragraph(f'<font size=11>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-                Paragraph('<font size=9 >Код формы по ОКУД:<br/>' 'Медицинская документация<br/>Учетная форма № 014/у<br/>Утверждена приказом Министерства<br/> зравоохранения Российской '
-                          'Федерации<br/>от 14 апреля 2025г. № 207н</font>', styleT),
+                Paragraph(
+                    '<font size=9 >Код формы по ОКУД:<br/>'
+                    'Медицинская документация<br/>Учетная форма № 014/у<br/>Утверждена приказом Министерства<br/> зравоохранения Российской '
+                    'Федерации<br/>от 14 апреля 2025г. № 207н</font>',
+                    styleT,
+                ),
             ],
         ]
 
