@@ -23,6 +23,7 @@ class Hospitals(models.Model):
     address = models.CharField(max_length=128, blank=True, default='', help_text="Адрес больницы")
     phones = models.CharField(max_length=128, blank=True, default='', help_text="Телефон больницы")
     ogrn = models.CharField(max_length=16, blank=True, default='', help_text="ОГРН больницы")
+    inn = models.CharField(max_length=12, blank=True, default='', help_text=" ИНН больницы")
     www = models.CharField(max_length=128, blank=True, default='', help_text="Сайт больницы")
     rmis_org_id = models.CharField(max_length=12, blank=True, default='', help_text="ID организации в РМИС")
     email = models.CharField(max_length=128, blank=True, default='', help_text="email")
@@ -97,6 +98,10 @@ class Hospitals(models.Model):
     @property
     def safe_ogrn(self):
         return self.ogrn or SettingManager.get("org_ogrn")
+
+    @property
+    def safe_inn(self):
+        return self.inn or SettingManager.get("org_inn")
 
     @property
     def safe_www(self):

@@ -172,7 +172,11 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     opinion = [
         [
             Paragraph(f'<font size=10>{hospital_name}<br/>Адрес: {hospital_address}<br/>ОГРН: {hospital_kod_ogrn} <br/> </font>', styleT),
-            Paragraph('<font size=9 >Медицинская документация <br/> Учетная форма № 014/1-у<br/>Утверждена приказом Минздрава России<br/>от 24 марта 2016г. № 179н</font>', styleT),
+            Paragraph(
+                '<font size=9 >Медицинская документация <br/> Учетная форма № 014/1-у<br/>Утверждена приказом Министерства<br/> зравоохранения Российской '
+                'Федерации<br/>от 14 апреля 2025г. № 207н</font>',
+                styleT,
+            ),
         ],
     ]
 
