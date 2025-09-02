@@ -2157,7 +2157,6 @@ def form_15(request_data):
 
     TITLES_FIELDS_MEDEXAM_DRIVER.keys()
     title_fields = list(TITLES_FIELDS_MEDEXAM_DRIVER.values())
-    print(title_fields)
 
     result = fields_result_only_title_fields(iss, title_fields)
     result_protocol, date_protocol, is_return_document = "", "", ""
@@ -2168,7 +2167,6 @@ def form_15(request_data):
             date_protocol = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('returnDocument'):
             is_return_document = i['value']
-
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
