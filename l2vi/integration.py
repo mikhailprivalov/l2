@@ -53,7 +53,6 @@ def send_lab_direction_to_ecp(directions) -> dict:
     enpoint = 'send-lab-result-ecp'
     if path:
         enpoint = path
-
     return make_request(f"{url}/{enpoint}", data=json.dumps({"directions": directions}), gen_url=False, auth_token="a-super-secret-key")
 
 
