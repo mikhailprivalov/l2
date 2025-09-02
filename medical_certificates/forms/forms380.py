@@ -2007,8 +2007,12 @@ def form_14(request_data):
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
-    fwb.append(Paragraph('о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
-                         'противопоказаний к управлению транспортными средствами ', styleCentre))
+    fwb.append(
+        Paragraph(
+            'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских ' 'противопоказаний к управлению транспортными средствами ',
+            styleCentre,
+        )
+    )
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'№ {direction}', styleCenterBold))
     fwb.append(Spacer(1, 3 * mm))
