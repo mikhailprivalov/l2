@@ -2001,10 +2001,12 @@ def form_14(request_data):
     print(title_fields)
 
     result = fields_result_only_title_fields(iss, title_fields)
-    result_protocol = ""
+    result_protocol, date_protocol = "", ""
     for i in result:
         if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
             result_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
+            date_protocol = i['value']
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
@@ -2023,7 +2025,8 @@ def form_14(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"Дата проведения медицинского обследования: ", style))
+
+    fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", style))
     fwb.append(Spacer(1, 3 * mm))
 
     styleT2 = deepcopy(styleT)
@@ -2145,7 +2148,7 @@ def form_14(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f"Дата проведения медицинского обследования: ", style))
+    fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", style))
     fwb.append(Spacer(1, 3 * mm))
 
 
