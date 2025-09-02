@@ -2023,7 +2023,7 @@ def form_14(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"4. По результатам медицинского обследования {bold_open}врачом-психиатром{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
+    fwb.append(Paragraph("5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
 
     fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", style))
@@ -2164,12 +2164,15 @@ def form_15(request_data):
     print(title_fields)
 
     result = fields_result_only_title_fields(iss, title_fields)
-    result_protocol, date_protocol = "", ""
+    result_protocol, date_protocol, is_return_document = "", "", ""
     for i in result:
         if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
             result_protocol = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
             date_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('returnDocument'):
+            is_return_document = i['value']
+
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
@@ -2184,13 +2187,13 @@ def form_15(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"3. Регистрация по месту жительства: {patient_address}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"4. Медицинское освидетельствование проведено в связи с возвратом водительского удостоверения:", style))
+    fwb.append(Paragraph(f"4. Медицинское освидетельствование проведено в связи с возвратом водительского удостоверения: {is_return_document}", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph("5. Результаты лабораторных исследований:  не установлено", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"6. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"7. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", style))
+    fwb.append(Paragraph("7. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
 
     fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", style))
