@@ -1,8 +1,11 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
+from api.stationar.sql_func import get_title_fields_by_cda_relation
 from directions.models import ParaclinicResult, Issledovaniya, Napravleniya
+from external_system.sql_func import cda_data_by_title
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, CDA_TITLES_FIELDS_MEDEXAM_DRVER
 from laboratory.utils import strfdatetime
 from results.prepare_data import text_to_bold, fields_result_only_title_fields
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak, HRFlowable
@@ -1890,6 +1893,286 @@ def form_13(request_data):
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph("*Передается  работодателю  и  приобщается  к  личному  делу  работника (освидетельствуемого)", styleT))
     fwb.append(Paragraph("**Перечислить  в соответствии с Перечнем вредных факторов и Перечнем", styleT))
+
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_14(request_data):
+    # Вождение
+    direction = request_data["dir"]
+
+    buffer = BytesIO()
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.alignment = TA_JUSTIFY
+    style.leading = 10
+
+    styleCentre = deepcopy(style)
+    styleCentre.alignment = TA_CENTER
+    styleCentre.fontSize = 10
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+    hospital_inn = hospital.safe_inn
+    license_data = hospital.license_data
+    hospital_okpo = hospital.okpo
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+
+    fwb = []
+    opinion = [
+        [
+            Paragraph(f'<font size=10>Наименование медицинской организации: <br/>{hospital_name}</font>', styleT),
+            Paragraph(f'ОГРН {hospital_kod_ogrn}<br/> ИНН {hospital_inn}', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+    fwb.append(tbl)
+
+    opinion = [
+        [
+            Paragraph(f'Адрес {hospital_address} <br/>Лицензия {license_data}', styleT),
+            Paragraph(f"Код организации по <br/> ОКПО {hospital_okpo}", styleT),
+        ],
+    ]
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 5 * mm))
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 11.5
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    fio_short = patient.client.individual.fio(short=True, dots=True)
+    born = patient.client.individual.bd()
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+
+    title_fields = [
+        "Место работы",
+        "Должность",
+    ]
+
+    result = fields_result_only_title_fields(iss, title_fields)
+
+    for i in result:
+        if i["title"] == "Дата осмотра":
+            date = i["value"]
+
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
+    fwb.append(Paragraph(f'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
+                         f'противопоказаний к управлению транспортными средствами ', styleCentre))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'СЕРИЯ {space_symbol*20} № ', styleCenterBold))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии):  {fio} ', style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f'2. Число, месяц и год рождения: {born}', style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph("3. Регистрация по месту жительства:", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"4. По результатам медицинского обследования врачом-психиатром: ", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"Дата проведения медицинского обследования: ", style))
+    fwb.append(Spacer(1, 3 * mm))
+
+    styleT2 = deepcopy(styleT)
+    styleT2.alignment = TA_CENTER
+    styleT2.fontSize = 8
+    styleT2.leading = 3 * mm
+
+    opinion = [
+        [
+            Paragraph(f'Врач-психиатр <br/> {space_symbol* 2 }М.П.', styleT),
+            Paragraph(f"_______________________<br/>подпись", styleT2),
+            Paragraph(f"{iss.doc_confirmation_fio}<br/>", styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(50 * mm, 50 * mm, 50 * mm), hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (0, 0), (0, -1), -0.5),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styleT2))
+    fwb.append(Spacer(1, 15 * mm))
+    step_round_dash = (1.5 * mm, 1 * mm)
+    styleColor = deepcopy(styleT2)
+    styleColor.textColor = colors.gray
+    opinion = [
+        [
+            Paragraph('', styleT2),
+            Paragraph('линия отреза', styleColor),
+            Paragraph('', styleT2),
+        ],
+    ]
+    tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=(80 * mm, 25 * mm, 80 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('LINEBELOW', (0, 0), (0, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
+                ('LINEBELOW', (2, 0), (2, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
+                ('BOTTOMPADDING', (1, 0), (1, 0), -0.5 * mm),
+            ]
+        )
+    )
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 15 * mm))
+
+    opinion = [
+        [
+            Paragraph(f'<font size=10>Наименование медицинской организации: <br/>{hospital_name}</font>', styleT),
+            Paragraph(f'ОГРН {hospital_kod_ogrn}<br/> ИНН {hospital_inn}', styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+    fwb.append(tbl)
+
+    opinion = [
+        [
+            Paragraph(f'Адрес {hospital_address} <br/>Лицензия {license_data}', styleT),
+            Paragraph(f"Код организации по <br/> ОКПО {hospital_okpo}", styleT),
+        ],
+    ]
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 5 * mm))
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    title_fields = [
+        "Место работы",
+        "Должность",
+    ]
+
+    result = fields_result_only_title_fields(iss, title_fields)
+
+    for i in result:
+        if i["title"] == "Дата осмотра":
+            date = i["value"]
+
+    space_symbol = '&nbsp;'
+    fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
+    fwb.append(Paragraph(f'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
+                         f'противопоказаний к управлению транспортными средствами ', styleCentre))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'СЕРИЯ {space_symbol * 20} № ', styleCenterBold))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии):  {fio} ', style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f'2. Число, месяц и год рождения: {born}', style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph("3. Регистрация по месту жительства:", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"4. По результатам медицинского обследования врачом-психиатром: ", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f"Дата проведения медицинского обследования: ", style))
+    fwb.append(Spacer(1, 3 * mm))
+
+
+    opinion = [
+        [
+            Paragraph(f'Врач-психиатр <br/> {space_symbol * 2}М.П.', styleT),
+            Paragraph(f"_______________________<br/>подпись", styleT2),
+            Paragraph(f"{iss.doc_confirmation_fio}<br/>", styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(50 * mm, 50 * mm, 50 * mm), hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (0, 0), (0, -1), -0.5),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styleT2))
 
     doc.build(fwb)
     pdf = buffer.getvalue()

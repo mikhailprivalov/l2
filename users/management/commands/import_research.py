@@ -23,9 +23,10 @@ class Command(BaseCommand):
             r = Researches(title=title, code=data['code'], short_title=data['short_title'])
             r.save()
             for group in data['paraclinic_input_groups']:
+                print(group)
                 group_current = ParaclinicInputGroups(research=r, title=group["title"], show_title=group["show_title"], order=group["order"], hide=group["hide"])
                 group_current.save()
-                for f in group['paraclinic_input_field']:
+                for f in group['fields']:
                     field = ParaclinicInputField(
                         group=group_current,
                         title=f['title'],
