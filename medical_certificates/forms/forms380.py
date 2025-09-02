@@ -5,7 +5,7 @@ from api.stationar.sql_func import get_title_fields_by_cda_relation
 from directions.models import ParaclinicResult, Issledovaniya, Napravleniya
 from external_system.sql_func import cda_data_by_title
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER, CDA_TITLES_FIELDS_MEDEXAM_DRVER
+from laboratory.settings import FONTS_FOLDER, TITLES_FIELDS_MEDEXAM_DRIVER
 from laboratory.utils import strfdatetime
 from results.prepare_data import text_to_bold, fields_result_only_title_fields
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak, HRFlowable
@@ -1916,7 +1916,7 @@ def form_14(request_data):
     style.fontName = "PTAstraSerifReg"
     style.fontSize = 11
     style.alignment = TA_JUSTIFY
-    style.leading = 10
+    style.leading = 12
 
     styleCentre = deepcopy(style)
     styleCentre.alignment = TA_CENTER
@@ -1984,41 +1984,42 @@ def form_14(request_data):
     styleCenterBold.leading = 15
     styleCenterBold.fontName = 'PTAstraSerifBold'
 
+    bold_open = '<font fontname ="PTAstraSerifBold">'
+    bold_close = "</font>"
+
     patient = Napravleniya.objects.get(pk=direction)
     fio = patient.client.individual.fio()
-    fio_short = patient.client.individual.fio(short=True, dots=True)
+    patient_address = patient.client.main_address
     born = patient.client.individual.bd()
 
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
     if not iss.time_confirmation:
         return ""
 
-
-    title_fields = [
-        "Место работы",
-        "Должность",
-    ]
+    TITLES_FIELDS_MEDEXAM_DRIVER.keys()
+    title_fields = list(TITLES_FIELDS_MEDEXAM_DRIVER.values())
+    print(title_fields)
 
     result = fields_result_only_title_fields(iss, title_fields)
-
+    result_protocol = ""
     for i in result:
-        if i["title"] == "Дата осмотра":
-            date = i["value"]
+        if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
+            result_protocol = i['value']
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
     fwb.append(Paragraph(f'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
                          f'противопоказаний к управлению транспортными средствами ', styleCentre))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'СЕРИЯ {space_symbol*20} № ', styleCenterBold))
+    fwb.append(Paragraph(f'№ {direction}', styleCenterBold))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии):  {fio} ', style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f'2. Число, месяц и год рождения: {born}', style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("3. Регистрация по месту жительства:", style))
+    fwb.append(Paragraph(f"3. Регистрация по месту жительства: {patient_address}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"4. По результатам медицинского обследования врачом-психиатром: ", style))
+    fwb.append(Paragraph(f"4. По результатам медицинского обследования {bold_open}врачом-психиатром{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
@@ -2127,16 +2128,12 @@ def form_14(request_data):
 
     result = fields_result_only_title_fields(iss, title_fields)
 
-    for i in result:
-        if i["title"] == "Дата осмотра":
-            date = i["value"]
-
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
     fwb.append(Paragraph(f'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
                          f'противопоказаний к управлению транспортными средствами ', styleCentre))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'СЕРИЯ {space_symbol * 20} № ', styleCenterBold))
+    fwb.append(Paragraph(f'№ {direction}', styleCenterBold))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии):  {fio} ', style))
     fwb.append(Spacer(1, 1 * mm))
@@ -2144,7 +2141,7 @@ def form_14(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph("3. Регистрация по месту жительства:", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"4. По результатам медицинского обследования врачом-психиатром: ", style))
+    fwb.append(Paragraph(f"4. По результатам медицинского обследования {bold_open}врачом-психиатром{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
