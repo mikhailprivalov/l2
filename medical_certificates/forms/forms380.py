@@ -1902,7 +1902,7 @@ def form_13(request_data):
 
 
 def form_14(request_data):
-    # Вождение
+    # Вождение психиатр
     direction = request_data["dir"]
 
     buffer = BytesIO()
@@ -2055,30 +2055,51 @@ def form_14(request_data):
 
     fwb.append(tbl)
     fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styleT2))
-    fwb.append(Spacer(1, 15 * mm))
-    step_round_dash = (1.5 * mm, 1 * mm)
-    styleColor = deepcopy(styleT2)
-    styleColor.textColor = colors.gray
-    opinion = [
-        [
-            Paragraph('', styleT2),
-            Paragraph('линия отреза', styleColor),
-            Paragraph('', styleT2),
-        ],
-    ]
-    tbl = Table(opinion, hAlign='LEFT', rowHeights=5 * mm, colWidths=(80 * mm, 25 * mm, 80 * mm))
-    tbl.setStyle(
-        TableStyle(
-            [
-                ('LINEBELOW', (0, 0), (0, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
-                ('LINEBELOW', (2, 0), (2, 0), 0.2 * mm, colors.gray, 'round', step_round_dash),
-                ('BOTTOMPADDING', (1, 0), (1, 0), -0.5 * mm),
-            ]
-        )
-    )
-    fwb.append(tbl)
-    fwb.append(Spacer(1, 15 * mm))
 
+
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_15(request_data):
+    # Вождение нарколо
+    direction = request_data["dir"]
+
+    buffer = BytesIO()
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.alignment = TA_JUSTIFY
+    style.leading = 12
+
+    styleCentre = deepcopy(style)
+    styleCentre.alignment = TA_CENTER
+    styleCentre.fontSize = 10
+
+    hospital: Hospitals = request_data["hospital"]
+
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+    hospital_inn = hospital.safe_inn
+    license_data = hospital.license_data
+    hospital_okpo = hospital.okpo
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+
+    fwb = []
     opinion = [
         [
             Paragraph(f'<font size=10>Наименование медицинской организации: <br/>{hospital_name}</font>', styleT),
@@ -2120,16 +2141,35 @@ def form_14(request_data):
     fwb.append(tbl)
     fwb.append(Spacer(1, 5 * mm))
 
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 11.5
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    bold_open = '<font fontname ="PTAstraSerifBold">'
+    bold_close = "</font>"
+
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    patient_address = patient.client.main_address
+    born = patient.client.individual.bd()
+
     iss = Issledovaniya.objects.filter(napravleniye__pk=direction).order_by("research__pk", "research__sort_weight").first()
     if not iss.time_confirmation:
         return ""
 
-    title_fields = [
-        "Место работы",
-        "Должность",
-    ]
+    TITLES_FIELDS_MEDEXAM_DRIVER.keys()
+    title_fields = list(TITLES_FIELDS_MEDEXAM_DRIVER.values())
+    print(title_fields)
 
     result = fields_result_only_title_fields(iss, title_fields)
+    result_protocol, date_protocol = "", ""
+    for i in result:
+        if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
+            result_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
+            date_protocol = i['value']
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
@@ -2142,19 +2182,28 @@ def form_14(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f'2. Число, месяц и год рождения: {born}', style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("3. Регистрация по месту жительства:", style))
+    fwb.append(Paragraph(f"3. Регистрация по месту жительства: {patient_address}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"4. По результатам медицинского обследования {bold_open}врачом-психиатром{bold_close}: {result_protocol}", style))
+    fwb.append(Paragraph(f"4. Медицинское освидетельствование проведено в связи с возвратом водительского удостоверения:", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"5. Фамилия имя, отчество (при наличии), подпись врача-психиатр, принимавшего непосредственное участие в медицинском обследовании:", style))
+    fwb.append(Paragraph("5. Результаты лабораторных исследований:  не установлено", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"6. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", style))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"7. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
+
     fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", style))
     fwb.append(Spacer(1, 3 * mm))
 
+    styleT2 = deepcopy(styleT)
+    styleT2.alignment = TA_CENTER
+    styleT2.fontSize = 8
+    styleT2.leading = 3 * mm
 
     opinion = [
         [
-            Paragraph(f'Врач-психиатр <br/> {space_symbol * 2}М.П.', styleT),
+            Paragraph(f'Врач-психиатр-нарколог <br/> {space_symbol* 2 }М.П.', styleT),
             Paragraph(f"_______________________<br/>подпись", styleT2),
             Paragraph(f"{iss.doc_confirmation_fio}<br/>", styleT),
         ],
@@ -2173,6 +2222,7 @@ def form_14(request_data):
 
     fwb.append(tbl)
     fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styleT2))
+
 
     doc.build(fwb)
     pdf = buffer.getvalue()
