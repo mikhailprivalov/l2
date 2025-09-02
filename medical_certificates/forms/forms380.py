@@ -1,9 +1,7 @@
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
-from api.stationar.sql_func import get_title_fields_by_cda_relation
 from directions.models import ParaclinicResult, Issledovaniya, Napravleniya
-from external_system.sql_func import cda_data_by_title
 from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER, TITLES_FIELDS_MEDEXAM_DRIVER
 from laboratory.utils import strfdatetime
@@ -1998,7 +1996,6 @@ def form_14(request_data):
 
     TITLES_FIELDS_MEDEXAM_DRIVER.keys()
     title_fields = list(TITLES_FIELDS_MEDEXAM_DRIVER.values())
-    print(title_fields)
 
     result = fields_result_only_title_fields(iss, title_fields)
     result_protocol, date_protocol = "", ""
@@ -2009,9 +2006,9 @@ def form_14(request_data):
             date_protocol = i['value']
 
     space_symbol = '&nbsp;'
-    fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
-    fwb.append(Paragraph(f'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
-                         f'противопоказаний к управлению транспортными средствами ', styleCentre))
+    fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
+    fwb.append(Paragraph('о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
+                         'противопоказаний к управлению транспортными средствами ', styleCentre))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'№ {direction}', styleCenterBold))
     fwb.append(Spacer(1, 3 * mm))
@@ -2037,7 +2034,7 @@ def form_14(request_data):
     opinion = [
         [
             Paragraph(f'Врач-психиатр <br/> {space_symbol* 2 }М.П.', styleT),
-            Paragraph(f"_______________________<br/>подпись", styleT2),
+            Paragraph("_______________________<br/>подпись", styleT2),
             Paragraph(f"{iss.doc_confirmation_fio}<br/>", styleT),
         ],
     ]
@@ -2055,7 +2052,6 @@ def form_14(request_data):
 
     fwb.append(tbl)
     fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styleT2))
-
 
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2175,9 +2171,9 @@ def form_15(request_data):
 
 
     space_symbol = '&nbsp;'
-    fwb.append(Paragraph(f'МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
-    fwb.append(Paragraph(f'о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
-                         f'противопоказаний к управлению транспортными средствами ', styleCentre))
+    fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
+    fwb.append(Paragraph('о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских '
+                         'противопоказаний к управлению транспортными средствами ', styleCentre))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'№ {direction}', styleCenterBold))
     fwb.append(Spacer(1, 3 * mm))
@@ -2207,7 +2203,7 @@ def form_15(request_data):
     opinion = [
         [
             Paragraph(f'Врач-психиатр-нарколог <br/> {space_symbol* 2 }М.П.', styleT),
-            Paragraph(f"_______________________<br/>подпись", styleT2),
+            Paragraph("_______________________<br/>подпись", styleT2),
             Paragraph(f"{iss.doc_confirmation_fio}<br/>", styleT),
         ],
     ]
@@ -2225,7 +2221,6 @@ def form_15(request_data):
 
     fwb.append(tbl)
     fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styleT2))
-
 
     doc.build(fwb)
     pdf = buffer.getvalue()
