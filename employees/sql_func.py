@@ -4,7 +4,6 @@ from utils.db import namedtuplefetchall
 
 
 def get_employee_work_time(department_id: int, document_id: int, first_date_month: str):
-    print(first_date_month)
     with connection.cursor() as cursor:
         cursor.execute(
             """
