@@ -4,6 +4,7 @@ from utils.db import namedtuplefetchall
 
 
 def get_employee_work_time(department_id: int, document_id: int, first_date_month: str):
+    print(first_date_month)
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -43,8 +44,8 @@ def get_employee_work_time(department_id: int, document_id: int, first_date_mont
              FROM employees_employeeWorkingHoursSchedule WHERE time_tracking_document_id = %(document_id)s) as work_time_table 
             ON work_time_table.employee_position_id = employees_employeeposition.id
             WHERE department_id = %(department_id)s and employees_employeeposition.is_active = true and
-            (employees_employeeposition.date_dismissal IS NULL OR employees_employeeposition.date_dismissal > DATE %(first_date_month)s) AND
-            (employees_employeeposition.date_transfer IS NULL OR employees_employeeposition.date_dismissal > DATE %(first_date_month)s)
+            (employees_employeeposition.date_dismissal IS NULL OR employees_employeeposition.date_dismissal > %(first_date_month)s) AND
+            (employees_employeeposition.date_transfer IS NULL OR employees_employeeposition.date_transfer > %(first_date_month)s)
             ORDER BY family
         """,
             params={"department_id": department_id, "document_id": document_id, "first_date_month": first_date_month},
