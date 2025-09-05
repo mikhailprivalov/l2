@@ -1364,7 +1364,6 @@ def form_11(request_data):
     styleT.alignment = TA_LEFT
     styleT.fontSize = 10
     styleT.leading = 4.5 * mm
-
     fwb = []
     opinion = [
         [
@@ -1513,10 +1512,12 @@ def form_11(request_data):
     fwb.append(Paragraph('(подпись работника<br/>освидетельствуемого)', style))
     fwb = show_qr_lk_address(fwb)
 
-    doc.build(fwb)
-    pdf = buffer.getvalue()
+    if request_data.get("from_result_protocol"):
+        pdf = fwb
+    else:
+        doc.build(fwb)
+        pdf = buffer.getvalue()
     buffer.close()
-
     return pdf
 
 

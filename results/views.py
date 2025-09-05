@@ -613,7 +613,7 @@ def result_print(request):
                             for _ in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
                                 has_any_signature = True
                                 break
-                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature)
+                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request)
                 elif not protocol_plain_text or request.user.doctorprofile.is_structure_data_in_protocol or request.user.doctorprofile.podrazdeleniye.is_structure_data_in_protocol:
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone, med_certificate)
                 else:
