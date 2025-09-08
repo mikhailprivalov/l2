@@ -343,6 +343,7 @@ def direction_data(request):
             "timeTube": iss[iss_index].material_date,
             "docLogin": iss[iss_index].doc_confirmation.rmis_login if iss[iss_index].doc_confirmation else None,
             "docPassword": iss[iss_index].doc_confirmation.rmis_password if iss[iss_index].doc_confirmation else None,
+            "docConfirmAdditionalData": iss[iss_index].doc_confirmation.additional_info if iss[iss_index].additional_info else {},
             "department_oid": iss[iss_index].doc_confirmation.podrazdeleniye.oid if iss[iss_index].doc_confirmation else None,
             "department_name": iss[iss_index].doc_confirmation.podrazdeleniye.nsi_title if iss[iss_index].doc_confirmation else None,
             "kind": iss[iss_index].research.oid_kind if iss[iss_index].doc_confirmation else None,
@@ -371,6 +372,7 @@ def direction_data(request):
             "author": author_doctor(iss[iss_index].doc_confirmation) if iss[iss_index].doc_confirmation else None,
             "legalAuthenticator": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
             "doctorCreateDirectionAdditionalData": additional_data_create_direction,
+
         }
     )
 
