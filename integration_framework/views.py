@@ -372,7 +372,6 @@ def direction_data(request):
             "author": author_doctor(iss[iss_index].doc_confirmation) if iss[iss_index].doc_confirmation else None,
             "legalAuthenticator": legal_auth_get({"id": iss[iss_index].doc_confirmation.get_hospital().legal_auth_doc_id}, as_uploading_data=True),
             "doctorCreateDirectionAdditionalData": additional_data_create_direction,
-
         }
     )
 
