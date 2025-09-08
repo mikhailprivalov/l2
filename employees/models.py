@@ -720,7 +720,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         document_created = True if document else False
         if document_created:
             template_days = EmployeeWorkingHoursSchedule.get_month_days_template(year, month, length_month)
-            employees_work_time = get_employee_work_time(department_id, document.pk)
+            employees_work_time = get_employee_work_time(department_id, document.pk, str(first_date_month))
             result = {}
             for work_time in employees_work_time:
                 if not result.get(work_time.employee_position_id):
