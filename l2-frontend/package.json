@@ -8,8 +8,10 @@
   },
   "scripts": {
     "serve": "vue-cli-service serve",
+    "serve:hmr": "vue-cli-service serve --hot",
     "build": "NODE_NO_WARNINGS=1 vue-cli-service build --mode development --modern",
     "build_prod": "NODE_NO_WARNINGS=1 vue-cli-service build --modern",
+    "build:watch": "NODE_NO_WARNINGS=1 vue-cli-service build --mode development --modern --watch",
     "lint": "vue-cli-service lint",
     "ci:lint": "vue-cli-service lint --no-fix"
   },
@@ -116,6 +118,7 @@
     "url-loader": "^4.1.1",
     "vue-eslint-parser": "^9.1.1",
     "webpack": "4",
+    "webpack-bundle-tracker": "^1.8.1",
     "webpack-manifest-plugin": "~4.1.1"
   },
   "resolutions": {
