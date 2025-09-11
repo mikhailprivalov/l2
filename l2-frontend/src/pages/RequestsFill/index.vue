@@ -260,7 +260,6 @@ const loadRequestsByStatus = async (isDone: boolean) => {
     }
     return [];
   } catch (error) {
-    console.error('Ошибка загрузки заявок:', error);
     return [];
   }
 };

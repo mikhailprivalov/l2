@@ -116,7 +116,6 @@ const handleRequestAction = async (accept: boolean) => {
       notify.error(response.message || errorMessage);
     }
   } catch (error) {
-    console.error(`${errorMessage}:`, error);
     emit('request-accepted', {
       requestId: props.request.id,
       accepted: !newAcceptedState,
