@@ -2,16 +2,12 @@
   <PageInnerLayout>
     <TwoSidedLayout :left-width-px="800">
       <template #left>
-        <TopBottomLayout :top-height-px="300">
+        <TopBottomLayout :top-height-px="200">
           <template #top>
             <PatientCompactPicker
               v-model="cardId"
               :title-for-base="'Пациент'"
-            >
-              <template #for_card>
-                <PatientExtraFields v-model="patientExtraFields" />
-              </template>
-            </PatientCompactPicker>
+            />
           </template>
           <template #bottom>
             <TopBottomLayout
@@ -40,14 +36,37 @@
             </TopBottomLayout>
           </template>
         </topbottomlayout>
+        <div
+          v-if="isSelectionMode"
+          class="selection-overlay"
+        />
       </template>
       <template #right>
         <TwoSidedLayout :left-width-px="300">
           <template #left>
-            <RequestHistory :card-id="cardId" />
+            <RequestHistory
+              ref="requestHistoryRef"
+              key="requestHistoryKey"
+              :card-id="cardId"
+              :highlighted-request-id="hoveredImageId"
+              @request-selected="onRequestSelectedForLink"
+              @cancel-selection="onCancelSelection"
+              @request-hover="onRequestHover"
+            />
           </template>
           <template #right>
-            <RequestImageBinding />
+            <RequestImageBinding
+              ref="requestImageBindingRef"
+              key="requestImageBindingKey"
+              :is-selection-mode="isSelectionMode"
+              :current-image-for-link="currentImageForLink"
+              :highlighted-image-id="hoveredRequestId"
+              @image-linked="onImageLinked"
+              @image-unlinked="onImageUnlinked"
+              @request-link-needed="onRequestLinkNeeded"
+              @cancel-selection="onCancelSelection"
+              @image-hover="onImageHover"
+            />
           </template>
         </TwoSidedLayout>
       </template>
@@ -57,6 +76,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import moment from 'moment';
 
 import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
@@ -67,20 +87,24 @@ import useLoader from '@/hooks/useLoader';
 import useNotify from '@/hooks/useNotify';
 import api from '@/api';
 
-import PatientExtraFields from './PatientExtraFields.vue';
 import RequestFields from './RequestFields.vue';
 import RequestHistory from './RequestHistory.vue';
 import RequestImageBinding from './RequestImageBinding.vue';
 
 const cardId = ref(null);
 const research = ref(null);
+const requestHistoryRef = ref();
+const requestImageBindingRef = ref();
+const isSelectionMode = ref(false);
+const currentImageForLink = ref(null);
+const hoveredRequestId = ref(null);
+const hoveredImageId = ref(null);
 
 const loader = useLoader();
 const notify = useNotify();
 
-const defaultPatientExtraFields = () => ({ clinic: '' });
 const defaultRequestFields = () => ({
-  date: '',
+  date: moment().format('YYYY-MM-DD'),
   modality: '',
   anatomy: '',
   side: '',
@@ -93,42 +117,12 @@ const defaultRequestFields = () => ({
   files: [] as any[],
 });
 
-const patientExtraFields = ref(defaultPatientExtraFields());
 const requestFields = ref(defaultRequestFields());
-
-const fileSizeToString = (size: number) => {
-  if (size < 1024) {
-    return `${size} байт`;
-  }
-  if (size < 1024 * 1024) {
-    return `${(size / 1024).toFixed(1)} Кб`;
-  }
-  return `${(size / 1024 / 1024).toFixed(1)} Мб`;
-};
-
-function processFile(file: File) {
-  return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      resolve({
-        name: file.name,
-        size: fileSizeToString(file.size),
-        url: e.target?.result,
-      });
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 async function createRequest() {
   loader.inc();
   try {
-    const files: any[] = [];
-
-    // @ts-ignore
-    for (const { file } of requestFields.value.files.files) {
-      files.push(await processFile(file));
-    }
+    const files = requestFields.value.files || [];
 
     const { ok, message } = await api('requests/create', {
       patientId: cardId.value,
@@ -137,12 +131,16 @@ async function createRequest() {
         ...requestFields.value,
         files,
       },
-      patientExtraFields: patientExtraFields.value,
     });
     if (!ok) {
       notify.error(message);
     } else {
       notify.ok(message || 'Заявка успешно создана');
+      requestFields.value = defaultRequestFields();
+
+      if (requestHistoryRef.value?.refreshRequests) {
+        await requestHistoryRef.value.refreshRequests();
+      }
     }
   } catch (error) {
     // eslint-disable-next-line no-console
@@ -153,8 +151,73 @@ async function createRequest() {
   }
 }
 
+const onImageLinked = (requestId: number | string) => {
+  if (requestHistoryRef.value?.updateRequestImageStatus) {
+    requestHistoryRef.value.updateRequestImageStatus(requestId, true);
+  }
+};
+
+const onImageUnlinked = (requestId: number | string) => {
+  if (requestHistoryRef.value?.updateRequestImageStatus) {
+    requestHistoryRef.value.updateRequestImageStatus(requestId, false);
+  }
+};
+
+const onRequestLinkNeeded = (image: any) => {
+  if (requestHistoryRef.value?.enterSelectionMode) {
+    isSelectionMode.value = true;
+    currentImageForLink.value = image;
+    requestHistoryRef.value.enterSelectionMode(image);
+  }
+};
+
+const onRequestSelectedForLink = (request: any) => {
+  if (requestHistoryRef.value?.currentImageForLink && requestImageBindingRef.value?.linkImageToRequest) {
+    requestImageBindingRef.value.linkImageToRequest(requestHistoryRef.value.currentImageForLink, request);
+    requestHistoryRef.value.exitSelectionMode();
+    isSelectionMode.value = false;
+    currentImageForLink.value = null;
+  }
+};
+
+const onCancelSelection = () => {
+  if (requestHistoryRef.value?.exitSelectionMode) {
+    requestHistoryRef.value.exitSelectionMode();
+    isSelectionMode.value = false;
+    currentImageForLink.value = null;
+  }
+};
+
+const onRequestHover = (request: any) => {
+  if (request?.hasImage) {
+    hoveredRequestId.value = request.id;
+  } else {
+    hoveredRequestId.value = null;
+  }
+};
+
+const onImageHover = (image: any) => {
+  if (image?.linked && image?.requestId) {
+    hoveredImageId.value = image.requestId;
+  } else {
+    hoveredImageId.value = null;
+  }
+};
+
 watch(cardId, () => {
-  patientExtraFields.value = defaultPatientExtraFields();
   requestFields.value = defaultRequestFields();
 });
 </script>
+
+<style scoped>
+.selection-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 1000;
+  pointer-events: all;
+}
+</style>

@@ -33,6 +33,28 @@ continue_confirmation:
 watch:
 	yarn --cwd l2-frontend serve
 
+frontend_watch:
+	./frontend_watch.sh
+
+frontend_hmr:
+	./frontend_hmr.sh
+
+django_dev:
+	@echo "🐍 Запускаю Django dev-server..."
+	FRONTEND_HMR=1 poetry run python manage.py runserver 8000
+
+vue_dev:
+	@echo "🔧 Запускаю Vue dev-server с HMR..."
+	yarn --cwd l2-frontend serve:hmr
+
+frontend_hmr_tmux:
+	@echo "🔥 Запускаю HMR в tmux сессии..."
+	tmux new-session -d -s l2-dev
+	tmux send-keys -t l2-dev 'make django_dev' Enter
+	tmux split-window -t l2-dev
+	tmux send-keys -t l2-dev 'make vue_dev' Enter
+	tmux attach -t l2-dev
+
 update_browserlist:
 	-(cd l2-frontend && npx --yes browserslist@latest --update-db && cd ..)
 

@@ -10,6 +10,7 @@ PROFILING = False
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = None
 DEBUG = "DEBUG" in os.environ
+FRONTEND_HMR = "FRONTEND_HMR" in os.environ
 INTERNAL_IPS = ['127.0.0.1', '192.168.0.200', '192.168.0.101', '192.168.102.4', '192.168.0.128']
 ALLOWED_HOSTS = ['lis', '127.0.0.1', 'localhost', 'testserver']
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -25,6 +26,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'webpack_loader',
     'ajax_select',
     'appconf.apps.AppconfConfig',
     'manifest_loader',
@@ -117,6 +119,13 @@ TEMPLATES = [
         },
     },
 ]
+
+WEBPACK_LOADER = {
+    'DEFAULT': {
+        'STATS_FILE': os.path.join(BASE_DIR, 'l2-frontend', 'webpack-stats.json'),
+    }
+}
+
 WSGI_APPLICATION = 'laboratory.wsgi.application'
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/ui/menu'
@@ -144,7 +153,7 @@ DATE_FORMAT = 'd.m.Y'
 DATE_FORMAT_SHORT = 'd.m.y'
 TIME_FORMAT = 'd.m.Y'
 USE_TZ = True
-TIME_ZONE = 'Asia/Irkutsk'
+TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = True
 

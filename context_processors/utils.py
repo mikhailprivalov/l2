@@ -19,7 +19,12 @@ def card_bases(request):
 
 
 def local_settings(request):
-    return {"SYSTEM_AS_VI": settings.SYSTEM_AS_VI, "PROTOCOL_PLAIN_TEXT": PROTOCOL_PLAIN_TEXT, "SPLIT_PRINT_RESULT": SPLIT_PRINT_RESULT}
+    return {
+        "SYSTEM_AS_VI": settings.SYSTEM_AS_VI,
+        "PROTOCOL_PLAIN_TEXT": PROTOCOL_PLAIN_TEXT,
+        "SPLIT_PRINT_RESULT": SPLIT_PRINT_RESULT,
+        "FRONTEND_HMR": settings.FRONTEND_HMR,
+    }
 
 
 def menu(request):
