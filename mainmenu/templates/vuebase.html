@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">{% spaceless %}
-    {% load static setting manifest %}
+    {% load static setting manifest webpack_loader %}
     {% s_get "org_title" as org_title %}
     {% endspaceless %}
     <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
@@ -29,6 +29,7 @@
         {% firstof request.user.doctorprofile.hospital_safe_title org_title %}
     </title>
     {% endautoescape %}
+    {% if not FRONTEND_HMR %}
     <link rel="preload" href="{% manifest 'chunk-vendors.css' %}" as="style"/>
     <link rel="preload" href="{% manifest 'chunk-common.css' %}" as="style"/>
     <link rel="preload" href="{% manifest 'router.css' %}" as="style"/>
@@ -36,6 +37,9 @@
     <link rel="stylesheet" href="{% manifest 'chunk-vendors.css' %}"/>
     <link rel="stylesheet" href="{% manifest 'chunk-common.css' %}"/>
     <link rel="stylesheet" href="{% manifest 'router.css' %}"/>
+    {% else %}
+    {% render_bundle 'router' 'css' %}
+    {% endif %}
     {% if container_full %}
         <style>
             body, html {
@@ -120,8 +124,10 @@
 <script src="{% static 'locales/bootstrap-datepicker.ru.min.js' %}"></script>
 <script src="{% static 'js/typeahead.bundle.min.js' %}"></script>
 <script src="{% static 'js/jquery.scrollTo.js' %}"></script>
+{% if not FRONTEND_HMR %}
 <script src="{% manifest 'chunk-vendors.js' %}"></script>
 <script src="{% manifest 'chunk-common.js' %}"></script>
+{% endif %}
 {% autoescape off %}
 <script>
     window.ORG_TITLE = `{% firstof request.user.doctorprofile.hospital_safe_title org_title|safe %}`;
@@ -148,6 +154,10 @@
     window.L2_LOGO_CLASS = '{{ l2_logo_class|safe }}';
 </script>
 {% endautoescape %}
+{% if FRONTEND_HMR %}
+{% render_bundle 'router' 'js' %}
+{% else %}
 <script src="{% manifest 'router.js' %}"></script>
+{% endif %}
 </body>
 </html>

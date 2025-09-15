@@ -502,7 +502,7 @@ class DoctorProfileEquipment(models.Model):
     equipment = models.ForeignKey(Equipment, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.doc} {self.equipment}"
+        return f"{self.doctor_profile} {self.equipment}"
 
     class Meta:
         verbose_name = 'Пользователь-оборудование'

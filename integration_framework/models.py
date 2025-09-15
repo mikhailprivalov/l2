@@ -9,6 +9,7 @@ from django.db import models
 
 from directory.models import Researches
 from hospitals.models import Hospitals
+from laboratory.utils import strdate
 from users.models import DoctorProfile
 from utils.models import ChoiceArrayField
 
@@ -184,7 +185,7 @@ class IPLimitter(models.Model):
 
 class EquipmentReceive(models.Model):
     study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
-    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, null=True, blank=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
     patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
@@ -200,6 +201,22 @@ class EquipmentReceive(models.Model):
         DoctorProfile, null=True, blank=True, related_name="doc_reset_link", db_index=True, help_text='Пользователь анулировавший связь', on_delete=models.SET_NULL
     )
     time_reset_link = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время анулирвоания свзязи')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text='Время создания записи')
+    updated_at = models.DateTimeField(auto_now=True, help_text='Время последнего изменения записи')
 
     def __str__(self):
-        return f"{self.napravleniye} {self.study_instance_uid_tag} {self.doc_save_link}"
+        patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
+        if not patient_name:
+            patient_name = "Без имени"
+
+        status = "Связано" if self.doc_save_link else "Не связано"
+
+        date_str = strdate(self.created_at) if self.created_at else ""
+
+        uid_short = self.study_instance_uid_tag[:20] + "..." if self.study_instance_uid_tag and len(self.study_instance_uid_tag) > 20 else self.study_instance_uid_tag or "Без UID"
+
+        naprav_info = f"№{self.napravleniye.pk}" if self.napravleniye else "Без направления"
+
+        patient_id_info = f" (ID:{self.patient_id})" if self.patient_id else ""
+
+        return f"[{status}] {patient_name}{patient_id_info} - {naprav_info} - {uid_short} - {date_str}"

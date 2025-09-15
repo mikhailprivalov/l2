@@ -1,4 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+const BundleTracker = require('webpack-bundle-tracker');
 const path = require('path');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
@@ -6,6 +7,7 @@ const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const assetsPath = path.resolve(__dirname, '../assets/');
+const isHmr = !!process.env.FRONTEND_HMR;
 
 function addSassCacheLoader(rule) {
   rule
@@ -38,18 +40,26 @@ const configWebpack = {
   output: {
     filename: '[name].[chunkhash:8].js',
   },
-  plugins: [
+  plugins: [],
+};
+
+if (isHmr) {
+  configWebpack.plugins.push(new BundleTracker({ filename: './webpack-stats.json' }));
+} else {
+  configWebpack.plugins.push(
     new WebpackManifestPlugin({
       publicPath: 'webpack_bundles/',
       writeToFileEmit: true,
       fileName: path.resolve(assetsPath, 'webpack_bundles/manifest.json'),
     }),
+  );
+  configWebpack.plugins.push(
     new MiniCssExtractPlugin({
       ignoreOrder: true,
       filename: '[name].[chunkhash:8].css',
     }),
-  ],
-};
+  );
+}
 
 module.exports = {
   filenameHashing: false,
@@ -59,6 +69,45 @@ module.exports = {
     },
     router: {
       entry: 'src/mainWithRouter.ts',
+    },
+  },
+  devServer: {
+    port: 8081,
+    allowedHosts: 'all',
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+    },
+    proxy: {
+      '^/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '^/dashboard': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '^/clients': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '^/directions': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '^/results': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '^/forms': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '^/directory': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
     },
   },
   pluginOptions: {
@@ -86,7 +135,7 @@ module.exports = {
     config.plugins.delete('prefetch'),
     ...extendWithSass(config),
   ],
-  publicPath: '/static/webpack_bundles/',
+  publicPath: isHmr ? 'http://127.0.0.1:8081/' : '/static/webpack_bundles/',
   outputDir: path.resolve(assetsPath, 'webpack_bundles'),
   configureWebpack: configWebpack,
   runtimeCompiler: true,

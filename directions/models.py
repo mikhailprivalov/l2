@@ -589,6 +589,16 @@ class Napravleniya(models.Model):
     need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
     ecp_direction_number = models.CharField(max_length=64, default=None, blank=True, null=True, db_index=True, help_text='Id-направления ЕЦП')
     is_cito = models.BooleanField(default=False, blank=True, help_text='Срочное исполнение')
+    is_request = models.BooleanField(default=False, blank=True, db_index=True, help_text='Флаг заявки')
+    fact_research_date = models.DateField(blank=True, null=True, default=None, help_text='Фактическая дата проведения исследования')
+    contrast_amount = models.CharField(max_length=50, default='', blank=True, help_text='Объем контраста')
+    dose = models.CharField(max_length=50, default='', blank=True, help_text='Доза')
+    anamnesis = models.TextField(default='', blank=True, help_text='Краткий анамнез')
+    direction_comment = models.TextField(default='', blank=True, help_text='Комментарий к направлению')
+    accept_who_doctor = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, default=None, related_name='accept_who_doctor', on_delete=models.SET_NULL, help_text='Кто принял заявку', db_index=True
+    )
+    accept_time = models.DateTimeField(null=True, blank=True, default=None, help_text='Время принятия заявки')
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -1273,15 +1283,25 @@ class Napravleniya(models.Model):
             ).first()
         elif type_period == 'PERIOD_MONTH':
             monitoring_exists = MonitoringResult.objects.filter(
-                research=research, hospital=current_hospital, type_period=type_period, period_param_month=period_param_month, period_param_year=period_param_year
+                research=research,
+                hospital=current_hospital,
+                type_period=type_period,
+                period_param_month=period_param_month,
+                period_param_year=period_param_year,
             ).first()
         elif type_period == 'PERIOD_QURTER':
             monitoring_exists = MonitoringResult.objects.filter(
-                research=research, hospital=current_hospital, period_param_quarter=period_param_quarter, period_param_year=period_param_year
+                research=research,
+                hospital=current_hospital,
+                period_param_quarter=period_param_quarter,
+                period_param_year=period_param_year,
             ).first()
         elif type_period == 'PERIOD_HALFYEAR':
             monitoring_exists = MonitoringResult.objects.filter(
-                research=research, hospital=current_hospital, period_param_halfyear=period_param_halfyear, period_param_year=period_param_year
+                research=research,
+                hospital=current_hospital,
+                period_param_halfyear=period_param_halfyear,
+                period_param_year=period_param_year,
             ).first()
         elif type_period == 'PERIOD_YEAR':
             monitoring_exists = MonitoringResult.objects.filter(research=research, hospital=current_hospital, period_param_year=period_param_year).first()
@@ -1784,7 +1804,7 @@ class Napravleniya(models.Model):
                             monitoring.period_param_week_description = week_date_start_end[0]
                             monitoring.period_param_week_date_start = week_date_start_end[1]
                             monitoring.period_param_week_date_end = week_date_start_end[2]
-                            period_param_year = period_param_week_date_start.split('-')[0]
+                            period_param_year = week_date_start_end[1].split('-')[0]
                             monitoring.period_date = week_date_start_end[1]
                         monitoring.period_param_month = period_param_month
                         monitoring.period_param_quarter = period_param_quarter
@@ -1990,6 +2010,7 @@ class Napravleniya(models.Model):
             self.external_order.save()
 
         from results_feed.models import ResultFeed
+
         ResultFeed.remove_feed_by_direction(self)
 
     def last_time_confirm(self):
@@ -2654,8 +2675,8 @@ class IssledovaniyaFiles(models.Model):
         verbose_name_plural = 'Файлы на исследования'
 
 
-def get_file_path_napravleniya(instance: 'IssledovaniyaFiles', filename):
-    return os.path.join('issledovaniya_files', str(instance.issledovaniye.pk), str(uuid.uuid4()), filename)
+def get_file_path_napravleniya(instance: 'NapravleniyaFiles', filename):
+    return os.path.join('napravleniya_files', str(instance.napravleniye.pk), str(uuid.uuid4()), filename)
 
 
 class NapravleniyaFiles(models.Model):
