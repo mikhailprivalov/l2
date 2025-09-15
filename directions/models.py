@@ -3673,3 +3673,43 @@ class NumberGenerator(models.Model):
     class Meta:
         verbose_name = 'Диапазон номеров'
         verbose_name_plural = 'Диапазоны номеров'
+
+
+class DCMImageMeta(models.Model):
+    """
+    Снимок получен Dicom-сервером и отправлена мета информаця в L2
+    """
+    tag_patient_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ФИО пациента")
+    tag_study_instance_uid = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="тэг - uuid снимка")
+    tag_study_date = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - study date")
+    tag_patient_id = models.CharField(max_length=28, blank=True, null=True, default=None, help_text="ТЭГ - patient_id")
+    tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ")
+    tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
+    tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
+    equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - дл оборудования разделен 8 точками")
+    action_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания записи', db_index=True)
+
+    def __str__(self):
+        return f"{self.tag_study_instance_uid} - {self.tag_patient_name}"
+
+    class Meta:
+        verbose_name = 'Dicom-мета информация заказа'
+        verbose_name_plural = 'Dicom-мета информация заказов'
+
+
+class NapravleniyaDCMImageMeta(models.Model):
+    """
+    Снимок получен Dicom-сервером и отправлена мета информаця в L2
+    """
+    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    dcm_image_meta = models.ForeignKey(DCMImageMeta, null=True, help_text='Связь с dcm-image meta', db_index=True, on_delete=models.CASCADE)
+    action_at = models.DateTimeField(auto_now_add=True, help_text='Дата действия', db_index=True)
+    who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, help_text='Владелец действия', on_delete=models.SET_NULL)
+    status_link = models.BooleanField(default=False, verbose_name='Статус связи dcm с направлением')
+
+    def __str__(self):
+        return f"{self.napravleniye}-{self.dcm_image_meta}-{self.status_link}"
+
+    class Meta:
+        verbose_name = 'Dicom-связь с направлением'
+        verbose_name_plural = 'Dicom-связи с направлениями'

@@ -38,6 +38,8 @@ from .models import (
     StatementDocument,
     ParaclinicResult,
     NapravleniyaFiles,
+    DCMImageMeta,
+    NapravleniyaDCMImageMeta
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -400,3 +402,5 @@ admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmi
 admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
 admin.site.register(StatementDocument, ResStatementDocument)
+admin.site.register(NapravleniyaDCMImageMeta)
+admin.site.register(DCMImageMeta)

@@ -167,13 +167,22 @@ class FTPConnection:
         self.ftp.storbinary(f"STOR {file}", BytesIO(content.encode("utf-8")))
         self.log(f"Wrote file {file}")
 
-    def read_file_as_hl7(self, file):
+    def read_file_as_hl7(self, file, is_result=False):
         content = self.read_file_as_text(file).strip("\x0b").strip("\x0c")
         self.log(f"{file}\n{content}")
         content = content.replace("\n", "\r")
+        if is_result:
+            tmp_content = content.split("OBX")
+            print("tmp_content", tmp_content)
+            final_result = []
+            for i in tmp_content:
+                if i.find("\r") != len(i) - 1:
+                    print("replace")
+                    i = i.replace("\r", "", 1)
+                final_result.append(i)
+            content = "OBX".join(final_result)
         try:
             hl7_result = parse_message(content, validation_level=VALIDATION_LEVEL.QUIET)
-
             return hl7_result, content
         except Exception as e:
             self.error(f"Error parsing file {file}: {e}")
@@ -283,6 +292,7 @@ class FTPConnection:
                 services_by_additional_order_num = {}
                 for order_number, services_codes in orders_by_numbers.items():
                     for service_code in services_codes:
+                        service_code = service_code.replace("A09.05.018", "04.04.004")
                         service = Researches.objects.filter(hide=False, internal_code=service_code).first()
                         if not service:
                             raise ServiceNotFoundException(f"Service {service_code} not found")
@@ -373,7 +383,7 @@ class FTPConnection:
             self.error(f"Skipping file {file} because it does not end with '.res'")
             return
 
-        hl7_result, hl7_content = self.read_file_as_hl7(file)
+        hl7_result, hl7_content = self.read_file_as_hl7(file, is_result=True)
 
         if not hl7_content or not hl7_result:
             self.error(f"Skipping file {file} because it could not be parsed")
@@ -395,7 +405,6 @@ class FTPConnection:
                 iss = Issledovaniya.objects.filter(id=i.issledovaniye_id).first()
                 research_id = i.research_id
                 break
-
         if not iss:
             Log.log(
                 key=tube_number,
@@ -429,6 +438,7 @@ class FTPConnection:
 
         for obx in obxes:
             tmp_fractions = fractions.copy()
+
             if (obx.OBX.obx_3.obx_3_1.value).lower() == "pdf":
                 try:
                     pdf_base_64 = obx.OBX.obx_5.obx_5_5.value
@@ -611,6 +621,8 @@ class FTPConnection:
                 obr.obr_1 = str(n)
                 obr.obr_2 = f"L2_{iss.pk}^{direction.hospital.hl7_sender_application}"
                 tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
+                if len(tube_data) == 0:
+                    continue
                 obr.obr_3.value = str(tube_data[0])
                 obr.obr_4.obr_4_4.value = iss.research.internal_code
                 obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
