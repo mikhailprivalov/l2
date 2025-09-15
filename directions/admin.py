@@ -39,7 +39,7 @@ from .models import (
     ParaclinicResult,
     NapravleniyaFiles,
     DCMImageMeta,
-    NapravleniyaDCMImageMetaLog
+    NapravleniyaDCMImageMetaLog,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
