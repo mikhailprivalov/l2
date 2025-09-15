@@ -3724,6 +3724,7 @@ class NapravleniyaDCMImageMetaLog(models.Model):
     """
     Снимок получен Dicom-сервером и отправлена мета информаця в L2
     """
+
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     dcm_image_meta = models.ForeignKey(DCMImageMeta, null=True, help_text='Связь с dcm-image meta', db_index=True, on_delete=models.CASCADE)
     action_at = models.DateTimeField(auto_now_add=True, help_text='Дата действия', db_index=True)
