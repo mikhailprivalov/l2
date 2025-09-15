@@ -173,11 +173,9 @@ class FTPConnection:
         content = content.replace("\n", "\r")
         if is_result:
             tmp_content = content.split("OBX")
-            print("tmp_content", tmp_content)
             final_result = []
             for i in tmp_content:
                 if i.find("\r") != len(i) - 1:
-                    print("replace")
                     i = i.replace("\r", "", 1)
                 final_result.append(i)
             content = "OBX".join(final_result)
