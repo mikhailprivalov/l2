@@ -11,6 +11,9 @@ from forms.utils import register_fonts, create_style
 
 
 def form_01(request_data):
+    """
+    Создание печатной формы графика рабочего времени
+    """
     register_fonts()
     style = create_style()
 

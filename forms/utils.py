@@ -21,6 +21,9 @@ Number = Union[int, float]
 
 
 def register_fonts(fonts: List[Dict[str, str]] = None) -> None:
+    """
+    Регистрация шрифтов, по умолчанию регистрируются PTAstraSerif
+    """
     if fonts:
         for font in fonts:
             pdfmetrics.registerFont(TTFont(font.get("name"), os.path.join(FONTS_FOLDER, font.get("filename"))))
@@ -31,6 +34,9 @@ def register_fonts(fonts: List[Dict[str, str]] = None) -> None:
 
 
 def create_style(base=BASE_STYLE, font_name: str = None, font_size: Number = None, leading: Number = None, space_after: Number = None, alignment: str = None):
+    """
+    Создание копии базового стиля с необходимыми параметрами, alignment - ["left", "center", "right", "justify"]
+    """
     alignments = {"left": TA_LEFT, "center": TA_CENTER, "right": TA_RIGHT, "justify": TA_JUSTIFY}
     style = deepcopy(base)
     if font_name:
