@@ -290,7 +290,6 @@ class FTPConnection:
                 services_by_additional_order_num = {}
                 for order_number, services_codes in orders_by_numbers.items():
                     for service_code in services_codes:
-                        service_code = service_code.replace("A09.05.018", "04.04.004")
                         service = Researches.objects.filter(hide=False, internal_code=service_code).first()
                         if not service:
                             raise ServiceNotFoundException(f"Service {service_code} not found")

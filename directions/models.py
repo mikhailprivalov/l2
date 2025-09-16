@@ -3700,7 +3700,6 @@ class DCMImageMeta(models.Model):
     """
     Снимок получен Dicom-сервером и отправлена мета информаця в L2
     """
-
     tag_patient_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ФИО пациента")
     tag_study_instance_uid = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="тэг - uuid снимка")
     tag_study_date = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - study date")
@@ -3722,7 +3721,7 @@ class DCMImageMeta(models.Model):
 
 class NapravleniyaDCMImageMetaLog(models.Model):
     """
-    Снимок получен Dicom-сервером и отправлена мета информаця в L2
+    Логи на ссылку метаинформаю и свзяь с направлением
     """
 
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
