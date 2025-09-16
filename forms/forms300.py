@@ -1,4 +1,3 @@
-import logging
 import locale
 import os.path
 import sys
@@ -10,19 +9,14 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from laboratory.settings import FONTS_FOLDER
 
-logger = logging.getLogger(__name__)
 
 
 def form_01(request_data):
     form_type = request_data.get("type")
-    department_id = request_data.get('department_id')
-    year = request_data.get('year')
-    month = request_data.get('month')
     user = request_data.get('user')
     hospital = request_data.get('hospital')
     disable_date = request_data.get('disable_date')
     employee_work_time = request_data.get('employee_work_time')
-    logger.info(f"{form_type}, {department_id}, {year}, {month}, {user}, {hospital}, {disable_date}, {employee_work_time}")
 
     if sys.platform == 'win32':
         locale.setlocale(locale.LC_ALL, 'rus_rus')
