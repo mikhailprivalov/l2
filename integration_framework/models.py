@@ -208,7 +208,7 @@ class EquipmentReceive(models.Model):
     tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ")
     tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
-    equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - дл оборудования разделен 8 точками")
+    equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
 
     def __str__(self):
         patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
