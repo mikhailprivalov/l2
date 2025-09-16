@@ -1,5 +1,5 @@
 import os
-from typing import List, Dict, TypedDict
+from typing import List, Dict
 
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
