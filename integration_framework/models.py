@@ -205,7 +205,7 @@ class EquipmentReceive(models.Model):
     updated_at = models.DateTimeField(auto_now=True, help_text='Время последнего изменения записи')
     tag_patient_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ФИО пациента")
     tag_study_date = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - study date")
-    tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ")
+    tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название станции")
     tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
     equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
