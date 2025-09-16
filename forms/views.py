@@ -51,6 +51,7 @@ def pdf(request):
                 "user": request.user,
                 "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
                 "disable_date": disable_date,
+                "request_body": json.loads(request.body)
             }
         )
     )
