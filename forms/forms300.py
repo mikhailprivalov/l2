@@ -7,7 +7,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 
-from forms.utils import register_fonts
+from forms.utils import register_fonts, create_style
 
 
 def form_01(request_data):
@@ -21,12 +21,7 @@ def form_01(request_data):
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="График рабочего времени")
-    styleSheet = getSampleStyleSheet()
-    style = styleSheet["Normal"]
-    style.fontName = "PTAstraSerifReg"
-    style.fontSize = 12
-    style.leading = 15
-    style.spaceAfter = 0.5 * mm
+    style = create_style()
 
     objs = []
     objs.append(Paragraph('Привет', style))
