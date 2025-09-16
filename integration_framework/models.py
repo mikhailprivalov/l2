@@ -185,7 +185,7 @@ class IPLimitter(models.Model):
 
 class EquipmentReceive(models.Model):
     study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
-    napravleniye = models.ForeignKey(Napravleniya, null=True, blank=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, blank=True, null=True, default=None, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
     patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
@@ -203,6 +203,12 @@ class EquipmentReceive(models.Model):
     time_reset_link = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время анулирвоания свзязи')
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, help_text='Время создания записи')
     updated_at = models.DateTimeField(auto_now=True, help_text='Время последнего изменения записи')
+    tag_patient_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ФИО пациента")
+    tag_study_date = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - study date")
+    tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название станции")
+    tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
+    tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
+    equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
 
     def __str__(self):
         patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
