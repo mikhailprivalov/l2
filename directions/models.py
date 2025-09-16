@@ -3710,7 +3710,7 @@ class DCMImageMeta(models.Model):
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
     equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - дл оборудования разделен 8 точками")
     action_at = models.DateTimeField(auto_now_add=True, help_text='Дата создания записи', db_index=True)
-    napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya,  blank=True, null=True, default=None, help_text='Направление', db_index=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.tag_study_instance_uid} - {self.tag_patient_name}"
