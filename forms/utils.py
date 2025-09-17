@@ -1,9 +1,8 @@
 import os
 from copy import deepcopy
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Tuple
 
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.ttfonts import TTFont
@@ -51,7 +50,7 @@ def create_style(base: any = BASE_STYLE, font_name: str = None, font_size: Numbe
     return style
 
 
-def create_table(data, styles, col_widths, h_align: str, split_by_row, repeat_rows):
+def create_table(data: List[List], styles: List[Tuple] = None, col_widths: List[int] = None, h_align: str = None, split_by_row: int = None, repeat_rows: int = None):
     """ Создание таблицы """
     table = Table(data, colWidths=col_widths, hAlign=h_align, splitByRow=split_by_row, repeatRows=repeat_rows)
     table.setStyle(TableStyle(styles))
