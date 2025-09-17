@@ -24,14 +24,12 @@ def form_01(request_data):
     style_center_title = create_style(style_center, font_size=7)
     style_center_sup = create_style(style_center, font_size=5)
     style_center_data = create_style(style_center, font_size=8)
-    style_center_data_bold = create_style(style_center_bold)  # TODO Заменить его в коде на style_center_bold
-    style_center_data_title = create_style(style_center_title)  # TODO Заменить его в коде на style_center_title
     style_left = create_style(font_size=6)
     style_right = create_style(style_left, alignment="right")
     style_right_bold = create_style(style_right, "PTAstraSerifBold")
 
     document_data = []
-    department_table_number = 27
+    department_table_number = 27 # TODO не актуально?
     month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now()) # TODO месяц надо получать из документа который приходит в запросе
     current_year = datetime.date.today().year # TODO год из документа
     current_month = datetime.date.today().month # TODO месяц из документа
@@ -48,19 +46,19 @@ def form_01(request_data):
     hospital_name = hospital.safe_short_title
 
     title = [
-        Paragraph('', style_center_data_title),
-        Paragraph('', style_center_data_title),
-        Paragraph('', style_center_data_title),
+        Paragraph('', style_center_title),
+        Paragraph('', style_center_title),
+        Paragraph('', style_center_title),
     ]
-    date_month_start = [Paragraph(f'{number_day}', style_center_data_title) for number_day in range(1, 16)]
-    summ_day_15 = [Paragraph('Итого дней (часов) явок (неявок) с 1-15', style_center_data_title)]
-    date_month_end = [Paragraph(f'{number_day}', style_center_data_title) for number_day in range(16, last_day_month + 1)]
+    date_month_start = [Paragraph(f'{number_day}', style_center_title) for number_day in range(1, 16)]
+    summ_day_15 = [Paragraph('Итого дней (часов) явок (неявок) с 1-15', style_center_title)]
+    date_month_end = [Paragraph(f'{number_day}', style_center_title) for number_day in range(16, last_day_month + 1)]
     summ_all = [
-        Paragraph('Всего дней (часов) явок (неявок) за месяц', style_center_data_title),
-        Paragraph('Всего отработано часов', style_center_data_title),
-        Paragraph('Ночные', style_center_data_title),
-        Paragraph('Выходные', style_center_data_title),
-        Paragraph('Праздничные', style_center_data_title),
+        Paragraph('Всего дней (часов) явок (неявок) за месяц', style_center_title),
+        Paragraph('Всего отработано часов', style_center_title),
+        Paragraph('Ночные', style_center_title),
+        Paragraph('Выходные', style_center_title),
+        Paragraph('Праздничные', style_center_title),
     ]
 
     title.extend(date_month_start)
@@ -68,7 +66,7 @@ def form_01(request_data):
     title.extend(date_month_end)
     title.extend(summ_all)
 
-    column_numbers = [Paragraph(f'{column_number}', style_center_data_title) for column_number in range(1, last_day_month + 10)]
+    column_numbers = [Paragraph(f'{column_number}', style_center_title) for column_number in range(1, last_day_month + 10)]
 
     opinion = [
         [
