@@ -3,7 +3,7 @@ import datetime
 from io import BytesIO
 
 import pytils
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 
@@ -48,8 +48,8 @@ def form_01(request_data):
     objs.append(Paragraph('Привет', style))
 
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=25 * mm, rightMargin=5 * mm, topMargin=6 * mm, bottomMargin=6 * mm, allowSplitting=1, title="График рабочего времени")
-    doc.build(objs)
+    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=10 * mm, leftMargin=5 * mm, topMargin=56 * mm, bottomMargin=43 * mm, title="График рабочего времени")
+    document.build(objs)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
