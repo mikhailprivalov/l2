@@ -14,8 +14,6 @@ base_style_sheet = getSampleStyleSheet()
 BASE_STYLE = base_style_sheet["Normal"]
 BASE_STYLE.fontName = "PTAstraSerifReg"
 BASE_STYLE.fontSize = 12
-BASE_STYLE.leading = 15
-BASE_STYLE.spaceAfter = 0.5 * mm
 BASE_STYLE.alignment = TA_LEFT
 Number = Union[int, float]
 
@@ -33,7 +31,7 @@ def register_fonts(fonts: List[Dict[str, str]] = None) -> None:
     return None
 
 
-def create_style(base=BASE_STYLE, font_name: str = None, font_size: Number = None, leading: Number = None, space_after: Number = None, alignment: str = None):
+def create_style(base: any = BASE_STYLE, font_name: str = None, font_size: Number = None, leading: Number = None, space_after: Number = None, alignment: str = None):
     """
     Создание копии базового стиля с необходимыми параметрами, alignment - ["left", "center", "right", "justify"]
     """
