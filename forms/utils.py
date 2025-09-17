@@ -7,6 +7,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Table, TableStyle
 
 from laboratory.settings import FONTS_FOLDER
 
@@ -48,3 +49,11 @@ def create_style(base: any = BASE_STYLE, font_name: str = None, font_size: Numbe
     if alignment:
         style.alignment = alignments.get(alignment)
     return style
+
+
+def create_table(data, styles, col_widths, h_align: str, split_by_row, repeat_rows):
+    """ Создание таблицы """
+    table = Table(data, colWidths=col_widths, hAlign=h_align, splitByRow=split_by_row, repeatRows=repeat_rows)
+    table.setStyle(TableStyle(styles))
+    return table
+
