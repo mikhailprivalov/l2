@@ -30,7 +30,7 @@ def form_01(request_data):
     style_right = create_style(style_left, alignment="right")
     style_right_bold = create_style(style_right, "PTAstraSerifBold")
 
-    objs = [] # TODO Изменить на document_data
+    document_data = []
     department_table_number = 27
     month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now()) # TODO месяц надо получать из документа который приходит в запросе
     current_year = datetime.date.today().year # TODO год из документа
@@ -146,7 +146,7 @@ def form_01(request_data):
 
     table = create_table(opinion, table_style, col_widths, "LEFT", 1, 3)
 
-    objs.append(table)
+    document_data.append(table)
 
     def first_pages(canvas, doc):
         canvas.saveState()
@@ -392,7 +392,7 @@ def form_01(request_data):
 
     buffer = BytesIO()
     document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=10 * mm, leftMargin=5 * mm, topMargin=56 * mm, bottomMargin=43 * mm, title="График рабочего времени")
-    document.build(objs, first_pages, later_pages)
+    document.build(document_data, first_pages, later_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
