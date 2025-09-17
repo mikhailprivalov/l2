@@ -678,11 +678,11 @@ const createDocument = async () => {
 
 const printDocument = async () => {
   const apiForBlob = axios.create({
-    baseURL: `${window.location.origin}/api`,
+    baseURL: `${window.location.origin}/forms`,
     responseType: 'blob',
   });
   await store.dispatch(actions.INC_LOADING);
-  const result = await apiForBlob.post('/working-time/print-document', {
+  const result = await apiForBlob.post('/pdf?type=300.01', {
     employeesWorkTime: employeesWorkTime.value,
   });
   await store.dispatch(actions.DEC_LOADING);

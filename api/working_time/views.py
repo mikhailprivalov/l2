@@ -57,18 +57,6 @@ def get_ref_books(request):
 
 @login_required()
 @group_required('График рабочего времени')
-def print_document(request):
-    request_data = json.loads(request.body)
-    employees_work_time = request_data.get("employeesWorkTime")
-    result = form_01(request_data={"employeesWorkTime": employees_work_time})
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = 'inline; filename="form-' + '.pdf"'
-    response.write(result)
-    return response
-
-
-@login_required()
-@group_required('График рабочего времени')
 def employee_transfer(request):
     request_data = json.loads(request.body)
     employee_position_id = request_data.get("employeePositionId")
