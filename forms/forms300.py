@@ -16,9 +16,9 @@ def form_01(request_data):
     """
     Создание печатной формы графика рабочего времени
     """
+    # TODO Изменить таблицу табеля на таблицу графика в форме (кол-во колонок, названия)
     register_fonts()
     style = create_style(font_size=10, alignment="justify")
-    # TODO Изменить названия стилей на более правильные
     style_center = create_style(style, alignment="center")
     style_center_bold = create_style(style_center, "PTAstraSerifBold")
     style_center_title = create_style(style_center, font_size=7)
@@ -29,10 +29,10 @@ def form_01(request_data):
     style_right_bold = create_style(style_right, "PTAstraSerifBold")
 
     document_data = []
-    department_table_number = 27 # TODO не актуально?
+    department_table_number = 27  # TODO не актуально?
     month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now()) # TODO месяц надо получать из документа который приходит в запросе
-    current_year = datetime.date.today().year # TODO год из документа
-    current_month = datetime.date.today().month # TODO месяц из документа
+    current_year = datetime.date.today().year  # TODO год из документа
+    current_month = datetime.date.today().month  # TODO месяц из документа
     first_day_month = 1
     last_day_month = calendar.monthrange(current_year, current_month)[1]
     tabel_type = 'первичный'  # TODO Этого нет в графике
