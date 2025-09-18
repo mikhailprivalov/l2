@@ -12,6 +12,139 @@ from forms.utils import register_fonts, create_style, create_table
 from hospitals.models import Hospitals
 
 
+def _create_meta_information(canvas, is_first_page: bool, context: dict):
+    """
+    Функция создания мета информации для печатной формы графика-табеля
+    """
+    canvas.saveState()
+    text = Paragraph('Утв приказом Минфина России <br/> от 30 марта 2015 г. № 52н', context.get("style_right_bold"))
+    if is_first_page:
+        text.wrapOn(canvas, 141 * mm, 194 * mm)
+        text.drawOn(canvas, 141 * mm, 194 * mm)
+    else:
+        text.wrapOn(canvas, 141 * mm, 198 * mm)
+        text.drawOn(canvas, 141 * mm, 198 * mm)
+    opinion_f = [
+        [
+            Paragraph('', context.get("style_left")),
+            Paragraph(f'Табель № <u>{context.get("department_table_number")}</u>', context.get("style_center_bold")),
+            Paragraph('', context.get("style_right")),
+            Paragraph('', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('', context.get("style_left")),
+            Paragraph('учета использования рабочего времени', context.get("style_center")),
+            Paragraph('', context.get("style_right")),
+            Paragraph('Коды', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('', context.get("style_left")),
+            Paragraph('', context.get("style_center")),
+            Paragraph('Форма ОКУД', context.get("style_right")),
+            Paragraph('0504421', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('', context.get("style_left")),
+            Paragraph(f'За период с {context.get("first_day_month")} по {context.get("last_day_month")} {context.get("month_name")} {context.get("current_year")} года',
+                      context.get("style_center")),
+            Paragraph('Дата', context.get("style_right")),
+            Paragraph(f'{context.get("date_now")}', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('Учреждение', context.get("style_left")),
+            Paragraph(f'{context.get("hospital_name")}', context.get("style_center")),
+            Paragraph('по ОКПО', context.get("style_right")),
+            Paragraph('', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('Структурное подразделение', context.get("style_left")),
+            Paragraph(f'{context.get("department_name")}', context.get("style_center_bold")),
+            Paragraph('', context.get("style_right")),
+            Paragraph('', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('Вид табеля', context.get("style_left")),
+            Paragraph(f'{context.get("tabel_type")}', context.get("style_center")),
+            Paragraph('Номер корректировки', context.get("style_right")),
+            Paragraph('', context.get("style_center_title"))
+        ],
+        [
+            Paragraph('', context.get("style_left")),
+            Paragraph('(первичный - 0, корректирующий 1,2  и т.д)', context.get("style_center_sup")),
+            Paragraph('Дата формирования документа', context.get("style_right")),
+            Paragraph(f'{context.get("date_now")}', context.get("style_center_title"))
+        ]
+    ]
+    col_widths_f = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
+    table_style_f = [
+        ('LINEBELOW', (1, 4), (1, 6), 0.75, colors.black),
+        ('GRID', (3, 1), (3, -1), 0.75, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 1),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
+        ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
+        ('TOPPADDING', (0, 0), (-1, -1), -1)
+    ]
+    table_f = create_table(opinion_f, table_style_f, col_widths_f)
+    if is_first_page:
+        table_f.wrapOn(canvas, 7 * mm, 156 * mm)
+        table_f.drawOn(canvas, 7 * mm, 156 * mm)
+    else:
+        table_f.wrapOn(canvas, 7 * mm, 160 * mm)
+        table_f.drawOn(canvas, 7 * mm, 160 * mm)
+    canvas.setFont('PTAstraSerifReg', 8)
+
+    canvas.drawString(11 * mm, 41 * mm, 'Главный врач')
+    canvas.drawString(75 * mm, 41 * mm, f'{context.get("main_doctor")}')
+
+    canvas.line(7 * mm, 40 * mm, 33 * mm, 40 * mm)
+    canvas.line(45 * mm, 40 * mm, 101 * mm, 40 * mm)
+
+    canvas.drawString(12 * mm, 37 * mm, '(должность)')
+    canvas.drawString(50 * mm, 37 * mm, '(подпись)')
+
+    canvas.drawString(10 * mm, 31 * mm, 'Зав. отделением')
+    canvas.drawString(75 * mm, 31 * mm, f'{context.get("head_department")}')
+
+    canvas.line(7 * mm, 30 * mm, 33 * mm, 30 * mm)
+    canvas.line(45 * mm, 30 * mm, 101 * mm, 30 * mm)
+
+    canvas.drawString(12 * mm, 27 * mm, '(должность)')
+    canvas.drawString(50 * mm, 27 * mm, '(подпись)')
+
+    canvas.drawString(8 * mm, 21 * mm, 'Старшая медсестра')
+    canvas.drawString(75 * mm, 21 * mm, f'{context.get("old_sestra")}')
+
+    canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
+    canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
+
+    canvas.drawString(12 * mm, 17 * mm, '(должность)')
+    canvas.drawString(50 * mm, 17 * mm, '(подпись)')
+
+    canvas.drawString(10 * mm, 11 * mm, 'Специалист о.к.')
+    canvas.drawString(75 * mm, 11 * mm, f'{context.get("hr_specialist")}')
+
+    canvas.line(7 * mm, 10 * mm, 33 * mm, 10 * mm)
+    canvas.line(45 * mm, 10 * mm, 101 * mm, 10 * mm)
+
+    canvas.drawString(12 * mm, 7 * mm, '(должность)')
+    canvas.drawString(50 * mm, 7 * mm, '(подпись)')
+
+    canvas.rect(156 * mm, 10 * mm, 112 * mm, 23 * mm, stroke=1, fill=0)
+    canvas.setFont('PTAstraSerifBold', 8)
+    canvas.drawString(185 * mm, 30 * mm, 'Отметка бухгалтерии о принятии настоящего табеля')
+    canvas.drawString(160 * mm, 24 * mm, 'Исполнитель')
+    canvas.setFont('PTAstraSerifReg', 8)
+    canvas.line(180 * mm, 23 * mm, 255 * mm, 23 * mm)
+    canvas.drawString(210 * mm, 20 * mm, '(подпись)')
+
+    canvas.line(165 * mm, 13 * mm, 175 * mm, 13 * mm)
+    canvas.line(180 * mm, 13 * mm, 210 * mm, 13 * mm)
+    canvas.line(215 * mm, 13 * mm, 225 * mm, 13 * mm)
+
+    canvas.restoreState()
+
+
 def form_01(request_data):
     """
     Создание печатной формы графика рабочего времени
@@ -146,247 +279,34 @@ def form_01(request_data):
 
     document_data.append(table)
 
+    context = {
+        "department_table_number": department_table_number,
+        "month_name": month_name,
+        "current_year": current_year,
+        "first_day_month": first_day_month,
+        "last_day_month": last_day_month,
+        "date_now": date_now,
+        "hospital_name": hospital_name,
+        "department_name": department_name,
+        "tabel_type": tabel_type,
+        "main_doctor": main_doctor,
+        "head_department": head_department,
+        "old_sestra": old_sestra,
+        "hr_specialist": hr_specialist,
+        "style_left": style_left,
+        "style_right": style_right,
+        "style_center": style_center,
+        "style_center_bold": style_center_bold,
+        "style_center_title": style_center_title,
+        "style_center_sup": style_center_sup,
+        "style_right_bold": style_right_bold,
+    }
+
     def first_pages(canvas, doc):
-        canvas.saveState()
-        text = Paragraph('Утв приказом Минфина России <br/> от 30 марта 2015 г. № 52н', style_right_bold)
-        text.wrapOn(canvas, 141 * mm, 194 * mm)
-        text.drawOn(canvas, 141 * mm, 194 * mm)
-        opinion_f = [
-            [
-                Paragraph('', style_left),
-                Paragraph(f'Табель № <u>{department_table_number}</u>', style_center_bold),
-                Paragraph('', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph('учета использования рабочего времени', style_center),
-                Paragraph('', style_right),
-                Paragraph('Коды', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph('', style_center),
-                Paragraph('Форма ОКУД', style_right),
-                Paragraph('0504421', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph(f'За период с {first_day_month} по {last_day_month} {month_name} {current_year} года',
-                          style_center),
-                Paragraph('Дата', style_right),
-                Paragraph(f'{date_now}', style_center_title)
-            ],
-            [
-                Paragraph('Учреждение', style_left),
-                Paragraph(f'{hospital_name}', style_center),
-                Paragraph('по ОКПО', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('Структурное подразделение', style_left),
-                Paragraph(f'{department_name}', style_center_bold),
-                Paragraph('', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('Вид табеля', style_left),
-                Paragraph(f'{tabel_type}', style_center),
-                Paragraph('Номер корректировки', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph('(первичный - 0, корректирующий 1,2  и т.д)', style_center_sup),
-                Paragraph('Дата формирования документа', style_right),
-                Paragraph(f'{date_now}', style_center_title)
-            ]
-        ]
-        col_widths_f = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
-        table_style_f = [
-            ('LINEBELOW', (1, 4), (1, 6), 0.75, colors.black),
-            ('GRID', (3, 1), (3, -1), 0.75, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 1),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-            ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
-            ('TOPPADDING', (0, 0), (-1, -1), -1)
-        ]
-        table_f = create_table(opinion_f, table_style_f, col_widths_f)
-        table_f.wrapOn(canvas, 7 * mm, 156 * mm)
-        table_f.drawOn(canvas, 7 * mm, 156 * mm)
-        canvas.setFont('PTAstraSerifReg', 8)
-
-        canvas.drawString(11 * mm, 41 * mm, 'Главный врач')
-        canvas.drawString(75 * mm, 41 * mm, f'{main_doctor}')
-
-        canvas.line(7 * mm, 40 * mm, 33 * mm, 40 * mm)
-        canvas.line(45 * mm, 40 * mm, 101 * mm, 40 * mm)
-
-        canvas.drawString(12 * mm, 37 * mm, '(должность)')
-        canvas.drawString(50 * mm, 37 * mm, '(подпись)')
-
-        canvas.drawString(10 * mm, 31 * mm, 'Зав. отделением')
-        canvas.drawString(75 * mm, 31 * mm, f'{head_department}')
-
-        canvas.line(7 * mm, 30 * mm, 33 * mm, 30 * mm)
-        canvas.line(45 * mm, 30 * mm, 101 * mm, 30 * mm)
-
-        canvas.drawString(12 * mm, 27 * mm, '(должность)')
-        canvas.drawString(50 * mm, 27 * mm, '(подпись)')
-
-        canvas.drawString(8 * mm, 21 * mm, 'Старшая медсестра')
-        canvas.drawString(75 * mm, 21 * mm, f'{old_sestra}')
-
-        canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
-        canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
-
-        canvas.drawString(12 * mm, 17 * mm, '(должность)')
-        canvas.drawString(50 * mm, 17 * mm, '(подпись)')
-
-        canvas.drawString(10 * mm, 11 * mm, 'Специалист о.к.')
-        canvas.drawString(75 * mm, 11 * mm, f'{hr_specialist}')
-
-        canvas.line(7 * mm, 10 * mm, 33 * mm, 10 * mm)
-        canvas.line(45 * mm, 10 * mm, 101 * mm, 10 * mm)
-
-        canvas.drawString(12 * mm, 7 * mm, '(должность)')
-        canvas.drawString(50 * mm, 7 * mm, '(подпись)')
-
-        canvas.rect(156 * mm, 10 * mm, 112 * mm, 23 * mm, stroke=1, fill=0)
-        canvas.setFont('PTAstraSerifBold', 8)
-        canvas.drawString(185 * mm, 30 * mm, 'Отметка бухгалтерии о принятии настоящего табеля')
-        canvas.drawString(160 * mm, 24 * mm, 'Исполнитель')
-        canvas.setFont('PTAstraSerifReg', 8)
-        canvas.line(180 * mm, 23 * mm, 255 * mm, 23 * mm)
-        canvas.drawString(210 * mm, 20 * mm, '(подпись)')
-
-        canvas.line(165 * mm, 13 * mm, 175 * mm, 13 * mm)
-        canvas.line(180 * mm, 13 * mm, 210 * mm, 13 * mm)
-        canvas.line(215 * mm, 13 * mm, 225 * mm, 13 * mm)
-
-        canvas.restoreState()
+        _create_meta_information(canvas, True, context)
 
     def later_pages(canvas, doc):
-        canvas.saveState()
-        text = Paragraph('Утв приказом Минфина России <br/> от 30 марта 2015 г. № 52н', style_right_bold)
-        text.wrapOn(canvas, 141 * mm, 198 * mm)
-        text.drawOn(canvas, 141 * mm, 198 * mm)
-        opinion_l = [
-            [
-                Paragraph('', style_left),
-                Paragraph(f'Табель № <u>{department_table_number}</u>', style_center_bold),
-                Paragraph('', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph('учета использования рабочего времени', style_center),
-                Paragraph('', style_right),
-                Paragraph('Коды', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph('', style_center),
-                Paragraph('Форма ОКУД', style_right),
-                Paragraph('0504421', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph(f'За период с {first_day_month} по {last_day_month} {month_name} {current_year} года',
-                          style_center),
-                Paragraph('Дата', style_right),
-                Paragraph(f'{date_now}', style_center_title)
-            ],
-            [
-                Paragraph('Учреждение', style_left),
-                Paragraph(f'{hospital_name}', style_center),
-                Paragraph('по ОКПО', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('Структурное подразделение', style_left),
-                Paragraph(f'{department_name}', style_center_bold),
-                Paragraph('', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('Вид табеля', style_left),
-                Paragraph(f'{tabel_type}', style_center),
-                Paragraph('Номер корректировки', style_right),
-                Paragraph('', style_center_title)
-            ],
-            [
-                Paragraph('', style_left),
-                Paragraph('(первичный - 0, корректирующий 1,2  и т.д)', style_center_sup),
-                Paragraph('Дата формирования документа', style_right),
-                Paragraph(f'{date_now}', style_center_title)
-            ]
-        ]
-        col_widths_l = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
-        table_style_l = [
-            ('LINEBELOW', (1, 4), (1, 6), 0.75, colors.black),
-            ('GRID', (3, 1), (3, -1), 0.75, colors.black),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 1),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-            ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
-            ('TOPPADDING', (0, 0), (-1, -1), -1)
-        ]
-        table_l = create_table(opinion_l, table_style_l, col_widths_l)
-        table_l.wrapOn(canvas, 7 * mm, 160 * mm)
-        table_l.drawOn(canvas, 7 * mm, 160 * mm)
-        canvas.setFont('PTAstraSerifReg', 8)
-
-        canvas.drawString(11 * mm, 41 * mm, 'Главный врач')
-        canvas.drawString(75 * mm, 41 * mm, f'{main_doctor}')
-
-        canvas.line(7 * mm, 40 * mm, 33 * mm, 40 * mm)
-        canvas.line(45 * mm, 40 * mm, 101 * mm, 40 * mm)
-
-        canvas.drawString(12 * mm, 37 * mm, '(должность)')
-        canvas.drawString(50 * mm, 37 * mm, '(подпись)')
-
-        canvas.drawString(10 * mm, 31 * mm, 'Зав. отделением')
-        canvas.drawString(75 * mm, 31 * mm, f'{head_department}')
-
-        canvas.line(7 * mm, 30 * mm, 33 * mm, 30 * mm)
-        canvas.line(45 * mm, 30 * mm, 101 * mm, 30 * mm)
-
-        canvas.drawString(12 * mm, 27 * mm, '(должность)')
-        canvas.drawString(50 * mm, 27 * mm, '(подпись)')
-
-        canvas.drawString(8 * mm, 21 * mm, 'Старшая медсестра')
-        canvas.drawString(75 * mm, 21 * mm, f'{old_sestra}')
-
-        canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
-        canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
-
-        canvas.drawString(12 * mm, 17 * mm, '(должность)')
-        canvas.drawString(50 * mm, 17 * mm, '(подпись)')
-
-        canvas.drawString(10 * mm, 11 * mm, 'Специалист о.к.')
-        canvas.drawString(75 * mm, 11 * mm, f'{hr_specialist}')
-
-        canvas.line(7 * mm, 10 * mm, 33 * mm, 10 * mm)
-        canvas.line(45 * mm, 10 * mm, 101 * mm, 10 * mm)
-
-        canvas.drawString(12 * mm, 7 * mm, '(должность)')
-        canvas.drawString(50 * mm, 7 * mm, '(подпись)')
-
-        canvas.rect(156 * mm, 10 * mm, 112 * mm, 23 * mm, stroke=1, fill=0)
-        canvas.setFont('PTAstraSerifBold', 8)
-        canvas.drawString(185 * mm, 30 * mm, 'Отметка бухгалтерии о принятии настоящего табеля')
-        canvas.drawString(160 * mm, 24 * mm, 'Исполнитель')
-        canvas.setFont('PTAstraSerifReg', 8)
-        canvas.line(180 * mm, 23 * mm, 255 * mm, 23 * mm)
-        canvas.drawString(210 * mm, 20 * mm, '(подпись)')
-
-        canvas.line(165 * mm, 13 * mm, 175 * mm, 13 * mm)
-        canvas.line(180 * mm, 13 * mm, 210 * mm, 13 * mm)
-        canvas.line(215 * mm, 13 * mm, 225 * mm, 13 * mm)
-
-        canvas.restoreState()
+        _create_meta_information(canvas, False, context)
 
     buffer = BytesIO()
     document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=10 * mm, leftMargin=5 * mm, topMargin=56 * mm, bottomMargin=43 * mm, title="График рабочего времени")
