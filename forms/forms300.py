@@ -156,7 +156,7 @@ def form_01(request_data):
     style_center_bold = create_style(style_center, "PTAstraSerifBold")
     style_center_title = create_style(style_center, font_size=7)
     style_center_sup = create_style(style_center, font_size=5)
-    style_center_data = create_style(style_center, font_size=8)
+    style_center_data = create_style(style_center, font_size=6)
     style_left = create_style(font_size=6)
     style_right = create_style(style_left, alignment="right")
     style_right_bold = create_style(style_right, "PTAstraSerifBold")
@@ -179,17 +179,18 @@ def form_01(request_data):
     organization_title = organization.safe_short_title
 
     title = [
-        Paragraph('', style_center_title),
-        Paragraph('', style_center_title),
-        Paragraph('', style_center_title),
-        Paragraph('', style_center_title),
-        Paragraph('', style_center_title),
-        Paragraph('', style_center_title),
+        Paragraph('', style_center_data),
+        Paragraph('', style_center_data),
+        Paragraph('', style_center_data),
+        Paragraph('', style_center_data),
+        Paragraph('', style_center_data),
+        Paragraph('', style_center_data),
+        Paragraph('', style_center_data),
     ]
-    date_month_start = [Paragraph(f'{number_day}', style_center_title) for number_day in range(1, last_day_month + 1)]
+    date_month_start = [Paragraph(f'{number_day}', style_center_data) for number_day in range(1, last_day_month + 1)]
     summ_all = [
-        Paragraph("Количество часов согласно графику", style_center_title),
-        Paragraph('Подпись работника', style_center_title),
+        Paragraph("Количество часов согласно графику", style_center_data),
+        Paragraph('Подпись работника', style_center_data),
     ]
 
     title.extend(date_month_start)
@@ -201,6 +202,7 @@ def form_01(request_data):
             Paragraph('Фамилия, имя, отчество', style_center_data),
             Paragraph('Должность (профессия)', style_center_data),
             Paragraph('Вид занятости (осн, внутр, внеш)', style_center_data),
+            Paragraph('Занимаемый объем (согл ТД), шт ед', style_center_data),
             Paragraph('Норма часов на занимаемый объем', style_center_data),
             Paragraph('Рабочая смена', style_center_data),
             Paragraph('Числа месяца', style_center_data)
@@ -246,7 +248,8 @@ def form_01(request_data):
         ('SPAN', (3, 0), (3, 1)),
         ('SPAN', (4, 0), (4, 1)),
         ('SPAN', (5, 0), (5, 1)),
-        ('SPAN', (6, 0), (-1, 0)),
+        ('SPAN', (6, 0), (6, 1)),
+        ('SPAN', (7, 0), (-1, 0)),
         ('LEFTPADDING', (0, 0), (-1, -1), 1),
         ('RIGHTPADDING', (0, 0), (-1, -1), 1),
         ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
@@ -261,22 +264,24 @@ def form_01(request_data):
         if counter == 1:
             col_widths.append(8 * mm)  # для ячейки "№ п/п"
         elif counter == 2:
-            col_widths.append(23 * mm)  # для ячейки "ФИО"
+            col_widths.append(17 * mm)  # для ячейки "ФИО"
         elif counter == 3:
-            col_widths.append(19 * mm)  # для ячейки "Должность"
+            col_widths.append(15 * mm)  # для ячейки "Должность"
         # TODO объединить условия если возможно
         elif counter == 4:
-            col_widths.append(12 * mm)  # для ячейки "Вид занятости"
+            col_widths.append(13 * mm)  # для ячейки "Вид занятости"
         elif counter == 5:
-            col_widths.append(12 * mm)  # для ячейки "Норма часов"
+            col_widths.append(11 * mm)  # для ячейки "Занимаемый объем"
         elif counter == 6:
-            col_widths.append(12 * mm)  # для ячейки "Рабочая смена"
-        elif counter <= last_day_month + 6:
-            col_widths.append(5.8 * mm)  # для ячеек дат
-        elif counter == last_day_month + 7:
-            col_widths.append(14 * mm)  # для ячейки "кол-во часов согласно графику"
+            col_widths.append(13 * mm)  # для ячейки "Норма часов"
+        elif counter == 7:
+            col_widths.append(8.7 * mm)  # для ячейки "Рабочая смена"
+        elif counter <= last_day_month + 7:
+            col_widths.append(5.6 * mm)  # для ячеек дат
         elif counter == last_day_month + 8:
-            col_widths.append(16 * mm)  # для ячейки "Подпись работника"
+            col_widths.append(14 * mm)  # для ячейки "кол-во часов согласно графику"
+        elif counter == last_day_month + 9:
+            col_widths.append(15 * mm)  # для ячейки "Подпись работника"
         counter += 1
 
     table = create_table(opinion, table_style, col_widths, "LEFT", 1, 3)
@@ -313,7 +318,7 @@ def form_01(request_data):
         _create_meta_information(canvas, False, context)
 
     buffer = BytesIO()
-    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=10 * mm, leftMargin=5 * mm, topMargin=56 * mm, bottomMargin=43 * mm, title="График рабочего времени")
+    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=56 * mm, bottomMargin=43 * mm, title="График рабочего времени")
     document.build(document_data, first_pages, later_pages)
     pdf = buffer.getvalue()
     buffer.close()
