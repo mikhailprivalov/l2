@@ -182,6 +182,7 @@ def form_01(request_data):
         Paragraph('', style_center_title),
         Paragraph('', style_center_title),
         Paragraph('', style_center_title),
+        Paragraph('', style_center_title),
     ]
     date_month_start = [Paragraph(f'{number_day}', style_center_title) for number_day in range(1, last_day_month + 1)]
     summ_all = [
@@ -197,6 +198,7 @@ def form_01(request_data):
             Paragraph('№ п/п', style_center_data),
             Paragraph('Фамилия, имя, отчество', style_center_data),
             Paragraph('Должность (профессия)', style_center_data),
+            Paragraph('Вид занятости (осн, внутр, внеш)', style_center_data),
             Paragraph('Числа месяца', style_center_data)
         ],
         title,
@@ -237,7 +239,8 @@ def form_01(request_data):
         ('SPAN', (0, 0), (0, 1)),
         ('SPAN', (1, 0), (1, 1)),
         ('SPAN', (2, 0), (2, 1)),
-        ('SPAN', (3, 0), (-1, 0)),
+        ('SPAN', (3, 0), (3, 1)),
+        ('SPAN', (4, 0), (-1, 0)),
         ('LEFTPADDING', (0, 0), (-1, -1), 1),
         ('RIGHTPADDING', (0, 0), (-1, -1), 1),
         ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
@@ -255,8 +258,8 @@ def form_01(request_data):
             col_widths.append(23 * mm)  # для ячейки "ФИО"
         elif counter == 3:
             col_widths.append(19 * mm)  # для ячейки "Должность"
-        # elif counter == 19:
-        #     col_widths.append(10 * mm)  # для ячейки с 1 по 15ое
+        elif counter == 4:
+            col_widths.append(12 * mm)  # для ячейки "Вид занятости"
         elif counter <= last_day_month + 3:
             col_widths.append(5.8 * mm)  # для ячеек дат
         elif counter == last_day_month + 4:
