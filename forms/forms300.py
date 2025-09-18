@@ -201,8 +201,8 @@ def form_01(request_data):
 
     opinion = [
         [
+            Paragraph('№ п/п', style_center_data),
             Paragraph('Фамилия, имя, отчество', style_center_data),
-            Paragraph('Учетный номер', style_center_data),
             Paragraph('Должность (профессия)', style_center_data),
             Paragraph('Числа месяца', style_center_data)
         ],
@@ -257,9 +257,9 @@ def form_01(request_data):
     counter = 1
     for i in range(1, last_day_month + 10):
         if counter == 1:
-            col_widths.append(23 * mm)
+            col_widths.append(8 * mm)
         elif counter == 2:
-            col_widths.append(10 * mm)
+            col_widths.append(23 * mm)
         elif counter == 3:
             col_widths.append(19 * mm)
         elif counter == 19:
