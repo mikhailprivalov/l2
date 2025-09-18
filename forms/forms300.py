@@ -187,11 +187,8 @@ def form_01(request_data):
     summ_day_15 = [Paragraph('Итого дней (часов) явок (неявок) с 1-15', style_center_title)]
     date_month_end = [Paragraph(f'{number_day}', style_center_title) for number_day in range(16, last_day_month + 1)]
     summ_all = [
-        Paragraph('Всего дней (часов) явок (неявок) за месяц', style_center_title),
-        Paragraph('Всего отработано часов', style_center_title),
-        Paragraph('Ночные', style_center_title),
-        Paragraph('Выходные', style_center_title),
-        Paragraph('Праздничные', style_center_title),
+        Paragraph("Количество часов согласно графику", style_center_title),
+        Paragraph('Подпись работника', style_center_title),
     ]
 
     title.extend(date_month_start)
@@ -257,19 +254,19 @@ def form_01(request_data):
     counter = 1
     for i in range(1, last_day_month + 10):
         if counter == 1:
-            col_widths.append(8 * mm)
+            col_widths.append(8 * mm)  # для ячейки "№ п/п"
         elif counter == 2:
-            col_widths.append(23 * mm)
+            col_widths.append(23 * mm)  # для ячейки "ФИО"
         elif counter == 3:
-            col_widths.append(19 * mm)
+            col_widths.append(19 * mm)  # для ячейки "Должность"
         elif counter == 19:
-            col_widths.append(10 * mm)
+            col_widths.append(10 * mm)  # для ячейки с 1 по 15ое
         elif counter <= last_day_month + 4:
-            col_widths.append(5.8 * mm)
+            col_widths.append(5.8 * mm)  # для ячеек дат
         elif counter == last_day_month + 5:
-            col_widths.append(10 * mm)
-        elif counter <= last_day_month + 9:
-            col_widths.append(7.5 * mm)
+            col_widths.append(14 * mm)  # для ячейки "кол-во часов согласно графику"
+        elif counter == last_day_month + 6:
+            col_widths.append(16 * mm)  # для ячейки "Подпись работника"
         counter += 1
 
     table = create_table(opinion, table_style, col_widths, "LEFT", 1, 3)
