@@ -24,7 +24,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     else:
         text.wrapOn(canvas, 141 * mm, 198 * mm)
         text.drawOn(canvas, 141 * mm, 198 * mm)
-    opinion_f = [
+    table_data = [
         [
             Paragraph('', context.get("style_left")),
             Paragraph(f'Табель № <u>{context.get("department_table_number")}</u>', context.get("style_center_bold")),
@@ -75,8 +75,8 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph(f'{context.get("date_now")}', context.get("style_center_title"))
         ]
     ]
-    col_widths_f = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
-    table_style_f = [
+    col_widths = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
+    table_style = [
         ('LINEBELOW', (1, 4), (1, 6), 0.75, colors.black),
         ('GRID', (3, 1), (3, -1), 0.75, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -85,13 +85,13 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
         ('TOPPADDING', (0, 0), (-1, -1), -1)
     ]
-    table_f = create_table(opinion_f, table_style_f, col_widths_f)
+    table = create_table(table_data, table_style, col_widths)
     if is_first_page:
-        table_f.wrapOn(canvas, 7 * mm, 156 * mm)
-        table_f.drawOn(canvas, 7 * mm, 156 * mm)
+        table.wrapOn(canvas, 7 * mm, 156 * mm)
+        table.drawOn(canvas, 7 * mm, 156 * mm)
     else:
-        table_f.wrapOn(canvas, 7 * mm, 160 * mm)
-        table_f.drawOn(canvas, 7 * mm, 160 * mm)
+        table.wrapOn(canvas, 7 * mm, 160 * mm)
+        table.drawOn(canvas, 7 * mm, 160 * mm)
     canvas.setFont('PTAstraSerifReg', 8)
 
     canvas.drawString(11 * mm, 41 * mm, 'Главный врач')
