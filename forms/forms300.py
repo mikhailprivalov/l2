@@ -150,7 +150,7 @@ def form_01(request_data):
     """
     Создание печатной формы графика рабочего времени
     """
-    # TODO Изменить таблицу табеля на таблицу графика в форме (кол-во колонок, названия), изменить на двойные скобки везде
+    # TODO Изменить таблицу табеля на таблицу графика в форме (кол-во колонок, названия)
     register_fonts()
     style = create_style(font_size=10, alignment="justify")
     style_center = create_style(style, alignment="center")
