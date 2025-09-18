@@ -183,17 +183,13 @@ def form_01(request_data):
         Paragraph('', style_center_title),
         Paragraph('', style_center_title),
     ]
-    date_month_start = [Paragraph(f'{number_day}', style_center_title) for number_day in range(1, 16)]
-    # summ_day_15 = [Paragraph('Итого дней (часов) явок (неявок) с 1-15', style_center_title)]
-    date_month_end = [Paragraph(f'{number_day}', style_center_title) for number_day in range(16, last_day_month + 1)]
+    date_month_start = [Paragraph(f'{number_day}', style_center_title) for number_day in range(1, last_day_month + 1)]
     summ_all = [
         Paragraph("Количество часов согласно графику", style_center_title),
         Paragraph('Подпись работника', style_center_title),
     ]
 
     title.extend(date_month_start)
-    # title.extend(summ_day_15)
-    title.extend(date_month_end)
     title.extend(summ_all)
 
     opinion = [
