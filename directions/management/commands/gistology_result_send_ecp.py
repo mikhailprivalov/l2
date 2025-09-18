@@ -76,7 +76,7 @@ class Command(BaseCommand):
         for n in Napravleniya.objects.filter(pk__in=directions):
             if not result_send.get(n.pk):
                 continue
-            elif result_send.get(n.pk) == True:
+            elif result_send.get(n.pk):
                 n.result_rmis_send = True
                 n.save()
                 count += 1
