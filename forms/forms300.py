@@ -199,8 +199,6 @@ def form_01(request_data):
     title.extend(date_month_end)
     title.extend(summ_all)
 
-    column_numbers = [Paragraph(f'{column_number}', style_center_title) for column_number in range(1, last_day_month + 10)]
-
     opinion = [
         [
             Paragraph('Фамилия, имя, отчество', style_center_data),
@@ -209,7 +207,6 @@ def form_01(request_data):
             Paragraph('Числа месяца', style_center_data)
         ],
         title,
-        column_numbers
     ]
     # TODO Здесь заполнение таблицы данными, с объединением строк по фио (одно фио, две должности) для табеля, необходимо поменять под график
     # col_span = []
