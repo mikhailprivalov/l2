@@ -16,8 +16,9 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     """
     Функция создания мета информации для печатной формы графика-табеля
     """
+    # TODO изменить под график
     canvas.saveState()
-    text = Paragraph('Утв приказом Минфина России <br/> от 30 марта 2015 г. № 52н', context.get("style_right_bold"))
+    text = Paragraph("Утв приказом Минфина России <br/> от 30 марта 2015 г. № 52н", context.get("style_right_bold"))
     if is_first_page:
         text.wrapOn(canvas, 141 * mm, 194 * mm)
         text.drawOn(canvas, 141 * mm, 194 * mm)
@@ -26,64 +27,64 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         text.drawOn(canvas, 141 * mm, 198 * mm)
     table_data = [
         [
-            Paragraph('', context.get("style_left")),
-            Paragraph(f'Табель № <u>{context.get("department_table_number")}</u>', context.get("style_center_bold")),
-            Paragraph('', context.get("style_right")),
-            Paragraph('', context.get("style_center_title"))
+            Paragraph("", context.get("style_left")),
+            Paragraph(f"Табель № <u>{context.get('department_table_number')}</u>", context.get("style_center_bold")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title"))
         ],
         [
-            Paragraph('', context.get("style_left")),
-            Paragraph('учета использования рабочего времени', context.get("style_center")),
-            Paragraph('', context.get("style_right")),
-            Paragraph('Коды', context.get("style_center_title"))
+            Paragraph("", context.get("style_left")),
+            Paragraph("учета использования рабочего времени", context.get("style_center")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("Коды", context.get("style_center_title"))
         ],
         [
-            Paragraph('', context.get("style_left")),
-            Paragraph('', context.get("style_center")),
-            Paragraph('Форма ОКУД', context.get("style_right")),
-            Paragraph('0504421', context.get("style_center_title"))
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center")),
+            Paragraph("Форма ОКУД", context.get("style_right")),
+            Paragraph("0504421", context.get("style_center_title"))
         ],
         [
-            Paragraph('', context.get("style_left")),
-            Paragraph(f'За период с {context.get("first_day_month")} по {context.get("last_day_month")} {context.get("month_name")} {context.get("current_year")} года',
+            Paragraph("", context.get("style_left")),
+            Paragraph(f"За период с {context.get('first_day_month')} по {context.get('last_day_month')} {context.get('month_name')} {context.get('current_year')} года",
                       context.get("style_center")),
-            Paragraph('Дата', context.get("style_right")),
-            Paragraph(f'{context.get("date_now")}', context.get("style_center_title"))
+            Paragraph("Дата", context.get("style_right")),
+            Paragraph(f"{context.get('date_now')}", context.get("style_center_title"))
         ],
         [
-            Paragraph('Учреждение', context.get("style_left")),
-            Paragraph(f'{context.get("organization_title")}', context.get("style_center")),
-            Paragraph('по ОКПО', context.get("style_right")),
-            Paragraph('', context.get("style_center_title"))
+            Paragraph("Учреждение", context.get("style_left")),
+            Paragraph(f"{context.get('organization_title')}", context.get("style_center")),
+            Paragraph("по ОКПО", context.get("style_right")),
+            Paragraph("", context.get("style_center_title"))
         ],
         [
-            Paragraph('Структурное подразделение', context.get("style_left")),
-            Paragraph(f'{context.get("department_name")}', context.get("style_center_bold")),
-            Paragraph('', context.get("style_right")),
-            Paragraph('', context.get("style_center_title"))
+            Paragraph("Структурное подразделение", context.get("style_left")),
+            Paragraph(f"{context.get('department_name')}", context.get("style_center_bold")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title"))
         ],
         [
-            Paragraph('Вид табеля', context.get("style_left")),
-            Paragraph(f'{context.get("tabel_type")}', context.get("style_center")),
-            Paragraph('Номер корректировки', context.get("style_right")),
-            Paragraph('', context.get("style_center_title"))
+            Paragraph("Вид табеля", context.get("style_left")),
+            Paragraph(f"{context.get('tabel_type')}", context.get("style_center")),
+            Paragraph("Номер корректировки", context.get("style_right")),
+            Paragraph("", context.get("style_center_title"))
         ],
         [
-            Paragraph('', context.get("style_left")),
-            Paragraph('(первичный - 0, корректирующий 1,2  и т.д)', context.get("style_center_sup")),
-            Paragraph('Дата формирования документа', context.get("style_right")),
-            Paragraph(f'{context.get("date_now")}', context.get("style_center_title"))
+            Paragraph("", context.get("style_left")),
+            Paragraph("(первичный - 0, корректирующий 1,2  и т.д)", context.get("style_center_sup")),
+            Paragraph("Дата формирования документа", context.get("style_right")),
+            Paragraph(f"{context.get('date_now')}", context.get("style_center_title"))
         ]
     ]
     col_widths = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
     table_style = [
-        ('LINEBELOW', (1, 4), (1, 6), 0.75, colors.black),
-        ('GRID', (3, 1), (3, -1), 0.75, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('LEFTPADDING', (0, 0), (-1, -1), 1),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-        ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
-        ('TOPPADDING', (0, 0), (-1, -1), -1)
+        ("LINEBELOW", (1, 4), (1, 6), 0.75, colors.black),
+        ("GRID", (3, 1), (3, -1), 0.75, colors.black),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 1),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 1),
+        ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
+        ("TOPPADDING", (0, 0), (-1, -1), -1)
     ]
     table = create_table(table_data, table_style, col_widths)
     if is_first_page:
@@ -92,51 +93,51 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     else:
         table.wrapOn(canvas, 7 * mm, 160 * mm)
         table.drawOn(canvas, 7 * mm, 160 * mm)
-    canvas.setFont('PTAstraSerifReg', 8)
+    canvas.setFont("PTAstraSerifReg", 8)
 
-    canvas.drawString(11 * mm, 41 * mm, 'Главный врач')
-    canvas.drawString(75 * mm, 41 * mm, f'{context.get("main_doctor")}')
+    canvas.drawString(11 * mm, 41 * mm, "Главный врач")
+    canvas.drawString(75 * mm, 41 * mm, f"{context.get('main_doctor')}")
 
     canvas.line(7 * mm, 40 * mm, 33 * mm, 40 * mm)
     canvas.line(45 * mm, 40 * mm, 101 * mm, 40 * mm)
 
-    canvas.drawString(12 * mm, 37 * mm, '(должность)')
-    canvas.drawString(50 * mm, 37 * mm, '(подпись)')
+    canvas.drawString(12 * mm, 37 * mm, "(должность)")
+    canvas.drawString(50 * mm, 37 * mm, "(подпись)")
 
-    canvas.drawString(10 * mm, 31 * mm, 'Зав. отделением')
-    canvas.drawString(75 * mm, 31 * mm, f'{context.get("head_department")}')
+    canvas.drawString(10 * mm, 31 * mm, "Зав. отделением")
+    canvas.drawString(75 * mm, 31 * mm, f"{context.get('head_department')}")
 
     canvas.line(7 * mm, 30 * mm, 33 * mm, 30 * mm)
     canvas.line(45 * mm, 30 * mm, 101 * mm, 30 * mm)
 
-    canvas.drawString(12 * mm, 27 * mm, '(должность)')
-    canvas.drawString(50 * mm, 27 * mm, '(подпись)')
+    canvas.drawString(12 * mm, 27 * mm, "(должность)")
+    canvas.drawString(50 * mm, 27 * mm, "(подпись)")
 
-    canvas.drawString(8 * mm, 21 * mm, 'Старшая медсестра')
-    canvas.drawString(75 * mm, 21 * mm, f'{context.get("old_sestra")}')
+    canvas.drawString(8 * mm, 21 * mm, "Старшая медсестра")
+    canvas.drawString(75 * mm, 21 * mm, f"{context.get('old_sestra')}")
 
     canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
     canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
 
-    canvas.drawString(12 * mm, 17 * mm, '(должность)')
-    canvas.drawString(50 * mm, 17 * mm, '(подпись)')
+    canvas.drawString(12 * mm, 17 * mm, "(должность)")
+    canvas.drawString(50 * mm, 17 * mm, "(подпись)")
 
-    canvas.drawString(10 * mm, 11 * mm, 'Специалист о.к.')
-    canvas.drawString(75 * mm, 11 * mm, f'{context.get("hr_specialist")}')
+    canvas.drawString(10 * mm, 11 * mm, "Специалист о.к.")
+    canvas.drawString(75 * mm, 11 * mm, f"{context.get('hr_specialist')}")
 
     canvas.line(7 * mm, 10 * mm, 33 * mm, 10 * mm)
     canvas.line(45 * mm, 10 * mm, 101 * mm, 10 * mm)
 
-    canvas.drawString(12 * mm, 7 * mm, '(должность)')
-    canvas.drawString(50 * mm, 7 * mm, '(подпись)')
+    canvas.drawString(12 * mm, 7 * mm, "(должность)")
+    canvas.drawString(50 * mm, 7 * mm, "(подпись)")
 
     canvas.rect(156 * mm, 10 * mm, 112 * mm, 23 * mm, stroke=1, fill=0)
-    canvas.setFont('PTAstraSerifBold', 8)
-    canvas.drawString(185 * mm, 30 * mm, 'Отметка бухгалтерии о принятии настоящего табеля')
-    canvas.drawString(160 * mm, 24 * mm, 'Исполнитель')
-    canvas.setFont('PTAstraSerifReg', 8)
+    canvas.setFont("PTAstraSerifBold", 8)
+    canvas.drawString(185 * mm, 30 * mm, "Отметка бухгалтерии о принятии настоящего табеля")
+    canvas.drawString(160 * mm, 24 * mm, "Исполнитель")
+    canvas.setFont("PTAstraSerifReg", 8)
     canvas.line(180 * mm, 23 * mm, 255 * mm, 23 * mm)
-    canvas.drawString(210 * mm, 20 * mm, '(подпись)')
+    canvas.drawString(210 * mm, 20 * mm, "(подпись)")
 
     canvas.line(165 * mm, 13 * mm, 175 * mm, 13 * mm)
     canvas.line(180 * mm, 13 * mm, 210 * mm, 13 * mm)
@@ -163,34 +164,34 @@ def form_01(request_data):
 
     document_data = []
     department_table_number = 27  # TODO не актуально?
-    month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now()) # TODO месяц надо получать из документа который приходит в запросе
+    month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now())  # TODO месяц надо получать из документа который приходит в запросе
     current_year = datetime.date.today().year  # TODO год из документа
     current_month = datetime.date.today().month  # TODO месяц из документа
     first_day_month = 1
     last_day_month = calendar.monthrange(current_year, current_month)[1]
-    tabel_type = 'первичный'  # TODO Этого нет в графике
-    department_name = 'Кабинет неотложной травматологии и ортопедии (травмпункт)' # TODO это из документа
-    date_now = datetime.datetime.now().strftime('%d.%m.%Y') # TODO не актуально
-    main_doctor = 'Новожилов В.А.'  # TODO динамически
-    head_department = 'Преториус Т.Л.'  # TODO Из документа
-    old_sestra = 'Тотьямина Д.С.'  # TODO из документа
-    hr_specialist = 'Краснова С.А.'  # TODO не акутально
+    tabel_type = "первичный"  # TODO Этого нет в графике
+    department_name = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
+    date_now = datetime.datetime.now().strftime('%d.%m.%Y')  # TODO не актуально
+    main_doctor = "Новожилов В.А."  # TODO динамически
+    head_department = "Преториус Т.Л."  # TODO Из документа
+    old_sestra = "Тотьямина Д.С."  # TODO из документа, переименовать
+    hr_specialist = "Краснова С.А."  # TODO не актуально
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
 
     second_row_data = [
-        Paragraph('', style_center_data),
-        Paragraph('', style_center_data),
-        Paragraph('', style_center_data),
-        Paragraph('', style_center_data),
-        Paragraph('', style_center_data),
-        Paragraph('', style_center_data),
-        Paragraph('', style_center_data),
+        Paragraph("", style_center_data),
+        Paragraph("", style_center_data),
+        Paragraph("", style_center_data),
+        Paragraph("", style_center_data),
+        Paragraph("", style_center_data),
+        Paragraph("", style_center_data),
+        Paragraph("", style_center_data),
     ]
-    date_month_start = [Paragraph(f'{number_day}', style_center_data) for number_day in range(1, last_day_month + 1)]
+    date_month_start = [Paragraph(f"{number_day}", style_center_data) for number_day in range(1, last_day_month + 1)]
     summ_all = [
         Paragraph("Количество часов согласно графику", style_center_data),
-        Paragraph('Подпись работника', style_center_data),
+        Paragraph("Подпись работника", style_center_data),
     ]
 
     second_row_data.extend(date_month_start)
@@ -198,14 +199,14 @@ def form_01(request_data):
 
     working_time_schedule_data = [
         [
-            Paragraph('№ п/п', style_center_data),
-            Paragraph('Фамилия, имя, отчество', style_center_data),
-            Paragraph('Должность (профессия)', style_center_data),
-            Paragraph('Вид занятости (осн, внутр, внеш)', style_center_data),
-            Paragraph('Занимаемый объем (согл ТД), шт ед', style_center_data),
-            Paragraph('Норма часов на занимаемый объем', style_center_data),
-            Paragraph('Рабочая смена', style_center_data),
-            Paragraph('Числа месяца', style_center_data)
+            Paragraph("№ п/п", style_center_data),
+            Paragraph("Фамилия, имя, отчество", style_center_data),
+            Paragraph("Должность (профессия)", style_center_data),
+            Paragraph("Вид занятости (осн, внутр, внеш)", style_center_data),
+            Paragraph("Занимаемый объем (согл ТД), шт ед", style_center_data),
+            Paragraph("Норма часов на занимаемый объем", style_center_data),
+            Paragraph("Рабочая смена", style_center_data),
+            Paragraph("Числа месяца", style_center_data)
         ],
         second_row_data,
     ]
@@ -240,21 +241,21 @@ def form_01(request_data):
     #     start_row += row
 
     working_time_schedule_style = [
-        ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('SPAN', (0, 0), (0, 1)),
-        ('SPAN', (1, 0), (1, 1)),
-        ('SPAN', (2, 0), (2, 1)),
-        ('SPAN', (3, 0), (3, 1)),
-        ('SPAN', (4, 0), (4, 1)),
-        ('SPAN', (5, 0), (5, 1)),
-        ('SPAN', (6, 0), (6, 1)),
-        ('SPAN', (7, 0), (-1, 0)),
-        ('LEFTPADDING', (0, 0), (-1, -1), 1),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 1),
-        ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
-        ('TOPPADDING', (0, 0), (-1, -1), -1),
-        ('TOPPADDING', (0, 2), (-1, 2), 4),
+        ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("SPAN", (0, 0), (0, 1)),
+        ("SPAN", (1, 0), (1, 1)),
+        ("SPAN", (2, 0), (2, 1)),
+        ("SPAN", (3, 0), (3, 1)),
+        ("SPAN", (4, 0), (4, 1)),
+        ("SPAN", (5, 0), (5, 1)),
+        ("SPAN", (6, 0), (6, 1)),
+        ("SPAN", (7, 0), (-1, 0)),
+        ("LEFTPADDING", (0, 0), (-1, -1), 1),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 1),
+        ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
+        ("TOPPADDING", (0, 0), (-1, -1), -1),
+        ("TOPPADDING", (0, 2), (-1, 2), 4),
     ]
     # table_style.extend(col_span)
 
@@ -267,7 +268,6 @@ def form_01(request_data):
             col_widths.append(17 * mm)  # для ячейки "ФИО"
         elif counter == 3:
             col_widths.append(15 * mm)  # для ячейки "Должность"
-        # TODO объединить условия если возможно
         elif counter == 4:
             col_widths.append(13 * mm)  # для ячейки "Вид занятости"
         elif counter == 5:
