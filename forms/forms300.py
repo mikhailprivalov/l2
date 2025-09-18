@@ -178,7 +178,7 @@ def form_01(request_data):
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
 
-    title = [
+    second_row_data = [
         Paragraph('', style_center_data),
         Paragraph('', style_center_data),
         Paragraph('', style_center_data),
@@ -193,10 +193,10 @@ def form_01(request_data):
         Paragraph('Подпись работника', style_center_data),
     ]
 
-    title.extend(date_month_start)
-    title.extend(summ_all)
+    second_row_data.extend(date_month_start)
+    second_row_data.extend(summ_all)
 
-    opinion = [
+    working_time_schedule_data = [
         [
             Paragraph('№ п/п', style_center_data),
             Paragraph('Фамилия, имя, отчество', style_center_data),
@@ -207,7 +207,7 @@ def form_01(request_data):
             Paragraph('Рабочая смена', style_center_data),
             Paragraph('Числа месяца', style_center_data)
         ],
-        title,
+        second_row_data,
     ]
     # TODO Здесь заполнение таблицы данными, с объединением строк по фио (одно фио, две должности) для табеля, необходимо поменять под график
     # col_span = []
@@ -239,7 +239,7 @@ def form_01(request_data):
     #     col_span.append(('SPAN', (0, start_row), (0, start_row + (row - 1))))
     #     start_row += row
 
-    table_style = [
+    working_time_schedule_style = [
         ('GRID', (0, 0), (-1, -1), 0.75, colors.black),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('SPAN', (0, 0), (0, 1)),
@@ -284,7 +284,7 @@ def form_01(request_data):
             col_widths.append(15 * mm)  # для ячейки "Подпись работника"
         counter += 1
 
-    table = create_table(opinion, table_style, col_widths, "LEFT", 1, 3)
+    table = create_table(working_time_schedule_data, working_time_schedule_style, col_widths, "LEFT", 1, 3)
 
     document_data.append(table)
 
