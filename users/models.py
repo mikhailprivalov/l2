@@ -673,3 +673,15 @@ class DistrictResearchLimitAssign(models.Model):
                 type_period = 0 if t_b['type'] == 'День' else 1
                 d = DistrictResearchLimitAssign(district_group_id=district_pk, research_id=t_b['current_researches'], limit_count=t_b['count'], type_period_limit=type_period)
                 d.save()
+
+
+class PermissionHospitalProtocolDoctorProfile(models.Model):
+    hospital = models.ForeignKey('hospitals.Hospitals', db_index=True, blank=True, default=None, null=True, on_delete=models.SET_NULL)
+    doctor_profile = models.ForeignKey(DoctorProfile, db_index=True, blank=True, default=None, null=True, help_text='Пользователь', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.hospital} - {self.doctor_profile}"
+
+    class Meta:
+        verbose_name = 'Пользователь врач - имеет доступ к протоколам больницы'
+        verbose_name_plural = 'Пользователь врач - имеет доступ к протоколам больницы'
