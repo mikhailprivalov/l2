@@ -1,7 +1,16 @@
 from django.contrib import admin
 
-from .models import DoctorProfile, AssignmentTemplates, DoctorProfileEquipment, AssignmentResearches, Speciality, Position, AvailableResearchByGroup, DistrictResearchLimitAssign, \
-    PermissionHospitalProtocolDoctorProfile
+from .models import (
+    DoctorProfile,
+    AssignmentTemplates,
+    DoctorProfileEquipment,
+    AssignmentResearches,
+    Speciality,
+    Position,
+    AvailableResearchByGroup,
+    DistrictResearchLimitAssign,
+    PermissionHospitalProtocolDoctorProfile,
+)
 
 
 class DocAdmin(admin.ModelAdmin):
