@@ -52,7 +52,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         ],
         [
             Paragraph('Учреждение', context.get("style_left")),
-            Paragraph(f'{context.get("hospital_name")}', context.get("style_center")),
+            Paragraph(f'{context.get("organization_title")}', context.get("style_center")),
             Paragraph('по ОКПО', context.get("style_right")),
             Paragraph('', context.get("style_center_title"))
         ],
@@ -175,8 +175,8 @@ def form_01(request_data):
     head_department = 'Преториус Т.Л.'  # TODO Из документа
     old_sestra = 'Тотьямина Д.С.'  # TODO из документа
     hr_specialist = 'Краснова С.А.'  # TODO не акутально
-    hospital: Hospitals = request_data.get("hospital")  # TODO заменить на organization
-    hospital_name = hospital.safe_short_title
+    organization: Hospitals = request_data.get("hospital")
+    organization_title = organization.safe_short_title
 
     title = [
         Paragraph('', style_center_title),
@@ -283,7 +283,7 @@ def form_01(request_data):
         "first_day_month": first_day_month,
         "last_day_month": last_day_month,
         "date_now": date_now,
-        "hospital_name": hospital_name,
+        "organization_title": organization_title,
         "department_name": department_name,
         "tabel_type": tabel_type,
         "main_doctor": main_doctor,
