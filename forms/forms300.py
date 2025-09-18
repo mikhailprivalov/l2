@@ -184,6 +184,7 @@ def form_01(request_data):
         Paragraph('', style_center_title),
         Paragraph('', style_center_title),
         Paragraph('', style_center_title),
+        Paragraph('', style_center_title),
     ]
     date_month_start = [Paragraph(f'{number_day}', style_center_title) for number_day in range(1, last_day_month + 1)]
     summ_all = [
@@ -201,6 +202,7 @@ def form_01(request_data):
             Paragraph('Должность (профессия)', style_center_data),
             Paragraph('Вид занятости (осн, внутр, внеш)', style_center_data),
             Paragraph('Норма часов на занимаемый объем', style_center_data),
+            Paragraph('Рабочая смена', style_center_data),
             Paragraph('Числа месяца', style_center_data)
         ],
         title,
@@ -243,7 +245,8 @@ def form_01(request_data):
         ('SPAN', (2, 0), (2, 1)),
         ('SPAN', (3, 0), (3, 1)),
         ('SPAN', (4, 0), (4, 1)),
-        ('SPAN', (5, 0), (-1, 0)),
+        ('SPAN', (5, 0), (5, 1)),
+        ('SPAN', (6, 0), (-1, 0)),
         ('LEFTPADDING', (0, 0), (-1, -1), 1),
         ('RIGHTPADDING', (0, 0), (-1, -1), 1),
         ('BOTTOMTPADDING', (0, 0), (-1, -1), -1),
@@ -266,11 +269,13 @@ def form_01(request_data):
             col_widths.append(12 * mm)  # для ячейки "Вид занятости"
         elif counter == 5:
             col_widths.append(12 * mm)  # для ячейки "Норма часов"
-        elif counter <= last_day_month + 5:
+        elif counter == 6:
+            col_widths.append(12 * mm)  # для ячейки "Рабочая смена"
+        elif counter <= last_day_month + 6:
             col_widths.append(5.8 * mm)  # для ячеек дат
-        elif counter == last_day_month + 6:
-            col_widths.append(14 * mm)  # для ячейки "кол-во часов согласно графику"
         elif counter == last_day_month + 7:
+            col_widths.append(14 * mm)  # для ячейки "кол-во часов согласно графику"
+        elif counter == last_day_month + 8:
             col_widths.append(16 * mm)  # для ячейки "Подпись работника"
         counter += 1
 
