@@ -242,8 +242,7 @@ class EquipmentReceive(models.Model):
             study_instance_uid_tag=data.get("study_instance_uid_tag"),
             equipment=data.get("tag_patient_name"),
             equipment_model=equipment_model,
-            equipment_title=equipment_title,
+            equipment_title=equipment_title
         )
         eqr.save()
-
         return eqr
