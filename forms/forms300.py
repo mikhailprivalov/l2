@@ -135,6 +135,8 @@ def form_01(request_data):
     hr_specialist = "Краснова С.А."  # TODO не актуально
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
+    order_appendix_number = "2"
+    order_date = "от '20' февраля 2025 г №37"
 
     second_row_data = [
         Paragraph("", style_center_data),
