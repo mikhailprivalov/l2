@@ -131,18 +131,6 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     canvas.drawString(12 * mm, 7 * mm, "(должность)")
     canvas.drawString(50 * mm, 7 * mm, "(подпись)")
 
-    canvas.rect(156 * mm, 10 * mm, 112 * mm, 23 * mm, stroke=1, fill=0)
-    canvas.setFont("PTAstraSerifBold", 8)
-    canvas.drawString(185 * mm, 30 * mm, "Отметка бухгалтерии о принятии настоящего табеля")
-    canvas.drawString(160 * mm, 24 * mm, "Исполнитель")
-    canvas.setFont("PTAstraSerifReg", 8)
-    canvas.line(180 * mm, 23 * mm, 255 * mm, 23 * mm)
-    canvas.drawString(210 * mm, 20 * mm, "(подпись)")
-
-    canvas.line(165 * mm, 13 * mm, 175 * mm, 13 * mm)
-    canvas.line(180 * mm, 13 * mm, 210 * mm, 13 * mm)
-    canvas.line(215 * mm, 13 * mm, 225 * mm, 13 * mm)
-
     canvas.restoreState()
 
 
