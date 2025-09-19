@@ -685,3 +685,10 @@ class PermissionHospitalProtocolDoctorProfile(models.Model):
     class Meta:
         verbose_name = 'Пользователь врач - имеет доступ к протоколам больницы'
         verbose_name_plural = 'Пользователь врач - имеет доступ к протоколам больницы'
+
+    @staticmethod
+    def get_access_hospital_by_doctor(doctor_id):
+        permissions = PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile_id=doctor_id).first()
+        rows = [{"id": -1, "title": "Все"}]
+        rows.extend([{"id": i.hospital, "title": i.hospital.title} for i in permissions])
+        return rows

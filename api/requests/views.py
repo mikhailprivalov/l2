@@ -14,7 +14,7 @@ from utils.response import status_response
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles
 from clients.models import Card
 from integration_framework.models import EquipmentReceive
-from users.models import DoctorProfileEquipment
+from users.models import DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 
 
 @login_required
@@ -86,8 +86,6 @@ def get_requests(request):
 @login_required
 @group_required('Создание и исполнение заявок')
 def get_equipment_list(request):
-    from users.models import DoctorProfileEquipment
-
     doctor_equipments = DoctorProfileEquipment.objects.filter(doctor_profile=request.user.doctorprofile).select_related('equipment')
 
     rows = [
@@ -132,7 +130,7 @@ def get_request_images(request):
 
             base_queryset = EquipmentReceive.objects.filter(
                 created_at__date=search_date,
-                study_instance_uid_tag=equipment.sequence_study_instance_uid,
+                equipment=equipment.sequence_study_instance_uid,
             ).select_related('napravleniye__client__individual', 'doc_save_link', 'doc_reset_link')
 
             total = base_queryset.count()
@@ -170,7 +168,7 @@ def get_request_images(request):
                         "patronymic": equipment_receive.patronymic,
                         "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else '',
                         "sex": equipment_receive.sex,
-                        "patientId": equipment_receive.patient_id,
+                        "patientId": equipment_receive.tag_patient_id,
                         "orderId": equipment_receive.order_id,
                         "patient": patient_fio,
                         "datetime": strfdatetime(equipment_receive.created_at),
@@ -220,7 +218,7 @@ def get_image_details(request):
         "patronymic": equipment_receive.patronymic,
         "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else None,
         "sex": equipment_receive.sex,
-        "patientId": equipment_receive.patient_id,
+        "patientId": equipment_receive.tag_patient_id,
         "orderId": equipment_receive.order_id,
         "docSaveLink": equipment_receive.doc_save_link.get_fio() if equipment_receive.doc_save_link else None,
         "timeSaveLink": strfdatetime(equipment_receive.time_save_link) if equipment_receive.time_save_link else None,
@@ -603,3 +601,10 @@ def cancel_accept_request(request):
         direction.save(update_fields=["accept_who_doctor", "accept_time"])
 
     return status_response(True, "Принятие заявки отменено")
+
+
+@login_required
+@group_required("Заполнение заявок")
+def get_permissions_doctor(request):
+    access_hospital = PermissionHospitalProtocolDoctorProfile.get_access_hospital_by_doctor(request.user.doctorprofile)
+    return {"hospitals": access_hospital}

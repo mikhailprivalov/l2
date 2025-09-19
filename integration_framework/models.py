@@ -8,6 +8,7 @@ import uuid
 from django.db import models
 
 from directory.models import Researches
+from equipment.models import Equipment
 from hospitals.models import Hospitals
 from laboratory.utils import strdate
 from users.models import DoctorProfile
@@ -184,14 +185,12 @@ class IPLimitter(models.Model):
 
 
 class EquipmentReceive(models.Model):
-    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
     napravleniye = models.ForeignKey(Napravleniya, blank=True, null=True, default=None, help_text='Направление', db_index=True, on_delete=models.CASCADE)
     family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
     patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
     birthday = models.DateField(help_text="Дата рождения", db_index=True)
     sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
-    patient_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
     order_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="ID в результате")
     doc_save_link = models.ForeignKey(
         DoctorProfile, null=True, blank=True, related_name="doc_save_link", db_index=True, help_text='Пользователь связавший снимок с заказом', on_delete=models.SET_NULL
@@ -208,21 +207,44 @@ class EquipmentReceive(models.Model):
     tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название станции")
     tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
-    equipment = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
+    tag_patient_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
+    tag_sex = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
+    study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
+    equipment_title = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
+    equipment_model = models.ForeignKey(Equipment, blank=True, null=True, default=None, db_index=True, on_delete=models.CASCADE)
+
 
     def __str__(self):
         patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
         if not patient_name:
             patient_name = "Без имени"
-
         status = "Связано" if self.doc_save_link else "Не связано"
-
         date_str = strdate(self.created_at) if self.created_at else ""
-
         uid_short = self.study_instance_uid_tag[:20] + "..." if self.study_instance_uid_tag and len(self.study_instance_uid_tag) > 20 else self.study_instance_uid_tag or "Без UID"
-
         naprav_info = f"№{self.napravleniye.pk}" if self.napravleniye else "Без направления"
-
-        patient_id_info = f" (ID:{self.patient_id})" if self.patient_id else ""
-
+        patient_id_info = f" (ID:{self.tag_patient_id})" if self.tag_patient_id else ""
         return f"[{status}] {patient_name}{patient_id_info} - {naprav_info} - {uid_short} - {date_str}"
+
+    @staticmethod
+    def save_meta_tag_from_dicom_server(data):
+        study_instance_uid_tag = data.get("study_instance_uid_tag")
+        study_instance_uid_tag_dots = study_instance_uid_tag.split(".")
+        equipment_title = ".".join(study_instance_uid_tag_dots[:9])
+
+        equipment_model = Equipment.objects.filter(sequence_study_instance_uid=equipment_title).first()
+        eqr = EquipmentReceive(
+            tag_patient_name=data.get("tag_patient_name"),
+            tag_study_date= data.get("tag_study_date"),
+            tag_station_name=data.get("tag_station_name"),
+            tag_patient_sex =data.get("tag_patient_sex"),
+            tag_patient_birthdate=data.get("tag_patient_birthdate"),
+            tag_patient_id=data.get("tag_patient_id"),
+            tag_sex=data.get("tag_sex"),
+            study_instance_uid_tag=data.get("study_instance_uid_tag"),
+            equipment=data.get("tag_patient_name"),
+            equipment_model=equipment_model,
+            equipment_title=equipment_title
+        )
+        eqr.save()
+
+        return eqr

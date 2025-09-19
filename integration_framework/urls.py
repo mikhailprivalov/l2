@@ -78,4 +78,5 @@ urlpatterns = [
     path('employees/', include('integration_framework.employees.urls')),
     path('statistic/', include('integration_framework.statistic.urls')),
     path('feedback/', include('integration_framework.feedback.urls')),
+    path('dicom/', include('integration_framework.dicom.urls')),
 ]
