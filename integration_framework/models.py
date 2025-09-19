@@ -235,7 +235,7 @@ class EquipmentReceive(models.Model):
             tag_patient_name=data.get("tag_patient_name"),
             tag_study_date=data.get("tag_study_date"),
             tag_station_name=data.get("tag_station_name"),
-            tag_patient_sex =data.get("tag_patient_sex"),
+            tag_patient_sex=data.get("tag_patient_sex"),
             tag_patient_birthdate=data.get("tag_patient_birthdate"),
             tag_patient_id=data.get("tag_patient_id"),
             tag_sex=data.get("tag_sex"),
