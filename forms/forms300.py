@@ -95,41 +95,10 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         table.drawOn(canvas, 7 * mm, 160 * mm)
     canvas.setFont("PTAstraSerifReg", 8)
 
-    canvas.drawString(11 * mm, 41 * mm, "Главный врач")
-    canvas.drawString(75 * mm, 41 * mm, f"{context.get('main_doctor')}")
-
-    canvas.line(7 * mm, 40 * mm, 33 * mm, 40 * mm)
-    canvas.line(45 * mm, 40 * mm, 101 * mm, 40 * mm)
-
-    canvas.drawString(12 * mm, 37 * mm, "(должность)")
-    canvas.drawString(50 * mm, 37 * mm, "(подпись)")
-
-    canvas.drawString(10 * mm, 31 * mm, "Зав. отделением")
-    canvas.drawString(75 * mm, 31 * mm, f"{context.get('head_department')}")
-
-    canvas.line(7 * mm, 30 * mm, 33 * mm, 30 * mm)
-    canvas.line(45 * mm, 30 * mm, 101 * mm, 30 * mm)
-
-    canvas.drawString(12 * mm, 27 * mm, "(должность)")
-    canvas.drawString(50 * mm, 27 * mm, "(подпись)")
-
-    canvas.drawString(8 * mm, 21 * mm, "Старшая медсестра")
-    canvas.drawString(75 * mm, 21 * mm, f"{context.get('old_sestra')}")
-
-    canvas.line(7 * mm, 20 * mm, 33 * mm, 20 * mm)
-    canvas.line(45 * mm, 20 * mm, 101 * mm, 20 * mm)
-
-    canvas.drawString(12 * mm, 17 * mm, "(должность)")
-    canvas.drawString(50 * mm, 17 * mm, "(подпись)")
-
-    canvas.drawString(10 * mm, 11 * mm, "Специалист о.к.")
-    canvas.drawString(75 * mm, 11 * mm, f"{context.get('hr_specialist')}")
-
-    canvas.line(7 * mm, 10 * mm, 33 * mm, 10 * mm)
-    canvas.line(45 * mm, 10 * mm, 101 * mm, 10 * mm)
-
-    canvas.drawString(12 * mm, 7 * mm, "(должность)")
-    canvas.drawString(50 * mm, 7 * mm, "(подпись)")
+    canvas.drawString(11 * mm, 41 * mm, "Заведующий отделением")
+    canvas.line(42 * mm, 40 * mm, 72 * mm, 40 * mm)
+    canvas.drawString(110 * mm, 41 * mm, "Старшая медицинская сестра")
+    canvas.line(146 * mm, 40 * mm, 176 * mm, 40 * mm)
 
     canvas.restoreState()
 
