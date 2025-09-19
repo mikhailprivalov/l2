@@ -55,7 +55,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
             Paragraph(f"{context.get('organization_title')}", context.get("style_center")),
-            Paragraph("'____'_________________2025г.", context.get("style_right")),  # TODO подставлять дату
+            Paragraph("'____'_______________________2025г.", context.get("style_right")),  # TODO подставлять дату
             Paragraph("", context.get("style_center_title")),
         ],
         [
@@ -101,14 +101,18 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         30 * mm,
     ]
     table_style = [
-        ("LINEBELOW", (1, 4), (1, 6), 0.75, colors.black),
-        ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
+        # ("LINEBELOW", (1, 4), (1, 6), 0.75, colors.black),
+        # ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # TODO убедиться что работает
         ("LEFTPADDING", (0, 0), (-1, -1), 1),
         ("RIGHTPADDING", (0, 0), (-1, -1), 1),
         ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
         ("TOPPADDING", (0, 0), (-1, -1), -1),
         ("SPAN", (4, 3), (5, 3)),
+        ("LINEBELOW", (2, 0), (2, 0), 0.75, colors.black),
+        ("LINEBELOW", (5, 1), (5, 1), 0.75, colors.black),
+        ("LINEBELOW", (0, 5), (4, 5), 0.75, colors.black),
+        ("LINEBELOW", (4, 6), (4, 6), 0.75, colors.black),
     ]
     table = create_table(table_data, table_style, col_widths)
     if is_first_page:
@@ -250,7 +254,7 @@ def form_01(request_data):
     occupied_volume_col_width = 11 * mm
     norm_hours_col_width = 13 * mm
     working_shift_col_width = 8.7 * mm
-    dates_col_widths = [None for _ in range(1, last_day_month+1)]
+    dates_col_widths = [None for _ in range(1, last_day_month+1)]  # 5.6 норм
     amount_hours_col_width = 14 * mm
     employees_signature = 15 * mm
     col_widths = [
@@ -295,8 +299,6 @@ def form_01(request_data):
         "order_appendix_number": order_appendix_number,
         "order_date": order_date,
         "item_number_col_width": item_number_col_width,
-        "fio_col_width": fio_col_width,
-        "position_col_width": position_col_width,
     }
 
     def first_pages(canvas, doc):
