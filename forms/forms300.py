@@ -18,75 +18,75 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     """
     # TODO изменить под график
     canvas.saveState()
-    text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", context.get("style_left_bold"))
+    text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", context.get("style_left"))
     if is_first_page:
-        text.wrapOn(canvas, 260 * mm, 194 * mm)
-        text.drawOn(canvas, 260 * mm, 194 * mm)
+        text.wrapOn(canvas, 260 * mm, 191 * mm)
+        text.drawOn(canvas, 260 * mm, 191 * mm)
     else:
-        text.wrapOn(canvas, 260 * mm, 198 * mm)
-        text.drawOn(canvas, 260 * mm, 198 * mm)
+        text.wrapOn(canvas, 260 * mm, 195 * mm)
+        text.drawOn(canvas, 260 * mm, 195 * mm)
     table_data = [
         [
-            Paragraph("Текст", context.get("style_left")),
             Paragraph("", context.get("style_left")),
+            Paragraph("Председатель ППО", context.get("style_left")),
             Paragraph("", context.get("style_center_bold")),
             Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("УТВЕРЖДАЮ", context.get("style_left")),
             Paragraph("", context.get("style_center_title")),
         ],
         [
-            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center")),
+            Paragraph("ГРАФИК РАБОЧЕГО ВРЕМЕНИ", context.get("style_center_bold")),
+            Paragraph("Руководитель учреждения", context.get("style_left_bold")),
+            Paragraph("", context.get("style_center_title")),
+        ],
+        [
+            Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
             Paragraph("", context.get("style_right")),
             Paragraph("", context.get("style_center_title")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("подпись", context.get("style_right")),
         ],
         [
-            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph(f"{context.get('organization_title')}", context.get("style_center")),
+            Paragraph("'____'_________________2025г.", context.get("style_right")),  # TODO подставлять дату
             Paragraph("", context.get("style_center_title")),
         ],
         [
-            Paragraph("Текст", context.get("style_left")),
+            Paragraph("&nbsp;", context.get("style_left")),
             Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph(" ", context.get("style_center")),
+            Paragraph(" ", context.get("style_right")),
+            Paragraph(" ", context.get("style_center_title")),
+            Paragraph(" ", context.get("style_center_title")),
         ],
         [
-            Paragraph("Текст", context.get("style_left")),
             Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
-            Paragraph("", context.get("style_center_title")),
-        ],
-        [
-            Paragraph("Текст", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center_bold")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph(f"{context.get('department_title')}", context.get("style_center")),
+            Paragraph("календарных дней", context.get("style_left")),  # TODO кол-во дней в месяце
             Paragraph("", context.get("style_center_title")),
         ],
         [
-            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("(подразделение)", context.get("style_center")),
+            Paragraph("Рабочих дней", context.get("style_left")),  # TODO кол-во рабочих дней
             Paragraph("", context.get("style_center_title")),
         ],
         [
-            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center_sup")),
-            Paragraph("", context.get("style_right")),
+            Paragraph("__________________ 2025 год", context.get("style_center")),  #TODO месяц и год
             Paragraph("", context.get("style_center_title")),
             Paragraph("", context.get("style_center_title")),
         ]
@@ -94,9 +94,9 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
 
     col_widths = [
         context.get("item_number_col_width"),
-        context.get("fio_col_width"),
-        context.get("position_col_width"),
-        145 * mm,
+        19 * mm,
+        21 * mm,
+        144 * mm,
         30 * mm,
         30 * mm,
     ]
@@ -107,7 +107,8 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         ("LEFTPADDING", (0, 0), (-1, -1), 1),
         ("RIGHTPADDING", (0, 0), (-1, -1), 1),
         ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
-        ("TOPPADDING", (0, 0), (-1, -1), -1)
+        ("TOPPADDING", (0, 0), (-1, -1), -1),
+        ("SPAN", (4, 3), (5, 3)),
     ]
     table = create_table(table_data, table_style, col_widths)
     if is_first_page:
@@ -151,7 +152,7 @@ def form_01(request_data):
     first_day_month = 1
     last_day_month = calendar.monthrange(current_year, current_month)[1]
     tabel_type = "первичный"  # TODO Этого нет в графике
-    department_name = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
+    department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
     date_now = datetime.datetime.now().strftime('%d.%m.%Y')  # TODO не актуально
     main_doctor = "Новожилов В.А."  # TODO динамически
     head_department = "Преториус Т.Л."  # TODO Из документа
@@ -277,7 +278,7 @@ def form_01(request_data):
         "last_day_month": last_day_month,
         "date_now": date_now,
         "organization_title": organization_title,
-        "department_name": department_name,
+        "department_title": department_title,
         "tabel_type": tabel_type,
         "main_doctor": main_doctor,
         "head_department": head_department,
