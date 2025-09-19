@@ -216,30 +216,28 @@ def form_01(request_data):
     ]
     # table_style.extend(col_span)
 
-    col_widths = []
-    counter = 1
-    for i in range(1, last_day_month + 10):
-        if counter == 1:
-            col_widths.append(8 * mm)  # для ячейки "№ п/п"
-        elif counter == 2:
-            col_widths.append(17 * mm)  # для ячейки "ФИО"
-        elif counter == 3:
-            col_widths.append(15 * mm)  # для ячейки "Должность"
-        elif counter == 4:
-            col_widths.append(13 * mm)  # для ячейки "Вид занятости"
-        elif counter == 5:
-            col_widths.append(11 * mm)  # для ячейки "Занимаемый объем"
-        elif counter == 6:
-            col_widths.append(13 * mm)  # для ячейки "Норма часов"
-        elif counter == 7:
-            col_widths.append(8.7 * mm)  # для ячейки "Рабочая смена"
-        elif counter <= last_day_month + 7:
-            col_widths.append(5.6 * mm)  # для ячеек дат
-        elif counter == last_day_month + 8:
-            col_widths.append(14 * mm)  # для ячейки "кол-во часов согласно графику"
-        elif counter == last_day_month + 9:
-            col_widths.append(15 * mm)  # для ячейки "Подпись работника"
-        counter += 1
+    item_number_col_width = 8 * mm
+    fio_col_width = 17 * mm
+    position_col_width = 15 * mm
+    type_employment_col_width = 13 * mm
+    occupied_volume_col_width = 11 * mm
+    norm_hours_col_width = 13 * mm
+    working_shift_col_width = 8.7 * mm
+    dates_col_widths = [5.6 * mm for _ in range(1, last_day_month+1)]
+    amount_hours_col_width = 14 * mm
+    employees_signature = 15 * mm
+    col_widths = [
+        item_number_col_width,
+        fio_col_width,
+        position_col_width,
+        type_employment_col_width,
+        occupied_volume_col_width,
+        norm_hours_col_width,
+        working_shift_col_width,
+        *dates_col_widths,
+        amount_hours_col_width,
+        employees_signature
+    ]
 
     table = create_table(working_time_schedule_data, working_time_schedule_style, col_widths, "LEFT", 1, 3)
 
