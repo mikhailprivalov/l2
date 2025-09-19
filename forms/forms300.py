@@ -18,69 +18,92 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     """
     # TODO изменить под график
     canvas.saveState()
-    text = Paragraph("Утв приказом Минфина России <br/> от 30 марта 2015 г. № 52н", context.get("style_right_bold"))
+    text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", context.get("style_left_bold"))
     if is_first_page:
-        text.wrapOn(canvas, 141 * mm, 194 * mm)
-        text.drawOn(canvas, 141 * mm, 194 * mm)
+        text.wrapOn(canvas, 260 * mm, 194 * mm)
+        text.drawOn(canvas, 260 * mm, 194 * mm)
     else:
-        text.wrapOn(canvas, 141 * mm, 198 * mm)
-        text.drawOn(canvas, 141 * mm, 198 * mm)
+        text.wrapOn(canvas, 260 * mm, 198 * mm)
+        text.drawOn(canvas, 260 * mm, 198 * mm)
     table_data = [
         [
+            Paragraph("Текст", context.get("style_left")),
             Paragraph("", context.get("style_left")),
-            Paragraph(f"Табель № <u>{context.get('department_table_number')}</u>", context.get("style_center_bold")),
+            Paragraph("", context.get("style_center_bold")),
             Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title"))
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("учета использования рабочего времени", context.get("style_center")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("Коды", context.get("style_center_title"))
-        ],
-        [
+            Paragraph("Текст", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
-            Paragraph("Форма ОКУД", context.get("style_right")),
-            Paragraph("0504421", context.get("style_center_title"))
-        ],
-        [
-            Paragraph("", context.get("style_left")),
-            Paragraph(f"За период с {context.get('first_day_month')} по {context.get('last_day_month')} {context.get('month_name')} {context.get('current_year')} года",
-                      context.get("style_center")),
-            Paragraph("Дата", context.get("style_right")),
-            Paragraph(f"{context.get('date_now')}", context.get("style_center_title"))
-        ],
-        [
-            Paragraph("Учреждение", context.get("style_left")),
-            Paragraph(f"{context.get('organization_title')}", context.get("style_center")),
-            Paragraph("по ОКПО", context.get("style_right")),
-            Paragraph("", context.get("style_center_title"))
-        ],
-        [
-            Paragraph("Структурное подразделение", context.get("style_left")),
-            Paragraph(f"{context.get('department_name')}", context.get("style_center_bold")),
             Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title"))
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
         ],
         [
-            Paragraph("Вид табеля", context.get("style_left")),
-            Paragraph(f"{context.get('tabel_type')}", context.get("style_center")),
-            Paragraph("Номер корректировки", context.get("style_right")),
-            Paragraph("", context.get("style_center_title"))
-        ],
-        [
+            Paragraph("Текст", context.get("style_left")),
             Paragraph("", context.get("style_left")),
-            Paragraph("(первичный - 0, корректирующий 1,2  и т.д)", context.get("style_center_sup")),
-            Paragraph("Дата формирования документа", context.get("style_right")),
-            Paragraph(f"{context.get('date_now')}", context.get("style_center_title"))
+            Paragraph("", context.get("style_center")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
+        ],
+        [
+            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
+        ],
+        [
+            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
+        ],
+        [
+            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center_bold")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
+        ],
+        [
+            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
+        ],
+        [
+            Paragraph("Текст", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_center_sup")),
+            Paragraph("", context.get("style_right")),
+            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_center_title")),
         ]
     ]
-    col_widths = [30 * mm, 180 * mm, 40 * mm, 25 * mm]
+
+    col_widths = [
+        context.get("item_number_col_width"),
+        context.get("fio_col_width"),
+        context.get("position_col_width"),
+        145 * mm,
+        30 * mm,
+        30 * mm,
+    ]
     table_style = [
         ("LINEBELOW", (1, 4), (1, 6), 0.75, colors.black),
-        ("GRID", (3, 1), (3, -1), 0.75, colors.black),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # TODO убедиться что работает
         ("LEFTPADDING", (0, 0), (-1, -1), 1),
         ("RIGHTPADDING", (0, 0), (-1, -1), 1),
         ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
@@ -116,6 +139,7 @@ def form_01(request_data):
     style_center_sup = create_style(style_center, font_size=5)
     style_center_data = create_style(style_center, font_size=6)
     style_left = create_style(font_size=6)
+    style_left_bold = create_style(style_left, "PTAstraSerifBold")
     style_right = create_style(style_left, alignment="right")
     style_right_bold = create_style(style_right, "PTAstraSerifBold")
 
@@ -225,7 +249,7 @@ def form_01(request_data):
     occupied_volume_col_width = 11 * mm
     norm_hours_col_width = 13 * mm
     working_shift_col_width = 8.7 * mm
-    dates_col_widths = [5.6 * mm for _ in range(1, last_day_month+1)]
+    dates_col_widths = [None for _ in range(1, last_day_month+1)]
     amount_hours_col_width = 14 * mm
     employees_signature = 15 * mm
     col_widths = [
@@ -260,12 +284,18 @@ def form_01(request_data):
         "old_sestra": old_sestra,
         "hr_specialist": hr_specialist,
         "style_left": style_left,
+        "style_left_bold": style_left_bold,
         "style_right": style_right,
         "style_center": style_center,
         "style_center_bold": style_center_bold,
         "style_center_title": style_center_title,
         "style_center_sup": style_center_sup,
         "style_right_bold": style_right_bold,
+        "order_appendix_number": order_appendix_number,
+        "order_date": order_date,
+        "item_number_col_width": item_number_col_width,
+        "fio_col_width": fio_col_width,
+        "position_col_width": position_col_width,
     }
 
     def first_pages(canvas, doc):
