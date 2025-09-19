@@ -213,7 +213,6 @@ class EquipmentReceive(models.Model):
     equipment_title = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
     equipment_model = models.ForeignKey(Equipment, blank=True, null=True, default=None, db_index=True, on_delete=models.CASCADE)
 
-
     def __str__(self):
         patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
         if not patient_name:
