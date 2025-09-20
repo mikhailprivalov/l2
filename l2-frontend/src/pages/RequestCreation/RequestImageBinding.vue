@@ -482,7 +482,7 @@ const checkForNewImages = async () => {
       pageSize: pageSize.value,
     });
 
-    if (rows.length > 0 && images.value.length > 0) {
+    if (rows.length > 0) {
       const newImages = rows.filter((newImg: Image) => !images.value.some(existingImg => existingImg.id === newImg.id));
 
       if (newImages.length > 0) {

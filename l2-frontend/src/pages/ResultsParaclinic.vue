@@ -386,7 +386,7 @@
       :class="{ embedded, embeddedFull }"
     >
       <div
-        v-if="!embeddedFull"
+        v-if="!embeddedFull || forcedResultsTop"
         class="results-top"
       >
         <div class="row">
@@ -794,7 +794,8 @@
                 row.research.show_more_services &&
                 (!row.confirmed || row.more.length > 0) &&
                 !data.has_monitoring &&
-                !data.has_expertise
+                !data.has_expertise &&
+                !forcedResultsTop
             "
             class="group"
           >
@@ -933,7 +934,7 @@
             </div>
           </div>
           <div
-            v-if="row.research.is_doc_refferal || row.research.is_paraclinic"
+            v-if="(row.research.is_doc_refferal || row.research.is_paraclinic) && !forcedResultsTop"
             class="group"
           >
             <div class="group-title">
@@ -1162,7 +1163,13 @@
             </div>
           </div>
           <div
-            v-if="!data.has_microbiology && !row.is_form && !data.has_monitoring && !data.has_expertise && !is_operator_protocol"
+            v-if="
+              !data.has_microbiology
+                && !row.is_form
+                && !data.has_monitoring
+                && !data.has_expertise
+                && !is_operator_protocol
+                && !forcedResultsTop"
             class="group"
           >
             <div class="fields">
@@ -1933,6 +1940,10 @@ export default {
     },
     kk: {
       type: String,
+      required: false,
+    },
+    forcedResultsTop: {
+      type: Boolean,
       required: false,
     },
   },

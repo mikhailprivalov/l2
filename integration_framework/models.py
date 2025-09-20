@@ -185,7 +185,7 @@ class IPLimitter(models.Model):
 
 
 class EquipmentReceive(models.Model):
-    napravleniye = models.ForeignKey(Napravleniya, blank=True, null=True, default=None, help_text='Направление', db_index=True, on_delete=models.CASCADE)
+    napravleniye = models.ForeignKey(Napravleniya, blank=True, null=True, default=None, help_text='Направление', db_index=True, on_delete=models.CASCADE, related_name='equipment_receive')
     family = models.CharField(max_length=120, blank=True, help_text="Фамилия", db_index=True)
     name = models.CharField(max_length=120, blank=True, help_text="Имя", db_index=True)
     patronymic = models.CharField(max_length=120, blank=True, help_text="Отчество", db_index=True)
@@ -242,7 +242,7 @@ class EquipmentReceive(models.Model):
             study_instance_uid_tag=data.get("study_instance_uid_tag"),
             equipment=data.get("tag_patient_name"),
             equipment_model=equipment_model,
-            equipment_title=equipment_title
+            equipment_title=equipment_title,
         )
         eqr.save()
         return eqr
