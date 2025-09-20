@@ -3,197 +3,133 @@
     <TwoSidedLayout :left-width-px="300">
       <template #left>
         <TopBottomLayout
-          :top-height-px="36"
+          :top-height-px="34"
           no-border
         >
           <template #top>
-            <DateFieldNav
-              :def="date"
-              :val.sync="date"
-              w="100%"
-            />
+            <div class="search">
+              <input
+                v-model.trim="numberToSearch"
+                type="text"
+                class="form-control "
+                placeholder="номер заявки"
+                @keyup.enter="searchByNumber()"
+              >
+              <button
+                class="btn btn-blue-nb"
+                :disabled="numberToSearch === ''"
+                @click="searchByNumber"
+              >
+                поиск
+              </button>
+            </div>
           </template>
           <template #bottom>
-            <TopBottomLayout split-half>
+            <TopBottomLayout
+              :top-height-px="36"
+              no-border
+            >
               <template #top>
-                <div class="requests-list">
-                  <div class="requests-list__header">
-                    <div class="requests-list__header-content">
-                      <span>Ожидающие</span>
-                      <div class="requests-list__filter">
-                        <button
-                          class="filter-btn"
-                          :class="{ 'filter-btn--active': !showAccepted }"
-                          @click="showAccepted = false"
-                        >
-                          {{ `Все (${requestsWait.length})` }}
-                        </button>
-                        <button
-                          class="filter-btn"
-                          :class="{ 'filter-btn--active': showAccepted }"
-                          @click="showAccepted = true"
-                        >
-                          {{ `Принятые (${requestsWait.filter(request => request.accepted).length})` }}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    v-if="initialLoading"
-                    class="requests-list__loading"
-                  >
-                    Загрузка...
-                  </div>
-                  <div
-                    v-else
-                    class="requests-list__items"
-                  >
-                    <RequestCard
-                      v-for="request in filteredWaitRequests"
-                      :key="request.id"
-                      :request="request"
-                      @request-accepted="handleRequestAccepted"
-                      @card-clicked="handleCardClick"
-                    />
-                    <div
-                      v-if="filteredWaitRequests.length === 0"
-                      class="requests-list__empty"
-                    >
-                      {{ showAccepted ? 'Нет принятых заявок' : 'Нет ожидающих заявок' }}
-                    </div>
-                  </div>
-                </div>
+                <DateFieldNav
+                  :def="date"
+                  :val.sync="date"
+                  w="100%"
+                />
               </template>
               <template #bottom>
-                <div class="requests-list">
-                  <div class="requests-list__header">
-                    Исполненные
-                  </div>
-                  <div
-                    v-if="initialLoading"
-                    class="requests-list__loading"
-                  >
-                    Загрузка...
-                  </div>
-                  <div
-                    v-else
-                    class="requests-list__items"
-                  >
-                    <RequestCard
-                      v-for="request in requestsDone"
-                      :key="request.id"
-                      :request="request"
-                      @card-clicked="handleCardClick"
-                    />
-                    <div
-                      v-if="requestsDone.length === 0"
-                      class="requests-list__empty"
-                    >
-                      Нет исполненных заявок
+                <TopBottomLayout split-half>
+                  <template #top>
+                    <div class="requests-list">
+                      <div class="requests-list__header">
+                        <div class="requests-list__header-content">
+                          <span>Ожидающие</span>
+                          <div class="requests-list__filter">
+                            <button
+                              class="filter-btn"
+                              :class="{ 'filter-btn--active': !showAccepted }"
+                              @click="showAccepted = false"
+                            >
+                              {{ `Все (${requestsWait.length})` }}
+                            </button>
+                            <button
+                              class="filter-btn"
+                              :class="{ 'filter-btn--active': showAccepted }"
+                              @click="showAccepted = true"
+                            >
+                              {{ `Принятые (${requestsWait.filter(request => request.accepted).length})` }}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        v-if="initialLoading"
+                        class="requests-list__loading"
+                      >
+                        Загрузка...
+                      </div>
+                      <div
+                        v-else
+                        class="requests-list__items"
+                      >
+                        <RequestCard
+                          v-for="request in filteredWaitRequests"
+                          :key="request.id"
+                          :request="request"
+                          @request-accepted="handleRequestAccepted"
+                          @card-clicked="handleCardClick"
+                        />
+                        <div
+                          v-if="filteredWaitRequests.length === 0"
+                          class="requests-list__empty"
+                        >
+                          {{ showAccepted ? 'Нет принятых заявок' : 'Нет ожидающих заявок' }}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </template>
+                  <template #bottom>
+                    <div class="requests-list">
+                      <div class="requests-list__header">
+                        Исполненные
+                      </div>
+                      <div
+                        v-if="initialLoading"
+                        class="requests-list__loading"
+                      >
+                        Загрузка...
+                      </div>
+                      <div
+                        v-else
+                        class="requests-list__items"
+                      >
+                        <RequestCard
+                          v-for="request in requestsDone"
+                          :key="request.id"
+                          :request="request"
+                          @card-clicked="handleCardClick"
+                        />
+                        <div
+                          v-if="requestsDone.length === 0"
+                          class="requests-list__empty"
+                        >
+                          Нет исполненных заявок
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </TopBottomLayout>
               </template>
             </TopBottomLayout>
           </template>
         </TopBottomLayout>
       </template>
       <template #right>
-        <div class="results-editor">
-          <div
-            v-if="formData && formData.researches && formData.researches.length > 0"
-            class="form-container"
-          >
-            <div class="form-header">
-              <p class="patient-info">
-                {{ formData.direction.pk }} {{ formData.patient.fio_age }}
-              </p>
-              <!-- <div
-                v-if="requestParams"
-                class="request-params"
-              >
-                <div class="params-grid">
-                  <div
-                    v-for="(value, key) in requestParams"
-                    :key="key"
-                    class="param-item"
-                  >
-                    <span class="param-label">{{ key }}:</span>
-                    <span class="param-value">{{ value }}</span>
-                  </div>
-                </div>
-              </div> -->
-            </div>
-            <div class="form-content">
-              <div
-                v-for="research in formData.researches"
-                :key="research.pk"
-              >
-                <div class="research-title">
-                  <div class="research-left">
-                    {{ research.research.title }}
-                    <span
-                      v-if="research.research.comment"
-                      class="comment"
-                    > [{{ research.research.comment }}]</span>
-                  </div>
-                  <div class="research-right">
-                    <template v-if="research.confirmed">
-                      <button
-                        class="btn btn-blue-nb"
-                        @click="printResults(selectedRequest.id)"
-                      >
-                        Печать
-                      </button>
-                    </template>
-                  </div>
-                </div>
-                <DescriptiveForm
-                  :research="research.research"
-                  :pk="research.pk"
-                  :confirmed="Boolean(!!research.confirmed || !!research.forbidden_edit)"
-                  :patient="formData.patient"
-                  :change_mkb="() => {}"
-                  :hospital_r_type="'desc'"
-                />
-                <div class="control-row">
-                  <div class="res-title">
-                    {{ research.research.title }}:
-                  </div>
-                  <div v-if="research.confirmed">
-                    <span class="status status-confirmed">Подтверждено</span>
-                  </div>
-                  <div v-else>
-                    <span class="status status-none">Не подтверждено</span>
-                  </div>
-                  <template v-if="!research.confirmed">
-                    <button
-                      class="btn btn-blue-nb"
-                      @click="saveResearch(research)"
-                    >
-                      Сохранить
-                    </button>
-                    <button
-                      class="btn btn-blue-nb"
-                      @click="saveAndConfirmResearch(research)"
-                    >
-                      Сохранить и подтвердить
-                    </button>
-                  </template>
-                  <template v-else>
-                    <button
-                      v-if="research.allow_reset_confirm"
-                      class="btn btn-blue-nb"
-                      @click="resetConfirmResearch(research)"
-                    >
-                      Сброс подтверждения
-                    </button>
-                  </template>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ResultsParaclinic
+          v-if="selectedRequest"
+          :key="selectedRequest.id"
+          :direction-id-to-open="selectedRequest.id"
+          forced-results-top
+        />
       </template>
     </TwoSidedLayout>
   </PageInnerLayout>
@@ -202,7 +138,6 @@
 <script setup lang="ts">
 import {
   computed,
-  getCurrentInstance,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -210,21 +145,18 @@ import {
 } from 'vue';
 import moment from 'moment';
 
+import ResultsParaclinic from '@/pages/ResultsParaclinic.vue';
 import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import TopBottomLayout from '@/layouts/TopBottomLayout.vue';
 import DateFieldNav from '@/fields/DateFieldNav.vue';
-import DescriptiveForm from '@/forms/DescriptiveForm.vue';
 import api from '@/api';
 import directionsPoint from '@/api/directions-point';
-import usePrint from '@/hooks/usePrint';
-import useNotify from '@/hooks/useNotify';
 import useLoader from '@/hooks/useLoader';
-import { vField, vGroup } from '@/components/visibility-triggers';
+import useOn from '@/hooks/useOn';
 
 import RequestCard, { type Request } from './RequestCard.vue';
 
-const root = getCurrentInstance().proxy.$root;
 const date = ref(moment().format('DD.MM.YYYY'));
 const requestsDone = ref<Request[]>([]);
 const requestsWait = ref<Request[]>([]);
@@ -234,12 +166,10 @@ const selectedRequest = ref<Request | null>(null);
 const formData = ref<any>(null);
 const formLoading = ref(false);
 const requestParams = ref<any>(null);
+const numberToSearch = ref<string>('');
 let refreshInterval: any = null;
 
 const loader = useLoader();
-
-const { printResults: doPrintResults } = usePrint();
-const notify = useNotify();
 
 const filteredWaitRequests = computed(() => {
   if (showAccepted.value) {
@@ -274,13 +204,15 @@ const loadAllRequests = async () => {
   requestsDone.value = doneRequests;
 };
 
+useOn('change-document-state', loadAllRequests);
+
 const startAutoRefresh = () => {
   if (refreshInterval) {
     clearInterval(refreshInterval);
   }
   refreshInterval = setInterval(() => {
     loadAllRequests();
-  }, 30000);
+  }, 10000);
 };
 
 const stopAutoRefresh = () => {
@@ -338,115 +270,17 @@ const handleCardClick = (request: Request) => {
   loadRequestParams(request.id);
 };
 
-const printResults = (requestId: number) => {
-  doPrintResults([requestId]);
-};
-
-const visibilityState = (research: any) => {
-  const groups = {};
-  const fields = {};
-  const { groups: igroups } = research.research;
-
-  for (const group of research.research.groups) {
-    if (!vGroup(group, igroups, formData.value.patient)) {
-      groups[group.pk] = false;
-    } else {
-      groups[group.pk] = true;
-      for (const field of group.fields) {
-        fields[field.pk] = vField(group, igroups, field.visibility, formData.value.patient);
-      }
-    }
-  }
-
-  return {
-    groups,
-    fields,
-  };
-};
-
-const saveResearch = async (research: any) => {
-  if (!formData.value) return;
-
-  try {
-    const response = await directionsPoint.paraclinicResultSave({
-      data: {
-        ...research,
-        direction: {
-          pk: selectedRequest.value.id,
-          all_confirmed: false,
-        },
-      },
-      with_confirm: false,
-      visibility_state: visibilityState(research),
+const searchByNumber = async () => {
+  if (numberToSearch.value) {
+    const { request } = await api('requests/by-number', {
+      number: numberToSearch.value,
     });
 
-    if (response.ok) {
-      notify.ok('Сохранено');
-      loadFormData(selectedRequest.value.id);
-      loadAllRequests();
-    } else {
-      notify.error(response.message);
-    }
-  } catch (error) {
-    notify.error('Ошибка сохранения');
-  }
-};
-
-const saveAndConfirmResearch = async (research: any) => {
-  if (!formData.value) return;
-
-  try {
-    const response = await directionsPoint.paraclinicResultSave({
-      data: {
-        ...research,
-        direction: {
-          pk: selectedRequest.value.id,
-          all_confirmed: false,
-        },
-      },
-      with_confirm: true,
-      visibility_state: visibilityState(research),
-    });
-
-    if (response.ok) {
-      notify.ok('Сохранено');
-      notify.ok('Подтверждено');
-      loadFormData(selectedRequest.value.id);
-      loadAllRequests();
-    } else {
-      notify.error(response.message);
-    }
-  } catch (error) {
-    notify.error('Ошибка сохранения и подтверждения');
-  }
-};
-
-const resetConfirmResearch = async (research: any) => {
-  if (!formData.value) return;
-
-  try {
-    try {
-      await root.$dialog.confirm(`Подтвердите сброс подтверждения услуги «${research.research.title}»`);
-    } catch (_) {
-      return;
+    if (request) {
+      handleCardClick(request);
     }
 
-    loader.inc();
-    const response = await directionsPoint.paraclinicResultConfirmReset({
-      iss_pk: research.pk,
-    });
-
-    if (response.ok) {
-      notify.ok('Подтверждение сброшено');
-      loadFormData(selectedRequest.value.id);
-      loadAllRequests();
-    } else {
-      notify.error(response.message);
-    }
-  } catch (error) {
-    notify.error('Ошибка сброса подтверждения');
-  } finally {
-    loader.dec();
+    numberToSearch.value = '';
   }
 };
 
@@ -703,5 +537,33 @@ onBeforeUnmount(() => {
 
 .status-confirmed {
   color: #049372
+}
+
+.search {
+  flex: 0 0 34px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+
+  input,
+  button {
+    align-self: stretch;
+    border: none;
+    border-radius: 0;
+  }
+
+  input {
+    border-bottom: 1px solid #b1b1b1;
+    width: 166px !important;
+    flex: 2 166px;
+    min-width: 0;
+  }
+
+  button {
+    flex: 3 94px;
+    width: 94px;
+  }
 }
 </style>

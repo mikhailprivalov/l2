@@ -41,6 +41,9 @@
         </div>
       </div>
       <div class="research-row">
+        <span class="request-id">{{ props.request.id }}</span> {{ props.request.patient }}
+      </div>
+      <div class="research-row">
         {{ props.request.research }}
       </div>
     </div>
@@ -55,6 +58,7 @@ import useNotify from '@/hooks/useNotify';
 
 export type Request = {
   id: number;
+  patient: string;
   clinic: string;
   datetime: string;
   research: string;
@@ -200,5 +204,14 @@ const handleCardClick = (event: Event) => {
   color: white;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+.request-id {
+  font-size: 13px;
+  color: #049372;
+  font-weight: 600;
+  background: #f0f9f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
 }
 </style>
