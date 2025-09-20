@@ -329,8 +329,9 @@ def link_image_to_request(request):
                 return status_response(False, "Заявка не найдена")
 
             for iss in napravleniye.issledovaniya_set.all():
+                iss.study_instance_uid = equipment_receive.study_instance_uid_tag
                 iss.study_instance_uid_tag = equipment_receive.study_instance_uid_tag
-                iss.save(update_fields=['study_instance_uid_tag'])
+                iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
 
             equipment_receive.napravleniye = napravleniye
             equipment_receive.doc_save_link = request.user.doctorprofile
@@ -343,7 +344,9 @@ def link_image_to_request(request):
         else:
             if equipment_receive.napravleniye:
                 for iss in equipment_receive.napravleniye.issledovaniya_set.all():
+                    iss.study_instance_uid = None
                     iss.study_instance_uid_tag = None
+                    iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
                 equipment_receive.napravleniye = None
             equipment_receive.doc_reset_link = request.user.doctorprofile
             equipment_receive.time_reset_link = timezone.now()
