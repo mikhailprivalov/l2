@@ -15,4 +15,5 @@ urlpatterns = [
     path('accept', views.accept_request),
     path('cancel-accept', views.cancel_accept_request),
     path('params', views.get_request_params),
+    path('permissions-doctor', views.get_permissions_doctor),
 ]

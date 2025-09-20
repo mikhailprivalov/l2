@@ -113,7 +113,7 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
                 patronymic=obj.patronymic,
                 birthday=obj.birthday,
                 sex=obj.sex,
-                patient_id=obj.patient_id,
+                patient_id=obj.tag_patient_id,
                 order_id=obj.order_id,
             )
             new_obj.save()
