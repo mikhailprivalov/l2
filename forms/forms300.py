@@ -102,8 +102,8 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict) -> None
             Paragraph("", style_right),
             Paragraph(f"{document_month_name} {document_year} год", style_center),
             Paragraph("", style_right),
-            Paragraph("", style_right)
-        ]
+            Paragraph("", style_right),
+        ],
     ]
 
     col_widths = [
