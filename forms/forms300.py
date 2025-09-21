@@ -17,78 +17,87 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     Функция создания мета информации для печатной формы графика-табеля
     """
     # TODO изменить под график
+
+    style_right = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="right")
+    style_left = create_style(font_size=6, leading=6, space_after=0, space_before=0)
+    style_left_bottom_bold = create_style(font_name="PTAstraSerifBold", font_size=6, leading=6, space_after=0, space_before=0)
+    style_center_bold = create_style(font_name="PTAstraSerifBold", font_size=9, leading=9, space_after=0, space_before=0, alignment="center")
     canvas.saveState()
     text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", context.get("style_left"))
     if is_first_page:
-        text.wrapOn(canvas, 260 * mm, 191 * mm)
-        text.drawOn(canvas, 260 * mm, 191 * mm)
+        text.wrapOn(canvas, 256 * mm, 197 * mm)
+        text.drawOn(canvas, 256 * mm, 197 * mm)
     else:
-        text.wrapOn(canvas, 260 * mm, 195 * mm)
-        text.drawOn(canvas, 260 * mm, 195 * mm)
+        text.wrapOn(canvas, 256 * mm, 201 * mm)
+        text.drawOn(canvas, 256 * mm, 201 * mm)
+    date_now: datetime.datetime = context.get("date_now")
+    current_day = date_now.day
+    current_year = date_now.year
+    month_name = context.get("month_name")
     table_data = [
         [
             Paragraph("", context.get("style_left")),
-            Paragraph("Председатель ППО", context.get("style_left")),
+            Paragraph("Председатель ППО", style_right),
             Paragraph("", context.get("style_center_bold")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("УТВЕРЖДАЮ", context.get("style_left")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("УТВЕРЖДАЮ", style_left),
+            Paragraph("", context.get("style_left")),
         ],
         [
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
-            Paragraph("ГРАФИК РАБОЧЕГО ВРЕМЕНИ", context.get("style_center_bold")),
-            Paragraph("Руководитель учреждения", context.get("style_left_bold")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("ГРАФИК РАБОЧЕГО ВРЕМЕНИ", style_center_bold),
+            Paragraph("Руководитель учреждения", style_left_bottom_bold),
+            Paragraph("", context.get("style_left")),
         ],
         [
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
-            Paragraph("", context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
-            Paragraph("подпись", context.get("style_right")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("подпись", style_right),
         ],
         [
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
             Paragraph(f"{context.get('organization_title')}", context.get("style_center")),
-            Paragraph("'____'_______________________2025г.", context.get("style_right")),  # TODO подставлять дату
+            Paragraph(f'"{current_day}"{month_name} {current_year}г.', context.get("style_right")),
             Paragraph("", context.get("style_center_title")),
         ],
         [
             Paragraph("&nbsp;", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph(" ", context.get("style_center")),
-            Paragraph(" ", context.get("style_right")),
-            Paragraph(" ", context.get("style_center_title")),
-            Paragraph(" ", context.get("style_center_title")),
+            Paragraph(" ", context.get("style_left")),
+            Paragraph(" ", context.get("style_left")),
+            Paragraph(" ", context.get("style_left")),
         ],
         [
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center_bold")),
             Paragraph(f"{context.get('department_title')}", context.get("style_center")),
-            Paragraph("календарных дней", context.get("style_left")),  # TODO кол-во дней в месяце
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("календарных дней", style_left),  # TODO кол-во дней в месяце графика
+            Paragraph("", context.get("style_left")),
         ],
         [
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_center")),
             Paragraph("(подразделение)", context.get("style_center")),
-            Paragraph("Рабочих дней", context.get("style_left")),  # TODO кол-во рабочих дней
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("рабочих дней", style_left),  # TODO кол-во рабочих дней из графика
+            Paragraph("", context.get("style_left")),
         ],
         [
             Paragraph("", context.get("style_left")),
             Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center_sup")),
-            Paragraph("__________________ 2025 год", context.get("style_center")),  #TODO месяц и год
-            Paragraph("", context.get("style_center_title")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("", context.get("style_left")),
+            Paragraph("__________________ 2025 год", context.get("style_center")),  #TODO месяц и год графика
+            Paragraph("", context.get("style_left")),
+            Paragraph("", context.get("style_left")),
         ]
     ]
 
@@ -97,17 +106,20 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         19 * mm,
         21 * mm,
         144 * mm,
-        30 * mm,
+        26.5 * mm,
         30 * mm,
     ]
     table_style = [
-        # ("LINEBELOW", (1, 4), (1, 6), 0.75, colors.black),
         # ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),  # TODO убедиться что работает
-        ("LEFTPADDING", (0, 0), (-1, -1), 1),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("VALIGN", (4, 1), (4, 1), "BOTTOM"),
+        ("VALIGN", (5, 2), (5, 2), "TOP"),
+        ("VALIGN", (4, 5), (4, 6), "BOTTOM"),
+        ("TOPPADDING", (5, 2), (5, 2), 0),
+        ("BOTTOMPADDING", (5, 2), (5, 2), 6),
+
         ("RIGHTPADDING", (0, 0), (-1, -1), 1),
-        ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
-        ("TOPPADDING", (0, 0), (-1, -1), -1),
+        ("LEFTPADDING", (0, 0), (-1, -1), 1),
         ("SPAN", (4, 3), (5, 3)),
         ("LINEBELOW", (2, 0), (2, 0), 0.75, colors.black),
         ("LINEBELOW", (5, 1), (5, 1), 0.75, colors.black),
@@ -157,7 +169,7 @@ def form_01(request_data):
     last_day_month = calendar.monthrange(current_year, current_month)[1]
     tabel_type = "первичный"  # TODO Этого нет в графике
     department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
-    date_now = datetime.datetime.now().strftime('%d.%m.%Y')  # TODO не актуально
+    date_now = datetime.datetime.now()  # TODO не из документа а время печати?
     main_doctor = "Новожилов В.А."  # TODO динамически
     head_department = "Преториус Т.Л."  # TODO Из документа
     old_sestra = "Тотьямина Д.С."  # TODO из документа, переименовать
