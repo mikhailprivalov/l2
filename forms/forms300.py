@@ -147,7 +147,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     canvas.restoreState()
 
 
-def _create_work_time_schedule_table(style_center, document_last_day_month: int):
+def _create_wts_table_header(style_center, document_last_day_month):
     second_row_data = [
         Paragraph("", style_center),
         Paragraph("", style_center),
@@ -166,7 +166,7 @@ def _create_work_time_schedule_table(style_center, document_last_day_month: int)
     second_row_data.extend(date_month_start)
     second_row_data.extend(summ_all)
 
-    working_time_schedule_data = [
+    header_table_data = [
         [
             Paragraph("№ п/п", style_center),
             Paragraph("Фамилия, имя, отчество", style_center),
@@ -179,9 +179,17 @@ def _create_work_time_schedule_table(style_center, document_last_day_month: int)
         ],
         second_row_data,
     ]
-    # TODO здесь данные собирать и добавлять в working_time_schedule_data
 
-    working_time_schedule_style = [
+    return header_table_data
+
+
+def _create_wts_table_body():
+    # TODO здесь будут данные
+    return [[]]
+
+
+def _create_wts_table_style():
+    table_style = [
         ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("SPAN", (0, 0), (0, 1)),
@@ -197,7 +205,10 @@ def _create_work_time_schedule_table(style_center, document_last_day_month: int)
         ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
         ("TOPPADDING", (0, 0), (-1, -1), -1),
     ]
+    return table_style
 
+
+def _create_wts_table_cols_widths(document_last_day_month: int) -> list:
     item_number_col_width = 8 * mm
     fio_col_width = 17 * mm
     position_col_width = 15 * mm
@@ -208,7 +219,7 @@ def _create_work_time_schedule_table(style_center, document_last_day_month: int)
     dates_col_widths = [None for _ in range(1, document_last_day_month + 1)]  # 5.6 норм
     amount_hours_col_width = 14 * mm
     employees_signature = 15 * mm
-    col_widths = [
+    cols_widths = [
         item_number_col_width,
         fio_col_width,
         position_col_width,
@@ -220,8 +231,17 @@ def _create_work_time_schedule_table(style_center, document_last_day_month: int)
         amount_hours_col_width,
         employees_signature
     ]
+    return cols_widths
 
-    table = create_table(working_time_schedule_data, working_time_schedule_style, col_widths, "LEFT", 1, 3)
+
+def _create_work_time_schedule_table(style_center, document_last_day_month: int):
+    data = [
+        *_create_wts_table_header(style_center, document_last_day_month),
+        *_create_wts_table_body()
+    ]
+    style = _create_wts_table_style()
+    cols_widths = _create_wts_table_cols_widths(document_last_day_month)
+    table = create_table(data, style, cols_widths, "LEFT", 1, 3)
     return table
 
 
@@ -246,7 +266,7 @@ def form_01(request_data):
     work_time_schedule_table = _create_work_time_schedule_table(style_center, document_last_day_month)
     document_data = [work_time_schedule_table]
 
-    context = {
+    meta_context = {
         "document_year": document_year,
         "document_month_name": document_month_name,
         "document_last_day_month": document_last_day_month,
@@ -257,10 +277,10 @@ def form_01(request_data):
     }
 
     def first_pages(canvas, doc):
-        _create_meta_information(canvas, True, context)
+        _create_meta_information(canvas, True, meta_context)
 
     def later_pages(canvas, doc):
-        _create_meta_information(canvas, False, context)
+        _create_meta_information(canvas, False, meta_context)
 
     buffer = BytesIO()
     document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=32 * mm, bottomMargin=43 * mm, title="График рабочего времени")
