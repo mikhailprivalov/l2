@@ -101,7 +101,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph("", style_right),
             Paragraph(f"{document_month_name} {document_year} год", style_center),
             Paragraph("", style_right),
-            Paragraph("", style_right),
+            Paragraph("", style_right)
         ]
     ]
 
@@ -128,7 +128,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         ("LINEBELOW", (5, 1), (5, 1), 0.75, colors.black),
         ("LINEBELOW", (0, 5), (4, 5), 0.75, colors.black),
         ("LINEBELOW", (4, 6), (4, 6), 0.75, colors.black),
-        *department_title_style
+        *department_title_style,
     ]
     table = create_table(header_table_data, header_table_style, col_widths)
     if is_first_page:
@@ -175,7 +175,7 @@ def _create_wts_table_header(style_center, document_last_day_month):
             Paragraph("Занимаемый объем (согл ТД), шт ед", style_center),
             Paragraph("Норма часов на занимаемый объем", style_center),
             Paragraph("Рабочая смена", style_center),
-            Paragraph("Числа месяца", style_center)
+            Paragraph("Числа месяца", style_center),
         ],
         second_row_data,
     ]
@@ -229,7 +229,7 @@ def _create_wts_table_cols_widths(document_last_day_month: int) -> list:
         working_shift_col_width,
         *dates_col_widths,
         amount_hours_col_width,
-        employees_signature
+        employees_signature,
     ]
     return cols_widths
 
