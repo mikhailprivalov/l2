@@ -152,7 +152,6 @@ def form_01(request_data):
     """
     Создание печатной формы графика рабочего времени
     """
-    # TODO Изменить таблицу табеля на таблицу графика в форме (кол-во колонок, названия)
     register_fonts()
     style = create_style(font_size=10, alignment="justify")
     style_center = create_style(style, alignment="center")
@@ -161,8 +160,8 @@ def form_01(request_data):
     document_data = []
     document_date = datetime.datetime.now()  # TODO Брать из документа
     document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
-    document_year = document_date.year  # TODO год из документа
-    document_month = document_date.month  # TODO месяц из документа
+    document_year = document_date.year
+    document_month = document_date.month
     last_day_month = calendar.monthrange(document_year, document_month)[1]
     department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
     organization: Hospitals = request_data.get("hospital")
