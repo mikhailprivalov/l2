@@ -292,7 +292,7 @@ def form_01(request_data):
         _create_meta_information(canvas, False, context)
 
     buffer = BytesIO()
-    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=56 * mm, bottomMargin=43 * mm, title="График рабочего времени")
+    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=32 * mm, bottomMargin=43 * mm, title="График рабочего времени")
     document.build(document_data, first_pages, later_pages)
     pdf = buffer.getvalue()
     buffer.close()
