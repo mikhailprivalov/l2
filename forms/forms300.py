@@ -21,9 +21,10 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     style_right = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="right")
     style_left = create_style(font_size=6, leading=6, space_after=0, space_before=0)
     style_left_bottom_bold = create_style(font_name="PTAstraSerifBold", font_size=6, leading=6, space_after=0, space_before=0)
-    style_center_bold = create_style(font_name="PTAstraSerifBold", font_size=9, leading=9, space_after=0, space_before=0, alignment="center")
+    style_center = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="center")
+    style_center_header_bold = create_style(style_center,font_name="PTAstraSerifBold", font_size=9, leading=9)
     canvas.saveState()
-    text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", context.get("style_left"))
+    text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", style_left)
     if is_first_page:
         text.wrapOn(canvas, 256 * mm, 197 * mm)
         text.drawOn(canvas, 256 * mm, 197 * mm)
@@ -36,73 +37,73 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     month_name = context.get("month_name")
     table_data = [
         [
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
             Paragraph("Председатель ППО", style_right),
-            Paragraph("", context.get("style_center_bold")),
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_center_header_bold),
+            Paragraph("", style_right),
             Paragraph("УТВЕРЖДАЮ", style_left),
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center")),
-            Paragraph("ГРАФИК РАБОЧЕГО ВРЕМЕНИ", style_center_bold),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("", style_center_header_bold),
+            Paragraph("ГРАФИК РАБОЧЕГО ВРЕМЕНИ", style_center_header_bold),
             Paragraph("Руководитель учреждения", style_left_bottom_bold),
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("", style_center_header_bold),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
             Paragraph("подпись", style_right),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center")),
-            Paragraph(f"{context.get('organization_title')}", context.get("style_center")),
-            Paragraph(f'"{current_day}"{month_name} {current_year}г.', context.get("style_right")),
-            Paragraph("", context.get("style_center_title")),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph(f"{context.get('organization_title')}", style_center_header_bold),
+            Paragraph(f'"{current_day}"{month_name} {current_year}г.', style_right),
+            Paragraph("", style_right),
         ],
         [
-            Paragraph("&nbsp;", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph(" ", context.get("style_center")),
-            Paragraph(" ", context.get("style_left")),
-            Paragraph(" ", context.get("style_left")),
-            Paragraph(" ", context.get("style_left")),
+            Paragraph("&nbsp;", style_right),
+            Paragraph("", style_right),
+            Paragraph(" ", style_right),
+            Paragraph(" ", style_right),
+            Paragraph(" ", style_right),
+            Paragraph(" ", style_right),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center_bold")),
-            Paragraph(f"{context.get('department_title')}", context.get("style_center")),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph(f"{context.get('department_title')}", style_center_header_bold),
             Paragraph("календарных дней", style_left),  # TODO кол-во дней в месяце графика
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_center")),
-            Paragraph("(подразделение)", context.get("style_center")),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("", style_center),
+            Paragraph("(подразделение)", style_center),
             Paragraph("рабочих дней", style_left),  # TODO кол-во рабочих дней из графика
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
         ],
         [
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
-            Paragraph("__________________ 2025 год", context.get("style_center")),  #TODO месяц и год графика
-            Paragraph("", context.get("style_left")),
-            Paragraph("", context.get("style_left")),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("", style_right),
+            Paragraph("__________________ 2025 год", style_center),  # TODO месяц и год графика
+            Paragraph("", style_right),
+            Paragraph("", style_right),
         ]
     ]
 
     col_widths = [
-        context.get("item_number_col_width"),
+        8 * mm,
         19 * mm,
         21 * mm,
         144 * mm,
@@ -115,8 +116,10 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         ("VALIGN", (4, 1), (4, 1), "BOTTOM"),
         ("VALIGN", (5, 2), (5, 2), "TOP"),
         ("VALIGN", (4, 5), (4, 6), "BOTTOM"),
-        ("TOPPADDING", (5, 2), (5, 2), 0),
-        ("BOTTOMPADDING", (5, 2), (5, 2), 6),
+        # ("TOPPADDING", (5, 2), (5, 2), 0),
+        # ("BOTTOMPADDING", (5, 2), (5, 2), -1),
+        ("TOPPADDING", (0, 0), (-1, -1), 1),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
 
         ("RIGHTPADDING", (0, 0), (-1, -1), 1),
         ("LEFTPADDING", (0, 0), (-1, -1), 1),
@@ -287,30 +290,14 @@ def form_01(request_data):
     document_data.append(table)
 
     context = {
-        "department_table_number": department_table_number,
         "month_name": month_name,
-        "current_year": current_year,
-        "first_day_month": first_day_month,
-        "last_day_month": last_day_month,
         "date_now": date_now,
         "organization_title": organization_title,
         "department_title": department_title,
-        "tabel_type": tabel_type,
-        "main_doctor": main_doctor,
         "head_department": head_department,
         "old_sestra": old_sestra,
-        "hr_specialist": hr_specialist,
-        "style_left": style_left,
-        "style_left_bold": style_left_bold,
-        "style_right": style_right,
-        "style_center": style_center,
-        "style_center_bold": style_center_bold,
-        "style_center_title": style_center_title,
-        "style_center_sup": style_center_sup,
-        "style_right_bold": style_right_bold,
         "order_appendix_number": order_appendix_number,
         "order_date": order_date,
-        "item_number_col_width": item_number_col_width,
     }
 
     def first_pages(canvas, doc):
