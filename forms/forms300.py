@@ -31,10 +31,12 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     else:
         text.wrapOn(canvas, 256 * mm, 201 * mm)
         text.drawOn(canvas, 256 * mm, 201 * mm)
-    date_now: datetime.datetime = context.get("date_now")
-    current_day = date_now.day
-    current_year = date_now.year
-    month_name = context.get("month_name")
+    current_date = datetime.datetime.now()
+    current_month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=current_date)
+    current_day = current_date.day
+    current_year = current_date.year
+    document_year = context.get("document_year")
+    document_month_name = context.get("document_month_name")
     table_data = [
         [
             Paragraph("", style_right),
@@ -65,7 +67,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph("", style_right),
             Paragraph("", style_right),
             Paragraph(f"{context.get('organization_title')}", style_center_header_bold),
-            Paragraph(f'"{current_day}"{month_name} {current_year}г.', style_right),
+            Paragraph(f'"{current_day}"{current_month_name} {current_year}г.', style_right),
             Paragraph("", style_right),
         ],
         [
@@ -96,7 +98,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph("", style_right),
             Paragraph("", style_right),
             Paragraph("", style_right),
-            Paragraph("__________________ 2025 год", style_center),  # TODO месяц и год графика
+            Paragraph(f"{document_month_name} {document_year} год", style_center),
             Paragraph("", style_right),
             Paragraph("", style_right),
         ]
@@ -111,7 +113,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         30 * mm,
     ]
     table_style = [
-        # ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
+        ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("VALIGN", (4, 1), (4, 1), "BOTTOM"),
         ("VALIGN", (5, 2), (5, 2), "TOP"),
@@ -157,12 +159,12 @@ def form_01(request_data):
     style_center_data = create_style(style_center, font_size=6)
 
     document_data = []
-    month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now())  # TODO месяц надо получать из документа который приходит в запросе
-    current_year = datetime.date.today().year  # TODO год из документа
-    current_month = datetime.date.today().month  # TODO месяц из документа
-    last_day_month = calendar.monthrange(current_year, current_month)[1]
+    document_date = datetime.datetime.now()  # TODO Брать из документа
+    document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
+    document_year = document_date.year  # TODO год из документа
+    document_month = document_date.month  # TODO месяц из документа
+    last_day_month = calendar.monthrange(document_year, document_month)[1]
     department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
-    date_now = datetime.datetime.now()  # TODO не из документа а время печати?
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
     order_appendix_number = "2"
@@ -276,8 +278,8 @@ def form_01(request_data):
     document_data.append(table)
 
     context = {
-        "month_name": month_name,
-        "date_now": date_now,
+        "document_year": document_year,
+        "document_month_name": document_month_name,
         "organization_title": organization_title,
         "department_title": department_title,
         "order_appendix_number": order_appendix_number,
