@@ -1,20 +1,21 @@
 import calendar
 import datetime
 from io import BytesIO
+from typing import List, Tuple
 
 import pytils
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
 
 from forms.utils import register_fonts, create_style, create_table
 from hospitals.models import Hospitals
 
 
-def _create_meta_information(canvas, is_first_page: bool, context: dict):
+def _create_meta_information(canvas, is_first_page: bool, context: dict) -> None:
     """
-    Функция создания мета информации для печатной формы графика-табеля
+    Функция добавления мета информации для печатной формы графика
     """
 
     style_right = create_style(font_size=6, leading=6, alignment="right")
@@ -147,7 +148,8 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     canvas.restoreState()
 
 
-def _create_wts_table_header(style_center, document_last_day_month):
+def _create_wts_table_header(style_center, document_last_day_month: int) -> List[List[Paragraph]]:
+    """Создание заголовков таблицы графика"""
     second_row_data = [
         Paragraph("", style_center),
         Paragraph("", style_center),
@@ -183,12 +185,14 @@ def _create_wts_table_header(style_center, document_last_day_month):
     return header_table_data
 
 
-def _create_wts_table_body():
+def _create_wts_table_body() -> List[List[Paragraph]]:
+    """Создание тела таблицы графика"""
     # TODO здесь будут данные
     return [[]]
 
 
-def _create_wts_table_style():
+def _create_wts_table_style() -> List[Tuple]:
+    """Создание стилей таблицы графика"""
     table_style = [
         ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -208,7 +212,8 @@ def _create_wts_table_style():
     return table_style
 
 
-def _create_wts_table_cols_widths(document_last_day_month: int) -> list:
+def _create_wts_table_cols_widths(document_last_day_month: int) -> List[float]:
+    """Создание списка ширин колонок таблицы графика"""
     item_number_col_width = 8 * mm
     fio_col_width = 17 * mm
     position_col_width = 15 * mm
@@ -234,7 +239,10 @@ def _create_wts_table_cols_widths(document_last_day_month: int) -> list:
     return cols_widths
 
 
-def _create_work_time_schedule_table(style_center, document_last_day_month: int):
+def _create_work_time_schedule_table(style_center, document_last_day_month: int) -> Table:
+    """
+    Создание таблицы графика
+    """
     data = [
         *_create_wts_table_header(style_center, document_last_day_month),
         *_create_wts_table_body()
