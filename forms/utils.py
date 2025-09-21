@@ -33,8 +33,9 @@ def register_fonts(fonts: List[Dict[str, str]] = None) -> None:
     return None
 
 
-def create_style(base: any = BASE_STYLE, font_name: str = None, font_size: Number = None, leading: Number = None, alignment: str = None, space_before: Number = None,
-                 space_after: Number = None):
+def create_style(
+    base: any = BASE_STYLE, font_name: str = None, font_size: Number = None, leading: Number = None, alignment: str = None, space_before: Number = None, space_after: Number = None
+):
     """
     Создание копии базового стиля с необходимыми параметрами, alignment - ["left", "center", "right", "justify"]
     """
