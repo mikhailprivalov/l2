@@ -84,7 +84,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph("", style_right),
             Paragraph("", style_right),
             Paragraph(f"{context.get('department_title')}", style_center_header_bold),
-            Paragraph(f"календарных дней {document_last_day_month}", style_left),  # TODO кол-во дней в месяце графика
+            Paragraph(f"календарных дней {document_last_day_month}", style_left),
             Paragraph("", style_right),
         ],
         [
@@ -139,10 +139,10 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         table.drawOn(canvas, 7 * mm, 179 * mm)
     canvas.setFont("PTAstraSerifReg", 8)
 
-    canvas.drawString(11 * mm, 41 * mm, "Заведующий отделением")
-    canvas.line(42 * mm, 40 * mm, 72 * mm, 40 * mm)
-    canvas.drawString(110 * mm, 41 * mm, "Старшая медицинская сестра")
-    canvas.line(146 * mm, 40 * mm, 176 * mm, 40 * mm)
+    canvas.drawString(11 * mm, 10 * mm, "Заведующий отделением")
+    canvas.line(42 * mm, 9 * mm, 72 * mm, 9 * mm)
+    canvas.drawString(110 * mm, 10 * mm, "Старшая медицинская сестра")
+    canvas.line(146 * mm, 9 * mm, 176 * mm, 9 * mm)
 
     canvas.restoreState()
 
