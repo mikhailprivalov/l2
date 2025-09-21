@@ -153,7 +153,7 @@ def form_01(request_data):
     """
     register_fonts()
     style = create_style(font_size=10, alignment="justify")
-    style_center = create_style(style, font_size=6, alignment="center")
+    style_center = create_style(style, font_size=6, leading=6, alignment="center")
 
     document_data = []
     document_date = datetime.datetime.now()  # TODO Брать из документа
