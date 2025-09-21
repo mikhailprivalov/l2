@@ -154,29 +154,15 @@ def form_01(request_data):
     register_fonts()
     style = create_style(font_size=10, alignment="justify")
     style_center = create_style(style, alignment="center")
-    style_center_bold = create_style(style_center, "PTAstraSerifBold")
-    style_center_title = create_style(style_center, font_size=7)
-    style_center_sup = create_style(style_center, font_size=5)
     style_center_data = create_style(style_center, font_size=6)
-    style_left = create_style(font_size=6)
-    style_left_bold = create_style(style_left, "PTAstraSerifBold")
-    style_right = create_style(style_left, alignment="right")
-    style_right_bold = create_style(style_right, "PTAstraSerifBold")
 
     document_data = []
-    department_table_number = 27  # TODO не актуально?
     month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=datetime.datetime.now())  # TODO месяц надо получать из документа который приходит в запросе
     current_year = datetime.date.today().year  # TODO год из документа
     current_month = datetime.date.today().month  # TODO месяц из документа
-    first_day_month = 1
     last_day_month = calendar.monthrange(current_year, current_month)[1]
-    tabel_type = "первичный"  # TODO Этого нет в графике
     department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
     date_now = datetime.datetime.now()  # TODO не из документа а время печати?
-    main_doctor = "Новожилов В.А."  # TODO динамически
-    head_department = "Преториус Т.Л."  # TODO Из документа
-    old_sestra = "Тотьямина Д.С."  # TODO из документа, переименовать
-    hr_specialist = "Краснова С.А."  # TODO не актуально
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
     order_appendix_number = "2"
@@ -294,8 +280,6 @@ def form_01(request_data):
         "date_now": date_now,
         "organization_title": organization_title,
         "department_title": department_title,
-        "head_department": head_department,
-        "old_sestra": old_sestra,
         "order_appendix_number": order_appendix_number,
         "order_date": order_date,
     }
