@@ -147,26 +147,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     canvas.restoreState()
 
 
-def form_01(request_data):
-    """
-    Создание печатной формы графика рабочего времени
-    """
-    register_fonts()
-    style = create_style(font_size=10, alignment="justify")
-    style_center = create_style(style, font_size=6, leading=6, alignment="center")
-
-    document_data = []
-    document_date = datetime.datetime.now()  # TODO Брать из документа
-    document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
-    document_year = document_date.year
-    document_month = document_date.month
-    document_last_day_month = calendar.monthrange(document_year, document_month)[1]
-    department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
-    organization: Hospitals = request_data.get("hospital")
-    organization_title = organization.safe_short_title
-    order_appendix_number = "2"
-    order_date = "от '20' февраля 2025 г №37"
-
+def _create_work_time_schedule_table(style_center, document_last_day_month: int):
     second_row_data = [
         Paragraph("", style_center),
         Paragraph("", style_center),
@@ -198,35 +179,7 @@ def form_01(request_data):
         ],
         second_row_data,
     ]
-    # TODO Здесь заполнение таблицы данными, с объединением строк по фио (одно фио, две должности) для табеля, необходимо поменять под график
-    # col_span = []
-    # start_row = 3
-    # for data_person in data_json["personData"]:
-    #     row = 0
-    #     for data_employee in data_person["employeeData"]:
-    #         common = []
-    #         fio = data_person["personLastname"] + " " + data_person["personFirstName"] + " " + data_person["personPatronymic"]
-    #         post = data_employee["postTitle"] + " " + data_employee["typePost"]
-    #         common.append(Paragraph(fio, style_center_data))
-    #         common.append(Paragraph(data_employee["tabelNumber"], style_center_data))
-    #         common.append(Paragraph(post, style_center_data_title))
-    #         dates = data_employee["dates"]
-    #         dates.sort()
-    #         tmp_common_hours = ['' for x in range(len(dates))]
-    #         for k, v in data_employee["commonHours"].items():
-    #             pos = dates.index(k)
-    #             tmp_common_hours[pos] = Paragraph(v, style_center_data)
-    #         tmp_common_hours.insert(15, Paragraph('10', style_center_data))
-    #         common.extend(tmp_common_hours)
-    #         common.append(Paragraph('7', style_center_data))
-    #         common.append(Paragraph('46', style_center_data))
-    #         common.append(Paragraph('28', style_center_data))
-    #         common.append(Paragraph('', style_center_data))
-    #         common.append(Paragraph('', style_center_data))
-    #         opinion.append(common)
-    #         row += 1
-    #     col_span.append(('SPAN', (0, start_row), (0, start_row + (row - 1))))
-    #     start_row += row
+    # TODO здесь данные собирать и добавлять в working_time_schedule_data
 
     working_time_schedule_style = [
         ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
@@ -244,7 +197,6 @@ def form_01(request_data):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
         ("TOPPADDING", (0, 0), (-1, -1), -1),
     ]
-    # table_style.extend(col_span)
 
     item_number_col_width = 8 * mm
     fio_col_width = 17 * mm
@@ -270,8 +222,29 @@ def form_01(request_data):
     ]
 
     table = create_table(working_time_schedule_data, working_time_schedule_style, col_widths, "LEFT", 1, 3)
+    return table
 
-    document_data.append(table)
+
+def form_01(request_data):
+    """
+    Создание печатной формы графика рабочего времени
+    """
+    register_fonts()
+    style_center = create_style(font_size=6, leading=6, alignment="center")
+
+    document_date = datetime.datetime.now()  # TODO Брать из документа
+    document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
+    document_year = document_date.year
+    document_month = document_date.month
+    document_last_day_month = calendar.monthrange(document_year, document_month)[1]
+    department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
+    organization: Hospitals = request_data.get("hospital")
+    organization_title = organization.safe_short_title
+    order_appendix_number = "2"
+    order_date = "от '20' февраля 2025 г №37"
+
+    work_time_schedule_table = _create_work_time_schedule_table(style_center, document_last_day_month)
+    document_data = [work_time_schedule_table]
 
     context = {
         "document_year": document_year,
