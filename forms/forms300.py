@@ -16,28 +16,29 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     """
     Функция создания мета информации для печатной формы графика-табеля
     """
-    # TODO изменить под график
 
     style_right = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="right")
-    style_left = create_style(font_size=6, leading=6, space_after=0, space_before=0)
-    style_left_bottom_bold = create_style(font_name="PTAstraSerifBold", font_size=6, leading=6, space_after=0, space_before=0)
+    style_left = create_style(style_right, alignment="left")
+    style_left_bottom_bold = create_style(style_right, font_name="PTAstraSerifBold", alignment="left")
     style_center = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="center")
-    style_center_header_bold = create_style(style_center,font_name="PTAstraSerifBold", font_size=9, leading=9)
+    style_center_header_bold = create_style(style_center, font_name="PTAstraSerifBold", font_size=9, leading=9)
     canvas.saveState()
     text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", style_left)
+    # TODO Надо ли разных страницах разную высоту? 4мм выше на следующих страницах
     if is_first_page:
-        text.wrapOn(canvas, 256 * mm, 197 * mm)
-        text.drawOn(canvas, 256 * mm, 197 * mm)
+        text.wrapOn(canvas, 256 * mm, 203 * mm)
+        text.drawOn(canvas, 256 * mm, 203 * mm)
     else:
-        text.wrapOn(canvas, 256 * mm, 201 * mm)
-        text.drawOn(canvas, 256 * mm, 201 * mm)
+        text.wrapOn(canvas, 256 * mm, 203 * mm)
+        text.drawOn(canvas, 256 * mm, 203 * mm)
     current_date = datetime.datetime.now()
     current_month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=current_date)
     current_day = current_date.day
     current_year = current_date.year
     document_year = context.get("document_year")
     document_month_name = context.get("document_month_name")
-    table_data = [
+    document_last_day_month = context.get("document_last_day_month")
+    header_table_data = [
         [
             Paragraph("", style_right),
             Paragraph("Председатель ППО", style_right),
@@ -83,7 +84,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
             Paragraph("", style_right),
             Paragraph("", style_right),
             Paragraph(f"{context.get('department_title')}", style_center_header_bold),
-            Paragraph("календарных дней", style_left),  # TODO кол-во дней в месяце графика
+            Paragraph(f"календарных дней {document_last_day_month}", style_left),  # TODO кол-во дней в месяце графика
             Paragraph("", style_right),
         ],
         [
@@ -112,17 +113,14 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         26.5 * mm,
         30 * mm,
     ]
-    table_style = [
-        ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
-        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-        ("VALIGN", (4, 1), (4, 1), "BOTTOM"),
-        ("VALIGN", (5, 2), (5, 2), "TOP"),
-        ("VALIGN", (4, 5), (4, 6), "BOTTOM"),
-        # ("TOPPADDING", (5, 2), (5, 2), 0),
-        # ("BOTTOMPADDING", (5, 2), (5, 2), -1),
+    department_title_style = [
+        ("TOPPADDING", (3, 0), (3, -1), 0),
+        ("BOTTOMPADDING", (3, 0), (3, -1), 2.5),
+    ]
+    header_table_style = [
+        ("VALIGN", (4, 2), (4, 2), "BOTTOM"),
         ("TOPPADDING", (0, 0), (-1, -1), 1),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
-
         ("RIGHTPADDING", (0, 0), (-1, -1), 1),
         ("LEFTPADDING", (0, 0), (-1, -1), 1),
         ("SPAN", (4, 3), (5, 3)),
@@ -130,14 +128,15 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
         ("LINEBELOW", (5, 1), (5, 1), 0.75, colors.black),
         ("LINEBELOW", (0, 5), (4, 5), 0.75, colors.black),
         ("LINEBELOW", (4, 6), (4, 6), 0.75, colors.black),
+        *department_title_style
     ]
-    table = create_table(table_data, table_style, col_widths)
+    table = create_table(header_table_data, header_table_style, col_widths)
     if is_first_page:
-        table.wrapOn(canvas, 7 * mm, 156 * mm)
-        table.drawOn(canvas, 7 * mm, 156 * mm)
+        table.wrapOn(canvas, 7 * mm, 179 * mm)
+        table.drawOn(canvas, 7 * mm, 179 * mm)
     else:
-        table.wrapOn(canvas, 7 * mm, 160 * mm)
-        table.drawOn(canvas, 7 * mm, 160 * mm)
+        table.wrapOn(canvas, 7 * mm, 179 * mm)
+        table.drawOn(canvas, 7 * mm, 179 * mm)
     canvas.setFont("PTAstraSerifReg", 8)
 
     canvas.drawString(11 * mm, 41 * mm, "Заведующий отделением")
@@ -162,7 +161,7 @@ def form_01(request_data):
     document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
     document_year = document_date.year
     document_month = document_date.month
-    last_day_month = calendar.monthrange(document_year, document_month)[1]
+    document_last_day_month = calendar.monthrange(document_year, document_month)[1]
     department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
@@ -178,7 +177,7 @@ def form_01(request_data):
         Paragraph("", style_center_data),
         Paragraph("", style_center_data),
     ]
-    date_month_start = [Paragraph(f"{number_day}", style_center_data) for number_day in range(1, last_day_month + 1)]
+    date_month_start = [Paragraph(f"{number_day}", style_center_data) for number_day in range(1, document_last_day_month + 1)]
     summ_all = [
         Paragraph("Количество часов согласно графику", style_center_data),
         Paragraph("Подпись работника", style_center_data),
@@ -256,7 +255,7 @@ def form_01(request_data):
     occupied_volume_col_width = 11 * mm
     norm_hours_col_width = 13 * mm
     working_shift_col_width = 8.7 * mm
-    dates_col_widths = [None for _ in range(1, last_day_month+1)]  # 5.6 норм
+    dates_col_widths = [None for _ in range(1, document_last_day_month + 1)]  # 5.6 норм
     amount_hours_col_width = 14 * mm
     employees_signature = 15 * mm
     col_widths = [
@@ -279,6 +278,7 @@ def form_01(request_data):
     context = {
         "document_year": document_year,
         "document_month_name": document_month_name,
+        "document_last_day_month": document_last_day_month,
         "organization_title": organization_title,
         "department_title": department_title,
         "order_appendix_number": order_appendix_number,
