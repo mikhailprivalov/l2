@@ -243,10 +243,7 @@ def _create_work_time_schedule_table(style_center, document_last_day_month: int)
     """
     Создание таблицы графика
     """
-    data = [
-        *_create_wts_table_header(style_center, document_last_day_month),
-        *_create_wts_table_body()
-    ]
+    data = [*_create_wts_table_header(style_center, document_last_day_month), *_create_wts_table_body()]
     style = _create_wts_table_style()
     cols_widths = _create_wts_table_cols_widths(document_last_day_month)
     table = create_table(data, style, cols_widths, "LEFT", 1, 3)
