@@ -204,9 +204,11 @@ const getEmployeesWorkTime = async () => {
     departmentId: selectedDepartment.value,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const { data, documentIsBlocked, documentIsCreated } = result;
+  const {
+    data, documentPk, documentIsBlocked, documentIsCreated,
+  } = result;
   employeesWorkTime.value = data;
-  documentId.value = documentId
+  documentId.value = documentPk;
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
