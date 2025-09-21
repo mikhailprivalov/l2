@@ -751,7 +751,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
             result = [value for value in result.values()]
             if document.blocked:
                 document_blocked = current_time(True) >= document.blocked
-        return {"data": result, "documentId": document.pk, "documentIsBlocked": document_blocked, "documentIsCreated": document_created}
+        return {"data": result, "documentId": document.pk if document else None, "documentIsBlocked": document_blocked, "documentIsCreated": document_created}
 
     @staticmethod
     def update_time(department_id: int, year: int, month: int, changed_time: dict):
