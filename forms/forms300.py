@@ -153,8 +153,7 @@ def form_01(request_data):
     """
     register_fonts()
     style = create_style(font_size=10, alignment="justify")
-    style_center = create_style(style, alignment="center")
-    style_center_data = create_style(style_center, font_size=6)
+    style_center = create_style(style, font_size=6, alignment="center")
 
     document_data = []
     document_date = datetime.datetime.now()  # TODO Брать из документа
@@ -169,18 +168,18 @@ def form_01(request_data):
     order_date = "от '20' февраля 2025 г №37"
 
     second_row_data = [
-        Paragraph("", style_center_data),
-        Paragraph("", style_center_data),
-        Paragraph("", style_center_data),
-        Paragraph("", style_center_data),
-        Paragraph("", style_center_data),
-        Paragraph("", style_center_data),
-        Paragraph("", style_center_data),
+        Paragraph("", style_center),
+        Paragraph("", style_center),
+        Paragraph("", style_center),
+        Paragraph("", style_center),
+        Paragraph("", style_center),
+        Paragraph("", style_center),
+        Paragraph("", style_center),
     ]
-    date_month_start = [Paragraph(f"{number_day}", style_center_data) for number_day in range(1, document_last_day_month + 1)]
+    date_month_start = [Paragraph(f"{number_day}", style_center) for number_day in range(1, document_last_day_month + 1)]
     summ_all = [
-        Paragraph("Количество часов согласно графику", style_center_data),
-        Paragraph("Подпись работника", style_center_data),
+        Paragraph("Количество часов согласно графику", style_center),
+        Paragraph("Подпись работника", style_center),
     ]
 
     second_row_data.extend(date_month_start)
@@ -188,14 +187,14 @@ def form_01(request_data):
 
     working_time_schedule_data = [
         [
-            Paragraph("№ п/п", style_center_data),
-            Paragraph("Фамилия, имя, отчество", style_center_data),
-            Paragraph("Должность (профессия)", style_center_data),
-            Paragraph("Вид занятости (осн, внутр, внеш)", style_center_data),
-            Paragraph("Занимаемый объем (согл ТД), шт ед", style_center_data),
-            Paragraph("Норма часов на занимаемый объем", style_center_data),
-            Paragraph("Рабочая смена", style_center_data),
-            Paragraph("Числа месяца", style_center_data)
+            Paragraph("№ п/п", style_center),
+            Paragraph("Фамилия, имя, отчество", style_center),
+            Paragraph("Должность (профессия)", style_center),
+            Paragraph("Вид занятости (осн, внутр, внеш)", style_center),
+            Paragraph("Занимаемый объем (согл ТД), шт ед", style_center),
+            Paragraph("Норма часов на занимаемый объем", style_center),
+            Paragraph("Рабочая смена", style_center),
+            Paragraph("Числа месяца", style_center)
         ],
         second_row_data,
     ]
