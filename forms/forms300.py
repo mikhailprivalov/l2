@@ -17,10 +17,10 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict):
     Функция создания мета информации для печатной формы графика-табеля
     """
 
-    style_right = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="right")
+    style_right = create_style(font_size=6, leading=6, alignment="right", space_before=0, space_after=0)
     style_left = create_style(style_right, alignment="left")
     style_left_bottom_bold = create_style(style_right, font_name="PTAstraSerifBold", alignment="left")
-    style_center = create_style(font_size=6, leading=6, space_after=0, space_before=0, alignment="center")
+    style_center = create_style(font_size=6, leading=6, alignment="center", space_before=0, space_after=0)
     style_center_header_bold = create_style(style_center, font_name="PTAstraSerifBold", font_size=9, leading=9)
     canvas.saveState()
     text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", style_left)
