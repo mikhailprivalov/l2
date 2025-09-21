@@ -52,7 +52,7 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
         'get_patient_name',
         'birthday',
         'sex',
-        'patient_id',
+        'tag_patient_id',
         'order_id',
         'doc_save_link',
         'time_save_link',
@@ -80,7 +80,7 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
         'family',
         'name',
         'patronymic',
-        'patient_id',
+        'tag_patient_id',
         'order_id',
     )
     raw_id_fields = (
@@ -113,7 +113,7 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
                 patronymic=obj.patronymic,
                 birthday=obj.birthday,
                 sex=obj.sex,
-                patient_id=obj.patient_id,
+                tag_patient_id=obj.tag_patient_id,
                 order_id=obj.order_id,
             )
             new_obj.save()

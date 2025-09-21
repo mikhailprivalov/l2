@@ -69,8 +69,17 @@ class Command(BaseCommand):
         res = send_gistology_direction_to_ecp(directions_iss)
         self.stdout.write(f"{res}\n")
         count = 0
+        result_send = {}
+        for i in res.get('result'):
+            result_send[i.get('directionId')] = i.get('success')
+
         for n in Napravleniya.objects.filter(pk__in=directions):
-            n.result_rmis_send = True
-            n.save()
-            count += 1
+            if not result_send.get(n.pk):
+                continue
+            elif result_send.get(n.pk):
+                n.result_rmis_send = True
+                n.save()
+                count += 1
+                self.stdout.write("успех")
+
         self.stdout.write(f"{count}\n")

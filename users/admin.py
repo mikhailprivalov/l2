@@ -1,6 +1,16 @@
 from django.contrib import admin
 
-from .models import DoctorProfile, AssignmentTemplates, DoctorProfileEquipment, AssignmentResearches, Speciality, Position, AvailableResearchByGroup, DistrictResearchLimitAssign
+from .models import (
+    DoctorProfile,
+    AssignmentTemplates,
+    DoctorProfileEquipment,
+    AssignmentResearches,
+    Speciality,
+    Position,
+    AvailableResearchByGroup,
+    DistrictResearchLimitAssign,
+    PermissionHospitalProtocolDoctorProfile,
+)
 
 
 class DocAdmin(admin.ModelAdmin):
@@ -52,3 +62,4 @@ admin.site.register(AvailableResearchByGroup)
 admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
 admin.site.register(Position, ResPosition)
 admin.site.register(DoctorProfileEquipment, ResDoctorProfileEquipment)
+admin.site.register(PermissionHospitalProtocolDoctorProfile)

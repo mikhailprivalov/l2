@@ -14,7 +14,7 @@ from utils.response import status_response
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles
 from clients.models import Card
 from integration_framework.models import EquipmentReceive
-from users.models import DoctorProfileEquipment
+from users.models import DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 
 
 @login_required
@@ -86,8 +86,6 @@ def get_requests(request):
 @login_required
 @group_required('Создание и исполнение заявок')
 def get_equipment_list(request):
-    from users.models import DoctorProfileEquipment
-
     doctor_equipments = DoctorProfileEquipment.objects.filter(doctor_profile=request.user.doctorprofile).select_related('equipment')
 
     rows = [
@@ -132,7 +130,7 @@ def get_request_images(request):
 
             base_queryset = EquipmentReceive.objects.filter(
                 created_at__date=search_date,
-                study_instance_uid_tag=equipment.sequence_study_instance_uid,
+                equipment_model=equipment,
             ).select_related('napravleniye__client__individual', 'doc_save_link', 'doc_reset_link')
 
             total = base_queryset.count()
@@ -170,7 +168,7 @@ def get_request_images(request):
                         "patronymic": equipment_receive.patronymic,
                         "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else '',
                         "sex": equipment_receive.sex,
-                        "patientId": equipment_receive.patient_id,
+                        "patientId": equipment_receive.tag_patient_id,
                         "orderId": equipment_receive.order_id,
                         "patient": patient_fio,
                         "datetime": strfdatetime(equipment_receive.created_at),
@@ -197,9 +195,7 @@ def get_image_details(request):
 
     equipment_receive = EquipmentReceive.objects.select_related('napravleniye__client__individual', 'napravleniye__doc', 'doc_save_link', 'doc_reset_link').get(pk=image_id)
 
-    from equipment.models import Equipment
-
-    equipment = Equipment.objects.filter(sequence_study_instance_uid=equipment_receive.study_instance_uid_tag).first()
+    equipment = equipment_receive.equipment_model
 
     if not equipment:
         return JsonResponse({"success": False, "message": "Оборудование не найдено"})
@@ -220,7 +216,7 @@ def get_image_details(request):
         "patronymic": equipment_receive.patronymic,
         "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else None,
         "sex": equipment_receive.sex,
-        "patientId": equipment_receive.patient_id,
+        "patientId": equipment_receive.tag_patient_id,
         "orderId": equipment_receive.order_id,
         "docSaveLink": equipment_receive.doc_save_link.get_fio() if equipment_receive.doc_save_link else None,
         "timeSaveLink": strfdatetime(equipment_receive.time_save_link) if equipment_receive.time_save_link else None,
@@ -315,9 +311,7 @@ def link_image_to_request(request):
     except EquipmentReceive.DoesNotExist:
         return status_response(False, "Изображение не найдено")
 
-    from equipment.models import Equipment
-
-    equipment = Equipment.objects.filter(sequence_study_instance_uid=equipment_receive.study_instance_uid_tag).first()
+    equipment = equipment_receive.equipment_model
 
     if not equipment:
         return status_response(False, "Оборудование не найдено")
@@ -334,6 +328,11 @@ def link_image_to_request(request):
             except Napravleniya.DoesNotExist:
                 return status_response(False, "Заявка не найдена")
 
+            for iss in napravleniye.issledovaniya_set.all():
+                iss.study_instance_uid = equipment_receive.study_instance_uid_tag
+                iss.study_instance_uid_tag = equipment_receive.study_instance_uid_tag
+                iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
+
             equipment_receive.napravleniye = napravleniye
             equipment_receive.doc_save_link = request.user.doctorprofile
             equipment_receive.time_save_link = timezone.now()
@@ -343,7 +342,12 @@ def link_image_to_request(request):
 
             return status_response(True, "Изображение успешно привязано к заявке")
         else:
-            equipment_receive.napravleniye = None
+            if equipment_receive.napravleniye:
+                for iss in equipment_receive.napravleniye.issledovaniya_set.all():
+                    iss.study_instance_uid = None
+                    iss.study_instance_uid_tag = None
+                    iss.save(update_fields=['study_instance_uid', 'study_instance_uid_tag'])
+                equipment_receive.napravleniye = None
             equipment_receive.doc_reset_link = request.user.doctorprofile
             equipment_receive.time_reset_link = timezone.now()
             equipment_receive.save(update_fields=['napravleniye', 'doc_reset_link', 'time_reset_link'])
@@ -499,56 +503,68 @@ def get_unlinked_requests(request):
     return JsonResponse({"rows": rows})
 
 
+def direction_to_request(direction, doctor_profile):
+    research_titles = []
+    for iss in direction.issledovaniya_set.all():
+        if iss.research and iss.research.short_title:
+            research_titles.append(iss.research.short_title)
+        elif iss.research and iss.research.title:
+            research_titles.append(iss.research.title)
+
+    return {
+        "id": direction.pk,
+        "patient": direction.client.individual.fio(short=True),
+        "clinic": direction.doc.get_hospital_title() if direction.doc else "Не указан",
+        "datetime": strfdatetime(direction.data_sozdaniya, "%H:%M"),
+        "research": research_titles[0] if research_titles else "",
+        "cardId": direction.client.pk,
+        "waitFill": not direction.total_confirmed,
+        "cito": direction.is_cito,
+        "accepted": direction.accept_who_doctor is not None,
+        "acceptedAt": strfdatetime(direction.accept_time) if direction.accept_time else None,
+        "acceptedBy": direction.accept_who_doctor.get_fio() if direction.accept_who_doctor else None,
+        "acceptedByCurrentUser": direction.accept_who_doctor == doctor_profile if direction.accept_who_doctor else False,
+    }
+
+
 @login_required
 @group_required("Заполнение заявок")
 def get_requests_by_status(request):
     request_data = json.loads(request.body)
-    date = request_data.get("date")
+    search_date = '-'.join(request_data.get("date").split(".")[::-1])
     is_done = request_data.get("isDone", False)
 
-    directions = Napravleniya.objects.filter(is_request=True).select_related("client__individual", "doc").prefetch_related("issledovaniya_set__research").order_by("-data_sozdaniya")
-
-    if date:
-        try:
-            search_date = datetime.strptime(date, "%d.%m.%Y").date()
-            directions = directions.filter(data_sozdaniya__date=search_date)
-        except ValueError:
-            pass
+    directions = (
+        Napravleniya.objects.filter(is_request=True, equipment_receive__isnull=False, equipment_receive__time_save_link__date=search_date)
+        .select_related("client__individual", "doc")
+        .prefetch_related("issledovaniya_set__research")
+    )
 
     if is_done:
-        directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, issledovaniya__time_confirmation__isnull=False).distinct()
+        directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-equipment_receive__time_save_link").distinct()
     else:
-        directions = directions.filter(issledovaniya__time_confirmation__isnull=True).distinct()
+        directions = directions.filter(total_confirmed=False).order_by("-last_confirmed_at").distinct()
 
     directions_list = list(directions)
 
     rows = []
     for direction in directions_list:
-        research_titles = []
-        for iss in direction.issledovaniya_set.all():
-            if iss.research and iss.research.short_title:
-                research_titles.append(iss.research.short_title)
-            elif iss.research and iss.research.title:
-                research_titles.append(iss.research.title)
-
-        rows.append(
-            {
-                "id": direction.pk,
-                "clinic": direction.doc.get_hospital_title() if direction.doc else "Не указан",
-                "datetime": strfdatetime(direction.data_sozdaniya, "%H:%M"),
-                "research": research_titles[0] if research_titles else "",
-                "cardId": direction.client.pk,
-                "waitFill": not is_done,
-                "cito": direction.is_cito,
-                "accepted": direction.accept_who_doctor is not None,
-                "acceptedByCurrentUser": direction.accept_who_doctor == request.user.doctorprofile if direction.accept_who_doctor else False,
-            }
-        )
+        rows.append(direction_to_request(direction, request.user.doctorprofile))
 
     if not is_done:
         rows.sort(key=lambda x: (not x["cito"], -int(x["datetime"].replace(":", ""))))
 
     return JsonResponse({"rows": rows})
+
+
+@login_required
+@group_required("Заполнение заявок")
+def get_request_by_number(request):
+    request_data = json.loads(request.body)
+    number = request_data.get("number")
+
+    direction = Napravleniya.objects.get(pk=number, is_request=True)
+    return JsonResponse({"request": direction_to_request(direction, request.user.doctorprofile)})
 
 
 @login_required
@@ -603,3 +619,10 @@ def cancel_accept_request(request):
         direction.save(update_fields=["accept_who_doctor", "accept_time"])
 
     return status_response(True, "Принятие заявки отменено")
+
+
+@login_required
+@group_required("Заполнение заявок")
+def get_permissions_doctor(request):
+    access_hospital = PermissionHospitalProtocolDoctorProfile.get_access_hospital_by_doctor(request.user.doctorprofile)
+    return {"hospitals": access_hospital}
