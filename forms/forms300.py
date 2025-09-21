@@ -216,7 +216,7 @@ def _create_wts_table_cols_widths(document_last_day_month: int) -> list:
     occupied_volume_col_width = 11 * mm
     norm_hours_col_width = 13 * mm
     working_shift_col_width = 8.7 * mm
-    dates_col_widths = [None for _ in range(1, document_last_day_month + 1)]  # 5.6 норм
+    dates_col_widths = [None for _ in range(1, document_last_day_month + 1)]  # TODO подумать какую ширину сделать, ~5.6 норм
     amount_hours_col_width = 14 * mm
     employees_signature = 15 * mm
     cols_widths = [
