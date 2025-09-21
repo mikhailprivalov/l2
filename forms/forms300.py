@@ -239,11 +239,10 @@ def form_01(request_data):
         ("SPAN", (5, 0), (5, 1)),
         ("SPAN", (6, 0), (6, 1)),
         ("SPAN", (7, 0), (-1, 0)),
-        ("LEFTPADDING", (0, 0), (-1, -1), 1),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 1),
-        ("BOTTOMTPADDING", (0, 0), (-1, -1), -1),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0.1),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 0.1),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
         ("TOPPADDING", (0, 0), (-1, -1), -1),
-        ("TOPPADDING", (0, 2), (-1, 2), 4),
     ]
     # table_style.extend(col_span)
 
