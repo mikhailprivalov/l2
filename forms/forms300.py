@@ -89,7 +89,7 @@ def _create_meta_information(canvas, context: dict) -> None:
             Paragraph("", style_right),
             Paragraph("", style_center),
             Paragraph("(подразделение)", style_center),
-            Paragraph("рабочих дней", style_left),  # TODO кол-во рабочих дней из графика
+            Paragraph("рабочих дней", style_left),
             Paragraph("", style_right),
         ],
         [
@@ -204,7 +204,7 @@ def _create_work_time_schedule_table_cols_widths(document_last_day_month: int) -
     occupied_volume_col_width = 11 * mm
     norm_hours_col_width = 13 * mm
     working_shift_col_width = 8.7 * mm
-    dates_col_widths = [None for _ in range(1, document_last_day_month + 1)]  # TODO подумать какую ширину сделать, ~5.6 норм
+    dates_col_widths = [None for _ in range(1, document_last_day_month + 1)]
     amount_hours_col_width = 14 * mm
     employees_signature = 15 * mm
     cols_widths = [
