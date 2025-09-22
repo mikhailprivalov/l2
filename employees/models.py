@@ -636,6 +636,11 @@ class TimeTrackingDocument(models.Model):
         document = TimeTrackingDocument.objects.filter(month__gte=first_date, month__lte=last_date, department_id=department_id).last()
         return document
 
+    @staticmethod
+    def get_document_by_id(document_id: int):
+        document = TimeTrackingDocument.objects.filter(pk=document_id).first()
+        return document
+
 
 class TypeCheckTimeTrackingDocument(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
