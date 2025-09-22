@@ -637,8 +637,8 @@ class TimeTrackingDocument(models.Model):
         return document
 
     @staticmethod
-    def get_document_by_id(document_id: int):
-        document = TimeTrackingDocument.objects.filter(pk=document_id).first()
+    def get_document_for_print(document_id: int):
+        document = TimeTrackingDocument.objects.filter(pk=document_id).select_related('department').first()
         return document
 
 
