@@ -184,11 +184,6 @@ def _create_work_time_schedule_table_header(style_center, document_last_day_mont
     return header_table_data
 
 
-def _create_work_time_schedule_table_body() -> List[List[Paragraph]]:
-    # TODO здесь будут данные
-    return [[]]
-
-
 def _create_work_time_schedule_table_style() -> List[Tuple]:
     table_style = [
         ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
@@ -236,7 +231,7 @@ def _create_work_time_schedule_table_cols_widths(document_last_day_month: int) -
 
 
 def _create_work_time_schedule_table(style_center, document_last_day_month: int) -> Table:
-    data = [*_create_work_time_schedule_table_header(style_center, document_last_day_month), *_create_work_time_schedule_table_body()]
+    data = [*_create_work_time_schedule_table_header(style_center, document_last_day_month)]
     style = _create_work_time_schedule_table_style()
     cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
     table = create_table(data, style, cols_widths, "LEFT", 1, 3)
