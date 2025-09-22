@@ -68,7 +68,11 @@ def send_paraclinic_direction_to_ecp(directions) -> dict:
 
 def send_gistology_direction_to_ecp(directions) -> dict:
     url = SettingManager.get_api_ecp_base_url()
-    return make_request(f"{url}/send-gistology-result", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
+    path = SettingManager.get("endpoint_ecp_send_gistology", default='', default_type='s')
+    enpoint = 'send-gistology-result'
+    if path:
+        enpoint = path
+    return make_request(f"{url}/{enpoint}", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
 
 
 def send_medexam_to_ecp(directions) -> dict:
