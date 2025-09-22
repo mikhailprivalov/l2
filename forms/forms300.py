@@ -9,6 +9,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
 
+from employees.models import TimeTrackingDocument
 from forms.utils import register_fonts, create_style, create_table
 from hospitals.models import Hospitals
 
@@ -233,15 +234,18 @@ def form_01(request_data):
     """
     Создание печатной формы графика рабочего времени
     """
+    request_body = request_data.get("request_body")
+    document_id = request_body.get("documentId")
+    time_tracking_document: TimeTrackingDocument = TimeTrackingDocument.get_document_for_print(document_id)
     register_fonts()
     style_center = create_style(font_size=6, leading=6, alignment="center")
 
-    document_date = datetime.datetime.now()  # TODO Брать из документа
+    document_date = time_tracking_document.month
     document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
     document_year = document_date.year
     document_month = document_date.month
     document_last_day_month = calendar.monthrange(document_year, document_month)[1]
-    department_title = "Кабинет неотложной травматологии и ортопедии (травмпункт)"  # TODO это из документа
+    department_title = time_tracking_document.department.name
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
     order_appendix_number = "2"
@@ -260,10 +264,10 @@ def form_01(request_data):
         "order_date": order_date,
     }
 
-    def first_pages(canvas):
+    def first_pages(canvas, doc):
         _create_meta_information(canvas, meta_context)
 
-    def later_pages(canvas):
+    def later_pages(canvas, doc):
         _create_meta_information(canvas, meta_context)
 
     buffer = BytesIO()
