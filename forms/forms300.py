@@ -274,10 +274,10 @@ def form_01(request_data):
         "order_date": order_date,
     }
 
-    def first_pages(canvas, doc):
+    def first_pages(canvas):
         _create_meta_information(canvas, True, meta_context)
 
-    def later_pages(canvas, doc):
+    def later_pages(canvas):
         _create_meta_information(canvas, False, meta_context)
 
     buffer = BytesIO()
