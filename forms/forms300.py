@@ -25,7 +25,7 @@ def _create_meta_information(canvas, context: dict) -> None:
     style_center = create_style(font_size=6, leading=6, alignment="center")
     style_center_header_bold = create_style(style_center, font_name="PTAstraSerifBold", font_size=9, leading=9)
     canvas.saveState()
-    text = Paragraph(f"Приложение №2 к <br/> приказу от '20' февраля 2025 г №37", style_left)
+    text = Paragraph("Приложение №2 к <br/> приказу от '20' февраля 2025 г №37", style_left)
     text.wrapOn(canvas, 256 * mm, 203 * mm)
     text.drawOn(canvas, 256 * mm, 203 * mm)
     current_date = datetime.datetime.now()
