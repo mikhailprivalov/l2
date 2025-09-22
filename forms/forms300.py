@@ -13,7 +13,7 @@ from forms.utils import register_fonts, create_style, create_table
 from hospitals.models import Hospitals
 
 
-def _create_meta_information(canvas, is_first_page: bool, context: dict) -> None:
+def _create_meta_information(canvas, context: dict) -> None:
     """
     Функция добавления мета информации для печатной формы графика
     """
@@ -25,13 +25,8 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict) -> None
     style_center_header_bold = create_style(style_center, font_name="PTAstraSerifBold", font_size=9, leading=9)
     canvas.saveState()
     text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", style_left)
-    # TODO Надо ли разных страницах разную высоту? 4мм выше на следующих страницах
-    if is_first_page:
-        text.wrapOn(canvas, 256 * mm, 203 * mm)
-        text.drawOn(canvas, 256 * mm, 203 * mm)
-    else:
-        text.wrapOn(canvas, 256 * mm, 203 * mm)
-        text.drawOn(canvas, 256 * mm, 203 * mm)
+    text.wrapOn(canvas, 256 * mm, 203 * mm)
+    text.drawOn(canvas, 256 * mm, 203 * mm)
     current_date = datetime.datetime.now()
     current_month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=current_date)
     current_day = current_date.day
@@ -132,14 +127,10 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict) -> None
         *department_title_style,
     ]
     table = create_table(header_table_data, header_table_style, col_widths)
-    if is_first_page:
-        table.wrapOn(canvas, 7 * mm, 179 * mm)
-        table.drawOn(canvas, 7 * mm, 179 * mm)
-    else:
-        table.wrapOn(canvas, 7 * mm, 179 * mm)
-        table.drawOn(canvas, 7 * mm, 179 * mm)
-    canvas.setFont("PTAstraSerifReg", 8)
+    table.wrapOn(canvas, 7 * mm, 179 * mm)
+    table.drawOn(canvas, 7 * mm, 179 * mm)
 
+    canvas.setFont("PTAstraSerifReg", 8)
     canvas.drawString(11 * mm, 10 * mm, "Заведующий отделением")
     canvas.line(42 * mm, 9 * mm, 72 * mm, 9 * mm)
     canvas.drawString(110 * mm, 10 * mm, "Старшая медицинская сестра")
@@ -270,10 +261,10 @@ def form_01(request_data):
     }
 
     def first_pages(canvas):
-        _create_meta_information(canvas, True, meta_context)
+        _create_meta_information(canvas, meta_context)
 
     def later_pages(canvas):
-        _create_meta_information(canvas, False, meta_context)
+        _create_meta_information(canvas, meta_context)
 
     buffer = BytesIO()
     document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=32 * mm, bottomMargin=43 * mm, title="График рабочего времени")
