@@ -25,7 +25,7 @@ def _create_meta_information(canvas, context: dict) -> None:
     style_center = create_style(font_size=6, leading=6, alignment="center")
     style_center_header_bold = create_style(style_center, font_name="PTAstraSerifBold", font_size=9, leading=9)
     canvas.saveState()
-    text = Paragraph(f"Приложение №{context.get('order_appendix_number')} к <br/> приказу {context.get('order_date')}", style_left)
+    text = Paragraph(f"Приложение №2 к <br/> приказу от '20' февраля 2025 г №37", style_left)
     text.wrapOn(canvas, 256 * mm, 203 * mm)
     text.drawOn(canvas, 256 * mm, 203 * mm)
     current_date = datetime.datetime.now()
@@ -248,8 +248,6 @@ def form_01(request_data):
     department_title = time_tracking_document.department.name
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
-    order_appendix_number = "2"
-    order_date = "от '20' февраля 2025 г №37"
 
     work_time_schedule_table = _create_work_time_schedule_table(style_center, document_last_day_month)
     document_data = [work_time_schedule_table]
@@ -260,8 +258,6 @@ def form_01(request_data):
         "document_last_day_month": document_last_day_month,
         "organization_title": organization_title,
         "department_title": department_title,
-        "order_appendix_number": order_appendix_number,
-        "order_date": order_date,
     }
 
     def first_pages(canvas, doc):
