@@ -56,7 +56,7 @@ def create_style(
     return style
 
 
-def create_table(data: List[List], styles: List[Tuple] = None, col_widths: List[int] = None, h_align: str = None, split_by_row: int = None, repeat_rows: int = None):
+def create_table(data: List[List], styles: List[Tuple] = None, col_widths: List[float] = None, h_align: str = None, split_by_row: int = None, repeat_rows: int = None):
     """Создание таблицы"""
     table = Table(data, colWidths=col_widths, hAlign=h_align, splitByRow=split_by_row, repeatRows=repeat_rows)
     table.setStyle(TableStyle(styles))
