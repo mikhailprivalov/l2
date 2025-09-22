@@ -148,8 +148,7 @@ def _create_meta_information(canvas, is_first_page: bool, context: dict) -> None
     canvas.restoreState()
 
 
-def _create_wts_table_header(style_center, document_last_day_month: int) -> List[List[Paragraph]]:
-    """Создание заголовков таблицы графика"""
+def _create_work_time_schedule_table_header(style_center, document_last_day_month: int) -> List[List[Paragraph]]:
     second_row_data = [
         Paragraph("", style_center),
         Paragraph("", style_center),
@@ -185,14 +184,12 @@ def _create_wts_table_header(style_center, document_last_day_month: int) -> List
     return header_table_data
 
 
-def _create_wts_table_body() -> List[List[Paragraph]]:
-    """Создание тела таблицы графика"""
+def _create_work_time_schedule_table_body() -> List[List[Paragraph]]:
     # TODO здесь будут данные
     return [[]]
 
 
-def _create_wts_table_style() -> List[Tuple]:
-    """Создание стилей таблицы графика"""
+def _create_work_time_schedule_table_style() -> List[Tuple]:
     table_style = [
         ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -212,8 +209,7 @@ def _create_wts_table_style() -> List[Tuple]:
     return table_style
 
 
-def _create_wts_table_cols_widths(document_last_day_month: int) -> List[float]:
-    """Создание списка ширин колонок таблицы графика"""
+def _create_work_time_schedule_table_cols_widths(document_last_day_month: int) -> List[float]:
     item_number_col_width = 8 * mm
     fio_col_width = 17 * mm
     position_col_width = 15 * mm
@@ -240,12 +236,9 @@ def _create_wts_table_cols_widths(document_last_day_month: int) -> List[float]:
 
 
 def _create_work_time_schedule_table(style_center, document_last_day_month: int) -> Table:
-    """
-    Создание таблицы графика
-    """
-    data = [*_create_wts_table_header(style_center, document_last_day_month), *_create_wts_table_body()]
-    style = _create_wts_table_style()
-    cols_widths = _create_wts_table_cols_widths(document_last_day_month)
+    data = [*_create_work_time_schedule_table_header(style_center, document_last_day_month), *_create_work_time_schedule_table_body()]
+    style = _create_work_time_schedule_table_style()
+    cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
     table = create_table(data, style, cols_widths, "LEFT", 1, 3)
     return table
 
