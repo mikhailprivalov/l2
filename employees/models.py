@@ -597,6 +597,11 @@ class WorkDayStatus(models.Model):
         result = [{"id": status.pk, "label": status.short_title if short else status.title} for status in WorkDayStatus.objects.filter(hide=False)]
         return result
 
+    @staticmethod
+    def get_short_statuses_dict():
+        result = {status.id: status.short_title for status in WorkDayStatus.objects.filter(hide=False)}
+        return result
+
 
 class TimeTrackingDocument(models.Model):
     create_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время создания")
