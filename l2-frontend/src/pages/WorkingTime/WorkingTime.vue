@@ -189,6 +189,7 @@ const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value 
 const timeOptions = computed(() => (store.getters.modules.working_time_variants
   ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
+const documentId = ref(null);
 const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
@@ -203,8 +204,11 @@ const getEmployeesWorkTime = async () => {
     departmentId: selectedDepartment.value,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const { data, documentIsBlocked, documentIsCreated } = result;
+  const {
+    data, documentPk, documentIsBlocked, documentIsCreated,
+  } = result;
   employeesWorkTime.value = data;
+  documentId.value = documentPk;
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
@@ -684,6 +688,7 @@ const printDocument = async () => {
   await store.dispatch(actions.INC_LOADING);
   const result = await apiForBlob.post('/pdf?type=300.01', {
     employeesWorkTime: employeesWorkTime.value,
+    documentId: documentId.value,
   });
   await store.dispatch(actions.DEC_LOADING);
   const urlFile = URL.createObjectURL(result.data);

@@ -636,6 +636,11 @@ class TimeTrackingDocument(models.Model):
         document = TimeTrackingDocument.objects.filter(month__gte=first_date, month__lte=last_date, department_id=department_id).last()
         return document
 
+    @staticmethod
+    def get_document_for_print(document_id: int):
+        document = TimeTrackingDocument.objects.filter(pk=document_id).select_related('department').first()
+        return document
+
 
 class TypeCheckTimeTrackingDocument(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
@@ -714,7 +719,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         first_date_month = datetime.date(year, month, 1)
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
-        document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
+        document: TimeTrackingDocument = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
         result = []
         document_blocked = False
         document_created = True if document else False
@@ -751,7 +756,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
             result = [value for value in result.values()]
             if document.blocked:
                 document_blocked = current_time(True) >= document.blocked
-        return {"data": result, "documentIsBlocked": document_blocked, "documentIsCreated": document_created}
+        return {"data": result, "documentPk": document.pk if document else None, "documentIsBlocked": document_blocked, "documentIsCreated": document_created}
 
     @staticmethod
     def update_time(department_id: int, year: int, month: int, changed_time: dict):
