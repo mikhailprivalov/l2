@@ -250,17 +250,7 @@ def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_
         date_keys = [key for key in work_time.keys() if key not in non_date_key]
         date_keys_sorted = sorted(date_keys, key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
         date_values = [Paragraph(_parse_cell_data(work_day_statuses, work_time.get(date_key)), style_center) for date_key in date_keys_sorted]
-        row = [
-            item_number,
-            fio,
-            position,
-            type_employment,
-            occupied_volume,
-            norm_hours,
-            working_shift,
-            *date_values,
-            total_hours_decimal
-        ]
+        row = [item_number, fio, position, type_employment, occupied_volume, norm_hours, working_shift, *date_values, total_hours_decimal]
         table_body.append(row)
     return table_body
 
