@@ -1288,6 +1288,7 @@ class ParaclinicInputField(models.Model):
     lines = models.IntegerField(default=3)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
     required = models.BooleanField(default=False, blank=True)
+    required_set_by_admin = models.BooleanField(default=False, blank=True)
     for_talon = models.BooleanField(default=False, blank=True)
     can_edit_computed = models.BooleanField(default=False, blank=True)
     sign_organization = models.BooleanField(default=False, blank=True, help_text="Подпись от организации")
