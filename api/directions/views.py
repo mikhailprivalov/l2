@@ -2012,7 +2012,7 @@ def directions_paraclinic_form(request):
                                 "can_edit": field.can_edit_computed,
                                 "default_value": field.default_value,
                                 "visibility": field.visibility,
-                                "required": field.required,
+                                "required": field.required or field.required_set_by_admin,
                                 "helper": field.helper,
                                 "controlParam": field.control_param,
                                 "not_edit": field.not_edit,
