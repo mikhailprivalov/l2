@@ -284,7 +284,7 @@ def form_01(request_data):
     work_day_statuses = WorkDayStatus.get_short_statuses_dict()
 
     register_fonts()
-    style_center = create_style(font_size=7, leading=7, alignment="center")
+    style_center = create_style(font_size=6, leading=6, alignment="center")
     style_left = create_style(style_center, alignment="left")
 
     document_date = time_tracking_document.month
