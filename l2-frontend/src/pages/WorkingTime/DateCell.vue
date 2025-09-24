@@ -194,12 +194,10 @@ const selectedTimeOffLabel = ref('');
 
 const selectedTimeOption = ref(null);
 
-const isEmpty = (val) => val === null || val === undefined || val === '';
-
 const hasChanged = (oldStartTime, oldEndTime, oldTypeId, newStartTime, newEndTime, newTypeId) => {
-  const allOldEmpty = [oldStartTime, oldEndTime, oldTypeId].every(isEmpty);
-  const allNewEmpty = [newStartTime, newEndTime, newTypeId].every(isEmpty);
-  return !(allOldEmpty && allNewEmpty);
+  const oldValues = [oldStartTime, oldEndTime, oldTypeId];
+  const newValues = [newStartTime, newEndTime, newTypeId];
+  return !oldValues.every((val, i) => val === newValues[i]);
 };
 
 const clear = () => {
