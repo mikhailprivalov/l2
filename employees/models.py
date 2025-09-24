@@ -1,4 +1,5 @@
 import calendar
+import copy
 import datetime
 from typing import Union, Optional
 
@@ -736,7 +737,6 @@ class EmployeeWorkingHoursSchedule(models.Model):
                         "bidType": work_time.bid_name[:3] if work_time.bid_name else "",
                         "lunchDuration": EmployeePosition.get_lunch_duration(work_time.lunch_duration, work_time.position_name, work_time.lunch_duration_by_department),
                     }
-                    # TODO Добавить фильтрацию, не получать в sql работников которые перевелись до начала месяца документа
                     if work_time.date_dismissal or work_time.date_transfer:
                         result[work_time.employee_position_id].update(
                             {
@@ -745,7 +745,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                             }
                         )
                     else:
-                        result[work_time.employee_position_id].update(template_days)
+                        result[work_time.employee_position_id].update(copy.deepcopy(template_days))
                 if work_time.day:
                     tmp_work_time = {
                         "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else None,

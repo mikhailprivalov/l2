@@ -119,6 +119,7 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import moment from 'moment';
+import vSelect from 'vue-select';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
@@ -193,6 +194,12 @@ const selectedTimeOffLabel = ref('');
 
 const selectedTimeOption = ref(null);
 
+const hasChanged = (oldStartTime, oldEndTime, oldTypeId, newStartTime, newEndTime, newTypeId) => {
+  const oldValues = [oldStartTime, oldEndTime, oldTypeId];
+  const newValues = [newStartTime, newEndTime, newTypeId];
+  return !oldValues.every((val, i) => val === newValues[i]);
+};
+
 const clear = () => {
   startWork.value = null;
   endWork.value = null;
@@ -200,14 +207,24 @@ const clear = () => {
   selectedTimeOffLabel.value = '';
   nextDayEndWork.value = null;
   selectedTimeOption.value = null;
-  emit('changeWorkTime', {
-    employeePositionId: props.employeePositionId,
-    date: props.date,
-    startWorkTime: startWork.value,
-    endWorkTime: endWork.value,
-    typeId: selectedTimeOff.value,
-    nextDayEndWork: nextDayEndWork.value,
-  });
+  const propsWorkTime = props.workTime;
+  if (hasChanged(
+    propsWorkTime.startWorkTime,
+    propsWorkTime.endWorkTime,
+    propsWorkTime.typeId,
+    startWork.value,
+    endWork.value,
+    selectedTimeOff.value,
+  )) {
+    emit('changeWorkTime', {
+      employeePositionId: props.employeePositionId,
+      date: props.date,
+      startWorkTime: startWork.value,
+      endWorkTime: endWork.value,
+      typeId: selectedTimeOff.value,
+      nextDayEndWork: nextDayEndWork.value,
+    });
+  }
 };
 const selectTime = (variantId: number, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
@@ -238,15 +255,25 @@ const updateTime = async () => {
     nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
     endWork.value = '00:00';
   }
-  emit('changeWorkTime', {
-    employeePositionId: props.employeePositionId,
-    date: props.date,
-    startWorkTime: startWork.value,
-    endWorkTime: endWork.value,
-    typeId: selectedTimeOff.value,
-    nextDayEndWork: nextDayEndWork.value,
-  });
-  nextDayEndWork.value = null;
+  const propsWorkTime = props.workTime;
+  if (hasChanged(
+    propsWorkTime.startWorkTime,
+    propsWorkTime.endWorkTime,
+    propsWorkTime.typeId,
+    startWork.value,
+    endWork.value,
+    selectedTimeOff.value,
+  )) {
+    emit('changeWorkTime', {
+      employeePositionId: props.employeePositionId,
+      date: props.date,
+      startWorkTime: startWork.value,
+      endWorkTime: endWork.value,
+      typeId: selectedTimeOff.value,
+      nextDayEndWork: nextDayEndWork.value,
+    });
+    nextDayEndWork.value = null;
+  }
 };
 
 watch([startWork, endWork], () => {
