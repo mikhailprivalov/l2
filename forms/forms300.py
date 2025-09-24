@@ -227,9 +227,9 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
     end_time = cell_value.get("endWorkTime")
     type_id = cell_value.get("typeId")
     if type_id:
-        result = work_day_statuses.get(int(type_id))
+        result = work_day_statuses.get(int(type_id), "")
     else:
-        result = f"{start_time}\r{end_time}"
+        result = f"{start_time}\r{end_time}" if start_time and end_time else ""
     return result
 
 
