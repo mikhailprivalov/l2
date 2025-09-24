@@ -256,7 +256,10 @@ def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_
 
 
 def _create_work_time_schedule_table(style_center, style_left, document_last_day_month: int, employees_work_time: List[Dict], work_day_statuses: Dict) -> Table:
-    data = [*_create_work_time_schedule_table_header(style_center, document_last_day_month), *_create_work_time_schedule_table_body(employees_work_time, work_day_statuses, style_center, style_left)]
+    data = [
+        *_create_work_time_schedule_table_header(style_center, document_last_day_month),
+        *_create_work_time_schedule_table_body(employees_work_time, work_day_statuses, style_center, style_left),
+    ]
     style = _create_work_time_schedule_table_style()
     cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
     table = create_table(data, style, cols_widths, "LEFT", 1, 3)
