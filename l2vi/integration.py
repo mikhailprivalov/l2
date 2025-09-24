@@ -67,7 +67,10 @@ def send_paraclinic_direction_to_ecp(directions) -> dict:
 
 
 def send_gistology_direction_to_ecp(directions) -> dict:
-    url = SettingManager.get_api_ecp_base_url()
+    if API_SERVER_SEND_GISTOLOGY_RESULT:
+        url = API_SERVER_SEND_GISTOLOGY_RESULT
+    else:
+        url = SettingManager.get_api_ecp_base_url()
     path = SettingManager.get("endpoint_ecp_send_gistology", default='', default_type='s')
     enpoint = 'send-gistology-result'
     if path:

@@ -170,8 +170,10 @@ class FTPConnection:
     def read_file_as_hl7(self, file, is_result=False):
         content = self.read_file_as_text(file).strip("\x0b").strip("\x0c")
         self.log(f"{file}\n{content}")
+
         content = content.replace("\n", "\r")
         if is_result:
+            content = content.replace("\r[10]", "")
             tmp_content = content.split("OBX")
             final_result = []
             for i in tmp_content:
