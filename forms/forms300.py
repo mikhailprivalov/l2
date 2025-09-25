@@ -1,7 +1,7 @@
 import calendar
 import datetime
 from io import BytesIO
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import pytils
 from reportlab.lib import colors
@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
 
-from employees.models import TimeTrackingDocument
+from employees.models import TimeTrackingDocument, WorkDayStatus
 from forms.utils import register_fonts, create_style, create_table
 from hospitals.models import Hospitals
 
@@ -222,8 +222,44 @@ def _create_work_time_schedule_table_cols_widths(document_last_day_month: int) -
     return cols_widths
 
 
-def _create_work_time_schedule_table(style_center, document_last_day_month: int) -> Table:
-    data = [*_create_work_time_schedule_table_header(style_center, document_last_day_month)]
+def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
+    start_time = cell_value.get("startWorkTime")
+    end_time = cell_value.get("endWorkTime")
+    type_id = cell_value.get("typeId")
+    if type_id:
+        result = work_day_statuses.get(int(type_id), "")
+    elif start_time and end_time:
+        result = f"{start_time}\n{end_time}"
+    else:
+        result = ""
+    return result
+
+
+def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_day_statuses: Dict[int, str], style_center, style_left) -> List[List[Paragraph]]:
+    table_body = []
+    non_date_key = {"employeePositionId", "fio", "position", "bidType", "lunchDuration", "totalHoursDecimal", "totalHours"}
+    for index, work_time in enumerate(employees_work_time, 1):
+        item_number = Paragraph(f"{index}", style_center)
+        fio = Paragraph(work_time.get("fio"), style_left)
+        position = Paragraph(work_time.get("position"), style_left)
+        type_employment = Paragraph(work_time.get("bidType"), style_center)
+        occupied_volume = Paragraph("", style_center)
+        norm_hours = Paragraph("", style_center)
+        working_shift = Paragraph("", style_center)
+        total_hours_decimal = Paragraph(work_time.get("totalHoursDecimal"), style_center)
+        date_keys = [key for key in work_time.keys() if key not in non_date_key]
+        date_keys_sorted = sorted(date_keys, key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
+        date_values = [Paragraph(_parse_cell_data(work_day_statuses, work_time.get(date_key)), style_center) for date_key in date_keys_sorted]
+        row = [item_number, fio, position, type_employment, occupied_volume, norm_hours, working_shift, *date_values, total_hours_decimal]
+        table_body.append(row)
+    return table_body
+
+
+def _create_work_time_schedule_table(style_center, style_left, document_last_day_month: int, employees_work_time: List[Dict], work_day_statuses: Dict) -> Table:
+    data = [
+        *_create_work_time_schedule_table_header(style_center, document_last_day_month),
+        *_create_work_time_schedule_table_body(employees_work_time, work_day_statuses, style_center, style_left),
+    ]
     style = _create_work_time_schedule_table_style()
     cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
     table = create_table(data, style, cols_widths, "LEFT", 1, 3)
@@ -236,9 +272,13 @@ def form_01(request_data):
     """
     request_body = request_data.get("request_body")
     document_id = request_body.get("documentId")
+    employees_work_time = request_body.get("employeesWorkTime")
     time_tracking_document: TimeTrackingDocument = TimeTrackingDocument.get_document_for_print(document_id)
+    work_day_statuses = WorkDayStatus.get_short_statuses_dict()
+
     register_fonts()
     style_center = create_style(font_size=6, leading=6, alignment="center")
+    style_left = create_style(style_center, alignment="left")
 
     document_date = time_tracking_document.month
     document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
@@ -249,7 +289,7 @@ def form_01(request_data):
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
 
-    work_time_schedule_table = _create_work_time_schedule_table(style_center, document_last_day_month)
+    work_time_schedule_table = _create_work_time_schedule_table(style_center, style_left, document_last_day_month, employees_work_time, work_day_statuses)
     document_data = [work_time_schedule_table]
 
     meta_context = {
