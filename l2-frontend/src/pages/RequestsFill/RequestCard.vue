@@ -1,51 +1,43 @@
 <template>
   <div
-    class="direction"
+    :class="{ [$style.direction]: true, [$style.directionCito]: props.request.cito }"
     @click="handleCardClick"
   >
-    <div>{{ props.request.clinic }}</div>
-    <div class="research-row">
-      <div class="row">
-        <div class="col-xs-5">
-          {{ props.request.datetime }}
-          <span
-            v-if="props.request.cito"
-            class="cito-badge"
-          >
-            CITO
-          </span>
-        </div>
-        <div class="col-xs-7 text-right">
-          <span
-            class="fill-status"
-            :class="getStatusClass()"
-          >
-            <button
-              v-if="showAcceptButton()"
-              class="btn btn-sm btn-blue-nb"
-              :disabled="processing"
-              @click="handleRequestAction(true)"
-            >
-              {{ processing ? 'Принимаю...' : 'принять' }}
-            </button>
-            <button
-              v-else-if="showCancelButton()"
-              class="btn btn-sm btn-blue-nb"
-              :disabled="processing"
-              @click="handleRequestAction(false)"
-            >
-              {{ processing ? 'Отменяю...' : 'отменить принятие' }}
-            </button>
-            <div v-else />
-          </span>
-        </div>
+    <div :class="[$style.topPart, props.request.cito && $style.citoColor]">
+      <div :class="$style.topLeft">
+        <span
+          v-if="props.request.cito"
+          :class="$style.citoBadge"
+        >
+          CITO
+        </span>
+        <span :class="$style.datetime">{{ props.request.datetime }}</span>
       </div>
-      <div class="research-row">
-        <span class="request-id">{{ props.request.id }}</span> {{ props.request.patient }}
+      <span :class="$style.requestId">{{ props.request.id }}</span>
+      <div class="topBtn">
+        <button
+          v-if="showAcceptButton()"
+          class="btn btn-sm btn-not-accepted"
+          :disabled="processing"
+          @click="handleRequestAction(true)"
+        >
+          принять <i class="fa-regular fa-square" />
+        </button>
+        <button
+          v-else-if="showCancelButton()"
+          v-tippy
+          class="btn btn-sm btn-blue-nb"
+          title="отменить принятие"
+          :disabled="processing"
+          @click="handleRequestAction(false)"
+        >
+          принято <i class="fa fa-square-check" />
+        </button>
       </div>
-      <div class="research-row">
-        {{ props.request.research }}
-      </div>
+    </div>
+    <div>{{ props.request.patient }}, {{ props.request.clinic }}</div>
+    <div :class="$style.researchRow">
+      {{ props.request.research }}
     </div>
   </div>
 </template>
@@ -79,12 +71,6 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const processing = ref(false);
-
-const getStatusClass = () => {
-  if (!props.request.waitFill) return 'fill-status--done';
-  if (props.request.accepted) return 'fill-status--accepted';
-  return 'fill-status--wait';
-};
 
 const showAcceptButton = () => props.request.waitFill && !props.request.accepted;
 
@@ -139,7 +125,7 @@ const handleCardClick = (event: Event) => {
 };
 </script>
 
-<style scoped lang="scss">
+<style module lang="scss">
 .direction {
   padding: 5px;
   margin: 5px;
@@ -154,64 +140,80 @@ const handleCardClick = (event: Event) => {
     background: linear-gradient(to bottom, rgba(4, 147, 114, 0.05) 0%, rgba(4, 147, 114, 0.15) 100%);
   }
 }
-.research-row {
-  margin-top: 3px;
-  margin-bottom: 3px;
+
+.directionCito {
+  border-color: #ff6b6b;
+}
+
+.citoColor {
+  color: #ff6b6b;
+}
+
+.requestId {
+  color: #434A54;
+  font-size: 13px;
+  font-weight: 600;
+  float: right;
+  vertical-align: middle;
+}
+
+.citoBadge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  margin-right: 2px;
+  border-radius: 3px;
+  background-color: #ff6b6b;
+  color: white;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+.datetime {
+  font-family: 'Lucida Console', Monaco, monospace;
+  vertical-align: middle;
+}
+
+.researchRow {
   padding: 3px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
+  flex: 1;
 }
-.fill-status {
-  font-size: 12px;
-  font-weight: 500;
+
+.topPart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+</style>
+
+<style scoped lang="scss">
+.topBtn {
+  width: 79px;
+  text-align: right;
 
   .btn {
-    padding: 3px;
-    margin-left: 5px;
+    padding: 2px 6px;
+
+    i {
+      vertical-align: middle;
+      margin-left: 1px;
+    }
 
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
 
-    &.btn-orange-nb {
-      background-color: #f39c12;
-      color: white;
-      border: 1px solid #e67e22;
+    &.btn-not-accepted {
+      background-color: transparent;
+      color: #434A54;
 
-      &:hover:not(:disabled) {
-        background-color: #e67e22;
+      &:hover {
+        background-color: #434A5411;
       }
     }
   }
-}
-.fill-status--wait {
-  color: #1448f4;
-}
-.fill-status--accepted {
-  color: #049372;
-}
-.fill-status--done {
-  color: #2ecc40;
-}
-.cito-badge {
-  display: inline-block;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  margin-left: 8px;
-  border-radius: 3px;
-  background-color: #ff6b6b;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.request-id {
-  font-size: 13px;
-  color: #049372;
-  font-weight: 600;
-  background: #f0f9f7;
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: inline-block;
 }
 </style>
