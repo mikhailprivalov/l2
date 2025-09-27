@@ -119,7 +119,6 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import moment from 'moment';
-import vSelect from 'vue-select';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 

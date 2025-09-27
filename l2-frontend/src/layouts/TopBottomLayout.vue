@@ -21,6 +21,7 @@ import { computed, useCssModule } from 'vue';
 
 const props = withDefaults(defineProps<{
   topHeightPx?: number,
+  topHeightPercent?: number,
   topPaddingPx?: number,
   topScrollable?: boolean,
   bottomScrollable?: boolean,
@@ -41,7 +42,9 @@ const topStyle = computed(() => {
   if (props.splitHalf) {
     return { height: '50%' };
   }
-  const style: Record<string, string> = { height: `${props.topHeightPx}px` };
+  const style: Record<string, string> = props.topHeightPercent !== undefined
+    ? { height: `${props.topHeightPercent}%` }
+    : { height: `${props.topHeightPx}px` };
 
   if (props.topPaddingPx) {
     style.padding = `${props.topPaddingPx}px`;

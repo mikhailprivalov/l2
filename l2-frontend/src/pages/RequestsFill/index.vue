@@ -37,12 +37,12 @@
                 />
               </template>
               <template #bottom>
-                <TopBottomLayout split-half>
+                <TopBottomLayout :top-height-percent="70">
                   <template #top>
                     <div class="requests-list">
                       <div class="requests-list__header">
                         <div class="requests-list__header-content">
-                          <span>Ожидающие</span>
+                          <span>Ожидают</span>
                           <div class="requests-list__filter">
                             <button
                               class="filter-btn"
@@ -58,6 +58,14 @@
                             >
                               {{ `Принятые (${requestsWait.filter(request => request.accepted).length})` }}
                             </button>
+                            <button
+                              class="filter-btn"
+                              :class="{ 'filter-btn--active': isSearchMode }"
+                              title="поиск по пациенту"
+                              @click="isSearchMode = !isSearchMode"
+                            >
+                              <i class="fa fa-search" />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -71,6 +79,17 @@
                         v-else
                         class="requests-list__items"
                       >
+                        <div
+                          v-if="isSearchMode"
+                          class="requests-list__search"
+                        >
+                          <input
+                            v-model.trim="patientQuery"
+                            type="text"
+                            class="form-control"
+                            placeholder="поиск по пациенту"
+                          >
+                        </div>
                         <RequestCard
                           v-for="request in filteredWaitRequests"
                           :key="request.id"
@@ -167,15 +186,20 @@ const formData = ref<any>(null);
 const formLoading = ref(false);
 const requestParams = ref<any>(null);
 const numberToSearch = ref<string>('');
+const isSearchMode = ref(false);
+const patientQuery = ref<string>('');
 let refreshInterval: any = null;
 
 const loader = useLoader();
 
 const filteredWaitRequests = computed(() => {
-  if (showAccepted.value) {
-    return requestsWait.value.filter(request => request.accepted);
-  }
-  return requestsWait.value;
+  const base = showAccepted.value
+    ? requestsWait.value.filter(request => request.accepted)
+    : requestsWait.value;
+
+  const query = patientQuery.value.trim().toLowerCase();
+  if (!query) return base;
+  return base.filter(request => request.patient.toLowerCase().includes(query));
 });
 
 const loadRequestsByStatus = async (isDone: boolean) => {
@@ -205,6 +229,9 @@ const loadAllRequests = async () => {
 };
 
 useOn('change-document-state', loadAllRequests);
+useOn('close-results-paraclinic', () => {
+  selectedRequest.value = null;
+});
 
 const startAutoRefresh = () => {
   if (refreshInterval) {
@@ -288,6 +315,12 @@ watch(date, () => {
   loadAllRequests();
 });
 
+watch(isSearchMode, value => {
+  if (!value) {
+    patientQuery.value = '';
+  }
+});
+
 onMounted(() => {
   initialLoading.value = true;
   loadAllRequests().finally(() => {
@@ -357,6 +390,18 @@ onBeforeUnmount(() => {
 
 .requests-list__items {
   padding: 5px;
+}
+
+.requests-list__search {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #ffffff;
+  padding-bottom: 5px;
+}
+
+.requests-list__search input {
+  width: 100%;
 }
 
 .requests-list__loading {
