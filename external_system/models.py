@@ -41,6 +41,7 @@ class InstrumentalResearchRefbook(models.Model):
 
     code_nsi = models.CharField(default='', max_length=20, db_index=True, help_text='Уникальный код')
     title = models.CharField(default='', max_length=1000, db_index=True, help_text='Полное наименование')
+    short_title = models.CharField(default='', max_length=1000, db_index=True, help_text='Краткое наименование')
     method = models.CharField(default='', max_length=300, db_index=True, help_text='Метод')
     area = models.CharField(default='', max_length=300, db_index=True, help_text='Область')
     localization = models.CharField(default='', max_length=300, db_index=True, help_text='Локализация')
