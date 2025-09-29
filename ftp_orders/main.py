@@ -622,7 +622,7 @@ class FTPConnection:
                 tube_data = [i.tube_number for i in get_tubesregistration_id_by_iss(iss.pk)]
                 if len(tube_data) == 0:
                     continue
-                obr.obr_3.value = str(tube_data[0])
+                obr.obr_3.value = str(tube_data[0]) if tube_data[0] else ""
                 obr.obr_4.obr_4_4.value = iss.research.internal_code
                 obr.obr_4.obr_4_5.value = iss.research.title.replace(" ", "_")
                 obr.obr_7.value = created_at
@@ -899,7 +899,7 @@ def process_pull_results():
 
             processed_files_by_url[ftp_url] = processed_files_new
 
-        time.sleep(5)
+        time.sleep(60)
 
     for _, ftp_connection in ftp_connections.items():
         ftp_connection.disconnect()

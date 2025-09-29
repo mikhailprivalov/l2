@@ -1,7 +1,9 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
+from directory.models import Researches
 from external_system.models import InstrumentalResearchRefbook
+from podrazdeleniya.models import Podrazdeleniya
 
 
 class Command(BaseCommand):
@@ -25,7 +27,7 @@ class Command(BaseCommand):
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        code, title, method, area, localization, actual, code_nmu = '', '', '', '', '', '', ''
+        code, title, method, area, localization, actual, code_nmu, short_title = '', '', '', '', '', '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -37,6 +39,7 @@ class Command(BaseCommand):
                     localization = cells.index("Локализация")
                     code_nmu = cells.index("НМУ")
                     actual = cells.index("Статус")
+                    short_title = cells.index("Короткое")
                     starts = True
             else:
                 if cells[actual].lower() != "актуальный":
@@ -46,6 +49,7 @@ class Command(BaseCommand):
                     InstrumentalResearchRefbook(
                         code_nsi=cells[code],
                         title=cells[title],
+                        short_title=cells[short_title],
                         method=cells[method],
                         area=cells[area],
                         code_nmu=cells[code_nmu],
@@ -75,3 +79,12 @@ class Command(BaseCommand):
                         print('обновлено', cells[code])  # noqa: T001
                     else:
                         print('не обновлено', cells[code])  # noqa: T001
+
+                if Researches.objects.filter(nsi_id=cells[code]).exists():
+                    continue
+                else:
+                    podrazdeleniye = Podrazdeleniya.objects.filter(title=cells[method]).first()
+                    if not podrazdeleniye:
+                        podrazdeleniye = Podrazdeleniya(title=cells[method], p_type=3).save()
+                    Researches(title=cells[title], short_title=cells[short_title], nsi_id=cells[code], podrazdeleniye=podrazdeleniye, is_paraclinic=True, code=cells[code_nmu]).save()
+                    print('добавлен услуга:', cells[title], cells[code])  # noqa: T001

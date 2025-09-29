@@ -621,7 +621,7 @@ def print_direction(c: Canvas, n, dir: Napravleniya, format_a6: bool = False):
             rt = i.research.podrazdeleniye.get_title()
         if rt not in vid:
             vid.append(rt)
-            if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC:
+            if i.research.podrazdeleniye and i.research.podrazdeleniye.p_type == Podrazdeleniya.PARACLINIC or i.research.is_paraclinic:
                 has_descriptive = True
                 if i.research.podrazdeleniye.can_has_pacs:
                     need_qr_code = True
