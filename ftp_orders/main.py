@@ -899,7 +899,7 @@ def process_pull_results():
 
             processed_files_by_url[ftp_url] = processed_files_new
 
-        time.sleep(5)
+        time.sleep(60)
 
     for _, ftp_connection in ftp_connections.items():
         ftp_connection.disconnect()
