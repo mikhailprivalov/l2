@@ -82,10 +82,10 @@ class Command(BaseCommand):
 
                 if Researches.objects.filter(nsi_id=cells[code]).exists():
                     r = Researches.objects.filter(nsi_id=cells[code]).first()
-                    r.short_title=cells[short_title]
-                    r.title=cells[title]
-                    r.is_paraclinic=True
-                    r.code=cells[code_nmu]
+                    r.short_title = cells[short_title]
+                    r.title = cells[title]
+                    r.is_paraclinic = True
+                    r.code = cells[code_nmu]
                     r.save()
                 else:
                     podrazdeleniye = Podrazdeleniya.objects.filter(title=cells[method]).first()
