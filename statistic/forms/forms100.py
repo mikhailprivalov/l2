@@ -37,15 +37,11 @@ def form_01(ws1, data):
 
     # получить ЗАКРЫТЫЕ случаи за дату по компании
     last_date_year = f"{current_year()}-12-31"
-    print(data['company_id'])
-    print(data)
     closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'], last_date_year)
-    print("closed_id", closed_id)
 
     male = CONTROL_AGE_MEDEXAM.get("м")
     female = CONTROL_AGE_MEDEXAM.get("ж")
     adds_harmfull_title = set([CONTROL_AGE_MEDEXAM_MALE[i.age_year] if i.sex == "м" else CONTROL_AGE_MEDEXAM_FEMALE[i.age_year] for i in closed_id])
-    print("adds_harmfull_title", adds_harmfull_title)
     adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_title})}
     factors_id = {*set([i.factor_id for i in closed_id]), *adds_harmfull.values()}
 
