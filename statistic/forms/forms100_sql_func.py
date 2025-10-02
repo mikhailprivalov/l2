@@ -5,6 +5,7 @@ from laboratory.settings import TIME_ZONE
 
 
 def closed_company_cases_by_date(d_start, d_end, company_id, current_year_last_date):
+    print('RESEARCH_ID_CLOSE_CASE', RESEARCH_ID_CLOSE_CASE)
     with connection.cursor() as cursor:
         cursor.execute(
             """
