@@ -205,10 +205,12 @@ class EquipmentReceive(models.Model):
     tag_patient_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ФИО пациента")
     tag_study_date = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - study date")
     tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название станции")
+    tag_manufacturer = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0008,0070")
+    tag_manufacturer_model_name = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0008,1090")
     tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
     tag_patient_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
-    tag_sex = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
+    tag_sex = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag Пол")
     study_instance_uid_tag = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_uid tag", db_index=True)
     equipment_title = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
     equipment_model = models.ForeignKey(Equipment, blank=True, null=True, default=None, db_index=True, on_delete=models.CASCADE)
@@ -226,11 +228,12 @@ class EquipmentReceive(models.Model):
 
     @staticmethod
     def save_meta_tag_from_dicom_server(data):
-        study_instance_uid_tag = data.get("study_instance_uid_tag")
-        study_instance_uid_tag_dots = study_instance_uid_tag.split(".")
-        equipment_title = ".".join(study_instance_uid_tag_dots[:9])
+        tag_manufacturer = data.get("tag_manufacturer")
+        tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
+        tag_station_name = data.get("tag_station_name")
 
-        equipment_model = Equipment.objects.filter(sequence_study_instance_uid=equipment_title).first()
+        equipment_model = Equipment.objects.filter(tag_manufacturer=tag_manufacturer, tag_manufacturer_model_name=tag_manufacturer_model_name, tag_station_name=tag_station_name).first()
+
         eqr = EquipmentReceive(
             tag_patient_name=data.get("tag_patient_name"),
             tag_study_date=data.get("tag_study_date"),
@@ -242,7 +245,7 @@ class EquipmentReceive(models.Model):
             study_instance_uid_tag=data.get("study_instance_uid_tag"),
             equipment=data.get("tag_patient_name"),
             equipment_model=equipment_model,
-            equipment_title=equipment_title,
+            equipment_title=equipment_model.title,
         )
         eqr.save()
         return eqr
