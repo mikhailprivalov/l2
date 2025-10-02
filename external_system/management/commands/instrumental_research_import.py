@@ -91,12 +91,5 @@ class Command(BaseCommand):
                     podrazdeleniye = Podrazdeleniya.objects.filter(title=cells[method]).first()
                     if not podrazdeleniye:
                         podrazdeleniye = Podrazdeleniya(title=cells[method], p_type=3).save()
-                    Researches(
-                        title=cells[title],
-                        short_title=cells[short_title],
-                        nsi_id=cells[code],
-                        podrazdeleniye=podrazdeleniye,
-                        is_paraclinic=True,
-                        code=cells[code_nmu]
-                    ).save()
+                    Researches(title=cells[title], short_title=cells[short_title], nsi_id=cells[code], podrazdeleniye=podrazdeleniye, is_paraclinic=True, code=cells[code_nmu]).save()
                     print('добавлен услуга:', cells[title], cells[code])  # noqa: T001

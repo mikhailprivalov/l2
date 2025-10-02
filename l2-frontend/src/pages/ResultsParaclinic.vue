@@ -633,10 +633,10 @@
           </div>
           <div class="col-xs-1">
             <button
-              v-if="!embedded"
+              v-if="!embedded || forcedResultsTop"
               type="button"
               class="close"
-              @click="clear()"
+              @click="forcedResultsTop ? close() : clear()"
             >
               <span>&times;</span>
             </button>
@@ -2967,6 +2967,9 @@ export default {
       this.inserted = true;
       this.load_location();
       this.load_location_internal();
+    },
+    close() {
+      this.$root.$emit('close-results-paraclinic');
     },
     clear(ignoreOrig) {
       const ignore = ignoreOrig || false;
