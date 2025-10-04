@@ -47,13 +47,13 @@ class CrieOrderAdmin(admin.ModelAdmin):
 
 class EquipmentReceiveAdmin(admin.ModelAdmin):
     list_display = (
-        'study_instance_uid_tag',
+        'equipment_model',
         'napravleniye',
         'get_patient_name',
-        'birthday',
-        'sex',
         'tag_patient_id',
-        'order_id',
+        'tag_instance_id',
+        'study_instance_uid_tag',
+
         'doc_save_link',
         'time_save_link',
         'doc_reset_link',
@@ -62,10 +62,12 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
         'updated_at',
     )
     list_display_links = (
+        'equipment_model',
         'study_instance_uid_tag',
         'napravleniye',
     )
     list_filter = (
+        'equipment_model',
         'sex',
         'doc_save_link',
         'doc_reset_link',
@@ -97,7 +99,7 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
     actions = ['duplicate_equipment_receive']
 
     def get_patient_name(self, obj):
-        return f"{obj.family} {obj.name} {obj.patronymic}".strip()
+        return f"{obj.tag_patient_name}".strip()
 
     get_patient_name.short_description = 'ФИО пациента'
     get_patient_name.admin_order_field = 'family'
