@@ -53,7 +53,6 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
         'tag_patient_id',
         'tag_instance_id',
         'study_instance_uid_tag',
-
         'doc_save_link',
         'time_save_link',
         'doc_reset_link',
