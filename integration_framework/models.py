@@ -1,7 +1,6 @@
 from django.db.models import Q
 from django.utils import timezone
 
-from api.models import Application
 from clients.models import Individual, Phones
 from directions.models import Napravleniya
 import uuid
@@ -263,5 +262,4 @@ class EquipmentReceive(models.Model):
                 equipment_model=equipment_model,
                 equipment_title=equipment_model.title,
             ).save()
-            print(eqr)
         return eqr
