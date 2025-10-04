@@ -237,7 +237,6 @@ class EquipmentReceive(models.Model):
             type=6001,
             body=data,
             user=None,
-
         ).save()
 
         tag_manufacturer = data.get("tag_manufacturer")
