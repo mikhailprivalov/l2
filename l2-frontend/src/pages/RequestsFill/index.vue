@@ -194,6 +194,7 @@ import api from '@/api';
 import directionsPoint from '@/api/directions-point';
 import useLoader from '@/hooks/useLoader';
 import useOn from '@/hooks/useOn';
+import useNotify from '@/hooks/useNotify';
 
 import RequestCard, { type Request } from './RequestCard.vue';
 
@@ -220,6 +221,7 @@ const patientQuery = ref<string>('');
 let refreshInterval: any = null;
 
 const loader = useLoader();
+const notify = useNotify();
 
 const filteredWaitRequests = computed(() => {
   const base = showAccepted.value
@@ -247,6 +249,8 @@ const loadHospitals = async () => {
       }
     }
   } catch (error) {
+    notify.error('Ошибка загрузки организаций');
+    // eslint-disable-next-line no-console
     console.error('Ошибка загрузки организаций:', error);
   } finally {
     loader.global.dec();
@@ -267,6 +271,9 @@ const loadRequestsByStatus = async (isDone: boolean) => {
     }
     return [];
   } catch (error) {
+    notify.error('Ошибка загрузки заявок');
+    // eslint-disable-next-line no-console
+    console.error('Ошибка загрузки заявок:', error);
     return [];
   }
 };
