@@ -1,28 +1,45 @@
 <template>
   <PageInnerLayout>
-    <TwoSidedLayout :left-width-px="300">
+    <TwoSidedLayout :left-width-px="301">
       <template #left>
         <TopBottomLayout
-          :top-height-px="34"
+          :top-height-px="69"
           no-border
         >
           <template #top>
-            <div class="search">
-              <input
-                v-model.trim="numberToSearch"
-                type="text"
-                class="form-control "
-                placeholder="номер заявки"
-                @keyup.enter="searchByNumber()"
-              >
-              <button
-                class="btn btn-blue-nb"
-                :disabled="numberToSearch === ''"
-                @click="searchByNumber"
-              >
-                поиск
-              </button>
-            </div>
+            <TopBottomLayout :top-height-px="35">
+              <template #top>
+                <Treeselect
+                  v-model="selectedHospitalId"
+                  :options="hospitals"
+                  :clearable="false"
+                  :disabled="hospitalsLoading"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :append-to-body="true"
+                  placeholder="Выберите организацию"
+                  class="treeselect-noborder treeselect-34px"
+                />
+              </template>
+              <template #bottom>
+                <div class="search">
+                  <input
+                    v-model.trim="numberToSearch"
+                    type="text"
+                    class="form-control "
+                    placeholder="номер заявки"
+                    @keyup.enter="searchByNumber()"
+                  >
+                  <button
+                    class="btn btn-blue-nb"
+                    :disabled="numberToSearch === ''"
+                    @click="searchByNumber"
+                  >
+                    поиск
+                  </button>
+                </div>
+              </template>
+            </TopBottomLayout>
           </template>
           <template #bottom>
             <TopBottomLayout
@@ -94,6 +111,7 @@
                           v-for="request in filteredWaitRequests"
                           :key="request.id"
                           :request="request"
+                          :hospital-id="selectedHospitalId"
                           @request-accepted="handleRequestAccepted"
                           @card-clicked="handleCardClick"
                         />
@@ -125,6 +143,7 @@
                           v-for="request in requestsDone"
                           :key="request.id"
                           :request="request"
+                          :hospital-id="selectedHospitalId"
                           @card-clicked="handleCardClick"
                         />
                         <div
@@ -163,6 +182,8 @@ import {
   watch,
 } from 'vue';
 import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import ResultsParaclinic from '@/pages/ResultsParaclinic.vue';
 import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
@@ -176,7 +197,15 @@ import useOn from '@/hooks/useOn';
 
 import RequestCard, { type Request } from './RequestCard.vue';
 
+interface Hospital {
+  id: number;
+  label: string;
+}
+
 const date = ref(moment().format('DD.MM.YYYY'));
+const hospitals = ref<Hospital[]>([]);
+const selectedHospitalId = ref<number>(-1);
+const hospitalsLoading = ref(false);
 const requestsDone = ref<Request[]>([]);
 const requestsWait = ref<Request[]>([]);
 const initialLoading = ref(false);
@@ -202,11 +231,35 @@ const filteredWaitRequests = computed(() => {
   return base.filter(request => request.patient.toLowerCase().includes(query));
 });
 
+const loadHospitals = async () => {
+  try {
+    loader.global.inc();
+    hospitalsLoading.value = true;
+    const response = await api('requests/permissions-doctor');
+
+    if (response.hospitals && Array.isArray(response.hospitals)) {
+      hospitals.value = response.hospitals.map(h => ({
+        id: h.id,
+        label: h.title,
+      }));
+      if (hospitals.value.length > 0) {
+        selectedHospitalId.value = hospitals.value[0].id;
+      }
+    }
+  } catch (error) {
+    console.error('Ошибка загрузки организаций:', error);
+  } finally {
+    loader.global.dec();
+    hospitalsLoading.value = false;
+  }
+};
+
 const loadRequestsByStatus = async (isDone: boolean) => {
   try {
     const response = await api('requests/by-status', {
       date: date.value,
       isDone,
+      hospitalId: selectedHospitalId.value,
     });
 
     if (response.rows) {
@@ -260,6 +313,7 @@ const handleRequestAccepted = (data: { requestId: number; accepted: boolean; acc
 const loadRequestParams = async (requestId: number) => {
   const response = await api('requests/params', {
     requestId,
+    hospitalId: selectedHospitalId.value,
   });
 
   requestParams.value = response.params;
@@ -301,6 +355,7 @@ const searchByNumber = async () => {
   if (numberToSearch.value) {
     const { request } = await api('requests/by-number', {
       number: numberToSearch.value,
+      hospitalId: selectedHospitalId.value,
     });
 
     if (request) {
@@ -315,6 +370,11 @@ watch(date, () => {
   loadAllRequests();
 });
 
+watch(selectedHospitalId, () => {
+  selectedRequest.value = null;
+  loadAllRequests();
+});
+
 watch(isSearchMode, value => {
   if (!value) {
     patientQuery.value = '';
@@ -322,6 +382,7 @@ watch(isSearchMode, value => {
 });
 
 onMounted(() => {
+  loadHospitals();
   initialLoading.value = true;
   loadAllRequests().finally(() => {
     initialLoading.value = false;
@@ -585,12 +646,12 @@ onBeforeUnmount(() => {
 }
 
 .search {
-  flex: 0 0 34px;
   display: flex;
   flex-direction: row;
   align-items: stretch;
   flex-wrap: nowrap;
   justify-content: stretch;
+  height: 100%;
 
   input,
   button {

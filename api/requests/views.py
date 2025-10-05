@@ -17,6 +17,24 @@ from integration_framework.models import EquipmentReceive
 from users.models import DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 
 
+def get_allowed_hospital_ids(doctor_profile):
+    permissions = PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile=doctor_profile)
+    return [p.hospital_id for p in permissions if p.hospital_id]
+
+
+def check_hospital_access(doctor_profile, hospital_id):
+    if hospital_id == -1:
+        allowed_ids = get_allowed_hospital_ids(doctor_profile)
+        if not allowed_ids:
+            raise ValueError("У пользователя нет доступа ни к одной организации")
+        return allowed_ids
+    else:
+        allowed_ids = get_allowed_hospital_ids(doctor_profile)
+        if hospital_id not in allowed_ids:
+            raise ValueError("У пользователя нет доступа к указанной организации")
+        return [hospital_id]
+
+
 @login_required
 @group_required('Создание и исполнение заявок')
 def get_requests(request):
@@ -424,14 +442,23 @@ def get_request_details(request):
 def get_request_params(request):
     request_data = json.loads(request.body)
     request_id = request_data.get('requestId')
+    hospital_id = request_data.get('hospitalId', -1)
 
     if not request_id:
         return JsonResponse({"success": False, "message": "ID заявки не указан"})
 
     try:
+        allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
+    except ValueError as e:
+        return JsonResponse({"success": False, "message": str(e)})
+
+    try:
         direction = Napravleniya.objects.select_related('client__individual', 'doc').get(pk=request_id, is_request=True)
     except Napravleniya.DoesNotExist:
         return JsonResponse({"success": False, "message": "Заявка не найдена"})
+
+    if allowed_hospital_ids and direction.hospital_id not in allowed_hospital_ids:
+        return JsonResponse({"success": False, "message": "У пользователя нет доступа к этой заявке"})
 
     params = {}
 
@@ -533,12 +560,21 @@ def get_requests_by_status(request):
     request_data = json.loads(request.body)
     search_date = '-'.join(request_data.get("date").split(".")[::-1])
     is_done = request_data.get("isDone", False)
+    hospital_id = request_data.get("hospitalId", -1)
+
+    try:
+        allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
+    except ValueError as e:
+        return JsonResponse({"rows": [], "error": str(e)})
 
     directions = (
         Napravleniya.objects.filter(is_request=True, equipment_receive__isnull=False, equipment_receive__time_save_link__date=search_date)
         .select_related("client__individual", "doc")
         .prefetch_related("issledovaniya_set__research")
     )
+
+    if allowed_hospital_ids:
+        directions = directions.filter(hospital_id__in=allowed_hospital_ids)
 
     if is_done:
         directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-equipment_receive__time_save_link").distinct()
@@ -562,9 +598,22 @@ def get_requests_by_status(request):
 def get_request_by_number(request):
     request_data = json.loads(request.body)
     number = request_data.get("number")
+    hospital_id = request_data.get("hospitalId", -1)
 
-    direction = Napravleniya.objects.get(pk=number, is_request=True)
-    return JsonResponse({"request": direction_to_request(direction, request.user.doctorprofile)})
+    try:
+        allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
+    except ValueError as e:
+        return JsonResponse({"request": None, "error": str(e)})
+
+    try:
+        direction = Napravleniya.objects.get(pk=number, is_request=True)
+
+        if allowed_hospital_ids and direction.hospital_id not in allowed_hospital_ids:
+            return JsonResponse({"request": None, "error": "У пользователя нет доступа к этой заявке"})
+
+        return JsonResponse({"request": direction_to_request(direction, request.user.doctorprofile)})
+    except Napravleniya.DoesNotExist:
+        return JsonResponse({"request": None, "error": "Заявка не найдена"})
 
 
 @login_required
@@ -572,12 +621,21 @@ def get_request_by_number(request):
 def accept_request(request):
     request_data = json.loads(request.body)
     request_id = request_data.get("requestId")
+    hospital_id = request_data.get("hospitalId", -1)
 
     if not request_id:
         return status_response(False, "ID заявки не указан")
 
+    try:
+        allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
+    except ValueError as e:
+        return status_response(False, str(e))
+
     with transaction.atomic():
         direction = Napravleniya.objects.select_for_update().get(pk=request_id, is_request=True)
+
+        if allowed_hospital_ids and direction.hospital_id not in allowed_hospital_ids:
+            return status_response(False, "У пользователя нет доступа к этой заявке")
 
         if direction.accept_who_doctor:
             if direction.accept_who_doctor == request.user.doctorprofile:
@@ -597,12 +655,21 @@ def accept_request(request):
 def cancel_accept_request(request):
     request_data = json.loads(request.body)
     request_id = request_data.get("requestId")
+    hospital_id = request_data.get("hospitalId", -1)
 
     if not request_id:
         return status_response(False, "ID заявки не указан")
 
+    try:
+        allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
+    except ValueError as e:
+        return status_response(False, str(e))
+
     with transaction.atomic():
         direction = Napravleniya.objects.select_for_update().get(pk=request_id, is_request=True)
+
+        if allowed_hospital_ids and direction.hospital_id not in allowed_hospital_ids:
+            return status_response(False, "У пользователя нет доступа к этой заявке")
 
         if not direction.accept_who_doctor:
             return status_response(False, "Заявка не принята")
@@ -625,4 +692,4 @@ def cancel_accept_request(request):
 @group_required("Заполнение заявок")
 def get_permissions_doctor(request):
     access_hospital = PermissionHospitalProtocolDoctorProfile.get_access_hospital_by_doctor(request.user.doctorprofile)
-    return {"hospitals": access_hospital}
+    return JsonResponse({"hospitals": access_hospital})

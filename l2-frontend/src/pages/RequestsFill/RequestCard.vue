@@ -35,7 +35,7 @@
         </button>
       </div>
     </div>
-    <div>{{ props.request.patient }}, {{ props.request.clinic }}</div>
+    <div>{{ patientInfo }}</div>
     <div :class="$style.researchRow">
       {{ props.request.research }}
     </div>
@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import api from '@/api';
 import useNotify from '@/hooks/useNotify';
@@ -61,7 +61,14 @@ export type Request = {
   acceptedByCurrentUser: boolean;
 };
 
-const props = defineProps<{ request: Request }>();
+interface Props {
+  request: Request;
+  hospitalId?: number;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  hospitalId: -1,
+});
 
 // eslint-disable-next-line no-spaced-func,func-call-spacing
 const emit = defineEmits<{
@@ -71,6 +78,13 @@ const emit = defineEmits<{
 
 const notify = useNotify();
 const processing = ref(false);
+
+const patientInfo = computed(() => {
+  if (props.hospitalId === -1) {
+    return `${props.request.patient}, ${props.request.clinic}`;
+  }
+  return props.request.patient;
+});
 
 const showAcceptButton = () => props.request.waitFill && !props.request.accepted;
 
@@ -93,7 +107,7 @@ const handleRequestAction = async (accept: boolean) => {
       acceptedByCurrentUser: newAcceptedByCurrentUser,
     });
 
-    const response = await api(endpoint, { requestId: props.request.id });
+    const response = await api(endpoint, { requestId: props.request.id, hospitalId: props.hospitalId });
 
     if (response.ok) {
       notify.ok(successMessage);
