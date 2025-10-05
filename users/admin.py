@@ -25,7 +25,12 @@ class DocAdmin(admin.ModelAdmin):
     )
     list_display_links = ('fio',)
     search_fields = ('fio',)
-    filter_horizontal = ('white_list_monitoring', 'black_list_monitoring', 'disabled_fin_source', 'room_access',)
+    filter_horizontal = (
+        'white_list_monitoring',
+        'black_list_monitoring',
+        'disabled_fin_source',
+        'room_access',
+    )
 
 
 class ResDistrictResearchLimitAssign(admin.ModelAdmin):
@@ -38,8 +43,8 @@ class ResAssignmentTemplates(admin.ModelAdmin):
 
 
 class ResPosition(admin.ModelAdmin):
-    list_display = ('title', 'n3_id',)
-    list_display_links = ('title', 'n3_id',)
+    list_display = ('title', 'n3_id')
+    list_display_links = ('title', 'n3_id')
 
 
 class ResDoctorProfileEquipment(admin.ModelAdmin):
@@ -53,6 +58,12 @@ class ResDoctorProfileEquipment(admin.ModelAdmin):
     )
 
 
+class ResPermissionHospitalProtocolDoctorProfile(admin.ModelAdmin):
+    autocomplete_fields = ('hospital', 'doctor_profile')
+    list_display = ('doctor_profile', 'hospital')
+    list_display_links = ('doctor_profile', 'hospital')
+
+
 admin.site.register(DoctorProfile, DocAdmin)
 admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
 admin.site.register(AssignmentResearches)
@@ -62,4 +73,4 @@ admin.site.register(AvailableResearchByGroup)
 admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
 admin.site.register(Position, ResPosition)
 admin.site.register(DoctorProfileEquipment, ResDoctorProfileEquipment)
-admin.site.register(PermissionHospitalProtocolDoctorProfile)
+admin.site.register(PermissionHospitalProtocolDoctorProfile, ResPermissionHospitalProtocolDoctorProfile)

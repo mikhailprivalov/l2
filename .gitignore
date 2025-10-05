@@ -244,3 +244,7 @@ external_system/settings/phones_org.json
 !/ftp_orders/hl7_rule/default.json
 /xml_generate/templates/
 /forms/xlsx/media/
+
+# Memory Bank - personal developer context
+memory-bank/activeContext.md
+memory-bank/progress.md

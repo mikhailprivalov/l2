@@ -690,5 +690,5 @@ class PermissionHospitalProtocolDoctorProfile(models.Model):
     def get_access_hospital_by_doctor(doctor_id):
         permissions = PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile_id=doctor_id)
         rows = [{"id": -1, "title": "Все"}]
-        rows.extend([{"id": i.hospital, "title": i.hospital.title} for i in permissions])
+        rows.extend([{"id": i.hospital.pk, "title": i.hospital.title} for i in permissions])
         return rows
