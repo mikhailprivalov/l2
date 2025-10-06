@@ -239,7 +239,12 @@ class EquipmentReceive(models.Model):
         study_instance_uid_tag = cache.get(cache_key)
         eqr = None
         if not study_instance_uid_tag:
-            Log(key="", type=6001, body=data, user=None,).save()
+            Log(
+                key="",
+                type=6001,
+                body=data,
+                user=None,
+            ).save()
             tag_manufacturer = data.get("tag_manufacturer")
             tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
             tag_institution_name = data.get("tag_institution_name")
