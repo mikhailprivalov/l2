@@ -15,6 +15,7 @@ from slog.models import Log
 from users.models import DoctorProfile
 from utils.models import ChoiceArrayField
 import simplejson as json
+from django.core.cache import cache
 
 
 class IntegrationNamespace(models.Model):
@@ -207,8 +208,10 @@ class EquipmentReceive(models.Model):
     tag_patient_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - ФИО пациента")
     tag_study_date = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - study date")
     tag_station_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название станции")
+    tag_institution_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название организации")
     tag_manufacturer = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0008,0070")
     tag_manufacturer_model_name = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0008,1090")
+    tag_device_serial_number = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0018,1000")
     tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
     tag_patient_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
@@ -232,33 +235,40 @@ class EquipmentReceive(models.Model):
     @staticmethod
     def save_meta_tag_from_dicom_server(request):
         data = json.loads(request.body)
-        Log(
-            key="",
-            type=6001,
-            body=data,
-            user=None,
-        ).save()
-
-        tag_manufacturer = data.get("tag_manufacturer")
-        tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
-        tag_station_name = data.get("tag_station_name")
-        equipment_model = Equipment.objects.filter(manufacturer=tag_manufacturer, manufacturer_model_name=tag_manufacturer_model_name, station_name=tag_station_name).first()
-        if not equipment_model:
-            eqr = None
-        else:
-            eqr = EquipmentReceive(
-                tag_patient_name=data.get("tag_patient_name"),
-                tag_study_date=data.get("tag_study_date"),
-                tag_station_name=data.get("tag_station_name"),
-                tag_manufacturer=tag_manufacturer,
-                tag_manufacturer_model_name=tag_manufacturer_model_name,
-                tag_patient_sex=data.get("tag_patient_sex"),
-                tag_patient_birthdate=data.get("tag_patient_birthdate"),
-                tag_instance_id=data.get("tag_instanceId"),
-                tag_patient_id=data.get("tag_patient_id"),
-                tag_sex=data.get("tag_sex"),
-                study_instance_uid_tag=data.get("study_instance_uid_tag"),
-                equipment_model=equipment_model,
-                equipment_title=equipment_model.title,
+        cache_key = f"dcm:study_instance_uid:{data.get('study_instance_uid_tag')}"
+        study_instance_uid_tag = cache.get(cache_key)
+        eqr = None
+        if not study_instance_uid_tag:
+            Log(
+                key="",
+                type=6001,
+                body=data,
+                user=None,
             ).save()
+            tag_manufacturer = data.get("tag_manufacturer")
+            tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
+            tag_institution_name = data.get("tag_institution_name")
+            tag_station_name = data.get("tag_station_name")
+            equipment_model = Equipment.objects.filter(
+                institution_name=tag_institution_name, manufacturer=tag_manufacturer, manufacturer_model_name=tag_manufacturer_model_name, station_name=tag_station_name
+            ).first()
+            if equipment_model:
+                eqr = EquipmentReceive(
+                    tag_patient_name=data.get("tag_patient_name"),
+                    tag_study_date=data.get("tag_study_date"),
+                    tag_station_name=data.get("tag_station_name"),
+                    tag_institution_name=data.get("tag_institution_name"),
+                    tag_manufacturer=tag_manufacturer,
+                    tag_manufacturer_model_name=tag_manufacturer_model_name,
+                    tag_patient_sex=data.get("tag_patient_sex"),
+                    tag_patient_birthdate=data.get("tag_patient_birthdate"),
+                    tag_instance_id=data.get("tag_instanceId"),
+                    tag_patient_id=data.get("tag_patient_id"),
+                    tag_device_serial_number=data.get("tag_device_serial_number"),
+                    tag_sex=data.get("tag_sex"),
+                    study_instance_uid_tag=data.get("study_instance_uid_tag"),
+                    equipment_model=equipment_model,
+                    equipment_title=equipment_model.title,
+                ).save()
+                cache.set(cache_key, data.get('study_instance_uid_tag'), 60 * 60 * 24)
         return eqr
