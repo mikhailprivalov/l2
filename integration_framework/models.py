@@ -235,14 +235,22 @@ class EquipmentReceive(models.Model):
     def save_meta_tag_from_dicom_server(request):
         data = json.loads(request.body)
         cache_key = f"dcm:study_instance_uid:{data.get('study_instance_uid_tag')}"
+        print("cache_key", cache_key)
         study_instance_uid_tag = cache.get(cache_key)
+        print("study_instance_uid_tag", study_instance_uid_tag)
         eqr = None
         if not study_instance_uid_tag:
             Log(key="", type=6001, body=data, user=None,).save()
             tag_manufacturer = data.get("tag_manufacturer")
             tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
+            tag_institution_name = data.get("tag_institution_name")
             tag_station_name = data.get("tag_station_name")
-            equipment_model = Equipment.objects.filter(manufacturer=tag_manufacturer, manufacturer_model_name=tag_manufacturer_model_name, station_name=tag_station_name).first()
+            equipment_model = Equipment.objects.filter(
+                institution_name=tag_institution_name,
+                manufacturer=tag_manufacturer,
+                manufacturer_model_name=tag_manufacturer_model_name,
+                station_name=tag_station_name
+            ).first()
             if equipment_model:
                 eqr = EquipmentReceive(
                     tag_patient_name=data.get("tag_patient_name"),
