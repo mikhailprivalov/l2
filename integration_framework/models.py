@@ -211,6 +211,7 @@ class EquipmentReceive(models.Model):
     tag_institution_name = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ТЭГ - название организации")
     tag_manufacturer = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0008,0070")
     tag_manufacturer_model_name = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0008,1090")
+    tag_device_serial_number = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="tag 0018,1000")
     tag_patient_sex = models.CharField(max_length=1, blank=True, null=True, default=None, help_text="ТЭГ - пол")
     tag_patient_birthdate = models.CharField(max_length=10, blank=True, null=True, default=None, help_text="ТЭГ - дата рождения")
     tag_patient_id = models.CharField(max_length=64, default=None, null=True, blank=True, db_index=True, help_text="Patient ID")
@@ -235,9 +236,7 @@ class EquipmentReceive(models.Model):
     def save_meta_tag_from_dicom_server(request):
         data = json.loads(request.body)
         cache_key = f"dcm:study_instance_uid:{data.get('study_instance_uid_tag')}"
-        print("cache_key", cache_key)
         study_instance_uid_tag = cache.get(cache_key)
-        print("study_instance_uid_tag", study_instance_uid_tag)
         eqr = None
         if not study_instance_uid_tag:
             Log(key="", type=6001, body=data, user=None,).save()
@@ -263,6 +262,7 @@ class EquipmentReceive(models.Model):
                     tag_patient_birthdate=data.get("tag_patient_birthdate"),
                     tag_instance_id=data.get("tag_instanceId"),
                     tag_patient_id=data.get("tag_patient_id"),
+                    tag_device_serial_number=data.get("tag_device_serial_number"),
                     tag_sex=data.get("tag_sex"),
                     study_instance_uid_tag=data.get("study_instance_uid_tag"),
                     equipment_model=equipment_model,

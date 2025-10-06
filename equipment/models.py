@@ -9,6 +9,8 @@ class Equipment(models.Model):
     manufacturer_model_name = models.CharField(max_length=255, default="", blank=True, null=True, help_text="tag 0008,1090", db_index=True)
     station_name = models.CharField(max_length=255, default="", blank=True, null=True, help_text="tag 0008,1010", db_index=True)
     institution_name = models.CharField(max_length=255, default="", blank=True, null=True, help_text="tag 0008,0080", db_index=True)
+    device_serial_number = models.CharField(max_length=255, default="", blank=True, null=True, help_text="tag 0018,1000", db_index=True)
+
 
     def __str__(self):
         return f"{self.hospital} {self.title}"
