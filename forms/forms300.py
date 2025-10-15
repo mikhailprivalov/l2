@@ -262,7 +262,7 @@ def _create_work_time_schedule_table(style_center, style_left, document_last_day
     ]
     style = _create_work_time_schedule_table_style()
     cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
-    table = create_table(data, style, cols_widths, "LEFT", 1, 3)
+    table = create_table(data, style, cols_widths, "LEFT", 1, 2)
     return table
 
 
