@@ -262,7 +262,7 @@ def _create_work_time_schedule_table(style_center, style_left, document_last_day
     ]
     style = _create_work_time_schedule_table_style()
     cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
-    table = create_table(data, style, cols_widths, "LEFT", 1, 3)
+    table = create_table(data, style, cols_widths, "LEFT", 1, 2)
     return table
 
 
@@ -307,7 +307,7 @@ def form_01(request_data):
         _create_meta_information(canvas, meta_context)
 
     buffer = BytesIO()
-    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=32 * mm, bottomMargin=43 * mm, title="График рабочего времени")
+    document = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=5 * mm, leftMargin=5 * mm, topMargin=32 * mm, bottomMargin=15 * mm, title="График рабочего времени")
     document.build(document_data, first_pages, later_pages)
     pdf = buffer.getvalue()
     buffer.close()
