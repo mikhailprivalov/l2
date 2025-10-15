@@ -4,13 +4,13 @@ from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 
 
-def add_thin_bottom_border(work_sheet, border_style, row_number, start_col_number, end_col_number):
+def set_thin_bottom_border(work_sheet, border_style: Border, row_number: int, start_col_number: int, end_col_number: int) -> None:
     for col in range(start_col_number, end_col_number + 1):
         cell = work_sheet.cell(row=row_number, column=col)
         cell.border = border_style
 
 
-def _set_work_time_sheet_column_widths(work_sheet):
+def _set_work_time_sheet_column_widths(work_sheet) -> None:
     work_sheet.column_dimensions['A'].width = 4.17
     work_sheet.column_dimensions['B'].width = 17.5
     work_sheet.column_dimensions['C'].width = 18.83
@@ -30,6 +30,13 @@ def _set_work_time_sheet_column_widths(work_sheet):
 
 
 def form_01(request_data) -> Workbook:
+    """
+    Создает xlsx файл по форме графика рабочего времени
+    """
+
+    # TODO вынести создание заголовка в отдельную функцию
+    # TODO динамически получать все данные
+    # TODO подумать как разбить по страницам
 
     organization_title = "ОГАУЗ ГИМДКБ"  # TODO получать динамически
     department_title = "Травмпункт"  # TODO получать динамически
@@ -67,14 +74,14 @@ def form_01(request_data) -> Workbook:
     work_sheet["A7"] = department_title
     cell_a_number = 1
     cell_ag_number = 33
-    add_thin_bottom_border(work_sheet, thin_bottom_border, 7, cell_a_number, cell_ag_number)
+    set_thin_bottom_border(work_sheet, thin_bottom_border, 7, cell_a_number, cell_ag_number)
     work_sheet["AD7"] = "календарных дней"
     work_sheet.merge_cells('A8:AC8')
     work_sheet["A8"].alignment = alignment_center
     work_sheet["A8"] = "(подразделение)"
     work_sheet["AD8"] = "рабочих дней"
     cell_ad_number = 30
-    add_thin_bottom_border(work_sheet, thin_bottom_border, 8, cell_ad_number, cell_ag_number)
+    set_thin_bottom_border(work_sheet, thin_bottom_border, 8, cell_ad_number, cell_ag_number)
     work_sheet.merge_cells('A9:AC9')
     work_sheet["A9"].alignment = alignment_center
     work_sheet["A9"] = "_______________ 20      год"
