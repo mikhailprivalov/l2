@@ -88,6 +88,12 @@
           </button>
           <button
             class="btn btn-blue-nb"
+            @click.prevent="downloadXlsx()"
+          >
+            XLSX
+          </button>
+          <button
+            class="btn btn-blue-nb"
             @click.prevent="printDocument()"
           >
             PDF
@@ -693,6 +699,10 @@ const printDocument = async () => {
   await store.dispatch(actions.DEC_LOADING);
   const urlFile = URL.createObjectURL(result.data);
   window.open(urlFile);
+};
+
+const downloadXlsx = async () => {
+  window.open('/forms/xlsx?type=104.01', '_blank');
 };
 
 </script>
