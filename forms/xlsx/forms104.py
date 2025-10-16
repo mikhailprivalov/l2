@@ -200,4 +200,9 @@ def form_01(request_data) -> Workbook:
             work_sheet.cell(row=third_row_number+index_row, column=start_date_col_number+index_date, value=date)
         work_sheet.cell(row=third_row_number+index_row, column=amount_hours_col_number, value=amount_hours)
 
+    work_sheet.cell(row=data_end_row_number+2, column=1, value="Заведующий отделением")
+    work_sheet.cell(row=data_end_row_number+2, column=3, value="_____________________")
+    work_sheet.cell(row=data_end_row_number+2, column=11, value="Старшая медицинская сестра")
+    work_sheet.cell(row=data_end_row_number + 2, column=16, value="_____________________")
+
     return work_book
