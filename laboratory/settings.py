@@ -179,13 +179,8 @@ LOGGING = {
     'formatters': {
         'base': {'format': '\n[%(asctime)s] [%(levelname)s] %(module)s\n' 'Request: %(path)s [%(method)s] %(user)s %(data)s\n' 'Body: %(body)s\n' '%(stack_info)s\n'},
     },
-    'filters': {
-        'requestdata': {
-            '()': 'utils.filters.RequestDataFilter',
-        },
-    },
     'handlers': {
-        'file': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filters': ['requestdata'], 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
+        'file': {'level': 'DEBUG', 'class': 'logging.FileHandler', 'filename': os.path.join(BASE_DIR, 'logs', 'log.txt'), 'formatter': 'base'},
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
