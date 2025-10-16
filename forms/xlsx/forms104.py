@@ -175,7 +175,6 @@ def form_01(request_data) -> Workbook:
     for date_number in range(document_last_day_month):
         work_sheet.cell(row=second_row_number, column=date_number + start_date_col_number, value=date_number + 1)
 
-    table_body = []
     non_date_key = {"employeePositionId", "fio", "position", "bidType", "lunchDuration", "totalHoursDecimal", "totalHours"}
     for index_row, work_time in enumerate(employees_work_time):
         item_number = index_row + 1
@@ -186,10 +185,16 @@ def form_01(request_data) -> Workbook:
         norm_hours = ""
         working_shift = ""
         amount_hours = work_time.get("totalHoursDecimal")
-        date_keys = [key for key in work_time.keys() if key not in non_date_key]
-        date_keys_sorted = sorted(date_keys, key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
-        date_values = [_parse_cell_data(work_day_statuses, work_time.get(date_key)) for date_key in date_keys_sorted]
-        work_sheet.cell(row=third_row_number+index_row, column=item_number_col_number, value=index_row)
+        date_keys = []
+        for key in work_time.keys():
+            try:
+                date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
+                date_keys.append(date_key)
+            except ValueError:
+                pass
+        date_keys_sorted = sorted(date_keys)
+        date_values = [_parse_cell_data(work_day_statuses, work_time.get(date_key.strftime("%Y-%m-%d"))) for date_key in date_keys_sorted]
+        work_sheet.cell(row=third_row_number+index_row, column=item_number_col_number, value=item_number)
         work_sheet.cell(row=third_row_number+index_row, column=fio_col_number, value=fio)
         work_sheet.cell(row=third_row_number+index_row, column=position_col_number, value=position)
         work_sheet.cell(row=third_row_number+index_row, column=type_employment_col_number, value=type_employment)
