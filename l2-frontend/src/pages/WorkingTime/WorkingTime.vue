@@ -702,7 +702,33 @@ const printDocument = async () => {
 };
 
 const downloadXlsx = async () => {
-  window.open('/forms/xlsx?type=104.01', '_blank');
+  const apiForBlob = axios.create({
+    baseURL: `${window.location.origin}/forms`,
+    responseType: 'blob',
+  });
+  await store.dispatch(actions.INC_LOADING);
+  const result = await apiForBlob.post('/xlsx?type=104.01', {
+    employeesWorkTime: employeesWorkTime.value,
+    documentId: documentId.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  const blob = new Blob([result.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const urlFile = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = urlFile;
+  const contentDisposition = result.headers['content-disposition'];
+  let fileName = 'form.xlsx';
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename="?([^"]+?)(?:_)?"?$/);
+    if (match?.[1]) {
+      [, fileName] = match;
+    }
+  }
+  link.setAttribute('download', fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(urlFile);
 };
 
 </script>
