@@ -11,10 +11,21 @@ from employees.models import TimeTrackingDocument, WorkDayStatus
 from hospitals.models import Hospitals
 
 
-def set_thin_bottom_border(work_sheet, border_style: Border, row_number: int, start_col_number: int, end_col_number: int) -> None:
-    for col in range(start_col_number, end_col_number + 1):
-        cell = work_sheet.cell(row=row_number, column=col)
-        cell.border = border_style
+def set_style_for_area(work_sheet, min_row, max_row, min_col, max_col, border_style=None, alignment_style=None):
+    for row in work_sheet.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
+        for cell in row:
+            if border_style:
+                cell.border = border_style
+            if alignment_style:
+                cell.alignment = alignment_style
+
+
+def merge_cells_by_row(work_sheet, start_row, end_row, start_col, end_col):
+    """
+    Объединяет построчно для каждой колонки в диапозоне
+    """
+    for col in range(start_col, end_col + 1):
+        work_sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
 
 
 def _set_work_time_sheet_column_widths(work_sheet) -> None:
@@ -75,17 +86,101 @@ def _create_work_time_sheet_header_meta(context):
     work_sheet["A7"] = department_title
     cell_a_number = 1
     cell_ag_number = 33
-    set_thin_bottom_border(work_sheet, thin_bottom_border, 7, cell_a_number, cell_ag_number)
+    set_style_for_area(work_sheet, 7, 7, cell_a_number, cell_ag_number, thin_bottom_border)
+    # set_border_for_area(work_sheet, thin_bottom_border, 7, 7, cell_a_number, cell_ag_number)
     work_sheet["AD7"] = f"календарных дней {document_last_day_month}"
     work_sheet.merge_cells('A8:AC8')
     work_sheet["A8"].alignment = alignment_center
     work_sheet["A8"] = "(подразделение)"
     work_sheet["AD8"] = "рабочих дней"
     cell_ad_number = 30
-    set_thin_bottom_border(work_sheet, thin_bottom_border, 8, cell_ad_number, cell_ag_number)
+    set_style_for_area(work_sheet, 8, 8, cell_ad_number, cell_ag_number, thin_bottom_border)
+    # set_border_for_area(work_sheet, thin_bottom_border, 8, 8, cell_ad_number, cell_ag_number)
     work_sheet.merge_cells('A9:AC9')
     work_sheet["A9"].alignment = alignment_center
     work_sheet["A9"] = f"{document_month_name} {document_year} год"
+
+
+def _create_work_time_sheet_table_header(context):
+    work_sheet = context.get("work_sheet")
+    first_row_number = context.get("first_row_number")
+    second_row_number = context.get("second_row_number")
+    item_number_col_number = context.get("item_number_col_number")
+    fio_col_number = context.get("fio_col_number")
+    position_col_number = context.get("position_col_number")
+    type_employment_col_number = context.get("type_employment_col_number")
+    occupied_volume_col_number = context.get("occupied_volume_col_number")
+    norm_hours_col_number = context.get("norm_hours_col_number")
+    working_shift_col_number = context.get("working_shift_col_number")
+    start_date_col_number = context.get("start_date_col_number")
+    end_date_col_number = context.get("end_date_col_number")
+    amount_hours_col_number = context.get("amount_hours_col_number")
+    employees_signature_col_number = context.get("employees_signature_col_number")
+    document_last_day_month = context.get("document_last_day_month")
+
+    merge_cells_by_row(work_sheet, first_row_number, second_row_number, item_number_col_number, working_shift_col_number)
+    work_sheet.merge_cells(start_row=first_row_number, start_column=start_date_col_number, end_row=first_row_number, end_column=end_date_col_number)
+    merge_cells_by_row(work_sheet, first_row_number, second_row_number, amount_hours_col_number, employees_signature_col_number)
+
+    work_sheet.cell(row=first_row_number, column=item_number_col_number, value="№ п/п")
+    work_sheet.cell(row=first_row_number, column=fio_col_number, value="Фамилия имя отчество")
+    work_sheet.cell(row=first_row_number, column=position_col_number, value="Должность (профессия)")
+    work_sheet.cell(row=first_row_number, column=type_employment_col_number, value="Вид занятости (осн, внутр, внеш)")
+    work_sheet.cell(row=first_row_number, column=occupied_volume_col_number, value="Занимаемый объем (согл ТД), шт ед")
+    work_sheet.cell(row=first_row_number, column=norm_hours_col_number, value="Норма часов на занимаемый объем")
+    work_sheet.cell(row=first_row_number, column=working_shift_col_number, value="Рабочая смена")
+    work_sheet.cell(row=first_row_number, column=start_date_col_number, value="Числа месяца")
+    work_sheet.cell(row=first_row_number, column=amount_hours_col_number, value="Количество часов согласно графика")
+    work_sheet.cell(row=first_row_number, column=employees_signature_col_number, value="Подпись работника")
+    for date_number in range(document_last_day_month):
+        work_sheet.cell(row=second_row_number, column=date_number + start_date_col_number, value=date_number + 1)
+
+
+def _create_work_time_sheet_table(context) -> None:
+    work_sheet = context.get("work_sheet")
+    document_last_day_month = context.get("document_last_day_month")
+    thin_border = context.get("thin_border")
+    alignment_center_wrap = context.get("alignment_center_wrap")
+    alignment_left_wrap = context.get("alignment_left_wrap")
+    employees_work_time = context.get("employees_work_time")
+    work_day_statuses = context.get("work_day_statuses")
+    first_row_number = 12
+    second_row_number = 13
+    third_row_number = 14
+    data_end_row_number = third_row_number + len(employees_work_time)
+    item_number_col_number = 1
+    fio_col_number = 2
+    position_col_number = 3
+    type_employment_col_number = 4
+    occupied_volume_col_number = 5
+    norm_hours_col_number = 6
+    working_shift_col_number = 7
+    start_date_col_number = 8
+    end_date_col_number = start_date_col_number + document_last_day_month
+    amount_hours_col_number = end_date_col_number + 1
+    employees_signature_col_number = amount_hours_col_number + 1
+
+    set_style_for_area(work_sheet, first_row_number, data_end_row_number, item_number_col_number, employees_signature_col_number, thin_border, alignment_center_wrap)
+    set_style_for_area(work_sheet, third_row_number, data_end_row_number, fio_col_number, fio_col_number, alignment_style=alignment_left_wrap)
+
+    header_table_context = {
+        "work_sheet": work_sheet,
+        "first_row_number": first_row_number,
+        "second_row_number": second_row_number,
+        "item_number_col_number": item_number_col_number,
+        "fio_col_number": fio_col_number,
+        "position_col_number": position_col_number,
+        "type_employment_col_number": type_employment_col_number,
+        "occupied_volume_col_number": occupied_volume_col_number,
+        "norm_hours_col_number": norm_hours_col_number,
+        "working_shift_col_number": working_shift_col_number,
+        "start_date_col_number": start_date_col_number,
+        "end_date_col_number": end_date_col_number,
+        "amount_hours_col_number": amount_hours_col_number,
+        "employees_signature_col_number": employees_signature_col_number,
+        "document_last_day_month": document_last_day_month
+    }
+    _create_work_time_sheet_table_header(header_table_context)
 
 
 def form_01(request_data) -> Workbook:
@@ -99,7 +194,6 @@ def form_01(request_data) -> Workbook:
     employees_work_time = request_body.get("employeesWorkTime")
     time_tracking_document: TimeTrackingDocument = TimeTrackingDocument.get_document_for_print(document_id)
     work_day_statuses = WorkDayStatus.get_short_statuses_dict()
-
     document_date = time_tracking_document.month
     document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
     document_year = document_date.year
@@ -109,13 +203,17 @@ def form_01(request_data) -> Workbook:
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
 
-    thin_bottom_border = Border(bottom=Side(style='thin'))
+    thin_line = Side(style='thin')
+    thin_bottom_border = Border(bottom=thin_line)
+    thin_border = Border(left=thin_line, top=thin_line, right=thin_line, bottom=thin_line)
     alignment_center = Alignment(horizontal='center', vertical='center')
+    alignment_center_wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    alignment_left_wrap = Alignment(horizontal='left', vertical='center', wrap_text=True)
     font_bold = Font(bold=True)
 
     work_book: Workbook = openpyxl.Workbook()
     work_book.remove(work_book.get_sheet_by_name("Sheet"))
-    work_sheet = work_book.create_sheet(f"{department_title}")  # TODO название отделения
+    work_sheet = work_book.create_sheet(f"{department_title}")
     _set_work_time_sheet_column_widths(work_sheet)
 
     meta_context = {
@@ -130,5 +228,15 @@ def form_01(request_data) -> Workbook:
         "department_title": department_title,
     }
     _create_work_time_sheet_header_meta(meta_context)
+    table_context = {
+        "work_sheet": work_sheet,
+        "document_last_day_month": document_last_day_month,
+        "thin_border": thin_border,
+        "alignment_center_wrap": alignment_center_wrap,
+        "alignment_left_wrap": alignment_left_wrap,
+        "employees_work_time": employees_work_time,
+        "work_day_statuses": work_day_statuses
+    }
+    _create_work_time_sheet_table(table_context)
 
     return work_book
