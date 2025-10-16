@@ -29,27 +29,7 @@ def _set_work_time_sheet_column_widths(work_sheet) -> None:
     work_sheet.column_dimensions['AN'].width = 11.33
 
 
-def form_01(request_data) -> Workbook:
-    """
-    Создает xlsx файл по форме графика рабочего времени
-    """
-
-    # TODO вынести создание заголовка в отдельную функцию
-    # TODO динамически получать все данные
-    # TODO подумать как разбить по страницам
-
-    organization_title = "ОГАУЗ ГИМДКБ"  # TODO получать динамически
-    department_title = "Травмпункт"  # TODO получать динамически
-
-    thin_bottom_border = Border(bottom=Side(style='thin'))
-    alignment_center = Alignment(horizontal='center', vertical='center')
-    font_bold = Font(bold=True)
-
-    work_book: Workbook = openpyxl.Workbook()
-    work_book.remove(work_book.get_sheet_by_name("Sheet"))
-    work_sheet = work_book.create_sheet("Подразделение")
-    _set_work_time_sheet_column_widths(work_sheet)
-
+def _create_work_time_sheet_header_meta(work_sheet, alignment_center, font_bold, thin_bottom_border, organization_title, department_title):
     work_sheet["AL1"] = "Приложение № 2 к"
     work_sheet["B2"] = "Председатель ППО"
     work_sheet["C2"] = "________________"
@@ -85,5 +65,28 @@ def form_01(request_data) -> Workbook:
     work_sheet.merge_cells('A9:AC9')
     work_sheet["A9"].alignment = alignment_center
     work_sheet["A9"] = "_______________ 20      год"
+
+
+def form_01(request_data) -> Workbook:
+    """
+    Создает xlsx файл по форме графика рабочего времени
+    """
+
+    # TODO вынести создание заголовка в отдельную функцию
+    # TODO динамически получать все данные
+    # TODO подумать как разбить по страницам
+
+    organization_title = "ОГАУЗ ГИМДКБ"  # TODO получать динамически
+    department_title = "Травмпункт"  # TODO получать динамически
+
+    thin_bottom_border = Border(bottom=Side(style='thin'))
+    alignment_center = Alignment(horizontal='center', vertical='center')
+    font_bold = Font(bold=True)
+
+    work_book: Workbook = openpyxl.Workbook()
+    work_book.remove(work_book.get_sheet_by_name("Sheet"))
+    work_sheet = work_book.create_sheet("Подразделение")  # TODO название отделения
+    _set_work_time_sheet_column_widths(work_sheet)
+    _create_work_time_sheet_header_meta(work_sheet, alignment_center, font_bold, thin_bottom_border, organization_title, department_title)
 
     return work_book
