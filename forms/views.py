@@ -107,6 +107,7 @@ def xlsx(request):
             **dict(request.GET.items()),
             "user": request.user,
             "hospital": request.user.doctorprofile.get_hospital() if hasattr(request.user, "doctorprofile") else Hospitals.get_default_hospital(),
+            "request_body": json.loads(request.body) if request.body else None,
         }
     )
 
