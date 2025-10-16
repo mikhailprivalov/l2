@@ -452,7 +452,7 @@ def endpoint(request):
                                                 anti_result = directions.MicrobiologyResultCultureAntibiotic(
                                                     result_culture=culture_result,
                                                     antibiotic=anti_obj,
-                                                    sensitivity=anti_r.get("RSI"),
+                                                    sensitivity=rsi,
                                                     dia=anti_r.get("dia", ""),
                                                     mic=anti_r.get("mic", "") or None,
                                                     antibiotic_amount=a_name,
