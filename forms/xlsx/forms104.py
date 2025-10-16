@@ -4,7 +4,7 @@ from typing import Dict
 
 import openpyxl
 import pytils
-from openpyxl.styles import Alignment, Border, Side, Font
+from openpyxl.styles import Alignment, Border, Side, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.workbook import Workbook
 
@@ -12,13 +12,15 @@ from employees.models import TimeTrackingDocument, WorkDayStatus
 from hospitals.models import Hospitals
 
 
-def set_style_for_area(work_sheet, min_row, max_row, min_col, max_col, border_style=None, alignment_style=None):
+def set_style_for_area(work_sheet, min_row, max_row, min_col, max_col, border_style=None, alignment_style=None, fill_style=None):
     for row in work_sheet.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
         for cell in row:
             if border_style:
                 cell.border = border_style
             if alignment_style:
                 cell.alignment = alignment_style
+            if fill_style:
+                cell.fill = fill_style
 
 
 def merge_cells_by_row(work_sheet, start_row, end_row, start_col, end_col):
@@ -29,7 +31,6 @@ def merge_cells_by_row(work_sheet, start_row, end_row, start_col, end_col):
         work_sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
 
 
-
 def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
     start_time = cell_value.get("startWorkTime")
     end_time = cell_value.get("endWorkTime")
@@ -37,7 +38,7 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
     if type_id:
         result = work_day_statuses.get(int(type_id), "")
     elif start_time and end_time:
-        result = f"{start_time}\n{end_time}"
+        result = f"{start_time} {end_time}"
     else:
         result = ""
     return result
@@ -119,6 +120,10 @@ def form_01(request_data) -> Workbook:
     work_sheet.column_dimensions[get_column_letter(amount_hours_col_number)].width = amount_hours_col_width
     work_sheet.column_dimensions[get_column_letter(employees_signature_col_number)].width = employees_signature_col_width
 
+    work_sheet.row_dimensions[first_row_number].height = 47.25
+    for row_number in range(third_row_number, data_end_row_number + 1):
+        work_sheet.row_dimensions[row_number].height = 26
+
     work_sheet["AL1"] = "Приложение № 2 к"
     work_sheet["B2"] = "Председатель ППО"
     work_sheet["C2"] = "________________"
@@ -157,6 +162,16 @@ def form_01(request_data) -> Workbook:
 
     set_style_for_area(work_sheet, first_row_number, data_end_row_number, item_number_col_number, employees_signature_col_number, thin_border, alignment_center_wrap)
     set_style_for_area(work_sheet, third_row_number, data_end_row_number, fio_col_number, fio_col_number, alignment_style=alignment_left_wrap)
+
+    weekend_fill = PatternFill(start_color="ffe699", end_color="ffe699", fill_type="solid")
+    for day_number in range(1, document_last_day_month):
+        date = datetime.date(document_year, document_month, day_number)
+        if date.weekday() in (5, 6):
+            day_col = day_number + (start_date_col_number - 1)
+            set_style_for_area(work_sheet, second_row_number, data_end_row_number, day_col, day_col, fill_style=weekend_fill)
+    # set_style_for_area(work_sheet, second_row_number, data_end_row_number, weekend_days_cols)
+
+
 
     merge_cells_by_row(work_sheet, first_row_number, second_row_number, item_number_col_number, working_shift_col_number)
     work_sheet.merge_cells(start_row=first_row_number, start_column=start_date_col_number, end_row=first_row_number, end_column=end_date_col_number)
