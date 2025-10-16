@@ -87,7 +87,6 @@ def _create_work_time_sheet_header_meta(context):
     cell_a_number = 1
     cell_ag_number = 33
     set_style_for_area(work_sheet, 7, 7, cell_a_number, cell_ag_number, thin_bottom_border)
-    # set_border_for_area(work_sheet, thin_bottom_border, 7, 7, cell_a_number, cell_ag_number)
     work_sheet["AD7"] = f"календарных дней {document_last_day_month}"
     work_sheet.merge_cells('A8:AC8')
     work_sheet["A8"].alignment = alignment_center
@@ -95,7 +94,6 @@ def _create_work_time_sheet_header_meta(context):
     work_sheet["AD8"] = "рабочих дней"
     cell_ad_number = 30
     set_style_for_area(work_sheet, 8, 8, cell_ad_number, cell_ag_number, thin_bottom_border)
-    # set_border_for_area(work_sheet, thin_bottom_border, 8, 8, cell_ad_number, cell_ag_number)
     work_sheet.merge_cells('A9:AC9')
     work_sheet["A9"].alignment = alignment_center
     work_sheet["A9"] = f"{document_month_name} {document_year} год"
@@ -156,7 +154,7 @@ def _create_work_time_sheet_table(context) -> None:
     norm_hours_col_number = 6
     working_shift_col_number = 7
     start_date_col_number = 8
-    end_date_col_number = start_date_col_number + document_last_day_month
+    end_date_col_number = start_date_col_number + document_last_day_month - 1
     amount_hours_col_number = end_date_col_number + 1
     employees_signature_col_number = amount_hours_col_number + 1
 
