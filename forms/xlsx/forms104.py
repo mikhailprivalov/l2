@@ -1,5 +1,6 @@
 import calendar
 import datetime
+from typing import Dict
 
 import openpyxl
 import pytils
@@ -26,6 +27,20 @@ def merge_cells_by_row(work_sheet, start_row, end_row, start_col, end_col):
     """
     for col in range(start_col, end_col + 1):
         work_sheet.merge_cells(start_row=start_row, start_column=col, end_row=end_row, end_column=col)
+
+
+
+def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
+    start_time = cell_value.get("startWorkTime")
+    end_time = cell_value.get("endWorkTime")
+    type_id = cell_value.get("typeId")
+    if type_id:
+        result = work_day_statuses.get(int(type_id), "")
+    elif start_time and end_time:
+        result = f"{start_time}\n{end_time}"
+    else:
+        result = ""
+    return result
 
 
 def form_01(request_data) -> Workbook:
@@ -67,7 +82,7 @@ def form_01(request_data) -> Workbook:
     first_row_number = 12
     second_row_number = 13
     third_row_number = 14
-    data_end_row_number = third_row_number + len(employees_work_time)
+    data_end_row_number = third_row_number + len(employees_work_time) - 1
 
     item_number_col_number = 1
     fio_col_number = 2
@@ -159,5 +174,30 @@ def form_01(request_data) -> Workbook:
     work_sheet.cell(row=first_row_number, column=employees_signature_col_number, value="Подпись работника")
     for date_number in range(document_last_day_month):
         work_sheet.cell(row=second_row_number, column=date_number + start_date_col_number, value=date_number + 1)
+
+    table_body = []
+    non_date_key = {"employeePositionId", "fio", "position", "bidType", "lunchDuration", "totalHoursDecimal", "totalHours"}
+    for index_row, work_time in enumerate(employees_work_time):
+        item_number = index_row + 1
+        fio = work_time.get("fio")
+        position = work_time.get("position")
+        type_employment = work_time.get("bidType")
+        occupied_volume = ""
+        norm_hours = ""
+        working_shift = ""
+        amount_hours = work_time.get("totalHoursDecimal")
+        date_keys = [key for key in work_time.keys() if key not in non_date_key]
+        date_keys_sorted = sorted(date_keys, key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
+        date_values = [_parse_cell_data(work_day_statuses, work_time.get(date_key)) for date_key in date_keys_sorted]
+        work_sheet.cell(row=third_row_number+index_row, column=item_number_col_number, value=index_row)
+        work_sheet.cell(row=third_row_number+index_row, column=fio_col_number, value=fio)
+        work_sheet.cell(row=third_row_number+index_row, column=position_col_number, value=position)
+        work_sheet.cell(row=third_row_number+index_row, column=type_employment_col_number, value=type_employment)
+        work_sheet.cell(row=third_row_number+index_row, column=occupied_volume_col_number, value=occupied_volume)
+        work_sheet.cell(row=third_row_number+index_row, column=norm_hours_col_number, value=norm_hours)
+        work_sheet.cell(row=third_row_number+index_row, column=working_shift_col_number, value=working_shift)
+        for index_date, date in enumerate(date_values):
+            work_sheet.cell(row=third_row_number+index_row, column=start_date_col_number+index_date, value=date)
+        work_sheet.cell(row=third_row_number+index_row, column=amount_hours_col_number, value=amount_hours)
 
     return work_book
