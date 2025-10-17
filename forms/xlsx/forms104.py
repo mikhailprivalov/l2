@@ -80,6 +80,7 @@ def form_01(request_data) -> Workbook:
     alignment_center_wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
     alignment_left_wrap = Alignment(horizontal='left', vertical='center', wrap_text=True)
     font_bold = Font(bold=True)
+    weekend_fill = PatternFill(start_color="ffe699", end_color="ffe699", fill_type="solid")
 
     work_book: Workbook = openpyxl.Workbook()
     work_book.remove(work_book.get_sheet_by_name("Sheet"))
@@ -89,10 +90,10 @@ def form_01(request_data) -> Workbook:
         list_name = ''.join([word[0] for word in department_words])
         work_sheet = work_book.create_sheet(f"{list_name}_{index}")
 
-        first_row_number = 12
-        second_row_number = 13
-        third_row_number = 14
-        data_end_row_number = third_row_number + len(chunk_data) - 1
+        first_row_table_number = 12
+        second_row_table_number = 13
+        third_row_table_number = 14
+        table_data_end_row_number = third_row_table_number + len(chunk_data) - 1
 
         item_number_col_number = 1
         fio_col_number = 2
@@ -129,8 +130,8 @@ def form_01(request_data) -> Workbook:
         work_sheet.column_dimensions[get_column_letter(amount_hours_col_number)].width = amount_hours_col_width
         work_sheet.column_dimensions[get_column_letter(employees_signature_col_number)].width = employees_signature_col_width
 
-        work_sheet.row_dimensions[first_row_number].height = 47.25
-        for row_number in range(third_row_number, data_end_row_number + 1):
+        work_sheet.row_dimensions[first_row_table_number].height = 47.25
+        for row_number in range(third_row_table_number, table_data_end_row_number + 1):
             work_sheet.row_dimensions[row_number].height = 45
 
         work_sheet["AL1"] = "Приложение № 2 к"
@@ -169,32 +170,31 @@ def form_01(request_data) -> Workbook:
         work_sheet["A9"].alignment = alignment_center
         work_sheet["A9"] = f"{document_month_name} {document_year} год"
 
-        set_style_for_area(work_sheet, first_row_number, data_end_row_number, item_number_col_number, employees_signature_col_number, thin_border, alignment_center_wrap)
-        set_style_for_area(work_sheet, third_row_number, data_end_row_number, fio_col_number, fio_col_number, alignment_style=alignment_left_wrap)
+        set_style_for_area(work_sheet, first_row_table_number, table_data_end_row_number, item_number_col_number, employees_signature_col_number, thin_border, alignment_center_wrap)
+        set_style_for_area(work_sheet, third_row_table_number, table_data_end_row_number, fio_col_number, fio_col_number, alignment_style=alignment_left_wrap)
 
-        weekend_fill = PatternFill(start_color="ffe699", end_color="ffe699", fill_type="solid")
         for day_number in range(1, document_last_day_month):
             date = datetime.date(document_year, document_month, day_number)
             if date.weekday() in (5, 6):
                 day_col = day_number + (start_date_col_number - 1)
-                set_style_for_area(work_sheet, second_row_number, data_end_row_number, day_col, day_col, fill_style=weekend_fill)
+                set_style_for_area(work_sheet, second_row_table_number, table_data_end_row_number, day_col, day_col, fill_style=weekend_fill)
 
-        merge_cells_by_row(work_sheet, first_row_number, second_row_number, item_number_col_number, working_shift_col_number)
-        work_sheet.merge_cells(start_row=first_row_number, start_column=start_date_col_number, end_row=first_row_number, end_column=end_date_col_number)
-        merge_cells_by_row(work_sheet, first_row_number, second_row_number, amount_hours_col_number, employees_signature_col_number)
+        merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, item_number_col_number, working_shift_col_number)
+        work_sheet.merge_cells(start_row=first_row_table_number, start_column=start_date_col_number, end_row=first_row_table_number, end_column=end_date_col_number)
+        merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, amount_hours_col_number, employees_signature_col_number)
 
-        work_sheet.cell(row=first_row_number, column=item_number_col_number, value="№ п/п")
-        work_sheet.cell(row=first_row_number, column=fio_col_number, value="Фамилия имя отчество")
-        work_sheet.cell(row=first_row_number, column=position_col_number, value="Должность (профессия)")
-        work_sheet.cell(row=first_row_number, column=type_employment_col_number, value="Вид занятости (осн, внутр, внеш)")
-        work_sheet.cell(row=first_row_number, column=occupied_volume_col_number, value="Занимаемый объем (согл ТД), шт ед")
-        work_sheet.cell(row=first_row_number, column=norm_hours_col_number, value="Норма часов на занимаемый объем")
-        work_sheet.cell(row=first_row_number, column=working_shift_col_number, value="Рабочая смена")
-        work_sheet.cell(row=first_row_number, column=start_date_col_number, value="Числа месяца")
-        work_sheet.cell(row=first_row_number, column=amount_hours_col_number, value="Количество часов согласно графика")
-        work_sheet.cell(row=first_row_number, column=employees_signature_col_number, value="Подпись работника")
+        work_sheet.cell(row=first_row_table_number, column=item_number_col_number, value="№ п/п")
+        work_sheet.cell(row=first_row_table_number, column=fio_col_number, value="Фамилия имя отчество")
+        work_sheet.cell(row=first_row_table_number, column=position_col_number, value="Должность (профессия)")
+        work_sheet.cell(row=first_row_table_number, column=type_employment_col_number, value="Вид занятости (осн, внутр, внеш)")
+        work_sheet.cell(row=first_row_table_number, column=occupied_volume_col_number, value="Занимаемый объем (согл ТД), шт ед")
+        work_sheet.cell(row=first_row_table_number, column=norm_hours_col_number, value="Норма часов на занимаемый объем")
+        work_sheet.cell(row=first_row_table_number, column=working_shift_col_number, value="Рабочая смена")
+        work_sheet.cell(row=first_row_table_number, column=start_date_col_number, value="Числа месяца")
+        work_sheet.cell(row=first_row_table_number, column=amount_hours_col_number, value="Количество часов согласно графика")
+        work_sheet.cell(row=first_row_table_number, column=employees_signature_col_number, value="Подпись работника")
         for date_number in range(document_last_day_month):
-            work_sheet.cell(row=second_row_number, column=date_number + start_date_col_number, value=date_number + 1)
+            work_sheet.cell(row=second_row_table_number, column=date_number + start_date_col_number, value=date_number + 1)
 
         for index_row, work_time in enumerate(chunk_data):
             item_number = index_row + 1
@@ -214,20 +214,20 @@ def form_01(request_data) -> Workbook:
                     pass
             date_keys_sorted = sorted(date_keys)
             date_values = [_parse_cell_data(work_day_statuses, work_time.get(date_key.strftime("%Y-%m-%d"))) for date_key in date_keys_sorted]
-            work_sheet.cell(row=third_row_number+index_row, column=item_number_col_number, value=item_number)
-            work_sheet.cell(row=third_row_number+index_row, column=fio_col_number, value=fio)
-            work_sheet.cell(row=third_row_number+index_row, column=position_col_number, value=position)
-            work_sheet.cell(row=third_row_number+index_row, column=type_employment_col_number, value=type_employment)
-            work_sheet.cell(row=third_row_number+index_row, column=occupied_volume_col_number, value=occupied_volume)
-            work_sheet.cell(row=third_row_number+index_row, column=norm_hours_col_number, value=norm_hours)
-            work_sheet.cell(row=third_row_number+index_row, column=working_shift_col_number, value=working_shift)
+            work_sheet.cell(row=third_row_table_number+index_row, column=item_number_col_number, value=item_number)
+            work_sheet.cell(row=third_row_table_number+index_row, column=fio_col_number, value=fio)
+            work_sheet.cell(row=third_row_table_number+index_row, column=position_col_number, value=position)
+            work_sheet.cell(row=third_row_table_number+index_row, column=type_employment_col_number, value=type_employment)
+            work_sheet.cell(row=third_row_table_number+index_row, column=occupied_volume_col_number, value=occupied_volume)
+            work_sheet.cell(row=third_row_table_number+index_row, column=norm_hours_col_number, value=norm_hours)
+            work_sheet.cell(row=third_row_table_number+index_row, column=working_shift_col_number, value=working_shift)
             for index_date, date in enumerate(date_values):
-                work_sheet.cell(row=third_row_number+index_row, column=start_date_col_number+index_date, value=date)
-            work_sheet.cell(row=third_row_number+index_row, column=amount_hours_col_number, value=amount_hours)
+                work_sheet.cell(row=third_row_table_number+index_row, column=start_date_col_number+index_date, value=date)
+            work_sheet.cell(row=third_row_table_number+index_row, column=amount_hours_col_number, value=amount_hours)
 
-        work_sheet.cell(row=data_end_row_number+2, column=1, value="Заведующий отделением")
-        work_sheet.cell(row=data_end_row_number+2, column=3, value="_____________________")
-        work_sheet.cell(row=data_end_row_number+2, column=11, value="Старшая медицинская сестра")
-        work_sheet.cell(row=data_end_row_number + 2, column=16, value="_____________________")
+        work_sheet.cell(row=table_data_end_row_number+2, column=1, value="Заведующий отделением")
+        work_sheet.cell(row=table_data_end_row_number+2, column=3, value="_____________________")
+        work_sheet.cell(row=table_data_end_row_number+2, column=11, value="Старшая медицинская сестра")
+        work_sheet.cell(row=table_data_end_row_number + 2, column=16, value="_____________________")
 
     return work_book
