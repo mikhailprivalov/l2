@@ -48,6 +48,7 @@ def chunked(data, size):
     for i in range(0, len(data), size):
         yield data[i:i + size]
 
+
 def form_01(request_data) -> Workbook:
     """
     Создает xlsx файл по форме графика рабочего времени
@@ -84,7 +85,9 @@ def form_01(request_data) -> Workbook:
     work_book.remove(work_book.get_sheet_by_name("Sheet"))
     max_row_count_in_list = 15
     for index, chunk_data in enumerate(chunked(employees_work_time, max_row_count_in_list)):
-        work_sheet = work_book.create_sheet(f"{index}")
+        department_words = department_title.replace("-", " ").split(" ")
+        list_name = ''.join([word[0] for word in department_words])
+        work_sheet = work_book.create_sheet(f"{list_name}_{index}")
 
         first_row_number = 12
         second_row_number = 13
