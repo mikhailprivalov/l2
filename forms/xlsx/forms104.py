@@ -46,7 +46,7 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
 
 def chunked(data, size):
     for i in range(0, len(data), size):
-        yield data[i:i + size]
+        yield data[i : i + size]
 
 
 def form_01(request_data) -> Workbook:
