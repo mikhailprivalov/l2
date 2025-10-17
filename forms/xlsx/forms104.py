@@ -222,12 +222,12 @@ def form_01(request_data) -> Workbook:
             work_sheet.cell(row=third_row_table_number + index_row, column=norm_hours_col_number, value=norm_hours)
             work_sheet.cell(row=third_row_table_number + index_row, column=working_shift_col_number, value=working_shift)
             for index_date, date in enumerate(date_values):
-                work_sheet.cell(row=third_row_table_number+index_row, column=start_date_col_number+index_date, value=date)
-            work_sheet.cell(row=third_row_table_number+index_row, column=amount_hours_col_number, value=amount_hours)
+                work_sheet.cell(row=third_row_table_number + index_row, column=start_date_col_number + index_date, value=date)
+            work_sheet.cell(row=third_row_table_number + index_row, column=amount_hours_col_number, value=amount_hours)
 
-        work_sheet.cell(row=table_data_end_row_number+2, column=1, value="Заведующий отделением")
-        work_sheet.cell(row=table_data_end_row_number+2, column=3, value="_____________________")
-        work_sheet.cell(row=table_data_end_row_number+2, column=11, value="Старшая медицинская сестра")
+        work_sheet.cell(row=table_data_end_row_number + 2, column=1, value="Заведующий отделением")
+        work_sheet.cell(row=table_data_end_row_number + 2, column=3, value="_____________________")
+        work_sheet.cell(row=table_data_end_row_number + 2, column=11, value="Старшая медицинская сестра")
         work_sheet.cell(row=table_data_end_row_number + 2, column=16, value="_____________________")
 
     return work_book
