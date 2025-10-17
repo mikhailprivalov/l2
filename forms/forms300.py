@@ -237,7 +237,6 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
 
 def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_day_statuses: Dict[int, str], style_center, style_left) -> List[List[Paragraph]]:
     table_body = []
-    non_date_key = {"employeePositionId", "fio", "position", "bidType", "lunchDuration", "totalHoursDecimal", "totalHours"}
     for index, work_time in enumerate(employees_work_time, 1):
         item_number = Paragraph(f"{index}", style_center)
         fio = Paragraph(work_time.get("fio"), style_left)
@@ -247,9 +246,15 @@ def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_
         norm_hours = Paragraph("", style_center)
         working_shift = Paragraph("", style_center)
         total_hours_decimal = Paragraph(work_time.get("totalHoursDecimal"), style_center)
-        date_keys = [key for key in work_time.keys() if key not in non_date_key]
-        date_keys_sorted = sorted(date_keys, key=lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
-        date_values = [Paragraph(_parse_cell_data(work_day_statuses, work_time.get(date_key)), style_center) for date_key in date_keys_sorted]
+        date_keys = []
+        for key in work_time.keys():
+            try:
+                date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
+                date_keys.append(date_key)
+            except ValueError:
+                pass
+        date_keys_sorted = sorted(date_keys)
+        date_values = [Paragraph(_parse_cell_data(work_day_statuses, work_time.get(date_key.strftime("%Y-%m-%d"))), style_center) for date_key in date_keys_sorted]
         row = [item_number, fio, position, type_employment, occupied_volume, norm_hours, working_shift, *date_values, total_hours_decimal]
         table_body.append(row)
     return table_body
