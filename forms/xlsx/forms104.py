@@ -214,13 +214,13 @@ def form_01(request_data) -> Workbook:
                     pass
             date_keys_sorted = sorted(date_keys)
             date_values = [_parse_cell_data(work_day_statuses, work_time.get(date_key.strftime("%Y-%m-%d"))) for date_key in date_keys_sorted]
-            work_sheet.cell(row=third_row_table_number+index_row, column=item_number_col_number, value=item_number)
-            work_sheet.cell(row=third_row_table_number+index_row, column=fio_col_number, value=fio)
-            work_sheet.cell(row=third_row_table_number+index_row, column=position_col_number, value=position)
-            work_sheet.cell(row=third_row_table_number+index_row, column=type_employment_col_number, value=type_employment)
-            work_sheet.cell(row=third_row_table_number+index_row, column=occupied_volume_col_number, value=occupied_volume)
-            work_sheet.cell(row=third_row_table_number+index_row, column=norm_hours_col_number, value=norm_hours)
-            work_sheet.cell(row=third_row_table_number+index_row, column=working_shift_col_number, value=working_shift)
+            work_sheet.cell(row=third_row_table_number + index_row, column=item_number_col_number, value=item_number)
+            work_sheet.cell(row=third_row_table_number + index_row, column=fio_col_number, value=fio)
+            work_sheet.cell(row=third_row_table_number + index_row, column=position_col_number, value=position)
+            work_sheet.cell(row=third_row_table_number + index_row, column=type_employment_col_number, value=type_employment)
+            work_sheet.cell(row=third_row_table_number + index_row, column=occupied_volume_col_number, value=occupied_volume)
+            work_sheet.cell(row=third_row_table_number + index_row, column=norm_hours_col_number, value=norm_hours)
+            work_sheet.cell(row=third_row_table_number + index_row, column=working_shift_col_number, value=working_shift)
             for index_date, date in enumerate(date_values):
                 work_sheet.cell(row=third_row_table_number+index_row, column=start_date_col_number+index_date, value=date)
             work_sheet.cell(row=third_row_table_number+index_row, column=amount_hours_col_number, value=amount_hours)
