@@ -67,6 +67,7 @@ class Command(BaseCommand):
             if result_params.get(d.napravleniye_id)
         ]
         res = send_gistology_direction_to_ecp(directions_iss)
+        res = send_gistology_direction_to_ecp(directions_iss)
         self.stdout.write(f"{res}\n")
         count = 0
         result_send = {}

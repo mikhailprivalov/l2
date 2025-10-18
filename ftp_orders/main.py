@@ -170,7 +170,6 @@ class FTPConnection:
     def read_file_as_hl7(self, file, is_result=False):
         content = self.read_file_as_text(file).strip("\x0b").strip("\x0c")
         self.log(f"{file}\n{content}")
-
         content = content.replace("\n", "\r")
         if is_result:
             content = content.replace("\r[10]", "")
@@ -395,6 +394,14 @@ class FTPConnection:
         tube_number = obr.OBR_3.OBR_3_1.value
         internal_code = obr.OBR_4.OBR_4_4.value
         research_title = obr.OBR_4.OBR_4_5.value
+        if not tube_number:
+            Log.log(
+                key = -999,
+                type = 190005,
+                body = {"tube": -999, "internal_code": internal_code, "researchTile": research_title, "file": file, "reason": f"{tube_number} нет или пустая пробирка"},
+                user = None,
+            )
+            return
 
         tubes_sql = get_tube_by_number(tube_number)
         iss = None
@@ -516,6 +523,8 @@ class FTPConnection:
                 if ref_str:
                     ref_str = ref_str.replace('"', "'")
                     ref_str = f'{{"Все": "{ref_str}"}}'
+                else:
+                    ref_str = None
                 if Result.objects.filter(issledovaniye=iss, fraction=fraction).first():
                     update_result = Result.objects.filter(issledovaniye=iss, fraction=fraction).first()
                     update_result.value = value
@@ -755,7 +764,8 @@ def process_pull_orders():
 
                     if file not in processed_files_by_url[ftp_url]:
                         if path_to_copy:
-                            ftp_connection.copy_file(file, path_to_copy)
+                            pass
+                            # ftp_connection.copy_file(file, path_to_copy)
                         ftp_connection.pull_order(file)
 
             except ftplib.all_errors as e:
@@ -766,7 +776,7 @@ def process_pull_orders():
 
             processed_files_by_url[ftp_url] = processed_files_new
 
-        time.sleep(5)
+        time.sleep(60)
 
     for _, ftp_connection in ftp_connections.items():
         ftp_connection.disconnect()
@@ -776,7 +786,7 @@ def process_pull_start_orders():
     stdout.write("Starting pull_orders process")
     while True:
         process_pull_orders()
-        time.sleep(1)
+        time.sleep(60)
 
 
 def get_hospitals_push_orders():
