@@ -599,6 +599,7 @@ class Napravleniya(models.Model):
         DoctorProfile, null=True, blank=True, default=None, related_name='accept_who_doctor', on_delete=models.SET_NULL, help_text='Кто принял заявку', db_index=True
     )
     accept_time = models.DateTimeField(null=True, blank=True, default=None, help_text='Время принятия заявки')
+    is_sent_to_work_place = models.BooleanField(null=True, blank=True, default=False, help_text='Отправлен протокол работодателю', db_index=True)
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
