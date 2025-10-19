@@ -30,11 +30,7 @@ def get_med_protocols(request):
     companies_id = tuple([i.id for i in app.companies.all()])
     closed_case_need_send = get_closed_case_by_company(companies_id)
     # получить заключения со снилс пациента Результат, Группа, Вредность,
-
-
     count = request.GET.get("count")
-    print(count)
     view = request.GET.get("view")
-    print(view)
 
     return Response({"result": {"count": count}, "view": view})
