@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from rest_framework import exceptions
 
 from integration_framework.admission_cert.sql_func import get_closed_case_by_company
+from statistic.forms.forms100_sql_func import directions_by_parent_cases_issledovaniye
 
 
 @api_view(['GET'])
@@ -29,7 +30,8 @@ def get_med_protocols(request):
 
     companies_id = tuple([i.id for i in app.companies.all()])
     closed_case_need_send = get_closed_case_by_company(companies_id)
-    # получить заключения со снилс пациента Результат, Группа, Вредность,
+    cases_iss = set([i.case_issledovaniye_id for i in closed_case_need_send])
+    result_iss_id = directions_by_parent_cases_issledovaniye(tuple(cases_iss))
     count = request.GET.get("count")
     view = request.GET.get("view")
 
