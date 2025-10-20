@@ -17,7 +17,6 @@ def get_med_protocols(request):
     app = None
     try:
         app = Application.objects.filter(active=True, key=token).first()
-        print(app)
         if not app:
             token_is_not_valid = True
     except:
