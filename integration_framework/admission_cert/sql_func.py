@@ -1,7 +1,7 @@
 from django.db import connection
 from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
-from laboratory.settings import RESEARCH_ID_CLOSE_CASE, CDA_ID_FOR_TYPE_MEDICAL_INSPECTION
+from laboratory.settings import RESEARCH_ID_CLOSE_CASE
 
 
 def get_closed_case_by_company(companies_id):

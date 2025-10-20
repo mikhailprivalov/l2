@@ -2,8 +2,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 from api.models import Application
-from django.core.exceptions import ValidationError
-from rest_framework import exceptions
 
 from integration_framework.admission_cert.sql_func import get_closed_case_by_company
 from statistic.forms.forms100_sql_func import directions_by_parent_cases_issledovaniye
