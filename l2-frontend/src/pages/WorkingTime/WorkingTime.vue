@@ -88,12 +88,14 @@
           </button>
           <button
             class="btn btn-blue-nb"
+            :disabled="hasChange"
             @click.prevent="downloadXlsx()"
           >
             XLSX
           </button>
           <button
             class="btn btn-blue-nb"
+            :disabled="hasChange"
             @click.prevent="printDocument()"
           >
             PDF
@@ -201,6 +203,7 @@ const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
 const changedEmployeesWorkTime = ref({});
+const hasChange = ref(false);
 
 const getEmployeesWorkTime = async () => {
   await store.dispatch(actions.INC_LOADING);
@@ -218,6 +221,7 @@ const getEmployeesWorkTime = async () => {
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
   changedEmployeesWorkTime.value = {};
+  hasChange.value = false;
 };
 
 watch(employeesWorkTime, () => {
@@ -384,6 +388,7 @@ const updateChangedEmployeesWorkTime = (
       typeId,
     };
   }
+  hasChange.value = true;
 };
 
 const changeWorkTime = async ({
@@ -687,48 +692,56 @@ const createDocument = async () => {
 };
 
 const printDocument = async () => {
-  const apiForBlob = axios.create({
-    baseURL: `${window.location.origin}/forms`,
-    responseType: 'blob',
-  });
-  await store.dispatch(actions.INC_LOADING);
-  const result = await apiForBlob.post('/pdf?type=300.01', {
-    employeesWorkTime: employeesWorkTime.value,
-    documentId: documentId.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  const urlFile = URL.createObjectURL(result.data);
-  window.open(urlFile);
+  if (hasChange.value) {
+    root.$emit('msg', 'error', 'Есть не сохраненные изменения');
+  } else {
+    const apiForBlob = axios.create({
+      baseURL: `${window.location.origin}/forms`,
+      responseType: 'blob',
+    });
+    await store.dispatch(actions.INC_LOADING);
+    const result = await apiForBlob.post('/pdf?type=300.01', {
+      employeesWorkTime: employeesWorkTime.value,
+      documentId: documentId.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    const urlFile = URL.createObjectURL(result.data);
+    window.open(urlFile);
+  }
 };
 
 const downloadXlsx = async () => {
-  const apiForBlob = axios.create({
-    baseURL: `${window.location.origin}/forms`,
-    responseType: 'blob',
-  });
-  await store.dispatch(actions.INC_LOADING);
-  const result = await apiForBlob.post('/xlsx?type=104.01', {
-    employeesWorkTime: employeesWorkTime.value,
-    documentId: documentId.value,
-  });
-  await store.dispatch(actions.DEC_LOADING);
-  const blob = new Blob([result.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const urlFile = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = urlFile;
-  const contentDisposition = result.headers['content-disposition'];
-  let fileName = 'form.xlsx';
-  if (contentDisposition) {
-    const match = contentDisposition.match(/filename="?([^"]+?)(?:_)?"?$/);
-    if (match?.[1]) {
-      [, fileName] = match;
+  if (hasChange.value) {
+    root.$emit('msg', 'error', 'Есть не сохраненные изменения');
+  } else {
+    const apiForBlob = axios.create({
+      baseURL: `${window.location.origin}/forms`,
+      responseType: 'blob',
+    });
+    await store.dispatch(actions.INC_LOADING);
+    const result = await apiForBlob.post('/xlsx?type=104.01', {
+      employeesWorkTime: employeesWorkTime.value,
+      documentId: documentId.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    const blob = new Blob([result.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const urlFile = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = urlFile;
+    const contentDisposition = result.headers['content-disposition'];
+    let fileName = 'form.xlsx';
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^"]+?)(?:_)?"?$/);
+      if (match?.[1]) {
+        [, fileName] = match;
+      }
     }
+    link.setAttribute('download', fileName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(urlFile);
   }
-  link.setAttribute('download', fileName);
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(urlFile);
 };
 
 </script>
