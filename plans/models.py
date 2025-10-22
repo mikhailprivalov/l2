@@ -65,7 +65,6 @@ class PlanOperations(models.Model):
                         "doc_operate": data['hirurg'],
                         "type_operation": type_operation,
                         "duration,": duration,
-
                     }
                 ),
                 user=doc_who_create,
