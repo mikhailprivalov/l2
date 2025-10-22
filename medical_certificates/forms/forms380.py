@@ -1336,7 +1336,6 @@ def form_10(request_data):
 
 def form_11(request_data):
     # Профосомтр
-    print("request_data", request_data)
     direction = request_data["dir"]
 
     buffer = BytesIO()

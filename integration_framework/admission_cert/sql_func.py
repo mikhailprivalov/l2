@@ -4,7 +4,7 @@ from utils.db import namedtuplefetchall
 from laboratory.settings import RESEARCH_ID_CLOSE_CASE, RESEARCH_ID_FINAL_REPORT
 
 
-def get_closed_case_by_company(companies_id):
+def get_closed_case_by_company(companies_id, limit=500):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -24,8 +24,9 @@ def get_closed_case_by_company(companies_id):
             AND directions_issledovaniya.research_id = %(research_id_case)s
             AND dn.is_sent_to_work_place = false
             ORDER BY directions_issledovaniya.medical_examination
+            LIMIT %(limit)s 
             """,
-            params={'tz': TIME_ZONE, 'companies_id': companies_id, 'research_id_case': RESEARCH_ID_CLOSE_CASE},
+            params={'limit': limit, 'tz': TIME_ZONE, 'companies_id': companies_id, 'research_id_case': RESEARCH_ID_CLOSE_CASE},
         )
 
         rows = namedtuplefetchall(cursor)

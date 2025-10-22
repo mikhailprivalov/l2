@@ -29,10 +29,10 @@ def get_med_protocols(request):
     if token_is_not_valid:
         return Response({"result": "error", "comment": "token is not valid"})
 
-    count = request.GET.get("count")
+    limit = request.GET.get("count")
 
     companies_id = tuple([i.id for i in app.companies.all()])
-    closed_case_need_send = get_closed_case_by_company(companies_id)
+    closed_case_need_send = get_closed_case_by_company(companies_id, limit)
     cases_iss = set([i.case_issledovaniye_id for i in closed_case_need_send])
     result_iss_id = directions_by_parent_cases_issledovaniye_only_research_id_final_report(tuple(cases_iss))
     direction_iss = {i.iss_id: {
