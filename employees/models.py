@@ -437,6 +437,9 @@ class EmployeePosition(models.Model):
     date_dismissal = models.DateField(verbose_name="Дата увольнения", help_text="2025-02-01", blank=True, null=True, default=None)
     lunch_duration = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
     date_transfer = models.DateField(verbose_name="Дата перевода", help_text="2025-02-01", blank=True, null=True, default=None)
+    daily_hours_norm = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="120, 240, 360, 480 мин")
+    weekly_hours_norm = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="120, 240, 360, 480 мин")
+    work_days_per_week = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="5 дней")
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
