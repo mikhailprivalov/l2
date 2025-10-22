@@ -84,7 +84,7 @@ def get_med_protocols(request):
                         "doctor": direction_iss.get(k)["doctor"],
                         "reinspection": ""
                     }
-                ]
+                ],
             }
         )
 
