@@ -47,11 +47,16 @@ def directions_by_parent_cases_issledovaniye_only_research_id_final_report(cases
             ci.patronymic as patient_patronymic,
             ci.sex,
             to_char(ci.birthday AT TIME ZONE %(tz)s, 'YYYY-MM-DD') as patient_birthday,
-            dn.work_place_db_id
+            dn.work_place_db_id,
+            udpf.family as doc_family,
+            udpf.name as doc_name,
+            udpf.patronymic as doc_patronymic,
+            udpf.hospital_id
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
             LEFT JOIN clients_card cc on cc.id=dn.client_id
             LEFT JOIN clients_individual ci on cc.individual_id = ci.id
+            LEFT JOIN users_doctorprofile udpf on directions_issledovaniya.doc_confirmation_id = udpf.id
             WHERE 
             directions_issledovaniya.napravleniye_id in (SELECT id from directions_napravleniya where directions_napravleniya.parent_case_id in %(cases_issledovaniye_ids)s)
             AND directions_issledovaniya.time_confirmation IS NOT NULL
