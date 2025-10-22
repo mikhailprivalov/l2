@@ -35,17 +35,20 @@ def get_med_protocols(request):
     closed_case_need_send = get_closed_case_by_company(companies_id)
     cases_iss = set([i.case_issledovaniye_id for i in closed_case_need_send])
     result_iss_id = directions_by_parent_cases_issledovaniye_only_research_id_final_report(tuple(cases_iss))
-    direction_iss = {i.iss_id: {
-        "dir": i.napravleniye_id,
-        "patient_family": i.patient_family,
-        "patient_name": i.patient_name,
-        "patient_patronymic": i.patient_patronymic,
-        "sex": i.sex,
-        "patient_birthday": i.patient_birthday,
-        "work_place_db_id": i.work_place_db_id,
-        "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
-        "date_confirm": i.date_confirm
-    } for i in result_iss_id}
+    direction_iss = {
+        i.iss_id: {
+            "dir": i.napravleniye_id,
+            "patient_family": i.patient_family,
+            "patient_name": i.patient_name,
+            "patient_patronymic": i.patient_patronymic,
+            "sex": i.sex,
+            "patient_birthday": i.patient_birthday,
+            "work_place_db_id": i.work_place_db_id,
+            "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
+            "date_confirm": i.date_confirm,
+        }
+        for i in result_iss_id
+    }
 
     paraclinic_result = get_expertis_results_by_issledovaniya(tuple(direction_iss.keys()))
     final_value_result = {}
