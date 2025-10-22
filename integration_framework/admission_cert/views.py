@@ -1,17 +1,13 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
-import slog
 from api.models import Application
 from contracts.models import Company
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
-
 from integration_framework.admission_cert.sql_func import get_closed_case_by_company, directions_by_parent_cases_issledovaniye_only_research_id_final_report
 from integration_framework.common_func import direction_pdf_result
 from results.sql_func import get_expertis_results_by_issledovaniya
 import simplejson as json
-
 from slog.models import Log
 
 
@@ -70,7 +66,7 @@ def get_med_protocols(request):
                 "name": direction_iss.get(k)["patient_name"],
                 "name2": direction_iss.get(k)["patient_patronymic"],
                 "bdate": direction_iss.get(k)["patient_birthday"],
-                "snils": v.get("снилс"),
+                "snils": v.get("снилс", ""),
                 "workplace": companies.get(direction_iss.get(k)["work_place_db_id"])["title"],
                 "inn": companies.get(direction_iss.get(k)["work_place_db_id"])["inn"],
                 "profid": direction_iss.get(k)["dir"],
@@ -91,11 +87,8 @@ def get_med_protocols(request):
                 ]
             }
         )
-    for i in response_result:
-        print(i)
 
-
-    return Response({"result": {"count": count},})
+    return Response(response_result)
 
 
 @api_view(['GET'])
