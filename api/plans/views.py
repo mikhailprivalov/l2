@@ -45,7 +45,7 @@ def get_plan_operations_by_patient(request):
             'type_operation': i.type_operation,
             'pk_plan': i.pk,
             'cancel': i.canceled,
-            'duration_oper': i.duration
+            'duration_oper': i.duration,
         }
         for i in result
     ]
