@@ -104,7 +104,7 @@ def get_plan_operations_by_params(request):
                 "direction": i[2],
                 "date": i[3],
                 "date_raw": date_raw,
-                "type_operation": f"{i[4]}; t - {i[13]} мин.",
+                "type_operation": i[4],
                 "doc_operate_id": i[5],
                 "doc_anesthetist_id": i[6] or -1,
                 "canceled": i[7],

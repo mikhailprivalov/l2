@@ -11,10 +11,15 @@
       >
         {{ data.direction }}
       </a>
-      <br> <br> <i class="fa-regular fa-clock"></i> {{ data.duration }}
     </td>
-    <td>{{ data.fio_patient }} <br>{{ data.birthday }}<br>{{ data.weight }}</td>
     <td>
+      {{ data.fio_patient }} <br>{{ data.birthday }}<br>{{ data.weight }}
+    </td>
+    <td>
+      <div class="text-bold">
+        <i class="fa-solid fa-clock" /> {{ data.duration }}
+      </div>
+      <br>
       {{ data.type_operation }}
     </td>
     <td>
@@ -127,6 +132,10 @@ export default {
 </script>
 
 <style scoped lang="scss">
+.text-bold {
+  float: left;
+  font-weight: bold;
+}
 .cancel-row {
   td,
   th {
