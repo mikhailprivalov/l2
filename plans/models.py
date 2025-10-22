@@ -26,6 +26,7 @@ class PlanOperations(models.Model):
     canceled = models.BooleanField(default=False, help_text='Операция отменена')
     doc_anesthetist = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_anesthetist", help_text='Кто опрерирует', on_delete=models.SET_NULL)
     doc_who_create = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_create_plan", help_text='Создатель планирования', on_delete=models.SET_NULL)
+    duration = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text='Длительность операции в минутах')
 
     @staticmethod
     def save_data(data, doc_who_create):
@@ -34,6 +35,7 @@ class PlanOperations(models.Model):
         type_operation = data.get('type_operation', '')
         doc_operate_obj = DoctorProfile.objects.filter(pk=data['hirurg'])[0]
         doc_anesthetist = data.get('doc_anesthetist', None)
+        duration = data.get('duration_operation', None)
         doc_anesthetist_obj = None
         if doc_anesthetist:
             doc_anesthetist_obj = DoctorProfile.objects.filter(pk=doc_anesthetist)[0]
@@ -48,6 +50,7 @@ class PlanOperations(models.Model):
                 doc_anesthetist=doc_anesthetist_obj,
                 doc_who_create=doc_who_create,
                 canceled=False,
+                duration=duration,
             )
             plan_obj.save()
 
@@ -61,6 +64,8 @@ class PlanOperations(models.Model):
                         "date_operation": data['date'],
                         "doc_operate": data['hirurg'],
                         "type_operation": type_operation,
+                        "duration,": duration,
+
                     }
                 ),
                 user=doc_who_create,
@@ -76,6 +81,7 @@ class PlanOperations(models.Model):
             plan_obj.direction = direction_obj
             plan_obj.patient_card = patient_card
             plan_obj.canceled = False
+            plan_obj.duration = duration
             plan_obj.save()
             slog.Log(
                 key=data['pk_plan'],
@@ -87,6 +93,7 @@ class PlanOperations(models.Model):
                         "date_operation": data['date'],
                         "doc_operate": data['hirurg'],
                         "type_operation": type_operation,
+                        "duration": duration,
                     }
                 ),
                 user=doc_who_create,

@@ -11,6 +11,7 @@
       >
         {{ data.direction }}
       </a>
+      <br> <br> <i class="fa-regular fa-clock"></i> {{ data.duration }}
     </td>
     <td>{{ data.fio_patient }} <br>{{ data.birthday }}<br>{{ data.weight }}</td>
     <td>
