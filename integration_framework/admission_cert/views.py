@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+import slog
 from api.models import Application
 from contracts.models import Company
 from directions.models import Napravleniya
@@ -10,6 +11,8 @@ from integration_framework.admission_cert.sql_func import get_closed_case_by_com
 from integration_framework.common_func import direction_pdf_result
 from results.sql_func import get_expertis_results_by_issledovaniya
 import simplejson as json
+
+from slog.models import Log
 
 
 @api_view(['GET'])
@@ -154,6 +157,7 @@ def result_accept_protocol(request):
     data = json.loads(request.body)
     direction_id = data.get("protocolid")
     status = data.get("status")
+    error = data.get("error")
 
     direction = Napravleniya.objects.filter(pk=direction_id).first()
     if direction.parent_case:
@@ -165,7 +169,10 @@ def result_accept_protocol(request):
     else:
         return Response({"result": "error", "comment": "No case for protocolId"})
 
-    direction.is_sent_to_work_place = True
-    direction.parent_case.napravleniye.is_sent_to_work_place = True
+    Log.log(key=direction_id, type=140002, body={direction.pk: {"status": status, "error": error, "protocolid": direction_id}})
+    if status == "ok":
+        direction.is_sent_to_work_place = True
+        direction.parent_case.napravleniye.is_sent_to_work_place = True
+        return Response({"result": "ok", "comment": "Сообщение принято успешно"})
 
-    return Response({"result": "ok", "comment": ""})
+    return Response({"result": "error", "comment": f"Ошибка сохранения статуса - {direction_id}"})
