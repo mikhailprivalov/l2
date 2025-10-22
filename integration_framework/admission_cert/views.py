@@ -82,7 +82,7 @@ def get_med_protocols(request):
                         "conclusion": f"Медицинские противопоказания по приказу 29н {(v['Медицинские противопоказания к работе']).lower()}",
                         "contraindication": False if (v["Медицинские противопоказания к работе"]).lower() == "не выявлено" else True,
                         "doctor": direction_iss.get(k)["doctor"],
-                        "reinspection": ""
+                        "reinspection": "",
                     }
                 ],
             }
