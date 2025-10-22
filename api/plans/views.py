@@ -112,7 +112,7 @@ def get_plan_operations_by_params(request):
                 "birthday": i[11],
                 "weight": weight,
                 "tooltip_data": '\n'.join(tooltip_data),
-                "duration": f"{hour}:{min}"
+                "duration": f"{hour}:{min}",
             }
         )
 
