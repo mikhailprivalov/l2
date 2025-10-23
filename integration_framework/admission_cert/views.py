@@ -168,7 +168,9 @@ def result_accept_protocol(request):
     Log.log(key=direction_id, type=140002, body={direction.pk: {"status": status, "error": error, "protocolid": direction_id}})
     if status == "ok":
         direction.is_sent_to_work_place = True
+        direction.save()
         direction.parent_case.napravleniye.is_sent_to_work_place = True
+        direction.parent_case.napravleniye.save()
         return Response({"result": "ok", "comment": "Сообщение принято успешно"})
 
     return Response({"result": "error", "comment": f"Ошибка сохранения статуса - {direction_id}"})
