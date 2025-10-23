@@ -45,6 +45,7 @@ def get_plan_operations_by_patient(request):
             'type_operation': i.type_operation,
             'pk_plan': i.pk,
             'cancel': i.canceled,
+            'duration_oper': i.duration,
         }
         for i in result
     ]
@@ -89,6 +90,13 @@ def get_plan_operations_by_params(request):
             time = strfdatetime(u.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
 
+        res = divmod(i[13], 60)
+        hour = res[0]
+        if res[0] < 10:
+            hour = f"0{res[0]}"
+        min = res[1]
+        if res[1] < 10:
+            min = f"0{res[1]}"
         data.append(
             {
                 "pk_plan": i[0],
@@ -104,6 +112,7 @@ def get_plan_operations_by_params(request):
                 "birthday": i[11],
                 "weight": weight,
                 "tooltip_data": '\n'.join(tooltip_data),
+                "duration": f"{hour}:{min}",
             }
         )
 

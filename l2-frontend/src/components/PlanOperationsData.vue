@@ -65,6 +65,18 @@
         >
       </div>
     </div>
+    <div class="form-row">
+      <div class="row-t">
+        Длительность (мин)
+      </div>
+      <div class="row-v">
+        <input
+          v-model="duration_operation"
+          class="form-control"
+          type="number"
+        >
+      </div>
+    </div>
 
     <div class="buttons">
       <div
@@ -76,7 +88,7 @@
 
       <button
         class="btn btn-blue-nb btn-sm"
-        :class="[{ btndisable: !current_hirurg || !current_direction || !card_pk || !current_time }]"
+        :class="[{ btndisable: !current_hirurg || !current_direction || !card_pk || !current_time || !duration_operation }]"
         @click="save_to_plan"
       >
         {{ pk_plan && pk_plan > -1 ? 'Сохранить изменения' : 'Добавить новую запись в план' }}
@@ -171,6 +183,10 @@ export default {
       type: String,
       required: false,
     },
+    duration_oper: {
+      type: Number,
+      required: false,
+    },
     operation: {
       type: String,
       required: false,
@@ -190,6 +206,7 @@ export default {
       current_hirurg: this.pk_hirurg,
       current_time: this.date,
       type_operation: this.operation,
+      duration_operation: this.duration_oper,
       base_pk: -1,
       offsetHoursForPlanOperations: 0,
     };
@@ -281,6 +298,7 @@ export default {
         hirurg: this.current_hirurg,
         date: this.current_time,
         type_operation: this.type_operation,
+        duration_operation: this.duration_operation,
       });
       await this.$store.dispatch(actions.DEC_LOADING);
       this.$root.$emit('msg', 'ok', 'Сохранено');

@@ -24,6 +24,7 @@
         :date="date"
         :operation="operation"
         :cancel_operation="cancel_operation"
+        :duration_oper="duration_oper"
       />
     </div>
     <div slot="footer">
@@ -76,6 +77,10 @@ export default {
     },
     date: {
       type: String,
+      required: false,
+    },
+    duration_oper: {
+      type: Number,
       required: false,
     },
     operation: {
