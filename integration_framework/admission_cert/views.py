@@ -124,8 +124,8 @@ def get_pdf_protocol(request):
     else:
         return Response({"result": "error", "comment": "No case for protocolId"})
 
-    extension = request.GET.get("extension")
-    if extension != "pdf":
+    type = request.GET.get("type")
+    if type != "pdf":
         return Response({"result": "error", "comment": "format not valid"})
 
     pdf_content = direction_pdf_result(direction_id)
