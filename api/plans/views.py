@@ -89,8 +89,10 @@ def get_plan_operations_by_params(request):
             doctor = u.user.get_fio()
             time = strfdatetime(u.time, '%d.%m.%y %H:%M')
             tooltip_data.append(f"Обновил: {doctor} ({time})")
-
-        res = divmod(i[13], 60)
+        if i[13]:
+            res = divmod(i[13], 60)
+        else:
+            res = (99, 99,)
         hour = res[0]
         if res[0] < 10:
             hour = f"0{res[0]}"
