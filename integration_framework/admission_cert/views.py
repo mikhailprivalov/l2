@@ -29,7 +29,7 @@ def get_med_protocols(request):
     if token_is_not_valid:
         return Response({"result": "error", "comment": "token is not valid"})
 
-    limit = request.GET.get("count")
+    limit = int(request.GET.get("count", 500))
 
     companies_id = tuple([i.id for i in app.companies.all()])
     closed_case_need_send = get_closed_case_by_company(companies_id, limit)
