@@ -91,6 +91,7 @@
         :date="date"
         :operation="operation"
         :cancel_operation="cancel"
+        :duration_oper="duration_oper"
       />
     </li>
   </ul>
@@ -115,6 +116,7 @@ export default {
       current_direction_history_open: '',
       pk_plan: null,
       pk_hirurg: null,
+      duration_oper: '',
       date: null,
       operation: '',
       cancel: false,
@@ -150,6 +152,7 @@ export default {
       this.date = '';
       this.operation = '';
       this.current_direction = this.current_direction_history_open.toString();
+      this.duration_oper = '';
     },
     edit_data(row) {
       this.pk_hirurg = row.hirurg_pk;
@@ -160,6 +163,7 @@ export default {
       this.pk_plan = row.pk_plan;
       this.cancel = row.cancel;
       this.edit_plan_operations_old = true;
+      this.duration_oper = row.duration_oper;
     },
   },
 };
