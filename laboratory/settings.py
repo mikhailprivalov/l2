@@ -489,7 +489,10 @@ LUNCH_DURATION_BY_POSITIONS = {}
 DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 # Варианты смен [{"id": "16.2", "label": "16.2 ч."}]
 SHIFTS_VARIANTS = []
+# Число месяца для блокировки графика
 TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
+# Кол-во дней в неделю для трудового договора (EmployeePosition)
+WORK_DAYS_PER_WEEK_DEFAULT = 5
 CDA_ID_FOR_DATE_CLOSE_CASE = -1
 CDA_ID_FOR_WHERE_SERVICE_DONE = -1
 CDA_ID_FOR_TYPE_MEDICAL_INSPECTION = -1
