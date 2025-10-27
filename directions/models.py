@@ -1805,7 +1805,7 @@ class Napravleniya(models.Model):
                             monitoring.period_param_week_description = week_date_start_end[0]
                             monitoring.period_param_week_date_start = week_date_start_end[1]
                             monitoring.period_param_week_date_end = week_date_start_end[2]
-                            period_param_year = week_date_start_end[1].split('-')[0]
+                            period_param_year = period_param_year
                             monitoring.period_date = week_date_start_end[1]
                         monitoring.period_param_month = period_param_month
                         monitoring.period_param_quarter = period_param_quarter

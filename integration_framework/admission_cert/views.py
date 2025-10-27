@@ -95,7 +95,7 @@ def get_med_protocols(request):
 
 
 @api_view(['GET'])
-def get_pdf_protocol(request):
+def get_result_protocol(request):
     token = request.META.get("HTTP_AUTHORIZATION")
     token = token.replace("Bearer ", "")
     if not token:
@@ -123,10 +123,6 @@ def get_pdf_protocol(request):
             return Response({"result": "error", "comment": "No work_place in case protocolId"})
     else:
         return Response({"result": "error", "comment": "No case for protocolId"})
-
-    type = request.GET.get("type")
-    if type != "pdf":
-        return Response({"result": "error", "comment": "format not valid"})
 
     pdf_content = direction_pdf_result(direction_id)
     return Response({"protocol_id": pdf_content})
