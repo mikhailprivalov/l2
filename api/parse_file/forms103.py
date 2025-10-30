@@ -234,6 +234,8 @@ def update_employee_position(employee_position, employee_data):
         employee_position.date_dismissal = employee_data.get("date_dismissal")
         employee_position.is_active = False
     employee_position.weekly_hours_norm = employee_data.get("work_schedule")
+    if employee_position.work_days_per_week:
+        employee_position.daily_hours_norm = employee_data.get("work_schedule") / employee_position.work_days_per_week
     employee_position.save()
 
 
