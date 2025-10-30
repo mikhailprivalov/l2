@@ -38,9 +38,10 @@ def parse_work_sheet(ws: Worksheet):
     Разбор xlsx листа из файла
     """
     result = {"ok": True, "message": ""}
-    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
+    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения", "График работы"}
     starts = False
-    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = (
+    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx, work_schedule_idx = (
+        '',
         '',
         '',
         '',
@@ -64,6 +65,7 @@ def parse_work_sheet(ws: Worksheet):
         {"fields": {"snils"}, "normalize_funcs": {"normalize_snils"}},
         {"fields": {"rate"}, "normalize_funcs": {"normalize_rate"}},
         {"fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}},
+        {"fields": {"work_schedule"}, "normalize_funcs": {"get_first_number"}},
     ]
 
     russian_keys = {
@@ -76,6 +78,7 @@ def parse_work_sheet(ws: Worksheet):
         "rate": "Количество ставок",
         "date_employment": "Дата приема",
         "date_dismissal": "Дата увольнения",
+        "work_schedule": "График работы"
     }
     values_lens = {
         "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
@@ -110,6 +113,7 @@ def parse_work_sheet(ws: Worksheet):
                 rate_idx = cells.index("Количество ставок")
                 date_employment_idx = cells.index("Дата приема")
                 date_dismissal_idx = cells.index("Дата увольнения")
+                work_schedule_idx = cells.index("График работы")
                 starts = True
         else:
             employee_data = {
@@ -122,6 +126,7 @@ def parse_work_sheet(ws: Worksheet):
                 "rate": cells[rate_idx],
                 "date_employment": cells[date_employment_idx],
                 "date_dismissal": cells[date_dismissal_idx],
+                "work_schedule": cells[work_schedule_idx]
             }
             normalized_employee_data = normalize_employee_data(employee_data, normalize_actions)
             validation_result = validate_employee_data(normalized_employee_data, russian_keys, values_lens, checks_lists)
