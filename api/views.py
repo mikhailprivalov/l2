@@ -27,7 +27,7 @@ from laboratory.settings import (
     STATISTIC_TYPE_DEPARTMENT,
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
-    MEDEXAM_FIN_SOURCE_TITLE,
+    MEDEXAM_FIN_SOURCE_TITLE, MAGAZINE_REPORT,
 )
 from statistic.models import TypeReport
 from utils.response import status_response
@@ -3213,6 +3213,13 @@ def get_research_sets(request):
 def get_types_report(request):
     types = [{"id": type_report.code, "label": type_report.title} for type_report in TypeReport.objects.all().order_by("title")]
     return JsonResponse({"data": types})
+
+
+@login_required
+@group_required("Статистика-журналы")
+def get_types_magazine(request):
+    data = [{"id": k, "label": v.get("label")}for k, v in MAGAZINE_REPORT.items()]
+    return JsonResponse({"data": data})
 
 
 @login_required
