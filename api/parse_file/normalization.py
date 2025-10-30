@@ -42,6 +42,15 @@ def normalize_date(value: str):
     return normalized_value
 
 
+def get_first_number(value: str):
+    """Получает из строки первое число """
+    values = value.split(" ")
+    for value in values:
+        if value.isnumeric():
+            return int(value)
+    return None
+
+
 def normalize_values(value: str, actions: set):
     """
     Перебирает действия по нормализации
