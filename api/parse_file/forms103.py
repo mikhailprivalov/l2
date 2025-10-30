@@ -233,8 +233,8 @@ def update_employee_position(employee_position, employee_data):
     if employee_data.get("date_dismissal"):
         employee_position.date_dismissal = employee_data.get("date_dismissal")
         employee_position.is_active = False
-        employee_position.weekly_hours_norm = employee_data.get("work_schedule")
-        employee_position.save()
+    employee_position.weekly_hours_norm = employee_data.get("work_schedule")
+    employee_position.save()
 
 
 def create_employee_position(employee_data, employee, department, position, employment_form):
