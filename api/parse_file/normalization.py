@@ -52,7 +52,9 @@ def get_first_number(value: str):
 
 
 def convert_hours_to_minutes(value: int):
-    result = value * 60
+    result = None
+    if value:
+        result = value * 60
     return result
 
 
