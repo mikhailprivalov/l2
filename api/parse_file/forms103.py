@@ -79,7 +79,7 @@ def parse_work_sheet(ws: Worksheet):
         "rate": "Количество ставок",
         "date_employment": "Дата приема",
         "date_dismissal": "Дата увольнения",
-        "work_schedule": "График работы"
+        "work_schedule": "График работы",
     }
     values_lens = {
         "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
