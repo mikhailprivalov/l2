@@ -43,7 +43,7 @@ def normalize_date(value: str):
 
 
 def get_first_number(value: str):
-    """Получает из строки первое число """
+    """Получает из строки первое число"""
     values = value.split(" ")
     for value in values:
         if value.isnumeric():
