@@ -51,6 +51,11 @@ def get_first_number(value: str):
     return None
 
 
+def convert_hours_to_minutes(value: int):
+    result = value * 60
+    return result
+
+
 def normalize_values(value: str, actions: set):
     """
     Перебирает действия по нормализации
