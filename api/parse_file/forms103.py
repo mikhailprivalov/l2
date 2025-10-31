@@ -236,8 +236,8 @@ def update_employee_position(employee_position, employee_data):
         employee_position.is_active = False
     work_schedule_minutes = employee_data.get("work_schedule")
     employee_position.weekly_hours_norm = work_schedule_minutes
-    if employee_position.work_days_per_week:
-        employee_position.daily_hours_norm = work_schedule_minutes / employee_position.work_days_per_week
+    if employee_position.work_days_per_week and work_schedule_minutes:
+        employee_position.daily_hours_norm = work_schedule_minutes // employee_position.work_days_per_week
     employee_position.save()
 
 
