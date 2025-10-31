@@ -5,6 +5,7 @@ from api.parse_file.normalization import normalize_values
 from api.parse_file.validation import check_values
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
+from laboratory.settings import WORK_DAYS_PER_WEEK_DEFAULT
 
 
 def check_request_data(organization_id, user=None):
@@ -38,9 +39,10 @@ def parse_work_sheet(ws: Worksheet):
     Разбор xlsx листа из файла
     """
     result = {"ok": True, "message": ""}
-    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения"}
+    need_col_name = {"Вид занятости", "СНИЛС", "Табельный номер", "Сотрудник", "Подразделение", "Должность", "Количество ставок", "Дата приема", "Дата увольнения", "График работы"}
     starts = False
-    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx = (
+    employment_form_idx, snils_idx, tabel_number_idx, employee_fio_idx, department_title_idx, position_title_idx, rate_idx, date_employment_idx, date_dismissal_idx, work_schedule_idx = (
+        '',
         '',
         '',
         '',
@@ -64,6 +66,7 @@ def parse_work_sheet(ws: Worksheet):
         {"fields": {"snils"}, "normalize_funcs": {"normalize_snils"}},
         {"fields": {"rate"}, "normalize_funcs": {"normalize_rate"}},
         {"fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}},
+        {"fields": {"work_schedule"}, "normalize_funcs": {"get_first_number", "convert_hours_to_minutes"}},
     ]
 
     russian_keys = {
@@ -76,6 +79,7 @@ def parse_work_sheet(ws: Worksheet):
         "rate": "Количество ставок",
         "date_employment": "Дата приема",
         "date_dismissal": "Дата увольнения",
+        "work_schedule": "График работы",
     }
     values_lens = {
         "employment_form": TypeWorkTimeEmployee._meta.get_field("title").max_length,
@@ -110,6 +114,7 @@ def parse_work_sheet(ws: Worksheet):
                 rate_idx = cells.index("Количество ставок")
                 date_employment_idx = cells.index("Дата приема")
                 date_dismissal_idx = cells.index("Дата увольнения")
+                work_schedule_idx = cells.index("График работы")
                 starts = True
         else:
             employee_data = {
@@ -122,6 +127,7 @@ def parse_work_sheet(ws: Worksheet):
                 "rate": cells[rate_idx],
                 "date_employment": cells[date_employment_idx],
                 "date_dismissal": cells[date_dismissal_idx],
+                "work_schedule": cells[work_schedule_idx],
             }
             normalized_employee_data = normalize_employee_data(employee_data, normalize_actions)
             validation_result = validate_employee_data(normalized_employee_data, russian_keys, values_lens, checks_lists)
@@ -228,7 +234,11 @@ def update_employee_position(employee_position, employee_data):
     if employee_data.get("date_dismissal"):
         employee_position.date_dismissal = employee_data.get("date_dismissal")
         employee_position.is_active = False
-        employee_position.save()
+    work_schedule_minutes = employee_data.get("work_schedule")
+    employee_position.weekly_hours_norm = work_schedule_minutes
+    if employee_position.work_days_per_week and work_schedule_minutes:
+        employee_position.daily_hours_norm = work_schedule_minutes // employee_position.work_days_per_week
+    employee_position.save()
 
 
 def create_employee_position(employee_data, employee, department, position, employment_form):
@@ -236,7 +246,8 @@ def create_employee_position(employee_data, employee, department, position, empl
     Создает новый трудовой договор (EmployeePosition)
     """
     active = False if employee_data.get("date_dismissal") else True
-    new_employee_position = EmployeePosition(
+    work_schedule_minutes = employee_data.get("work_schedule")
+    new_employee_position: EmployeePosition = EmployeePosition(
         is_active=active,
         employee_id=employee.pk,
         position_id=position.pk,
@@ -246,6 +257,8 @@ def create_employee_position(employee_data, employee, department, position, empl
         type_work_time_id=employment_form.pk,
         date_employment=employee_data.get("date_employment"),
         date_dismissal=employee_data.get("date_dismissal"),
+        weekly_hours_norm=work_schedule_minutes,
+        daily_hours_norm=work_schedule_minutes / WORK_DAYS_PER_WEEK_DEFAULT,
     )
     new_employee_position.save()
 
