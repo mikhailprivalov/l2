@@ -45,6 +45,7 @@ def form_01(ws1, data):
         previous_direction_number = i.direction_number
         step += 1
     result.append(tmp_string.copy())
+
     return ws1
 
 
