@@ -744,6 +744,8 @@ def process_pull_orders():
             processed_files_new = set()
             path_to_copy = None
             path_to_push = ftp_connection.hospital.orders_push_by_numbers
+            if not path_to_push:
+                continue
             if len(path_to_push) > 0:
                 path_to_copy = urlparse(path_to_push).path
             try:
@@ -755,7 +757,8 @@ def process_pull_orders():
 
                     if file not in processed_files_by_url[ftp_url]:
                         if path_to_copy:
-                            ftp_connection.copy_file(file, path_to_copy)
+                            pass
+                            # ftp_connection.copy_file(file, path_to_copy)
                         ftp_connection.pull_order(file)
 
             except ftplib.all_errors as e:
