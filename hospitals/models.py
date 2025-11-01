@@ -66,6 +66,7 @@ class Hospitals(models.Model):
     send_result_after_time_min = models.PositiveSmallIntegerField(default=0, blank=True, null=True, verbose_name="Время (мин) отправки результатов")
     use_self_generate_tube = models.BooleanField(default=False, blank=True, help_text='Приоритет собственного генератора')
     use_internal_code_api_integration = models.BooleanField(default=True, blank=True, help_text='Использовать внутренний код для интеграции')
+    auth_data_for_resp = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Авторизация для rest-api текстом в {} для json")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

@@ -81,3 +81,15 @@ def send_gistology_direction_to_ecp(directions) -> dict:
 def send_medexam_to_ecp(directions) -> dict:
     url = SettingManager.get_api_ecp_base_url()
     return make_request(f"{url}/med-exam", data=json.dumps({"directions": directions}), gen_url=False, auth_token="a-super-secret-key")
+
+
+def send_direction_external_service(directions) -> dict:
+    if API_SERVER_SEND_GISTOLOGY_RESULT:
+        url = API_SERVER_SEND_GISTOLOGY_RESULT
+    else:
+        url = SettingManager.get_api_ecp_base_url()
+    path = SettingManager.get("endpoint_ecp_send_gistology", default='', default_type='s')
+    endpoint = 'send-gistology-result'
+    if path:
+        endpoint = path
+    return make_request(f"{url}/{endpoint}", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
