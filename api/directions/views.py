@@ -3923,8 +3923,8 @@ def tubes_for_get(request):
                             hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                             if direction.hospital:
                                 hospital_for_generator_tube = direction.hospital
-#                            if direction.external_executor_hospital:
-#                                hospital_for_generator_tube = direction.external_executor_hospital
+                            #                            if direction.external_executor_hospital:
+                            #                                hospital_for_generator_tube = direction.external_executor_hospital
                             generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                             generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                             number = generator.get_next_value()
