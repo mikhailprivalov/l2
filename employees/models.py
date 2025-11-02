@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT, WORK_DAYS_PER_WEEK_DEFAULT
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -439,7 +439,7 @@ class EmployeePosition(models.Model):
     date_transfer = models.DateField(verbose_name="Дата перевода", help_text="2025-02-01", blank=True, null=True, default=None)
     daily_hours_norm = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="120, 240, 360, 480 мин")
     weekly_hours_norm = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="120, 240, 360, 480 мин")
-    work_days_per_week = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="5 дней")
+    work_days_per_week = models.PositiveSmallIntegerField(default=WORK_DAYS_PER_WEEK_DEFAULT, blank=True, null=True, help_text="5 дней")
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
