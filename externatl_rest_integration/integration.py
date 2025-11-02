@@ -23,10 +23,7 @@ def make_request_get_token(hosp_data, method="GET"):
         if cv:
             return json.loads(cv)
         else:
-            headers = {
-                "login": hosp_data.get("login"),
-                "password": hosp_data.get("password")
-            }
+            headers = {"login": hosp_data.get("login"), "password": hosp_data.get("password")}
             auth = (hosp_data.get("auth_login"), hosp_data.get("auth_password"))
             url = f"{hosp_data.get('url')}/ky"
             response = requests.request(method, url, headers=headers, auth=auth)
