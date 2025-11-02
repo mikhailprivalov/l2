@@ -30,8 +30,9 @@ from directions.models import (
     Result,
     IssledovaniyaFiles,
 )
-from directions.sql_func import get_tube_by_number
+from directions.sql_func import get_tube_by_number, get_data_by_directions_id
 from directory.sql_func import get_fsli_fractions_by_research_id
+from externatl_rest_integration.integration import make_request_get_token, rest_make_request_get
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
@@ -683,6 +684,47 @@ class FTPConnection:
             self.log("Writing file", path_file, "\n", content)
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
+
+            hosptal_data_auth = direction.hospital.auth_data_for_rest
+            if hosptal_data_auth:
+                hosp_data = json.load(hosptal_data_auth)
+                hosp_data['hospital_id'] = direction.hospital_id
+
+            rest_token = make_request_get_token(hosp_data, method="GET")
+
+            default_part_url = hosp_data.get("url")
+            path = "ky/check"
+            rest_api_data = {}
+            result = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="GET")
+            if result.get("result") == "ok":
+                pass
+            else:
+                rest_token = make_request_get_token(hosp_data, method="GET")
+            sql_resutl = get_data_by_directions_id(direction.pk)
+
+            analyses = [{"article": i.research_internal_code, "barcode": i.tube_number} for i in sql_resutl]
+
+            rest_api_data = {
+                "id": direction.pk,
+                "client": {
+                    "lname": sql_resutl[0].patient_family,
+                    "fname": sql_resutl[0].patient_name,
+                    "patronymic": sql_resutl[0].patient_patronymic,
+                    "birthdate": sql_resutl[0].patient_birthday_english,
+                    "phonenumber": "",
+                    "email": "",
+                    "sex": sql_resutl[0].patient_sex,
+                    "notify": False
+                },
+                "analyses": analyses,
+                "cito": False,
+                "agreement": "1046"
+            }
+            path = "order/new"
+            new_order = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="POST")
+            number_new_order = new_order.get("number")
+
+
             for k in directons_external_order_group:
                 if k in directions_to_sync:
                     directions_to_sync.remove(k)
