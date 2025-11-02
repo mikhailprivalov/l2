@@ -757,7 +757,7 @@ def send_order_by_rest_api(direction: Napravleniya):
                 "phonenumber": "",
                 "email": "",
                 "sex": sql_resutl[0].patient_sex,
-                "notify": False
+                "notify": False,
             },
             "analyses": analyses,
             "cito": False,
