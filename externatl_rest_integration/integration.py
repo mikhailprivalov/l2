@@ -40,10 +40,7 @@ def rest_make_request_get(default_part_url, path, token, auth_data, data, method
         data = {}
     try:
         url = f"{default_part_url}/{path}"
-        headers = {
-            "x-auth-token": token,
-            "Content-Type": "application/json"
-        }
+        headers = {"x-auth-token": token, "Content-Type": "application/json"}
         auth = (auth_data.get("auth_login"), auth_data.get("auth_password"))
         data = requests.request(method, url, auth=auth, headers=headers, data=json.dumps(data, ensure_ascii=False))
         return json.loads(data.content.decode())
