@@ -794,7 +794,6 @@ def send_order_by_rest_api(direction: Napravleniya):
     return is_send_api_order
 
 
-
 def get_hospitals_pull_orders():
     hospitals = Hospitals.objects.filter(orders_pull_by_numbers__isnull=False, hide=False)
     return hospitals
