@@ -18,7 +18,7 @@ class Command(BaseCommand):
         mode = kwargs["mode"]
         self.stdout.write("Добавление началось, ожидайте...")
         default_hospital = Hospitals.get_default_hospital()
-        if mode:
+        if mode == 1:
             departments = Department.get_active_departments(default_hospital.id)
             count_departments_change = len(departments)
             for department in departments:
