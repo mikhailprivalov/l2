@@ -493,6 +493,9 @@ SHIFTS_VARIANTS = []
 TIME_TRACKING_DOCUMENT_BLOCK_DEFAULT = 21
 # Кол-во дней в неделю для трудового договора (EmployeePosition)
 WORK_DAYS_PER_WEEK_DEFAULT = 5
+# Начало рабочего дня для работников и подразделений (Employees, Department)
+EMPLOYEE_START_WORK_TIME_DEFAULT = "08:00"
+
 CDA_ID_FOR_DATE_CLOSE_CASE = -1
 CDA_ID_FOR_WHERE_SERVICE_DONE = -1
 CDA_ID_FOR_TYPE_MEDICAL_INSPECTION = -1
