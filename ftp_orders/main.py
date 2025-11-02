@@ -761,7 +761,7 @@ def send_order_by_rest_api(direction: Napravleniya):
             },
             "analyses": analyses,
             "cito": False,
-            "agreement": direction.price_name.symbol_code
+            "agreement": direction.price_name.symbol_code,
         }
         path = "order/new"
         new_order = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="POST")
