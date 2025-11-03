@@ -114,13 +114,13 @@ def form_01(ws1, data):
 
 
 def sql_01(research_id, d_s, d_e):
-        """
-        Для журнала ВК-ДЛО
-        :return:
-        """
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
+    """
+    Для журнала ВК-ДЛО
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
                 SELECT
                     directions_paraclinicresult.issledovaniye_id,
                     directions_paraclinicresult.field_id,
