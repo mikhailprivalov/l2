@@ -81,6 +81,7 @@ from laboratory.settings import (
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
     UNLIMIT_PERIOD_STATISTIC_GROUP,
     TYPE_REPORT_FORMS,
+    MAGAZINE_REPORT,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
@@ -1906,6 +1907,31 @@ def statistic_xls(request):
             query = sql_func.statistics_consolidate_research(start_date, end_date, type_fin, is_research_set, researche_ids)
             ws = consolidates.consolidate_base(ws, d1, d2, title_fin.title)
             ws = consolidates.consolidate_fill_data(ws, query)
+    elif tp == "statistics-magazine":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Журнал_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("ВК")
+
+        type_magazine = int(request_data.get("type-magazine"))
+        xlsx_form = None
+        if type_magazine:
+            data_form = MAGAZINE_REPORT.get(type_magazine)
+            use_form = data_form.get("use_statistic_form")
+            research_id = data_form.get("research_id")
+            if use_form:
+                xlsx_form = import_string(f'statistic.{use_form}')
+
+            if not xlsx_form:
+                pass
+            else:
+                start_date = normalize_dots_date(date_start_o)
+                end_date = normalize_dots_date(date_end_o)
+                start_date = f"{start_date} 00:00:00"
+                end_date = f"{end_date} 23:59:59"
+
+                data = {"d_s": start_date, "d_e": end_date, "research_id": research_id}
+                ws = xlsx_form(ws, data)
     elif tp == "consolidate-type-department":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Свод пациенты-услуги_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()

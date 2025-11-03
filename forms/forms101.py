@@ -7421,7 +7421,7 @@ def form_32(request_data):
     objs.append(Spacer(1, 7 * mm))
     objs.append(
         Paragraph(
-            f"Информированное добровольное согласие потребителя (пациента) о предоставлении платных<br/>медицинских услуг при оказании медицинской помощи в {hospital_name}",
+            f"Согласие пациента на обработку персональных данных в {hospital_name}",
             styleCenterBold,
         )
     )

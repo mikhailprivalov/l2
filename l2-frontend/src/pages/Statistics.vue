@@ -265,6 +265,22 @@
             />
           </div>
           <div
+            v-if="checkReportParam(PARAMS_TYPES.TYPES_MAGAZINE)"
+            :key="PARAMS_TYPES.TYPES_MAGAZINE"
+            class="input-group"
+          >
+            <span class="input-group-addon">Тип журнала:</span>
+            <treeselect
+              v-model="values.typeMagazine"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="typesMagazine"
+              :clearable="true"
+              placeholder="Тип журнала"
+            />
+          </div>
+          <div
             v-if="checkReportParam(PARAMS_TYPES.TYPE_DEPARTMENT)"
             :key="PARAMS_TYPES.TYPE_DEPARTMENT"
             class="input-group"
@@ -498,6 +514,7 @@ const PARAMS_TYPES = {
   FIN_SOURCE: 'FIN_SOURCE',
   RESEARCH_SETS: 'RESEARCH_SETS',
   TYPES_REPORT: 'TYPES_REPORT',
+  TYPES_MAGAZINE: 'TYPES_MAGAZINE',
   LOAD_FILE: 'LOAD_FILE',
   RESEARCH: 'RESEARCH',
   RESEARCH_CREATE: 'RESEARCH_CREATE',
@@ -592,6 +609,12 @@ const STATS_CATEGORIES = {
         title: 'Экспертиза стационара',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-hosp-expertise&date-start=<date-start>&date-end=<date-end>',
+      },
+      magazine: {
+        groups: ['Статистика-журналы'],
+        title: 'Журналы',
+        params: [PARAMS_TYPES.TYPES_MAGAZINE, PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-magazine&date-start=<date-start>&date-end=<date-end>&type-magazine=<type-magazine>',
       },
     },
   },
@@ -740,6 +763,7 @@ const getVaues = () => ({
   finSource: -1,
   researchSet: null,
   typeReport: null,
+  typeMagazine: null,
   typeDepartment: null,
   depByType: null,
   user: null,
@@ -784,6 +808,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       companies: [],
       researchSets: [],
       typesReport: [],
+      typesMagazine: [],
       typeDepartments: [],
       disabled_categories: [],
       disabled_reports: [],
@@ -816,6 +841,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
     this.loadCompanies();
     this.loadResearchSets();
     this.loadTypesReport();
+    this.loadTypesMagazine();
     this.loadTypeDepartments();
     this.loadPurposes();
     this.loadResultTreatment();
@@ -845,6 +871,8 @@ export default class Statistics extends Vue {
   researchSets: any[];
 
   typesReport: any[];
+
+  typesMagazine: any[];
 
   typeDepartments: any[];
 
@@ -924,6 +952,13 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { data } = await this.$api('/get-types-report');
     this.typesReport = data;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadTypesMagazine() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { data } = await this.$api('/get-types-magazine');
+    this.typesMagazine = data;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -1078,6 +1113,13 @@ export default class Statistics extends Vue {
           url = url.replace('<type-report>', -1);
         }
         url = url.replace('<type-report>', this.values.typeReport);
+      }
+
+      if (this.PARAMS_TYPES.TYPES_MAGAZINE === p) {
+        if (_.isNil(this.values.typeMagazine)) {
+          url = url.replace('<type-magazine>', -1);
+        }
+        url = url.replace('<type-magazine>', this.values.typeMagazine);
       }
 
       if (this.PARAMS_TYPES.TYPE_DEPARTMENT === p) {

@@ -181,7 +181,7 @@ class TubesRegistration(models.Model):
         return self.issledovaniya_set.all().count()
 
     def __str__(self):
-        return "%d %s (%s, %s) %s" % (self.number, self.type.tube.title, self.doc_get, self.doc_recive, self.notice)
+        return f"{self.number} {self.doc_get} {self.doc_recive} {self.notice}"
 
     def day_num(self, doc, num):
         if not self.getstatus():
