@@ -13,8 +13,13 @@ def form_01(ws1, data):
     style_border = NamedStyle(name="style_border_ca")
     bd = Side(style="thin", color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    style_border.font = Font(bold=True, size=11)
-    style_border.alignment = Alignment(wrap_text=True, horizontal="left", vertical="center")
+    style_border.font = Font(bold=True, size=12)
+    style_border.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
+
+    style_border2 = NamedStyle(name="style_border2")
+    style_border2.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    style_border2.font = Font(bold=False, size=11)
+    style_border2.alignment = Alignment(wrap_text=True, horizontal="center", vertical="center")
 
     columns = [
         ('№ п/п.', 5),
@@ -24,9 +29,9 @@ def form_01(ws1, data):
         ('Дата рождения', 10),
         ('Характеристика случая экспертизы', 30),
         ('Диагноз основной (МКБ-10)', 8),
-        ('№ ф.003/у (№ случая")', 15),
+        ('№ ф.003/у (№ случая")', 10),
         ('Обоснование заключения. Заключение экспертов, рекомендации', 30),
-        ('Основной состав экспертов', 25),
+        ('Основной состав экспертов', 20),
         ("Подписи экспертов", 15),
     ]
     row = 5
@@ -44,13 +49,12 @@ def form_01(ws1, data):
         if i.direction_number != previous_direction_number and step != 0:
             result.append(tmp_string.copy())
             tmp_string = {}
-        tmp_string.update({i.field_title: i.field_value, "history_num": i.parent_direction, "doc_fio": i.doc_fio, "med_exam": i.medical_examination})
+        tmp_string.update({i.field_title: i.field_value, "history_num": i.parent_direction, "doc_fio": i.doc_fio, "medical_examination": i.medical_examination})
         previous_direction_number = i.direction_number
         step += 1
     result.append(tmp_string.copy())
-    step = 0
     previous_date = None
-
+    step = 0
     for i in result:
         row += 1
         if step != 0 and previous_date != i.get("medical_examination"):
@@ -61,7 +65,10 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=3).value = i.get("doc_fio")
         ws1.cell(row=row, column=4).value = i.get("ФИО пациента")
         ws1.cell(row=row, column=5).value = i.get("Дата рождения пациента")
-        subject = json.loads(i.get("Предмет рассмотрения"))
+        try:
+            subject = json.loads(i.get("Предмет рассмотрения"))
+        except:
+            subject = {"rows": [""]}
         subject_result = ""
         k = 0
         for s in subject.get("rows"):
@@ -71,16 +78,37 @@ def form_01(ws1, data):
                 subject_result = s[0]
             k += 1
         ws1.cell(row=row, column=6).value = subject_result
-        diag = json.loads(i.get("Диагноз основной по МКБ-10"))
+        try:
+            diag = json.loads(i.get("Диагноз основной по МКБ-10"))
+        except:
+            diag = {"code": "-"}
 
         ws1.cell(row=row, column=7).value = diag.get("code")
-        ws1.cell(row=row, column=8).value = i.get("history_num")
-        ws1.cell(row=row, column=9).value = "-"
-        ws1.cell(row=row, column=10).value = "-"
 
+        ws1.cell(row=row, column=8).value = i.get("history_num")
+
+        name_form = i.get("Наименование/форма выпуска/дозировка", "-")
+        count = i.get("Количество упаковок", "-")
+        ws1.cell(row=row, column=9).value = f"{name_form} ({count})"
+        try:
+            members = json.loads(i.get("Члены комиссии"))
+        except:
+            members = {"rows": ["-", "-"]}
+        members_result = ""
+        m_step = 0
+        for m in members.get("rows"):
+            if m_step != 0:
+                members_result = f"{members_result} \n {m[1]}"
+            else:
+                members_result = m[1]
+            m_step += 1
+
+        ws1.cell(row=row, column=10).value = members_result
+
+        for c in range(11):
+            ws1.cell(row=row, column=c + 1).style = style_border2
 
         previous_date = i.get("medical_examination")
-        print(i)
 
     return ws1
 
