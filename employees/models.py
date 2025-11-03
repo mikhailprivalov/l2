@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
