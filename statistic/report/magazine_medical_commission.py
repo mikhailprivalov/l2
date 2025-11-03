@@ -146,5 +146,5 @@ def sql_01(research_id, d_s, d_e):
             params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )
 
-            rows = namedtuplefetchall(cursor)
-        return rows
+        rows = namedtuplefetchall(cursor)
+    return rows
