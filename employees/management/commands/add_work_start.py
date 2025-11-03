@@ -2,7 +2,6 @@ from django.core.management.base import BaseCommand
 
 from employees.models import EmployeePosition, Department, default_work_start
 from hospitals.models import Hospitals
-from laboratory.settings import WORK_DAYS_PER_WEEK_DEFAULT
 
 
 class Command(BaseCommand):
@@ -11,7 +10,6 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        """ """
         parser.add_argument('mode', type=int)
 
     def handle(self, *args, **kwargs):
