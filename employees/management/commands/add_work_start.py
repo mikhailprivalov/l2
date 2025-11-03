@@ -11,8 +11,7 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        """
-        """
+        """ """
         parser.add_argument('mode', type=int)
 
     def handle(self, *args, **kwargs):
