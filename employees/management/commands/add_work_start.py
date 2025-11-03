@@ -9,6 +9,7 @@ class Command(BaseCommand):
     """
     Добавление/изменение начала рабочего дня в подразделениях и трудовых договора (EmployeePosition, Department)
     """
+
     def add_arguments(self, parser):
         """
         """
