@@ -80,7 +80,8 @@ from laboratory.settings import (
     DISPANSERIZATION_SERVICE_PK,
     UNLIMIT_PERIOD_STATISTIC_RESEARCH,
     UNLIMIT_PERIOD_STATISTIC_GROUP,
-    TYPE_REPORT_FORMS, MAGAZINE_REPORT,
+    TYPE_REPORT_FORMS,
+    MAGAZINE_REPORT,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
