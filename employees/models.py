@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 
 from employees.sql_func import get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
-from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, DATE_MONTH_TRACKING_DOCUMENT_BLOCK_DEFAULT
+from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
 from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
@@ -256,6 +256,11 @@ class Position(models.Model):
         ordering = ('hospital__short_title', 'hospital__title', 'name')
 
 
+def default_work_start():
+    hours, minutes = map(int, EMPLOYEE_START_WORK_TIME_DEFAULT.split(":"))
+    return datetime.time(hours, minutes)
+
+
 class Department(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
     name = models.CharField(max_length=255, verbose_name='Название отдела')
@@ -270,6 +275,7 @@ class Department(models.Model):
     )
     external_id = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Внешний ИД-код", db_index=True)
     lunch_duration = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="30, 60, 120")
+    work_start = models.TimeField(default=default_work_start, blank=True, null=True, help_text="08:00")
 
     def __str__(self):
         return self.name
@@ -439,7 +445,8 @@ class EmployeePosition(models.Model):
     date_transfer = models.DateField(verbose_name="Дата перевода", help_text="2025-02-01", blank=True, null=True, default=None)
     daily_hours_norm = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="120, 240, 360, 480 мин")
     weekly_hours_norm = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="120, 240, 360, 480 мин")
-    work_days_per_week = models.PositiveSmallIntegerField(default=None, blank=True, null=True, help_text="5 дней")
+    work_days_per_week = models.PositiveSmallIntegerField(default=WORK_DAYS_PER_WEEK_DEFAULT, blank=True, null=True, help_text="5 дней")
+    work_start = models.TimeField(default=default_work_start, blank=True, null=True, help_text="08:00")
 
     def __str__(self):
         return f'{self.employee} — {self.position} (ставка {self.rate})'
