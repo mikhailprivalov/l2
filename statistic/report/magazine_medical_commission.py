@@ -143,8 +143,8 @@ def sql_01(research_id, d_s, d_e):
                       AND directions_issledovaniya.medical_examination AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s      
                     order by directions_issledovaniya.medical_examination, directions_issledovaniya.napravleniye_id
                 """,
-                params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
-            )
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
 
             rows = namedtuplefetchall(cursor)
         return rows
