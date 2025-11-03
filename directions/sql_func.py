@@ -192,7 +192,8 @@ def get_data_by_directions_id(direction_ids):
             to_char(dn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YY HH24:MI') as direction_create,
             dr.internal_code as research_internal_code,
             dlm.title as laboratory_material,
-            to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'DD.MM -  HH24:MI') as tube_registration_time
+            to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'DD.MM -  HH24:MI') as tube_registration_time,
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'YY-MM-DD') as patient_birthday_english
             FROM directions_tubesregistration
             LEFT JOIN directions_issledovaniya_tubes dit on directions_tubesregistration.id = dit.tubesregistration_id
             LEFT JOIN directory_releationsft drft on drft.id = directions_tubesregistration.type_id
