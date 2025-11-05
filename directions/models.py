@@ -60,8 +60,10 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes,
 
 from appconf.manager import SettingManager
 from utils.dates import normalize_dots_date
+import sys
 
 logger = logging.getLogger(__name__)
+sys.setrecursionlimit(5000)  # Increase to 5000
 
 
 class FrequencyOfUseResearches(models.Model):
