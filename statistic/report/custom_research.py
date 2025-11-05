@@ -28,7 +28,7 @@ def custom_research_data(query_sql, result_additional_research):
                 "Адрес": i.patient_fact_address if i.patient_fact_address else i.patient_main_address,
                 "Исполнитель": i.doc_fio,
                 "Код врача": i.personal_code,
-                "Доп услуги": additional_research
+                "Доп услуги": additional_research,
             }
         tmp_result[i.field_title] = i.field_value
         if i.field_title not in custom_fields:
