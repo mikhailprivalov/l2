@@ -60,8 +60,10 @@ from statistics_tickets.models import VisitPurpose, ResultOfTreatment, Outcomes,
 
 from appconf.manager import SettingManager
 from utils.dates import normalize_dots_date
+import sys
 
 logger = logging.getLogger(__name__)
+sys.setrecursionlimit(5000)  # Increase to 5000
 
 
 class FrequencyOfUseResearches(models.Model):
@@ -3604,8 +3606,6 @@ class GeneratorValuesAreOver(Exception):
 class GeneratorOverlap(Exception):
     pass
 
-import sys
-sys.setrecursionlimit(5000)  # Increase to 5000
 
 class NumberGenerator(models.Model):
     DEATH_FORM_NUMBER = 'deathFormNumber'
@@ -3666,7 +3666,6 @@ class NumberGenerator(models.Model):
             next_value = min_last_value
             if has_overlap:
                 self.last = next_value
-        print("next_value", next_value)
         self.free_numbers = [x for x in self.free_numbers if x != next_value]
         self.save(update_fields=['last', 'free_numbers'])
 
