@@ -32,7 +32,7 @@ from directions.models import (
 )
 from directions.sql_func import get_tube_by_number, get_data_by_directions_id
 from directory.sql_func import get_fsli_fractions_by_research_id
-from externatl_rest_integration.integration import make_request_get_token, rest_make_request_get
+from external_rest_integration.integration import make_request_get_token, rest_make_request_get
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
@@ -597,9 +597,12 @@ class FTPConnection:
                 else:
                     price_code_value = direction.price_name.symbol_code
                 pv.PV1.PV1_20.value = f"Договор^^{direction.price_name.title}^{price_code_value}"
-                if direction.doc_who_create.podrazdeleniye.oid:
-                    department_code = direction.doc_who_create.podrazdeleniye.oid
-                else:
+                try:
+                    if direction.doc_who_create.podrazdeleniye.oid:
+                        department_code = direction.doc_who_create.podrazdeleniye.oid
+                    else:
+                        department_code = l2_price_code
+                except:
                     department_code = l2_price_code
                 pv.PV1.PV1_7.value = f"{department_code}"
             else:
@@ -744,7 +747,7 @@ def send_order_by_rest_api(direction: Napravleniya):
             pass
         else:
             rest_token = make_request_get_token(hosp_data, method="GET")
-        sql_resutl = get_data_by_directions_id(direction.pk)
+        sql_resutl = get_data_by_directions_id((direction.pk,))
 
         analyses = [{"article": i.research_internal_code, "barcode": i.tube_number} for i in sql_resutl]
         rest_api_data = {
@@ -776,7 +779,7 @@ def send_order_by_rest_api(direction: Napravleniya):
                 None,
                 {
                     "org": direction.hospital.safe_short_title,
-                    "content": {"def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
+                    "content": {"number_new_order": number_new_order, "def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
                 },
             )
             is_send_api_order = True
