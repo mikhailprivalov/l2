@@ -164,8 +164,8 @@ def tubes(request, direction_implict_id=None):
                                     hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                                     if tmp2.hospital:
                                         hospital_for_generator_tube = tmp2.hospital
-                                    # if tmp2.external_executor_hospital:
-                                    # hospital_for_generator_tube = tmp2.external_executor_hospital
+                                    if tmp2.external_executor_hospital and SettingManager.get("use_external_executor_for_tube_generator", default='true', default_type='b'):
+                                        hospital_for_generator_tube = tmp2.external_executor_hospital
                                     generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                                     generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                                     number = generator.get_next_value()

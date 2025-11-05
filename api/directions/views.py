@@ -2342,7 +2342,7 @@ def directions_paraclinic_result(request):
                         val = {}
                     f_result.value_json = val
                 f_result.client = iss.napravleniye.client
-                if f.cda_option_id == CDA_ID_FOR_DATE_CLOSE_CASE:
+                if f.cda_option_id in CDA_ID_FOR_DATE_CLOSE_CASE:
                     iss.medical_examination = datetime.strptime(field["value"], "%Y-%m-%d").date()
 
                 f_result.save()
@@ -3923,8 +3923,8 @@ def tubes_for_get(request):
                             hospital_for_generator_tube = request.user.doctorprofile.get_hospital()
                             if direction.hospital:
                                 hospital_for_generator_tube = direction.hospital
-                            # if direction.external_executor_hospital:
-                            #     hospital_for_generator_tube = direction.external_executor_hospital
+                            if direction.external_executor_hospital and SettingManager.get("use_external_executor_for_tube_generator", default='true', default_type='b'):
+                                hospital_for_generator_tube = direction.external_executor_hospital
                             generator_pk = TubesRegistration.get_tube_number_generator_pk(hospital_for_generator_tube)
                             generator = NumberGenerator.objects.select_for_update().get(pk=generator_pk)
                             number = generator.get_next_value()

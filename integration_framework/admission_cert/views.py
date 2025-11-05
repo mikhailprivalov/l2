@@ -125,7 +125,7 @@ def get_result_protocol(request):
         return Response({"result": "error", "comment": "No case for protocolId"})
 
     pdf_content = direction_pdf_result(direction_id)
-    return Response({"protocol_id": pdf_content})
+    return Response({"pdf_base64": pdf_content})
 
 
 @api_view(['POST'])

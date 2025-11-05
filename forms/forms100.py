@@ -684,7 +684,7 @@ def form_03(request_data):
     else:
         objs.append(Paragraph(f"11. Место работы: {work_p}", style))
     objs.append(Paragraph(f"12. Должность: {patient_data['work_position']}", style))
-    objs.append(Paragraph(f"13. Вредность: {patient_data['harmful_factor']}", style))
+    objs.append(Paragraph(f"13. Вредность: {patient_data.get('harmfull_factors', '')}", style))
 
     opinion = [
         [Paragraph('14. Прикрепление', style), InteractiveTextField(width=140 * mm, fontsize=10, height=5 * mm)],
