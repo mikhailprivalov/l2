@@ -733,7 +733,7 @@ def send_order_by_rest_api(direction: Napravleniya):
     hosptal_data_auth = direction.hospital.auth_data_for_rest
     is_send_api_order = False
     if hosptal_data_auth:
-        hosp_data = json.load(hosptal_data_auth)
+        hosp_data = json.loads(hosptal_data_auth)
         hosp_data['hospital_id'] = direction.hospital_id
         rest_token = make_request_get_token(hosp_data, method="GET")
         default_part_url = hosp_data.get("url")
@@ -769,6 +769,7 @@ def send_order_by_rest_api(direction: Napravleniya):
         if number_new_order:
             direction.order_redirection_number = number_new_order
             direction.need_order_redirection = False
+            direction.save()
             Log.log(
                 direction.pk,
                 190008,
