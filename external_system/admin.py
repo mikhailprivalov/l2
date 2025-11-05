@@ -1,5 +1,14 @@
 from django.contrib import admin
-from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments, CdaFields, ProfessionsWorkersPositionsRefbook
+from .models import (
+    FsliRefbookTest,
+    InstrumentalResearchRefbook,
+    BodySiteRefbook,
+    ArchiveMedicalDocuments,
+    TypesMedicalDocuments,
+    CdaFields,
+    ProfessionsWorkersPositionsRefbook,
+    CuratorCdaFields,
+)
 
 
 class ResArchiveMedicalDocuments(admin.ModelAdmin):
@@ -44,9 +53,18 @@ class ResProfessionsWorkersPositionsRefbook(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+class ResCurator(admin.ModelAdmin):
+    list_display = (
+        'curator',
+        'indicator',
+    )
+    search_fields = ('indicator__title',)
+
+
 admin.site.register(FsliRefbookTest)
 admin.site.register(InstrumentalResearchRefbook)
 admin.site.register(BodySiteRefbook)
+admin.site.register(CuratorCdaFields, ResCurator)
 admin.site.register(ArchiveMedicalDocuments, ResArchiveMedicalDocuments)
 admin.site.register(TypesMedicalDocuments)
 admin.site.register(CdaFields, ResCdaFields)
