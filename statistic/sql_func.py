@@ -2088,3 +2088,26 @@ def statistics_corp_by_confirm_direction(d_start, d_end):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def result_research_by_parent_iss(parent_iss):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT 
+            dn.parent_id,
+            to_char(di.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
+            dr.title,
+            dr.code
+            FROM directions_napravleniya dn
+            LEFT JOIN directions_issledovaniya di on dn.id = di.napravleniye_id 
+            LEFT JOIN directory_researches dr on dr.id = di.research_id             
+            WHERE
+            dn.parent_id in %(parent_iss)s
+            ORDER BY dn.parent_id
+            """,
+            params={'parent_iss': parent_iss, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows

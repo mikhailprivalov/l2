@@ -3,7 +3,7 @@ from openpyxl.utils import get_column_letter
 import json
 
 
-def custom_research_data(query_sql):
+def custom_research_data(query_sql, result_additional_research):
     result = []
     prev_direction = None
     step = 0
@@ -14,6 +14,11 @@ def custom_research_data(query_sql):
             result.append(tmp_result.copy())
         if prev_direction != i.direction_number:
             parent = f"#{i.parent}" if i.parent else ""
+            additional_research = ""
+            if result_additional_research.get(i.issledovaniye_id):
+                for r in result_additional_research.get(i.issledovaniye_id):
+                    additional_research = f"{additional_research} \n {r.get('title')}-{r.get('code')}-{r.get('date_confirm')}"
+                    print(additional_research)
             tmp_result = {
                 "Направление": f"{i.direction_number} - {parent}",
                 "Источник": i.fin_source,
@@ -24,6 +29,7 @@ def custom_research_data(query_sql):
                 "Адрес": i.patient_fact_address if i.patient_fact_address else i.patient_main_address,
                 "Исполнитель": i.doc_fio,
                 "Код врача": i.personal_code,
+                "Доп услуги": additional_research
             }
         tmp_result[i.field_title] = i.field_value
         if i.field_title not in custom_fields:
@@ -31,7 +37,7 @@ def custom_research_data(query_sql):
         step += 1
         prev_direction = i.direction_number
     result.append(tmp_result.copy())
-    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Исполнитель", "Код врача"]
+    fields = ["Направление", "Источник", "Пациент", "Пол", "Дата рождения", "Возраст", "Адрес", "Исполнитель", "Код врача", "Доп услуги"]
     fields.extend(custom_fields)
     return {"result": result, "custom_fields": custom_fields, "fields": fields}
 
@@ -58,6 +64,7 @@ def custom_research_base(ws1, d1, d2, result_query, research_title):
         ('Адрес', 40),
         ('Исполнитель', 35),
         ('Код врача', 15),
+        ('Доп услуги', 60),
     ]
 
     columns2 = [(i, 25) for i in result_query["custom_fields"]]

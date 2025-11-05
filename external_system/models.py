@@ -103,7 +103,6 @@ class CdaFields(models.Model):
 
     @staticmethod
     def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):
-        result = [{"id": -1, "label": "Пусто"}]
         if is_doc_refferal:
             result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
         elif is_treatment:

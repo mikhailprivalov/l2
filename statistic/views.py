@@ -67,7 +67,7 @@ from .sql_func import (
     get_all_harmful_factors_templates,
     get_researches_by_templates,
     get_expertise_grade,
-    get_confirm_protocol_by_date_extract,
+    get_confirm_protocol_by_date_extract, result_research_by_parent_iss,
 )
 
 from laboratory.settings import (
@@ -838,11 +838,23 @@ def statistic_xls(request):
             ws = custom_research.custom_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
+            print("researches_sql", researches_sql)
+            child_iss = [i.issledovaniye_id for i in researches_sql]
+            if len(child_iss) == 0:
+                child_iss = [-1]
+            result_by_parent_iss = result_research_by_parent_iss(tuple(child_iss))
+            result_additional_research = {}
+            for i in result_by_parent_iss:
+                if not result_additional_research.get(i.parent_id):
+                    result_additional_research[i.parent_id] = [{"title": i.title, "code": i.code, "date_confirm": i.date_confirm}]
+                else:
+                    result_additional_research[i.parent_id].append({"title": i.title, "code": i.code, "date_confirm": i.date_confirm})
+
             if Researches.objects.filter(pk=research_id).first().is_monitoring:
                 result = custom_research.custom_monitoring_research_data(researches_sql)
                 ws = custom_research.custom_monitorimg_research_base(ws, d1, d2, result, research_title[0])
             else:
-                result = custom_research.custom_research_data(researches_sql)
+                result = custom_research.custom_research_data(researches_sql, result_additional_research)
                 ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
         else:
