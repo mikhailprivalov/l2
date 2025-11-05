@@ -18,7 +18,6 @@ def custom_research_data(query_sql, result_additional_research):
             if result_additional_research.get(i.issledovaniye_id):
                 for r in result_additional_research.get(i.issledovaniye_id):
                     additional_research = f"{additional_research} \n {r.get('title')}-{r.get('code')}-{r.get('date_confirm')}"
-                    print(additional_research)
             tmp_result = {
                 "Направление": f"{i.direction_number} - {parent}",
                 "Источник": i.fin_source,
