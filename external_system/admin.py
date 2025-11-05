@@ -1,6 +1,14 @@
 from django.contrib import admin
-from .models import FsliRefbookTest, InstrumentalResearchRefbook, BodySiteRefbook, ArchiveMedicalDocuments, TypesMedicalDocuments, CdaFields, ProfessionsWorkersPositionsRefbook, \
-    CuratorCdaFields
+from .models import (
+    FsliRefbookTest,
+    InstrumentalResearchRefbook,
+    BodySiteRefbook,
+    ArchiveMedicalDocuments,
+    TypesMedicalDocuments,
+    CdaFields,
+    ProfessionsWorkersPositionsRefbook,
+    CuratorCdaFields,
+)
 
 
 class ResArchiveMedicalDocuments(admin.ModelAdmin):
