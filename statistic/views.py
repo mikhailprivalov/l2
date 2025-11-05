@@ -841,19 +841,19 @@ def statistic_xls(request):
             parent_iss = [i.issledovaniye_id for i in researches_sql]
             if len(parent_iss) == 0:
                 parent_iss = [-1]
-            result_by_parent_iss = result_research_by_parent_iss(tuple(parent_iss))
-            result_additional_research = {}
-            for i in result_by_parent_iss:
-                if not result_additional_research.get(i.parent_id):
-                    result_additional_research[i.parent_id] = [{"title": i.title, "code": i.code, "date_confirm": i.date_confirm}]
+            result_child_iss = result_research_by_parent_iss(tuple(parent_iss))
+            result_child_research = {}
+            for i in result_child_iss:
+                if not result_child_research.get(i.parent_id):
+                    result_child_research[i.parent_id] = [{"title": i.title, "code": i.code, "date_confirm": i.date_confirm}]
                 else:
-                    result_additional_research[i.parent_id].append({"title": i.title, "code": i.code, "date_confirm": i.date_confirm})
+                    result_child_research[i.parent_id].append({"title": i.title, "code": i.code, "date_confirm": i.date_confirm})
 
             if Researches.objects.filter(pk=research_id).first().is_monitoring:
                 result = custom_research.custom_monitoring_research_data(researches_sql)
                 ws = custom_research.custom_monitorimg_research_base(ws, d1, d2, result, research_title[0])
             else:
-                result = custom_research.custom_research_data(researches_sql, result_additional_research)
+                result = custom_research.custom_research_data(researches_sql, result_child_research)
                 ws = custom_research.custom_research_base(ws, d1, d2, result, research_title[0])
             ws = custom_research.custom_research_fill_data(ws, result)
         else:
