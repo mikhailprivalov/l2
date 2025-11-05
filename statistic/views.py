@@ -838,11 +838,10 @@ def statistic_xls(request):
             ws = custom_research.custom_research_fill_data(ws, result)
         elif special_fields == "true":
             researches_sql = sql_func.custom_statistics_research(research_id, start_date, end_date, hospital_id, medical_exam)
-            print("researches_sql", researches_sql)
-            child_iss = [i.issledovaniye_id for i in researches_sql]
-            if len(child_iss) == 0:
-                child_iss = [-1]
-            result_by_parent_iss = result_research_by_parent_iss(tuple(child_iss))
+            parent_iss = [i.issledovaniye_id for i in researches_sql]
+            if len(parent_iss) == 0:
+                parent_iss = [-1]
+            result_by_parent_iss = result_research_by_parent_iss(tuple(parent_iss))
             result_additional_research = {}
             for i in result_by_parent_iss:
                 if not result_additional_research.get(i.parent_id):
