@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from api.models import Application
+from appconf.manager import SettingManager
 from contracts.models import Company
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
@@ -17,6 +18,8 @@ def get_med_protocols(request):
     token = token.replace("Bearer ", "")
     if not token:
         return Response({"result": "error", "comment": "token is empty"})
+    if not SettingManager.get('enabled_api_get_med_protocols', default='False', default_type='b'):
+        return Response({"result": "error", "comment": "not active service"})
     token_is_not_valid = False
     app = None
     try:
