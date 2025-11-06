@@ -16,11 +16,11 @@ def get_url_auth_data(hospital_id):
     return data
 
 
-def make_request_get_token(hosp_data, method="GET"):
+def make_request_get_token(hosp_data, method="GET", get_new_token=False):
     try:
         k = f"{hosp_data.get('hospital_id')}_hosp_key_auth"
         cv = cache.get(k)
-        if cv:
+        if cv and not get_new_token:
             return json.loads(cv)
         else:
             headers = {"login": hosp_data.get("login"), "password": hosp_data.get("password")}

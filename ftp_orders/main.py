@@ -746,12 +746,12 @@ def send_order_by_rest_api(direction: Napravleniya):
         if result.get("result") == "ok":
             pass
         else:
-            rest_token = make_request_get_token(hosp_data, method="GET")
+            rest_token = make_request_get_token(hosp_data, method="GET", get_new_token=True)
         sql_resutl = get_data_by_directions_id((direction.pk,))
 
-        analyses = [{"article": i.research_internal_code, "barcode": i.tube_number} for i in sql_resutl]
+        analyses = [{"article": i.research_internal_code, "barcode": str(i.tube_number)} for i in sql_resutl]
         rest_api_data = {
-            "id": direction.pk,
+            "id": str(direction.pk),
             "client": {
                 "lname": sql_resutl[0].patient_family,
                 "fname": sql_resutl[0].patient_name,
@@ -792,6 +792,7 @@ def send_order_by_rest_api(direction: Napravleniya):
                 {
                     "org": direction.hospital.safe_short_title,
                     "content": {"def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
+                    "response": new_order,
                 },
             )
             is_send_api_order = False
