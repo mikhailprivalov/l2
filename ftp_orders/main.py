@@ -34,6 +34,7 @@ from directions.sql_func import get_tube_by_number, get_data_by_directions_id
 from directory.sql_func import get_fsli_fractions_by_research_id
 from external_rest_integration.integration import make_request_get_token, rest_make_request_get
 from ftp_orders.sql_func import get_tubesregistration_id_by_iss
+from hl7_actions.hl7_generator import HL7Generator, create_sample_data
 from hospitals.models import Hospitals
 from directory.models import Researches, Fractions
 from laboratory.settings import BASE_DIR, NEED_RECIEVE_TUBE_TO_PUSH_ORDER, FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES, OWN_SETUP_TO_SEND_FTP_EXECUTOR, FTP_PATH_TO_SAVE, FTP_PATH_TO_SAVE_ERROR_FILE
@@ -995,7 +996,7 @@ def process_pull_start_results():
         time.sleep(1)
 
 
-def push_result(iss: Issledovaniya):
+def push_result_old(iss: Issledovaniya):
     hl7 = Message()
     meta_data = FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES
     msh_meta = meta_data.get("msh")
@@ -1058,3 +1059,36 @@ def push_result(iss: Issledovaniya):
     with FTP(ftp_settings["address"], ftp_settings["user"], ftp_settings["password"]) as ftp:
         ftp.cwd(ftp_settings["path"])
         ftp.storbinary(f"STOR {filename}", BytesIO(content.encode("cp1251")))
+
+
+def push_result(iss: Issledovaniya):
+    direction = iss.napravleniye
+    generator = HL7Generator(os.path.join(BASE_DIR, 'hl7_actions', 'templates'))
+    iss_uploaded_file = IssledovaniyaFiles.objects.filter(issledovaniye=iss).first()
+    d = iss_uploaded_file.uploaded_file.path
+    pdf_base_64 = base64.b64encode(d.file.read()).decode("utf-8"),
+    obr_data = {
+        "order_number": direction.order_redirection_number,
+        "tube_number": "",
+        "code_nmu": "",
+        "research_title": "",
+        "research_internal_code": "",
+        "doctor_family": "",
+        "doctor_name": "",
+        "doctor_patronymic": ""
+    }
+    data_patient = {
+        "patient_id": direction.client.number,
+        "patient_name": "",
+        "patient_birthday": "",
+        "patient_sec": "",
+    }
+
+    data = create_sample_data(data_patient, obr_data, pdf_base_64)
+    hl7_message = generator.generate_hl7_message(data)
+    ftp_connection = FTPConnection(direction.hospital.result_push_by_numbers, hospital=direction.hospital)
+    ftp_connection.connect()
+    created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+    filename = f"{direction.pk}_{direction.order_redirection_number}_{created_at}.res"
+    ftp_connection.write_file_as_text(filename, hl7_message)

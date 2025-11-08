@@ -80,6 +80,11 @@ class Hospitals(models.Model):
 
         return hosp
 
+    @staticmethod
+    def get_hospitals_pull_results_from_external_system():
+        hospitals = Hospitals.objects.filter(auth_data_for_rest=False, hide=False)
+        return hospitals
+
     @property
     def safe_full_title(self):
         return self.title or self.short_title

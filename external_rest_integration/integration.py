@@ -47,3 +47,16 @@ def rest_make_request_get(default_part_url, path, token, auth_data, data, method
     except Exception as e:
         logger.exception(e)
         return {}
+
+
+def rest_make_request_get_result(default_part_url, token, auth_data, order_number, only_new=False):
+    path = "result"
+    rest_api_data = {
+        "number": order_number,
+        "format": "pdf",
+        "combine": False,
+        "article": "",
+        "new": only_new,
+    }
+    return rest_make_request_get(default_part_url, path, token, auth_data, rest_api_data, method="POST")
+
