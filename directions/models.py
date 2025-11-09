@@ -582,6 +582,7 @@ class Napravleniya(models.Model):
     external_order = models.ForeignKey(RegisteredOrders, default=None, blank=True, null=True, db_index=True, on_delete=models.PROTECT, help_text='Внешний заказ')
     need_order_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление заказа')
     order_redirection_number = models.CharField(max_length=24, default=None, blank=True, null=True, db_index=True, help_text='Номер перенаправленного заказа')
+    order_redirection_number_is_finished = models.BooleanField(default=False, blank=True, help_text='результат полностью выпонен внешней системой')
     external_executor_hospital = models.ForeignKey(
         Hospitals, related_name='external_executor_hospital', default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Внешняя организация-исполнитель'
     )
@@ -1807,7 +1808,7 @@ class Napravleniya(models.Model):
                             monitoring.period_param_week_description = week_date_start_end[0]
                             monitoring.period_param_week_date_start = week_date_start_end[1]
                             monitoring.period_param_week_date_end = week_date_start_end[2]
-                            period_param_year = period_param_year
+                            period_param_year = week_date_start_end[1].year
                             monitoring.period_date = week_date_start_end[1]
                         monitoring.period_param_month = period_param_month
                         monitoring.period_param_quarter = period_param_quarter
