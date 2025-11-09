@@ -1068,7 +1068,7 @@ def push_result(iss: Issledovaniya):
     iss_uploaded_file = IssledovaniyaFiles.objects.filter(issledovaniye=iss).first()
     if iss_uploaded_file:
         d = iss_uploaded_file.uploaded_file.path
-        pdf_base_64 = base64.b64encode(d.file.read()).decode("utf-8"),
+        pdf_base_64 = (base64.b64encode(d.file.read()).decode("utf-8"),)
     else:
         result = direction_pdf_content(direction.pk)
         pdf_base_64 = base64.b64encode(result).decode('utf-8')
