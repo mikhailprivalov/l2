@@ -27,7 +27,7 @@ class Command(BaseCommand):
         order_redirection_numbers = {i.order_redirection_number: i.hospital_id for i in d_qs}
         order_redirection_numbers_internal_direction = {i.order_redirection_number: i.pk for i in d_qs}
         for order_redirection_number, v in order_redirection_numbers.items():
-            pdf_base_64 = ""
+            iss = None
             direction = None
             hosp_data = json.loads(hospitals_id.get(v))
             rest_token = make_request_get_token(hosp_data, method="GET")
@@ -51,10 +51,15 @@ class Command(BaseCommand):
                         user=None,
                     )
                     continue
+                doctor_data = ["", "", ""]
+                tube_number = ""
 
                 for article in i.get("articles"):
                     tube_number = int(article.get("barcode"))
                     internal_code = article.get("article")
+                    doctor = article.get("doctor")
+                    doctor_data = doctor.split(" ")
+                    date = article.get("date")
                     tubes_sql = get_tube_by_number(tube_number)
                     for t in tubes_sql:
                         if internal_code == t.research_internal_code:
@@ -70,6 +75,35 @@ class Command(BaseCommand):
                             direction = Napravleniya.objects.filter(pk=t.direction_number).first()
                             break
             # проверить статус - если 3 зафинишировать
+                generator = HL7Generator(os.path.join(BASE_DIR, 'hl7_actions', 'templates'))
+                obr_data = {
+                    "order_number": order_redirection_number,
+                    "tube_number": tube_number,
+                    "code_nmu": iss.research.code,
+                    "research_title": iss.research.title,
+                    "research_internal_code": iss.research.internal_code,
+                    "doctor_fio": iss.doc_confirmation_string,
+                    "doctor_family": doctor_data[0],
+                    "doctor_name": doctor_data[1],
+                    "doctor_patronymic": doctor_data[2],
+                    "direction_id": direction.pk
+                }
+                data_patient = {
+                    "patient_id": direction.client.number,
+                    "patient_name": "",
+                    "patient_birthday": "",
+                    "patient_sec": "",
+                }
+
+                data = create_sample_data(data_patient, obr_data, pdf_base_64)
+                hl7_message = generator.generate_hl7_message(data)
+                ftp_connection = FTPConnection(hospitals_id_ftp_connect.get(v), hospital=hospitals_object.get(v))
+                ftp_connection.connect()
+                created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+
+                filename = f"{direction.pk}_{order_redirection_number}_{created_at}.res"
+                ftp_connection.write_file_as_text(filename, hl7_message)
+
             result_check = rest_make_request_get(default_part_url, "ky/check", rest_token, hosp_data, {}, method="GET")
             if result_check.get("result") == "ok":
                 pass
@@ -80,29 +114,4 @@ class Command(BaseCommand):
             if result.get("status") == 3:
                 direction.order_redirection_number_is_finished = True
                 direction.save()
-            generator = HL7Generator(os.path.join(BASE_DIR, 'hl7_actions', 'templates'))
-            obr_data = {
-                "order_number": order_redirection_number,
-                "tube_number": "",
-                "code_nmu": "",
-                "research_title": "",
-                "research_internal_code": "",
-                "doctor_family": "",
-                "doctor_name": "",
-                "doctor_patronymic": ""
-            }
-            data_patient = {
-                "patient_id": direction.client.number,
-                "patient_name": "",
-                "patient_birthday": "",
-                "patient_sec": "",
-            }
 
-            data = create_sample_data(data_patient, obr_data, pdf_base_64)
-            hl7_message = generator.generate_hl7_message(data)
-            ftp_connection = FTPConnection(hospitals_id_ftp_connect.get(v), hospital=hospitals_object.get(v))
-            ftp_connection.connect()
-            created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-
-            filename = f"{direction.pk}_{order_redirection_number}_{created_at}.res"
-            ftp_connection.write_file_as_text(filename, hl7_message)
