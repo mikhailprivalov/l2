@@ -114,4 +114,3 @@ class Command(BaseCommand):
             if result.get("status") == 3:
                 direction.order_redirection_number_is_finished = True
                 direction.save()
-
