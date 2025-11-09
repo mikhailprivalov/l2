@@ -86,7 +86,7 @@ class Command(BaseCommand):
                     "doctor_family": doctor_data[0],
                     "doctor_name": doctor_data[1],
                     "doctor_patronymic": doctor_data[2],
-                    "direction_id": direction.pk
+                    "direction_id": direction.pk,
                 }
                 data_patient = {
                     "patient_id": direction.client.number,
