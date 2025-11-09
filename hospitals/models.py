@@ -55,6 +55,9 @@ class Hospitals(models.Model):
     result_push_by_numbers = models.CharField(
         max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории отрпавки результатов (ftp://user:password@host.example.com/path)'
     )
+    result_push_by_numbers_for_rest = models.CharField(
+        max_length=256, blank=True, default=None, null=True, help_text='URL для FTP директории отрпавки результатов 2 (ftp://user:password@host.example.com/path)'
+    )
     hl7_sender_application = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение отправитель')
     hl7_sender_org = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 организация отправитель')
     hl7_receiver_appplication = models.CharField(max_length=55, blank=True, default=None, null=True, help_text='HL7 приложение получатель')

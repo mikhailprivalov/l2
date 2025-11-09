@@ -1097,7 +1097,7 @@ def push_result(iss: Issledovaniya):
 
     data = create_sample_data(data_patient, obr_data, pdf_base_64)
     hl7_message = generator.generate_hl7_message(data)
-    ftp_connection = FTPConnection(direction.hospital.result_push_by_numbers, hospital=direction.hospital)
+    ftp_connection = FTPConnection(direction.hospital.result_push_by_numbers_for_rest, hospital=direction.hospital)
     ftp_connection.connect()
     created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{dir}{direction.pk}_{direction.order_redirection_number}_{created_at}.res"

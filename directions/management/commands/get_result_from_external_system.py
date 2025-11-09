@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         hospitals = Hospitals.get_hospitals_pull_results_from_external_system()
         hospitals_id = {i.pk: i.auth_data_for_rest for i in hospitals}
-        hospitals_id_ftp_connect = {i.pk: i.result_push_by_numbers for i in hospitals}
+        hospitals_id_ftp_connect = {i.pk: i.result_push_by_numbers_for_rest for i in hospitals}
         hospitals_object = {i.pk: i for i in hospitals}
 
         d_qs = Napravleniya.objects.filter(order_redirection_number_is_finished=False, order_redirection_number__isnull=False, hospital_id__in=hospitals_id.keys())
