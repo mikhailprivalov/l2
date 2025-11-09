@@ -1085,7 +1085,7 @@ def push_result(iss: Issledovaniya):
         "doctor_family": doctor_data[0],
         "doctor_name": doctor_data[1],
         "doctor_patronymic": doctor_data[2],
-        "direction_id": direction.pk
+        "direction_id": direction.pk,
     }
     ind_data = direction.client.get_data_individual()
     data_patient = {
