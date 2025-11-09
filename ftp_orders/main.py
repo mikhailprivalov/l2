@@ -1077,7 +1077,7 @@ def push_result(iss: Issledovaniya):
     doctor_data = (iss.doc_confirmation_string).split(" ") if iss.doc_confirmation_string else ["-", "-", "-"]
     obr_data = {
         "order_number": direction.order_redirection_number,
-        "tube_number":  str(tube_data[0]) if tube_data[0] else "",
+        "tube_number": str(tube_data[0]) if tube_data[0] else "",
         "code_nmu": iss.research.code,
         "research_title": iss.research.title,
         "research_internal_code": iss.research.internal_code,
