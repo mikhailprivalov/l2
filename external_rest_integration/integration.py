@@ -59,4 +59,3 @@ def rest_make_request_get_result(default_part_url, token, auth_data, order_numbe
         "new": only_new,
     }
     return rest_make_request_get(default_part_url, path, token, auth_data, rest_api_data, method="POST")
-

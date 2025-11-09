@@ -74,7 +74,7 @@ class Command(BaseCommand):
                             iss_file.save()
                             direction = Napravleniya.objects.filter(pk=t.direction_number).first()
                             break
-            # проверить статус - если 3 зафинишировать
+                # проверить статус - если 3 зафинишировать
                 generator = HL7Generator(os.path.join(BASE_DIR, 'hl7_actions', 'templates'))
                 obr_data = {
                     "order_number": order_redirection_number,
@@ -86,7 +86,7 @@ class Command(BaseCommand):
                     "doctor_family": doctor_data[0],
                     "doctor_name": doctor_data[1],
                     "doctor_patronymic": doctor_data[2],
-                    "direction_id": direction.pk
+                    "direction_id": direction.pk,
                 }
                 data_patient = {
                     "patient_id": direction.client.number,
@@ -114,4 +114,3 @@ class Command(BaseCommand):
             if result.get("status") == 3:
                 direction.order_redirection_number_is_finished = True
                 direction.save()
-

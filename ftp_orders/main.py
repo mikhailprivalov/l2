@@ -1068,7 +1068,7 @@ def push_result(iss: Issledovaniya):
     iss_uploaded_file = IssledovaniyaFiles.objects.filter(issledovaniye=iss).first()
     if iss_uploaded_file:
         d = iss_uploaded_file.uploaded_file.path
-        pdf_base_64 = base64.b64encode(d.file.read()).decode("utf-8"),
+        pdf_base_64 = (base64.b64encode(d.file.read()).decode("utf-8"),)
     else:
         result = direction_pdf_content(direction.pk)
         pdf_base_64 = base64.b64encode(result).decode('utf-8')
@@ -1085,7 +1085,7 @@ def push_result(iss: Issledovaniya):
         "doctor_family": doctor_data[0],
         "doctor_name": doctor_data[1],
         "doctor_patronymic": doctor_data[2],
-        "direction_id": direction.pk
+        "direction_id": direction.pk,
     }
     ind_data = direction.client.get_data_individual()
     data_patient = {
