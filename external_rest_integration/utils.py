@@ -83,7 +83,7 @@ def rest_api_pull_result():
                         iss.save()
                         direction = Napravleniya.objects.filter(pk=t.direction_number).first()
                         break
-            # проверить статус - если 3 зафинишировать
+                # проверить статус - если 3 зафинишировать
                 generator = HL7Generator(os.path.join(BASE_DIR, 'hl7_actions', 'templates'))
                 time_confirm = iss.time_confirmation.strftime("%Y%m%d%H%M%S")
                 obr_data = {
