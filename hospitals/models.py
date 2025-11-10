@@ -85,7 +85,7 @@ class Hospitals(models.Model):
 
     @staticmethod
     def get_hospitals_pull_results_from_external_system():
-        hospitals = Hospitals.objects.filter(auth_data_for_rest=False, hide=False)
+        hospitals = Hospitals.objects.filter(auth_data_for_rest__isnull=False, hide=False)
         return hospitals
 
     @property
