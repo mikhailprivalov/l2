@@ -1,4 +1,4 @@
 MSH|^~\&|L2|L2|L2|L2|{{ message_datetime }}||ORU^R01|{{ message_control_id }}|P|2.3|||AL|NE|22.2.19
 PID|{{ pid_segment.patient_id }}||{{ pid_segment.patient_name }}||{{ pid_segment.datetime_of_birth }}|{{ pid_segment.sex }}|||||
-OBR|1|{{ obr.order_number }}^{{ obr.direction_id }}|{{ obr.tube_number }}|{{ obr.code_nmu }}^{{ obr.research_title }}^^{{ obr.research_internal_code }}^{{ obr.research_title }}|||20250917102242|20250917173116|||||^||||||||||||F||^^^^^R|||||^{{ doctor_family }}^{{ doctor_name }}^{{ doctor_patronymic }}^^^^^||
+OBR|1|{{ obr.order_number }}^{{ obr.direction_id }}|{{ obr.tube_number }}|{{ obr.code_nmu }}^{{ obr.research_title }}^^{{ obr.research_internal_code }}^{{ obr.research_title }}|||{{ obr.time_confirm }}|{{ obr.time_confirm }}|||||^||||||||||||F||^^^^^R|||||^{{ doctor_family }}^{{ doctor_name }}^{{ doctor_patronymic }}^^^^^||
 OBX|1|ED|PDF||^^PDF^Base64^{{ pdf_base64 }}
