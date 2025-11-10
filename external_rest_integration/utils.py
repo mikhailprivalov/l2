@@ -97,7 +97,7 @@ def rest_api_pull_result():
                     "doctor_name": doctor_data[1] if doctor_data[1] else "",
                     "doctor_patronymic": doctor_data[2] if doctor_data[2] else "",
                     "direction_id": direction.pk,
-                    "time_confirm": time_confirm
+                    "time_confirm": time_confirm,
                 }
                 data_patient = {
                     "patient_id": direction.client.number,
