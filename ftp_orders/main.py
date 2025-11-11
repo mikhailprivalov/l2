@@ -690,10 +690,6 @@ class FTPConnection:
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
 
-            is_send_api_order = True
-
-
-
             for k in directons_external_order_group:
                 if k in directions_to_sync:
                     directions_to_sync.remove(k)

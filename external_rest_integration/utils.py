@@ -39,7 +39,6 @@ def rest_api_pull_result(only_new_order=True):
         else:
             rest_token = make_request_get_token(hosp_data, method="GET", get_new_token=True)
         result_order_data = rest_make_request_get_result(default_part_url, rest_token, hosp_data, order_redirection_number, only_new=only_new_order)
-        print(result_order_data)
         result_order = result_order_data.get('data')
         if not result_order.get("results"):
             continue
