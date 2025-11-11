@@ -25,6 +25,7 @@ def create_sample_data(data_patient, obr_data, pdf_base64):
             "doctor_name": obr_data.get("doctor_name"),
             "doctor_patronymic": obr_data.get("doctor_patronymic"),
             "direction_id": obr_data.get("direction_id"),
+            "time_confirm": obr_data.get("time_confirm"),
         },
         "pdf_base64": pdf_base64,
     }

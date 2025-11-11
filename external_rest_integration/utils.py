@@ -17,7 +17,7 @@ from sys import stdout
 import time
 
 
-def rest_api_pull_result():
+def rest_api_pull_result(only_new_order=True):
     hospitals = Hospitals.get_hospitals_pull_results_from_external_system()
     hospitals_id = {i.pk: i.auth_data_for_rest for i in hospitals}
     hospitals_id_ftp_connect = {i.pk: i.result_push_by_numbers_for_rest for i in hospitals}
@@ -38,7 +38,7 @@ def rest_api_pull_result():
             pass
         else:
             rest_token = make_request_get_token(hosp_data, method="GET", get_new_token=True)
-        result_order_data = rest_make_request_get_result(default_part_url, rest_token, hosp_data, order_redirection_number, only_new=True)
+        result_order_data = rest_make_request_get_result(default_part_url, rest_token, hosp_data, order_redirection_number, only_new=only_new_order)
         result_order = result_order_data.get('data')
         if not result_order.get("results"):
             continue
@@ -112,8 +112,15 @@ def rest_api_pull_result():
                 ftp_connection.connect()
                 created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
-                filename = f"{direction.pk}_{order_redirection_number}_{created_at}.res"
+                filename = f"{direction.pk}_{order_redirection_number}_{iss.research.internal_code}_{created_at}.res"
+                stdout.write(f"filename###: {filename}### ")
                 ftp_connection.write_file_as_text(filename, hl7_message)
+                Log.log(
+                    key=order_redirection_number,
+                    type=190003,
+                    body={"order_redirection_number": order_redirection_number, "direction": direction.pk, "hl7_message": hl7_message},
+                    user=None,
+                )
 
         result_check = rest_make_request_get(default_part_url, "ky/check", rest_token, hosp_data, {}, method="GET")
         if result_check.get("result") == "ok":

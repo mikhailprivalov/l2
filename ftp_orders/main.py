@@ -642,9 +642,6 @@ class FTPConnection:
             self.log("Writing file", filename, "\n", content)
             self.write_file_as_text(filename, content)
 
-            if SettingManager.get("use_rest_api_send_order", default='False', default_type='b'):
-                send_order_by_rest_api(direction)
-
             Log.log(
                 direction.pk,
                 190001,
@@ -693,15 +690,9 @@ class FTPConnection:
             filename = f"form1c_orm_{direction.pk}_{created_at}.ord"
             self.write_file_as_text(filename, content)
 
-            is_send_api_order = True
-
-            if SettingManager.get("use_rest_api_send_order", default='False', default_type='b'):
-                is_send_api_order = send_order_by_rest_api(direction)
-
-            if is_send_api_order:
-                for k in directons_external_order_group:
-                    if k in directions_to_sync:
-                        directions_to_sync.remove(k)
+            for k in directons_external_order_group:
+                if k in directions_to_sync:
+                    directions_to_sync.remove(k)
 
             Log.log(
                 direction.pk,
@@ -736,7 +727,7 @@ def check_replace_fields(field_replace, line_new, direction):
 
 def send_order_by_rest_api(direction: Napravleniya):
     hosptal_data_auth = direction.hospital.auth_data_for_rest
-    is_send_api_order = False
+    is_send_api_order = True
     if hosptal_data_auth:
         hosp_data = json.loads(hosptal_data_auth)
         hosp_data['hospital_id'] = direction.hospital_id
@@ -784,7 +775,6 @@ def send_order_by_rest_api(direction: Napravleniya):
                     "content": {"number_new_order": number_new_order, "def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
                 },
             )
-            is_send_api_order = True
         else:
             direction.need_order_redirection = True
             Log.log(
@@ -925,6 +915,8 @@ def process_push_orders():
                             ftp_connection.push_tranfer_file_order(direction, registered_orders_ids, directions_to_sync)
                         else:
                             ftp_connection.push_order(direction)
+                        if SettingManager.get("use_rest_api_send_order", default='False', default_type='b'):
+                            send_order_by_rest_api(direction)
 
                 except ftplib.all_errors as e:
                     ftp_connection.error(f"error: {e}")
