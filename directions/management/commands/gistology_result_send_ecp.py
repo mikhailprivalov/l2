@@ -27,11 +27,11 @@ class Command(BaseCommand):
             available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
             if not available:
                 self.stdout.write({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
-        current_time_ecp_upload = SettingManager.rmis_upload_hours_interval()
-        date_start = current_time(only_date=False) + relativedelta(hours=-48)
+        current_time_ecp_upload = SettingManager.rmis_upload_minutes_interval()
+        date_start = current_time(only_date=False) + relativedelta(hours=-10)
         date_start = date_start.strftime('%Y%m%d %H:%M:%S')
 
-        date_end = current_time(only_date=False) + relativedelta(hours=-current_time_ecp_upload)
+        date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
         date_end = date_end.strftime('%Y%m%d %H:%M:%S')
         d_qs = []
         if kwargs["dirs"]:
@@ -64,8 +64,9 @@ class Command(BaseCommand):
                 "rmis_password": d.rmis_password,
             }
             for d in d_qs
-            if result_params.get(d.napravleniye_id)
+            if result_params.get(d.napravleniye_id) and d.rmis_login
         ]
+        self.stdout.write(f"{directions_iss}")
         res = send_gistology_direction_to_ecp(directions_iss)
         self.stdout.write(f"{res}\n")
         count = 0
