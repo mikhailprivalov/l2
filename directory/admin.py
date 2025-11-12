@@ -292,6 +292,23 @@ class SetAuxService(admin.ModelAdmin):
     )
 
 
+class SetControlAppointmentDependentResearch(admin.ModelAdmin):
+    list_display = (
+        'main_research',
+        'dependent_research',
+        'is_active',
+    )
+    list_display_links = (
+        'main_research',
+        'dependent_research',
+    )
+
+    autocomplete_fields = (
+        'main_research',
+        'dependent_research',
+    )
+
+
 class SetComplexService(admin.ModelAdmin):
     list_display = (
         'main_research',
@@ -383,6 +400,7 @@ admin.site.register(models.SetResearch, SetResearchAdmin)
 admin.site.register(models.SetOrderResearch, SetOrderResearchAdmin)
 admin.site.register(models.AuxService, SetAuxService)
 admin.site.register(models.ComplexService, SetComplexService)
+admin.site.register(models.ControlAppointmentDependentResearch, SetControlAppointmentDependentResearch)
 admin.site.register(models.ParaclinicTemplateNameDepartment, ResParaclinicTemplateDepartment)
 admin.site.register(models.PatternParam, ResPatternParam)
 admin.site.register(models.StatisticPattern, ResStatisticPattern)

@@ -347,3 +347,27 @@ def get_paraclini_directions_for_send_ecp_queue(researches, date_start, date_end
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_patient_result_by_main_research_for_dependent(main_researches, card_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_issledovaniya.research_id,
+            directions_issledovaniya.time_confirmation
+            
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya dn on dn.id = directions_issledovaniya.napravleniye_id
+            LEFT JOIN clients_card cc on dn.client_id = cc.id
+            WHERE 
+            directions_issledovaniya.research_id in %(researches)s
+            AND
+            directions_issledovaniya.time_confirmation IS NOT NULL
+            and 
+            cc.id = %(card_id)s
+            """,
+            params={'researches': main_researches, "card_id": card_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows

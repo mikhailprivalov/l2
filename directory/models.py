@@ -2115,3 +2115,13 @@ class SetOrderResearch(models.Model):
     class Meta:
         verbose_name = "Исследование в наборе"
         verbose_name_plural = "Исследования в наборе"
+
+
+class ControlAppointmentDependentResearch(models.Model):
+    main_research = models.ForeignKey(Researches, help_text="Услуга должна быть назначена и подтверждена", on_delete=models.CASCADE, db_index=True)
+    dependent_research = models.ForeignKey(Researches, related_name="research_dependent", help_text="Услуга зависимая назначаемая", on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True, blank=True, help_text="Контроль активен", db_index=True)
+
+    class Meta:
+        verbose_name = "Контроль назначения зависимых услуга"
+        verbose_name_plural = "Контроль назначения зависимых услуга"
