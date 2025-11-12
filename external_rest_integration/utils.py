@@ -43,6 +43,7 @@ def rest_api_pull_result(only_new_order=True):
         if not result_order.get("results"):
             continue
         for i in result_order.get("results"):
+            stdout.write(f"results: {i} ")
             try:
                 pdf_base_64 = i.get("binary")
                 base64_bytes = pdf_base_64.encode('utf-8')

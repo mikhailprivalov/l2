@@ -124,6 +124,7 @@ from medical_certificates.models import ResearchesCertificate, MedicalCertificat
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
 from ..patients.common_func import get_card_control_param, get_vital_param_in_hosp
+from directory.sql_func import get_control_dependent_pairs_research
 
 
 @login_required
@@ -208,6 +209,12 @@ def directions_generate(request):
                     result_coast += dc.coast
             result = {"ok": True, "directions": [], "directionsStationar": [], "message": result_coast}
             return JsonResponse(result)
+
+        researches_pks = [element for v in researches.values() for element in v]
+
+        pair_dependent_research = {i.main_research_id: i.dependent_research_id for i in get_control_dependent_pairs_research(tuple(researches_pks))}
+        check_patient_result_main_research = ""
+
 
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
