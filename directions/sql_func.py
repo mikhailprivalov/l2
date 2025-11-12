@@ -354,8 +354,9 @@ def get_patient_result_by_main_research_for_dependent(main_researches, card_id):
         cursor.execute(
             """
             SELECT
-            directions_issledovaniya.research_id
- 
+            directions_issledovaniya.research_id,
+            directions_issledovaniya.time_confirmation
+            
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya dn on dn.id = directions_issledovaniya.napravleniye_id
             LEFT JOIN clients_card cc on dn.client_id = cc.id

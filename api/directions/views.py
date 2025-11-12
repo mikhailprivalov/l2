@@ -12,6 +12,7 @@ from barcodes.views import tubes
 from cash_registers.models import Cheque
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory, PriceCoast, PriceName, Company, MedicalExamination
+from directions.sql_func import get_patient_result_by_main_research_for_dependent
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook, CdaFields
 from integration_framework.common_func import directions_pdf_result
@@ -212,9 +213,21 @@ def directions_generate(request):
 
         researches_pks = [element for v in researches.values() for element in v]
 
-        pair_dependent_research = {i.main_research_id: i.dependent_research_id for i in get_control_dependent_pairs_research(tuple(researches_pks))}
-        check_patient_result_main_research = ""
+        result_main_dependent = get_control_dependent_pairs_research(tuple(researches_pks))
+        pair_dependent_research = {r.main_research_id: r.dependent_research_id for r in result_main_dependent}
+        main_research_title = {r.main_research_id: r.main_title for r in result_main_dependent}
+        dependent_research_title = {r.dependent_research_id: r.dependent_title for r in result_main_dependent}
 
+        if pair_dependent_research:
+            main_research_for_chek_patient = pair_dependent_research.keys()
+            check_patient_result_main_research = get_patient_result_by_main_research_for_dependent(tuple(main_research_for_chek_patient), card_pk)
+            for chked_main_research in check_patient_result_main_research:
+                del pair_dependent_research[chked_main_research.research_id]
+            if pair_dependent_research:
+                message = ""
+                for k, v in pair_dependent_research.items():
+                    message = f"{message} {dependent_research_title.get(v)} зависит от услуги {main_research_title.get(k)}"
+                return JsonResponse({"ok": False, "directions": [], "directionsStationar": [], "message": message})
 
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)

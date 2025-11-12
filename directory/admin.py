@@ -303,6 +303,8 @@ class SetControlAppointmentDependentResearch(admin.ModelAdmin):
         'dependent_research',
     )
 
+    autocomplete_fields = ('main_research', 'dependent_research',)
+
 
 class SetComplexService(admin.ModelAdmin):
     list_display = (

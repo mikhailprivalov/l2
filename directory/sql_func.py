@@ -194,9 +194,13 @@ def get_control_dependent_pairs_research(researches):
         cursor.execute(
             """
             SELECT
+            main_research_id,
+            dr_main.title as main_title,
             dependent_research_id,
-            main_research_id
+            dr_dependent.title as dependent_title
             FROM directory_controlappointmentdependentresearch
+            LEFT JOIN directory_researches dr_dependent on dr_dependent.id = directory_controlappointmentdependentresearch.dependent_research_id
+            LEFT JOIN directory_researches dr_main on dr_main.id = directory_controlappointmentdependentresearch.main_research_id
             WHERE 
             directory_controlappointmentdependentresearch.dependent_research_id in %(researches)s
             and is_active = true

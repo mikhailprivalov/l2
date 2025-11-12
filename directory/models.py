@@ -2118,18 +2118,9 @@ class SetOrderResearch(models.Model):
 
 
 class ControlAppointmentDependentResearch(models.Model):
-    TYPES = (
-        (0, "Глобальный"),
-        (1, "Случай амбулаторны"),
-        (2, "Случай стационарный"),
-        (3, "Отделение стационара"),
-    )
-
     main_research = models.ForeignKey(Researches, help_text="Услуга должна быть назначена и подтверждена", on_delete=models.CASCADE, db_index=True)
     dependent_research = models.ForeignKey(Researches, related_name="research_dependent", help_text="Услуга зависимая назначаемая", on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True, blank=True, help_text="Контроль активен", db_index=True)
-    control_period = models.PositiveSmallIntegerField(default=None, null=True, blank=True, help_text="Контроль активен")
-    type_period = models.PositiveSmallIntegerField(default=None, null=True, blank=True, help_text="Контроль активен")
 
     class Meta:
         verbose_name = "Контроль назначения зависимых услуга"
