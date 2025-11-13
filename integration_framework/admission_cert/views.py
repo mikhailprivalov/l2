@@ -14,8 +14,6 @@ from slog.models import Log
 
 @api_view(['GET'])
 def get_med_protocols(request):
-    if not SettingManager.get('enabled_api_get_med_protocols', default='False', default_type='b'):
-        return Response({"result": "error", "comment": "not active service"})
     token = request.META.get("HTTP_AUTHORIZATION")
     token = token.replace("Bearer ", "")
     if not token:
@@ -99,8 +97,6 @@ def get_med_protocols(request):
 
 @api_view(['GET'])
 def get_result_protocol(request):
-    if not SettingManager.get('enabled_api_get_med_protocols', default='False', default_type='b'):
-        return Response({"result": "error", "comment": "not active service"})
     token = request.META.get("HTTP_AUTHORIZATION")
     token = token.replace("Bearer ", "")
     if not token:
