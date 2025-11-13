@@ -372,6 +372,3 @@ def get_patient_result_by_main_research_for_dependent(main_researches, card_id):
         )
         rows = namedtuplefetchall(cursor)
     return rows
-
-
-
