@@ -89,23 +89,6 @@ def form_01(ws1, data):
         name_form = i.get("Наименование/форма выпуска/дозировка", "-")
         count = i.get("Количество упаковок", "-")
         ws1.cell(row=row, column=9).value = f"{name_form} ({count})"
-        try:
-            members = json.loads(i.get("Члены комиссии"))
-        except:
-            members = {"rows": ["-", "-"]}
-        members_result = ""
-        m_step = 0
-        for m in members.get("rows"):
-            if m_step != 0:
-                members_result = f"{members_result} \n {m[1]}"
-            else:
-                members_result = m[1]
-            m_step += 1
-
-        ws1.cell(row=row, column=10).value = members_result
-
-        for c in range(11):
-            ws1.cell(row=row, column=c + 1).style = style_border2
 
         previous_date = i.get("medical_examination")
 
