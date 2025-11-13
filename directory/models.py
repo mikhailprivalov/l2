@@ -390,6 +390,7 @@ class Researches(models.Model):
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП")
+    ecp_id_synonim = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП-синоним")
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text="Биоматериал", on_delete=models.SET_NULL)
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
