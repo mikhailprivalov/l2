@@ -290,7 +290,7 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
             AND directions_napravleniya.result_rmis_send = false
             AND directions_napravleniya.rmis_direction_date is not Null
             AND di.research_id in %(researches)s 
-            LIMIT 10
+            LIMIT 40
             """,
             params={'researches': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )

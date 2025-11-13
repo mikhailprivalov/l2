@@ -79,4 +79,4 @@ def process_gistology_result_upload_start():
     while True:
         result = gistology_result_send()
         if result:
-            time.sleep(60)
+            time.sleep(600)
