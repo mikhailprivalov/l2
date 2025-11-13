@@ -135,7 +135,7 @@ def rest_api_pull_result(only_new_order=True):
             direction.save()
 
 
-def process_rest_api_pull_result_star():
+def process_rest_api_pull_result_start():
     stdout.write("Starting pull_orders process")
     while True:
         rest_api_pull_result()
