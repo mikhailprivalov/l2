@@ -66,6 +66,8 @@ def get_med_protocols(request):
     companies = {i.pk: {"title": i.title, "inn": i.inn} for i in companies_obj}
     hospital = Hospitals.objects.filter(is_default=True).first()
     for k, v in final_value_result.items():
+        vred = v["Вредный производственный фактор или вид работы"].split(";")
+        vred = [i for i in vred if float(i) < 30]
         response_result.append(
             {
                 "med_org": hospital.title,
@@ -84,7 +86,7 @@ def get_med_protocols(request):
                         "protocolid": direction_iss.get(k)["dir"],
                         "treatcode": k,
                         "view": "Заключение",
-                        "vred": v["Вредный производственный фактор или вид работы"].split(";"),
+                        "vred": vred,
                         "group": v["Диспансерная группа"],
                         "conclusion": f"Медицинские противопоказания по приказу 29н {(v['Медицинские противопоказания к работе']).lower()}",
                         "contraindication": False if (v["Медицинские противопоказания к работе"]).lower() == "не выявлено" else True,

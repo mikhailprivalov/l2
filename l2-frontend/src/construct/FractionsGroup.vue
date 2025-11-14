@@ -58,7 +58,12 @@
           <th><strong>Фракция</strong></th>
           <th><strong>Ед. изм</strong></th>
           <th><strong>Код ЕЦП</strong></th>
-          <th><strong>ФСЛИ</strong></th>
+          <th v-if="!showFsli">
+            <strong>ЕЦП-2</strong>
+          </th>
+          <th v-if="showFsli">
+            <strong>ФСЛИ</strong>
+          </th>
           <th />
         </tr>
       </thead>
@@ -116,7 +121,22 @@
             :disabled="fraction.hide"
           >
         </td>
-        <td class="padding-td">
+        <td
+          v-if="!showFsli"
+          class="padding-td"
+        >
+          <input
+            v-model="fraction.ecpIdSynonymfr"
+            :class="fraction.hide ? 'hide-background form-control fraction-input' : 'form-control fraction-input'"
+            placeholder="Введите код"
+            maxlength="16"
+            :disabled="fraction.hide"
+          >
+        </td>
+        <td
+          v-if="showFsli"
+          class="padding-td"
+        >
           <Treeselect
             v-model="fraction.fsli"
             :async="true"
@@ -185,6 +205,7 @@ import ColorTitled from '@/ui-cards/ColorTitled.vue';
 import { tubeData } from '@/construct/ResearchDetail.vue';
 import api from '@/api';
 import TippyTreeselect from '@/construct/TippyTreeselect.vue';
+import { useStore } from '@/store';
 
 const root = getCurrentInstance().proxy.$root;
 
@@ -207,12 +228,15 @@ const props = defineProps({
   },
 });
 const emit = defineEmits(['updateOrder', 'edit', 'addFraction', 'changeTube']);
+const store = useStore();
 
 const sortedFractions = computed(() => {
   const res = [...props.tube.fractions];
   const result = res.sort((x, y) => x.order - y.order);
   return result;
 });
+
+const showFsli = computed(() => store.getters.modules.l2_show_fsli_in_lab_constructor);
 
 const minMaxOrder = computed(() => {
   let min = sortedFractions.value[0].order;
@@ -290,6 +314,7 @@ const changeTube = async () => {
     root.$emit('msg', 'error', 'Пробирка не выбрана');
   }
 };
+
 </script>
 
 <style scoped lang="scss">

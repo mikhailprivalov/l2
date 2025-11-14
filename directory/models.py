@@ -390,7 +390,7 @@ class Researches(models.Model):
     cda_template_file = models.CharField(max_length=50, db_index=True, blank=True, default="", null=True, help_text="название шаблона cda-шаблона")
     n3_id_med_document_type = models.SmallIntegerField(default=0, blank=True, help_text="N3 id_med_document_type")
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП")
-    ecp_id_synonim = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП-синоним")
+    ecp_id_synonym = models.CharField(max_length=16, default="", blank=True, verbose_name="Код услуги в ЕЦП-синоним")
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text="Биоматериал", on_delete=models.SET_NULL)
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
@@ -609,6 +609,7 @@ class Researches(models.Model):
             "code": self.code,
             "internalCode": self.internal_code,
             "ecpId": self.ecp_id,
+            "ecpIdSynonym": self.ecp_id_synonym,
             "preparation": self.preparation,
             "departmentId": self.podrazdeleniye_id,
             "laboratoryMaterialId": self.laboratory_material_id,
@@ -715,6 +716,7 @@ class Researches(models.Model):
             "title": research_data["title"].strip() if research_data["title"] else None,
             "short_title": research_data["shortTitle"].strip() if research_data["shortTitle"] else "",
             "ecp_id": research_data["ecpId"].strip() if research_data["ecpId"] else "",
+            "ecp_id_synonym": research_data["ecpIdSynonym"].strip() if research_data["ecpIdSynonym"] else "",
             "code": research_data["code"].strip() if research_data["code"] else "",
             "internal_code": research_data["internalCode"].strip() if research_data["internalCode"] else "",
             "preparation": research_data["preparation"],
@@ -731,6 +733,7 @@ class Researches(models.Model):
         service.short_title = service_data["short_title"]
         service.code = service_data["code"]
         service.ecp_id = service_data["ecp_id"]
+        service.ecp_id_synonym = service_data["ecp_id_synonym"]
         service.internal_code = service_data["internal_code"]
         service.preparation = service_data["preparation"]
         service.podrazdeleniye_id = service_data["department_id"]
@@ -1592,6 +1595,7 @@ class Fractions(models.Model):
     patient_control_param = models.ForeignKey(PatientControlParam, default=None, null=True, blank=True, help_text="Контролируемый параметр", on_delete=models.SET_NULL)
     not_send_odli = models.BooleanField(help_text="Не отправлять данные в ОДЛИ", default=False)
     ecp_id = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП")
+    ecp_id_synonym = models.CharField(max_length=16, default="", blank=True, verbose_name="Код теста в ЕЦП синоним")
     external_code = models.CharField(max_length=255, default="", help_text="Внешний код теста", blank=True, db_index=True)
     statistic_pattern_param = models.ForeignKey(PatternParam, default=None, null=True, blank=True, help_text="Статистический параметр модели", on_delete=models.SET_NULL)
     default_value = models.CharField(max_length=255, default="", blank=True, null=True, verbose_name="Значение по умолчанию", help_text="24, отрицательно и т.д")
@@ -1626,6 +1630,7 @@ class Fractions(models.Model):
             "title": fraction.title,
             "unitId": fraction.unit_id,
             "ecpId": fraction.ecp_id,
+            "ecpIdSynonymfr": fraction.ecp_id_synonym,
             "fsli": fraction.fsli,
             "order": fraction.sort_weight,
             "variantsId": fraction.variants_id,
@@ -1660,6 +1665,7 @@ class Fractions(models.Model):
         return {
             "title": fraction_data["title"].strip() if fraction_data["title"] else "",
             "ecp_id": fraction_data["ecpId"].strip() if fraction_data["ecpId"] else "",
+            "ecp_id_synonym": fraction_data["ecpIdSynonymfr"].strip() if fraction_data["ecpIdSynonymfr"] else "",
             "unit_id": fraction_data.get("unitId", None),
             "ref_m": ref_m,
             "ref_f": ref_f,
@@ -1675,6 +1681,7 @@ class Fractions(models.Model):
     def update_fraction(fraction, fraction_data):
         fraction.title = fraction_data["title"]
         fraction.ecp_id = fraction_data["ecp_id"]
+        fraction.ecp_id_synonym = fraction_data["ecp_id_synonym"]
         fraction.fsli = fraction_data["fsli"]
         fraction.sort_weight = fraction_data["order"]
         fraction.unit_id = fraction_data["unit_id"]
@@ -1692,6 +1699,7 @@ class Fractions(models.Model):
             research_id=service_pk,
             title=fraction_data["title"],
             ecp_id=fraction_data["ecp_id"],
+            ecp_id_synonym=fraction_data["ecp_id_synonym"],
             fsli=fraction_data["fsli"],
             unit_id=fraction_data["unit_id"],
             relation_id=relation_pk,
