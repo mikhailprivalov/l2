@@ -33,6 +33,7 @@ constructor_help_message = [
     {"label": "-", "param": "%current_manager", "value": "Текущий руководитель МО"},
     {"label": "-", "param": "%work_position", "value": "Должность пациента из карты"},
     {"label": "-", "param": "%work_department", "value": "Подразделение пациента из карты "},
+    {"label": "-", "param": "%db_department", "value": "Подразделение пациента из справочника "},
     {"label": "-", "param": "%harmful_factor", "value": "Факторы вредности пациента из карты"},
     {"label": "-", "param": "%harmfull_factors", "value": "Факторы вредности из отдельной модели"},
     {"label": "-", "param": "%proto_operation", "value": "Сведения об операциях в стационарном случае"},

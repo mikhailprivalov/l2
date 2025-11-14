@@ -549,6 +549,7 @@ def patients_get_card_data(request, card_id):
         doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all().exclude(title__startswith="Паспорт гражданина РФ")]
     else:
         doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]
+    work_place_db = card.work_place_db_id or -1,
     return JsonResponse(
         {
             **i,
@@ -563,6 +564,7 @@ def patients_get_card_data(request, card_id):
             "room_location_db": card.room_location_id if card.room_location_id else -1,
             "work_place_db_title": card.work_place_db.title if card.work_place_db else "",
             "work_department_db": card.work_department_db.pk if card.work_department_db else -1,
+            "work_departments": CompanyDepartment.search_departments(work_place_db),
             "district": card.district_id or -1,
             "districts": [{"id": -1, "title": "НЕ ВЫБРАН"}, *[{"id": x.pk, "title": x.title} for x in d.filter(is_ginekolog=False)]],
             "ginekolog_district": card.ginekolog_district_id or -1,
