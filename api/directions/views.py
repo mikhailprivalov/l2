@@ -4269,7 +4269,7 @@ def eds_documents(request):
         error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
-    if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
+    if not direction.client.get_card_documents(check_has_type=['СНИЛС']) and SettingManager.get("eds_control_snils", default="false", default_type="b"):
         # direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:
