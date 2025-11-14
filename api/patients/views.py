@@ -549,7 +549,7 @@ def patients_get_card_data(request, card_id):
         doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all().exclude(title__startswith="Паспорт гражданина РФ")]
     else:
         doc_types = [{"pk": x.pk, "title": x.title} for x in DocumentType.objects.all()]
-    work_place_db = card.work_place_db_id or -1,
+    work_place_db = (card.work_place_db_id or -1,)
     return JsonResponse(
         {
             **i,
