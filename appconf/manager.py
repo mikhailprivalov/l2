@@ -219,6 +219,7 @@ class SettingManager:
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
+            "l2_show_fsli_in_lab_constructor": SettingManager.get("l2_show_fsli_in_lab_constructor", default='false', default_type='b'),
             "forms_url": SettingManager.forms_url(),
             "l2_show_external_org_fin_sources": SettingManager.get("l2_show_external_org_fin_sources", default='', default_type='s').split(","),
             "working_time_variants": SettingManager.get("working_time_variants", default="", default_type='s'),
