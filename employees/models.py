@@ -817,8 +817,9 @@ class EmployeeWorkingHoursSchedule(models.Model):
             current_employee_position: EmployeePosition = employee_positions.filter(pk=current_employee_position_id).first()
             start_work_time_employee = current_employee_position.work_start
             daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
+            end_work_time_in_minutes = daily_hours_norm_in_minutes + lunch_duration_in_minutes if lunch_duration_in_minutes else daily_hours_norm_in_minutes
             start_work_time_by_employee_template = datetime.datetime.combine(date_key.date(), start_work_time_employee)
-            end_work_time_by_employee_template = start_work_time_by_employee_template + datetime.timedelta(minutes=daily_hours_norm_in_minutes+lunch_duration_in_minutes)
+            end_work_time_by_employee_template = start_work_time_by_employee_template + datetime.timedelta(minutes=end_work_time_in_minutes)
             result = {
                     "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
                     "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
@@ -837,7 +838,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         for employee_work_time in employees_work_time_data:
             current_employee_position_id = employee_work_time.get("employeePositionId")
             lunch_duration = employee_work_time.get("lunchDuration")
-            for key, value in employee_work_time:
+            for key, value in employee_work_time.items():
                 try:
                     date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
                     new_value = EmployeeWorkingHoursSchedule.fill_by_template(action, date_key, value, employee_positions, current_employee_position_id, lunch_duration)
