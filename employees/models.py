@@ -824,10 +824,10 @@ class EmployeeWorkingHoursSchedule(models.Model):
             start_work_time_by_employee_template = datetime.datetime.combine(date_key.date(), start_work_time_employee)
             end_work_time_by_employee_template = start_work_time_by_employee_template + datetime.timedelta(minutes=end_work_time_in_minutes)
             result = {
-                    "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
-                    "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
-                    "typeId": "",
-                }
+                "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
+                "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
+                "typeId": "",
+            }
         return result
 
     @staticmethod
