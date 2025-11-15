@@ -8,4 +8,5 @@ urlpatterns = [
     path('create-document', views.create_document),
     path('get-ref-books', views.get_ref_books),
     path('employee-transfer', views.employee_transfer),
+    path('get-work-time-filling-by-employee-template', views.get_work_time_filling_by_employee_template),
 ]

@@ -590,6 +590,11 @@ class EmployeePosition(models.Model):
         other_dates = [date_dismissal, date_transfer]
         return any(current_date >= day for day in other_dates if day)
 
+    @staticmethod
+    def get_by_ids(employee_position_ids: set):
+        employee_positions = EmployeePosition.objects.filter(pk__in=employee_position_ids)
+        return employee_positions
+
 
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
@@ -802,6 +807,44 @@ class EmployeeWorkingHoursSchedule(models.Model):
                     )
                 day.save()
         return {"ok": True, "message": ""}
+
+
+    @staticmethod
+    def fill_by_template(action: str, date_key, value, employee_positions, current_employee_position_id, lunch_duration_in_minutes):
+        value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
+        result = value
+        if action == "replace" or (action == "add" and value_is_empty):
+            current_employee_position: EmployeePosition = employee_positions.filter(pk=current_employee_position_id).first()
+            start_work_time_employee = current_employee_position.work_start
+            daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
+            start_work_time_by_employee_template = datetime.datetime.combine(date_key.date(), start_work_time_employee)
+            end_work_time_by_employee_template = start_work_time_by_employee_template + datetime.timedelta(minutes=daily_hours_norm_in_minutes+lunch_duration_in_minutes)
+            result = {
+                    "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
+                    "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
+                    "typeId": "",
+                }
+        return result
+
+    @staticmethod
+    def get_work_time_filling_by_employee_template(year: int, month: int, department_id: int, action: str):
+        employees_work_time = EmployeeWorkingHoursSchedule.get_work_time_employee(year, month, department_id)
+        employee_position_ids = set()
+        employees_work_time_data = employees_work_time.get("data")
+        for employee_work_time in employees_work_time_data:
+            employee_position_ids.add(employee_work_time.get("employeePositionId"))
+        employee_positions = EmployeePosition.get_by_ids(employee_position_ids)
+        for employee_work_time in employees_work_time_data:
+            current_employee_position_id = employee_work_time.get("employeePositionId")
+            lunch_duration = employee_work_time.get("lunchDuration")
+            for key, value in employee_work_time:
+                try:
+                    date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
+                    new_value = EmployeeWorkingHoursSchedule.fill_by_template(action, date_key, value, employee_positions, current_employee_position_id, lunch_duration)
+                    employee_work_time[key] = new_value
+                except ValueError:
+                    continue
+        return employees_work_time_data
 
 
 class CashRegister(models.Model):

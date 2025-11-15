@@ -34,7 +34,7 @@
 
 import { getCurrentInstance } from 'vue';
 
-const emit = defineEmits(['fill', 'clear']);
+const emit = defineEmits(['fill', 'clear', 'fillByEmployeesTemplate']);
 const root = getCurrentInstance().proxy.$root;
 
 const fill = () => {
@@ -50,9 +50,9 @@ const fillByEmployeesTemplate = async () => {
       okText: 'Дописать',
       cancelText: 'Заменить',
     });
-    console.log('выбрано дописать');
+    emit('fillByEmployeesTemplate', { action: 'add' });
   } catch (_) {
-    console.log('выбрано заменить');
+    emit('fillByEmployeesTemplate', { action: 'replace' });
   }
 };
 </script>
