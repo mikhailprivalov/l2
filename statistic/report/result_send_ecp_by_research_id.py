@@ -41,16 +41,17 @@ def form_01(ws1, data):
 
     sql_data = sql_01(data['research_id'], data['d_s'], data['d_e'])
     result = [
-        {"doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
-         "status": "Да" if i.result_rmis_send else "Нет",
-         "date_confirm": i.date_confirm,
-         "date_create": i.rmis_direction_date,
-         "direction_id": i.direction_number,
-         "rmis_id": i.rmis_number,
-         "hospital": i.hospital_title,
-         "patient": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
-         "patient_birthday": i.patient_birthday
-         }
+        {
+            "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
+            "status": "Да" if i.result_rmis_send else "Нет",
+            "date_confirm": i.date_confirm,
+            "date_create": i.rmis_direction_date,
+            "direction_id": i.direction_number,
+            "rmis_id": i.rmis_number,
+            "hospital": i.hospital_title,
+            "patient": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
+            "patient_birthday": i.patient_birthday,
+        }
         for i in sql_data
     ]
     step = 0
