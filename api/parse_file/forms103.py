@@ -258,8 +258,9 @@ def create_employee_position(employee_data, employee, department, position, empl
         date_employment=employee_data.get("date_employment"),
         date_dismissal=employee_data.get("date_dismissal"),
         weekly_hours_norm=work_schedule_minutes,
-        daily_hours_norm=work_schedule_minutes / WORK_DAYS_PER_WEEK_DEFAULT,
     )
+    if new_employee_position.work_days_per_week and work_schedule_minutes:
+        new_employee_position.daily_hours_norm = work_schedule_minutes // new_employee_position.work_days_per_week
     new_employee_position.save()
 
 
