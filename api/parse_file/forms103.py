@@ -175,7 +175,6 @@ def normalize_employee_data(employee_data: dict, normalize_funcs_list: list):
         result["name"] = fio_data[1]
         if len(fio_data) > 2:
             result["patronymic"] = " ".join(fio_data[2:])
-    print(result)
     return result
 
 
