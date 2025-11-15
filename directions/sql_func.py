@@ -193,7 +193,7 @@ def get_data_by_directions_id(direction_ids):
             dr.internal_code as research_internal_code,
             dlm.title as laboratory_material,
             to_char(directions_tubesregistration.time_get AT TIME ZONE %(tz)s, 'DD.MM -  HH24:MI') as tube_registration_time,
-            to_char(ci.birthday AT TIME ZONE %(tz)s, 'YY-MM-DD') as patient_birthday_english
+            to_char(ci.birthday AT TIME ZONE %(tz)s, 'YYYY-MM-DD') as patient_birthday_english
             FROM directions_tubesregistration
             LEFT JOIN directions_issledovaniya_tubes dit on directions_tubesregistration.id = dit.tubesregistration_id
             LEFT JOIN directory_releationsft drft on drft.id = directions_tubesregistration.type_id
@@ -290,6 +290,7 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
             AND directions_napravleniya.result_rmis_send = false
             AND directions_napravleniya.rmis_direction_date is not Null
             AND di.research_id in %(researches)s 
+            LIMIT 40
             """,
             params={'researches': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )
@@ -344,6 +345,30 @@ def get_paraclini_directions_for_send_ecp_queue(researches, date_start, date_end
             directions_napravleniya.ecp_direction_number IS NULL
             """,
             params={'researches': researches, 'tz': TIME_ZONE, 'd_start': date_start, 'd_end': date_end},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_patient_result_by_main_research_for_dependent(main_researches, card_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_issledovaniya.research_id,
+            directions_issledovaniya.time_confirmation
+            
+            FROM directions_issledovaniya
+            LEFT JOIN directions_napravleniya dn on dn.id = directions_issledovaniya.napravleniye_id
+            LEFT JOIN clients_card cc on dn.client_id = cc.id
+            WHERE 
+            directions_issledovaniya.research_id in %(researches)s
+            AND
+            directions_issledovaniya.time_confirmation IS NOT NULL
+            and 
+            cc.id = %(card_id)s
+            """,
+            params={'researches': main_researches, "card_id": card_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows

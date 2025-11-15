@@ -96,6 +96,19 @@
                 placeholder="Введите код"
               >
             </div>
+            <div class="margin flex-item">
+              <label
+                for="ecpIdSynonym"
+                class="research-detail-label"
+              >ЕЦП-2</label>
+              <input
+                id="ecpIdSynonym"
+                v-model="research.ecpIdSynonym"
+                maxlength="255"
+                class="form-control"
+                placeholder="Введите код"
+              >
+            </div>
           </div>
           <div class="margin">
             <label
@@ -410,6 +423,7 @@ interface fractionsData {
   unitId: number,
   order: number,
   ecpId: string,
+  ecpIdSynonymfr: string,
   fsli: number,
   variantsId: number,
   formula: string,
@@ -435,6 +449,7 @@ interface researchData {
   order: number,
   internalCode: number | null,
   ecpId: string,
+  ecpIdSynonym: string,
   preparation: string | null,
   departmentId: number,
   laboratoryMaterialId: number,
@@ -457,6 +472,7 @@ const research = ref<researchData>({
   order: null,
   internalCode: null,
   ecpId: '',
+  ecpIdSynonymfr: '',
   preparation: '',
   departmentId: null,
   laboratoryMaterialId: null,
@@ -468,6 +484,7 @@ const research = ref<researchData>({
 
 const defaultFraction = ref<fractionsData>({
   ecpId: '',
+  ecpIdSynonymfr: '',
   formula: '',
   fsli: null,
   order: 1,

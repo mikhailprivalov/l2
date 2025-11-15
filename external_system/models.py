@@ -3,6 +3,7 @@ from django.db import models
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
 from podrazdeleniya.models import Podrazdeleniya
+from users.models import DoctorProfile
 
 
 class FsliRefbookTest(models.Model):
@@ -95,13 +96,13 @@ class CdaFields(models.Model):
     is_treatment = models.BooleanField(default=False, blank=True, help_text="Это лечение", db_index=True)
     is_form = models.BooleanField(default=False, blank=True, help_text="Это формы, cправки, направления", db_index=True)
     is_extract = models.BooleanField(default=False, blank=True, help_text="Это выписка", db_index=True)
+    is_indicator = models.BooleanField(default=False, blank=True, help_text="Это показатель для Куратора", db_index=True)
 
     def __str__(self):
         return f"{self.pk} - {self.title}"
 
     @staticmethod
     def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):
-        result = [{"id": -1, "label": "Пусто"}]
         if is_doc_refferal:
             result = [{"id": -1, "label": "Пусто"}, *[{"id": x.pk, "label": f"{x.title} - {x.code}"} for x in CdaFields.objects.filter(is_doc_refferal=True).order_by("title")]]
         elif is_treatment:
@@ -140,3 +141,15 @@ class ProfessionsWorkersPositionsRefbook(models.Model):
     class Meta:
         verbose_name = "Профессия рабочих и должностей служащих"
         verbose_name_plural = "Профессии рабочих и должностей служащих"
+
+
+class CuratorCdaFields(models.Model):
+    indicator = models.ForeignKey(CdaFields, null=True, blank=True, default=None, help_text='Показатель', db_index=True, on_delete=models.SET_NULL)
+    curator = models.ForeignKey(DoctorProfile, null=True, blank=True, default=None, help_text='Куратор', on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"{self.curator} {self.indicator}"
+
+    class Meta:
+        verbose_name = 'Куратор-показатель'
+        verbose_name_plural = 'Куратор-показатель'

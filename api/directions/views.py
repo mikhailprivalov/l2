@@ -12,6 +12,7 @@ from barcodes.views import tubes
 from cash_registers.models import Cheque
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory, PriceCoast, PriceName, Company, MedicalExamination
+from directions.sql_func import get_patient_result_by_main_research_for_dependent
 from ecp_integration.integration import get_ecp_time_table_list_patient, get_ecp_evn_direction, fill_slot_ecp_free_nearest
 from external_system.models import ProfessionsWorkersPositionsRefbook, CdaFields
 from integration_framework.common_func import directions_pdf_result
@@ -124,6 +125,7 @@ from medical_certificates.models import ResearchesCertificate, MedicalCertificat
 from utils.data_verification import data_parse
 from utils.expertise import get_expertise
 from ..patients.common_func import get_card_control_param, get_vital_param_in_hosp
+from directory.sql_func import get_control_dependent_pairs_research
 
 
 @login_required
@@ -208,6 +210,24 @@ def directions_generate(request):
                     result_coast += dc.coast
             result = {"ok": True, "directions": [], "directionsStationar": [], "message": result_coast}
             return JsonResponse(result)
+
+        researches_pks = [element for v in researches.values() for element in v]
+
+        result_main_dependent = get_control_dependent_pairs_research(tuple(researches_pks))
+        pair_dependent_research = {r.main_research_id: r.dependent_research_id for r in result_main_dependent}
+        main_research_title = {r.main_research_id: r.main_title for r in result_main_dependent}
+        dependent_research_title = {r.dependent_research_id: r.dependent_title for r in result_main_dependent}
+
+        if pair_dependent_research:
+            main_research_for_chek_patient = pair_dependent_research.keys()
+            check_patient_result_main_research = get_patient_result_by_main_research_for_dependent(tuple(main_research_for_chek_patient), card_pk)
+            for chked_main_research in check_patient_result_main_research:
+                del pair_dependent_research[chked_main_research.research_id]
+            if pair_dependent_research:
+                message = ""
+                for k, v in pair_dependent_research.items():
+                    message = f"{message} {dependent_research_title.get(v)} зависит от услуги {main_research_title.get(k)}"
+                return JsonResponse({"ok": False, "directions": [], "directionsStationar": [], "message": message})
 
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)
@@ -4249,7 +4269,7 @@ def eds_documents(request):
         error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
 
-    if not direction.client.get_card_documents(check_has_type=['СНИЛС']):
+    if not direction.client.get_card_documents(check_has_type=['СНИЛС']) and SettingManager.get("eds_control_snils", default="false", default_type="b"):
         # direction.client.individual.sync_with_tfoms()
         snils_used = direction.client.get_card_documents(check_has_type=['СНИЛС'])
         if not snils_used:

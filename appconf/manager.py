@@ -116,6 +116,10 @@ class SettingManager:
         return SettingManager.get("rmis_upload_hours_interval", default='1', default_type='i')
 
     @staticmethod
+    def rmis_upload_minutes_interval():
+        return SettingManager.get("rmis_upload_minutes_interval", default='60', default_type='i')
+
+    @staticmethod
     def l2_modules() -> dict:
         k = SettingManager.FULL_CACHE_L2_KEY
         cv = cache.get(k)
@@ -215,6 +219,7 @@ class SettingManager:
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
+            "l2_show_fsli_in_lab_constructor": SettingManager.get("l2_show_fsli_in_lab_constructor", default='false', default_type='b'),
             "forms_url": SettingManager.forms_url(),
             "l2_show_external_org_fin_sources": SettingManager.get("l2_show_external_org_fin_sources", default='', default_type='s').split(","),
             "working_time_variants": SettingManager.get("working_time_variants", default="", default_type='s'),

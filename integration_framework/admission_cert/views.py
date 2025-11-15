@@ -1,6 +1,7 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from api.models import Application
+from appconf.manager import SettingManager
 from contracts.models import Company
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
@@ -35,6 +36,9 @@ def get_med_protocols(request):
     closed_case_need_send = get_closed_case_by_company(companies_id, limit)
     cases_iss = set([i.case_issledovaniye_id for i in closed_case_need_send])
     result_iss_id = directions_by_parent_cases_issledovaniye_only_research_id_final_report(tuple(cases_iss))
+    if not result_iss_id:
+        return Response({"result": "None", "comment": "No new results"})
+
     direction_iss = {
         i.iss_id: {
             "dir": i.napravleniye_id,
@@ -62,6 +66,8 @@ def get_med_protocols(request):
     companies = {i.pk: {"title": i.title, "inn": i.inn} for i in companies_obj}
     hospital = Hospitals.objects.filter(is_default=True).first()
     for k, v in final_value_result.items():
+        vred = v["Вредный производственный фактор или вид работы"].split(";")
+        vred = [i for i in vred if float(i) < 30]
         response_result.append(
             {
                 "med_org": hospital.title,
@@ -80,7 +86,7 @@ def get_med_protocols(request):
                         "protocolid": direction_iss.get(k)["dir"],
                         "treatcode": k,
                         "view": "Заключение",
-                        "vred": v["Вредный производственный фактор или вид работы"].split(";"),
+                        "vred": vred,
                         "group": v["Диспансерная группа"],
                         "conclusion": f"Медицинские противопоказания по приказу 29н {(v['Медицинские противопоказания к работе']).lower()}",
                         "contraindication": False if (v["Медицинские противопоказания к работе"]).lower() == "не выявлено" else True,

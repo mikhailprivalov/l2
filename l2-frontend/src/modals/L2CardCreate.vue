@@ -453,7 +453,7 @@
                   :cache-options="false"
                   open-direction="top"
                   :open-on-focus="true"
-                  @input="changeCompany(card.work_place_db, card.work_department_db)"
+                  @search-change="changeCompany(card.work_place_db, card.work_department_db)"
                 >
                   <div
                     slot="value-label"
@@ -1786,6 +1786,7 @@ export default {
         .getCard(this, 'card_pk')
         .then((data) => {
           this.card = data;
+          this.companyDepartments = this.card.work_departments;
         })
         .finally(() => {
           this.$store.dispatch(actions.DEC_LOADING);
