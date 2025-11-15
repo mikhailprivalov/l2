@@ -60,13 +60,13 @@ def parse_work_sheet(ws: Worksheet):
 
     normalize_actions = [
         {
-            "fields": {"employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"},
-            "normalize_funcs": {"remove_double_spaces"},
+            "fields": ["employment_form", "tabel_number", "fio", "department_title", "position_title", "rate"],
+            "normalize_funcs": ["remove_double_spaces"],
         },
-        {"fields": {"snils"}, "normalize_funcs": {"normalize_snils"}},
-        {"fields": {"rate"}, "normalize_funcs": {"normalize_rate"}},
-        {"fields": {"date_employment", "date_dismissal"}, "normalize_funcs": {"normalize_date"}},
-        {"fields": {"work_schedule"}, "normalize_funcs": {"get_first_number", "convert_hours_to_minutes"}},
+        {"fields": ["snils"], "normalize_funcs": ["normalize_snils"]},
+        {"fields": ["rate"], "normalize_funcs": ["normalize_rate"]},
+        {"fields": ["date_employment", "date_dismissal"], "normalize_funcs": ["normalize_date"]},
+        {"fields": ["work_schedule"], "normalize_funcs": ["get_first_number", "convert_hours_to_minutes"]},
     ]
 
     russian_keys = {
@@ -91,13 +91,13 @@ def parse_work_sheet(ws: Worksheet):
     }
     checks_lists = [
         {
-            "fields": {"employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"},
-            "check_funcs": {"check_not_empty", "check_max_len"},
+            "fields": ["employment_form", "snils", "tabel_number", "fio", "department_title", "position_title"],
+            "check_funcs": ["check_not_empty", "check_max_len"],
         },
-        {"fields": {"snils"}, "check_funcs": {"check_snils"}},
-        {"fields": {"rate"}, "check_funcs": {"check_not_empty", "check_rate"}},
-        {"fields": {"date_employment"}, "check_funcs": {"check_not_empty"}},
-        {"fields": {"date_employment", "date_dismissal"}, "check_funcs": {"check_date"}},
+        {"fields": ["snils"], "check_funcs": ["check_snils"]},
+        {"fields": ["rate"], "check_funcs": ["check_not_empty", "check_rate"]},
+        {"fields": ["date_employment"], "check_funcs": ["check_not_empty"]},
+        {"fields": ["date_employment", "date_dismissal"], "check_funcs": ["check_date"]},
     ]
     for row in ws.rows:
         cells = [str(x.value) for x in row]
@@ -159,6 +159,7 @@ def normalize_employee_data(employee_data: dict, normalize_funcs_list: list):
         "rate": None,
         "date_employment": None,
         "date_dismissal": None,
+        "work_schedule": None,
     }
 
     for action in normalize_funcs_list:
