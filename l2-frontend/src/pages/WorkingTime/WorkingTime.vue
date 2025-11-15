@@ -447,6 +447,14 @@ const fillByEmployeeTemplate = async ({ action }) => {
   });
   await store.dispatch(actions.DEC_LOADING);
   employeesWorkTime.value = result;
+  for (const employeePosition of result) {
+    const { employeePositionId } = employeePosition;
+    for (const [key, value] of Object.entries(employeePosition)) {
+      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+        updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value);
+      }
+    }
+  }
 };
 
 const copyTop = ({ rowIndex }) => {
