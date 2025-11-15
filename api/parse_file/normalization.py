@@ -42,12 +42,20 @@ def normalize_date(value: str):
     return normalized_value
 
 
+def is_number(value: str) -> bool:
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
 def get_first_number(value: str):
     """Получает из строки первое число"""
     values = value.split(" ")
     for value in values:
-        if value.isnumeric():
-            return int(value)
+        if is_number(value):
+            return float(value)
     return None
 
 
