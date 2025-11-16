@@ -63,7 +63,7 @@ def form_01(ws1, data):
             max_count_date_for_client_id[i.client_id] += 1
         else:
             child_result_by_card_id[i.client_id][i.char_medical_examination].update({i.field_title: i.field_value})
-    child_count_patronage = [('Дата патронажа', 20) for i in  range(max(max_count_date_for_client_id.values()))]
+    child_count_patronage = [('Дата патронажа', 20) for i in range(max(max_count_date_for_client_id.values()))]
 
     columns.extend(child_count_patronage)
     row = 5
