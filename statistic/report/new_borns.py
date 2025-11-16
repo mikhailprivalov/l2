@@ -23,94 +23,98 @@ def form_01(ws1, data):
 
     columns = [
         ('№ п/п.', 5),
-        ('Дата подачи', 10),
-        ('Место рождения', 25),
-        ('Фамилия, имя, отчество пациента', 25),
-        ('Дата рождения', 10),
-        ('Прививки', 30),
+        ('ФИО пациента', 30),
+        ('Дата рождения', 30),
+        ('Пол', 10),
+        ('Родильный дом', 10),
+        ('Дата передачи', 30),
+        ('Дата выписки', 30),
+        ('Участок', 15),
+        ('Адрес', 25),
+        ('Телефон', 25),
+        ('Вес при рождении (г.)', 30),
+        ('Вес при выписке (г.)', 30),
+        ('БЦЖ-статус', 20),
+        ('БЦЖ-дата', 20),
+        ('Гепатит-статус', 20),
+        ('Гепатит-дата', 20),
+        ('ФКУ-статус', 20),
+        ('ФКУ-дата', 20),
+        ('Дата патронажа (перв)', 20),
     ]
+    sql_data_main_research = sql_01(data['research_id'], data['d_s'], data['d_e'])
+    card_pks = set([i.client_id for i in sql_data_main_research])
+    main_result_by_card_id = {}
+    for i in sql_data_main_research:
+        if not main_result_by_card_id.get(i.client_id):
+            main_result_by_card_id[i.client_id] = {"fio": f"{i.family} {i.name} {i.patronymic}", "sex": i.sex, i.field_title: i.field_value}
+        else:
+            main_result_by_card_id[i.client_id].update({i.field_title: i.field_value})
+
+    sql_data_child_research = sql_02(data['child_research_id'], card_pks)
+    child_result_by_card_id = {}
+    max_count_date_for_client_id = {}
+    for i in sql_data_child_research:
+        if not child_result_by_card_id.get(i.client_id):
+            child_result_by_card_id[i.client_id] = {i.char_medical_examination: {i.field_title: i.field_value}}
+            max_count_date_for_client_id[i.client_id] = 1
+        elif not child_result_by_card_id[i.client_id].get(i.char_medical_examination):
+            child_result_by_card_id[i.client_id][i.char_medical_examination] = {i.field_title: i.field_value}
+            max_count_date_for_client_id[i.client_id] += 1
+        else:
+            child_result_by_card_id[i.client_id][i.char_medical_examination].update({i.field_title: i.field_value})
+    child_count_patronage = [('Дата патронажа', 20) for i in range(max(max_count_date_for_client_id.values()))]
+
+    columns.extend(child_count_patronage)
     row = 5
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=row, column=idx).value = column[0]
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
 
-    result = []
-    previous_direction_number = None
-    tmp_string = {}
     step = 0
-    sql_data = sql_01(data['research_id'], data['d_s'], data['d_e'])
-    for i in sql_data:
-        if i.direction_number != previous_direction_number and step != 0:
-            result.append(tmp_string.copy())
-            tmp_string = {}
-        tmp_string.update({i.field_title: i.field_value, "history_num": i.parent_direction, "doc_fio": i.doc_fio, "medical_examination": i.medical_examination})
-        previous_direction_number = i.direction_number
-        step += 1
-    result.append(tmp_string.copy())
-    previous_date = None
-    step = 0
-    for i in result:
+    for card_id, values in main_result_by_card_id.items():
         row += 1
-        if step != 0 and previous_date != i.get("medical_examination"):
-            step = 0
         step += 1
         ws1.cell(row=row, column=1).value = step
-        ws1.cell(row=row, column=2).value = normalize_date(i.get("Дата"))
-        ws1.cell(row=row, column=3).value = i.get("doc_fio")
-        ws1.cell(row=row, column=4).value = i.get("ФИО пациента")
-        ws1.cell(row=row, column=5).value = i.get("Дата рождения пациента")
-        try:
-            subject = json.loads(i.get("Предмет рассмотрения"))
-        except:
-            subject = {"rows": [""]}
-        subject_result = ""
-        k = 0
-        for s in subject.get("rows"):
-            if k != 0:
-                subject_result = f"{subject_result} \n {s[0]}"
-            else:
-                subject_result = s[0]
-            k += 1
-        ws1.cell(row=row, column=6).value = subject_result
-        try:
-            diag = json.loads(i.get("Диагноз основной по МКБ-10"))
-        except:
-            diag = {"code": "-"}
+        ws1.cell(row=row, column=2).value = values.get("fio")
+        ws1.cell(row=row, column=3).value = values.get("Дата рождения")
+        ws1.cell(row=row, column=4).value = values.get("пол")
+        ws1.cell(row=row, column=5).value = values.get("Родильный дом")
+        ws1.cell(row=row, column=6).value = values.get("Дата передачи")
+        ws1.cell(row=row, column=7).value = values.get("Дата выписки")
+        ws1.cell(row=row, column=8).value = values.get("Участок")
+        ws1.cell(row=row, column=9).value = values.get("Адрес")
+        ws1.cell(row=row, column=10).value = values.get("Телефон")
+        ws1.cell(row=row, column=11).value = values.get("Вес при рождении (г.)")
+        ws1.cell(row=row, column=12).value = values.get("Вес при выписке (г.)")
 
-        ws1.cell(row=row, column=7).value = diag.get("code")
-
-        ws1.cell(row=row, column=8).value = i.get("history_num")
-
-        name_form = i.get("Наименование/форма выпуска/дозировка", "-")
-        count = i.get("Количество упаковок", "-")
-        ws1.cell(row=row, column=9).value = f"{name_form} ({count})"
-        try:
-            members = json.loads(i.get("Члены комиссии"))
-        except:
-            members = {"rows": ["-", "-"]}
-        members_result = ""
-        m_step = 0
-        for m in members.get("rows"):
-            if m_step != 0:
-                members_result = f"{members_result} \n {m[1]}"
-            else:
-                members_result = m[1]
-            m_step += 1
-
-        ws1.cell(row=row, column=10).value = members_result
+        ws1.cell(row=row, column=13).value = values.get("БЦЖ-статус")
+        ws1.cell(row=row, column=14).value = values.get("БЦЖ-дата")
+        ws1.cell(row=row, column=15).value = values.get("Гепатит-статус")
+        ws1.cell(row=row, column=16).value = values.get("Гепатит-дата")
+        ws1.cell(row=row, column=17).value = values.get("ФКУ-статус")
+        ws1.cell(row=row, column=18).value = values.get("ФКУ-дата")
+        result_partonage = f"{values.get('Дата патронажа')}"
+        ws1.cell(row=row, column=19).value = result_partonage
+        column = 19
+        for date_child_patronage, value_child_patronage in child_result_by_card_id.get(card_id):
+            column += 1
+            child_cell_result = f"{date_child_patronage}"
+            for k, v in value_child_patronage.items():
+                if k != "Дата патронажа":
+                    child_cell_result = f"{child_cell_result} {k} {v}"
+            ws1.cell(row=row, column=column).value = child_cell_result
 
         for c in range(11):
             ws1.cell(row=row, column=c + 1).style = style_border2
-
-        previous_date = i.get("medical_examination")
 
     return ws1
 
 
 def sql_01(research_id, d_s, d_e):
     """
-    Для журнала ВК-ДЛО
+    Для журнала новородок первичные
     :return:
     """
     with connection.cursor() as cursor:
@@ -121,16 +125,18 @@ def sql_01(research_id, d_s, d_e):
                     directions_paraclinicresult.field_id,
                     directions_paraclinicresult.value as field_value,
                     directory_paraclinicinputfield.title as field_title,
-                    directions_issledovaniya.napravleniye_id as direction_number,
-                    users_doctorprofile.fio as doc_fio,
-                    di.napravleniye_id as parent_direction,
-                    directions_issledovaniya.medical_examination
-                    FROM public.directions_paraclinicresult
+                    directions_issledovaniya.medical_examination,
+                    directions_napravleniya.client_id,
+                    ci.family,
+                    ci.name,
+                    ci.patronymic,
+                    ci.sex
+                    FROM directions_paraclinicresult
                     LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
                     LEFT JOIN directory_paraclinicinputfield ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
                     LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
-                    LEFT JOIN users_doctorprofile ON directions_issledovaniya.doc_confirmation_id=users_doctorprofile.id
-                    LEFT JOIN directions_issledovaniya di ON di.id = directions_napravleniya.parent_id
+                    LEFT JOIN clients_card cc ON cc.id = directions_napravleniya.client_id
+                    LEFT JOIN clients_individual ci ON ci.id = cc.individual_id
                     WHERE 
                       directions_issledovaniya.research_id=%(research_id)s
                       AND directory_paraclinicinputfield.for_talon = true
@@ -139,6 +145,41 @@ def sql_01(research_id, d_s, d_e):
                     order by directions_issledovaniya.medical_examination, directions_issledovaniya.napravleniye_id
                 """,
             params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def sql_02(research_id, card_pks):
+    """
+    Для журнала новородок повторные приемы
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                    directions_napravleniya.client_id,
+                    directions_paraclinicresult.issledovaniye_id,
+                    directions_issledovaniya.medical_examination,
+                    to_char(directions_issledovaniya.medical_examination, 'DD.MM.YYYY') as char_medical_examination,
+                    directions_paraclinicresult.value as field_value,
+                    directory_paraclinicinputfield.title as field_title,
+                    directions_issledovaniya.napravleniye_id as direction_number
+                    FROM directions_paraclinicresult
+                    LEFT JOIN directions_issledovaniya ON directions_issledovaniya.id = directions_paraclinicresult.issledovaniye_id
+                    LEFT JOIN directory_paraclinicinputfield ON directory_paraclinicinputfield.id = directions_paraclinicresult.field_id
+                    LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                    LEFT JOIN directions_issledovaniya di ON di.id = directions_napravleniya.parent_id
+                    WHERE 
+                      directions_issledovaniya.research_id=%(research_id)s
+                      AND directions_napravleniya.client_id in %(card_pks)s
+                      AND directory_paraclinicinputfield.for_talon = true
+                      AND directions_issledovaniya.time_confirmation IS NOT NULL      
+                    order by directions_napravleniya.client_id, directions_issledovaniya.medical_examination
+                """,
+            params={'research_id': research_id, 'card_pks': card_pks},
         )
 
         rows = namedtuplefetchall(cursor)
