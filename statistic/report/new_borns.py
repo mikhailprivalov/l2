@@ -72,9 +72,6 @@ def form_01(ws1, data):
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
 
-
-
-    previous_date = None
     step = 0
     for card_id, values in main_result_by_card_id.items():
         row += 1
