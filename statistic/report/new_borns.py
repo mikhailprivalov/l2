@@ -98,16 +98,19 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=16).value = values.get("Гепатит-дата")
         ws1.cell(row=row, column=17).value = values.get("ФКУ-статус")
         ws1.cell(row=row, column=18).value = values.get("ФКУ-дата")
-        ws1.cell(row=row, column=19).value = values.get("Дата патронажа (перв)")
+        result_partonage = f"{values.get('Дата патронажа')}"
+        ws1.cell(row=row, column=19).value = result_partonage
         column = 19
         for date_child_patronage, value_child_patronage in child_result_by_card_id.get(card_id):
             column += 1
-            ws1.cell(row=row, column=column).value = values.get("Дата патронажа")
+            child_cell_result = f"{date_child_patronage}"
+            for k, v in value_child_patronage.items():
+                if k != "Дата патронажа":
+                    child_cell_result = f"{child_cell_result} {k} {v}"
+            ws1.cell(row=row, column=column).value = child_cell_result
 
         for c in range(11):
             ws1.cell(row=row, column=c + 1).style = style_border2
-
-        previous_date = i.get("medical_examination")
 
     return ws1
 
