@@ -21,11 +21,6 @@
       >
         По умолчанию
       </button>
-      <button
-        class="btn btn-blue-nb row-item"
-      >
-        Из предыдущего
-      </button>
     </div>
   </div>
 </template>
