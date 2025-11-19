@@ -25,7 +25,7 @@ class Command(BaseCommand):
         else:
             dirs = ''
         if len(dirs) > 0:
-            dirs = [int(i) for i in dirs]
+            dirs = [int(i) for i in dirs.split(",")]
             d_qs = Napravleniya.objects.filter(pk__in=dirs)
         else:
             date = current_time() + relativedelta(days=-2)
