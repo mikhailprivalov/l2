@@ -13,6 +13,7 @@ def offer_base(ws1):
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
     columns = [
+        ('Код', 50),
         ('Услуга', 50),
         ('Количество', 18),
         ('Цена', 18),

@@ -314,6 +314,7 @@ def direction_data(request):
                 additional_data_create_direction = None
 
     date_direction_create = direction.data_sozdaniya.strftime("%d.%m.%Y")
+
     return Response(
         {
             "ok": True,
@@ -396,7 +397,11 @@ def issledovaniye_data(request):
     else:
         results = directions.Result.objects.filter(issledovaniye=i).exclude(fraction__fsli__isnull=True).exclude(fraction__fsli="").exclude(fraction__not_send_odli=True)
     if need_ecp_code:
+        if SettingManager.get("use_ecp2_code", default='false', default_type='b'):
+            results = results.exclude(fraction__ecp_id_synonym__isnull=True).exclude(fraction__ecp_id_synonym="")
+    else:
         results = results.exclude(fraction__ecp_id__isnull=True).exclude(fraction__ecp_id="")
+
     if (
         (not ignore_sample and not sample)
         or (not results.exists() and not i.research.is_gistology and not i.research.is_paraclinic and not i.research.is_slave_hospital)
@@ -488,6 +493,10 @@ def issledovaniye_data(request):
                     additional_data_confirm_data = {}
             except Exception:
                 additional_data_confirm_data = None
+    if SettingManager.get("use_ecp2_code", default='false', default_type='b'):
+        ecp_id_research = i.research.ecp_id_synonym
+    else:
+        ecp_id_research = i.research.ecp_id
 
     return Response(
         {
@@ -507,7 +516,7 @@ def issledovaniye_data(request):
             "comments": i.lab_comment,
             "isGistology": i.research.is_gistology,
             "isParaclinic": i.research.is_paraclinic,
-            "ecpResearchId": ecpResearchId if ecpResearchId else i.research.ecp_id,
+            "ecpResearchId": ecpResearchId if ecpResearchId else ecp_id_research,
         }
     )
 
