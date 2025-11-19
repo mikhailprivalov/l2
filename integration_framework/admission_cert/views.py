@@ -67,7 +67,7 @@ def get_med_protocols(request):
     hospital = Hospitals.objects.filter(is_default=True).first()
     for k, v in final_value_result.items():
         vred = v["Вредный производственный фактор или вид работы"].split(";")
-        vred = [i for i in vred if float(i) < 30]
+        vred = [i for i in vred]
         response_result.append(
             {
                 "med_org": hospital.title,

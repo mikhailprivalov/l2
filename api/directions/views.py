@@ -198,8 +198,8 @@ def directions_generate(request):
             plan_start_date=p.get("planStartDate", None),
             slot_fact_id=p.get("slotFactId", None),
         )
+        fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()
         if type_generate == "calculate-cost":
-            fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()
             calculate_researches = []
             for values in researches.values():
                 calculate_researches.extend(values)
@@ -228,6 +228,9 @@ def directions_generate(request):
                 for k, v in pair_dependent_research.items():
                     message = f"{message} {dependent_research_title.get(v)} зависит от услуги {main_research_title.get(k)}"
                 return JsonResponse({"ok": False, "directions": [], "directionsStationar": [], "message": message})
+        if SettingManager.get('create_new_case_for_corporation', default='false', default_type='b'):
+            if fin_source_obj.title.lower() in ["профосмотр", "юрлица"] and p.get("caseId") != -1:
+                return JsonResponse({"ok": False, "directions": [], "directionsStationar": [], "message": "Укажите - Новый случай"})
 
         for _ in range(p.get("directions_count", 1)):
             rc = Napravleniya.gen_napravleniya_by_issledovaniya(*args, **kwargs)

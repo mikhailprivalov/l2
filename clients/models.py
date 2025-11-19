@@ -21,6 +21,7 @@ import slog.models as slog
 from appconf.manager import SettingManager
 from clients.sql_func import last_result_researches_years
 from directory.models import Researches, ScreeningPlan, PatientControlParam
+from laboratory.settings import CONTROL_AGE_MEDEXAM_MALE, CONTROL_AGE_MEDEXAM_FEMALE
 
 from laboratory.utils import localtime, current_year, strfdatetime
 from podrazdeleniya.models import Room
@@ -1350,7 +1351,15 @@ class Card(models.Model):
         ind_data['ecp_id'] = self.individual.ecp_id
 
         patient_harmfull_factors = PatientHarmfullFactor.objects.filter(card=self)
-        harmful_factors_title = [f"{i.harmful_factor.title}" for i in patient_harmfull_factors]
+        artificial_harmfull_factors_male = {}
+        artificial_harmfull_factors_female = {}
+        if CONTROL_AGE_MEDEXAM_MALE:
+            artificial_harmfull_factors_male = set(CONTROL_AGE_MEDEXAM_MALE.values())
+        if CONTROL_AGE_MEDEXAM_FEMALE:
+            artificial_harmfull_factors_female = set(CONTROL_AGE_MEDEXAM_MALE.values())
+        artificial_result = {*artificial_harmfull_factors_male, *artificial_harmfull_factors_female}
+
+        harmful_factors_title = [f"{i.harmful_factor.title}" for i in patient_harmfull_factors if i.harmful_factor.title not in artificial_result]
         ind_data['harmfull_factors'] = ";".join(harmful_factors_title)
 
         return ind_data
