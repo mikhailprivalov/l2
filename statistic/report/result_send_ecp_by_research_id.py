@@ -1,11 +1,8 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
-
-from utils.dates import normalize_date
 from utils.db import namedtuplefetchall
 from laboratory.settings import TIME_ZONE
 from django.db import connection
-import simplejson as json
 
 
 def form_01(ws1, data):
@@ -86,7 +83,7 @@ def sql_01(research_id, d_s, d_e):
                     ud.patronymic as doc_patronymic,
                     dn.result_rmis_send,
                     hh.title as hospital_title,
-                    dn.rmis_direction_date,
+                    to_char(dn.rmis_direction_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as rmis_direction_date,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
                     directions_issledovaniya.napravleniye_id as direction_number,
                     dn.rmis_number,
@@ -97,7 +94,7 @@ def sql_01(research_id, d_s, d_e):
                     FROM directions_issledovaniya
                     LEFT JOIN directions_napravleniya dn ON dn.id = directions_issledovaniya.napravleniye_id
                     LEFT JOIN users_doctorprofile ud ON directions_issledovaniya.doc_confirmation_id=ud.id
-                    LEFT JOIN clients_card cc ON cc.id=dn.id
+                    LEFT JOIN clients_card cc ON cc.id=dn.client_id
                     LEFT JOIN clients_individual ci ON cc.individual_id=ci.id
                     LEFT JOIN hospitals_hospitals hh ON dn.hospital_id=hh.id
                     WHERE 

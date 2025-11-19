@@ -6,6 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from jsonfield import JSONField
 
+from appconf.manager import SettingManager
 from directory.sql_func import get_constructor_edit_access_by_research_id
 from laboratory.settings import DEATH_RESEARCH_PK, EXCLUDE_TYPE_RESEARCH
 from podrazdeleniya.models import Podrazdeleniya
@@ -1621,7 +1622,10 @@ class Fractions(models.Model):
         return (self.fsli or "").strip()
 
     def get_ecp_code(self):
-        return (self.ecp_id or "").strip()
+        if SettingManager.get("use_ecp2_code", default='false', default_type='b'):
+            return (self.ecp_id_synonym or "").strip()
+        else:
+            return (self.ecp_id or "").strip()
 
     @staticmethod
     def as_json(fraction) -> dict:

@@ -85,6 +85,13 @@ def rest_api_pull_result(only_new_order=True):
                         direction = Napravleniya.objects.filter(pk=t.direction_number).first()
                         break
                 # проверить статус - если 3 зафинишировать
+                try:
+                    ftp_connection = FTPConnection(hospitals_id_ftp_connect.get(v), hospital=hospitals_object.get(v))
+                    if not ftp_connection:
+                        continue
+                    ftp_connection.connect()
+                except:
+                    continue
                 generator = HL7Generator(os.path.join(BASE_DIR, 'hl7_actions', 'templates'))
                 time_confirm = iss.time_confirmation.strftime("%Y%m%d%H%M%S")
                 obr_data = {
@@ -109,8 +116,7 @@ def rest_api_pull_result(only_new_order=True):
 
                 data = create_sample_data(data_patient, obr_data, pdf_base_64)
                 hl7_message = generator.generate_hl7_message(data)
-                ftp_connection = FTPConnection(hospitals_id_ftp_connect.get(v), hospital=hospitals_object.get(v))
-                ftp_connection.connect()
+
                 created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
                 filename = f"{direction.pk}_{order_redirection_number}_{iss.research.internal_code}_{created_at}.res"
