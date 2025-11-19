@@ -11,14 +11,25 @@ from l2vi.integration import send_lab_direction_to_ecp
 class Command(BaseCommand):
     help = "Отправить лабораторные результаты в ЕЦП"
 
+    def add_arguments(self, parser):
+        parser.add_argument('dirs', type=str)
+
     def handle(self, *args, **kwargs):
         base = SettingManager.get_api_ecp_base_url()
         if base != 'empty':
             available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
             if not available:
                 self.stdout.write({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
-        date = current_time() + relativedelta(days=-2)
-        d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False, last_confirmed_at__gte=date)
+        if kwargs["dirs"]:
+            dirs = kwargs["dirs"]
+        else:
+            dirs = ''
+        if len(dirs) > 0:
+            dirs = [int(i) for i in dirs]
+            d_qs = Napravleniya.objects.filter(pk__in=dirs)
+        else:
+            date = current_time() + relativedelta(days=-2)
+            d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False, last_confirmed_at__gte=date)
         directions = [i.pk for i in d_qs]
         res = send_lab_direction_to_ecp(directions)
         self.stdout.write(f"{res}\n")
