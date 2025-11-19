@@ -46,7 +46,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['fillInTemplate']);
+const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate']);
 const monthDays = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
@@ -115,6 +115,10 @@ const clearTemplate = () => {
   createTemplateData();
 };
 
+const fillByEmployeeTemplate = ({ action }) => {
+  emit('fillByEmployeeTemplate', { action });
+};
+
 const getColumns = () => {
   const columnTemplate = [
     {
@@ -130,7 +134,7 @@ const getColumns = () => {
           props: {
             workTime: row[column.field] ? row[column.field] : '',
           },
-          on: { fill: fillInTemplate, clear: clearTemplate },
+          on: { fill: fillInTemplate, clear: clearTemplate, fillByEmployeesTemplate: fillByEmployeeTemplate },
         },
       ),
     },

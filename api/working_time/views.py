@@ -63,3 +63,15 @@ def employee_transfer(request):
     date_transfer = request_data.get("date")
     result = EmployeePosition.employee_transfer(employee_position_id, date_transfer)
     return JsonResponse(result)
+
+
+@login_required()
+@group_required('График рабочего времени')
+def get_work_time_filling_by_employee_template(request):
+    request_data = json.loads(request.body)
+    year = request_data.get("year")
+    month = request_data.get("month")
+    department_id = request_data.get("departmentId")
+    action = request_data.get("action")
+    result = EmployeeWorkingHoursSchedule.get_work_time_filling_by_employee_template(year, month, department_id, action)
+    return JsonResponse({"result": result})

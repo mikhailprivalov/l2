@@ -55,6 +55,7 @@
           :work-day-statuses="workDayStatuses"
           :department-lunch-duration="lunchDurationSelectedDepartment"
           @fillInTemplate="fillInTemplateData"
+          @fillByEmployeeTemplate="fillByEmployeeTemplate"
         />
       </div>
       <div
@@ -434,6 +435,26 @@ const fillInTemplateData = ({ templateData }) => {
     }
   }
   checkboxOption.value.selectedRowKeys = [];
+};
+
+const fillByEmployeeTemplate = async ({ action }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('/working-time/get-work-time-filling-by-employee-template', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+    departmentId: selectedDepartment.value,
+    action,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  employeesWorkTime.value = result;
+  for (const employeePosition of result) {
+    const { employeePositionId } = employeePosition;
+    for (const [key, value] of Object.entries(employeePosition)) {
+      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+        updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value);
+      }
+    }
+  }
 };
 
 const copyTop = ({ rowIndex }) => {
