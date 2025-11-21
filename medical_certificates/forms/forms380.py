@@ -21,6 +21,32 @@ import json
 from utils.dates import normalize_date
 from utils.xh import show_qr_lk_address
 
+pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+styleSheet = getSampleStyleSheet()
+style = styleSheet["Normal"]
+style.fontName = "PTAstraSerifReg"
+style.fontSize = 11
+style.alignment = TA_JUSTIFY
+style.leading = 12
+styleCentre = deepcopy(style)
+styleCentre.alignment = TA_CENTER
+styleCentre.fontSize = 10
+styleT = deepcopy(style)
+styleT.alignment = TA_LEFT
+styleT.fontSize = 10
+styleT.leading = 4.5 * mm
+styleCenterBold = deepcopy(style)
+styleCenterBold.alignment = TA_CENTER
+styleCenterBold.fontSize = 11.5
+styleCenterBold.leading = 15
+styleCenterBold.fontName = 'PTAstraSerifBold'
+styleT2 = deepcopy(styleT)
+styleT2.alignment = TA_CENTER
+styleT2.fontSize = 8
+styleT2.leading = 3 * mm
+styles = {"styleCenterBold": styleCenterBold, "style": styleCenterBold, "styleT2": styleT2, "styleT": styleT}
+
 
 def form_04(request_data):
     # Профосомтр
@@ -2164,12 +2190,15 @@ def form_15(request_data):
     title_fields = list(TITLES_FIELDS_MEDEXAM_DRIVER.values())
 
     result = fields_result_only_title_fields(iss, title_fields)
-    result_protocol, date_protocol, is_return_document = "", "", ""
+    result_protocol, date_protocol, is_return_document = "", "", "", ""
+    result_lab_from_proto = "не установлено"
     for i in result:
         if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
             result_protocol = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
             date_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('labResult'):
+            result_lab_from_proto = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('returnDocument'):
             is_return_document = i['value']
 
@@ -2192,7 +2221,7 @@ def form_15(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"4. Медицинское освидетельствование проведено в связи с возвратом водительского удостоверения: {is_return_document}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("5. Результаты лабораторных исследований:  не установлено", style))
+    fwb.append(Paragraph(f"5. Результаты лабораторных исследований:  {result_lab_from_proto}", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"6. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
@@ -2237,7 +2266,7 @@ def form_15(request_data):
 
 
 def form_16(request_data):
-    # Охранник нарколо
+    # Охранник психиатр
     direction = request_data["dir"]
 
     buffer = BytesIO()
@@ -2336,11 +2365,14 @@ def form_16(request_data):
 
     result = fields_result_only_title_fields(iss, title_fields)
     result_protocol, date_protocol, is_return_document = "", "", ""
+    result_lab_from_proto = "не установлено"
     for i in result:
         if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
             result_protocol = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
             date_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('labResult'):
+            result_lab_from_proto = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('returnDocument'):
             is_return_document = i['value']
 
@@ -2361,13 +2393,11 @@ def form_16(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"3. Регистрация по месту жительства: {patient_address}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"4. Медицинское освидетельствование проведено в связи с возвратом водительского удостоверения: {is_return_document}", style))
+    fwb.append(Paragraph(f"4. Результаты лабораторных исследований:  {result_lab_from_proto}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("5. Результаты лабораторных исследований:  не установлено", style))
+    fwb.append(Paragraph(f"5. По результатам медицинского обследования {bold_open}врачом-психиатром{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"6. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", style))
-    fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("7. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", style))
+    fwb.append(Paragraph("6. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
 
     fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", style))
@@ -2507,13 +2537,17 @@ def form_17(request_data):
 
     result = fields_result_only_title_fields(iss, title_fields)
     result_protocol, date_protocol, is_return_document = "", "", ""
+    result_lab_from_proto = " не установлено"
     for i in result:
         if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
             result_protocol = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
             date_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('labResult'):
+            result_lab_from_proto = i['value']
         elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('returnDocument'):
             is_return_document = i['value']
+
 
     space_symbol = '&nbsp;'
     fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
@@ -2532,9 +2566,7 @@ def form_17(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"3. Регистрация по месту жительства: {patient_address}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"4. Медицинское освидетельствование проведено в связи с возвратом водительского удостоверения: {is_return_document}", style))
-    fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("5. Результаты лабораторных исследований:  не установлено", style))
+    fwb.append(Paragraph(f"5. Результаты лабораторных исследований:  {result_lab_from_proto}", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"6. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
@@ -2576,3 +2608,197 @@ def form_17(request_data):
     buffer.close()
 
     return pdf
+
+
+def form_18(request_data):
+    # Оружие психиатр
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+    meta_data = meta_data_hospital_patient(request_data)
+    fwb = []
+    fwb = title_opinion(meta_data, styleT, fwb)
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=meta_data.get("direction", -1)).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
+    fwb = title_medical(fwb, "владению оружием")
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_19(request_data):
+    # Оружие нарколо
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+    meta_data = meta_data_hospital_patient(request_data)
+    fwb = []
+    fwb = title_opinion(meta_data, styleT, fwb)
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=meta_data.get("direction", -1)).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
+
+    fwb = title_medical(fwb, "владению оружием")
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def title_medical(fwb, title):
+    fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
+    fwb.append(Paragraph(f'о наличии (отсутствии) медицинских противопоказаний к {title}', styleCentre))
+    return fwb
+
+
+def title_opinion(meta_data, styles, fwb):
+    opinion = [
+        [
+            Paragraph(f'<font size=10>Наименование медицинской организации: <br/>{meta_data.get("hospital_name", "")}</font>', styles.get("styleT")),
+            Paragraph(f'ОГРН {meta_data.get("hospital_kod_ogrn", "")}<br/> ИНН {meta_data.get("hospital_inn", "")}', styles.get("styleT")),
+        ],
+    ]
+
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+    fwb.append(tbl)
+
+    opinion = [
+        [
+            Paragraph(f'Адрес {meta_data.get("hospital_address", "")} <br/>Лицензия {meta_data.get("license_data", "")}', styles.get("styleT")),
+            Paragraph(f'Код организации по <br/> ОКПО {meta_data.get("hospital_okpo", "")}', styles.get("styleT")),
+        ],
+    ]
+    tbl = Table(opinion, 2 * [100 * mm])
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 35 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 5 * mm))
+    return fwb
+
+
+def content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles):
+    bold_open = '<font fontname ="PTAstraSerifBold">'
+    bold_close = "</font>"
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'№ {meta_data.get("direction", "")}', styles.get("styleCenterBold")))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии):  {meta_data.get("fio", "")} ', styles.get("style")))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f'2. Число, месяц и год рождения: {meta_data.get("born", "")}', styles.get("style")))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f'3. Регистрация по месту жительства: {meta_data.get("patient_address", "")}', styles.get("style")))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"4. Результаты лабораторных исследований:  {result_lab_from_proto}", styles.get("style")))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph(f"5. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", styles.get("style")))
+    fwb.append(Spacer(1, 1 * mm))
+    fwb.append(Paragraph("6. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", styles.get("style")))
+    fwb.append(Spacer(1, 3 * mm))
+
+    fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", styles.get("style")))
+    fwb.append(Spacer(1, 3 * mm))
+    return fwb
+
+
+def result_content_protocol(iss):
+    title_fields = list(TITLES_FIELDS_MEDEXAM_DRIVER.values())
+    result = fields_result_only_title_fields(iss, title_fields)
+    result_protocol, date_protocol, is_return_document, result_lab_from_proto = "", "", "", ""
+    for i in result:
+        if i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('resultField'):
+            result_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('dateField'):
+            date_protocol = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('labResult'):
+            result_lab_from_proto = i['value']
+        elif i['title'] == TITLES_FIELDS_MEDEXAM_DRIVER.get('returnDocument'):
+            is_return_document = i['value']
+    if not result_lab_from_proto:
+        result_lab_from_proto = "не установлено"
+    return result_protocol, date_protocol, is_return_document, result_lab_from_proto
+
+
+def meta_data_hospital_patient(request_data):
+    hospital: Hospitals = request_data["hospital"]
+    direction = request_data["dir"]
+    hospital_name = hospital.safe_short_title
+    hospital_address = hospital.safe_address
+    hospital_kod_ogrn = hospital.safe_ogrn
+    hospital_inn = hospital.safe_inn
+    license_data = hospital.license_data
+    hospital_okpo = hospital.okpo
+    patient = Napravleniya.objects.get(pk=direction)
+    fio = patient.client.individual.fio()
+    patient_address = patient.client.main_address
+    born = patient.client.individual.bd()
+
+    return {
+        "hospital_name": hospital_name,
+        "hospital_address": hospital_address,
+        "hospital_kod_ogrn": hospital_kod_ogrn,
+        "hospital_inn": hospital_inn,
+        "license_data": license_data,
+        "hospital_okpo": hospital_okpo,
+        "fio": fio,
+        "patient_address": patient_address,
+        "born": born,
+        "direction": direction
+    }
+
+
+def footer_medical(position, doctor_fio, fwb, styles):
+    space_symbol = '&nbsp;'
+    opinion = [
+        [
+            Paragraph(f'{position} <br/> {space_symbol* 2 }М.П.', styleT),
+            Paragraph("_______________________<br/>подпись", styleT2),
+            Paragraph(f"{doctor_fio}<br/>", styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(50 * mm, 50 * mm, 50 * mm), hAlign='LEFT')
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (0, 0), (0, -1), -0.5),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+
+    fwb.append(tbl)
+    fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styles.get("styleT2")))
+    return fwb
+
