@@ -2069,6 +2069,54 @@ def form_19(request_data):
     return pdf
 
 
+def form_20(request_data):
+    # Психотропные ср-ва психиатр
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+    meta_data = meta_data_hospital_patient(request_data)
+    fwb = []
+    fwb = title_opinion(meta_data, styles, fwb)
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=meta_data.get("direction", -1)).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
+
+    fwb = title_medical(fwb, "о наличии (отсутствии) в организме наркотических средств, психотропных веществ и их метаболитов")
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
+def form_21(request_data):
+    # Психотропные ср-ва нарколог
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+    meta_data = meta_data_hospital_patient(request_data)
+    fwb = []
+    fwb = title_opinion(meta_data, styles, fwb)
+
+    iss = Issledovaniya.objects.filter(napravleniye__pk=meta_data.get("direction", -1)).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+
+    result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
+
+    fwb = title_medical(fwb, "о наличии (отсутствии) в организме наркотических средств, психотропных веществ и их метаболитов")
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
 def title_medical(fwb, title):
     fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
     fwb.append(Paragraph(f'{title}', styleCentre))
