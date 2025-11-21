@@ -1940,7 +1940,8 @@ def form_14(request_data):
 
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
-    fwb = title_medical(fwb, "о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских ' 'противопоказаний к управлению транспортными средствами ")
+    fwb = title_medical(fwb, "о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских "
+                             "противопоказаний к управлению транспортными средствами ")
     fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
     fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
@@ -1963,7 +1964,8 @@ def form_15(request_data):
 
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
-    fwb = title_medical(fwb, "о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских ' 'противопоказаний к управлению транспортными средствами ")
+    fwb = title_medical(fwb, "о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских "
+                             "противопоказаний к управлению транспортными средствами ")
     fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
     fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
@@ -2210,4 +2212,3 @@ def footer_medical(position, doctor_fio, fwb, styles):
     fwb.append(tbl)
     fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styles.get("styleT2")))
     return fwb
-
