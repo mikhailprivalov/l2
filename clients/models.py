@@ -1356,7 +1356,7 @@ class Card(models.Model):
         if CONTROL_AGE_MEDEXAM_MALE:
             artificial_harmfull_factors_male = set(CONTROL_AGE_MEDEXAM_MALE.values())
         if CONTROL_AGE_MEDEXAM_FEMALE:
-            artificial_harmfull_factors_female = set(CONTROL_AGE_MEDEXAM_MALE.values())
+            artificial_harmfull_factors_female = set(CONTROL_AGE_MEDEXAM_FEMALE.values())
         artificial_result = {*artificial_harmfull_factors_male, *artificial_harmfull_factors_female}
 
         harmful_factors_title = [f"{i.harmful_factor.title}" for i in patient_harmfull_factors if i.harmful_factor.title not in artificial_result]
