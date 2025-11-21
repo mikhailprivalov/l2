@@ -2395,7 +2395,7 @@ def form_16(request_data):
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"4. Результаты лабораторных исследований:  {result_lab_from_proto}", style))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"5. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", style))
+    fwb.append(Paragraph(f"5. По результатам медицинского обследования {bold_open}врачом-психиатром{bold_close}: {result_protocol}", style))
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph("6. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", style))
     fwb.append(Spacer(1, 3 * mm))
