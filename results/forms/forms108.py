@@ -276,8 +276,13 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph(f'НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ <br/> НА ВИЧ* № {direction.pk}', styleCenterBold))
     fwb.append(Paragraph(f'{open_bold_tag}Фамилия:{close_tag_bold} {data.get("Фамилия", "")} {space_symbol * 15} {open_bold_tag}Имя:{close_tag_bold} {data.get("Имя", "")} ', style))
-    fwb.append(Paragraph(f'{open_bold_tag}Отчество:{close_tag_bold} {data.get("Отчество", "")} {space_symbol * 15} {open_bold_tag}Дата рождения (число, месяц, год):{close_tag_bold} '
-                         f'{data.get("Дата рождения", "")} ', style))
+    fwb.append(
+        Paragraph(
+            f'{open_bold_tag}Отчество:{close_tag_bold} {data.get("Отчество", "")} {space_symbol * 15} {open_bold_tag}Дата рождения (число, месяц, год):{close_tag_bold} '
+            f'{data.get("Дата рождения", "")} ',
+            style,
+        )
+    )
     fwb.append(Paragraph(f'{open_bold_tag}Адрес регистрации (прописка):{close_tag_bold} {data.get("Адрес регистрации (прописка)", "")}', style))
     fwb.append(Paragraph(f'{open_bold_tag}Адрес фактического места проживания:{close_tag_bold} {data.get("Адрес фактического места проживания", "")}', style))
     fwb.append(Paragraph(f'{open_bold_tag}Социальный статус:{close_tag_bold} {data.get("Социальный статус", "")}', style))
