@@ -566,9 +566,9 @@ class EmployeePosition(models.Model):
         ordering = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'rate', 'is_active')
 
     @staticmethod
-    def get_lunch_duration(duration: Union[int, None], position: str, duration_by_department: Union[int, None]):
-        if duration is not None:
-            local_duration = duration
+    def get_lunch_duration(duration_by_employee: Union[int, None], position: str, duration_by_department: Union[int, None]):
+        if duration_by_employee is not None:
+            local_duration = duration_by_employee
         elif duration_by_department is not None:
             local_duration = duration_by_department
         else:
@@ -810,9 +810,14 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def fill_by_template(action: str, date_key, value, employee_positions, current_employee_position_id, lunch_duration_in_minutes):
+        """
+        Заполняет если это НЕ выходной день.
+        Заполняет если выбрано "заменить" или если выбрано дописать и значение не было заполнено до этого
+        """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
         result = value
-        if action == "replace" or (action == "add" and value_is_empty):
+        day_is_weekday = date_key.isoweekday() in [6, 7]
+        if not day_is_weekday and (action == "replace" or (action == "add" and value_is_empty)):
             current_employee_position: EmployeePosition = employee_positions.filter(pk=current_employee_position_id).first()
             start_work_time_employee = current_employee_position.work_start
             daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
