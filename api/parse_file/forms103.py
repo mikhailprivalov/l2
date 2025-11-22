@@ -230,23 +230,29 @@ def update_organization_positions(organization_id: int, new_positions_titles: Un
 def update_employee_position(employee_position, employee_data):
     """
     Обновляет данные трудового договора (EmployeePosition)
+    недельная норма указывается общая, не на ставку конкретного трудового договора
+    Для получения нормы на день, умножается на ставку в текущем ТД
     """
     if employee_data.get("date_dismissal"):
         employee_position.date_dismissal = employee_data.get("date_dismissal")
         employee_position.is_active = False
-    work_schedule_minutes = employee_data.get("work_schedule")
-    employee_position.weekly_hours_norm = work_schedule_minutes
-    if employee_position.work_days_per_week and work_schedule_minutes:
-        employee_position.daily_hours_norm = work_schedule_minutes // employee_position.work_days_per_week
+    work_schedule_minutes_weekly = employee_data.get("work_schedule")
+    employee_position.weekly_hours_norm = work_schedule_minutes_weekly
+    if employee_position.work_days_per_week and work_schedule_minutes_weekly:
+        work_schedule_minutes_day = work_schedule_minutes_weekly // employee_position.work_days_per_week
+        work_schedule_minutes_per_rate = work_schedule_minutes_day * employee_position.rate if employee_position.rate else work_schedule_minutes_day
+        employee_position.daily_hours_norm = int(work_schedule_minutes_per_rate)
     employee_position.save()
 
 
 def create_employee_position(employee_data, employee, department, position, employment_form):
     """
     Создает новый трудовой договор (EmployeePosition)
+    недельная норма указывается общая, не на ставку конкретного трудового договора
+    Для получения нормы на день, умножается на ставку в текущем ТД
     """
     active = False if employee_data.get("date_dismissal") else True
-    work_schedule_minutes = employee_data.get("work_schedule")
+    work_schedule_minutes_weekly = employee_data.get("work_schedule")
     new_employee_position: EmployeePosition = EmployeePosition(
         is_active=active,
         employee_id=employee.pk,
@@ -257,10 +263,12 @@ def create_employee_position(employee_data, employee, department, position, empl
         type_work_time_id=employment_form.pk,
         date_employment=employee_data.get("date_employment"),
         date_dismissal=employee_data.get("date_dismissal"),
-        weekly_hours_norm=work_schedule_minutes,
+        weekly_hours_norm=work_schedule_minutes_weekly,
     )
-    if new_employee_position.work_days_per_week and work_schedule_minutes:
-        new_employee_position.daily_hours_norm = work_schedule_minutes // new_employee_position.work_days_per_week
+    if new_employee_position.work_days_per_week and work_schedule_minutes_weekly:
+        work_schedule_minutes_day = work_schedule_minutes_weekly // new_employee_position.work_days_per_week
+        work_schedule_minutes_per_rate = work_schedule_minutes_day * new_employee_position.rate if new_employee_position.rate else work_schedule_minutes_day
+        new_employee_position.daily_hours_norm = int(work_schedule_minutes_per_rate)
     new_employee_position.save()
 
 
@@ -272,7 +280,7 @@ def find_employee_position(employee_position_query_set, active: bool, employee: 
 def update_organization_employee_positions(organization_id: int, employees):
     """
     Обновление и создание трудовых договоров (EmployeePosition)
-    Ищет активный трудовой договор - обновляет, если нет, ищет архивный, если нет - создает архивный
+    Ищет активный трудовой договор - обновляет, если нет и стоит дата увольнения, ищет архивный, если нет - создает архивный
     Если не нашло ничего - создает новый трудовой договор
     """
     departments = Department.get_active_departments(organization_id)
