@@ -810,9 +810,14 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def fill_by_template(action: str, date_key, value, employee_positions, current_employee_position_id, lunch_duration_in_minutes):
+        """
+        Заполняет если это НЕ выходной день.
+        Заполняет если выбрано "заменить" или если выбрано дописать и значение не было заполнено до этого
+        """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
         result = value
-        if action == "replace" or (action == "add" and value_is_empty):
+        day_is_weekday = date_key.isoweekday() in [6, 7]
+        if not day_is_weekday and (action == "replace" or (action == "add" and value_is_empty)):
             current_employee_position: EmployeePosition = employee_positions.filter(pk=current_employee_position_id).first()
             start_work_time_employee = current_employee_position.work_start
             daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
