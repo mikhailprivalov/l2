@@ -271,8 +271,6 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     space_symbol = '&nbsp;'
     open_bold_tag = '<font face ="PTAstraSerifBold">'
     close_tag_bold = "</font>"
-
-
     fwb.append(Paragraph(f'Наименование учреждения здравоохранения {data.get("Учреждение", "")}', style))
     fwb.append(Paragraph(f'Отделение, палата  {data.get("Отделение", "")} - {data.get("Палата", "")}', style))
     fwb.append(Spacer(1, 5 * mm))
