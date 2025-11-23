@@ -11,6 +11,43 @@ from laboratory.settings import FONTS_FOLDER
 import os.path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+import simplejson as json
+
+
+def title_fields_result(iss, title_fields):
+    result = fields_result_only_title_fields(iss, title_fields, False)
+    data = {i['title']: i['value'] for i in result}
+
+    for i in result:
+        data[i["title"]] = i["value"]
+
+    if not data.get("Куда направляется", None):
+        data["Куда направляется"] = ""
+    if not data.get("Цель", None):
+        data["Цель"] = ""
+    if not data.get("Диагноз основной", None):
+        data["Диагноз основной"] = ""
+    if not data.get("Дата приема", None):
+        data["Дата приема"] = ""
+    if not data.get("Направлен(а) на", None):
+        data["Направлен(а) на"] = ""
+    if not data.get("Наименование (консультации, исследования, отделения)", None):
+        data["Наименование (консультации, исследования, отделения)"] = ""
+    if not data.get("Данные анамнеза", None):
+        data["Данные анамнеза"] = ""
+    if not data.get("Сведения о профилактических прививках", None):
+        data["Сведения о профилактических прививках"] = ""
+    if not data.get("Прочие цели", None):
+        data["Прочие цели"] = ""
+    if not data.get("Диагноз сопутствующий", None):
+        data["Диагноз сопутствующий"] = ""
+    if not data.get("Руководитель МО", None):
+        data["Руководитель МО"] = ""
+    if not data.get("Врач", None):
+        data["Врач"] = ""
+    else:
+        data["Врач"] = get_doctor_data(data["Врач"])
+    return data
 
 
 def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -44,7 +81,25 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     styleTCentre.alignment = TA_CENTER
     styleTCentre.fontSize = 13
 
-    data = title_fields(iss)
+    title_fields = [
+        "Куда направляется",
+        "Цель",
+        "Диагноз основной",
+        "Дата приема",
+        "Направлен(а) на",
+        "Наименование (консультации, исследования, отделения)",
+        "Данные анамнеза",
+        "Результаты лабораторные",
+        "Результаты диагностические",
+        "Результаты консультационные",
+        "Сведения о профилактических прививках",
+        "Прочие цели",
+        "Диагноз сопутствующий",
+        "Врач",
+        "Руководитель МО",
+    ]
+
+    data = title_fields_result(iss, title_fields)
 
     opinion = [
         [
@@ -163,55 +218,89 @@ def form_01(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     return fwb
 
 
-def title_fields(iss):
+def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
+    # Направление ВИЧ-ИФА
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 11
+    style.leading = 12
+    style.spaceAfter = 1.5 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = 'PTAstraSerifBold'
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 12
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 10
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTCentre = deepcopy(styleT)
+    styleTCentre.alignment = TA_CENTER
+    styleTCentre.fontSize = 13
+
     title_fields = [
-        "Куда направляется",
-        "Цель",
-        "Диагноз основной",
-        "Дата приема",
-        "Направлен(а) на",
-        "Наименование (консультации, исследования, отделения)",
-        "Данные анамнеза",
-        "Результаты лабораторные",
-        "Результаты диагностические",
-        "Результаты консультационные",
-        "Сведения о профилактических прививках",
-        "Прочие цели",
-        "Диагноз сопутствующий",
-        "Врач",
-        "Руководитель МО",
+        "Учреждение",
+        "Отделение",
+        "Палата",
+        "Фамилия",
+        "Имя",
+        "Отчество",
+        "Дата рождения",
+        "Адрес регистрации (прописка)",
+        "Адрес фактического места проживания",
+        "Социальный статус",
+        "Код",
+        "Диагноз",
+        "Врач (ФИО)",
+        "Медсестра (ФИО)",
+        "Дата забора крови",
     ]
 
-    result = fields_result_only_title_fields(iss, title_fields, False)
-    data = {i['title']: i['value'] for i in result}
-
-    for i in result:
-        data[i["title"]] = i["value"]
-
-    if not data.get("Куда направляется", None):
-        data["Куда направляется"] = ""
-    if not data.get("Цель", None):
-        data["Цель"] = ""
-    if not data.get("Диагноз основной", None):
-        data["Диагноз основной"] = ""
-    if not data.get("Дата приема", None):
-        data["Дата приема"] = ""
-    if not data.get("Направлен(а) на", None):
-        data["Направлен(а) на"] = ""
-    if not data.get("Наименование (консультации, исследования, отделения)", None):
-        data["Наименование (консультации, исследования, отделения)"] = ""
-    if not data.get("Данные анамнеза", None):
-        data["Данные анамнеза"] = ""
-    if not data.get("Сведения о профилактических прививках", None):
-        data["Сведения о профилактических прививках"] = ""
-    if not data.get("Прочие цели", None):
-        data["Прочие цели"] = ""
-    if not data.get("Диагноз сопутствующий", None):
-        data["Диагноз сопутствующий"] = ""
-    if not data.get("Руководитель МО", None):
-        data["Руководитель МО"] = ""
-    if not data.get("Врач", None):
-        data["Врач"] = ""
-    else:
-        data["Врач"] = get_doctor_data(data["Врач"])
-    return data
+    data = title_fields_result(iss, title_fields)
+    space_symbol = '&nbsp;'
+    open_bold_tag = '<font face ="PTAstraSerifBold">'
+    close_tag_bold = "</font>"
+    fwb.append(Paragraph(f'Наименование учреждения здравоохранения {data.get("Учреждение", "")}', style))
+    fwb.append(Paragraph(f'Отделение, палата  {data.get("Отделение", "")} - {data.get("Палата", "")}', style))
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(Paragraph(f'НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ <br/> НА ВИЧ* № {direction.pk}', styleCenterBold))
+    fwb.append(Paragraph(f'{open_bold_tag}Фамилия:{close_tag_bold} {data.get("Фамилия", "")} {space_symbol * 15} {open_bold_tag}Имя:{close_tag_bold} {data.get("Имя", "")} ', style))
+    fwb.append(
+        Paragraph(
+            f'{open_bold_tag}Отчество:{close_tag_bold} {data.get("Отчество", "")} {space_symbol * 15} {open_bold_tag}Дата рождения (число, месяц, год):{close_tag_bold} '
+            f'{data.get("Дата рождения", "")} ',
+            style,
+        )
+    )
+    fwb.append(Paragraph(f'{open_bold_tag}Адрес регистрации (прописка):{close_tag_bold} {data.get("Адрес регистрации (прописка)", "")}', style))
+    fwb.append(Paragraph(f'{open_bold_tag}Адрес фактического места проживания:{close_tag_bold} {data.get("Адрес фактического места проживания", "")}', style))
+    fwb.append(Paragraph(f'{open_bold_tag}Социальный статус:{close_tag_bold} {data.get("Социальный статус", "")}', style))
+    try:
+        diag_data = json.loads(data.get("Диагноз"))
+        code = diag_data.get("code")
+        title = diag_data.get("title")
+    except:
+        code = ""
+        title = ""
+    fwb.append(Paragraph(f'{open_bold_tag}Код:{close_tag_bold} {data.get("Код", "")} {space_symbol * 7} {open_bold_tag}Диагноз:{close_tag_bold} {code} - {title}', style))
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(Paragraph(f'{open_bold_tag}ФИО врача, направившего на обследование:{close_tag_bold} {data.get("Врач (ФИО)", "")}', style))
+    fwb.append(Paragraph(f'{open_bold_tag}ФИО процедурной м/с:{close_tag_bold} {data.get("Медсестра (ФИО)", "")}', style))
+    fwb.append(Paragraph(f'{open_bold_tag}Дата забора крови:{close_tag_bold}  {data.get("Дата забора крови", "")}', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph('Дата доставки  крови в ИОЦ СПИД «_____ »_____________ 20______г. (заполняется  ИОЦ СПИД)', style))
+    fwb.append(Paragraph('РЕЗУЛЬТАТ ИССЛЕДОВАНИЯ', style))
+    fwb.append(Spacer(1, 25 * mm))
+    fwb.append(Paragraph('Дата выдачи результата  «_____ »____________ 20______г.  Подпись', style))
+    return fwb
