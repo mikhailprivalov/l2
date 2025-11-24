@@ -6,7 +6,7 @@ from hospitals.models import Hospitals
 from laboratory.settings import FONTS_FOLDER, TITLES_FIELDS_MEDEXAM_DRIVER
 from laboratory.utils import strfdatetime
 from results.prepare_data import text_to_bold, fields_result_only_title_fields
-from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak, HRFlowable
+from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak, HRFlowable, Image
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
 from copy import deepcopy
@@ -16,6 +16,7 @@ from reportlab.lib.pagesizes import A4, landscape, A5, portrait
 import os.path
 import directory.models as directory
 from reportlab.lib.units import mm
+
 from utils.common import get_system_name
 import json
 from utils.dates import normalize_date
@@ -1363,6 +1364,7 @@ def form_10(request_data):
 def form_11(request_data):
     # Профосомтр
     direction = request_data["dir"]
+    img_stamp = request_data.get("img_stamp")
 
     buffer = BytesIO()
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
@@ -1530,10 +1532,13 @@ def form_11(request_data):
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f"7 Диспансерная группа: {dispensary_group}", style))
     fwb.append(Spacer(1, 5 * mm))
-    fwb.append(Paragraph("Председатель врачебной комиссии________________________(__________)", style))
+    doc_confirm = iss.doc_confirmation.get_fio()
+    if img_stamp == "1":
+        tbl = gen_table(iss.doc_confirmation, style, doc_confirm)
+        fwb.append(tbl)
+    fwb.append(Paragraph(f"Председатель врачебной комиссии ({doc_confirm})", style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph('М.П.', style))
-    fwb.append(Spacer(1, 8 * mm))
+    fwb.append(Spacer(1, 18 * mm))
     fwb.append(Paragraph(f'_______________________({fio_short}) {date} г.', style))
     fwb.append(Paragraph('(подпись работника<br/>освидетельствуемого)', style))
     fwb = show_qr_lk_address(fwb)
@@ -2262,3 +2267,35 @@ def footer_medical(position, doctor_fio, fwb, styles):
     fwb.append(tbl)
     fwb.append(Paragraph(f'{space_symbol * 150} печать медицинской организации', styles.get("styleT2")))
     return fwb
+
+
+def gen_table(doctor, style, doc_confirm):
+    img = ""
+    if doctor:
+        file_jpg = doctor.get_signature_stamp_pdf()
+        if file_jpg:
+            img = Image(
+                file_jpg,
+                70 * mm,
+                34 * mm,
+            )
+
+    opinion = [
+        [
+            "",
+            img,
+        ],
+    ]
+    gentbl = Table(opinion, colWidths=(80 * mm, 100 * mm))
+    gentbl.setStyle(
+        TableStyle(
+            [
+                ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+                ('LINEBELOW', (2, 0), (2, 0), 0.75, colors.black),
+                ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), -25 * mm),
+                ('LEFTPADDING', (-1, 0), (-1, 0), -4 * mm),
+            ]
+        )
+    )
+    return gentbl
