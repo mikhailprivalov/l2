@@ -2282,7 +2282,8 @@ def gen_table(doctor, style, doc_confirm):
             )
 
     opinion = [
-        ["",
+        [
+            "",
             img,
         ],
     ]
