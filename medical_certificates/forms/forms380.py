@@ -1533,6 +1533,7 @@ def form_11(request_data):
     fwb.append(Paragraph(f"7 Диспансерная группа: {dispensary_group}", style))
     fwb.append(Spacer(1, 5 * mm))
     doc_confirm = iss.doc_confirmation.get_fio()
+
     if img_stamp == "1":
         tbl = gen_table(iss.doc_confirmation, style, doc_confirm)
         fwb.append(tbl)
