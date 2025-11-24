@@ -1943,7 +1943,7 @@ def form_14(request_data):
     fwb = title_medical(
         fwb, "о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских " "противопоказаний к управлению транспортными средствами "
     )
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр')
     fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -1968,7 +1968,7 @@ def form_15(request_data):
     fwb = title_medical(
         fwb, "о наличии (отсутствии) у водителей транспортных средств (кандидатов в водители транспортных средств) медицинских " "противопоказаний к управлению транспортными средствами "
     )
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр-нарколог')
     fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -1991,7 +1991,7 @@ def form_16(request_data):
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
     fwb = title_medical(fwb, "о наличии (отсутствии) медицинских противопоказаний к исполнению обязанностей частного охранника")
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр')
     fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2014,7 +2014,7 @@ def form_17(request_data):
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
     fwb = title_medical(fwb, "о наличии (отсутствии) медицинских противопоказаний к исполнению обязанностей частного охранника")
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр-нарколог')
     fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2036,7 +2036,7 @@ def form_18(request_data):
 
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
     fwb = title_medical(fwb, "о наличии (отсутствии) медицинских противопоказаний к владению оружием")
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр')
     fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2060,7 +2060,7 @@ def form_19(request_data):
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
     fwb = title_medical(fwb, "о наличии (отсутствии) медицинских противопоказаний к владению оружием")
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр-нарколог')
     fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2084,7 +2084,7 @@ def form_20(request_data):
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
     fwb = title_medical(fwb, "о наличии (отсутствии) в организме наркотических средств, психотропных веществ и их метаболитов")
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр')
     fwb = footer_medical('Врач-психиатр', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2108,7 +2108,7 @@ def form_21(request_data):
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
 
     fwb = title_medical(fwb, "о наличии (отсутствии) в организме наркотических средств, психотропных веществ и их метаболитов")
-    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles)
+    fwb = content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, 'Врач-психиатр-нарколог')
     fwb = footer_medical('Врач-психиатр-нарколог', iss.doc_confirmation_fio, fwb, styles)
     doc.build(fwb)
     pdf = buffer.getvalue()
@@ -2168,7 +2168,7 @@ def title_opinion(meta_data, styles, fwb):
     return fwb
 
 
-def content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles):
+def content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date_protocol, styles, position):
     bold_open = '<font fontname ="PTAstraSerifBold">'
     bold_close = "</font>"
     fwb.append(Spacer(1, 3 * mm))
@@ -2182,9 +2182,9 @@ def content_medical(fwb, meta_data, result_lab_from_proto, result_protocol, date
     fwb.append(Spacer(1, 1 * mm))
     fwb.append(Paragraph(f"4. Результаты лабораторных исследований:  {result_lab_from_proto}", styles.get("style")))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph(f"5. По результатам медицинского обследования {bold_open}врачом-психиатром-наркологом{bold_close}: {result_protocol}", styles.get("style")))
+    fwb.append(Paragraph(f"5. По результатам медицинского обследования {bold_open}{position}{bold_close}: {result_protocol}", styles.get("style")))
     fwb.append(Spacer(1, 1 * mm))
-    fwb.append(Paragraph("6. Фамилия имя, отчество (при наличии), подпись врача-психиатра-нарколога, принимавшего непосредственное участие в медицинском обследовании:", styles.get("style")))
+    fwb.append(Paragraph(f"6. Фамилия имя, отчество (при наличии), подпись {position}, принимавшего непосредственное участие в медицинском обследовании:", styles.get("style")))
     fwb.append(Spacer(1, 3 * mm))
 
     fwb.append(Paragraph(f"Дата проведения медицинского обследования: {date_protocol} ", styles.get("style")))
