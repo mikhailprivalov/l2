@@ -9,10 +9,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     112.01 - Заключение из MedicalCertificate
     """
     form_result = import_string('medical_certificates.forms.forms380' + '.form_11')
+    img_stamp = request.GET.get("img_stamp", "0")
     try:
         hospital = request.user.doctorprofile.hospital
     except:
         hospital = Hospitals.objects.filter(is_default=True).first()
-    params = {"dir": direction.pk, "hospital": hospital, "from_result_protocol": True}
+    params = {"dir": direction.pk, "hospital": hospital, "from_result_protocol": True, "img_stamp": img_stamp}
 
     return form_result(params)

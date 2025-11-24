@@ -129,8 +129,8 @@ def get_result_protocol(request):
             return Response({"result": "error", "comment": "No work_place in case protocolId"})
     else:
         return Response({"result": "error", "comment": "No case for protocolId"})
-
-    pdf_content = direction_pdf_result(direction_id)
+    img_stamp = True
+    pdf_content = direction_pdf_result(direction_id, img_stamp)
     return Response({"pdf_base64": pdf_content})
 
 

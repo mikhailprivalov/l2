@@ -77,6 +77,7 @@ import PDFObject from 'pdfobject';
       complex: 0,
       portion: 0,
       sort: 0,
+      img_stamp: 0,
     };
   },
   watch: {
@@ -127,6 +128,8 @@ export default class ResultsPreview extends Vue {
 
   complex: number;
 
+  img_stamp: number;
+
   portion: number;
 
   sort: number;
@@ -151,6 +154,7 @@ export default class ResultsPreview extends Vue {
     url.searchParams.append('complex', String(this.complex));
     url.searchParams.append('portion', String(this.portion));
     url.searchParams.append('sort', String(this.sort));
+    url.searchParams.append('img_stamp', String(this.img_stamp));
     return url;
   }
 
@@ -180,6 +184,7 @@ export default class ResultsPreview extends Vue {
     this.complex = Number(urlParams.get('complex') || 0);
     this.portion = Number(urlParams.get('portion') || 0);
     this.sort = Number(urlParams.get('sort') || 0);
+    this.img_stamp = Number(urlParams.get('img_stamp') || 0);
   }
 
   loadLocalStorage() {
