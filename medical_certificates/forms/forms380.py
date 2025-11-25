@@ -2182,10 +2182,13 @@ def form_22(request_data):
     fwb.append(Spacer(1, 2 * mm))
     result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
     date_result = date_protocol.split(".")
-    fwb.append(Paragraph(
-        f'4. Дата выдачи медицинского заключения: число <u>{space_symbol * 2} {date_result[0]} {space_symbol * 2}</u> месяц <u>{space_symbol * 2}{date_result[1]}{space_symbol * 2}</u>год '
-        f'<u>{space_symbol * 2}{date_result[2]}{space_symbol * 2}</u>',
-        style))
+    fwb.append(
+        Paragraph(
+            f'4. Дата выдачи медицинского заключения: число <u>{space_symbol * 2} {date_result[0]} {space_symbol * 2}</u> месяц <u>{space_symbol * 2}{date_result[1]}{space_symbol * 2}</u>год '
+            f'<u>{space_symbol * 2}{date_result[2]}{space_symbol * 2}</u>',
+            style,
+        )
+    )
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'5. Медицинское заключение: {result_protocol}', style))
     fwb.append(Spacer(1, 2 * mm))
