@@ -32,7 +32,7 @@ style.alignment = TA_JUSTIFY
 style.leading = 12
 styleCentre = deepcopy(style)
 styleCentre.alignment = TA_CENTER
-styleCentre.fontSize = 10
+styleCentre.fontSize = 1
 styleT = deepcopy(style)
 styleT.alignment = TA_LEFT
 styleT.fontSize = 10
@@ -2124,6 +2124,77 @@ def form_21(request_data):
     return pdf
 
 
+def form_22(request_data):
+    # Заключение Психотропные ср-ва
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=10 * mm, bottomMargin=5 * mm, allowSplitting=1, title="Форма {}".format("Заключение"))
+    meta_data = meta_data_hospital_patient(request_data)
+    iss = Issledovaniya.objects.filter(napravleniye__pk=meta_data.get("direction", -1)).order_by("research__pk", "research__sort_weight").first()
+    if not iss.time_confirmation:
+        return ""
+    space_symbol = '&nbsp;'
+    fwb = []
+    opinion = [
+        [
+            Paragraph(f'<font size=10>{meta_data.get("hospital_name", "")}<br/>Адрес: {meta_data.get("hospital_address")}<br/>Лицензия {meta_data.get("license_data", "")}</font>', styleT),
+            Paragraph(
+                'Код формы по ОКУД<br/>'
+                'Код учреждения по ОКПО<br/>'
+                'Медицинская документация<br/>'
+                'Форма № 003-О/у<br/>'
+                'Утверждена приказом Министерства<br/>'
+                'здравоохранения Российской Федерации<br/>'
+                'от 26 ноября 2021 года N 1104н',
+                styleT),
+        ],
+    ]
+
+    tbl = Table(opinion, colWidths=(80 * mm, 120 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('LEFTPADDING', (1, 0), (-1, -1), 55 * mm),
+                ('LEFTPADDING', (0, 0), (0, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+    fwb.append(tbl)
+    fwb.append(Spacer(1, 8 * mm))
+    fwb.append(Paragraph(f'Медицинское заключение серия ___ № {meta_data.get("direction", -1)}', styleCenterBold))
+    fwb.append(Paragraph(f'об отсутствии в организме человека наркотических средств, психотропных веществ и их метаболитов', styleCenterBold))
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии): {meta_data.get("fio")}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    born = meta_data.get("born")
+    born_data = born.split(".")
+    fwb.append(Paragraph(f'2. Дата рождения: число <u>{space_symbol*2}{born_data[0]}{space_symbol*2}</u>месяц <u>{space_symbol*2}{born_data[1]} {space_symbol*2}</u> '
+                         f'год<u>{space_symbol*2}{born_data[2]}{space_symbol*2}</u>', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'3. Место регистрации: {meta_data.get("patient_address")}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    result_protocol, date_protocol, is_return_document, result_lab_from_proto = result_content_protocol(iss)
+    date_result = date_protocol.split(".")
+    fwb.append(Paragraph(
+        f'4. Дата выдачи медицинского заключения: число <u>{space_symbol * 2} {date_result[0]} {space_symbol * 2}</u> месяц <u>{space_symbol * 2}{date_result[1]}{space_symbol * 2}</u>год '
+        f'<u>{space_symbol * 2}{date_result[2]}{space_symbol * 2}</u>',
+        style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'5. Медицинское заключение: {result_protocol}', style))
+    fwb.append(Spacer(1, 2 * mm))
+    doctor_fio = iss.doc_confirmation.get_full_fio()
+    fwb.append(Paragraph(f'Фамилия, имя, отчество (при наличии), подпись врача, выдавшего медицинское заключение: {doctor_fio}', style))
+    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Paragraph(f'{space_symbol * 5}М.П.', style))
+
+    doc.build(fwb)
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    return pdf
+
+
 def title_medical(fwb, title):
     fwb.append(Paragraph('МЕДИЦИНСКАЯ СПРАВКА', styleCentre))
     fwb.append(Paragraph(f'{title}', styleCentre))
@@ -2271,7 +2342,7 @@ def footer_medical(position, doctor_fio, fwb, styles):
     return fwb
 
 
-def gen_table(doctor, style, doc_confirm):
+def gen_table(doctor):
     img = ""
     if doctor:
         file_jpg = doctor.get_signature_stamp_pdf()
