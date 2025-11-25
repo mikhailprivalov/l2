@@ -2170,8 +2170,13 @@ def form_22(request_data):
     fwb.append(Spacer(1, 2 * mm))
     born = meta_data.get("born")
     born_data = born.split(".")
-    fwb.append(Paragraph(f'2. Дата рождения: число <u>{space_symbol*2}{born_data[0]}{space_symbol*2}</u>месяц <u>{space_symbol*2}{born_data[1]} {space_symbol*2}</u> '
-                         f'год<u>{space_symbol*2}{born_data[2]}{space_symbol*2}</u>', style))
+    fwb.append(
+        Paragraph(
+            f'2. Дата рождения: число <u>{space_symbol*2}{born_data[0]}{space_symbol*2}</u>месяц <u>{space_symbol*2}{born_data[1]} {space_symbol*2}</u> '
+            f'год<u>{space_symbol*2}{born_data[2]}{space_symbol*2}</u>',
+            style,
+        )
+    )
     fwb.append(Spacer(1, 2 * mm))
     fwb.append(Paragraph(f'3. Место регистрации: {meta_data.get("patient_address")}', style))
     fwb.append(Spacer(1, 2 * mm))
