@@ -1483,6 +1483,7 @@ def form_11(request_data):
         "Диспансерная группа",
     ]
     result = fields_result_only_title_fields(iss, title_fields)
+
     for i in result:
         if i["title"] == "Место работы":
             work_place = i["value"]
