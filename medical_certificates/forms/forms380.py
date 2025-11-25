@@ -2164,7 +2164,7 @@ def form_22(request_data):
     fwb.append(tbl)
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'Медицинское заключение серия ___ № {meta_data.get("direction", -1)}', styleCenterBold))
-    fwb.append(Paragraph(f'об отсутствии в организме человека наркотических средств, психотропных веществ и их метаболитов', styleCenterBold))
+    fwb.append(Paragraph('об отсутствии в организме человека наркотических средств, психотропных веществ и их метаболитов', styleCenterBold))
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph(f'1. Фамилия, имя, отчество (при наличии): {meta_data.get("fio")}', style))
     fwb.append(Spacer(1, 2 * mm))
