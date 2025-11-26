@@ -3703,9 +3703,7 @@ class NumberGenerator(models.Model):
 class IndicatorResultByCurator(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
     paraclinic_result = models.ForeignKey(ParaclinicResult, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
-    curator = models.ForeignKey(
-        DoctorProfile, null=True, blank=True, related_name="curator_confirmation", db_index=True, help_text='Профиль куратора результата', on_delete=models.SET_NULL
-    )
+    curator = models.ForeignKey(DoctorProfile, null=True, blank=True, related_name="curator_confirmation", db_index=True, help_text='Профиль куратора результата', on_delete=models.SET_NULL)
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     field_order = models.IntegerField(default=None, blank=True, null=True)
     curator_value = models.TextField()
