@@ -3698,3 +3698,19 @@ class NumberGenerator(models.Model):
     class Meta:
         verbose_name = 'Диапазон номеров'
         verbose_name_plural = 'Диапазоны номеров'
+
+
+class IndicatorResultByCurator(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
+    paraclinic_result = models.ForeignKey(ParaclinicResult, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    curator = models.ForeignKey(
+        DoctorProfile, null=True, blank=True, related_name="curator_confirmation", db_index=True, help_text='Профиль куратора результата', on_delete=models.SET_NULL
+    )
+    field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    field_order = models.IntegerField(default=None, blank=True, null=True)
+    curator_value = models.TextField()
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text='Время подтверждения куратором')
+
+    class Meta:
+        verbose_name = 'Показатель-результат куратора'
+        verbose_name_plural = 'Показатели-результаты кураторов'
