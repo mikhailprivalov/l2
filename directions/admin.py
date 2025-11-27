@@ -38,6 +38,7 @@ from .models import (
     StatementDocument,
     ParaclinicResult,
     NapravleniyaFiles,
+    IndicatorResultByCurator,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -164,6 +165,20 @@ class ResEmployeeJob(admin.ModelAdmin):
     )
     list_display_links = ('doc_execute',)
     search_fields = ('doc_execute__fio',)
+
+
+class ResIndicatorResultByCurator(admin.ModelAdmin):
+    autocomplete_fields = ('issledovaniye',)
+    list_display = (
+        'issledovaniye',
+        'paraclinic_result',
+        'field',
+        'curator_value',
+        'curator',
+    )
+    search_fields = ('issledovaniye__napravleniye__pk',)
+
+    list_filter = ('field__cda_option',)
 
 
 class ResKeyValue(admin.ModelAdmin):
@@ -400,3 +415,4 @@ admin.site.register(MicrobiologyResultPhenotype, MicrobiologyResultPhenotypeAdmi
 admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
 admin.site.register(StatementDocument, ResStatementDocument)
+admin.site.register(IndicatorResultByCurator, ResIndicatorResultByCurator)
