@@ -1536,7 +1536,7 @@ def form_11(request_data):
     doc_confirm = iss.doc_confirmation.get_fio()
 
     if img_stamp == "1":
-        tbl = gen_table(iss.doc_confirmation, style, doc_confirm)
+        tbl = gen_table(iss.doc_confirmation)
         fwb.append(tbl)
     fwb.append(Paragraph(f"Председатель врачебной комиссии ({doc_confirm})", style))
     fwb.append(Spacer(1, 3 * mm))
@@ -2193,7 +2193,7 @@ def form_22(request_data):
     fwb.append(Paragraph(f'5. Медицинское заключение: {result_protocol}', style))
     fwb.append(Spacer(1, 2 * mm))
     doctor_fio = iss.doc_confirmation.get_full_fio()
-    fwb.append(Paragraph(f'Фамилия, имя, отчество (при наличии), подпись врача, выдавшего медицинское заключение: {doctor_fio}', style))
+    fwb.append(Paragraph(f'6. Фамилия, имя, отчество (при наличии), подпись врача, выдавшего медицинское заключение: {doctor_fio}', style))
     fwb.append(Spacer(1, 4 * mm))
     fwb.append(Paragraph(f'{space_symbol * 5}М.П.', style))
 
