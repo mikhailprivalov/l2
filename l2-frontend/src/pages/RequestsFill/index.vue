@@ -167,9 +167,247 @@
           :key="selectedRequest.id"
           :direction-id-to-open="selectedRequest.id"
           forced-results-top
-        />
+        >
+          <template #before-researches>
+            <div class="request-info-block">
+              <div class="request-info-title">
+                <span>Информация о заявке</span>
+              </div>
+              <div
+                v-if="requestParams"
+                class="request-info-content"
+              >
+                <div class="info-grid">
+                  <div
+                    v-if="requestParams.creator"
+                    class="info-row"
+                  >
+                    <span class="info-label">Создал</span>
+                    <span class="info-value">{{ requestParams.creator }}</span>
+                  </div>
+                  <div
+                    v-if="requestParams.createdAt"
+                    class="info-row"
+                  >
+                    <span class="info-label">Создана</span>
+                    <span class="info-value">{{ requestParams.createdAt }}</span>
+                  </div>
+                  <div
+                    v-if="requestParams.researchDate"
+                    class="info-row"
+                  >
+                    <span class="info-label">Дата исследования</span>
+                    <span class="info-value">{{ requestParams.researchDate }}</span>
+                  </div>
+                  <div
+                    v-if="requestParams.dose"
+                    class="info-row"
+                  >
+                    <span class="info-label">Доза</span>
+                    <span class="info-value">{{ requestParams.dose }} мЗв</span>
+                  </div>
+                  <div
+                    v-if="requestParams.contrastAmount"
+                    class="info-row"
+                  >
+                    <span class="info-label">Объём контраста</span>
+                    <span class="info-value">{{ requestParams.contrastAmount }} мл</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Срочность</span>
+                    <span class="info-value">
+                      <span
+                        v-if="requestParams.isCito"
+                        class="cito-badge"
+                      >CITO</span>
+                      <template v-else>Обычная</template>
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Изображение</span>
+                    <span class="info-value">
+                      <template v-if="requestParams.hasImage">
+                        Привязано
+                        <a
+                          class="a-under"
+                          href="#"
+                          @click.prevent="showImageModal = true"
+                        ><i class="fa fa-info-circle" /></a>
+                      </template>
+                      <template v-else>
+                        Нет
+                      </template>
+                    </span>
+                  </div>
+                  <div
+                    v-if="requestParams.files && requestParams.files.length > 0"
+                    class="info-row"
+                  >
+                    <span class="info-label">Файлы</span>
+                    <span class="info-value">
+                      <a
+                        v-for="file in requestParams.files"
+                        :key="file.url"
+                        :href="file.url"
+                        target="_blank"
+                        class="a-under"
+                      >{{ file.name }}</a>
+                    </span>
+                  </div>
+                </div>
+                <div
+                  v-if="requestParams.anamnesis"
+                  class="info-block"
+                >
+                  <div class="info-block-label">
+                    Анамнез
+                  </div>
+                  <Collapse
+                    max-height="60px"
+                    bg-color="#f9f9f9"
+                  >
+                    <div
+                      class="info-block-text"
+                      v-text="requestParams.anamnesis"
+                    />
+                  </Collapse>
+                </div>
+                <div
+                  v-if="requestParams.comment"
+                  class="info-block"
+                >
+                  <div class="info-block-label">
+                    Комментарий
+                  </div>
+                  <Collapse
+                    max-height="60px"
+                    bg-color="#f9f9f9"
+                  >
+                    <div
+                      class="info-block-text"
+                      v-text="requestParams.comment"
+                    />
+                  </Collapse>
+                </div>
+              </div>
+            </div>
+          </template>
+        </ResultsParaclinic>
       </template>
     </TwoSidedLayout>
+    <Modal
+      v-if="showImageModal && requestParams?.imageData"
+      show-footer="true"
+      white-bg="true"
+      max-width="700px"
+      margin-left-right="auto"
+      @close="showImageModal = false"
+    >
+      <span slot="header">Детали изображения #{{ requestParams.imageData.id }}</span>
+      <div
+        slot="body"
+        class="image-modal-body"
+      >
+        <div class="details-section">
+          <div class="section-title">
+            Данные пациента
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Фамилия:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.family }"
+            >{{ requestParams.imageData.family || '(не указана)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Имя:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.name }"
+            >{{ requestParams.imageData.name || '(не указано)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Отчество:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.patronymic }"
+            >{{ requestParams.imageData.patronymic || '(не указано)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Дата рождения:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.birthday }"
+            >{{ requestParams.imageData.birthday || '(не указана)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Пол:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.sex }"
+            >{{ requestParams.imageData.sex || '(не указан)' }}</span>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <div class="section-title">
+            Идентификаторы
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">ID пациента:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.patientId }"
+            >{{ requestParams.imageData.patientId || '(отсутствует)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">ID заказа:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.orderId }"
+            >{{ requestParams.imageData.orderId || '(отсутствует)' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Study Instance UID:</span>
+            <span
+              class="detail-value small-text"
+              :class="{ 'empty-value': !requestParams.imageData.studyInstanceUidTag }"
+            >{{ requestParams.imageData.studyInstanceUidTag || '(отсутствует)' }}</span>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <div class="section-title">
+            Оборудование
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Название:</span>
+            <span
+              class="detail-value"
+              :class="{ 'empty-value': !requestParams.imageData.equipmentTitle }"
+            >{{ requestParams.imageData.equipmentTitle || '(не определено)' }}</span>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <div class="section-title">
+            Даты
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Создано:</span>
+            <span class="detail-value">{{ requestParams.imageData.createdAt }}</span>
+          </div>
+        </div>
+      </div>
+      <div slot="footer">
+        <button
+          class="btn btn-blue-nb"
+          @click="showImageModal = false"
+        >
+          Закрыть
+        </button>
+      </div>
+    </Modal>
   </PageInnerLayout>
 </template>
 
@@ -185,6 +423,7 @@ import moment from 'moment';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
+import Modal from '@/ui-cards/Modal.vue';
 import ResultsParaclinic from '@/pages/ResultsParaclinic.vue';
 import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
@@ -195,6 +434,7 @@ import directionsPoint from '@/api/directions-point';
 import useLoader from '@/hooks/useLoader';
 import useOn from '@/hooks/useOn';
 import useNotify from '@/hooks/useNotify';
+import Collapse from '@/components/Collapse.vue';
 
 import RequestCard, { type Request } from './RequestCard.vue';
 
@@ -218,6 +458,7 @@ const requestParams = ref<any>(null);
 const numberToSearch = ref<string>('');
 const isSearchMode = ref(false);
 const patientQuery = ref<string>('');
+const showImageModal = ref(false);
 let refreshInterval: any = null;
 
 const loader = useLoader();
@@ -291,6 +532,7 @@ const loadAllRequests = async () => {
 useOn('change-document-state', loadAllRequests);
 useOn('close-results-paraclinic', () => {
   selectedRequest.value = null;
+  requestParams.value = null;
 });
 
 const startAutoRefresh = () => {
@@ -354,6 +596,7 @@ const loadFormData = async (requestId: number) => {
 
 const handleCardClick = (request: Request) => {
   selectedRequest.value = request;
+  showImageModal.value = false;
   loadFormData(request.id);
   loadRequestParams(request.id);
 };
@@ -379,6 +622,7 @@ watch(date, () => {
 
 watch(selectedHospitalId, () => {
   selectedRequest.value = null;
+  requestParams.value = null;
   loadAllRequests();
 });
 
@@ -677,6 +921,148 @@ onBeforeUnmount(() => {
   button {
     flex: 3 94px;
     width: 94px;
+  }
+}
+
+.request-info-block {
+  margin-bottom: 10px;
+}
+
+.request-info-title {
+  position: sticky;
+  top: 0;
+  background-color: #ddd;
+  padding: 5px;
+  font-weight: bold;
+  z-index: 4;
+}
+
+.request-info-content {
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-top: none;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 20px;
+}
+
+.info-row {
+  display: flex;
+  align-items: baseline;
+  padding: 3px 0;
+  font-size: 13px;
+}
+
+.info-label {
+  color: #888;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.info-value {
+  color: #333;
+  flex: 1;
+}
+
+.cito-badge {
+  display: inline-block;
+  background: #ff6b6b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 3px;
+  padding: 2px 6px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+.info-block {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f0f0;
+  max-width: 800px;
+}
+
+.info-block-label {
+  font-weight: 500;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.info-block-text {
+  background: #f9f9f9;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.info-value .a-under + .a-under {
+  margin-left: 10px;
+}
+
+.image-modal-body {
+  padding: 15px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.details-section {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  font-weight: 600;
+  color: #049372;
+  font-size: 13px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #333;
+  min-width: 140px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.detail-value {
+  color: #666;
+  margin-left: 8px;
+  flex: 1;
+  font-size: 13px;
+  word-break: break-word;
+
+  &.small-text {
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+  }
+
+  &.empty-value {
+    color: #999;
+    font-style: italic;
   }
 }
 </style>

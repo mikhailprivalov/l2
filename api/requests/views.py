@@ -39,29 +39,49 @@ def check_hospital_access(doctor_profile, hospital_id):
 @group_required('Создание и исполнение заявок')
 def get_requests(request):
     request_data = json.loads(request.body)
-    date = request_data.get('date')
+    date_from = request_data.get('dateFrom')
+    date_to = request_data.get('dateTo')
     search_type = request_data.get('searchType', 'all')
     card_id = request_data.get('cardId')
+    only_mine = request_data.get('onlyMine', False)
+    offset = request_data.get('offset', 0)
+    limit = request_data.get('limit', 50)
 
     directions = (
-        Napravleniya.objects.filter(is_request=True, doc=request.user.doctorprofile)
-        .select_related("client__individual")
+        Napravleniya.objects.filter(is_request=True)
+        .select_related("client__individual", "doc")
         .prefetch_related('issledovaniya_set__research')
         .prefetch_related('napravleniyafiles_set')
         .order_by("-data_sozdaniya")
     )
 
+    if search_type in ('search', 'card'):
+        hospital_id = request.user.doctorprofile.hospital_id
+        if hospital_id:
+            directions = directions.filter(hospital_id=hospital_id)
+        else:
+            directions = directions.filter(doc=request.user.doctorprofile)
+        if only_mine:
+            directions = directions.filter(doc=request.user.doctorprofile)
+    else:
+        directions = directions.filter(doc=request.user.doctorprofile)
+
     if search_type == 'card' and card_id:
         directions = directions.filter(client_id=card_id)
 
-    if date:
+    if date_from and date_to:
         try:
-            search_date = datetime.strptime(date, '%d.%m.%Y').date()
-            directions = directions.filter(data_sozdaniya__date=search_date)
+            search_date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+            search_date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+            directions = directions.filter(
+                data_sozdaniya__date__gte=search_date_from,
+                data_sozdaniya__date__lte=search_date_to,
+            )
         except ValueError:
             pass
 
-    directions_list = list(directions)
+    total_count = directions.count()
+    directions_list = list(directions[offset : offset + limit])
 
     direction_ids = [d.pk for d in directions_list]
     equipment_receives = set(EquipmentReceive.objects.filter(napravleniye_id__in=direction_ids).values_list('napravleniye_id', flat=True))
@@ -91,14 +111,16 @@ def get_requests(request):
                 "patient": direction.client.individual.fio(),
                 "datetime": strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M'),
                 "hasImage": has_image,
+                "hasResult": direction.total_confirmed,
                 "cardId": direction.client.pk,
                 "files": files,
                 "researchTitle": research_titles[0] if research_titles else "",
                 "isCito": direction.is_cito,
+                "creator": direction.doc.get_fio() if direction.doc and direction.doc != request.user.doctorprofile else "",
             }
         )
 
-    return JsonResponse({"rows": rows})
+    return JsonResponse({"rows": rows, "total": total_count, "hasMore": offset + limit < total_count})
 
 
 @login_required
@@ -453,7 +475,7 @@ def get_request_params(request):
         return JsonResponse({"success": False, "message": str(e)})
 
     try:
-        direction = Napravleniya.objects.select_related('client__individual', 'doc').get(pk=request_id, is_request=True)
+        direction = Napravleniya.objects.select_related('client__individual', 'doc').prefetch_related('napravleniyafiles_set').get(pk=request_id, is_request=True)
     except Napravleniya.DoesNotExist:
         return JsonResponse({"success": False, "message": "Заявка не найдена"})
 
@@ -462,28 +484,50 @@ def get_request_params(request):
 
     params = {}
 
-    if direction.fact_research_date:
-        params["Дата исследования"] = strfdatetime(direction.fact_research_date, '%d.%m.%Y')
+    if direction.doc:
+        params["creator"] = direction.doc.get_fio()
 
-    if direction.contrast_amount:
-        params["Количество контраста"] = direction.contrast_amount
+    params["createdAt"] = strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M')
+
+    if direction.fact_research_date:
+        params["researchDate"] = strfdatetime(direction.fact_research_date, '%d.%m.%Y')
 
     if direction.dose:
-        params["Доза"] = direction.dose
+        params["dose"] = direction.dose
+
+    if direction.contrast_amount:
+        params["contrastAmount"] = direction.contrast_amount
+
+    params["isCito"] = direction.is_cito
+
+    equipment_receive = EquipmentReceive.objects.filter(napravleniye_id=direction.pk).first()
+    params["hasImage"] = equipment_receive is not None
+    if equipment_receive:
+        params["imageId"] = equipment_receive.pk
+        params["imageData"] = {
+            "id": equipment_receive.pk,
+            "studyInstanceUidTag": equipment_receive.study_instance_uid_tag,
+            "family": equipment_receive.family,
+            "name": equipment_receive.name,
+            "patronymic": equipment_receive.patronymic,
+            "birthday": equipment_receive.birthday.strftime('%d.%m.%Y') if equipment_receive.birthday else None,
+            "sex": equipment_receive.sex,
+            "patientId": equipment_receive.tag_patient_id,
+            "orderId": equipment_receive.order_id,
+            "createdAt": strfdatetime(equipment_receive.created_at),
+            "equipmentTitle": equipment_receive.equipment_model.title if equipment_receive.equipment_model else None,
+        }
 
     if direction.anamnesis:
-        params["Анамнез"] = direction.anamnesis
+        params["anamnesis"] = direction.anamnesis
 
     if direction.direction_comment:
-        params["Комментарий"] = direction.direction_comment
+        params["comment"] = direction.direction_comment
 
-    if direction.is_cito:
-        params["Статус"] = "CITO"
-
-    params["Создана"] = strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M')
-
-    if direction.doc:
-        params["Врач"] = direction.doc.get_fio()
+    files = []
+    for file_obj in direction.napravleniyafiles_set.all():
+        files.append({"name": file_obj.uploaded_file.name.split('/')[-1] if file_obj.uploaded_file else 'Файл', "url": file_obj.uploaded_file.url if file_obj.uploaded_file else ''})
+    params["files"] = files
 
     return JsonResponse({"success": True, "params": params})
 

@@ -3,7 +3,7 @@
     <div
       ref="content"
       :class="{ [$style.collapsed]: !isExpanded && isCollapsible }"
-      :style="{ 'max-height': !isExpanded && isCollapsible ? maxHeight : 'none' }"
+      :style="contentStyle"
     >
       <slot />
     </div>
@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import {
+  computed,
   nextTick,
   onMounted,
   onUpdated,
@@ -31,12 +32,27 @@ const props = defineProps({
     type: String,
     default: '200px',
   },
+  bgColor: {
+    type: String,
+    default: 'white',
+  },
 });
 
 const content = ref<HTMLElement | null>(null);
 const isCollapsible = ref(false);
 const isExpanded = ref(false);
 const slots = useSlots();
+
+const contentStyle = computed(() => {
+  const style: Record<string, string> = {};
+  if (!isExpanded.value && isCollapsible.value) {
+    style['max-height'] = props.maxHeight;
+    style['--collapse-bg'] = props.bgColor;
+  } else {
+    style['max-height'] = 'none';
+  }
+  return style;
+});
 
 const checkHeight = async () => {
   await nextTick();
@@ -75,7 +91,7 @@ onUpdated(() => {
     left: 0;
     right: 0;
     height: 50px;
-    background: linear-gradient(to bottom, transparent, white);
+    background: linear-gradient(to bottom, transparent, var(--collapse-bg, white));
     pointer-events: none;
   }
 }

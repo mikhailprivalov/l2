@@ -29,7 +29,8 @@
               <template #bottom>
                 <RequestFields
                   v-if="cardId && cardId !== -1 && research && research !== -1"
-                  v-model="requestFields"
+                  :value="requestFields"
+                  @input="onRequestFieldsInput"
                   @create:request="createRequest"
                 />
               </template>
@@ -117,7 +118,13 @@ const defaultRequestFields = () => ({
   files: [] as any[],
 });
 
-const requestFields = ref(defaultRequestFields());
+type RequestFieldsValue = ReturnType<typeof defaultRequestFields>;
+
+const requestFields = ref<RequestFieldsValue>(defaultRequestFields());
+
+const onRequestFieldsInput = (value: RequestFieldsValue) => {
+  requestFields.value = value;
+};
 
 async function createRequest() {
   loader.inc();
@@ -138,7 +145,9 @@ async function createRequest() {
       notify.ok(message || 'Заявка успешно создана');
       requestFields.value = defaultRequestFields();
 
-      if (requestHistoryRef.value?.refreshRequests) {
+      if (requestHistoryRef.value?.handleNewRequestCreated) {
+        await requestHistoryRef.value.handleNewRequestCreated();
+      } else if (requestHistoryRef.value?.refreshRequests) {
         await requestHistoryRef.value.refreshRequests();
       }
     }
@@ -181,11 +190,8 @@ const onRequestSelectedForLink = (request: any) => {
 };
 
 const onCancelSelection = () => {
-  if (requestHistoryRef.value?.exitSelectionMode) {
-    requestHistoryRef.value.exitSelectionMode();
-    isSelectionMode.value = false;
-    currentImageForLink.value = null;
-  }
+  isSelectionMode.value = false;
+  currentImageForLink.value = null;
 };
 
 const onRequestHover = (request: any) => {

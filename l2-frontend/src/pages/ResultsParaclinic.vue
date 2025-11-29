@@ -644,6 +644,7 @@
         </div>
       </div>
       <div class="results-editor">
+        <slot name="before-researches" />
         <div
           v-for="row in data.researches"
           :key="row.pk"
