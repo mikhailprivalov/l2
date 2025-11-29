@@ -106,10 +106,10 @@
             </div>
             <div class="research-row">
               <div class="row">
-                <div class="col-xs-5">
+                <div class="col-xs-7">
                   {{ formatDateTime(item.datetime) }}
                 </div>
-                <div class="col-xs-7 text-right">
+                <div class="col-xs-5 text-right">
                   <span
                     class="image-status"
                     :class="item.hasImage ? 'image-status--yes' : 'image-status--no'"
