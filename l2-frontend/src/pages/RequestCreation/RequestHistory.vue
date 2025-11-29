@@ -37,7 +37,7 @@
           </div>
         </div>
         <label
-          v-if="searchMode === 'card' || searchMode === 'search'"
+          v-if="searchMode === 'card'"
           class="only-mine-filter"
         >
           <input
@@ -49,7 +49,7 @@
       </div>
       <div
         class="directions"
-        :class="{ 'with-filter': searchMode === 'card' || searchMode === 'search' }"
+        :class="{ 'with-filter': searchMode === 'card' }"
       >
         <div
           ref="listContainer"
@@ -550,7 +550,8 @@ const refreshNewItems = async () => {
       }
     }
   } catch (error) {
-    console.error('Auto-refresh error:', error);
+    // eslint-disable-next-line no-console
+    console.error(error);
   } finally {
     isRefreshing.value = false;
   }
