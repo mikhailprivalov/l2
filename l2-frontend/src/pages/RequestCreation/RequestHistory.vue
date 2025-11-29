@@ -401,7 +401,7 @@ const printResult = (id: number) => {
 const emit = defineEmits(['request-selected', 'cancel-selection', 'request-hover']);
 
 const SEARCH_MODES = [
-  { id: 'all', title: 'Созданные' },
+  { id: 'all', title: 'Мои заявки' },
   { id: 'card', title: 'Пациент' },
   { id: 'search', title: 'Организация' },
 ];
@@ -411,6 +411,7 @@ const SEARCH_MODES_MAP = new Map(SEARCH_MODES.map((m) => [m.id, m.title]));
 const searchMode = ref(SEARCH_MODES[0].id);
 const availableSearchModes = computed(() => SEARCH_MODES.filter((mode) => mode.id !== searchMode.value));
 const dateRange = ref([moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')]);
+const dateRangeKey = computed(() => dateRange.value.join('|'));
 const isMultipleDays = computed(() => dateRange.value[0] !== dateRange.value[1]);
 const showModes = ref(false);
 const isLoading = ref(false);
@@ -463,6 +464,14 @@ const isRefreshing = ref(false);
 const listContainer = ref<HTMLElement | null>(null);
 const isAtTop = ref(true);
 const pendingNewItems = ref(false);
+
+const scrollListToTop = (smooth = false) => {
+  if (!listContainer.value) return;
+  listContainer.value.scrollTo({
+    top: 0,
+    behavior: smooth ? 'smooth' : 'auto',
+  });
+};
 
 const actualCardId = computed(() => {
   if (searchMode.value === 'card' && props.cardId && props.cardId > 0) {
@@ -560,6 +569,16 @@ const refreshNewItems = async () => {
 watch([searchMode, actualCardId, dateRange, onlyMine], async () => {
   await getRequests();
 }, { immediate: true, deep: true });
+
+watch(searchMode, (newMode, prevMode) => {
+  if (!prevMode) return;
+  scrollListToTop();
+});
+
+watch(dateRangeKey, (newKey, prevKey) => {
+  if (!prevKey || newKey === prevKey) return;
+  scrollListToTop();
+});
 
 const showNewItemsBanner = computed(() => pendingNewItems.value && !isAtTop.value);
 
