@@ -21,8 +21,7 @@
               class="dropdown-menu min-width-160 margin-top-1"
             >
               <li
-                v-for="row in SEARCH_MODES"
-                v-if="row.id !== searchMode"
+                v-for="row in availableSearchModes"
                 :key="row.id"
               >
                 <a
@@ -33,19 +32,44 @@
               </li>
             </ul>
           </span>
-          <DateFieldNav
-            :def="selectedDate"
-            :val.sync="selectedDate"
-            w="100px"
-            light
-          />
+          <div>
+            <DateRange v-model="dateRange" />
+          </div>
         </div>
+        <label
+          v-if="searchMode === 'card'"
+          class="only-mine-filter"
+        >
+          <input
+            v-model="onlyMine"
+            type="checkbox"
+          >
+          Только созданные мной
+        </label>
       </div>
-      <div class="directions">
+      <div
+        class="directions"
+        :class="{ 'with-filter': searchMode === 'card' }"
+      >
         <div
+          ref="listContainer"
           class="inner"
           :class="{ 'with-bottom-header': isSelectionMode }"
+          @scroll="onListScroll"
         >
+          <div
+            v-if="showNewItemsBanner"
+            class="new-items-banner"
+          >
+            <span>Есть новые заявки</span>
+            <button
+              class="new-items-button"
+              type="button"
+              @click="showPendingItems"
+            >
+              Показать
+            </button>
+          </div>
           <div
             v-for="item in requests"
             :key="item.id"
@@ -71,11 +95,19 @@
                 v-if="item.isCito"
                 class="cito-badge"
               >CITO</span>
+              <button
+                v-if="item.hasResult"
+                class="print-result-btn"
+                title="Печать результата"
+                @click.stop="printResult(item.id)"
+              >
+                <i class="fa fa-print" /> Результат
+              </button>
             </div>
             <div class="research-row">
               <div class="row">
                 <div class="col-xs-7">
-                  {{ item.datetime }}
+                  {{ formatDateTime(item.datetime) }}
                 </div>
                 <div class="col-xs-5 text-right">
                   <span
@@ -86,6 +118,13 @@
                   </span>
                 </div>
               </div>
+            </div>
+            <div
+              v-if="item.creator"
+              class="creator-row"
+            >
+              <i class="fa fa-user-md" />
+              {{ item.creator }}
             </div>
             <div
               v-if="item.files && item.files.length > 0"
@@ -112,6 +151,18 @@
             class="text-center margin-5"
           >
             Нет данных
+          </div>
+          <div
+            ref="loadMoreTrigger"
+            class="load-more-trigger"
+          >
+            <div
+              v-if="isLoadingMore"
+              class="loading-more"
+            >
+              <i class="fa fa-spinner fa-spin" />
+              Загрузка...
+            </div>
           </div>
         </div>
         <div
@@ -331,8 +382,9 @@ import {
 import moment from 'moment';
 
 import api from '@/api';
-import DateFieldNav from '@/fields/DateFieldNav.vue';
+import DateRange from '@/ui-cards/DateRange.vue';
 import useNotify from '@/hooks/useNotify';
+import usePrint from '@/hooks/usePrint';
 import Modal from '@/ui-cards/Modal.vue';
 
 const props = defineProps<{
@@ -340,20 +392,30 @@ const props = defineProps<{
   highlightedRequestId?: number | string | null;
 }>();
 const notify = useNotify();
+const { printResults } = usePrint();
+
+const printResult = (id: number) => {
+  printResults([id]);
+};
 
 const emit = defineEmits(['request-selected', 'cancel-selection', 'request-hover']);
 
 const SEARCH_MODES = [
-  { id: 'all', title: 'Все заявки' },
+  { id: 'all', title: 'Мои заявки' },
   { id: 'card', title: 'Пациент' },
+  { id: 'search', title: 'Организация' },
 ];
 
 const SEARCH_MODES_MAP = new Map(SEARCH_MODES.map((m) => [m.id, m.title]));
 
 const searchMode = ref(SEARCH_MODES[0].id);
-const selectedDate = ref(moment().format('DD.MM.YYYY'));
+const availableSearchModes = computed(() => SEARCH_MODES.filter((mode) => mode.id !== searchMode.value));
+const dateRange = ref([moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')]);
+const dateRangeKey = computed(() => dateRange.value.join('|'));
+const isMultipleDays = computed(() => dateRange.value[0] !== dateRange.value[1]);
 const showModes = ref(false);
 const isLoading = ref(false);
+const onlyMine = ref(false);
 const isSelectionMode = ref(false);
 const currentImageForLink = ref<any>(null);
 const showRequestDetailsModal = ref(false);
@@ -363,6 +425,13 @@ const isLoadingDetails = ref(false);
 const selectMode = (id: string) => {
   searchMode.value = id;
   showModes.value = false;
+};
+
+const formatDateTime = (datetime: string) => {
+  if (isMultipleDays.value) {
+    return datetime;
+  }
+  return datetime.split(' ')[1] || datetime;
 };
 
 type File = {
@@ -376,15 +445,33 @@ type Request = {
   patient: string;
   datetime: string;
   hasImage: boolean;
+  hasResult: boolean;
   cardId: number;
   files: File[];
   researchTitle: string;
   isCito: boolean;
+  creator?: string;
 };
 
 let autoRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+const PAGE_SIZE = 10;
 
 const requests = ref<Request[]>([]);
+const hasMore = ref(false);
+const currentOffset = ref(0);
+const isLoadingMore = ref(false);
+const isRefreshing = ref(false);
+const listContainer = ref<HTMLElement | null>(null);
+const isAtTop = ref(true);
+const pendingNewItems = ref(false);
+
+const scrollListToTop = (smooth = false) => {
+  if (!listContainer.value) return;
+  listContainer.value.scrollTo({
+    top: 0,
+    behavior: smooth ? 'smooth' : 'auto',
+  });
+};
 
 const actualCardId = computed(() => {
   if (searchMode.value === 'card' && props.cardId && props.cardId > 0) {
@@ -393,15 +480,24 @@ const actualCardId = computed(() => {
   return null;
 });
 
+const existingIds = computed(() => new Set(requests.value.map(r => r.id)));
+
 const getRequests = async () => {
+  currentOffset.value = 0;
   isLoading.value = true;
   try {
-    const { rows } = await api('requests/list', {
-      date: selectedDate.value,
+    const params: Record<string, any> = {
       searchType: searchMode.value,
       cardId: actualCardId.value,
-    });
+      offset: 0,
+      limit: PAGE_SIZE,
+      onlyMine: onlyMine.value,
+    };
+    [params.dateFrom, params.dateTo] = dateRange.value;
+    const { rows, hasMore: more } = await api('requests/list', params);
     requests.value = rows;
+    hasMore.value = more;
+    currentOffset.value = rows.length;
   } catch (error) {
     notify.error('Ошибка при получении заявок');
   } finally {
@@ -409,15 +505,110 @@ const getRequests = async () => {
   }
 };
 
-watch(actualCardId, (newCardId, oldCardId) => {
-  if (searchMode.value === 'card' && newCardId !== oldCardId && newCardId) {
-    selectedDate.value = moment().format('DD.MM.YYYY');
+const loadMore = async () => {
+  if (!hasMore.value || isLoadingMore.value || isLoading.value || isRefreshing.value) return;
+  isLoadingMore.value = true;
+  try {
+    const params: Record<string, any> = {
+      searchType: searchMode.value,
+      cardId: actualCardId.value,
+      offset: currentOffset.value,
+      limit: PAGE_SIZE,
+      onlyMine: onlyMine.value,
+    };
+    [params.dateFrom, params.dateTo] = dateRange.value;
+    const { rows, hasMore: more } = await api('requests/list', params);
+    const newRows = rows.filter((r: Request) => !existingIds.value.has(r.id));
+    requests.value = [...requests.value, ...newRows];
+    hasMore.value = more;
+    currentOffset.value += rows.length;
+  } catch (error) {
+    notify.error('Ошибка при загрузке');
+  } finally {
+    isLoadingMore.value = false;
   }
+};
+
+const refreshNewItems = async () => {
+  if (isLoading.value || isLoadingMore.value || isRefreshing.value) return;
+  isRefreshing.value = true;
+  try {
+    const params: Record<string, any> = {
+      searchType: searchMode.value,
+      cardId: actualCardId.value,
+      offset: 0,
+      limit: PAGE_SIZE,
+      onlyMine: onlyMine.value,
+    };
+    [params.dateFrom, params.dateTo] = dateRange.value;
+    const { rows } = await api('requests/list', params);
+    const newRows = rows.filter((r: Request) => !existingIds.value.has(r.id));
+    if (newRows.length > 0) {
+      requests.value = [...newRows, ...requests.value];
+      currentOffset.value += newRows.length;
+    }
+    const existingIdsSet = existingIds.value;
+    for (const row of rows) {
+      if (existingIdsSet.has(row.id)) {
+        const existing = requests.value.find(r => r.id === row.id);
+        if (existing) {
+          existing.hasImage = row.hasImage;
+          existing.hasResult = row.hasResult;
+          existing.files = row.files;
+        }
+      }
+    }
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+  } finally {
+    isRefreshing.value = false;
+  }
+};
+
+watch([searchMode, actualCardId, dateRange, onlyMine], async () => {
+  await getRequests();
+}, { immediate: true, deep: true });
+
+watch(searchMode, (newMode, prevMode) => {
+  if (!prevMode) return;
+  scrollListToTop();
 });
 
-watch([selectedDate, searchMode, actualCardId], async () => {
-  await getRequests();
-}, { immediate: true });
+watch(dateRangeKey, (newKey, prevKey) => {
+  if (!prevKey || newKey === prevKey) return;
+  scrollListToTop();
+});
+
+const showNewItemsBanner = computed(() => pendingNewItems.value && !isAtTop.value);
+
+const onListScroll = () => {
+  if (!listContainer.value) return;
+  isAtTop.value = listContainer.value.scrollTop <= 50;
+  if (isAtTop.value && pendingNewItems.value) {
+    pendingNewItems.value = false;
+    refreshNewItems();
+  }
+};
+
+const handleNewRequestCreated = async () => {
+  if (listContainer.value) {
+    isAtTop.value = listContainer.value.scrollTop <= 50;
+  }
+  if (isAtTop.value) {
+    await refreshNewItems();
+  } else {
+    pendingNewItems.value = true;
+  }
+};
+
+const showPendingItems = async () => {
+  pendingNewItems.value = false;
+  if (listContainer.value) {
+    listContainer.value.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  await refreshNewItems();
+};
 
 const updateRequestImageStatus = (requestId: number | string, hasImage: boolean) => {
   const request = requests.value.find(r => r.id.toString() === requestId.toString());
@@ -504,8 +695,11 @@ const startAutoRefresh = () => {
   }
   autoRefreshTimer = setTimeout(async () => {
     try {
-      if (!isSelectionMode.value && !isLoading.value && selectedDate.value === moment().format('DD.MM.YYYY')) {
-        await getRequests();
+      const today = moment().format('DD.MM.YYYY');
+      const includestoday = dateRange.value[1] === today;
+      const canRefresh = !isSelectionMode.value && !isLoading.value && includestoday;
+      if (canRefresh) {
+        await refreshNewItems();
       }
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -522,12 +716,35 @@ const stopAutoRefresh = () => {
   }
 };
 
+const loadMoreTrigger = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
+
+watch(loadMoreTrigger, (el) => {
+  if (observer && el) {
+    observer.observe(el);
+  }
+});
+
 onMounted(() => {
   startAutoRefresh();
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        loadMore();
+      }
+    },
+    { threshold: 0.1 },
+  );
+  if (loadMoreTrigger.value) {
+    observer.observe(loadMoreTrigger.value);
+  }
 });
 
 onUnmounted(() => {
   stopAutoRefresh();
+  if (observer) {
+    observer.disconnect();
+  }
 });
 
 defineExpose({
@@ -536,6 +753,7 @@ defineExpose({
   exitSelectionMode,
   currentImageForLink,
   refreshRequests,
+  handleNewRequestCreated,
 });
 </script>
 
@@ -557,9 +775,30 @@ defineExpose({
     border-bottom: 1px solid #b1b1b1;
   }
 }
+.only-mine-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #555;
+  cursor: pointer;
+  background: #f5f5f5;
+  border-top: 1px solid #ddd;
+
+  input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  &:hover {
+    background: #eee;
+  }
+}
 .input-group {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 .input-group-btn {
   position: relative;
@@ -638,6 +877,10 @@ defineExpose({
   bottom: 0;
   display: flex;
   flex-direction: column;
+
+  &.with-filter {
+    top: 60px;
+  }
 }
 
 .directions .inner {
@@ -646,6 +889,39 @@ defineExpose({
   overflow-x: hidden;
   padding-bottom: 110px;
   flex: 1;
+}
+
+.new-items-banner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  padding: 6px 10px;
+  margin: 8px;
+  color: #856404;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.new-items-button {
+  background: transparent;
+  border: none;
+  color: #856404;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.new-items-button:hover {
+  background: rgba(133, 100, 4, 0.1);
 }
 
 .direction {
@@ -668,8 +944,31 @@ defineExpose({
   margin-top: 2px;
   margin-bottom: 2px;
 }
+.print-result-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  background: #049372;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #037a5a;
+  }
+
+  i {
+    font-size: 10px;
+  }
+}
 .image-status {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
 }
 .image-status--yes {
@@ -677,6 +976,33 @@ defineExpose({
 }
 .image-status--no {
   color: #888;
+}
+.creator-row {
+  font-size: 11px;
+  color: #666;
+  margin-top: 3px;
+  padding: 2px 4px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 3px;
+
+  i {
+    margin-right: 4px;
+    color: #049372;
+  }
+}
+.load-more-trigger {
+  min-height: 20px;
+  padding: 5px;
+}
+.loading-more {
+  text-align: center;
+  color: #888;
+  font-size: 12px;
+  padding: 10px;
+
+  i {
+    margin-right: 5px;
+  }
 }
 .text-center {
   color: #aaa;
@@ -841,6 +1167,7 @@ defineExpose({
   font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   max-height: 40px;
   display: -webkit-box;
