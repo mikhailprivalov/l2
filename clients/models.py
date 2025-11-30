@@ -1362,6 +1362,8 @@ class Card(models.Model):
         harmful_factors_title = [f"{i.harmful_factor.title}" for i in patient_harmfull_factors if i.harmful_factor.title not in artificial_result]
         ind_data['harmfull_factors'] = ";".join(harmful_factors_title)
 
+        ind_data['card_harmfull_factor'] = self.harmful_factor
+
         return ind_data
 
     def get_ecp_id(self):
