@@ -196,8 +196,8 @@
                     v-if="requestParams.researchDate"
                     class="info-row"
                   >
-                    <span class="info-label">Дата исследования</span>
-                    <span class="info-value">{{ requestParams.researchDate }}</span>
+                    <span class="info-label">Дата и время исследования</span>
+                    <span class="info-value">{{ requestParams.researchDate }} {{ requestParams.researchTime }}</span>
                   </div>
                   <div
                     v-if="requestParams.dose"
@@ -959,7 +959,7 @@ onBeforeUnmount(() => {
 
 .info-label {
   color: #888;
-  width: 140px;
+  width: 186px;
   flex-shrink: 0;
 }
 

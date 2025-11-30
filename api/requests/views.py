@@ -282,6 +282,9 @@ def create_request(request):
     if not patient_id or not research_id:
         return status_response(False, "Не указаны обязательные поля")
 
+    if not request_fields.get('date') or not request_fields.get('time'):
+        return status_response(False, "Не указана дата или время исследования")
+
     card = Card.objects.get(pk=patient_id)
 
     fin_source = IstochnikiFinansirovaniya.objects.filter(base=card.base, title="ОМС", hide=False).first()
@@ -320,7 +323,8 @@ def create_request(request):
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
         direction.fact_research_date = request_fields.get('date', '') or None
-        direction.save(update_fields=['is_cito', 'is_request', 'contrast_amount', 'dose', 'anamnesis', 'direction_comment', 'fact_research_date'])
+        direction.fact_research_time = request_fields.get('time', '') or None
+        direction.save(update_fields=['is_cito', 'is_request', 'contrast_amount', 'dose', 'anamnesis', 'direction_comment', 'fact_research_date', 'fact_research_time'])
 
         for file_data in files:
             if 'url' in file_data and file_data['url'].startswith('data:'):
@@ -446,6 +450,7 @@ def get_request_details(request):
         "datetime": strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M'),
         "doctor": direction.doc.get_fio() if direction.doc else 'Не указан',
         "factResearchDate": strfdatetime(direction.fact_research_date, '%d.%m.%Y') if direction.fact_research_date else None,
+        "factResearchTime": direction.fact_research_time.strftime('%H:%M') if direction.fact_research_time else None,
         "contrastAmount": direction.contrast_amount or '',
         "dose": direction.dose or '',
         "anamnesis": direction.anamnesis or '',
@@ -491,6 +496,9 @@ def get_request_params(request):
 
     if direction.fact_research_date:
         params["researchDate"] = strfdatetime(direction.fact_research_date, '%d.%m.%Y')
+
+    if direction.fact_research_time:
+        params["researchTime"] = direction.fact_research_time.strftime('%H:%M')
 
     if direction.dose:
         params["dose"] = direction.dose

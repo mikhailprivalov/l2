@@ -594,6 +594,7 @@ class Napravleniya(models.Model):
     is_cito = models.BooleanField(default=False, blank=True, help_text='Срочное исполнение')
     is_request = models.BooleanField(default=False, blank=True, db_index=True, help_text='Флаг заявки')
     fact_research_date = models.DateField(blank=True, null=True, default=None, help_text='Фактическая дата проведения исследования')
+    fact_research_time = models.TimeField(blank=True, null=True, default=None, help_text='Фактическое время проведения исследования')
     contrast_amount = models.CharField(max_length=50, default='', blank=True, help_text='Объем контраста')
     dose = models.CharField(max_length=50, default='', blank=True, help_text='Доза')
     anamnesis = models.TextField(default='', blank=True, help_text='Краткий анамнез')
