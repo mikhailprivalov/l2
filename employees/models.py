@@ -602,7 +602,6 @@ class EmployeePosition(models.Model):
         employee_position.save()
 
 
-
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
     short_title = models.CharField(max_length=25, verbose_name='Сокращенное наименование')
