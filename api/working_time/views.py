@@ -85,4 +85,3 @@ def edit_lunch(request):
     lunch_duration_in_minutes = request_data.get("lunchDurationInMinutes")
     EmployeePosition.edit_lunch(employee_position_id, lunch_duration_in_minutes)
     return JsonResponse({"ok": True, "message": ""})
-
