@@ -533,6 +533,21 @@ const employeeTransfer = async ({ employeePositionId, date }) => {
   }
 };
 
+const editLunch = async ({ employeePositionId, lunchDurationInMinutes }) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/working-time/edit-lunch', {
+    employeePositionId,
+    lunchDurationInMinutes,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    await getEmployeesWorkTime();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
 const columns = ref([]);
 
 const getMonthDays = (year: number, month: number) => {
@@ -614,12 +629,14 @@ const getColumns = () => {
             tippyMaxWidth: '50%',
             rowIndex,
             employeePositionId: row.employeePositionId,
+            employeeLunchDuration: row.lunchDuration,
             employeePositions: employeesWorkTime.value,
           },
           on: {
             copyTop,
             copyFrom,
             clear,
+            editLunch,
           },
         },
       ),

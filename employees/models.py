@@ -595,6 +595,13 @@ class EmployeePosition(models.Model):
         employee_positions = EmployeePosition.objects.filter(pk__in=employee_position_ids)
         return employee_positions
 
+    @staticmethod
+    def edit_lunch(employee_position_id: int, lunch_duration_in_minutes: int):
+        employee_position = EmployeePosition.objects.filter(pk=employee_position_id).first()
+        employee_position.lunch_duration = lunch_duration_in_minutes
+        employee_position.save()
+
+
 
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
