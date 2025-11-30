@@ -70,6 +70,10 @@ class Hospitals(models.Model):
     use_self_generate_tube = models.BooleanField(default=False, blank=True, help_text='Приоритет собственного генератора')
     use_internal_code_api_integration = models.BooleanField(default=True, blank=True, help_text='Использовать внутренний код для интеграции')
     auth_data_for_rest = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Авторизация для rest-api текстом в {} для json")
+    height_stamp_jpg = models.PositiveSmallIntegerField(blank=True, null=True, default=0, help_text="Высота заголовка-логотипа 50")
+    width_stamp_jpg = models.PositiveSmallIntegerField(blank=True, null=True, default=0, help_text="Ширина заголовка-логотипа 200")
+    x_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Х -10 ")
+    y_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Y 2 ")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
