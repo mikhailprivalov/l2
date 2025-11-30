@@ -25,6 +25,7 @@ def gistology_result_send(dirs=''):
     date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
     date_end = date_end.strftime('%Y%m%d %H:%M:%S')
     if len(dirs) > 0:
+        dirs = dirs.split(",")
         dirs = [int(i) for i in dirs]
         d_qs = get_directions_for_send_ecp_by_dirs(tuple(REMD_ONLY_RESEARCH), tuple(dirs))
     else:
