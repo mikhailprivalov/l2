@@ -678,7 +678,7 @@ def result_print(request):
                         fwb.append(Paragraph("{}".format(s_napr), style))
                     fwb = procedural_text_for_result(iss.napravleniye, fwb, napr_child)
                     if iss.research.has_own_form_result:
-                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                        fwb.append(Paragraph(f"Исполнитель: {format(iss.doc_confirmation.get_full_fio())}", styleBold))
 
                 fwb.append(Spacer(1, 3 * mm))
                 if not hosp and not iss.research.is_slave_hospital and not iss.research.has_own_form_result and not iss.research.is_form:
@@ -694,11 +694,11 @@ def result_print(request):
 
                 if not iss.research.has_own_form_result and not iss.research.is_form and not iss.research.is_aux and not iss.research.is_expertise:
                     if iss.doc_confirmation and iss.doc_confirmation.podrazdeleniye.vaccine:
-                        fwb.append(Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                        fwb.append(Paragraph("Исполнитель: {}".format(iss.doc_confirmation.get_full_fio()), styleBold))
                     else:
                         if iss.doc_confirmation:
                             doc_execute = "фельдшер" if request.user.is_authenticated and iss.doc_confirmation.has_group("Фельдшер") else "врач"
-                            fwb.append(Paragraph("Исполнитель: {} {}, {}".format(doc_execute, iss.doc_confirmation.get_full_fio(), iss.doc_confirmation.podrazdeleniye.title), styleBold))
+                            fwb.append(Paragraph("Исполнитель: {} {}".format(doc_execute, iss.doc_confirmation.get_full_fio()), styleBold))
                         else:
                             fwb.append(
                                 Paragraph("Исполнитель: {}, {}".format(iss.doc_confirmation_string, iss.napravleniye.hospital.short_title or iss.napravleniye.hospital.title), styleBold)
