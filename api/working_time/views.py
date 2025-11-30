@@ -75,3 +75,13 @@ def get_work_time_filling_by_employee_template(request):
     action = request_data.get("action")
     result = EmployeeWorkingHoursSchedule.get_work_time_filling_by_employee_template(year, month, department_id, action)
     return JsonResponse({"result": result})
+
+
+@login_required()
+@group_required('График рабочего времени')
+def edit_lunch(request):
+    request_data = json.loads(request.body)
+    employee_position_id = request_data.get("employeePositionId")
+    lunch_duration_in_minutes = request_data.get("lunchDurationInMinutes")
+    EmployeePosition.edit_lunch(employee_position_id, lunch_duration_in_minutes)
+    return JsonResponse({"ok": True, "message": ""})
