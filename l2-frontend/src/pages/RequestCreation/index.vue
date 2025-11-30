@@ -106,6 +106,7 @@ const notify = useNotify();
 
 const defaultRequestFields = () => ({
   date: moment().format('YYYY-MM-DD'),
+  time: moment().format('HH:mm'),
   modality: '',
   anatomy: '',
   side: '',

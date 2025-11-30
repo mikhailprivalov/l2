@@ -7,13 +7,21 @@
         @input="onInput"
       >
         <div class="request-fields">
-          <FormulateInput
-            class="half-width"
-            type="date"
-            name="date"
-            label="Дата исследования"
-            placeholder="ДД.ММ.ГГГГ"
-          />
+          <div class="half-width">
+            <label class="formulate-input-label date-time-label">Дата и время исследования</label>
+            <div class="date-time-fields">
+              <FormulateInput
+                type="date"
+                name="date"
+                placeholder="ДД.ММ.ГГГГ"
+              />
+              <FormulateInput
+                type="time"
+                name="time"
+                placeholder="ЧЧ:ММ"
+              />
+            </div>
+          </div>
           <FormulateInput
             class="half-width"
             type="number"
@@ -432,7 +440,7 @@ watch(() => props.value, (val) => {
 
 ::v-deep .formulate-input-element {
     input {
-        &[type="date"], &[type="number"], &[type="text"] {
+        &[type="date"], &[type="number"], &[type="text"], &[type="time"], &[type="datetime-local"] {
             min-height: 0;
             height: 34px;
         }
@@ -463,5 +471,17 @@ watch(() => props.value, (val) => {
   right: 0;
   bottom: 0;
   z-index: 2;
+}
+
+.date-time-fields {
+  display: flex;
+  gap: 6px;
+}
+
+.date-time-label {
+  line-height: 1.5;
+  font-size: 0.9em;
+  font-weight: 600;
+  margin-bottom: 0.1em;
 }
 </style>
