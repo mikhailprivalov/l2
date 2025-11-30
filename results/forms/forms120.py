@@ -164,13 +164,7 @@ def gen_header_title(hospital):
     y_offset = hospital.y_offset if hospital.y_offset else 1
     img = None
     if file_jpg:
-        img = ImageWithOffset(
-            file_jpg,
-            width_stamp * mm,
-            height_stamp * mm,
-            x_offset=x_offset * mm,
-            y_offset=y_offset * mm
-        )
+        img = ImageWithOffset(file_jpg, width_stamp * mm, height_stamp * mm, x_offset=x_offset * mm, y_offset=y_offset * mm)
     return img
 
 
