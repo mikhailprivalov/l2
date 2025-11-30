@@ -1,5 +1,4 @@
 import pytz
-from hospitals.models import Hospitals
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, Flowable
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
