@@ -20,9 +20,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     """
 
     hospital: Hospitals = direction.hospital
-    hospital_name = hospital.safe_short_title
-    hospital_address = hospital.safe_address
-
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
 
@@ -52,7 +49,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     result = get_paraclinic_results_by_direction(iss.napravleniye_id)
     data = {r.cda_title_field: r.value for r in result}
     direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
-    is_cito = direction.is_cito
     contrast_amount = direction.contrast_amount
     dose = direction.dose
     anamnesis = direction.anamnesis
