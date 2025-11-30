@@ -2,6 +2,21 @@
   <div class="position">
     <div class="top-icons">
       <i
+        ref="lunch"
+        v-tippy="{
+          html: `#tempLunch${props.employeePositionId}`,
+          arrow: true,
+          reactive: true,
+          interactive: true,
+          animation: 'fade',
+          duration: 0,
+          theme: 'light',
+          placement: 'bottom',
+          trigger: 'click',
+        }"
+        class="fa-solid fa-cutlery icon-color"
+      />
+      <i
         v-tippy
         class="fa-solid fa-copy icon-color"
         title="Сверху"
@@ -36,6 +51,37 @@
       class="position-text"
     />
     <div
+      :id="`tempLunch${props.employeePositionId}`"
+      class="tp-lunch"
+    >
+      <div class="lunch-settings">
+        <label>{{ `Текущий обед в минутах: ${props.employeeLunchDuration ? props.employeeLunchDuration : 0}` }}</label>
+        <label>{{ `Выбранный обед в минутах: ${selectedLunchDurationInMinutes ? selectedLunchDurationInMinutes : 0}` }}</label>
+        <br>
+        <label for="withLunch">{{ withLunch ? 'С обедом' : 'Без обеда' }}</label>
+        <input
+          id="withLunch"
+          v-model="withLunch"
+          type="checkbox"
+        >
+        <br>
+        <RadioFieldById
+          v-if="withLunch"
+          v-model="selectedLunchDurationInMinutes"
+          :variants="lunchDurations"
+          class="lunch-duration-variants"
+          :start-null="true"
+        />
+        <button
+          class="btn btn-blue-nb"
+          :disabled="withLunch && !selectedLunchDurationInMinutes"
+          @click="editLunch"
+        >
+          Сохранить
+        </button>
+      </div>
+    </div>
+    <div
       :id="`tempCopyFrom${props.employeePositionId}`"
       class="tp"
     >
@@ -62,11 +108,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { getCurrentInstance, ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import RadioFieldById from '@/fields/RadioFieldById.vue';
 
 const props = defineProps({
   text: {
@@ -90,13 +137,18 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  employeeLunchDuration: {
+    type: [Number, undefined, null],
+    required: false,
+  },
   employeePositions: {
     type: Array,
     required: true,
   },
 });
 
-const emit = defineEmits(['copyTop', 'copyFrom', 'clear']);
+const emit = defineEmits(['copyTop', 'copyFrom', 'clear', 'editLunch']);
+const root = getCurrentInstance().proxy.$root;
 const copyTop = () => {
   if (props.rowIndex !== 0) {
     emit('copyTop', { rowIndex: props.rowIndex });
@@ -128,6 +180,33 @@ const normalizer = (node) => ({
 const clear = () => {
   emit('clear', { rowIndex: props.rowIndex });
 };
+
+const lunch = ref(null);
+const withLunch = ref(false);
+const selectedLunchDurationInMinutes = ref(null);
+const lunchDurations = ref([
+  { id: 30, label: '30' },
+  { id: 60, label: '60' },
+  { id: 90, label: '90' },
+  { id: 120, label: '120' },
+]);
+watch(withLunch, () => {
+  if (!withLunch.value && selectedLunchDurationInMinutes.value) {
+    selectedLunchDurationInMinutes.value = null;
+  }
+});
+const editLunch = () => {
+  if (withLunch.value && !selectedLunchDurationInMinutes.value) {
+    root.$emit('msg', 'error', 'Значение обеда не выбрано');
+  } else {
+    const lunchDurationInMinutes = withLunch.value ? selectedLunchDurationInMinutes.value : 0;
+    emit('editLunch', {
+      employeePositionId: props.employeePositionId,
+      lunchDurationInMinutes,
+    });
+  }
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -153,6 +232,10 @@ const clear = () => {
   height: auto;
   width: 150px;
 }
+.tp-lunch {
+  height: auto;
+  width: 300px;
+}
 .icon-color {
   color: #636e7e;
 }
@@ -162,5 +245,12 @@ const clear = () => {
   overflow: hidden;
   margin-bottom: 0;
   padding-top: 6px;
+}
+.lunch-duration-variants {
+  height: 19px;
+  margin-bottom: 5px;
+}
+.lunch-settings {
+  text-align: left;
 }
 </style>
