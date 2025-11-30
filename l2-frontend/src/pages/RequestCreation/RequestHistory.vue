@@ -309,6 +309,13 @@
                   >{{ requestDetails.factResearchDate || '(не указана)' }}</span>
                 </div>
                 <div class="detail-row">
+                  <span class="detail-label">Время исследования:</span>
+                  <span
+                    class="detail-value"
+                    :class="{ 'empty-value': !requestDetails.factResearchTime }"
+                  >{{ requestDetails.factResearchTime || '(не указано)' }}</span>
+                </div>
+                <div class="detail-row">
                   <span class="detail-label">Доза:</span>
                   <span
                     class="detail-value"
