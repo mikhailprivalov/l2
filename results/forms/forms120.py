@@ -225,7 +225,6 @@ def gen_table(doctor):
                 ('LINEBELOW', (6, 0), (6, 0), 0.75, colors.black),
                 ('TOPPADDING', (0, 0), (-1, -1), -20 * mm),
                 ('LEFTPADDING', (-1, 0), (-1, 0), 6 * mm),
-
             ]
         )
     )
