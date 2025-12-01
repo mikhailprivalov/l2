@@ -2789,7 +2789,8 @@ def results_by_direction(request):
                 objs_result[direction_data[1]]["services"][i["result"][0]["iss_id"]] = {
                     "title": i["title_research"],
                     "fio": short_fio_dots(i["result"][0]["docConfirm"]),
-                    "confirmedAt": direction_data[0],
+                    "confirmedAt": datetime.datetime.strftime(iss.time_confirmation.astimezone(pytz.timezone('ASIA/Irkutsk')), '%d.%m.%Y'),
+                    "confirmedTime": datetime.datetime.strftime(iss.time_confirmation.astimezone(pytz.timezone('ASIA/Irkutsk')), '%H:%M'),
                     "fractions": [],
                     "directionId": i["result"][0]["direction_id"],
                     "additionalDataConfirmDirection": additional_data_confirm_direction,
