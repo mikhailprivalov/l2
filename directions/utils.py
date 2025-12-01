@@ -19,7 +19,7 @@ def gistology_result_send(dirs=''):
         if not available:
             stdout.write("error Cервер отправки в ЕЦП не доступен")
     current_time_ecp_upload = SettingManager.rmis_upload_minutes_interval()
-    date_start = current_time(only_date=False) + relativedelta(hours=-10)
+    date_start = current_time(only_date=False) + relativedelta(hours=-100)
     date_start = date_start.strftime('%Y%m%d %H:%M:%S')
 
     date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
