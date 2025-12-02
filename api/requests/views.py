@@ -198,7 +198,8 @@ def get_request_images(request):
                 if equipment_receive.napravleniye and equipment_receive.napravleniye.client:
                     patient_fio = equipment_receive.napravleniye.client.individual.fio()
                 else:
-                    patient_fio = f"{equipment_receive.family} {equipment_receive.name} {equipment_receive.patronymic}".strip()
+                    # patient_fio = f"{equipment_receive.family} {equipment_receive.name} {equipment_receive.patronymic}".strip()
+                    patient_fio = equipment_receive.tag_patient_name
 
                 rows.append(
                     {

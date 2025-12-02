@@ -59,7 +59,8 @@ def search_dicom_study(direction=None):
                 return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
             else:
                 if WEB_PLUGIN_LINK_STUDY:
-                    dicom_link_web = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid_tag']}"
+                    # dicom_link_web = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid_tag']}"
+                    dicom_link_web = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid']}"
                 else:
                     dicom_link_web = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
                 return dicom_link_web
