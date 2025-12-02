@@ -52,13 +52,18 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     anamnesis = direction.anamnesis
     direction_comment = direction.direction_comment
     fact_research_date = direction.fact_research_date
+    fact_research_time = direction.fact_research_time
+    if fact_research_time:
+        fact_research_time = fact_research_time.strftime("%H:%M")
+    else:
+        fact_research_time = ""
 
     individula = direction.client.get_data_individual()
 
     table_data = [
         [
             Paragraph("Дата и время проведения исследования", style),
-            Paragraph(f"{fact_research_date.strftime('%d.%m.%Y')}", style),
+            Paragraph(f"{fact_research_date.strftime('%d.%m.%Y')} {fact_research_time}", style),
         ],
         [
             Paragraph("ФИО", style),
