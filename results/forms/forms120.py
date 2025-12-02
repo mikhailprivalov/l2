@@ -58,7 +58,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     else:
         fact_research_time = ""
 
-
     individula = direction.client.get_data_individual()
 
     table_data = [
