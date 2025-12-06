@@ -26,7 +26,3 @@ def start_get_msg():
 
             print("Ождиаю событие")
             ch.start_consuming()
-
-
-if __name__ == "__main__":
-    start_get_msg()

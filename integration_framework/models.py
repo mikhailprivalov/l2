@@ -250,8 +250,8 @@ class EquipmentReceive(models.Model):
             tag_institution_name = data.get("tag_institution_name")
             tag_station_name = data.get("tag_station_name")
             equipment_model = Equipment.objects.filter(
-                institution_name=tag_institution_name, manufacturer=tag_manufacturer, manufacturer_model_name=tag_manufacturer_model_name, station_name=tag_station_name
-            ).first()
+                Q(manufacturer=tag_manufacturer) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name) | Q(station_name=tag_station_name)
+            )).first()
             if equipment_model:
                 eqr = EquipmentReceive(
                     tag_patient_name=data.get("tag_patient_name"),
