@@ -125,8 +125,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph("Медицинская организация, осуществившая анализ(описание) результатов", style),
             Paragraph(iss.doc_confirmation.hospital.title, style),
         ],
-
-
     ]
 
     custom_style = [
