@@ -121,6 +121,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph("Аллергическая реакция", style),
             Paragraph("", style),
         ],
+        [
+            Paragraph("Медицинская организация, осуществившая анализ(описание) результатов", style),
+            Paragraph(iss.doc_confirmation.hospital.title, style),
+        ],
+
+
     ]
 
     custom_style = [
@@ -154,6 +160,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     tbl = gen_table(iss.doc_confirmation)
     objs.append(Spacer(1, 3 * mm))
     objs.append(tbl)
+    objs.append(Spacer(1, 3 * mm))
+    objs.append(Paragraph("Данное заключение не является диагнозом и должно быть правильно интерпретировано лечащим врачом!", style))
 
     fwb.extend(objs)
     return fwb
