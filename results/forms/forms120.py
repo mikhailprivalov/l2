@@ -157,9 +157,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     moscow_dt = iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S")
     objs.append(Paragraph(f"{moscow_dt} (Мск)", style))
     objs.append(Paragraph(f"Врач: {iss.doc_confirmation.get_full_fio()}", style))
-    tbl = gen_table(iss.doc_confirmation)
-    objs.append(Spacer(1, 3 * mm))
-    objs.append(tbl)
+    has_any_signature = kwargs.get('has_any_signature', False)
+    if not has_any_signature:
+        tbl = gen_table(iss.doc_confirmation)
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(tbl)
+
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph("Данное заключение не является диагнозом и должно быть правильно интерпретировано лечащим врачом!", style))
 
