@@ -6,6 +6,7 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_JUSTIFY
 from directions.models import Issledovaniya, Napravleniya
+from integration_framework.models import EquipmentReceive
 from laboratory.settings import FONTS_FOLDER
 import os.path
 from reportlab.pdfbase import pdfmetrics
@@ -59,6 +60,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         fact_research_time = ""
 
     individula = direction.client.get_data_individual()
+    equipment = EquipmentReceive.objects.filter(napravleniye=direction).first()
+    equipment_title = ''
+    if equipment.exist():
+        equipment_title = equipment.equipment_model.title
 
     table_data = [
         [
@@ -82,6 +87,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f"{direction.pk}", style),
         ],
         [
+            Paragraph("Причина обращения или диагноз", style),
+            Paragraph(f"{data.get('пр-Диагноз', '')} {data.get('пр-Причина', '')}", style),
+        ],
+        [
             Paragraph("Первичное/вторичное исследование", style),
             Paragraph(f"{data.get('пр-Этап исследования')}", style),
         ],
@@ -95,7 +104,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Наименование медицинского оборудования", style),
-            Paragraph("", style),
+            Paragraph(equipment_title, style),
         ],
         [
             Paragraph("Эффективная доза (при наличии)", style),
