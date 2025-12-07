@@ -6,6 +6,7 @@ from reportlab.lib.units import mm
 from copy import deepcopy
 from reportlab.lib.enums import TA_JUSTIFY
 from directions.models import Issledovaniya, Napravleniya
+from integration_framework.models import EquipmentReceive
 from laboratory.settings import FONTS_FOLDER
 import os.path
 from reportlab.pdfbase import pdfmetrics
@@ -59,6 +60,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         fact_research_time = ""
 
     individula = direction.client.get_data_individual()
+    equipment = EquipmentReceive.objects.filter(napravleniye=direction).first()
+    equipment_title = ''
+    if equipment.exist():
+        equipment_title = equipment.equipment_model.title
 
     table_data = [
         [
@@ -82,6 +87,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             Paragraph(f"{direction.pk}", style),
         ],
         [
+            Paragraph("Причина обращения или диагноз", style),
+            Paragraph(f"{data.get('пр-Диагноз', '')} {data.get('пр-Причина', '')}", style),
+        ],
+        [
             Paragraph("Первичное/вторичное исследование", style),
             Paragraph(f"{data.get('пр-Этап исследования')}", style),
         ],
@@ -95,7 +104,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Наименование медицинского оборудования", style),
-            Paragraph("", style),
+            Paragraph(equipment_title, style),
         ],
         [
             Paragraph("Эффективная доза (при наличии)", style),
@@ -120,6 +129,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         [
             Paragraph("Аллергическая реакция", style),
             Paragraph("", style),
+        ],
+        [
+            Paragraph("Медицинская организация, осуществившая анализ(описание) результатов", style),
+            Paragraph(iss.doc_confirmation.hospital.title, style),
         ],
     ]
 
@@ -151,9 +164,14 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     moscow_dt = iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S")
     objs.append(Paragraph(f"{moscow_dt} (Мск)", style))
     objs.append(Paragraph(f"Врач: {iss.doc_confirmation.get_full_fio()}", style))
-    tbl = gen_table(iss.doc_confirmation)
+    has_any_signature = kwargs.get('has_any_signature', False)
+    if not has_any_signature:
+        tbl = gen_table(iss.doc_confirmation)
+        objs.append(Spacer(1, 3 * mm))
+        objs.append(tbl)
+
     objs.append(Spacer(1, 3 * mm))
-    objs.append(tbl)
+    objs.append(Paragraph("Данное заключение не является диагнозом и должно быть правильно интерпретировано лечащим врачом!", style))
 
     fwb.extend(objs)
     return fwb
