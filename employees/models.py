@@ -606,6 +606,7 @@ class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
     short_title = models.CharField(max_length=25, verbose_name='Сокращенное наименование')
     hide = models.BooleanField(default=False, db_index=True)
+    is_vacation = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.title
@@ -616,7 +617,7 @@ class WorkDayStatus(models.Model):
 
     @staticmethod
     def get_workday_statuses(short=True):
-        result = [{"id": status.pk, "label": status.short_title if short else status.title} for status in WorkDayStatus.objects.filter(hide=False)]
+        result = [{"id": status.pk, "label": status.short_title if short else status.title, "isVacation": status.is_vacation} for status in WorkDayStatus.objects.filter(hide=False)]
         return result
 
     @staticmethod

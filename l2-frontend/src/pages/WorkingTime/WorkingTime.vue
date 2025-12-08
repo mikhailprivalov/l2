@@ -548,6 +548,31 @@ const editLunch = async ({ employeePositionId, lunchDurationInMinutes }) => {
   }
 };
 
+const fillVacation = ({ employeePositionId, vacationStart, vacationEnd }) => {
+  const workDayStatusesVacation = workDayStatuses.value.find(status => status.isVacation);
+  if (workDayStatusesVacation) {
+    const vacationStartDate = moment(vacationStart);
+    const vacationEndDate = moment(vacationEnd);
+    const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+        === employeePositionId);
+    const fullData = { startWorkTime: '', endWorkTime: '', typeId: workDayStatusesVacation.id };
+    for (let day = moment(vacationStartDate); day <= vacationEndDate; day.add(1, 'day')) {
+      const date = day.format('YYYY-MM-DD');
+      currentEmployeePosition[date] = { ...fullData };
+      updateChangedEmployeesWorkTime(
+        employeePositionId,
+        date,
+        null,
+        null,
+        null,
+        { ...fullData },
+      );
+    }
+  } else {
+    root.$emit('msg', 'error', 'Тип рабочего дня "отпуск" не настроен');
+  }
+};
+
 const columns = ref([]);
 
 const getMonthDays = (year: number, month: number) => {
@@ -560,6 +585,9 @@ const getMonthDays = (year: number, month: number) => {
   }
   return days;
 };
+
+const firstDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value, 1)).format('YYYY-MM-DD'));
+const lastDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value + 1, 0)).format('YYYY-MM-DD'));
 
 const getColumns = () => {
   const columnTemplate = [
@@ -631,12 +659,15 @@ const getColumns = () => {
             employeePositionId: row.employeePositionId,
             employeeLunchDuration: row.lunchDuration,
             employeePositions: employeesWorkTime.value,
+            firstDayMonth,
+            lastDayMonth,
           },
           on: {
             copyTop,
             copyFrom,
             clear,
             editLunch,
+            fillVacation,
           },
         },
       ),

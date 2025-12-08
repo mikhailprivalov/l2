@@ -2,6 +2,21 @@
   <div class="position">
     <div class="top-icons">
       <i
+        ref="vacation"
+        v-tippy="{
+          html: `#tempVacation${props.employeePositionId}`,
+          arrow: true,
+          reactive: true,
+          interactive: true,
+          animation: 'fade',
+          duration: 0,
+          theme: 'light',
+          placement: 'bottom',
+          trigger: 'click',
+        }"
+        class="fa-solid icon-color"
+      >О</i>
+      <i
         ref="lunch"
         v-tippy="{
           html: `#tempLunch${props.employeePositionId}`,
@@ -51,6 +66,50 @@
       class="position-text"
     />
     <div
+      :id="`tempVacation${props.employeePositionId}`"
+      class="tp"
+    >
+      <div>
+        <RadioFieldById
+          v-model="selectedVacationFillMode"
+          :variants="vacationFillMode"
+          class="radio-select-variants"
+        />
+        <label class="tp-label">Начало</label>
+        <input
+          v-model="vacationStart"
+          class="form-control"
+          type="date"
+          :min="props.firstDayMonth"
+          :max="props.lastDayMonth"
+        >
+        <input
+          v-if="selectedVacationFillMode === 'day'"
+          v-model="vacationDurationInDays"
+          class="form-control"
+          type="number"
+          min="0"
+          max="31"
+          :disabled="!vacationStart"
+        >
+        <input
+          v-else
+          v-model="vacationEnd"
+          class="form-control"
+          type="date"
+          :disabled="!vacationStart"
+          :min="props.firstDayMonth"
+          :max="props.lastDayMonth"
+        >
+        <button
+          class="btn btn-blue-nb"
+          @click="fillVacation"
+        >
+          Сохранить
+        </button>
+      </div>
+    </div>
+    <div
       :id="`tempLunch${props.employeePositionId}`"
       class="tp-lunch"
     >
@@ -66,7 +125,7 @@
           v-if="withLunch"
           v-model="selectedLunchDurationInMinutes"
           :variants="lunchDurations"
-          class="lunch-duration-variants"
+          class="radio-select-variants"
           :start-null="true"
         />
         <button
@@ -107,6 +166,7 @@
 <script setup lang="ts">
 import { getCurrentInstance, ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
+import moment from 'moment';
 
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
@@ -142,9 +202,17 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  firstDayMonth: {
+    type: String,
+    required: true,
+  },
+  lastDayMonth: {
+    type: String,
+    required: true,
+  },
 });
 
-const emit = defineEmits(['copyTop', 'copyFrom', 'clear', 'editLunch']);
+const emit = defineEmits(['copyTop', 'copyFrom', 'clear', 'editLunch', 'fillVacation']);
 const root = getCurrentInstance().proxy.$root;
 const copyTop = () => {
   if (props.rowIndex !== 0) {
@@ -204,6 +272,40 @@ const editLunch = () => {
   }
 };
 
+const vacation = ref(null);
+const vacationFillMode = ref([
+  { id: 'day', label: 'Дни' },
+  { id: 'date', label: 'Конец' },
+]);
+const selectedVacationFillMode = ref('day');
+const vacationStart = ref(null);
+const vacationDurationInDays = ref(0);
+const vacationEnd = ref(null);
+
+watch(vacationDurationInDays, () => {
+  if (Number(vacationDurationInDays.value) < 0) {
+    vacationDurationInDays.value = 0;
+  } else if (!vacationStart.value) {
+    root.$emit('msg', 'error', 'Дата начала не заполнена');
+  } else {
+    const lastMonthDay = moment(props.lastDayMonth);
+    const vacationStartDate = moment(vacationStart.value);
+    const vacationEndDate = moment(vacationStartDate).add(Number(vacationDurationInDays.value), 'days').subtract(1, 'day');
+    if (vacationEndDate <= lastMonthDay) {
+      vacationEnd.value = vacationEndDate.format('YYYY-MM-DD');
+    } else {
+      vacationEnd.value = lastMonthDay.format('YYYY-MM-DD');
+    }
+  }
+});
+const fillVacation = () => {
+  emit('fillVacation', {
+    employeePositionId: props.employeePositionId,
+    vacationStart: vacationStart.value,
+    vacationEnd: vacationEnd.value,
+  });
+};
+
 </script>
 
 <style scoped lang="scss">
@@ -243,7 +345,7 @@ const editLunch = () => {
   margin-bottom: 0;
   padding-top: 6px;
 }
-.lunch-duration-variants {
+.radio-select-variants {
   height: 19px;
   margin-bottom: 5px;
 }
