@@ -569,7 +569,7 @@ const fillVacation = ({ employeePositionId, vacationStart, vacationEnd }) => {
       );
     }
   } else {
-    root.$emit('msg', 'error', 'Тип рабочего дня "отпуск" не настроен');
+    root.$emit('msg', 'error', 'Статус "отпуск" не настроен');
   }
 };
 
@@ -659,8 +659,8 @@ const getColumns = () => {
             employeePositionId: row.employeePositionId,
             employeeLunchDuration: row.lunchDuration,
             employeePositions: employeesWorkTime.value,
-            firstDayMonth,
-            lastDayMonth,
+            firstDayMonth: firstDayMonth.value,
+            lastDayMonth: lastDayMonth.value,
           },
           on: {
             copyTop,
