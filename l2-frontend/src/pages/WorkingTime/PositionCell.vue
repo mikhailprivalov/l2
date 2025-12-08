@@ -55,9 +55,6 @@
       class="tp-lunch"
     >
       <div class="lunch-settings">
-        <label>{{ `Текущий обед в минутах: ${props.employeeLunchDuration ? props.employeeLunchDuration : 0}` }}</label>
-        <label>{{ `Выбранный обед в минутах: ${selectedLunchDurationInMinutes ? selectedLunchDurationInMinutes : 0}` }}</label>
-        <br>
         <label for="withLunch">{{ withLunch ? 'С обедом' : 'Без обеда' }}</label>
         <input
           id="withLunch"
