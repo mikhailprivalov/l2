@@ -497,7 +497,7 @@ def result_print(request):
         portrait_tmpl = PageTemplate(id='portrait_tmpl', frames=[p_frame], pagesize=portrait(A4), onPageEnd=local_mark_pages)
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
 
-        if link_files:
+        if link_files and SettingManager.get("show_add_file_in_proto_pdf", default='true', default_type='b'):
             continue
 
         count_direction += 1
@@ -804,7 +804,7 @@ def result_print(request):
     elif fwb:
         doc.build(naprs)
 
-    if len(link_result) > 0:
+    if len(link_result) > 0 and SettingManager.get("show_add_file_in_proto_pdf", default='true', default_type='b'):
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
         date_now_str = str(random.random()) + str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')

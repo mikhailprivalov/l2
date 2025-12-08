@@ -4,8 +4,6 @@ import pika
 def process_message(ch, method, properties, body):
     print(f"сообщение {body.decode()}")
     print(f"delivery_tag {method.delivery_tag}")
-
-
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 

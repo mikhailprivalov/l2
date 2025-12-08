@@ -1,14 +1,14 @@
 import pika
+from laboratory.settings import RMQ_AUTH_PARAM
 from laboratory.utils import current_time
 import simplejson as json
 
 
-def publish_to_exchange():
-    # Подключение к RabbitMQ
-    credentials = pika.PlainCredentials('guest', 'guest')  # если требуется аутентификация
+def broker_publish_msg(message):
+    credentials = pika.PlainCredentials(RMQ_AUTH_PARAM.get("login"), RMQ_AUTH_PARAM.get("password"))  # если требуется аутентификация
     parameters = pika.ConnectionParameters(
-        host='localhost',
-        port=5672,
+        host=RMQ_AUTH_PARAM.get("address"),
+        port=RMQ_AUTH_PARAM.get("port"),
         credentials=credentials,
         virtual_host='/'  # виртуальный хост
     )
@@ -17,50 +17,16 @@ def publish_to_exchange():
     channel = connection.channel()
 
     # Параметры существующего обменника (убедитесь, что он уже создан)
-    exchange_name = 'sendresult'
-    exchange_type = 'direct'  # или 'topic', 'fanout', 'headers'
+    exchange_name = RMQ_AUTH_PARAM.get("exchange_name")
 
-    # Публикация сообщения
-    message = {
-        'timestamp': current_time(),
-        'data': 'Hello RabbitMQ!',
-        'type': 'test_message'
-    }
-
-    # Если нужно опубликовать в конкретный routing_key
-    routing_key = 'route_sendresult_q'
-
-    channel.basic_publish(
-        exchange=exchange_name,
-        routing_key=routing_key,
-        body='Hello World!',
-        properties=pika.BasicProperties(
-            delivery_mode=2,  # persistent сообщение
-            content_type='application/json'
-        )
-    )
-
-    print(f" [x] Sent message to exchange '{exchange_name}' with routing key '{routing_key}'")
-    connection.close()
-
-
-def start_send_msg(message):
-    credentials = pika.PlainCredentials('guest', 'guest')  # если требуется аутентификация
-    parameters = pika.ConnectionParameters(
-        host='localhost',
-        port=5672,
-        credentials=credentials,
-        virtual_host='/'  # виртуальный хост
-    )
-    exchange_name = 'sendresult'
-    cur_time = current_time().strftime("%d.%m.%y %H:%M:%S")
+    cur_time = current_time().strftime("%Y%m%d%H:%M:%S")
     message = {
         'timestamp': cur_time,
-        'data': f"{message} -{cur_time}",
-        'type': 'test_message'
+        'data': f"{message}",
+        'type': 'direction'
     }
 
-    routing_key = 'route_sendresult_q'
+    routing_key = RMQ_AUTH_PARAM.get("routing_key")
     with pika.BlockingConnection(parameters) as conn:
         with conn.channel() as ch:
             ch.basic_publish(
@@ -68,12 +34,8 @@ def start_send_msg(message):
                 routing_key=routing_key,
                 body=json.dumps(message),
                 properties=pika.BasicProperties(
-                    delivery_mode=2,  # persistent сообщение
-                    content_type='application/json'
-                )
+                    delivery_mode=2,
+                    content_type='application/json',
+                ),
+                mandatory=True
             )
-
-
-def process_message(*args):
-    for arg in args:
-        print(arg, "\n\n")
