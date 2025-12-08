@@ -37,9 +37,9 @@ def get_med_protocols(request):
     cases_iss = set([i.case_issledovaniye_id for i in closed_case_need_send])
     try:
         result_iss_id = directions_by_parent_cases_issledovaniye_only_research_id_final_report(tuple(cases_iss))
-        if not result_iss_id:
-            return Response({"result": "None", "comment": "No new results"})
     except:
+        return Response({"result": "None", "comment": "No new results"})
+    if not result_iss_id:
         return Response({"result": "None", "comment": "No new results"})
 
     direction_iss = {
