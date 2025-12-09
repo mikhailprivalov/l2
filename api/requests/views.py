@@ -628,9 +628,7 @@ def get_requests_by_status(request):
         )
     else:
         directions = (
-            Napravleniya.objects.filter(is_request=True, data_sozdaniya__date=search_date)
-            .select_related("client__individual", "doc")
-            .prefetch_related("issledovaniya_set__research")
+            Napravleniya.objects.filter(is_request=True, data_sozdaniya__date=search_date).select_related("client__individual", "doc").prefetch_related("issledovaniya_set__research")
         )
 
     if allowed_hospital_ids:
