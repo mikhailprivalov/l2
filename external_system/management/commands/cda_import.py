@@ -19,7 +19,7 @@ class Command(BaseCommand):
         starts = False
 
         title, doc_refferal, extract, indicator = '', '', '', ''
-        code = -1
+        code_fact = -1
         for row in ws.rows:
             is_doc_refferal = False
             is_extract = False
@@ -28,7 +28,7 @@ class Command(BaseCommand):
             if not starts:
                 if "NAME" in cells:
                     title = cells.index("NAME")
-                    code = cells.index("code")
+                    code_fact = cells.index("code")
                     doc_refferal = cells.index("doc_refferal")
                     extract = cells.index("extract")
                     indicator = cells.index("indicator")
@@ -42,5 +42,13 @@ class Command(BaseCommand):
                         is_extract = True
                     if int(indicator) == 1:
                         is_indicator = True
-                    CdaFields(code=code, title=cells[title], is_doc_refferal=is_doc_refferal, is_extract=is_extract, is_indicator=is_indicator).save()
-                    self.stdout.write(f'сохранено {cells[title]}')
+                    try:
+                        if int(cells[code_fact]) >= 1:
+                            code_data = int(cells[code_fact])
+                        else:
+                            code_data = -1
+                    except:
+                        code_data = -1
+                    CdaFields(code=code_data, title=cells[title], is_doc_refferal=is_doc_refferal, is_extract=is_extract, is_indicator=is_indicator).save()
+                    self.stdout.write(f'сохранено {cells[title]}-{cells[code_fact]}')
+
