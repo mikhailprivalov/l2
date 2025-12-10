@@ -51,4 +51,3 @@ class Command(BaseCommand):
                         code_data = -1
                     CdaFields(code=code_data, title=cells[title], is_doc_refferal=is_doc_refferal, is_extract=is_extract, is_indicator=is_indicator).save()
                     self.stdout.write(f'сохранено {cells[title]}-{cells[code_fact]}')
-
