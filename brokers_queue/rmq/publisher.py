@@ -24,5 +24,5 @@ def broker_publish_msg(message):
                     delivery_mode=2,
                     content_type='application/json',
                 ),
-                mandatory=True
+                mandatory=True,
             )
