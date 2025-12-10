@@ -10,13 +10,9 @@ def broker_publish_msg(message):
         host=RMQ_AUTH_PARAM.get("address"),
         port=RMQ_AUTH_PARAM.get("port"),
         credentials=credentials,
-        virtual_host='/'  # виртуальный хост
+        virtual_host='/'
     )
 
-    connection = pika.BlockingConnection(parameters)
-    channel = connection.channel()
-
-    # Параметры существующего обменника (убедитесь, что он уже создан)
     exchange_name = RMQ_AUTH_PARAM.get("exchange_name")
 
     cur_time = current_time().strftime("%Y%m%d%H:%M:%S")
