@@ -249,8 +249,9 @@ class EquipmentReceive(models.Model):
             tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
             tag_institution_name = data.get("tag_institution_name")
             tag_station_name = data.get("tag_station_name")
-            equipment_model = Equipment.objects.filter(Q(manufacturer=tag_manufacturer) & (
-                        Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name) | Q(station_name=tag_station_name))).first()
+            equipment_model = Equipment.objects.filter(
+                Q(manufacturer=tag_manufacturer) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name) | Q(station_name=tag_station_name))
+            ).first()
             if equipment_model:
                 eqr = EquipmentReceive(
                     tag_patient_name=data.get("tag_patient_name"),
