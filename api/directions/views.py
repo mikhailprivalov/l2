@@ -89,7 +89,8 @@ from laboratory.settings import (
     DICOM_SERVERS,
     TUBE_MAX_RESEARCH_WITH_SHARE,
     CDA_ID_FOR_DATE_CLOSE_CASE,
-    WEB_PLUGIN_LINK_STUDY, RMQ_RESEARCH_SEND,
+    WEB_PLUGIN_LINK_STUDY,
+    RMQ_RESEARCH_SEND,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
