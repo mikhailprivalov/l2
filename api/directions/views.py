@@ -9,6 +9,7 @@ from typing import Optional
 from django.core.paginator import Paginator
 
 from barcodes.views import tubes
+from brokers_queue.rmq.publisher import broker_publish_msg
 from cash_registers.models import Cheque
 from cda.integration import cdator_gen_xml, render_cda
 from contracts.models import PriceCategory, PriceCoast, PriceName, Company, MedicalExamination
@@ -89,6 +90,7 @@ from laboratory.settings import (
     TUBE_MAX_RESEARCH_WITH_SHARE,
     CDA_ID_FOR_DATE_CLOSE_CASE,
     WEB_PLUGIN_LINK_STUDY,
+    RMQ_RESEARCH_SEND,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -2641,6 +2643,8 @@ def directions_paraclinic_result(request):
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
         response["soft_forbidden"] = not forbidden_edit
+        if iss.research_id in RMQ_RESEARCH_SEND:
+            broker_publish_msg(iss.napravleniye_id)
     return JsonResponse(response)
 
 
