@@ -74,7 +74,6 @@ def gistology_result_send(dirs=''):
             msg = f"{n.pk}- Не успех"
             stdout.write(msg)
 
-
     stdout.write(f"{count}\n")
     return True
 
