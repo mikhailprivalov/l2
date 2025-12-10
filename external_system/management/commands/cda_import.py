@@ -18,16 +18,20 @@ class Command(BaseCommand):
         ws = wb[wb.sheetnames[0]]
         starts = False
 
-        title, doc_refferal, extract = '', '', ''
+        title, doc_refferal, extract, indicator = '', '', '', ''
+        code = -1
         for row in ws.rows:
             is_doc_refferal = False
             is_extract = False
+            is_indicator = False
             cells = [str(x.value) for x in row]
             if not starts:
                 if "NAME" in cells:
                     title = cells.index("NAME")
+                    code = cells.index("code")
                     doc_refferal = cells.index("doc_refferal")
                     extract = cells.index("extract")
+                    indicator = cells.index("indicator")
                     starts = True
             else:
                 cda = CdaFields.objects.filter(title=cells[title])
@@ -36,5 +40,7 @@ class Command(BaseCommand):
                         is_doc_refferal = True
                     if int(extract) == 1:
                         is_extract = True
-                    CdaFields(title=cells[title], is_doc_refferal=is_doc_refferal, is_extract=is_extract).save()
+                    if int(indicator) == 1:
+                        is_indicator = True
+                    CdaFields(code=code, title=cells[title], is_doc_refferal=is_doc_refferal, is_extract=is_extract, is_indicator=is_indicator).save()
                     self.stdout.write(f'сохранено {cells[title]}')
