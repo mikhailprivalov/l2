@@ -8,6 +8,7 @@ import base64
 import uuid
 from django.utils import timezone
 
+from appconf.manager import SettingManager
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
@@ -619,18 +620,22 @@ def get_requests_by_status(request):
         allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
     except ValueError as e:
         return JsonResponse({"rows": [], "error": str(e)})
-
-    directions = (
-        Napravleniya.objects.filter(is_request=True, equipment_receive__isnull=False, equipment_receive__time_save_link__date=search_date)
-        .select_related("client__individual", "doc")
-        .prefetch_related("issledovaniya_set__research")
-    )
+    if SettingManager.get('show_directions_with_link_image', default='true', default_type='b'):
+        directions = (
+            Napravleniya.objects.filter(is_request=True, equipment_receive__isnull=False, equipment_receive__time_save_link__date=search_date)
+            .select_related("client__individual", "doc")
+            .prefetch_related("issledovaniya_set__research")
+        )
+    else:
+        directions = (
+            Napravleniya.objects.filter(is_request=True, data_sozdaniya__date=search_date).select_related("client__individual", "doc").prefetch_related("issledovaniya_set__research")
+        )
 
     if allowed_hospital_ids:
         directions = directions.filter(hospital_id__in=allowed_hospital_ids)
 
     if is_done:
-        directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-equipment_receive__time_save_link").distinct()
+        directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-issledovaniya__time_confirmation").distinct()
     else:
         directions = directions.filter(total_confirmed=False).order_by("-last_confirmed_at").distinct()
 
@@ -642,7 +647,6 @@ def get_requests_by_status(request):
 
     if not is_done:
         rows.sort(key=lambda x: (not x["cito"], -int(x["datetime"].replace(":", ""))))
-
     return JsonResponse({"rows": rows})
 
 

@@ -12,6 +12,7 @@ import os.path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from results.sql_func import get_paraclinic_results_by_direction
+import datetime
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -54,21 +55,28 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     direction_comment = direction.direction_comment
     fact_research_date = direction.fact_research_date
     fact_research_time = direction.fact_research_time
-    if fact_research_time:
-        fact_research_time = fact_research_time.strftime("%H:%M")
-    else:
-        fact_research_time = ""
+
+    naive_datetime = datetime.datetime.combine(fact_research_date, fact_research_time)
+    source_timezone = pytz.timezone(direction.hospital.time_zone)
+    aware_dt = source_timezone.localize(naive_datetime)
+    target_timezone = pytz.timezone('Europe/Moscow')
+    converted_dt = aware_dt.astimezone(target_timezone)
+
+    # if fact_research_time:
+    #     fact_research_time = fact_research_time.strftime("%H:%M")
+    # else:
+    #     fact_research_time = ""
 
     individula = direction.client.get_data_individual()
     equipment = EquipmentReceive.objects.filter(napravleniye=direction).first()
     equipment_title = ''
-    if equipment.exist():
+    if equipment:
         equipment_title = equipment.equipment_model.title
 
     table_data = [
         [
             Paragraph("Дата и время проведения исследования", style),
-            Paragraph(f"{fact_research_date.strftime('%d.%m.%Y')} {fact_research_time}", style),
+            Paragraph(f"{converted_dt.strftime('%d.%m.%Y')} {converted_dt.strftime('%H:%M')} (МСК)", style),
         ],
         [
             Paragraph("ФИО", style),
@@ -162,7 +170,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     objs.append(Spacer(1, 15 * mm))
 
     moscow_dt = iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S")
-    objs.append(Paragraph(f"{moscow_dt} (Мск)", style))
+    objs.append(Paragraph(f"{moscow_dt} (МСК)", style))
     objs.append(Paragraph(f"Врач: {iss.doc_confirmation.get_full_fio()}", style))
     has_any_signature = kwargs.get('has_any_signature', False)
     if not has_any_signature:

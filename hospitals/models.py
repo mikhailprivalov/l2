@@ -74,6 +74,7 @@ class Hospitals(models.Model):
     width_stamp_jpg = models.PositiveSmallIntegerField(blank=True, null=True, default=0, help_text="Ширина заголовка-логотипа 200")
     x_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Х -10 ")
     y_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Y 2 ")
+    time_zone = models.CharField(max_length=100, blank=True, null=True, default="Asia/Irkutsk", help_text="Europe/Moscow")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
