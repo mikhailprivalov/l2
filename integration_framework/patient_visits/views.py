@@ -3,7 +3,6 @@ from rest_framework.decorators import api_view
 from api.models import Application
 from directions.models import Napravleniya
 import simplejson as json
-from slog.models import Log
 
 
 @api_view(['POST'])
