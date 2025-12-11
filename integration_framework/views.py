@@ -259,6 +259,8 @@ def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", "*")
     only_cda = request.GET.get("onlyCDA", False)
+    is_visit = request.GET.get("isVivsit", False)
+
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related("istochnik_f", "client", "client__individual", "client__base").get(pk=pk)
     card = direction.client
     individual = card.individual

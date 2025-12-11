@@ -167,9 +167,11 @@ def get_field_result_by_cda(client_id, field_ids, count=1, parent_iss=-1, use_pa
             AND 
             CASE 
               WHEN %(use_parent_iss)s != '-1' THEN 
-                directions_napravleniya.parent_id in %(parent_iss)s
+                directions_napravleniya.parent_id in %(parent_iss)s AND
+                (directions_paraclinicresult.value is not Null or directions_paraclinicresult.value != '')
               WHEN %(use_parent_iss)s = '-1' THEN 
-                directions_issledovaniya.time_confirmation is not Null
+                directions_issledovaniya.time_confirmation is not Null AND
+                (directions_paraclinicresult.value is not Null or directions_paraclinicresult.value != '')
               END
             ORDER BY directions_issledovaniya.time_confirmation DESC LIMIT %(count_p)s
             """,
