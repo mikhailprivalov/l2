@@ -2192,6 +2192,7 @@ def directions_paraclinic_result(request):
             | Q(research__is_monitoring=True)
             | Q(research__is_expertise=True)
             | Q(research__is_aux=True)
+            | Q(research__is_case=True)
         ).exists()
         or request.user.is_staff
     ):
