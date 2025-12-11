@@ -3388,8 +3388,8 @@ def field_get_link_data_by_cda(
             match = re.fullmatch(r'\d{4}-\d\d-\d\d', value)
             if match:
                 value = normalize_date(value)
-    if days_ago > -1:
-        date_target_confirm = datetime.now() - timedelta(days=days_ago)
+    if int(days_ago) > -1:
+        date_target_confirm = datetime.now() - timedelta(days=int(days_ago))
         if date_confirm < date_target_confirm:
             value = ""
     return {"value": value}
