@@ -489,11 +489,11 @@ def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'Дата и время отправки биологических объектов: <u>{data.get("Дата отправки биологических объектов", "")}</u>', style))
     fwb.append(Paragraph(f'<u>{data.get("Ф.И.О. лица, осуществляющего перевозку биологических объектов", "")}</u>', style))
-    fwb.append(Paragraph(f'(Ф.И.О. лица, осуществляющего перевозку биологических объектов)', styleTCentre))
+    fwb.append(Paragraph('(Ф.И.О. лица, осуществляющего перевозку биологических объектов)', styleTCentre))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'<u>{space_symbol * 138}</u>', style))
-    fwb.append(Paragraph(f'(Фамилия, инициалы и подпись работника Подразделения)', styleTCentre))
+    fwb.append(Paragraph('(Фамилия, инициалы и подпись работника Подразделения)', styleTCentre))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'Дата и время доставки биологических объектов в ХТЛ <u>{space_symbol*43}</u>', style))
