@@ -304,3 +304,228 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     fwb.append(Spacer(1, 25 * mm))
     fwb.append(Paragraph('Дата выдачи результата  «_____ »____________ 20______г.  Подпись', style))
     return fwb
+
+
+def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
+    # Направлениена ХТИ
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 14
+    style.leading = 12
+    style.spaceAfter = 1.5 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = 'PTAstraSerifBold'
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 14
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 9
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTCentre = deepcopy(styleT)
+    styleTCentre.alignment = TA_CENTER
+
+    title_fields = [
+        "Дата",
+        "№",
+        "в",
+        "МО",
+        "ФИО освидетельствуемого",
+        "Дата рождения",
+        "Возраст",
+        "Код биологического объекта",
+        "Дата отбора объекта",
+        "Время отбора объекта",
+        "Условия хранения объектов",
+        "Биологический объект и его количество и показатели",
+        "Предварительный клинический диагноз",
+        "Цель химико-токсикологических исследований",
+        "Дополнительные сведения",
+        "Дата и время отправки",
+        "Ф.И.О. врача (фельдшера), выдавшего направление",
+    ]
+
+    data = title_fields_result(iss, title_fields)
+    space_symbol = '&nbsp;'
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Направление <br/> на химико-токсикологические исследования № {direction.pk}', styleCenterBold))
+
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(Paragraph(f'{data.get("Дата", "")}', style))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'в:{data.get("в", "")}', style))
+    fwb.append(Paragraph('(Наименование химико-токсикологической лаборатории - ХТЛ)', styleT))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'{data.get("МО", "")}', style))
+    fwb.append(Paragraph('(Наименование медицинской организации и его структурного  подразделения, выдавшего направление)', styleT))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'{data.get("ФИО освидетельствуемого", "")} {space_symbol *4} {data.get("Дата рождения", "")} {space_symbol *4} {data.get("Возраст", "")}', style))
+    fwb.append(Paragraph('(Фамилия, имя, отчество освидетельствуемого, дата рождения, возраст)', styleT))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Код биологического объекта: <u>{data.get("Код биологического объекта", "")}</u>', style))
+    fwb.append(Paragraph(f'Дата и время отбора объекта: <u>{data.get("Дата отбора объекта", "")}{space_symbol *4}{data.get("Время отбора объекта", "")} </u>', style))
+    fwb.append(Paragraph(f'Условия хранения объектов: <u>{data.get("Условия хранения объектов", "")}</u>', style))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Биологический объект и его количество и показатели: <u>{data.get("Биологический объект и его количество и показатели", "")}</u>', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Предварительный клинический диагноз: <u>{data.get("Предварительный клинический диагноз", "")}</u>', style))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Цель химико-токсикологических исследований: <u>{data.get("Цель химико-токсикологических исследований", "")}</u>', style))
+    fwb.append(Paragraph('(На обнаружение какого вещества (средства) или группы веществ (средств) требуется провести  исследования)', styleTCentre))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Дополнительные сведения {data.get("Дополнительные сведения", "")}', style))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Дата и время отправки биологических объектов в ХТЛ: <u>{data.get("Дата и время отправки", "")}</u>', style))
+
+    fwb.append(Spacer(1, 5 * mm))
+    opinion = [
+        [
+            Paragraph('Ф.И.О. врача,<br/>выдавшего направление', style),
+            Paragraph(f'_____________', style),
+            Paragraph(f'{data.get("Ф.И.О. врача (фельдшера), выдавшего направление", "")}', style)
+        ]
+    ]
+    tbl = Table(opinion, colWidths=(60 * mm, 45 * mm, 70 * mm))
+    tbl.setStyle(TableStyle([('GRID', (0, 0), (-1, -1), 0.75, colors.white)]))
+    fwb.append(tbl)
+    return fwb
+
+
+def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
+    # Справка о доставке биологических объектов на химико-токсикологические исследования
+    pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
+    pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+
+    styleSheet = getSampleStyleSheet()
+    style = styleSheet["Normal"]
+    style.fontName = "PTAstraSerifReg"
+    style.fontSize = 14
+    style.leading = 12
+    style.spaceAfter = 1.5 * mm
+
+    styleBold = deepcopy(style)
+    styleBold.fontName = 'PTAstraSerifBold'
+
+    styleCenterBold = deepcopy(style)
+    styleCenterBold.alignment = TA_CENTER
+    styleCenterBold.fontSize = 14
+    styleCenterBold.leading = 15
+    styleCenterBold.fontName = 'PTAstraSerifBold'
+
+    styleT = deepcopy(style)
+    styleT.alignment = TA_LEFT
+    styleT.fontSize = 9
+    styleT.leading = 4.5 * mm
+    styleT.face = 'PTAstraSerifReg'
+
+    styleTCentre = deepcopy(styleT)
+    styleTCentre.alignment = TA_CENTER
+
+    title_fields = [
+        "Дата",
+        "№",
+        "в",
+        "МО",
+        "ФИО освидетельствуемого",
+        "Дата рождения",
+        "Возраст",
+        "Коды (штрих-коды) биологических объектов",
+        "Дата отбора объекта",
+        "Время отбора объекта",
+        "Условия хранения объектов",
+        "Биологический объект и его количество и показатели",
+        "Предварительный клинический диагноз",
+        "Цель химико-токсикологических исследований",
+        "Дополнительные сведения",
+        "Дата отправки биологических объектов",
+        "Ф.И.О. врача (фельдшера), выдавшего направление",
+        "Ф.И.О. лица, осуществляющего перевозку биологических объектов",
+    ]
+
+    data = title_fields_result(iss, title_fields)
+    space_symbol = '&nbsp;'
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Справка о доставке биологических объектов<br/> на химико-токсикологические исследования № {direction.pk}', styleCenterBold))
+
+    fwb.append(Spacer(1, 5 * mm))
+    fwb.append(Paragraph(f'{data.get("Дата", "")}', style))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'в:{data.get("в", "")}', style))
+    fwb.append(Paragraph('(Наименование химико-токсикологической лаборатории - ХТЛ)', styleT))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'{data.get("МО", "")}', style))
+    fwb.append(Paragraph('(Наименование медицинской организации и его структурного  подразделения, выдавшего направление)', styleT))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'{data.get("ФИО освидетельствуемого", "")} {space_symbol *4} {data.get("Дата рождения", "")} {space_symbol *4} {data.get("Возраст", "")}', style))
+    fwb.append(Paragraph('(Фамилия, имя, отчество освидетельствуемого, дата рождения, возраст)', styleT))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Номера направлений   на  химико-токсикологические  исследования  и даты их выдачи: <u>{data.get("№", "")}</u>', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Коды (штрих-коды) биологических объектов: <u>{data.get("Код биологического объекта", "")}</u>', style))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Дата и время отправки биологических объектов: <u>{data.get("Дата отправки биологических объектов", "")}</u>', style))
+    fwb.append(Paragraph(f'<u>{data.get("Ф.И.О. лица, осуществляющего перевозку биологических объектов", "")}</u>', style))
+    fwb.append(Paragraph(f'(Ф.И.О. лица, осуществляющего перевозку биологических объектов)', styleTCentre))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'<u>{space_symbol * 138}</u>', style))
+    fwb.append(Paragraph(f'(Фамилия, инициалы и подпись работника Подразделения)', styleTCentre))
+
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Дата и время доставки биологических объектов в ХТЛ <u>{space_symbol*43}</u>', style))
+    fwb.append(Spacer(1, 4 * mm))
+    fwb.append(Paragraph(f'Результаты наружного осмотра биологических объектов <u>{space_symbol * 40}</u>', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'<u>{space_symbol * 138}</u>', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'<u>{space_symbol * 138}</u>', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'<u>{space_symbol * 138}</u>', style))
+    fwb.append(Spacer(1, 3 * mm))
+    fwb.append(Paragraph(f'Выявленные несоответствия  <u>{space_symbol * 88}</u>', style))
+    fwb.append(Spacer(1, 2 * mm))
+    fwb.append(Paragraph(f'<u>{space_symbol * 138}</u>', style))
+
+    fwb.append(Spacer(1, 9 * mm))
+    opinion = [
+        [
+            Paragraph('Заведующий КДЛ', style),
+            Paragraph('_________________<br/> (подпись)', styleTCentre),
+            Paragraph('________________________<br/> (Фамилия, инициалы)', styleTCentre)
+        ],
+    ]
+    tbl = Table(opinion, colWidths=(60 * mm, 45 * mm, 70 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('BOTTOMPADDING', (0, 0), (0, 0), 8 * mm),
+            ]
+        )
+    )
+    fwb.append(tbl)
+    return fwb
