@@ -401,7 +401,7 @@ def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         [
             Paragraph('Ф.И.О. врача,<br/>выдавшего направление', style),
             Paragraph(f'_____________', style),
-            Paragraph(f'{data.get("Ф.И.О. врача (фельдшера), выдавшего направление", "")}', style)
+            Paragraph(f'{data.get("Ф.И.О. врача (фельдшера), выдавшего направление", "")}', style),
         ]
     ]
     tbl = Table(opinion, colWidths=(60 * mm, 45 * mm, 70 * mm))
