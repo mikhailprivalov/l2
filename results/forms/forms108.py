@@ -400,7 +400,7 @@ def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     opinion = [
         [
             Paragraph('Ф.И.О. врача,<br/>выдавшего направление', style),
-            Paragraph(f'_____________', style),
+            Paragraph('_____________', style),
             Paragraph(f'{data.get("Ф.И.О. врача (фельдшера), выдавшего направление", "")}', style),
         ]
     ]
