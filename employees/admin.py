@@ -12,7 +12,8 @@ from .models import (
     TimeTrackingStatus,
     CashRegister,
     PlanDepartment,
-    EmployeePositionCountWorkDayPerMonth, EmployeeVacation,
+    EmployeePositionCountWorkDayPerMonth,
+    EmployeeVacation,
 )
 
 
