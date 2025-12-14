@@ -548,28 +548,25 @@ const editLunch = async ({ employeePositionId, lunchDurationInMinutes }) => {
   }
 };
 
-const fillVacation = ({ employeePositionId, vacationStart, vacationEnd }) => {
-  const workDayStatusesVacation = workDayStatuses.value.find(status => status.isVacation);
-  if (workDayStatusesVacation) {
-    const vacationStartDate = moment(vacationStart);
-    const vacationEndDate = moment(vacationEnd);
-    const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-        === employeePositionId);
-    const fullData = { startWorkTime: '', endWorkTime: '', typeId: workDayStatusesVacation.id };
-    for (let day = moment(vacationStartDate); day <= vacationEndDate; day.add(1, 'day')) {
-      const date = day.format('YYYY-MM-DD');
-      currentEmployeePosition[date] = { ...fullData };
-      updateChangedEmployeesWorkTime(
-        employeePositionId,
-        date,
-        null,
-        null,
-        null,
-        { ...fullData },
-      );
-    }
-  } else {
-    root.$emit('msg', 'error', 'Статус "отпуск" не настроен');
+const fillDayOff = ({
+  employeePositionId, workDayStatusId, dayOffStart, dayOffEnd,
+}) => {
+  const dayOffStartDate = moment(dayOffStart);
+  const dayOffEndDate = moment(dayOffEnd);
+  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
+      === employeePositionId);
+  const fullData = { startWorkTime: '', endWorkTime: '', typeId: workDayStatusId };
+  for (let day = moment(dayOffStartDate); day <= dayOffEndDate; day.add(1, 'day')) {
+    const date = day.format('YYYY-MM-DD');
+    currentEmployeePosition[date] = { ...fullData };
+    updateChangedEmployeesWorkTime(
+      employeePositionId,
+      date,
+      null,
+      null,
+      null,
+      { ...fullData },
+    );
   }
 };
 
@@ -661,13 +658,14 @@ const getColumns = () => {
             employeePositions: employeesWorkTime.value,
             firstDayMonth: firstDayMonth.value,
             lastDayMonth: lastDayMonth.value,
+            workDayStatuses: workDayStatuses.value,
           },
           on: {
             copyTop,
             copyFrom,
             clear,
             editLunch,
-            fillVacation,
+            fillDayOff,
           },
         },
       ),

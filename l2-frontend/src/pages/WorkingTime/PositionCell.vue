@@ -2,9 +2,9 @@
   <div class="position">
     <div class="top-icons">
       <i
-        ref="vacation"
+        ref="dayOff"
         v-tippy="{
-          html: `#tempVacation${props.employeePositionId}`,
+          html: `#tempDayOff${props.employeePositionId}`,
           arrow: true,
           reactive: true,
           interactive: true,
@@ -66,44 +66,49 @@
       class="position-text"
     />
     <div
-      :id="`tempVacation${props.employeePositionId}`"
+      :id="`tempDayOff${props.employeePositionId}`"
       class="tp"
     >
       <div>
         <RadioFieldById
-          v-model="selectedVacationFillMode"
-          :variants="vacationFillMode"
+          v-model="selectedDayOffType"
+          :variants="props.workDayStatuses"
+          class="radio-select-variants"
+        />
+        <RadioFieldById
+          v-model="selectedDayOffFillMode"
+          :variants="dayOffFillMode"
           class="radio-select-variants"
         />
         <label class="tp-label">Начало</label>
         <input
-          v-model="vacationStart"
+          v-model="dayOffStart"
           class="form-control"
           type="date"
           :min="props.firstDayMonth"
           :max="props.lastDayMonth"
         >
         <input
-          v-if="selectedVacationFillMode === 'day'"
-          v-model="vacationDurationInDays"
+          v-if="selectedDayOffFillMode === 'day'"
+          v-model="dayOffDurationInDays"
           class="form-control"
           type="number"
           min="0"
           max="31"
-          :disabled="!vacationStart"
+          :disabled="!dayOffStart"
         >
         <input
           v-else
-          v-model="vacationEnd"
+          v-model="dayOffEnd"
           class="form-control"
           type="date"
-          :disabled="!vacationStart"
+          :disabled="!dayOffStart"
           :min="props.firstDayMonth"
           :max="props.lastDayMonth"
         >
         <button
           class="btn btn-blue-nb"
-          @click="fillVacation"
+          @click="fillDayOff"
         >
           Сохранить
         </button>
@@ -210,9 +215,13 @@ const props = defineProps({
     type: String,
     required: true,
   },
+  workDayStatuses: {
+    type: [Array, undefined, null],
+    required: true,
+  },
 });
 
-const emit = defineEmits(['copyTop', 'copyFrom', 'clear', 'editLunch', 'fillVacation']);
+const emit = defineEmits(['copyTop', 'copyFrom', 'clear', 'editLunch', 'fillDayOff']);
 const root = getCurrentInstance().proxy.$root;
 const copyTop = () => {
   if (props.rowIndex !== 0) {
@@ -272,37 +281,39 @@ const editLunch = () => {
   }
 };
 
-const vacation = ref(null);
-const vacationFillMode = ref([
+const dayOff = ref(null);
+const selectedDayOffType = ref(null);
+const dayOffFillMode = ref([
   { id: 'day', label: 'Дни' },
   { id: 'date', label: 'Конец' },
 ]);
-const selectedVacationFillMode = ref('day');
-const vacationStart = ref(null);
-const vacationDurationInDays = ref(0);
-const vacationEnd = ref(null);
+const selectedDayOffFillMode = ref('day');
+const dayOffStart = ref(null);
+const dayOffDurationInDays = ref(0);
+const dayOffEnd = ref(null);
 
-watch(vacationDurationInDays, () => {
-  if (Number(vacationDurationInDays.value) < 0) {
-    vacationDurationInDays.value = 0;
-  } else if (!vacationStart.value) {
+watch(dayOffDurationInDays, () => {
+  if (Number(dayOffDurationInDays.value) < 0) {
+    dayOffDurationInDays.value = 0;
+  } else if (!dayOffStart.value) {
     root.$emit('msg', 'error', 'Дата начала не заполнена');
   } else {
     const lastMonthDay = moment(props.lastDayMonth);
-    const vacationStartDate = moment(vacationStart.value);
-    const vacationEndDate = moment(vacationStartDate).add(Number(vacationDurationInDays.value), 'days').subtract(1, 'day');
+    const vacationStartDate = moment(dayOffStart.value);
+    const vacationEndDate = moment(vacationStartDate).add(Number(dayOffDurationInDays.value), 'days').subtract(1, 'day');
     if (vacationEndDate <= lastMonthDay) {
-      vacationEnd.value = vacationEndDate.format('YYYY-MM-DD');
+      dayOffEnd.value = vacationEndDate.format('YYYY-MM-DD');
     } else {
-      vacationEnd.value = lastMonthDay.format('YYYY-MM-DD');
+      dayOffEnd.value = lastMonthDay.format('YYYY-MM-DD');
     }
   }
 });
-const fillVacation = () => {
-  emit('fillVacation', {
+const fillDayOff = () => {
+  emit('fillDayOff', {
     employeePositionId: props.employeePositionId,
-    vacationStart: vacationStart.value,
-    vacationEnd: vacationEnd.value,
+    workDayStatusId: selectedDayOffType.value,
+    dayOffStart: dayOffStart.value,
+    dayOffEnd: dayOffEnd.value,
   });
 };
 
