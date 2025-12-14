@@ -150,8 +150,6 @@ def update_employees_vacation(organization_id, employee_vacations):
     return {"ok": True, "incorrect_employee_vacations": incorrect_employee_vacations}
 
 
-
-
 def form_01(request_data):
     """
     Загрузка отпусков работников
