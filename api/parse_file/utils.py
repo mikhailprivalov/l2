@@ -1,5 +1,3 @@
-
-
 def check_need_col(cols: list, need_cols: set):
     missing_cols = need_cols - set(cols)
     if missing_cols:
