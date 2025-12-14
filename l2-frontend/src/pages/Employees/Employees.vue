@@ -72,7 +72,7 @@
     <div class="flex">
       <UploadFileModal
         :types-file="['XLSX']"
-        :forms-file="['103.01']"
+        :forms-file="['103.01', '104.01']"
         :show-results="true"
         :entity-id="filters.organizationId"
         @uploadSuccess="getEmployees"

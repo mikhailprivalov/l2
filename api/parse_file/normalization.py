@@ -64,6 +64,11 @@ def convert_hours_to_minutes(value: int):
         return int(value * 60)
 
 
+def strip(value: str):
+    result = value.strip()
+    return result
+
+
 def normalize_values(value: str, actions: set):
     """
     Перебирает действия по нормализации
