@@ -25,6 +25,7 @@ def check_request_data(organization_id, user=None):
             result = {"ok": False, "message": "Запрещено передавать не свою организацию"}
     return result
 
+
 def normalize_vacation_data(employee_data: dict, normalize_funcs_list: list):
     result = {
         "tabel_number": None,
