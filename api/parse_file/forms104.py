@@ -75,7 +75,12 @@ def parse_work_sheet(ws: Worksheet):
 
     need_col_name = {"Табельный номер", "Вид отпуска (ежегодный, дополнительный)", "Отпуск, с", "Отпуск, по"}
     starts = False
-    tabel_number_idx, vacation_type_idx, vacation_start_idx, vacation_end_idx = None, None, None, None,
+    tabel_number_idx, vacation_type_idx, vacation_start_idx, vacation_end_idx = (
+        None,
+        None,
+        None,
+        None,
+    )
     employee_vacations = []
     incorrect_employee_vacations = []
 
