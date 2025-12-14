@@ -449,7 +449,7 @@ ALLOWED_FORMS_FILE = {
     "101.01": False,
     "102.01": False,
     "103.01": False,
-    "104.01": False, # Загрузка отпусков
+    "104.01": False,  # Загрузка отпусков
 }
 TYPE_REPORT_FORMS = {}
 EXCLUDE_TYPE_RESEARCH = {
