@@ -62,7 +62,6 @@ def data_by_direction(request):
         },
         "doctor": {"additionalInfo": additional_data},
     }
-
     return Response({"result": result})
 
 
@@ -97,14 +96,9 @@ def get_direction_data_by_cda_group(direction_pk):
                     s = f"{s}{val};"
         temp_result[k] = s
     final_result = {str(k): string_to_unicode_escape(v) for k, v in temp_result.items()}
-
     return {"data": final_result, "date_inspection": date_inspection, "time_inspection": time_inspection}
 
 
 def string_to_unicode_escape(text):
     symbols_data = ''.join(f'\\u{ord(char):04x}' for char in text)
     return symbols_data
-
-
-def from_escape(escaped_text):
-    return codecs.decode(escaped_text, 'unicode_escape')
