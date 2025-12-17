@@ -99,7 +99,9 @@ def get_paraclinic_results_by_direction(pk_dir):
                 directory_paraclinicInputField.title,
                 cda_paraclinicfields.title as cda_title_field,
                 cda_groupfields.title as cda_title_group,
-                directory_paraclinicinputgroups.title as group_title
+                directory_paraclinicinputgroups.title as group_title,
+                cda_groupfields.code as cda_group_code,
+                cda_paraclinicfields.code as cda_field_code
                 FROM directions_issledovaniya
                 LEFT JOIN directions_paraclinicresult ON
                 directions_issledovaniya.id=directions_paraclinicresult.issledovaniye_id
@@ -115,6 +117,7 @@ def get_paraclinic_results_by_direction(pk_dir):
                 directory_paraclinicinputgroups.cda_option_id = cda_groupfields.id
 
               WHERE directions_issledovaniya.napravleniye_id = %(num_dir)s
+              ORDER BY directory_paraclinicinputfield."order"
 
         """,
             params={'num_dir': pk_dir},

@@ -231,7 +231,7 @@ def directions_generate(request):
                     message = f"{message} {dependent_research_title.get(v)} зависит от услуги {main_research_title.get(k)}"
                 return JsonResponse({"ok": False, "directions": [], "directionsStationar": [], "message": message})
         if SettingManager.get('create_new_case_for_corporation', default='false', default_type='b'):
-            if fin_source_obj.title.lower() in ["профосмотр", "юрлица"] and p.get("caseId") != -1:
+            if fin_source_obj.title.lower() in ["профосмотр", "юрлица"] and p.get("caseId") < -1:
                 return JsonResponse({"ok": False, "directions": [], "directionsStationar": [], "message": "Укажите - Новый случай"})
 
         for _ in range(p.get("directions_count", 1)):

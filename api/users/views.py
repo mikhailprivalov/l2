@@ -257,9 +257,9 @@ def update_restricted_directions(request):
     doctor_profile: DoctorProfile = DoctorProfile.objects.get(user_id=user_pk)
     hospital: Hospitals = Hospitals.objects.get(pk=hospital_pk)
     if hospital.is_external_performing_organization:
-        price = PriceName.get_hospital_price_by_date(hospital_pk, current_time(only_date=True), current_time(only_date=True), True)
+        price = PriceName.get_hospital_price_by_date(hospital_pk, current_time(only_date=True), current_time(only_date=True), is_subcontract=False, external_performer=True)
     else:
-        price = PriceName.get_hospital_price_by_date(hospital_pk, current_time(only_date=True), current_time(only_date=True))
+        price = PriceName.get_hospital_price_by_date(hospital_pk, current_time(only_date=True), current_time(only_date=True), is_subcontract=True, external_performer=False)
     price_researches_ids = PriceCoast.get_researches_ids_by_price(price.pk)
     all_researches_ids = Researches.get_all_ids()
     research_for_restrict = set(all_researches_ids - price_researches_ids)

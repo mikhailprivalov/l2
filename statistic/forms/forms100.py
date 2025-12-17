@@ -323,8 +323,9 @@ def form_01(ws1, data):
         factors_title = i.get("factors_title")
         current_row = row
         for k in factors_title:
-            ws1.cell(row=current_row, column=col_factors).value = k
-            current_row += 1
+            if k not in ["30", "31", "32", "33"]:
+                ws1.cell(row=current_row, column=col_factors).value = k
+                current_row += 1
 
         col_title = None
         where_done_col = None
