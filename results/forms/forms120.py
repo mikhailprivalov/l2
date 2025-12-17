@@ -62,11 +62,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     target_timezone = pytz.timezone('Europe/Moscow')
     converted_dt = aware_dt.astimezone(target_timezone)
 
-    # if fact_research_time:
-    #     fact_research_time = fact_research_time.strftime("%H:%M")
-    # else:
-    #     fact_research_time = ""
-
     individula = direction.client.get_data_individual()
     equipment = EquipmentReceive.objects.filter(napravleniye=direction).first()
     equipment_title = ''
@@ -120,7 +115,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Ограничения визуализации", style),
-            Paragraph("", style),
+            Paragraph(f"{data.get('пр-Ограничения визуализации')}", style),
         ],
         [
             Paragraph("Примечания", style),
@@ -128,7 +123,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Пероральный контраст", style),
-            Paragraph("", style),
+            Paragraph(f"{data.get('пр-Пероральный контраст')}", style),
         ],
         [
             Paragraph("Внутривенный контраст", style),
@@ -136,11 +131,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Аллергическая реакция", style),
-            Paragraph("", style),
+            Paragraph(f"{data.get('пр-Аллергическая реакция')}", style),
         ],
         [
             Paragraph("Медицинская организация, осуществившая анализ(описание) результатов", style),
-            Paragraph(iss.doc_confirmation.hospital.title, style),
+            Paragraph(f"{iss.doc_confirmation.hospital.title} {iss.doc_confirmation.hospital.license_data}", style),
         ],
     ]
 
