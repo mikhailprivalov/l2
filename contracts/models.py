@@ -53,8 +53,8 @@ class PriceName(models.Model):
         return PriceName.objects.filter(company_id=company_id, date_start__lte=date_start, date_end__gte=date_end).first()
 
     @staticmethod
-    def get_hospital_price_by_date(hospital_id, date_start, date_end, is_subcontract=False):
-        return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract).first()
+    def get_hospital_price_by_date(hospital_id, date_start, date_end, is_subcontract=False, external_performer=False):
+        return PriceName.objects.filter(hospital_id=hospital_id, date_start__lte=date_start, date_end__gte=date_end, subcontract=is_subcontract, external_performer=external_performer).first()
 
     @staticmethod
     def get_hospital_many_prices_by_date(hospital_id, date_start, date_end, is_subcontract=False):
