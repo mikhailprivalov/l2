@@ -7417,7 +7417,7 @@ def form_32(request_data):
         )
     )
     current_date = strfdatetime(current_time(only_date=True), "%d.%m.%Y")
-    objs.append(Paragraph(f'Потребитель(пациент)____________________<font face="Symbola" size=18>\u2713</font> /______________________ Дата: {current_date}', styleSign))
+    objs.append(Paragraph(f'Потребитель(пациент)____________________<font face="Symbola" size=18>\u2713</font> /______________________ Дата:', styleSign))
     objs.append(Spacer(1, 7 * mm))
     objs.append(
         Paragraph(
