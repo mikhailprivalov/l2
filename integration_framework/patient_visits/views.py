@@ -60,9 +60,7 @@ def data_by_direction(request):
             "mainDiagnos": "",
             "code": iss.research.code,
         },
-        "doctor": {
-            "additionalInfo": additional_data
-        },
+        "doctor": {"additionalInfo": additional_data},
     }
 
     return Response({"result": result})
