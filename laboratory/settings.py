@@ -442,13 +442,14 @@ FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES = {
     "ftp_settings": {"address": "", "user": "", "password": "", "path": ""},
     "id_researches": [],
 }
-
+# Разрешенные функции для загрузки файлов api.parse_file.forms{number[:3]}.form_{number[4:]} forms104.form_01
 ALLOWED_FORMS_FILE = {
     "100.01": False,
     "100.02": False,
     "101.01": False,
     "102.01": False,
     "103.01": False,
+    "104.01": False,  # Загрузка отпусков
 }
 TYPE_REPORT_FORMS = {}
 EXCLUDE_TYPE_RESEARCH = {

@@ -13,6 +13,7 @@ from .models import (
     CashRegister,
     PlanDepartment,
     EmployeePositionCountWorkDayPerMonth,
+    EmployeeVacation,
 )
 
 
@@ -113,3 +114,13 @@ class PlanDepartmentAdmin(admin.ModelAdmin):
 @admin.register(EmployeePositionCountWorkDayPerMonth)
 class EmployeePositionCountWorkDayPerMonthAdmin(admin.ModelAdmin):
     list_display = ('employee_position', 'count_work_day_per_month', 'month', 'plan_day_profit')
+
+
+@admin.register(EmployeeVacation)
+class EmployeeVacationAdmin(admin.ModelAdmin):
+    list_display = ('employee_position_id', 'start', 'end', 'work_day_status_title')
+    raw_id_fields = ('employee_position', 'work_day_status')
+
+    @admin.display(description='Тип отпуска')
+    def work_day_status_title(self, obj):
+        return obj.work_day_status.title if obj.work_day_status else '—'

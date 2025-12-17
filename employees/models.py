@@ -601,12 +601,17 @@ class EmployeePosition(models.Model):
         employee_position.lunch_duration = lunch_duration_in_minutes
         employee_position.save()
 
+    @staticmethod
+    def find_by_tabel_number(organization_id: int, tabel_number: str, active=True):
+        employee_position = EmployeePosition.objects.filter(employee__hospital_id=organization_id, is_active=active, tabel_number=tabel_number).select_related("employee").first()
+        return employee_position
+
 
 class WorkDayStatus(models.Model):
     title = models.CharField(max_length=255, verbose_name='Наименование')
     short_title = models.CharField(max_length=25, verbose_name='Сокращенное наименование')
     hide = models.BooleanField(default=False, db_index=True)
-    is_vacation = models.BooleanField(default=False, db_index=True)
+    vacation_title = models.CharField(max_length=255, null=True, help_text="Доп. название для поиска в отпусках, 'ежегодный, основной'")
 
     def __str__(self):
         return self.title
@@ -617,7 +622,7 @@ class WorkDayStatus(models.Model):
 
     @staticmethod
     def get_workday_statuses(short=True):
-        result = [{"id": status.pk, "label": status.short_title if short else status.title, "isVacation": status.is_vacation} for status in WorkDayStatus.objects.filter(hide=False)]
+        result = [{"id": status.pk, "label": status.short_title if short else status.title} for status in WorkDayStatus.objects.filter(hide=False)]
         return result
 
     @staticmethod
@@ -861,6 +866,21 @@ class EmployeeWorkingHoursSchedule(models.Model):
                 except ValueError:
                     continue
         return employees_work_time_data
+
+
+class EmployeeVacation(models.Model):
+    employee_position = models.ForeignKey(EmployeePosition, null=True, db_index=True, on_delete=models.SET_NULL)
+    start = models.DateField()
+    end = models.DateField()
+    work_day_status = models.ForeignKey(WorkDayStatus, null=True, on_delete=models.SET_NULL)
+    hide = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Работник - отпуск"
+        verbose_name_plural = "Работники - отпуска"
+
+    def __str__(self):
+        return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
 
 
 class CashRegister(models.Model):
