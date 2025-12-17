@@ -105,5 +105,6 @@ def string_to_unicode_escape(text):
     symbols_data = ''.join(f'\\u{ord(char):04x}' for char in text)
     return symbols_data
 
+
 def from_escape(escaped_text):
     return codecs.decode(escaped_text, 'unicode_escape')
