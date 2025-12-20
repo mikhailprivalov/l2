@@ -1,7 +1,6 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from api.models import Application
-from appconf.manager import SettingManager
 from contracts.models import Company
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
@@ -16,6 +15,7 @@ from slog.models import Log
 def get_med_protocols(request):
     token = request.META.get("HTTP_AUTHORIZATION")
     token = token.replace("Bearer ", "")
+
     if not token:
         return Response({"result": "error", "comment": "token is empty"})
     token_is_not_valid = False

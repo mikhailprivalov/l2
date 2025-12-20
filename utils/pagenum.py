@@ -53,11 +53,55 @@ class PageNumCanvas(canvas.Canvas):
             self.drawRightString(200 * mm, 8 * mm, page)
 
 
-class PageNumCanvasPartitionAll(canvas.Canvas):
+class Colontitul(canvas.Canvas):
     """
     Adding a Page Number of Total
     """
 
+    # ----------------------------------------------------------------------
+    def __init__(self, *args, **kwargs):
+        """Constructor"""
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self.pages = []
+
+    # ----------------------------------------------------------------------
+    def showPage(self):
+        """
+        On a page break, add information to the list
+        """
+        self.pages.append(dict(self.__dict__))
+        self._startPage()
+
+    # ----------------------------------------------------------------------
+    def save(self):
+        """
+        Add the page number to each page (page x of y)
+        """
+        page_count = len(self.pages)
+
+        for page in self.pages:
+            self.__dict__.update(page)
+            self.draw_page_number(page_count)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    # ----------------------------------------------------------------------
+    def draw_page_number(self, page_count):
+        """
+        Add the page number
+        """
+        if not SELF_WATERMARKS:
+            pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+            self.setFont("PTAstraSerifReg", 8)
+            page = "Данное заключение диагнозом не является, для постановки диагноза и назначении лечения нужно обратиться к лечащему врачу."
+            self.drawString(25 * mm, 8 * mm, page)
+            page = "Не пренебрегайте консультацией специалиста и не ограничивайтесь диагностическими исследованиями. Будьте здоровы."
+            self.drawString(25 * mm, 5 * mm, page)
+
+class PageNumCanvasPartitionAll(canvas.Canvas):
+    """
+    Adding a Page Number of Total
+    """
     # ----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         """Constructor"""

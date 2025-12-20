@@ -43,7 +43,8 @@ def data_by_direction(request):
                     additional_data = {}
             except Exception:
                 additional_data = None
-    if not additional_data or not result_l2.get("date_inspection") or not result_l2.get("time_inspection"):
+    if not additional_data or not result_l2.get("date_inspection") or not result_l2.get("time_inspection") or \
+            not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password or not result_l2.get("general_condition"):
         return Response({"result": None})
 
     result = {
@@ -57,10 +58,13 @@ def data_by_direction(request):
             "dateInspection": result_l2.get("date_inspection"),
             "timeInspection": result_l2.get("time_inspection"),
             "protocol": result_tempalte,
-            "mainDiagnos": "",
+            "raw_data": result_l2.get("raw_data"),
+            "mainDiagnos": result_l2.get("main_diagnos"),
+            "general_condition": result_l2.get("general_condition"),
+            "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
             "code": iss.research.code,
         },
-        "doctor": {"additionalInfo": additional_data},
+        "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
     }
     return Response({"result": result})
 
@@ -68,13 +72,17 @@ def data_by_direction(request):
 def get_direction_data_by_cda_group(direction_pk):
     result = get_paraclinic_results_by_direction(direction_pk)
     data = {}
-    date_inspection, time_inspection = None, None
+    date_inspection, time_inspection, main_diagnos, general_condition = None, None, None, None
     for i in result:
         if i.cda_field_code and i.value:
             if i.cda_field_code == 7005:
                 date_inspection = normalize_date(i.value)
             if i.cda_field_code == 7004:
                 time_inspection = i.value
+            if i.cda_field_code == 809:
+                main_diagnos = i.value
+            if i.cda_field_code == 7003:
+                general_condition = i.value
             if not data.get(i.cda_field_code):
                 data[i.cda_field_code] = [{i.title: i.value}]
             else:
@@ -96,9 +104,13 @@ def get_direction_data_by_cda_group(direction_pk):
                     s = f"{s}{val};"
         temp_result[k] = s
     final_result = {str(k): string_to_unicode_escape(v) for k, v in temp_result.items()}
-    return {"data": final_result, "date_inspection": date_inspection, "time_inspection": time_inspection}
+    return {"raw_data": temp_result, "data": final_result, "date_inspection": date_inspection, "time_inspection": time_inspection, "main_diagnos": main_diagnos, "general_condition": general_condition}
 
 
 def string_to_unicode_escape(text):
     symbols_data = ''.join(f'\\u{ord(char):04x}' for char in text)
     return symbols_data
+
+def from_escape(escaped_text):
+        return codecs.decode(escaped_text, 'unicode_escape')
+
