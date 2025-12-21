@@ -653,6 +653,7 @@ class TimeTrackingDocument(models.Model):
             department_id=department_id,
         )
         document.save()
+        EmployeeVacation.create_day_off_for_document(document)
         return document
 
     @staticmethod
@@ -881,6 +882,42 @@ class EmployeeVacation(models.Model):
 
     def __str__(self):
         return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+
+    @staticmethod
+    def create_day_off_for_document(time_tracking_document: TimeTrackingDocument):
+        month = time_tracking_document.month
+        department_id = time_tracking_document.department_id
+        month_start = month.replace(day=1)
+        month_end = month.replace(day=calendar.monthrange(month.year, month.month)[1])
+
+        employee_positions = EmployeePosition.objects.filter(department_id=department_id, is_active=True)
+
+        vacations = EmployeeVacation.objects.filter(
+            employee_position__in=employee_positions,
+            hide=False,
+            start__lte=month_end,
+            end__gte=month_start,
+        ).select_related('employee_position', 'work_day_status')
+
+        day_offs = []
+
+        for vacation in vacations:
+            start = max(vacation.start, month_start)
+            end = min(vacation.end, month_end)
+
+            current_day = start
+            while current_day <= end:
+                day_offs.append(
+                    EmployeeWorkingHoursSchedule(
+                        time_tracking_document=time_tracking_document,
+                        employee_position=vacation.employee_position,
+                        day=current_day,
+                        work_day_status=vacation.work_day_status,
+                    )
+                )
+                current_day += datetime.timedelta(days=1)
+        EmployeeWorkingHoursSchedule.objects.bulk_create(day_offs, ignore_conflicts=True)
+
 
 
 class CashRegister(models.Model):
