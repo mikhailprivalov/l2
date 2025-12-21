@@ -21,7 +21,7 @@ class TokenAuthentication(authentication.BaseAuthentication):
                 "method": request.method,
                 "time": current_time().strftime("%Y-%m-%d %H:%M:%S"),
                 "token": request.headers['Authorization'],
-                "key": token
+                "key": token,
             }
         }
         if not token or not token.startswith('Bearer '):
