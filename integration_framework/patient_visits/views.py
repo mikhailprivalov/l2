@@ -148,5 +148,4 @@ def string_to_unicode_escape(text):
     return symbols_data
 
 def from_escape(escaped_text):
-        return codecs.decode(escaped_text, 'unicode_escape')
-
+    return codecs.decode(escaped_text, 'unicode_escape')
