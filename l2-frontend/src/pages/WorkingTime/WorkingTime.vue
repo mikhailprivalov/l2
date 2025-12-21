@@ -194,7 +194,7 @@ onMounted(() => {
   getRefBooks();
 });
 
-const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value && selectedDepartment.value));
+const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value != null && selectedDepartment.value));
 const timeOptions = computed(() => (store.getters.modules.working_time_variants
   ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
@@ -256,7 +256,7 @@ watch(employeesWorkTime, () => {
 }, { deep: true });
 
 watch([selectedYear, selectedMonth, selectedDepartment], () => {
-  if (selectedYear.value && selectedMonth.value && selectedDepartment.value) {
+  if (filtersFull.value) {
     getEmployeesWorkTime();
   }
 }, { immediate: true });
@@ -717,7 +717,7 @@ const getColumns = () => {
 };
 
 watch([selectedYear, selectedMonth], () => {
-  if (selectedYear.value && selectedMonth.value) {
+  if (selectedYear.value && selectedMonth.value != null) {
     getColumns();
   }
 }, { immediate: true });
