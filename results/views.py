@@ -595,7 +595,6 @@ def result_print(request):
                         fwb.append(Paragraph(iss.research.title + ' (' + str(dpk) + ')', styleBold))
 
                 type_form = iss.research.result_form
-                print(type_form)
                 form_result = None
                 if schema_pdf_form:
                     type_form = "99901"

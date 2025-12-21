@@ -140,12 +140,9 @@ def get_direction_data_by_cda_group(direction_pk):
                     s = f"{s}{val};"
         temp_result[k] = s
     temp_result = {str(k): v for k, v in temp_result.items()}
-    return {"data": temp_result,  "date_inspection": date_inspection, "time_inspection": time_inspection, "main_diagnos": main_diagnos, "general_condition": general_condition}
+    return {"data": temp_result, "date_inspection": date_inspection, "time_inspection": time_inspection, "main_diagnos": main_diagnos, "general_condition": general_condition}
 
 
 def string_to_unicode_escape(text):
     symbols_data = ''.join(f'\\u{ord(char):04x}' for char in text)
     return symbols_data
-
-def from_escape(escaped_text):
-    return codecs.decode(escaped_text, 'unicode_escape')
