@@ -98,6 +98,7 @@ class Colontitul(canvas.Canvas):
             page = "Не пренебрегайте консультацией специалиста и не ограничивайтесь диагностическими исследованиями. Будьте здоровы."
             self.drawString(25 * mm, 5 * mm, page)
 
+
 class PageNumCanvasPartitionAll(canvas.Canvas):
     """
     Adding a Page Number of Total
