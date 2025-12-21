@@ -2736,6 +2736,14 @@ def directions_paraclinic_confirm_reset(request):
             response["message"] = "Редактирование запрещено. В очереди на отправку в РМИС"
             return JsonResponse(response)
 
+        if iss.napravleniye.result_rmis_send and "Сброс для отправленных в РМИС" not in g:
+            response["message"] = "Редактирование запрещено. Уже отправлен в РМИС"
+            return JsonResponse(response)
+
+        if iss.napravleniye.amd_message and "Сброс для отправленных в РМИС" not in g:
+            response["message"] = "Редактирование запрещено. Ошибки при отрпавле в РМИС - анализ"
+            return JsonResponse(response)
+
         if allow_reset:
             predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
             iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
