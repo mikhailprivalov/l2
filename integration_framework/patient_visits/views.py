@@ -44,8 +44,14 @@ def data_by_direction(request):
                     additional_data = {}
             except Exception:
                 additional_data = None
-    if not additional_data or not result_l2.get("date_inspection") or not result_l2.get("time_inspection") or \
-            not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password or not result_l2.get("general_condition"):
+    if (
+        not additional_data
+        or not result_l2.get("date_inspection")
+        or not result_l2.get("time_inspection")
+        or not iss.doc_confirmation.rmis_login
+        or not iss.doc_confirmation.rmis_password
+        or not result_l2.get("general_condition")
+    ):
         return Response({"result": None})
 
     result = {
