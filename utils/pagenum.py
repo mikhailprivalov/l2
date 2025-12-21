@@ -103,6 +103,7 @@ class PageNumCanvasPartitionAll(canvas.Canvas):
     """
     Adding a Page Number of Total
     """
+
     # ----------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         """Constructor"""
