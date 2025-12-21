@@ -919,7 +919,6 @@ class EmployeeVacation(models.Model):
         EmployeeWorkingHoursSchedule.objects.bulk_create(day_offs, ignore_conflicts=True)
 
 
-
 class CashRegister(models.Model):
     employee_position = models.ForeignKey(EmployeePosition, null=True, blank=True, db_index=True, default=None, on_delete=models.SET_NULL)
     accounting_day = models.DateField(verbose_name='Дата учета', null=True, blank=True, default=None, db_index=True, help_text='дата')
