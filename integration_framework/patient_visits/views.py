@@ -6,7 +6,7 @@ from api.models import Application
 from directions.models import Napravleniya, Issledovaniya
 import simplejson as json
 from results.sql_func import get_paraclinic_results_by_direction
-from utils.dates import normalize_date
+from utils.dates import normalize_date, normalize_dots_date
 from xml_generate.views import gen_result_cda_files
 
 
@@ -46,13 +46,14 @@ def data_by_direction(request):
                 additional_data = None
     if (
         not additional_data
-        or not result_l2.get("date_inspection")
-        or not result_l2.get("time_inspection")
         or not iss.doc_confirmation.rmis_login
         or not iss.doc_confirmation.rmis_password
-        or not result_l2.get("general_condition")
     ):
+        iss.napravleniye.amd_message = "Нет связи с внешним сервисом"
         return Response({"result": None})
+
+    date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
+    time_inspection = iss.time_confirmation.strftime("%H:%M")
 
     result = {
         "patient": {
@@ -62,12 +63,14 @@ def data_by_direction(request):
             "birthday": direction.client.individual.bd(),
         },
         "service": {
-            "dateInspection": result_l2.get("date_inspection"),
-            "timeInspection": result_l2.get("time_inspection"),
+            "directionId": direction.pk,
+            "dateInspection": result_l2.get("date_inspection") if result_l2.get("date_inspection") else date_inspection,
+            "timeInspection": result_l2.get("time_inspection") if result_l2.get("time_inspection") else time_inspection,
+            "dateLatin": normalize_dots_date(result_l2.get("date_inspection")) if result_l2.get("date_inspection") else normalize_dots_date(date_inspection),
             "protocol": final_proto,
             "raw_data": result_tempalte,
             "mainDiagnos": result_l2.get("main_diagnos"),
-            "general_condition": result_l2.get("general_condition"),
+            "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести" ,
             "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
             "code": iss.research.code,
         },
@@ -97,12 +100,13 @@ def result_rmis_sent_direction(request):
     direction_id = data.get("directionId")
     rmis_number = data.get("rmis_number")
     message = data.get("message")
+    success = data.get("success")
     direction = Napravleniya.objects.filter(pk=direction_id).first()
-    if message:
+    if message and not success:
         direction.amd_message = message
         direction.result_rmis_send = False
         direction.save()
-    else:
+    if success:
         direction.rmis_case_number = rmis_number
         direction.result_rmis_send = True
         direction.amd_message = ""
