@@ -173,9 +173,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         objs.append(Spacer(1, 3 * mm))
         objs.append(tbl)
 
-    objs.append(Spacer(1, 3 * mm))
-    objs.append(Paragraph("Данное заключение не является диагнозом и должно быть правильно интерпретировано лечащим врачом!", style))
-
     fwb.extend(objs)
     return fwb
 

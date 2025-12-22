@@ -64,7 +64,7 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_strptime
 from utils.flowable import InteractiveTextField, QrCodeSite
-from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
+from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll, Colontitul
 from .laboratory_form import default_lab_form
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
@@ -416,6 +416,8 @@ def result_print(request):
             index_el = sorted_direction_d.index(d.pk)
             sorted_direction_d[index_el] = d
         sorted_direction = sorted_direction_d
+
+    type_form = None
 
     for direction in sorted_direction:
         dpk = direction.pk
@@ -793,7 +795,9 @@ def result_print(request):
     if not hosp:
         num_card = pk[0]
 
-    if len(pk) == 1 and has_own_form_result:
+    if len(pk) == 1 and has_own_form_result and type_form == 12001:
+        doc.build(fwb, canvasmaker=Colontitul)
+    elif len(pk) == 1 and has_own_form_result:
         doc.build(fwb)
     elif len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
