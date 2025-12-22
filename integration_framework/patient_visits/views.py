@@ -70,7 +70,7 @@ def data_by_direction(request):
             "protocol": final_proto,
             "raw_data": result_tempalte,
             "mainDiagnos": result_l2.get("main_diagnos"),
-            "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести" ,
+            "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести",
             "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
             "code": iss.research.code,
         },
