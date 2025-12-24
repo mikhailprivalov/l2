@@ -1515,7 +1515,7 @@ def sql_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, lis
 
 
 def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
-        start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1
+    start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1
 ):
     with connection.cursor() as cursor:
         cursor.execute(
