@@ -360,7 +360,7 @@ def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     data = title_fields_result(iss, title_fields)
     space_symbol = '&nbsp;'
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'Направление <br/> на химико-токсикологические исследования', styleCenterBold))
+    fwb.append(Paragraph('Направление <br/> на химико-токсикологические исследования', styleCenterBold))
 
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph(f'{data.get("Дата", "")} {space_symbol*100}№{data.get("№", "")}', style))
@@ -466,7 +466,7 @@ def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     data = title_fields_result(iss, title_fields)
     space_symbol = '&nbsp;'
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'Справка о доставке биологических объектов<br/> на химико-токсикологические исследования', styleCenterBold))
+    fwb.append(Paragraph('Справка о доставке биологических объектов<br/> на химико-токсикологические исследования', styleCenterBold))
 
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph(f'{data.get("Дата", "")} {space_symbol*100}№{data.get("№", "")}', style))

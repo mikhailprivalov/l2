@@ -324,7 +324,8 @@ def statistics_research(research_id, d_s, d_e, hospital_id_filter, is_purpose=0,
         SELECT napr, date_confirm, time_confirm, create_date_napr, create_time_napr, doc_fio, coast, discount, 
         how_many, ((coast + (coast/100 * discount)) * how_many)::NUMERIC(10,2) AS sum_money, ist_f, time_confirmation, num_card, 
         ind_family, ind_name, patronymic, birthday, date_born,
-        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title, t_iss.vich_code, dir_category, iss_category, additional_info FROM t_iss
+        to_char(EXTRACT(YEAR from age(time_confirmation, date_born)), '999') as ind_age, t_hosp.title, t_iss.purpose_title, t_iss.vich_code, dir_category, iss_category, additional_info 
+        FROM t_iss
         LEFT JOIN t_card ON t_iss.client_id = t_card.id
         LEFT JOIN t_hosp ON t_iss.hospital_id = t_hosp.id
 
@@ -1514,7 +1515,7 @@ def sql_pass_pap_fraction_result_value(start_time_confirm, end_time_confirm, lis
 
 
 def sql_card_dublicate_pass_pap_fraction_not_not_enough_adequate_result_value(
-    start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1
+        start_time_confirm, end_time_confirm, list_card, pap_id_analysis, fraction_id, value_result1, value_result2="", count_param=1
 ):
     with connection.cursor() as cursor:
         cursor.execute(
