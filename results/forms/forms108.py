@@ -338,6 +338,7 @@ def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
 
     title_fields = [
         "Дата",
+        "Номер",
         "№",
         "в",
         "МО",
@@ -359,10 +360,10 @@ def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     data = title_fields_result(iss, title_fields)
     space_symbol = '&nbsp;'
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'Направление <br/> на химико-токсикологические исследования № {direction.pk}', styleCenterBold))
+    fwb.append(Paragraph(f'Направление <br/> на химико-токсикологические исследования', styleCenterBold))
 
     fwb.append(Spacer(1, 5 * mm))
-    fwb.append(Paragraph(f'{data.get("Дата", "")}', style))
+    fwb.append(Paragraph(f'{data.get("Дата", "")} {space_symbol*100}№{data.get("№", "")}', style))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'в:{data.get("в", "")}', style))
@@ -391,7 +392,7 @@ def form_03(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     fwb.append(Paragraph('(На обнаружение какого вещества (средства) или группы веществ (средств) требуется провести  исследования)', styleTCentre))
 
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'Дополнительные сведения {data.get("Дополнительные сведения", "")}', style))
+    fwb.append(Paragraph(f'Дополнительные сведения: {data.get("Дополнительные сведения", "")}', style))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'Дата и время отправки биологических объектов в ХТЛ: <u>{data.get("Дата и время отправки", "")}</u>', style))
@@ -442,6 +443,7 @@ def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
 
     title_fields = [
         "Дата",
+        "Номер",
         "№",
         "в",
         "МО",
@@ -464,10 +466,10 @@ def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     data = title_fields_result(iss, title_fields)
     space_symbol = '&nbsp;'
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'Справка о доставке биологических объектов<br/> на химико-токсикологические исследования № {direction.pk}', styleCenterBold))
+    fwb.append(Paragraph(f'Справка о доставке биологических объектов<br/> на химико-токсикологические исследования', styleCenterBold))
 
     fwb.append(Spacer(1, 5 * mm))
-    fwb.append(Paragraph(f'{data.get("Дата", "")}', style))
+    fwb.append(Paragraph(f'{data.get("Дата", "")} {space_symbol*100}№{data.get("№", "")}', style))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'в:{data.get("в", "")}', style))
