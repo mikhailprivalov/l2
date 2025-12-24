@@ -155,8 +155,14 @@ def get_direction_data_by_cda_group(direction_pk):
     temp_result = {str(k): v for k, v in temp_result.items()}
     if main_diagnos:
         main_diagnos_code = main_diagnos.split(" ")[0]
-    return {"data": temp_result, "date_inspection": date_inspection, "time_inspection": time_inspection, "main_diagnos": main_diagnos, "general_condition": general_condition,
-            "main_diagnos_code": main_diagnos_code}
+    return {
+        "data": temp_result,
+        "date_inspection": date_inspection,
+        "time_inspection": time_inspection,
+        "main_diagnos": main_diagnos,
+        "general_condition": general_condition,
+        "main_diagnos_code": main_diagnos_code,
+    }
 
 
 def string_to_unicode_escape(text):
