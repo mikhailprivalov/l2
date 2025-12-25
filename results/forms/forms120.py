@@ -34,7 +34,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
 
-
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleBold.firstLineIndent = 0
