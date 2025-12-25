@@ -11,8 +11,11 @@ from laboratory.settings import FONTS_FOLDER
 import os.path
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+
 from results.sql_func import get_paraclinic_results_by_direction
 import datetime
+
+from utils.xh import check_valid_square_brackets
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -31,16 +34,18 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     style.spaceAfter = 0 * mm
     style.alignment = TA_JUSTIFY
 
+
     styleBold = deepcopy(style)
     styleBold.fontName = "PTAstraSerifBold"
     styleBold.firstLineIndent = 0
-    styleBold.fontSize = 8
+    styleBold.fontSize = 9
 
     styleJustified = deepcopy(style)
     styleJustified.alignment = TA_JUSTIFY
     styleJustified.spaceAfter = 4.5 * mm
     styleJustified.fontSize = 11
     styleJustified.leading = 4.5 * mm
+    styleJustified.firstLineIndent = 13
 
     objs = []
     header_title = gen_header_title(iss.napravleniye.doc.hospital)
@@ -72,6 +77,10 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         [
             Paragraph("Дата и время проведения исследования", style),
             Paragraph(f"{converted_dt.strftime('%d.%m.%Y')} {converted_dt.strftime('%H:%M')} (МСК)", style),
+        ],
+        [
+            Paragraph("Номер карты", style),
+            Paragraph(f"{direction.client.number}", style),
         ],
         [
             Paragraph("ФИО", style),
@@ -151,16 +160,22 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     table.setStyle(TableStyle(custom_style))
     objs.append(table)
     objs.append(Spacer(1, 3 * mm))
-
+    space_symbol = '&nbsp;'
     objs.append(Paragraph("ОПИСАНИЕ", styleBold))
-    objs.append(Paragraph(f"{data.get('пр-Результат')}", styleJustified))
+    opis = data.get('пр-Результат').replace('<', '&lt;').replace('>', '&gt;').replace("\n", f"<br/>{space_symbol*5}")
+    opis = text_to_bold(opis)
+    objs.append(Paragraph(opis, styleJustified))
     objs.append(Spacer(1, 3 * mm))
     objs.append(Paragraph("ЗАКЛЮЧЕНИЕ", styleBold))
-    objs.append(Paragraph(f"{data.get('пр-Заключение')}", styleJustified))
+    final = data.get('пр-Заключение').replace('<', '&lt;').replace('>', '&gt;').replace("\n", f"<br/>{space_symbol*5}")
+    final = text_to_bold(final)
+    objs.append(Paragraph(final, styleJustified))
     objs.append(Spacer(1, 3 * mm))
     if data.get('пр-Рекомендации'):
         objs.append(Paragraph("РЕКОМЕНДАЦИИ", styleBold))
-        objs.append(Paragraph(f"{data.get('пр-Рекомендации')}", styleJustified))
+        recomindation = data.get('пр-Рекомендации').replace('<', '&lt;').replace('>', '&gt;').replace("\n", f"<br/>{space_symbol*5}")
+        recomindation = text_to_bold(recomindation)
+        objs.append(Paragraph(recomindation, styleJustified))
 
     objs.append(Spacer(1, 15 * mm))
 
@@ -244,3 +259,12 @@ def gen_table(doctor):
         )
     )
     return gentbl
+
+
+def text_to_bold(v):
+    valid = check_valid_square_brackets(v)
+    if valid:
+        v = v.replace('[', '<font face=\"PTAstraSerifBold\">')
+        v = v.replace(']', '</font>')
+
+    return v

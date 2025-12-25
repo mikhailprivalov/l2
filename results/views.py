@@ -119,14 +119,26 @@ def result_print(request):
     inline = request.GET.get("inline", "1") == "1" or plain_response
     response = HttpResponse(content_type='application/pdf')
 
+    pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
+    file_title = "results"
+    if len(pk) == 1:
+        symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
+        tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
+        direction_for_client = Napravleniya.objects.filter(pk=pk[0]).first()
+        patient_fio = direction_for_client.client.individual.fio(short=True, dots=False)
+        patient_fio_tr = str.translate(patient_fio, tr)
+        patient_fio_tr = patient_fio_tr.replace(" ", "_")
+        iss_for_client = Issledovaniya.objects.filter(napravleniye_id=direction_for_client).first()
+        research_title_tr = str.translate(iss_for_client.research.title, tr)
+        research_title_tr = research_title_tr.replace(" ", "_")
+        file_title = f"{patient_fio_tr.lower()}_{research_title_tr.lower()}"
+
     if inline:
         if SettingManager.get("pdf_auto_print", "true", "b") and not plain_response:
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
-        response['Content-Disposition'] = 'inline; filename="results.pdf"'
+        response['Content-Disposition'] = f'inline; filename="{file_title}.pdf"'
     else:
-        response['Content-Disposition'] = 'attachment; filename="results.pdf"'
-
-    pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
+        response['Content-Disposition'] = f'attachment; filename="{file_title}.pdf"'
 
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
     interactive_text_field = SettingManager.get("interactive_text_field", default='False', default_type='b')

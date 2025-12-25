@@ -469,7 +469,7 @@ def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     fwb.append(Paragraph('Справка о доставке биологических объектов<br/> на химико-токсикологические исследования', styleCenterBold))
 
     fwb.append(Spacer(1, 5 * mm))
-    fwb.append(Paragraph(f'{data.get("Дата", "")} {space_symbol*100}№{data.get("№", "")}', style))
+    fwb.append(Paragraph(f'{data.get("Дата", "")} {space_symbol*100}№{data.get("Номер", "")}', style))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'в:{data.get("в", "")}', style))
@@ -486,7 +486,7 @@ def form_04(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'Номера направлений   на  химико-токсикологические  исследования  и даты их выдачи: <u>{data.get("№", "")}</u>', style))
     fwb.append(Spacer(1, 3 * mm))
-    fwb.append(Paragraph(f'Коды (штрих-коды) биологических объектов: <u>{data.get("Код биологического объекта", "")}</u>', style))
+    fwb.append(Paragraph(f'Коды (штрих-коды) биологических объектов: <u>{data.get("Коды (штрих-коды) биологических объектов", "")}</u>', style))
 
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Paragraph(f'Дата и время отправки биологических объектов: <u>{data.get("Дата отправки биологических объектов", "")}</u>', style))
