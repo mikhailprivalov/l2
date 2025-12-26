@@ -77,6 +77,7 @@ pdfmetrics.registerFont(TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'Open
 pdfmetrics.registerFont(TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.ttf')))
 pdfmetrics.registerFont(TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
+from django.utils.encoding import iri_to_uri
 
 
 @login_required
@@ -122,17 +123,10 @@ def result_print(request):
     pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
     file_title = "results"
     if len(pk) == 1:
-        symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
-        tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
         direction_for_client = Napravleniya.objects.filter(pk=pk[0]).first()
         patient_fio = direction_for_client.client.individual.fio(short=True, dots=False)
-        patient_fio_tr = str.translate(patient_fio, tr)
-        patient_fio_tr = patient_fio_tr.replace(" ", "_")
         iss_for_client = Issledovaniya.objects.filter(napravleniye_id=direction_for_client).first()
-        research_title_tr = str.translate(iss_for_client.research.title, tr)
-        research_title_tr = research_title_tr.replace(" ", "_")
-        file_title = f"{patient_fio_tr.lower()}_{research_title_tr.lower()}"
-
+        file_title = iri_to_uri(f"{patient_fio.replace(' ', '_')}_{iss_for_client.research.title.replace(' ', '_')}")
     if inline:
         if SettingManager.get("pdf_auto_print", "true", "b") and not plain_response:
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
