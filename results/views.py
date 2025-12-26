@@ -68,6 +68,7 @@ from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll, Colontitul
 from .laboratory_form import default_lab_form
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
+from django.utils.encoding import iri_to_uri
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
@@ -77,7 +78,6 @@ pdfmetrics.registerFont(TTFont('OpenSansLight', os.path.join(FONTS_FOLDER, 'Open
 pdfmetrics.registerFont(TTFont('Consolas', os.path.join(FONTS_FOLDER, 'consolas.ttf')))
 pdfmetrics.registerFont(TTFont('Consolas-Bold', os.path.join(FONTS_FOLDER, 'Consolas-Bold.ttf')))
 pdfmetrics.registerFont(TTFont('cour', os.path.join(FONTS_FOLDER, 'cour.ttf')))
-from django.utils.encoding import iri_to_uri
 
 
 @login_required
