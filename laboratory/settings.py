@@ -505,7 +505,7 @@ RESEARCH_ID_CLOSE_CASE = (-1,)
 RESEARCH_ID_FINAL_REPORT = (-1,)
 WEB_PLUGIN_LINK_STUDY = None
 MAGAZINE_REPORT = {}
-COMMAND_DOCX_2_PDF =""
+COMMAND_DOCX_2_PDF = ""
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
