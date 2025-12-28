@@ -79,6 +79,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         writer.addpages(PdfReader(f"{temp_file_dir}.pdf").pages)
         writer.write(pdf_all)
         pdf_out = pdf_all.getvalue()
+        os.remove(f"{temp_file_dir}.pdf")
+        os.remove(f"{temp_file_dir}.docx")
         return pdf_out
     except Exception as e:
         print(f"Ошибка: {e}")
