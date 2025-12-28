@@ -15,6 +15,8 @@ from slog.models import Log
 from users.models import DoctorProfile
 from django.utils import timezone
 
+from utils.dates import date_iter_range
+
 
 class Employee(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
@@ -900,22 +902,19 @@ class EmployeeVacation(models.Model):
         ).select_related('employee_position', 'work_day_status')
 
         day_offs = []
-
         for vacation in vacations:
             start = max(vacation.start, month_start)
             end = min(vacation.end, month_end)
-
-            current_day = start
-            while current_day <= end:
-                day_offs.append(
-                    EmployeeWorkingHoursSchedule(
-                        time_tracking_document=time_tracking_document,
-                        employee_position=vacation.employee_position,
-                        day=current_day,
-                        work_day_status=vacation.work_day_status,
-                    )
+            days_count = (end - start).days + 1
+            day_offs.extend(
+                EmployeeWorkingHoursSchedule(
+                    time_tracking_document=time_tracking_document,
+                    employee_position=vacation.employee_position,
+                    day=start + datetime.timedelta(days=offset),
+                    work_day_status=vacation.work_day_status,
                 )
-                current_day += datetime.timedelta(days=1)
+                for offset in range(days_count)
+            )
         EmployeeWorkingHoursSchedule.objects.bulk_create(day_offs, ignore_conflicts=True)
 
 
