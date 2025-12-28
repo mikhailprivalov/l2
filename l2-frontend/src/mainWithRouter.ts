@@ -864,6 +864,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/telemedicine',
+      name: 'telemedicine',
+      component: () => import('@/pages/Telemedicine/Telemedicine.vue'),
+      meta: {
+        title: 'Телемедицина',
+        groups: ['ТМК просмотр журнала', 'ТМК редактирование'],
+      },
+    },
+    {
       path: '*',
       redirect: (to) => ({ name: '404', hash: to.fullPath }),
       meta: {},

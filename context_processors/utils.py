@@ -257,6 +257,7 @@ def menu(request):
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
+                {"url": "/ui/telemedicine", "title": "Телемедицина", "nt": False, "access": ["ТМК просмотр журнала", "ТМК редактирование"]},
             ]
 
             hp = SettingManager.get(key="home_page", default="false")
