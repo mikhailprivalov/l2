@@ -608,12 +608,29 @@ def result_print(request):
 
                 type_form = iss.research.result_form
                 form_result = None
+                type_schema = None
+                link = None
                 if schema_pdf_form:
-                    type_form = "99901"
-                if type_form != 0:
+                    print(schema_pdf_form)
+                    path_name_schema = str(iss.research.schema_pdf)
+                    print(path_name_schema.split(".")[-1])
+                    if path_name_schema.split(".")[-1] == "docx":
+                        type_form = "10001"
+                        type_schema = "docx"
+                        link = "research"
+                    else:
+                        type_form = "99901"
+                if iss.doc_confirmation.hospital.schema_docx:
+                    type_form = "10001"
+                    type_schema = "docx"
+                    link = "hospital"
+                if type_form != 0 and type_schema != "docx":
                     current_type_form = str(type_form)
                     form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
-
+                if type_form != 0 and type_schema == "docx":
+                    print("здеся")
+                    current_type_form = str(type_form)
+                    form_result = import_string('results.schema_docx.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
                 if iss.research.is_microbiology:
                     fwb = microbiology_result(iss, fwb, doc)
                 elif form_result:
@@ -627,7 +644,12 @@ def result_print(request):
                             for _ in DocumentSign.objects.filter(document=document_for_sign, sign_certificate__isnull=False):
                                 has_any_signature = True
                                 break
-                    fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request)
+                    if type_schema != "docx":
+                        fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request, link=link)
+                    else:
+                        pdf_out = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request, link=link)
+                        response.write(pdf_out)
+                        return response
                 elif not protocol_plain_text or request.user.doctorprofile.is_structure_data_in_protocol or request.user.doctorprofile.podrazdeleniye.is_structure_data_in_protocol:
                     fwb = structure_data_for_result(iss, fwb, doc, leftnone, med_certificate)
                 else:

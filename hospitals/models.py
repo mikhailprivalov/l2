@@ -1,4 +1,5 @@
 import os
+import uuid
 from typing import Optional
 
 from django.core.mail import EmailMessage
@@ -8,6 +9,10 @@ from clients.models import Card
 from directory.models import Researches
 from hospitals.sql_func import search_hospitals
 from laboratory.settings import EMAIL_HOST_USER, MEDIA_ROOT
+
+
+def get_file_path_to_schemas(instance: 'Hospitals', filename):
+    return os.path.join('schemas-docx', str(instance.pk), str(uuid.uuid4()), filename)
 
 
 class Hospitals(models.Model):
@@ -75,6 +80,7 @@ class Hospitals(models.Model):
     x_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Х -10 ")
     y_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Y 2 ")
     time_zone = models.CharField(max_length=100, blank=True, null=True, default="Asia/Irkutsk", help_text="Europe/Moscow")
+    schema_docx = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

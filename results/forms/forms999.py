@@ -1,6 +1,5 @@
 from reportlab.platypus import PageBreak
 import os.path
-from laboratory.settings import BASE_DIR
 import simplejson as json
 from reportlab.platypus import Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
@@ -16,6 +15,10 @@ from reportlab.pdfbase.ttfonts import TTFont
 from results.prepare_data import lab_iss_to_pdf, text_iss_to_pdf, previous_procedure_list_result
 from results.sql_func import get_paraclinic_result_by_iss
 from utils.dates import normalize_date
+from docxtpl import DocxTemplate
+from docx2pdf import convert
+from docx import Document
+import os
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -170,3 +173,8 @@ def prepare_aggr_desc(field_value, field_type):
         if not aggr_lab:
             return []
         return aggr_lab
+
+
+
+
+
