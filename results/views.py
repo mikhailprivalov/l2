@@ -68,6 +68,7 @@ from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll, Colontitul
 from .laboratory_form import default_lab_form
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
+from django.utils.encoding import iri_to_uri
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
@@ -122,17 +123,10 @@ def result_print(request):
     pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
     file_title = "results"
     if len(pk) == 1:
-        symbols = (u"абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ", u"abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA")  # Словарь для транслитерации
-        tr = {ord(a): ord(b) for a, b in zip(*symbols)}  # Перевод словаря для транслита
         direction_for_client = Napravleniya.objects.filter(pk=pk[0]).first()
         patient_fio = direction_for_client.client.individual.fio(short=True, dots=False)
-        patient_fio_tr = str.translate(patient_fio, tr)
-        patient_fio_tr = patient_fio_tr.replace(" ", "_")
         iss_for_client = Issledovaniya.objects.filter(napravleniye_id=direction_for_client).first()
-        research_title_tr = str.translate(iss_for_client.research.title, tr)
-        research_title_tr = research_title_tr.replace(" ", "_")
-        file_title = f"{patient_fio_tr.lower()}_{research_title_tr.lower()}"
-
+        file_title = iri_to_uri(f"{patient_fio.replace(' ', '_')}_{iss_for_client.research.title.replace(' ', '_')}")
     if inline:
         if SettingManager.get("pdf_auto_print", "true", "b") and not plain_response:
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
