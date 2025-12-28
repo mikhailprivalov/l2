@@ -170,8 +170,3 @@ def prepare_aggr_desc(field_value, field_type):
         if not aggr_lab:
             return []
         return aggr_lab
-
-
-
-
-
