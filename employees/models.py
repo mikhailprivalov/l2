@@ -15,8 +15,6 @@ from slog.models import Log
 from users.models import DoctorProfile
 from django.utils import timezone
 
-from utils.dates import date_iter_range
-
 
 class Employee(models.Model):
     hospital = models.ForeignKey(Hospitals, on_delete=models.CASCADE, verbose_name='Медицинское учреждение')
