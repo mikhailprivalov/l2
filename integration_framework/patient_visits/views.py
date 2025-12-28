@@ -37,6 +37,9 @@ def data_by_direction(request):
     final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
+    if not iss.doc_confirmation:
+        return Response({"result": None})
+
     if iss.doc_confirmation.additional_info:
         if "{" in iss.doc_confirmation.additional_info and "}" in iss.doc_confirmation.additional_info:
             try:
