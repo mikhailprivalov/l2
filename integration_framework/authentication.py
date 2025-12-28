@@ -6,19 +6,35 @@ from rest_framework import exceptions
 
 from api.models import Application
 from integration_framework.models import IndividualAuth
+from laboratory.utils import current_time
+from slog.models import Log
 
 
 class TokenAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         token = request.META.get('HTTP_AUTHORIZATION')
+        log_result = {
+            "get_med_protocols": {
+                "REMOTE_ADDR": request.META.get('REMOTE_ADDR'),
+                "build_absolute_uri": request.build_absolute_uri(),
+                "get_full_path": request.get_full_path(),
+                "method": request.method,
+                "time": current_time().strftime("%Y-%m-%d %H:%M:%S"),
+                "token": request.headers['Authorization'],
+                "key": token,
+            }
+        }
         if not token or not token.startswith('Bearer '):
             raise exceptions.AuthenticationFailed('No such token')
         token = token.replace('Bearer ', '')
+
         try:
             app = Application.objects.filter(active=True, key=token).first()
         except ValidationError:
+            Log.log(key=current_time().strftime("%Y-%m-%d %H:%M:%S"), type=0, body=log_result)
             raise exceptions.AuthenticationFailed('No such token')
         if not app:
+            Log.log(key=current_time().strftime("%Y-%m-%d %H:%M:%S"), type=0, body=log_result)
             raise exceptions.AuthenticationFailed('No such active APP with token')
 
         return app, None
