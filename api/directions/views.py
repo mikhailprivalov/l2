@@ -2646,7 +2646,7 @@ def directions_paraclinic_result(request):
         response["soft_forbidden"] = not forbidden_edit
         if iss.research_id in RMQ_RESEARCH_SEND:
             broker_publish_msg(iss.napravleniye_id)
-            iss.napravleniye.rmis_resend_services = True
+            iss.napravleniye.need_resend_ecp = True
             iss.napravleniye.save()
     return JsonResponse(response)
 
@@ -2732,7 +2732,7 @@ def directions_paraclinic_confirm_reset(request):
             response["message"] = "Редактирование запрещено. Запросите сброс подтверждения у администратора"
             return JsonResponse(response)
 
-        if iss.napravleniye.rmis_resend_services and "Сброс для отправленных в РМИС" not in g:
+        if iss.napravleniye.need_resend_ecp and "Сброс для отправленных в РМИС" not in g:
             response["message"] = "Редактирование запрещено. В очереди на отправку в РМИС"
             return JsonResponse(response)
 

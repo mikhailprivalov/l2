@@ -9,7 +9,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "l2"
-version = "2025.12.252355+0d84e6"
+version = "2025.12.280639+ca8d0a"
 description = ""
 authors = ["Mikhail Privalov <n5250@ya.ru>"]
 license = "MIT"
@@ -91,6 +91,8 @@ numpy = [
 ]
 django-webpack-loader = "^1.6.0"
 pika = "^1.3.2"
+docxtpl = "^0.20.2"
+docx2pdf = "^0.1.8"
 
 [tool.poetry.extras]
 caching = ["psycopg2"]
