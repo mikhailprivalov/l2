@@ -11,6 +11,7 @@ from pdfrw import PdfReader, PdfWriter
 from integration_framework.models import EquipmentReceive
 from laboratory.settings import COMMAND_DOCX_2_PDF
 from results.sql_func import get_paraclinic_result_by_iss
+from slog.models import Log
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -83,6 +84,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         os.remove(f"{temp_file_dir}.docx")
         return pdf_out
     except Exception as e:
-        print(f"Ошибка: {e}")
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
 
     return fwb
