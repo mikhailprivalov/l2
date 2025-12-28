@@ -60,10 +60,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "hosp_confirmation": iss.doc_confirmation.hospital.title,
             "license_data": iss.doc_confirmation.hospital.license_data,
         }
-        context = {
-            **meta_info,
-            **result_data
-        }
+        context = {**meta_info, **result_data}
         doc.render(context)
 
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
