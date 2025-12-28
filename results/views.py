@@ -64,10 +64,11 @@ from laboratory.utils import strdate
 from podrazdeleniya.models import Podrazdeleniya
 from utils.dates import try_strptime
 from utils.flowable import InteractiveTextField, QrCodeSite
-from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll
+from utils.pagenum import PageNumCanvas, PageNumCanvasPartitionAll, Colontitul
 from .laboratory_form import default_lab_form
 from .prepare_data import default_title_result_form, structure_data_for_result, plaint_tex_for_result, microbiology_result, procedural_text_for_result
 from django.utils.module_loading import import_string
+from django.utils.encoding import iri_to_uri
 
 pdfmetrics.registerFont(TTFont('FreeSans', os.path.join(FONTS_FOLDER, 'FreeSans.ttf')))
 pdfmetrics.registerFont(TTFont('FreeSansBold', os.path.join(FONTS_FOLDER, 'FreeSansBold.ttf')))
@@ -119,14 +120,19 @@ def result_print(request):
     inline = request.GET.get("inline", "1") == "1" or plain_response
     response = HttpResponse(content_type='application/pdf')
 
+    pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
+    file_title = "results"
+    if len(pk) == 1:
+        direction_for_client = Napravleniya.objects.filter(pk=pk[0]).first()
+        patient_fio = direction_for_client.client.individual.fio(short=True, dots=False)
+        iss_for_client = Issledovaniya.objects.filter(napravleniye_id=direction_for_client).first()
+        file_title = iri_to_uri(f"{patient_fio.replace(' ', '_')}_{iss_for_client.research.title.replace(' ', '_')}")
     if inline:
         if SettingManager.get("pdf_auto_print", "true", "b") and not plain_response:
             pdfdoc.PDFCatalog.OpenAction = '<</S/JavaScript/JS(this.print\({bUI:true,bSilent:false,bShrinkToFit:true}\);)>>'
-        response['Content-Disposition'] = 'inline; filename="results.pdf"'
+        response['Content-Disposition'] = f'inline; filename="{file_title}.pdf"'
     else:
-        response['Content-Disposition'] = 'attachment; filename="results.pdf"'
-
-    pk = [x for x in json.loads(request.GET["pk"]) if x is not None]
+        response['Content-Disposition'] = f'attachment; filename="{file_title}.pdf"'
 
     show_norm = True  # request.GET.get("show_norm", "0") == "1"
     interactive_text_field = SettingManager.get("interactive_text_field", default='False', default_type='b')
@@ -416,6 +422,8 @@ def result_print(request):
             index_el = sorted_direction_d.index(d.pk)
             sorted_direction_d[index_el] = d
         sorted_direction = sorted_direction_d
+
+    type_form = None
 
     for direction in sorted_direction:
         dpk = direction.pk
@@ -793,7 +801,9 @@ def result_print(request):
     if not hosp:
         num_card = pk[0]
 
-    if len(pk) == 1 and has_own_form_result:
+    if len(pk) == 1 and has_own_form_result and type_form == 12001:
+        doc.build(fwb, canvasmaker=Colontitul)
+    elif len(pk) == 1 and has_own_form_result:
         doc.build(fwb)
     elif len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
