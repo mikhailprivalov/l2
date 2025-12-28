@@ -611,9 +611,7 @@ def result_print(request):
                 type_schema = None
                 link = None
                 if schema_pdf_form:
-                    print(schema_pdf_form)
                     path_name_schema = str(iss.research.schema_pdf)
-                    print(path_name_schema.split(".")[-1])
                     if path_name_schema.split(".")[-1] == "docx":
                         type_form = "10001"
                         type_schema = "docx"
@@ -628,7 +626,6 @@ def result_print(request):
                     current_type_form = str(type_form)
                     form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
                 if type_form != 0 and type_schema == "docx":
-                    print("здеся")
                     current_type_form = str(type_form)
                     form_result = import_string('results.schema_docx.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])
                 if iss.research.is_microbiology:
