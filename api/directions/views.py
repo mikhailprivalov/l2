@@ -4287,7 +4287,7 @@ def eds_documents(request):
         if not available:
             return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": "CDA-сервер недоступен"})
 
-    if error_doctor:
+    if error_doctor and SettingManager.get("control_doctor_error", default='False', default_type='b'):
         error_doctor = error_doctor.replace("position", "должность").replace("speciality", "специальность").replace("snils", "СНИЛС")
         error_doctor = f"В профиле врача {iss_obj.doc_confirmation.get_fio()} ошибки: {error_doctor}"
         return JsonResponse({"documents": [], "edsTitle": "", "executors": "", "error": True, "message": error_doctor})
