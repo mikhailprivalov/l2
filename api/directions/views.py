@@ -2755,9 +2755,6 @@ def directions_paraclinic_confirm_reset(request):
             if transfer_d:
                 # transfer_d.cancel = True
                 transfer_d.save()
-            # if iss.napravleniye.result_rmis_send:
-            #     c = Client()
-            #     c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
             response["ok"] = True
             for i in Issledovaniya.objects.filter(parent=iss):
                 i.doc_confirmation = None
