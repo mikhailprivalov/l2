@@ -2644,7 +2644,7 @@ def directions_paraclinic_result(request):
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
         response["soft_forbidden"] = not forbidden_edit
-        if iss.research_id in RMQ_RESEARCH_SEND:
+        if iss.research_id in RMQ_RESEARCH_SEND and not iss.napravleniye.result_rmis_send and not iss.napravleniye.rmis_case_number:
             broker_publish_msg(iss.napravleniye_id)
             iss.napravleniye.need_resend_ecp = True
             iss.napravleniye.save()
@@ -2755,9 +2755,9 @@ def directions_paraclinic_confirm_reset(request):
             if transfer_d:
                 # transfer_d.cancel = True
                 transfer_d.save()
-            if iss.napravleniye.result_rmis_send:
-                c = Client()
-                c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
+            # if iss.napravleniye.result_rmis_send:
+            #     c = Client()
+            #     c.directions.delete_services(iss.napravleniye, request.user.doctorprofile)
             response["ok"] = True
             for i in Issledovaniya.objects.filter(parent=iss):
                 i.doc_confirmation = None

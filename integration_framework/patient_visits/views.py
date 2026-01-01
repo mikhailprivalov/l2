@@ -32,7 +32,7 @@ def data_by_direction(request):
     direction = Napravleniya.objects.filter(pk=direction_id).first()
     result_l2 = get_direction_data_by_cda_group(direction.pk)
     result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
-    result_tempalte = result_tempalte.replace("\n", "")
+    result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ")
     json_data = json.loads(result_tempalte)
     final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
@@ -58,6 +58,8 @@ def data_by_direction(request):
 
     date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
     time_inspection = iss.time_confirmation.strftime("%H:%M")
+    print("json_data")
+    print(json_data)
 
     result = {
         "patient": {
@@ -75,6 +77,8 @@ def data_by_direction(request):
             "raw_data": result_tempalte,
             "protocol": json_data,
             "mainDiagnos": result_l2.get("main_diagnos"),
+            "outcomeVisit": result_l2.get("outcome_visit"),
+            "resultVisit": result_l2.get("result_visit"),
             "main_diagnos_code": result_l2.get("main_diagnos_code"),
             "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести",
             "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
@@ -103,8 +107,10 @@ def result_rmis_sent_direction(request):
         return Response({"message": "token is not valid"})
 
     data = json.loads(request.body)
+
     direction_id = data.get("directionId")
-    rmis_number = data.get("rmis_number")
+    rmis_case_number = data.get("rmis_case_number")
+    rmis_visit_number = data.get("rmis_visit_number")
     message = data.get("message")
     success = data.get("success")
     direction = Napravleniya.objects.filter(pk=direction_id).first()
@@ -113,7 +119,8 @@ def result_rmis_sent_direction(request):
         direction.result_rmis_send = False
         direction.save()
     if success:
-        direction.rmis_case_number = rmis_number
+        direction.rmis_case_number = rmis_case_number
+        direction.rmis_visit_number = rmis_visit_number
         direction.result_rmis_send = True
         direction.amd_message = ""
         direction.save()
@@ -125,16 +132,27 @@ def get_direction_data_by_cda_group(direction_pk):
     result = get_paraclinic_results_by_direction(direction_pk)
     data = {}
     date_inspection, time_inspection, main_diagnos, general_condition, main_diagnos_code = None, None, None, None, None
+    result_visit, outcome_visit = None, None
     for i in result:
         if i.cda_field_code and i.value:
             if i.cda_field_code == 7005:
                 date_inspection = normalize_date(i.value)
+                continue
             if i.cda_field_code == 7004:
                 time_inspection = i.value
+                continue
             if i.cda_field_code == 809:
                 main_diagnos = i.value
+                continue
             if i.cda_field_code == 7003:
                 general_condition = i.value
+                continue
+            if i.cda_field_code == 7001:
+                result_visit = i.value
+                continue
+            if i.cda_field_code == 7002:
+                outcome_visit = i.value
+                continue
             if not data.get(i.cda_field_code):
                 data[i.cda_field_code] = [{i.title: i.value}]
             else:
@@ -165,6 +183,8 @@ def get_direction_data_by_cda_group(direction_pk):
         "main_diagnos": main_diagnos,
         "general_condition": general_condition,
         "main_diagnos_code": main_diagnos_code,
+        "result_visit": result_visit,
+        "outcome_visit": outcome_visit
     }
 
 
