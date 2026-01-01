@@ -58,8 +58,6 @@ def data_by_direction(request):
 
     date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
     time_inspection = iss.time_confirmation.strftime("%H:%M")
-    print("json_data")
-    print(json_data)
 
     result = {
         "patient": {
