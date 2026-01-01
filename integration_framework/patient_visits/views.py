@@ -182,7 +182,7 @@ def get_direction_data_by_cda_group(direction_pk):
         "general_condition": general_condition,
         "main_diagnos_code": main_diagnos_code,
         "result_visit": result_visit,
-        "outcome_visit": outcome_visit
+        "outcome_visit": outcome_visit,
     }
 
 
