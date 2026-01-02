@@ -2772,8 +2772,14 @@ def update_price(request):
         elif request_data.get("typePrice") == "Тариф врача":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price = PriceName(
-                title=request_data["title"], symbol_code=request_data["code"], date_start=request_data["start"], date_end=request_data["end"], hospital=hospital,
-                contract_number=request_data.get("contractNumber"), active_status=True, doctor_id=int(request_data.get("doctorId"))
+                title=request_data["title"],
+                symbol_code=request_data["code"],
+                date_start=request_data["start"],
+                date_end=request_data["end"],
+                hospital=hospital,
+                contract_number=request_data.get("contractNumber"),
+                active_status=True,
+                doctor_id=int(request_data.get("doctorId")),
             )
         if current_price:
             current_price.save()
