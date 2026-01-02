@@ -94,7 +94,7 @@ class PriceName(models.Model):
             "symbolCode": price.symbol_code,
             "uuid": str(price.uuid),
             "contractNumber": price.contract_number,
-            "doctorId": price.doctor_id
+            "doctorId": price.doctor_id,
         }
         return json_data
 
