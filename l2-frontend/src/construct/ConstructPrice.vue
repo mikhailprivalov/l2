@@ -198,6 +198,30 @@
             >
           </td>
         </tr>
+        <tr
+          v-if="searchTypesObject === 'Тариф врача'"
+          class="height-row border"
+        >
+          <td />
+          <td />
+          <td />
+          <td class="border text-center">
+            <strong>Врач</strong>
+          </td>
+          <td
+            class="border"
+            colspan="3"
+          >
+            <Treeselect
+              v-model="priceData.doctorId"
+              class="treeselect-noborder"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="doctors"
+              placeholder="Врач не выбран"
+            />
+          </td>
+        </tr>
       </table>
     </div>
     <span v-if="priceIsSelected">
@@ -425,6 +449,7 @@ import VueTippyTd from '@/construct/VueTippyTd.vue';
 import LoadFile from '@/ui-cards/LoadFile.vue';
 import RadioField from '@/fields/RadioField.vue';
 import UploadFileModal from '@/modals/UploadFileModal.vue';
+import usersPoint from '@/api/user-point';
 
 export default {
   name: 'ConstructPrice',
@@ -452,6 +477,7 @@ export default {
       searchTypesObject: 'Работодатель',
       showArchive: false,
       typesObject: [],
+      doctors: [],
     };
   },
   computed: {
@@ -474,6 +500,9 @@ export default {
     l2_price_customer() {
       return this.$store.getters.modules.l2_price_customer;
     },
+    l2_price_tariff_doctor() {
+      return this.$store.getters.modules.l2_price_tariff_doctor;
+    },
     l2_price_externel_performer() {
       return this.$store.getters.modules.l2_price_externel_performer;
     },
@@ -489,6 +518,7 @@ export default {
           end: '',
           company: null,
           uuid: '',
+          doctorId: -1,
         };
         this.activeStatus.ok = true;
       } else {
@@ -502,6 +532,10 @@ export default {
     this.getResearchList();
     if (this.l2_price_customer) {
       this.typesObject.push('Заказчик');
+    }
+    if (this.l2_price_tariff_doctor) {
+      this.typesObject.push('Тариф врача');
+      this.load_doctors();
     }
     if (this.l2_price_externel_performer) {
       this.typesObject.push('Внешний исполнитель');
@@ -531,6 +565,7 @@ export default {
     filteredPriceObject() {
       this.getPrices();
       this.selectedPrice = null;
+      this.priceData.doctorId = -1;
     },
     downloadSpecification() {
       window.open(`/forms/docx?type=102.03&priceId=${this.selectedPrice}`, '_blank');
@@ -554,6 +589,8 @@ export default {
     async updatePrice() {
       if (!this.priceDataIsFilled) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
+      } else if (this.l2_price_tariff_doctor && this.priceData.doctorId < 0) {
+        this.$root.$emit('msg', 'error', 'Данные не заполнены');
       } else if (new Date(this.priceData.end) <= new Date(this.priceData.start)) {
         this.$root.$emit('msg', 'error', 'Дата конца раньше даты начала');
       } else if (this.priceIsSelected) {
@@ -568,6 +605,7 @@ export default {
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
           contractNumber: this.priceData.contractNumber,
+          doctorId: this.priceData.doctorId,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -588,6 +626,7 @@ export default {
           company: this.priceData.company,
           typePrice: this.searchTypesObject,
           contractNumber: this.priceData.contractNumber,
+          doctorId: this.priceData.doctorId,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
         if (ok) {
@@ -603,6 +642,7 @@ export default {
             company: null,
             uuid: '',
             contractNumber: '',
+            doctorId: -1,
           };
         } else {
           this.$root.$emit('msg', 'error', message);
@@ -704,6 +744,12 @@ export default {
           this.$root.$emit('msg', 'error', message);
         }
       }
+    },
+    async load_doctors() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const { users } = await usersPoint.loadUsersByGroup({ group: ['Тариф врача'] });
+      this.doctors = users;
+      await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
 };

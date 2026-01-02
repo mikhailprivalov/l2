@@ -41,6 +41,7 @@ class PriceName(models.Model):
     symbol_code = models.CharField(max_length=55, unique=True, blank=True, null=True, default=None, help_text="Код прайса", db_index=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
     contract_number = models.CharField(max_length=55, blank=True, null=True, default=None, verbose_name="Номер договора", help_text="№00-00/00/2024", db_index=True)
+    doctor = models.ForeignKey(DoctorProfile, db_index=True, null=True, default=None, help_text='Врач (для тарифа на врача)', on_delete=models.CASCADE)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -92,7 +93,8 @@ class PriceName(models.Model):
             "companyTitle": company_title,
             "symbolCode": price.symbol_code,
             "uuid": str(price.uuid),
-            "contractNumber": price.contract_number
+            "contractNumber": price.contract_number,
+            "doctorId": price.doctor_id
         }
         return json_data
 
