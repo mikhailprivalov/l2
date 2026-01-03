@@ -182,6 +182,7 @@ class SettingManager:
                     "disable_death_cert",
                     "price_customer",
                     "price_externel_performer",
+                    "price_tariff_doctor",
                     "ftp",
                     "case",
                     "hide_show_count_param",
