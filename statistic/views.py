@@ -1998,7 +1998,6 @@ def statistic_xls(request):
         for coast in coast_research_price:
             price_hospitals[coast.price_name_id][coast.research_id] = float(coast.coast)
 
-
     elif tp == "statistics-registry-profit":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
