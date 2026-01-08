@@ -46,6 +46,9 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleJustified.leading = 4.5 * mm
     styleJustified.firstLineIndent = 13
 
+    styleJustifiedDoctor = deepcopy(styleJustified)
+    styleJustifiedDoctor.firstLineIndent = 0
+
     objs = []
     header_title = gen_header_title(iss.napravleniye.doc.hospital)
     objs.append(header_title)
@@ -161,7 +164,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     objs.append(Spacer(1, 3 * mm))
     space_symbol = '&nbsp;'
     objs.append(Paragraph("ОПИСАНИЕ", styleBold))
-    opis = data.get('пр-Результат').replace('<', '&lt;').replace('>', '&gt;').replace("\n", f"<br/>{space_symbol*5}")
+    opis = data.get('пр-Результат').replace('<', '&lt;').replace('>', '&gt;').replace("\n", f"<br/>{space_symbol * 5}").replace("\r", f"<br/>{space_symbol * 5}")
     opis = text_to_bold(opis)
     objs.append(Paragraph(opis, styleJustified))
     objs.append(Spacer(1, 3 * mm))
@@ -180,7 +183,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     moscow_dt = iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S")
     objs.append(Paragraph(f"{moscow_dt} (МСК)", style))
-    objs.append(Paragraph(f"Врач: {iss.doc_confirmation.get_full_fio()}", style))
+    objs.append(Paragraph(f"Врач-рентгенолог: {iss.doc_confirmation.get_full_fio()}", styleJustifiedDoctor))
     has_any_signature = kwargs.get('has_any_signature', False)
     if not has_any_signature:
         tbl = gen_table(iss.doc_confirmation)

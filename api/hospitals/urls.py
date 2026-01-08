@@ -4,4 +4,5 @@ from . import views
 
 urlpatterns = [
     path('external-performer', views.external_performer),
+    path('hospitals', views.hospitals),
 ]

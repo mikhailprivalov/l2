@@ -10,3 +10,10 @@ from django.http import JsonResponse
 def external_performer(request):
     result = Hospitals.get_is_external_performing_organization()
     return JsonResponse({"data": result})
+
+
+@login_required
+@group_required('Статистика-реестры')
+def hospitals(request):
+    result = Hospitals.get_hospitals()
+    return JsonResponse({"rows": result})

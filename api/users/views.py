@@ -4,6 +4,7 @@ from io import BytesIO
 import pyotp
 import qrcode
 from django.contrib.auth.decorators import login_required
+from laboratory.decorators import group_required
 import simplejson as json
 import re
 from random import randint
@@ -14,12 +15,14 @@ from django.db import transaction
 from contracts.models import PriceName, PriceCoast
 from directory.models import Researches
 from hospitals.models import Hospitals
+from laboratory.settings import GROUP_USER_FOR_FILTER
 from laboratory.utils import current_time
 from users.tasks import send_password_reset_code
 
 from utils.response import status_response
 import slog.models as slog
 from users.models import DoctorProfile
+from django.http import JsonResponse
 
 
 def auth(request):
@@ -275,3 +278,10 @@ def cancel_restricted_directions(request):
     doctor_profile: DoctorProfile = DoctorProfile.objects.get(user_id=user_pk)
     doctor_profile.restricted_to_direct.clear()
     return status_response(True)
+
+
+@login_required
+@group_required('Статистика-реестры')
+def get_doctors_by_group(request):
+    result = [{"id": -1, "label": "Все"}, *[{"id": x.pk, "label": x.get_full_fio()} for x in DoctorProfile.objects.filter(user__groups__name=GROUP_USER_FOR_FILTER)]]
+    return JsonResponse({"rows": result})
