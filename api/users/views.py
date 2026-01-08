@@ -279,6 +279,7 @@ def cancel_restricted_directions(request):
     doctor_profile.restricted_to_direct.clear()
     return status_response(True)
 
+
 @login_required
 @group_required('Статистика-реестры')
 def get_doctors_by_group(request):
