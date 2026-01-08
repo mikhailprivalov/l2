@@ -68,7 +68,7 @@ from .sql_func import (
     get_researches_by_templates,
     get_expertise_grade,
     get_confirm_protocol_by_date_extract,
-    result_research_by_parent_iss,
+    result_research_by_parent_iss, statistics_confirm_research_by_hospital_create,
 )
 
 from laboratory.settings import (
@@ -1973,6 +1973,32 @@ def statistic_xls(request):
             ws = consolidates.consolidate_fill_data_doctors_by_type_department_detail_patient(ws, query_doctors, ws_and_finish_order[1])
         else:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
+    elif tp == "reestr-hospital":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_больницам_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Реестр по больницам")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        hospital = int(request_data.get("hospital", -1))
+        data = statistics_confirm_research_by_hospital_create(start_date, end_date, hospital)
+
+        hospitals_id = set([int(i.hospital_id) for i in data if i.hospital_id is not None])
+        hospitals_price = {}
+        price_hospitals = {}
+        for hospital_id in list(hospitals_id):
+            price = get_price_hospital(hospital_id, start_date, end_date)
+            if price:
+                hospitals_price[hospital_id] = price.id
+                price_hospitals[price.id] = {"hospital_id": hospital_id}
+        coast_research_price = get_research_coast_by_prce(tuple(price_hospitals.keys()))
+
+        for coast in coast_research_price:
+            price_hospitals[coast.price_name_id][coast.research_id] = float(coast.coast)
+
+
     elif tp == "statistics-registry-profit":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()

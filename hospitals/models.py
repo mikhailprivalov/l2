@@ -179,7 +179,7 @@ class Hospitals(models.Model):
             hospitals = Hospitals.objects.filter(pk=hospital_id)
         else:
             hospitals = Hospitals.objects.filter(hide=False).order_by('title')
-        result = [{"id": hospital.pk, "label": hospital.title} for hospital in hospitals]
+        result = [{"id": -1, "label": "Все"}, *[{"id": hospital.pk, "label": hospital.title} for hospital in hospitals]]
         return result
 
     class Meta:

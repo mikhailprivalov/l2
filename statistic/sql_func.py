@@ -995,6 +995,49 @@ def statistics_registry_profit(d_s, d_e, fin_source_pk):
     return rows
 
 
+def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.research_id,
+                    dr.title as research_title,
+                    directions_napravleniya.hospital_id,
+                    hh.title as hospital_title,
+                    directions_napravleniya.id as direction_num,
+                    pp.title as department_title,
+                    directions_issledovaniya.doc_confirmation_string,
+                    directions_issledovaniya.doc_confirmation_id,
+                    dp.family as doc_family,
+                    dp.name as doc_name,
+                    dp.patronymic as doc_patronymic
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+                LEFT JOIN clients_card cc ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN users_doctorprofile dp ON dp.id = directions_issledovaniya.doc_confirmation_id
+                LEFT JOIN hospitals_hospitals hh ON hh.id = directions_napravleniya.hospital_id
+                LEFT JOIN podrazdeleniya_podrazdeleniya pp ON pp.id = dr.podrazdeleniye_id
+                WHERE 
+                    time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                    AND  
+                      CASE WHEN %(hospital_id)s > 0 THEN
+                          directions_napravleniya.hospital_id in %(hospital_id)s
+                      WHEN %(is_research_set)s = -1 THEN
+                        directions_napravleniya.hospital_id IS NOT NULL
+                      END
+                ORDER BY
+                    directions_napravleniya.hospital_id,
+                    directions_issledovaniya.time_confirmation,
+                    directions_issledovaniya.doc_confirmation_id,
+                    directions_issledovaniya.research_id                    
+                    """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id': hospital_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def consolidate_doctors_by_type_department(d_s, d_e, fin_source_pk, doctors_pk):
     with connection.cursor() as cursor:
         cursor.execute(

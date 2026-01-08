@@ -506,6 +506,7 @@ RESEARCH_ID_FINAL_REPORT = (-1,)
 WEB_PLUGIN_LINK_STUDY = None
 MAGAZINE_REPORT = {}
 COMMAND_DOCX_2_PDF = ""
+GROUP_USER_FOR_FILTER = ""
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

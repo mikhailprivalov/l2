@@ -120,8 +120,42 @@
               :disable-branch-nodes="true"
               :options="deps"
               :clearable="true"
-              placeholder="Подразделение не выбано"
+              placeholder="Подразделение не выбрано"
               :disabled="values.user"
+            />
+          </div>
+
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.HOSPITAL)"
+            :key="PARAMS_TYPES.HOSPITAL"
+            class="input-group"
+          >
+            <span class="input-group-addon">Больница:</span>
+            <treeselect
+              v-model="values.hospital"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="hospitals"
+              :clearable="true"
+              placeholder="Больница не выбрана"
+            />
+          </div>
+
+          <div
+            v-if="checkReportParam(PARAMS_TYPES.DOCTORS)"
+            :key="PARAMS_TYPES.DOCTORS"
+            class="input-group"
+          >
+            <span class="input-group-addon">Врач:</span>
+            <treeselect
+              v-model="values.doctor"
+              class="treeselect-noborder treeselect-wide"
+              :multiple="false"
+              :disable-branch-nodes="true"
+              :options="doctors"
+              :clearable="true"
+              placeholder="Врач не выбрана"
             />
           </div>
 
@@ -510,6 +544,7 @@ const PARAMS_TYPES = {
   LABORATORY_WITH_ALL: 'LABORATORY_WITH_ALL',
   PERIOD_DATE: 'PERIOD_DATE',
   USERS: 'USERS',
+  DOCTORS: 'DOCTORS',
   USER_OR_DEP: 'USER_OR_DEP',
   FIN_SOURCE: 'FIN_SOURCE',
   RESEARCH_SETS: 'RESEARCH_SETS',
@@ -519,6 +554,7 @@ const PARAMS_TYPES = {
   RESEARCH: 'RESEARCH',
   RESEARCH_CREATE: 'RESEARCH_CREATE',
   COMPANY: 'COMPANY',
+  HOSPITAL: 'HOSPITAL',
   MONTH_YEAR: 'MONTH_YEAR',
   SPECIAL_FIELDS: 'SPECIAL_FIELDS',
   TYPE_DEPARTMENT: 'TYPE_DEPARTMENT',
@@ -691,6 +727,18 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-onco&date-start=<date-start>&date-end=<date-end>',
       },
+      reestrHospitals: {
+        groups: ['Статистика-реестры'],
+        title: 'Реестр по больницам',
+        params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.HOSPITAL],
+        url: '/statistic/xls?type=reestr-hospital&date-start=<date-start>&date-end=<date-end>&hospital=<hospital>',
+      },
+      reestrDoctors: {
+        groups: ['Статистика-реестры'],
+        title: 'Реестр по врачам',
+        params: [PARAMS_TYPES.DATE_RANGE, PARAMS_TYPES.DOCTORS],
+        url: '/statistic/xls?type=reestr-doctor&date-start=<date-start>&date-end=<date-end>&doctor=<doctor>',
+      },
     },
   },
   covid19: {
@@ -767,9 +815,11 @@ const getVaues = () => ({
   typeDepartment: null,
   depByType: null,
   user: null,
+  doctor: null,
   dep: null,
   research: null,
   company: null,
+  hospital: null,
   month: moment().month() + 1,
   year: moment().year(),
   purposes: [],
@@ -806,6 +856,8 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       },
       users: [],
       companies: [],
+      hospitals: [],
+      doctors: [],
       researchSets: [],
       typesReport: [],
       typesMagazine: [],
@@ -839,6 +891,8 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
   mounted() {
     this.loadUsers();
     this.loadCompanies();
+    this.loadHospitals();
+    this.loadDoctors();
     this.loadResearchSets();
     this.loadTypesReport();
     this.loadTypesMagazine();
@@ -867,6 +921,10 @@ export default class Statistics extends Vue {
   users: any[];
 
   companies: any[];
+
+  hospitals: any[];
+
+  doctors: any[];
 
   researchSets: any[];
 
@@ -938,6 +996,20 @@ export default class Statistics extends Vue {
     await this.$store.dispatch(actions.INC_LOADING);
     const { rows } = await this.$api('companies');
     this.companies = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadHospitals() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await this.$api('hospitals/hospitals');
+    this.hospitals = rows;
+    await this.$store.dispatch(actions.DEC_LOADING);
+  }
+
+  async loadDoctors() {
+    await this.$store.dispatch(actions.INC_LOADING);
+    const { rows } = await this.$api('users/get-doctors-by-group');
+    this.doctors = rows;
     await this.$store.dispatch(actions.DEC_LOADING);
   }
 
@@ -1164,6 +1236,21 @@ export default class Statistics extends Vue {
         }
 
         url = url.replace('<company>', this.values.company);
+      }
+
+      if (this.PARAMS_TYPES.HOSPITAL === p) {
+        if (_.isNil(this.values.hospital)) {
+          url = url.replace('<hospital>', -1);
+        }
+
+        url = url.replace('<hospital>', this.values.hospital);
+      }
+      if (this.PARAMS_TYPES.DOCTORS === p) {
+        if (_.isNil(this.values.doctor)) {
+          url = url.replace('<doctor>', -1);
+        }
+
+        url = url.replace('<doctor>', this.values.doctor);
       }
 
       if (this.PARAMS_TYPES.BY_CREATE_DIRECTION === p) {

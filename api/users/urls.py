@@ -12,4 +12,5 @@ urlpatterns = [
     path('disable-totp', views.disable_totp),
     path('update-restricted-directions', views.update_restricted_directions),
     path('cancel-restricted-directions', views.cancel_restricted_directions),
+    path('get-doctors-by-group', views.get_doctors_by_group),
 ]
