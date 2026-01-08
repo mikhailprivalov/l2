@@ -68,7 +68,8 @@ from .sql_func import (
     get_researches_by_templates,
     get_expertise_grade,
     get_confirm_protocol_by_date_extract,
-    result_research_by_parent_iss, statistics_confirm_research_by_hospital_create,
+    result_research_by_parent_iss,
+    statistics_confirm_research_by_hospital_create,
 )
 
 from laboratory.settings import (
