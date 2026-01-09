@@ -1,4 +1,3 @@
-import openpyxl
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
@@ -10,7 +9,7 @@ def reestr_hospital_base(ws1, d1, d2):
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    ws1.cell(row=1, column=1).value = f'Реестр по Клиникам'
+    ws1.cell(row=1, column=1).value = 'Реестр по Клиникам'
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
 
