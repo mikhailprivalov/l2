@@ -1002,6 +1002,7 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                 SELECT 
                     directions_issledovaniya.research_id,
                     dr.title as research_title,
+                    dr.code as research_code,
                     directions_napravleniya.hospital_id,
                     hh.title as hospital_title,
                     directions_napravleniya.id as direction_num,
@@ -1010,11 +1011,18 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                     directions_issledovaniya.doc_confirmation_id,
                     dp.family as doc_family,
                     dp.name as doc_name,
-                    dp.patronymic as doc_patronymic
+                    dp.patronymic as doc_patronymic,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
+                    cc.number as card_number,
+                    ci.family as patient_family,
+                    ci.name as patient_name,
+                    ci.patronymic as patient_patronymic
                 FROM directions_issledovaniya
                 LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
                 LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
                 LEFT JOIN clients_card cc ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN clients_individual ci ON ci.id = cc.individual_id
                 LEFT JOIN users_doctorprofile dp ON dp.id = directions_issledovaniya.doc_confirmation_id
                 LEFT JOIN hospitals_hospitals hh ON hh.id = directions_napravleniya.hospital_id
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp ON pp.id = dr.podrazdeleniye_id
@@ -1023,7 +1031,7 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                     AND  
                       CASE WHEN %(hospital_id)s > 0 THEN
                           directions_napravleniya.hospital_id in %(hospital_id)s
-                      WHEN %(is_research_set)s = -1 THEN
+                      WHEN %(hospital_id)s = -1 THEN
                         directions_napravleniya.hospital_id IS NOT NULL
                       END
                 ORDER BY
