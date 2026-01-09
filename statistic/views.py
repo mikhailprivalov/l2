@@ -51,7 +51,7 @@ from .report import (
     appointed_research,
     lab_result,
     partner_coast_data,
-    reestr_hospital
+    reestr_hospital,
 )
 from .sql_func import (
     attached_female_on_month,
