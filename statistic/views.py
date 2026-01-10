@@ -51,6 +51,7 @@ from .report import (
     appointed_research,
     lab_result,
     partner_coast_data,
+    reestr_hospital,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -1983,10 +1984,11 @@ def statistic_xls(request):
         d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
-        hospital = int(request_data.get("hospital", -1))
-        data = statistics_confirm_research_by_hospital_create(start_date, end_date, hospital)
+        hospital = [int(request_data.get("hospital", -1))]
+        data = statistics_confirm_research_by_hospital_create(start_date, end_date, tuple(hospital))
 
         hospitals_id = set([int(i.hospital_id) for i in data if i.hospital_id is not None])
+
         hospitals_price = {}
         price_hospitals = {}
         for hospital_id in list(hospitals_id):
@@ -1998,6 +2000,43 @@ def statistic_xls(request):
 
         for coast in coast_research_price:
             price_hospitals[coast.price_name_id][coast.research_id] = float(coast.coast)
+        row_report = []
+        for i in data:
+            tarif_coast = None
+            coast_price_research = None
+            if i.hospital_id:
+                id_price = hospitals_price.get(i.hospital_id)
+                if id_price:
+                    coast_price_research = price_hospitals.get(id_price)
+                if coast_price_research:
+                    tarif_coast = coast_price_research.get(i.research_id)
+            if not tarif_coast:
+                tarif_coast = 0
+            tmp_result = {}
+            tmp_result["hospital"] = i.hospital_title
+            tmp_result["direction_number"] = i.direction_num
+            tmp_result["date"] = i.date_confirm
+            tmp_result["time"] = i.time_confirm
+            tmp_result["card_number"] = i.card_number
+            tmp_result["patient_family"] = i.patient_family
+            tmp_result["patient_name"] = i.patient_name
+            tmp_result["patient_patronymic"] = i.patient_patronymic
+            tmp_result["service"] = i.research_title
+            tmp_result["service_code"] = i.research_code
+            tmp_result["department"] = i.department_title
+            tmp_result["doctor_family"] = i.doc_family
+            tmp_result["doctor_name"] = i.doc_name
+            tmp_result["doctor_patronymic"] = i.doc_patronymic
+            tmp_result["tarif_coast"] = tarif_coast
+            tmp_result["tarif_contrast"] = 0
+            tmp_result["tarif_dynamic"] = 0
+            tmp_result["tarif_extension"] = 0
+            tmp_result["tarif_night"] = 0
+            tmp_result["total_summ"] = 0
+            row_report.append(tmp_result.copy())
+
+        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o)
+        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
     elif tp == "statistics-registry-profit":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
