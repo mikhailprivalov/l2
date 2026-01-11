@@ -1,4 +1,6 @@
 import pika
+
+import slog.models as slog
 from laboratory.settings import RMQ_AUTH_PARAM
 from laboratory.utils import current_time
 import simplejson as json
@@ -26,3 +28,4 @@ def broker_publish_msg(message):
                 ),
                 mandatory=True,
             )
+            slog.Log(key=message, type=60028, body=f"Отправлено в RMQ {message}").save()
