@@ -2,14 +2,14 @@ from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
 
-def reestr_hospital_base(ws1, d1, d2):
+def reestr_hospital_base(ws1, d1, d2, title):
     style_border = NamedStyle(name="style_border_ca5")
     bd = Side(style='thin', color="000000")
     style_border.border = Border(left=bd, top=bd, right=bd, bottom=bd)
     style_border.font = Font(bold=True, size=11)
     style_border.alignment = Alignment(wrap_text=True, horizontal='center', vertical='center')
 
-    ws1.cell(row=1, column=1).value = 'Реестр по Клиникам'
+    ws1.cell(row=1, column=1).value = title
     ws1.cell(row=2, column=1).value = 'Период:'
     ws1.cell(row=3, column=1).value = f'c {d1} по {d2}'
 

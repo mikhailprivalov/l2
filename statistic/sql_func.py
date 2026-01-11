@@ -1030,7 +1030,7 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                     time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                     AND  
                       CASE WHEN %(hospital_id)s > 0 THEN
-                          directions_napravleniya.hospital_id in %(hospital_id)s
+                          directions_napravleniya.hospital_id = %(hospital_id)s
                       WHEN %(hospital_id)s = -1 THEN
                         directions_napravleniya.hospital_id IS NOT NULL
                       END
@@ -1041,6 +1041,58 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                     directions_issledovaniya.research_id                    
                     """,
             params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'hospital_id': hospital_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def statistics_confirm_research_by_doctor(d_s, d_e, doctor_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT 
+                    directions_issledovaniya.research_id,
+                    dr.title as research_title,
+                    dr.code as research_code,
+                    directions_napravleniya.hospital_id,
+                    hh.title as hospital_title,
+                    directions_napravleniya.id as direction_num,
+                    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_create,
+                    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') AS time_create,                    
+                    pp.title as department_title,
+                    directions_issledovaniya.doc_confirmation_id,
+                    dp.family as doc_family,
+                    dp.name as doc_name,
+                    dp.patronymic as doc_patronymic,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
+                    to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
+                    cc.number as card_number,
+                    ci.family as patient_family,
+                    ci.name as patient_name,
+                    ci.patronymic as patient_patronymic
+                FROM directions_issledovaniya
+                LEFT JOIN directions_napravleniya ON directions_napravleniya.id = directions_issledovaniya.napravleniye_id
+                LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+                LEFT JOIN clients_card cc ON directions_napravleniya.client_id = cc.id
+                LEFT JOIN clients_individual ci ON ci.id = cc.individual_id
+                LEFT JOIN users_doctorprofile dp ON dp.id = directions_issledovaniya.doc_confirmation_id
+                LEFT JOIN hospitals_hospitals hh ON hh.id = directions_napravleniya.hospital_id
+                LEFT JOIN podrazdeleniya_podrazdeleniya pp ON pp.id = dr.podrazdeleniye_id
+                WHERE 
+                    time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                    AND  
+                      CASE WHEN %(doctor_id)s > 0 THEN
+                          directions_issledovaniya.doc_confirmation_id = %(doctor_id)s
+                      WHEN %(doctor_id)s = -1 THEN
+                        directions_issledovaniya.doc_confirmation_id IS NOT NULL
+                      END
+                ORDER BY
+                    directions_issledovaniya.doc_confirmation_id,
+                    directions_issledovaniya.time_confirmation,
+                    directions_napravleniya.hospital_id,
+                    directions_issledovaniya.research_id                    
+                    """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'doctor_id': doctor_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows
