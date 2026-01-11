@@ -31,7 +31,9 @@ def auth(request):
     password = data.get('password', '')
     totp_password = data.get('totp', '')
     user = authenticate(username=username, password=password)
+    print(user)
     f1 = re.findall(r"^([ X0-9]{5})([0-9a-fA-F]{5})$", username)
+    print(f1)
     if user:
         ip = slog.Log.get_client_ip(request)
         if not totp_password and user.doctorprofile.totp_secret:
@@ -58,7 +60,12 @@ def auth(request):
         return status_response(False, message="Ваш аккаунт отключен")
     elif len(password) == 0 and len(f1) == 1 and len(f1[0]) == 2:
         did = int(f1[0][0].replace("X", ""))
+        print(did)
         u = DoctorProfile.objects.filter(pk=did).first()
+        print('u', u)
+        print('u.get_login_id(), username', u.get_login_id(), username)
+        print('active', u.user.is_active)
+        print('u.user.is_staff', u.user.is_staff)
         if u and u.get_login_id() == username and u.user.is_active and not u.user.is_staff:
             user = u.user
             login(request, user, backend="django.contrib.auth.backends.ModelBackend")
@@ -283,5 +290,5 @@ def cancel_restricted_directions(request):
 @login_required
 @group_required('Статистика-реестры')
 def get_doctors_by_group(request):
-    result = [{"id": -1, "label": "Все"}, *[{"id": x.pk, "label": x.get_full_fio()} for x in DoctorProfile.objects.filter(user__groups__name=GROUP_USER_FOR_FILTER)]]
+    result = [{"id": -1, "label": "Все"}, *[{"id": x.pk, "label": x.get_full_fio()} for x in DoctorProfile.objects.filter(user__groups__name=GROUP_USER_FOR_FILTER).order_by('family')]]
     return JsonResponse({"rows": result})

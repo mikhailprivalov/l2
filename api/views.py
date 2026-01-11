@@ -2802,6 +2802,11 @@ def update_price(request):
         elif request_data.get("typePrice") == "Заказчик" or request_data.get("typePrice") == "Внешний исполнитель":
             hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
             current_price.hospital = hospital
+        elif request_data.get("typePrice") == "Тариф врача":
+            hospital = Hospitals.objects.filter(pk=int(request_data["company"])).first()
+            doctor_id = int(request_data.get("doctorId"))
+            current_price.hospital = hospital
+            current_price.doctor_id = doctor_id
         current_price.save()
         Log.log(
             current_price.pk,

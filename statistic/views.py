@@ -70,7 +70,7 @@ from .sql_func import (
     get_expertise_grade,
     get_confirm_protocol_by_date_extract,
     result_research_by_parent_iss,
-    statistics_confirm_research_by_hospital_create,
+    statistics_confirm_research_by_hospital_create, statistics_confirm_research_by_doctor,
 )
 
 from laboratory.settings import (
@@ -1984,8 +1984,8 @@ def statistic_xls(request):
         d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
         start_date = datetime.datetime.combine(d1, datetime.time.min)
         end_date = datetime.datetime.combine(d2, datetime.time.max)
-        hospital = [int(request_data.get("hospital", -1))]
-        data = statistics_confirm_research_by_hospital_create(start_date, end_date, tuple(hospital))
+        hospital = int(request_data.get("hospital", -1))
+        data = statistics_confirm_research_by_hospital_create(start_date, end_date, hospital)
 
         hospitals_id = set([int(i.hospital_id) for i in data if i.hospital_id is not None])
 
@@ -2035,8 +2035,80 @@ def statistic_xls(request):
             tmp_result["total_summ"] = 0
             row_report.append(tmp_result.copy())
 
-        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o)
+        ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам')
         ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
+
+    elif tp == "reestr-doctor":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_больницам_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Реестр по врачам")
+        d1 = datetime.datetime.strptime(date_start_o, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(date_end_o, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+        doctor = int(request_data.get("doctor", -1))
+        data = statistics_confirm_research_by_doctor(start_date, end_date, doctor)
+        doctors_confirmation_id = set([int(i.doc_confirmation_id) for i in data if i.doc_confirmation_id is not None])
+
+        doctors_prices = {}
+        price_doctors = []
+        determined_prices = {}
+        for doc_confirmation_id in list(doctors_confirmation_id):
+            prices = get_price_doctor(doc_confirmation_id, start_date, end_date)
+            doctors_prices[doc_confirmation_id] = {i.hospital_id: i.pk for i in prices}
+            price_doctors.extend([i.pk for i in prices])
+
+        price_doctors = set(price_doctors)
+        if price_doctors:
+            coast_research_price = get_research_coast_by_prce(tuple(price_doctors))
+
+            for coast in coast_research_price:
+                if not determined_prices.get(coast.price_name_id):
+                    determined_prices[coast.price_name_id] = {coast.research_id: float(coast.coast)}
+                else:
+                    determined_prices[coast.price_name_id][coast.research_id] = float(coast.coast)
+
+            row_report = []
+            default_hospital = Hospitals.get_default_hospital()
+            for i in data:
+                tarif_coast = None
+                if i.hospital_id:
+                    potential_doctor_hospital_prices = doctors_prices.get(i.doc_confirmation_id)
+                    if potential_doctor_hospital_prices.get(i.hospital_id):
+                        tarif_coast = determined_prices[potential_doctor_hospital_prices.get(i.hospital_id)].get(i.research_id)
+                    elif potential_doctor_hospital_prices.get(default_hospital.pk):
+                        tarif_coast = determined_prices[potential_doctor_hospital_prices.get(default_hospital.pk)].get(i.research_id)
+                if not tarif_coast:
+                    tarif_coast = 0
+                tmp_result = {}
+                tmp_result["hospital"] = i.hospital_title
+                tmp_result["direction_number"] = i.direction_num
+                tmp_result["date"] = i.date_confirm
+                tmp_result["time"] = i.time_confirm
+                tmp_result["card_number"] = i.card_number
+                tmp_result["patient_family"] = i.patient_family
+                tmp_result["patient_name"] = i.patient_name
+                tmp_result["patient_patronymic"] = i.patient_patronymic
+                tmp_result["service"] = i.research_title
+                tmp_result["service_code"] = i.research_code
+                tmp_result["department"] = i.department_title
+                tmp_result["doctor_family"] = i.doc_family
+                tmp_result["doctor_name"] = i.doc_name
+                tmp_result["doctor_patronymic"] = i.doc_patronymic
+                tmp_result["tarif_coast"] = tarif_coast
+                tmp_result["tarif_contrast"] = 0
+                tmp_result["tarif_dynamic"] = 0
+                tmp_result["tarif_extension"] = 0
+                tmp_result["tarif_night"] = 0
+                tmp_result["total_summ"] = 0
+                row_report.append(tmp_result.copy())
+            title_fio = ""
+            if doctor > 0:
+                fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
+                title_fio = fio_doctor.get_fio()
+            ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
+            ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
     elif tp == "statistics-registry-profit":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
@@ -2491,3 +2563,7 @@ def get_price_company(company_id, start_date, end_date):
 
 def get_price_hospital(hospital_id, start_date, end_date):
     return PriceName.get_hospital_price_by_date(hospital_id, start_date, end_date, is_subcontract=True)
+
+
+def get_price_doctor(doctor_id, start_date, end_date):
+    return PriceName.get_doctors_many_prices_by_date(doctor_id, start_date, end_date, is_subcontract=True)
