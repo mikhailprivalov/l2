@@ -543,6 +543,7 @@ class Napravleniya(models.Model):
     need_resend_l2 = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в L2.Core?')
     need_resend_crie = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в CRIE')
     need_resend_ecp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЕЦП')
+    received_by_rmq = models.BooleanField(default=False, blank=True, help_text='Получен RMQ')
     core_id = models.CharField(max_length=32, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в L2.Core')
     amd_number = models.CharField(max_length=20, default=None, blank=True, null=True, db_index=True, help_text='Номер документа в АМД')
     error_amd = models.BooleanField(default=False, blank=True, help_text='Ошибка отправка в АМД?')

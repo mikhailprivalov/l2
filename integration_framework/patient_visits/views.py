@@ -1,5 +1,3 @@
-import codecs
-
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from api.models import Application
@@ -8,6 +6,7 @@ import simplejson as json
 from results.sql_func import get_paraclinic_results_by_direction
 from utils.dates import normalize_date, normalize_dots_date
 from xml_generate.views import gen_result_cda_files
+import slog.models as slog
 
 
 @api_view(['POST'])
@@ -30,6 +29,8 @@ def data_by_direction(request):
     data = json.loads(request.body)
     direction_id = data.get("directionId")
     direction = Napravleniya.objects.filter(pk=direction_id).first()
+    if direction.received_by_rmq or direction.rmis_visit_number and direction.rmis_case_number:
+        return Response({"patient": None})
     result_l2 = get_direction_data_by_cda_group(direction.pk)
     result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
     result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ")
@@ -38,7 +39,7 @@ def data_by_direction(request):
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
     if not iss.doc_confirmation:
-        return Response({"result": None})
+        return Response({"patient": None})
 
     if iss.doc_confirmation.additional_info:
         if "{" in iss.doc_confirmation.additional_info and "}" in iss.doc_confirmation.additional_info:
@@ -54,7 +55,7 @@ def data_by_direction(request):
         or not iss.doc_confirmation.rmis_password
     ):
         iss.napravleniye.amd_message = "Нет связи с внешним сервисом"
-        return Response({"result": None})
+        return Response({"patient": None})
 
     date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
     time_inspection = iss.time_confirmation.strftime("%H:%M")
@@ -84,6 +85,9 @@ def data_by_direction(request):
         },
         "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
     }
+    direction.received_by_rmq = True
+    direction.save()
+    slog.Log(key=direction.pk, type=60029, body=f"получено очередью RMQ {direction.pk}").save()
     return Response(result)
 
 
@@ -170,10 +174,11 @@ def get_direction_data_by_cda_group(direction_pk):
                     s = f"{s}{key}: {val};"
                 else:
                     s = f"{s}{val};"
-        temp_result[k] = s
+        temp_result[k] = s.replace('"', '').replace("'", "")
     temp_result = {str(k): v for k, v in temp_result.items()}
     if main_diagnos:
         main_diagnos_code = main_diagnos.split(" ")[0]
+        main_diagnos_code = main_diagnos_code.split(";")[0]
     return {
         "data": temp_result,
         "date_inspection": date_inspection,
