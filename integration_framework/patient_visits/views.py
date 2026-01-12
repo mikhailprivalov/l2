@@ -39,7 +39,7 @@ def data_by_direction(request):
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
     if not iss.doc_confirmation or not result_l2.get("main_diagnos"):
-        return Response({"patient": None})
+        return Response({"patient": None, "dia_cinfirm": False})
 
     if iss.doc_confirmation.additional_info:
         if "{" in iss.doc_confirmation.additional_info and "}" in iss.doc_confirmation.additional_info:
@@ -51,7 +51,7 @@ def data_by_direction(request):
                 additional_data = None
     if not additional_data or not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
         iss.napravleniye.amd_message = "Нет связи с внешним сервисом"
-        return Response({"patient": None})
+        return Response({"patient": None, "rmis_data_doctor": False})
 
     date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
     time_inspection = iss.time_confirmation.strftime("%H:%M")
@@ -82,7 +82,7 @@ def data_by_direction(request):
         "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
     }
     if not check_resut(result['service']):
-        return Response({"patient": None})
+        return Response({"patient": None, "check_result": False})
     direction.received_by_rmq = True
     direction.save()
     slog.Log(key=direction.pk, type=60029, body=f"получено очередью RMQ {direction.pk}").save()
