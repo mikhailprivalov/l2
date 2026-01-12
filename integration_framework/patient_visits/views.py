@@ -30,10 +30,10 @@ def data_by_direction(request):
     direction_id = data.get("directionId")
     direction = Napravleniya.objects.filter(pk=direction_id).first()
     if direction.received_by_rmq or direction.rmis_visit_number and direction.rmis_case_number:
+        direction.amd_message = "sent later"
+        direction.save()
         return Response({"patient": None})
     result_l2 = get_direction_data_by_cda_group(direction.pk)
-    if not result_l2.get('main_diagnos_code'):
-        return Response({"patient": None, "main_diagnos_code": False})
     result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
     result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ")
     json_data = json.loads(result_tempalte)
@@ -41,7 +41,9 @@ def data_by_direction(request):
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
     if not iss.doc_confirmation or not result_l2.get("main_diagnos"):
-        return Response({"patient": None, "dia_cinfirm": False})
+        direction.amd_message = "error main_diagnos"
+        direction.save()
+        return Response({"patient": None, "diagnose_confirm": False})
 
     if iss.doc_confirmation.additional_info:
         if "{" in iss.doc_confirmation.additional_info and "}" in iss.doc_confirmation.additional_info:
@@ -52,7 +54,8 @@ def data_by_direction(request):
             except Exception:
                 additional_data = None
     if not additional_data or not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
-        iss.napravleniye.amd_message = "Нет связи с внешним сервисом"
+        direction.amd_message = "Нет связи с внешним сервисом"
+        direction.save()
         return Response({"patient": None, "rmis_data_doctor": False})
 
     date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
