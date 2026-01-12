@@ -38,7 +38,7 @@ def data_by_direction(request):
     final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
-    if not iss.doc_confirmation:
+    if not iss.doc_confirmation or not result_l2.get("main_diagnos"):
         return Response({"patient": None})
 
     if iss.doc_confirmation.additional_info:
@@ -81,6 +81,8 @@ def data_by_direction(request):
         },
         "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
     }
+    if not check_resut(result['service']):
+        return Response({"patient": None})
     direction.received_by_rmq = True
     direction.save()
     slog.Log(key=direction.pk, type=60029, body=f"получено очередью RMQ {direction.pk}").save()
@@ -190,3 +192,10 @@ def get_direction_data_by_cda_group(direction_pk):
 def string_to_unicode_escape(text):
     symbols_data = ''.join(f'\\u{ord(char):04x}' for char in text)
     return symbols_data
+
+
+def check_resut(result):
+    for k, v in result.items():
+        if not v:
+            return False
+
