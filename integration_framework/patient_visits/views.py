@@ -32,6 +32,8 @@ def data_by_direction(request):
     if direction.received_by_rmq or direction.rmis_visit_number and direction.rmis_case_number:
         return Response({"patient": None})
     result_l2 = get_direction_data_by_cda_group(direction.pk)
+    if not result_l2.get('main_diagnos_code'):
+        return Response({"patient": None, "main_diagnos_code": False})
     result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
     result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ")
     json_data = json.loads(result_tempalte)
@@ -81,8 +83,6 @@ def data_by_direction(request):
         },
         "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
     }
-    if not check_resut(result['service']):
-        return Response({"patient": None, "check_result": False})
     direction.received_by_rmq = True
     direction.save()
     slog.Log(key=direction.pk, type=60029, body=f"получено очередью RMQ {direction.pk}").save()
@@ -192,10 +192,3 @@ def get_direction_data_by_cda_group(direction_pk):
 def string_to_unicode_escape(text):
     symbols_data = ''.join(f'\\u{ord(char):04x}' for char in text)
     return symbols_data
-
-
-def check_resut(result):
-    for k, v in result.items():
-        if not v:
-            return False
-
