@@ -49,11 +49,7 @@ def data_by_direction(request):
                     additional_data = {}
             except Exception:
                 additional_data = None
-    if (
-        not additional_data
-        or not iss.doc_confirmation.rmis_login
-        or not iss.doc_confirmation.rmis_password
-    ):
+    if not additional_data or not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
         iss.napravleniye.amd_message = "Нет связи с внешним сервисом"
         return Response({"patient": None})
 
