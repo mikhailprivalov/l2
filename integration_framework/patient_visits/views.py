@@ -172,7 +172,7 @@ def get_direction_data_by_cda_group(direction_pk):
                     s = f"{s}{key}: {val};"
                 else:
                     s = f"{s}{val};"
-        temp_result[k] = s.replace('"', '').replace("'", "")
+        temp_result[k] = s.replace('"', '').replace("'", "").replace("/", "|").replace("\\", "|")
     temp_result = {str(k): v for k, v in temp_result.items()}
     if main_diagnos:
         main_diagnos_code = main_diagnos.split(" ")[0]
