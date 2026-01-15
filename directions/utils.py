@@ -2,8 +2,9 @@ from sys import stdout
 from dateutil.relativedelta import relativedelta
 import simplejson as json
 
+from brokers_queue.rmq.publisher import broker_publish_msg
 from directions.sql_func import get_directions_for_send_ecp_by_researches, get_directions_for_send_ecp_by_dirs
-from laboratory.settings import REMD_ONLY_RESEARCH
+from laboratory.settings import REMD_ONLY_RESEARCH, RMQ_RESEARCH_SEND
 from laboratory.utils import current_time
 from api.dicom import check_server_port
 from appconf.manager import SettingManager
@@ -78,9 +79,32 @@ def gistology_result_send(dirs=''):
     return True
 
 
-def process_gistology_result_upload_start():
-    stdout.write("Starting send gistology result")
+def direction_result_send_rmq(dirs=''):
+    current_time_ecp_upload = SettingManager.rmis_upload_minutes_interval()
+    date_start = current_time(only_date=False) + relativedelta(hours=-100)
+    date_start = date_start.strftime('%Y%m%d %H:%M:%S')
+    date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
+    date_end = date_end.strftime('%Y%m%d %H:%M:%S')
+    if len(dirs) > 0:
+        dirs = dirs.split(",")
+        dirs = [int(i) for i in dirs]
+        d_qs = get_directions_for_send_ecp_by_dirs(tuple(REMD_ONLY_RESEARCH), tuple(dirs))
+    else:
+        filter_researches = REMD_ONLY_RESEARCH.extend(RMQ_RESEARCH_SEND)
+        d_qs = get_directions_for_send_ecp_by_researches(tuple(filter_researches), date_start, date_end)
+    directions_id = [i.napravleniye_id for i in d_qs]
+    directions_obj = Napravleniya.objects.filter(pk__in=directions_id)
+    for i in directions_obj:
+        broker_publish_msg(i.pk)
+        i.need_resend_ecp = True
+        i.napravleniye.save()
+
+    return True
+
+
+def process_direction_send_rmq_start():
+    stdout.write("Starting send direction to rmq")
     while True:
-        result = gistology_result_send()
+        result = direction_result_send_rmq()
         if result:
             time.sleep(600)
