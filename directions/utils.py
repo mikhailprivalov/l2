@@ -3,7 +3,7 @@ from dateutil.relativedelta import relativedelta
 import simplejson as json
 
 from brokers_queue.rmq.publisher import broker_publish_msg
-from directions.sql_func import get_directions_for_send_ecp_by_researches, get_directions_for_send_ecp_by_dirs
+from directions.sql_func import get_directions_for_send_ecp_by_researches, get_directions_for_send_ecp_by_dirs, get_directions_for_send_rmq_by_dirs, get_directions_for_send_rmq_by_researches
 from laboratory.settings import REMD_ONLY_RESEARCH, RMQ_RESEARCH_SEND
 from laboratory.utils import current_time
 from api.dicom import check_server_port
@@ -89,9 +89,9 @@ def direction_result_send_rmq(dirs=''):
     if len(dirs) > 0:
         dirs = dirs.split(",")
         dirs = [int(i) for i in dirs]
-        d_qs = get_directions_for_send_ecp_by_dirs(tuple(filter_researches), tuple(dirs))
+        d_qs = get_directions_for_send_rmq_by_dirs(tuple(filter_researches), tuple(dirs))
     else:
-        d_qs = get_directions_for_send_ecp_by_researches(tuple(filter_researches), date_start, date_end)
+        d_qs = get_directions_for_send_rmq_by_researches(tuple(filter_researches), date_start, date_end)
     directions_id = [i.napravleniye_id for i in d_qs]
     directions_obj = Napravleniya.objects.filter(pk__in=directions_id)
     for i in directions_obj:
