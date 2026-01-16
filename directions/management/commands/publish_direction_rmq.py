@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "Отправить гистологические результаты в ЕЦП"
+    help = "Отправить результаты в ЕЦП"
 
     def add_arguments(self, parser):
         """

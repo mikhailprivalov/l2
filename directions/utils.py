@@ -85,12 +85,12 @@ def direction_result_send_rmq(dirs=''):
     date_start = date_start.strftime('%Y%m%d %H:%M:%S')
     date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
     date_end = date_end.strftime('%Y%m%d %H:%M:%S')
+    filter_researches = REMD_ONLY_RESEARCH.extend(RMQ_RESEARCH_SEND)
     if len(dirs) > 0:
         dirs = dirs.split(",")
         dirs = [int(i) for i in dirs]
-        d_qs = get_directions_for_send_ecp_by_dirs(tuple(REMD_ONLY_RESEARCH), tuple(dirs))
+        d_qs = get_directions_for_send_ecp_by_dirs(tuple(filter_researches), tuple(dirs))
     else:
-        filter_researches = REMD_ONLY_RESEARCH.extend(RMQ_RESEARCH_SEND)
         d_qs = get_directions_for_send_ecp_by_researches(tuple(filter_researches), date_start, date_end)
     directions_id = [i.napravleniye_id for i in d_qs]
     directions_obj = Napravleniya.objects.filter(pk__in=directions_id)

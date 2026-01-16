@@ -319,6 +319,7 @@ def get_directions_for_send_ecp_by_dirs(researches, dirs):
             directions_napravleniya.id in %(dirs)s            
             AND directions_napravleniya.rmis_direction_date is not Null
             AND di.research_id in %(researches)s 
+            AND directions_napravleniya.parent_id is Null
             """,
             params={'researches': researches, 'dirs': dirs, 'tz': TIME_ZONE},
         )
