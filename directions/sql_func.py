@@ -301,6 +301,35 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
     return rows
 
 
+def get_directions_for_send_rmq_by_researches(researches, d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_napravleniya.id as napravleniye_id,
+            di.id as iss_id,
+            to_char(directions_napravleniya.rmis_direction_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as rmis_direction_date,
+            rmis_number,
+            ud.rmis_login as rmis_login,
+            ud.rmis_password as rmis_password
+            FROM directions_napravleniya
+            LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
+            LEFT JOIN users_doctorprofile ud on di.doc_confirmation_id=ud.id
+            WHERE 
+            di.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            AND directions_napravleniya.result_rmis_send = false
+            AND directions_napravleniya.rmis_case_number is Null
+            AND di.research_id in %(researches)s 
+            AND directions_napravleniya.parent_id is Null
+            AND directions_napravleniya.received_by_rmq = false 
+            LIMIT 40
+            """,
+            params={'researches': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def get_directions_for_send_ecp_by_dirs(researches, dirs):
     with connection.cursor() as cursor:
         cursor.execute(
@@ -318,6 +347,31 @@ def get_directions_for_send_ecp_by_dirs(researches, dirs):
             WHERE 
             directions_napravleniya.id in %(dirs)s            
             AND directions_napravleniya.rmis_direction_date is not Null
+            AND di.research_id in %(researches)s 
+            AND directions_napravleniya.parent_id is Null
+            """,
+            params={'researches': researches, 'dirs': dirs, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def get_directions_for_send_rmq_by_dirs(researches, dirs):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_napravleniya.id as napravleniye_id,
+            di.id as iss_id,
+            to_char(directions_napravleniya.rmis_direction_date AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as rmis_direction_date,
+            rmis_number,
+            ud.rmis_login as rmis_login,
+            ud.rmis_password as rmis_password
+            FROM directions_napravleniya
+            LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
+            LEFT JOIN users_doctorprofile ud on di.doc_confirmation_id=ud.id
+            WHERE 
+            directions_napravleniya.id in %(dirs)s            
             AND di.research_id in %(researches)s 
             AND directions_napravleniya.parent_id is Null
             """,
