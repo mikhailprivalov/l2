@@ -14,7 +14,7 @@ def broker_publish_msg(message):
     exchange_name = RMQ_AUTH_PARAM.get("exchange_name")
 
     cur_time = current_time().strftime("%Y%m%d%H:%M:%S")
-    message = {'timestamp': cur_time, 'data': f"{message}", 'type': 'direction'}
+    message_data = {'timestamp': cur_time, 'data': f"{message}", 'type': 'direction'}
 
     routing_key = RMQ_AUTH_PARAM.get("routing_key")
     with pika.BlockingConnection(parameters) as conn:
@@ -29,7 +29,7 @@ def broker_publish_msg(message):
                 ),
                 mandatory=True,
             )
-            slog.Log(key=message, type=60028, body=f"Отправлено в RMQ {message}").save()
-            direction = Napravleniya.objects.filter(pk=message)
+            slog.Log(key=message, type=60028, body=f"Отправлено в RMQ {message_data}").save()
+            direction = Napravleniya.objects.filter(pk=message).first()
             direction.received_by_rmq = False
             direction.save()

@@ -85,19 +85,18 @@ def direction_result_send_rmq(dirs=''):
     date_start = date_start.strftime('%Y%m%d %H:%M:%S')
     date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
     date_end = date_end.strftime('%Y%m%d %H:%M:%S')
-    filter_researches = REMD_ONLY_RESEARCH.extend(RMQ_RESEARCH_SEND)
     if len(dirs) > 0:
         dirs = dirs.split(",")
         dirs = [int(i) for i in dirs]
-        d_qs = get_directions_for_send_rmq_by_dirs(tuple(filter_researches), tuple(dirs))
+        d_qs = get_directions_for_send_rmq_by_dirs(tuple(RMQ_RESEARCH_SEND), tuple(dirs))
     else:
-        d_qs = get_directions_for_send_rmq_by_researches(tuple(filter_researches), date_start, date_end)
+        d_qs = get_directions_for_send_rmq_by_researches(tuple(RMQ_RESEARCH_SEND), date_start, date_end)
     directions_id = [i.napravleniye_id for i in d_qs]
     directions_obj = Napravleniya.objects.filter(pk__in=directions_id)
     for i in directions_obj:
         broker_publish_msg(i.pk)
         i.need_resend_ecp = True
-        i.napravleniye.save()
+        i.save()
 
     return True
 
@@ -106,5 +105,13 @@ def process_direction_send_rmq_start():
     stdout.write("Starting send direction to rmq")
     while True:
         result = direction_result_send_rmq()
+        if result:
+            time.sleep(600)
+
+
+def process_gistology_result_upload_start():
+    stdout.write("Starting send gistology result")
+    while True:
+        result = gistology_result_send()
         if result:
             time.sleep(600)
