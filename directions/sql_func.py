@@ -289,7 +289,10 @@ def get_directions_for_send_ecp_by_researches(researches, d_s, d_e):
             di.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
             AND directions_napravleniya.result_rmis_send = false
             AND directions_napravleniya.rmis_direction_date is not Null
+            AND directions_napravleniya.rmis_case_number is Null
             AND di.research_id in %(researches)s 
+            AND directions_napravleniya.parent_id is Null
+            AND directions_napravleniya.received_by_rmq = false 
             LIMIT 40
             """,
             params={'researches': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
@@ -316,6 +319,7 @@ def get_directions_for_send_ecp_by_dirs(researches, dirs):
             directions_napravleniya.id in %(dirs)s            
             AND directions_napravleniya.rmis_direction_date is not Null
             AND di.research_id in %(researches)s 
+            AND directions_napravleniya.parent_id is Null
             """,
             params={'researches': researches, 'dirs': dirs, 'tz': TIME_ZONE},
         )

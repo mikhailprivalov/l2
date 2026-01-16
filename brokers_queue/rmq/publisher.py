@@ -32,4 +32,4 @@ def broker_publish_msg(message):
             slog.Log(key=message, type=60028, body=f"Отправлено в RMQ {message}").save()
             direction = Napravleniya.objects.filter(pk=message)
             direction.received_by_rmq = False
-            direction.sava()
+            direction.save()
