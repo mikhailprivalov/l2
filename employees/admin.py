@@ -156,7 +156,7 @@ class TabelDocumentAdmin(admin.ModelAdmin):
 
 
 @admin.register(TabelFactTimeWork)
-class FactTimeWorkAdmin(admin.ModelAdmin):
+class TabelFactTimeWorkAdmin(admin.ModelAdmin):
     list_display = ("tabel_document", "employee", "date", "common_hours", "night_hours", "status")
     list_display_links = ("tabel_document", "employee", "date", "common_hours", "night_hours", "status")
     raw_id_fields = ("employee", )
