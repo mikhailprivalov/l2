@@ -986,7 +986,9 @@ class TabelDocument(models.Model):
     parent_document = models.ForeignKey("self", related_name="parent_tabel_document", help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
     status = models.CharField(max_length=20, default=Status.DRAFT, db_index=True, choices=Status.choices, help_text="Статус")
-    doc_change_status = models.ForeignKey(DoctorProfile, null=True, related_name="tabel_doc_change_status", blank=True, db_index=True, help_text="Профиль проверяющего", on_delete=models.SET_NULL)
+    doc_change_status = models.ForeignKey(
+        DoctorProfile, null=True, related_name="tabel_doc_change_status", blank=True, db_index=True, help_text="Профиль проверяющего", on_delete=models.SET_NULL
+    )
     doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
     time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время изменения статуса")
 
