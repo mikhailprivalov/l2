@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.formats import date_format
+
 from .models import (
     Employee,
     Position,
@@ -13,7 +15,7 @@ from .models import (
     CashRegister,
     PlanDepartment,
     EmployeePositionCountWorkDayPerMonth,
-    EmployeeVacation,
+    EmployeeVacation, TabelDocument, TabelFactTimeWork, TabelData,
 )
 
 
@@ -58,10 +60,16 @@ class TypeWorkTimeEmployeeAdmin(admin.ModelAdmin):
 @admin.register(EmployeePosition)
 class EmployeePositionAdmin(admin.ModelAdmin):
     list_display = ('employee', 'department', 'position', 'is_active')
-    list_filter = ('employee', 'department', 'position', 'is_active')
-    search_fields = ('employee', 'department', 'position')
+    list_filter = ('department', 'is_active')
+    search_fields = (
+        'employee__family',
+        'employee__name',
+        'employee__patronymic',
+        'position__name',
+    )
     ordering = ('employee', 'department', 'position', 'is_active')
     autocomplete_fields = ('employee', 'department', 'doctorprofile_created', 'doctorprofile_updated')
+    list_select_related = ('employee', 'department', 'position')
 
 
 @admin.register(WorkDayStatus)
@@ -124,3 +132,43 @@ class EmployeeVacationAdmin(admin.ModelAdmin):
     @admin.display(description='Тип отпуска')
     def work_day_status_title(self, obj):
         return obj.work_day_status.title if obj.work_day_status else '—'
+
+@admin.register(TabelDocument)
+class TabelDocumentAdmin(admin.ModelAdmin):
+    list_display = ("department_title", "month_tabel_title", "is_actual", "version", "status")
+    list_select_related = ("department",)
+    list_display_links = ("department_title", "month_tabel_title", "is_actual", "version", "status")
+
+    list_filter = (
+        "department",
+        "is_actual",
+        "status",
+        "month_tabel"
+    )
+
+    @admin.display(description="Месяц")
+    def month_tabel_title(self, obj):
+        return date_format(obj.month_tabel, "F, Y")
+
+    @admin.display(description="Подразделение")
+    def department_title(self, obj):
+        return obj.department.name if obj.department else "-"
+
+
+@admin.register(TabelFactTimeWork)
+class FactTimeWorkAdmin(admin.ModelAdmin):
+    list_display = ("tabel_document", "employee", "date", "common_hours", "night_hours", "status")
+    list_display_links = ("tabel_document", "employee", "date", "common_hours", "night_hours", "status")
+    raw_id_fields = ("employee", )
+
+
+@admin.register(TabelData)
+class FactTimeWorkAdmin(admin.ModelAdmin):
+    list_display = ("tabel_document", "tabel_document_month")
+    list_display_links = ("tabel_document", "tabel_document_month")
+    list_select_related = ("tabel_document",)
+
+    @admin.display(description="Месяц табеля")
+    def tabel_document_month(self, obj):
+        return obj.tabel_document.month_tabel.strftime("%B %Y") if obj.tabel_document else "-"
+
