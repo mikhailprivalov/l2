@@ -162,7 +162,7 @@ class TabelFactTimeWorkAdmin(admin.ModelAdmin):
 
 
 @admin.register(TabelData)
-class FactTimeWorkAdmin(admin.ModelAdmin):
+class TabelDataAdmin(admin.ModelAdmin):
     list_display = ("tabel_document", "tabel_document_month")
     list_display_links = ("tabel_document", "tabel_document_month")
     list_select_related = ("tabel_document",)
