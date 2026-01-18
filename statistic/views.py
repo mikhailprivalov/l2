@@ -2360,6 +2360,86 @@ def statistic_xls(request):
         ws = partner_coast_data.partner_coast_base(ws)
         ws = partner_coast_data.partner_coast_fill_data(ws, result)
 
+    elif tp == "statistics-workload":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Нагрузка.xlsx\"", tr)
+        user_groups = request.user.groups.values_list('name', flat=True)
+        if 'Статистика-моя нагрузка' not in user_groups:
+            return True
+
+        doctor = request.user.doctorprofile.pk
+
+        d_s = request_data.get("date-start")
+        d_e = request_data.get("date-end")
+        d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
+
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Отчет")
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+
+        data = statistics_confirm_research_by_doctor(start_date, end_date, doctor)
+
+        doctors_prices = {}
+        price_doctors = []
+        determined_prices = {}
+        for doc_confirmation_id in [doctor]:
+            prices = get_price_doctor(doc_confirmation_id, start_date, end_date)
+            doctors_prices[doc_confirmation_id] = {i.hospital_id: i.pk for i in prices}
+            price_doctors.extend([i.pk for i in prices])
+
+        price_doctors = set(price_doctors)
+        if price_doctors:
+            coast_research_price = get_research_coast_by_prce(tuple(price_doctors))
+
+            for coast in coast_research_price:
+                if not determined_prices.get(coast.price_name_id):
+                    determined_prices[coast.price_name_id] = {coast.research_id: float(coast.coast)}
+                else:
+                    determined_prices[coast.price_name_id][coast.research_id] = float(coast.coast)
+
+            row_report = []
+            default_hospital = Hospitals.get_default_hospital()
+            for i in data:
+                tarif_coast = None
+                if i.hospital_id:
+                    potential_doctor_hospital_prices = doctors_prices.get(i.doc_confirmation_id)
+                    if potential_doctor_hospital_prices.get(i.hospital_id):
+                        tarif_coast = determined_prices[potential_doctor_hospital_prices.get(i.hospital_id)].get(i.research_id)
+                    elif potential_doctor_hospital_prices.get(default_hospital.pk):
+                        tarif_coast = determined_prices[potential_doctor_hospital_prices.get(default_hospital.pk)].get(i.research_id)
+                if not tarif_coast:
+                    tarif_coast = 0
+                tmp_result = {}
+                tmp_result["hospital"] = i.hospital_title
+                tmp_result["direction_number"] = i.direction_num
+                tmp_result["date"] = i.date_confirm
+                tmp_result["time"] = i.time_confirm
+                tmp_result["card_number"] = i.card_number
+                tmp_result["patient_family"] = i.patient_family
+                tmp_result["patient_name"] = i.patient_name
+                tmp_result["patient_patronymic"] = i.patient_patronymic
+                tmp_result["service"] = i.research_title
+                tmp_result["service_code"] = i.research_code
+                tmp_result["department"] = i.department_title
+                tmp_result["doctor_family"] = i.doc_family
+                tmp_result["doctor_name"] = i.doc_name
+                tmp_result["doctor_patronymic"] = i.doc_patronymic
+                tmp_result["tarif_coast"] = tarif_coast
+                tmp_result["tarif_contrast"] = 0
+                tmp_result["tarif_dynamic"] = 0
+                tmp_result["tarif_extension"] = 0
+                tmp_result["tarif_night"] = 0
+                tmp_result["total_summ"] = 0
+                row_report.append(tmp_result.copy())
+            title_fio = ""
+            if doctor > 0:
+                fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
+                title_fio = fio_doctor.get_fio()
+            ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
+            ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
+
     wb.save(response)
     return response
 

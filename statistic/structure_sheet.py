@@ -755,6 +755,7 @@ def statistic_research_data(ws1, researches):
         direction_category_price = res[22]
         iss_category_price = res[23]
         additional_info = res[24]
+        district_info = res[25]
 
         ws1.cell(row=r, column=1).value = current_doc
         ws1.cell(row=r, column=2).value = f'{current_napr}, {current_napr_atcreate}'
@@ -775,6 +776,7 @@ def statistic_research_data(ws1, researches):
         ws1.cell(row=r, column=17).value = direction_category_price
         ws1.cell(row=r, column=18).value = iss_category_price
         ws1.cell(row=r, column=19).value = additional_info
+        ws1.cell(row=r, column=20).value = district_info
 
         rows = ws1[f'A{r}:R{r}']
         for row in rows:
