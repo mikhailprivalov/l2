@@ -143,12 +143,7 @@ class TabelDocumentAdmin(admin.ModelAdmin):
     list_select_related = ("department",)
     list_display_links = ("department_title", "month_tabel_title", "is_actual", "version", "status")
 
-    list_filter = (
-        "department",
-        "is_actual",
-        "status",
-        "month_tabel"
-    )
+    list_filter = ("department", "is_actual", "status", "month_tabel")
 
     @admin.display(description="Месяц")
     def month_tabel_title(self, obj):
