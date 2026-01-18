@@ -170,4 +170,3 @@ class FactTimeWorkAdmin(admin.ModelAdmin):
     @admin.display(description="Месяц табеля")
     def tabel_document_month(self, obj):
         return obj.tabel_document.month_tabel.strftime("%B %Y") if obj.tabel_document else "-"
-
