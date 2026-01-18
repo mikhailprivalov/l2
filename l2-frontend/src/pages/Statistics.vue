@@ -652,6 +652,12 @@ const STATS_CATEGORIES = {
         params: [PARAMS_TYPES.TYPES_MAGAZINE, PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-magazine&date-start=<date-start>&date-end=<date-end>&type-magazine=<type-magazine>',
       },
+      workload: {
+        groups: ['Статистика-моя нагрузка'],
+        title: 'Моя нагрузка',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        url: '/statistic/xls?type=statistics-workload&date-start=<date-start>&date-end=<date-end>',
+      },
     },
   },
   prof: {
