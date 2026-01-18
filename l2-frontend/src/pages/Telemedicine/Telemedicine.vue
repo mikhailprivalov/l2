@@ -23,7 +23,7 @@
         <label>Услуга</label>
         <Treeselect
           v-model="selectedService"
-          :options="Services"
+          :options="services"
           placeholder="Выберите услугу"
           :clearable="false"
         />
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, ref, watch,
+  computed, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
@@ -75,7 +75,6 @@ const getServices = async () => {
 //   });
 //   await store.dispatch(actions.DEC_LOADING);
 //   services.value = result;
-  console.log('получили услуги');
 };
 
 const selectedServiceStatus = ref('all');
