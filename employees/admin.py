@@ -136,6 +136,7 @@ class EmployeeVacationAdmin(admin.ModelAdmin):
     def work_day_status_title(self, obj):
         return obj.work_day_status.title if obj.work_day_status else '—'
 
+
 @admin.register(TabelDocument)
 class TabelDocumentAdmin(admin.ModelAdmin):
     list_display = ("department_title", "month_tabel_title", "is_actual", "version", "status")
