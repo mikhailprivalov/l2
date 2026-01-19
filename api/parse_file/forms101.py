@@ -9,6 +9,7 @@ from api.patients.views import patients_search_card
 from clients.models import Card, Individual, HarmfulFactor, PatientHarmfullFactor, CardBase
 from contracts.models import Company, CompanyDepartment, MedicalExamination
 from integration_framework.views import check_enp
+from laboratory.settings import SERVER_NAME, SERVER_PORT
 
 
 def get_background_token():
@@ -86,12 +87,15 @@ def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_fam
 def search_patient(snils_data, request_user, family_data, name_data, patronymic_data, birthday_data):
     patient_card = None
     bearer_token = get_background_token()
+    print(bearer_token, "bearer_token")
     params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
     request_obj = HttpRequest()
     request_obj._body = params
     request_obj.user = request_user
     request_obj.method = "POST"
     request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
+    request_obj.META["SERVER_NAME"] = SERVER_NAME
+    request_obj.META["SERVER_PORT"] = SERVER_PORT
     current_patient = None
     if snils_data and snils_data != "None":
         current_patient = check_enp(request_obj)
@@ -331,7 +335,9 @@ def form_01(request_data):
             if check_result["ok"] and check_result["data"]:
                 incorrect_patients.append(check_result["data"])
 
+            print(normalize_row)
             patient_card = search_patient(normalize_row["snils"], user, normalize_row["family"], normalize_row["name"], normalize_row["patronymic"], normalize_row["birthday"])
+            patient_card = None
             if patient_card is None:
                 patient_card = create_patient(
                     normalize_row["family"],
