@@ -333,9 +333,7 @@ def form_01(request_data):
             if check_result["ok"] and check_result["data"]:
                 incorrect_patients.append(check_result["data"])
 
-            print(normalize_row)
             patient_card = search_patient(normalize_row["snils"], user, normalize_row["family"], normalize_row["name"], normalize_row["patronymic"], normalize_row["birthday"])
-            patient_card = None
             if patient_card is None:
                 patient_card = create_patient(
                     normalize_row["family"],
