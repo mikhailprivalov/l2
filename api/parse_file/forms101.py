@@ -85,9 +85,7 @@ def search_by_possible_fio(request_obj, name, patronymic, birthday, possible_fam
 
 
 def search_patient(snils_data, request_user, family_data, name_data, patronymic_data, birthday_data):
-    patient_card = None
     bearer_token = get_background_token()
-    print(bearer_token, "bearer_token")
     params = {"enp": "", "snils": snils_data, "check_mode": "l2-snils"}
     request_obj = HttpRequest()
     request_obj._body = params
