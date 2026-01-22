@@ -82,7 +82,7 @@ def data_by_direction(request):
             "main_diagnos_code": result_l2.get("main_diagnos_code"),
             "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести",
             "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
-            "code": iss.research.code,
+            "code": iss.doc_confirmation.service_code_ambulatory if iss.doc_confirmation.service_code_ambulatory else iss.research.code,
         },
         "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
     }
