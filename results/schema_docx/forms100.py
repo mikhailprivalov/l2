@@ -31,12 +31,13 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         direction_comment = direction.direction_comment
         fact_research_date = direction.fact_research_date
         fact_research_time = direction.fact_research_time
-
-        naive_datetime = datetime.datetime.combine(fact_research_date, fact_research_time)
-        source_timezone = pytz.timezone(direction.hospital.time_zone)
-        aware_dt = source_timezone.localize(naive_datetime)
-        target_timezone = pytz.timezone('Europe/Moscow')
-        converted_dt = aware_dt.astimezone(target_timezone)
+        converted_dt = ""
+        if fact_research_date and fact_research_time:
+            naive_datetime = datetime.datetime.combine(fact_research_date, fact_research_time)
+            source_timezone = pytz.timezone(direction.hospital.time_zone)
+            aware_dt = source_timezone.localize(naive_datetime)
+            target_timezone = pytz.timezone('Europe/Moscow')
+            converted_dt = aware_dt.astimezone(target_timezone)
         equipment = EquipmentReceive.objects.filter(napravleniye=direction).first()
         equipment_title = ''
         if equipment:
@@ -50,8 +51,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "direction_comment": direction_comment,
             "converted_dt": converted_dt,
             "equipment_title": equipment_title,
-            "date_service": converted_dt.strftime('%d.%m.%Y'),
-            "time_service": converted_dt.strftime('%H:%M'),
+            "date_service": converted_dt.strftime('%d.%m.%Y') if converted_dt else "",
+            "time_service": converted_dt.strftime('%H:%M') if converted_dt else "",
             "card_number": direction.client.number,
             "fio": individula.get('fio'),
             "sex": individula.get('sex'),
@@ -60,12 +61,16 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "research": iss.research.title,
             "hosp_confirmation": iss.doc_confirmation.hospital.title,
             "license_data": iss.doc_confirmation.hospital.license_data,
+            "defect_card": "дефектная карта",
+            "fio_patient": "Иванов Иван Иванович"
         }
         context = {**meta_info, **result_data}
+        print(context)
         doc.render(context)
 
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         today = datetime.datetime.now()
+        print("today", today, today)
         date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
         date_now_str = str(direction.client_id) + str(date_now1)
         temp_file_dir = os.path.join(dir_param, date_now_str + '_dir')
@@ -80,7 +85,14 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         os.remove(f"{temp_file_dir}.pdf")
         os.remove(f"{temp_file_dir}.docx")
         return pdf_out
+    except AttributeError as e:
+        print(f"❌ Ошибка: {e}")
+        print("Проверьте версии библиотек!")
+
     except Exception as e:
-        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
+        print(f"❌ Другая ошибка: {e}")
+    # except Exception as e:
+    #     print("eeee", e)
+    #     Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
 
     return fwb
