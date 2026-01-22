@@ -129,6 +129,7 @@ class DoctorProfile(models.Model):
     dismissed = models.BooleanField(default=False, help_text="Уволен")
     is_structure_data_in_protocol = models.BooleanField(default=False, help_text="Только структурированные текст в протоколе")
     is_curator = models.BooleanField(default=False, help_text="Куратор показателей в мониторинге")
+    service_code_ambulatory = models.CharField(max_length=255, default="", blank=True)
 
     @staticmethod
     def get_system_profile():
