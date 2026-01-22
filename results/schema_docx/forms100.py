@@ -22,7 +22,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         current_template_file = iss.research.schema_pdf.path
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
-        result_data = {i.field_title: i.field_value for i in fields_values}
+        result_data = {i.synonym: i.field_value for i in fields_values}
         doc = DocxTemplate(current_template_file)
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount
@@ -61,16 +61,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "research": iss.research.title,
             "hosp_confirmation": iss.doc_confirmation.hospital.title,
             "license_data": iss.doc_confirmation.hospital.license_data,
-            "defect_card": "дефектная карта",
-            "fio_patient": "Иванов Иван Иванович"
         }
         context = {**meta_info, **result_data}
-        print(context)
         doc.render(context)
 
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         today = datetime.datetime.now()
-        print("today", today, today)
         date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
         date_now_str = str(direction.client_id) + str(date_now1)
         temp_file_dir = os.path.join(dir_param, date_now_str + '_dir')
@@ -86,13 +82,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         os.remove(f"{temp_file_dir}.docx")
         return pdf_out
     except AttributeError as e:
-        print(f"❌ Ошибка: {e}")
-        print("Проверьте версии библиотек!")
-
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk, "message": "Версии библиотек не те"}})
     except Exception as e:
-        print(f"❌ Другая ошибка: {e}")
-    # except Exception as e:
-    #     print("eeee", e)
-    #     Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
+        Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
 
     return fwb
