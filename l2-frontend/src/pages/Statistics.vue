@@ -606,10 +606,11 @@ const STATS_CATEGORIES = {
       executors: {
         title: 'По врачу (нагрузка) – статталоны',
         groups: ['Статистика-статталоны'],
-        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.USER_OR_DEP, PARAMS_TYPES.FIN_SOURCE],
+        params: [PARAMS_TYPES.PERIOD_DATE, PARAMS_TYPES.USER_OR_DEP, PARAMS_TYPES.FIN_SOURCE, PARAMS_TYPES.DATE_RANGE],
         url: [
           '/statistic/xls?type=statistics-tickets-print&user=<user>',
-          '&department=<dep>&date_type=<date-type>&date_values=<date-values>&fin=<fin-source>',
+          '&department=<dep>&date_type=<date-type>&date_values=<date-values>&fin=<fin-source>'
+          + '&date-start=<date-start>&date-end=<date-end>',
         ].join(''),
       },
       visits: {
