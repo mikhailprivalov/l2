@@ -9,6 +9,7 @@ from api.patients.views import patients_search_card
 from clients.models import Card, Individual, HarmfulFactor, PatientHarmfullFactor, CardBase
 from contracts.models import Company, CompanyDepartment, MedicalExamination
 from integration_framework.views import check_enp
+from laboratory.settings import SERVER_NAME, SERVER_PORT
 
 
 def get_background_token():
@@ -92,6 +93,8 @@ def search_patient(snils_data, request_user, family_data, name_data, patronymic_
     request_obj.user = request_user
     request_obj.method = "POST"
     request_obj.META["HTTP_AUTHORIZATION"] = bearer_token
+    request_obj.META["SERVER_NAME"] = SERVER_NAME
+    request_obj.META["SERVER_PORT"] = SERVER_PORT
     current_patient = None
     if snils_data and snils_data != "None":
         current_patient = check_enp(request_obj)

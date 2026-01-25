@@ -547,6 +547,8 @@ DB_NAME = get_env_value('DB_NAME')
 DB_HOST = get_env_value('DB_HOST')
 DB_PORT = get_env_value('DB_PORT')
 ENV_SECRET_KEY = get_env_value('SECRET_KEY')
+SERVER_NAME = 'localhost'
+SERVER_PORT = 80
 
 if DB_USER:
     DATABASES['default']['USER'] = DB_USER
