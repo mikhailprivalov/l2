@@ -20,7 +20,7 @@ def gistology_result_send(dirs=''):
         if not available:
             stdout.write("error Cервер отправки в ЕЦП не доступен")
     current_time_ecp_upload = SettingManager.rmis_upload_minutes_interval()
-    date_start = current_time(only_date=False) + relativedelta(hours=-100)
+    date_start = current_time(only_date=False) + relativedelta(hours=-200)
     date_start = date_start.strftime('%Y%m%d %H:%M:%S')
 
     date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
@@ -36,9 +36,12 @@ def gistology_result_send(dirs=''):
     result_params = {}
     for i in dir_params:
         if i.title == "Маркировка материала":
-            marking_biopsy = json.loads(i.value)
-            marking_biopsy_local_id = marking_biopsy['rows'][0][1]
-            marking_biopsy_local_id = marking_biopsy_local_id.split("/")
+            try:
+                marking_biopsy = json.loads(i.value)
+                marking_biopsy_local_id = marking_biopsy['rows'][0][1]
+                marking_biopsy_local_id = marking_biopsy_local_id.split("/")
+            except:
+                marking_biopsy_local_id = []
             if len(marking_biopsy_local_id) < 2:
                 continue
             result_params[i.napravleniye_id] = marking_biopsy_local_id[1]
@@ -65,12 +68,15 @@ def gistology_result_send(dirs=''):
 
     for n in Napravleniya.objects.filter(pk__in=directions):
         if not result_send.get(n.pk):
+            msg = f"{n.pk}- Не успех"
+            stdout.write(msg)
             continue
         elif result_send.get(n.pk):
             n.result_rmis_send = True
             n.save()
             count += 1
-            stdout.write("успех")
+            msg = f"{n.pk}- Ууспех"
+            stdout.write(msg)
         else:
             msg = f"{n.pk}- Не успех"
             stdout.write(msg)
