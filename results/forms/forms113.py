@@ -4,7 +4,7 @@ from django.utils.module_loading import import_string
 from hospitals.models import Hospitals
 
 
-def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, has_any_signature=None, request=None):
+def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, has_any_signature=None, request=None, link=None):
     """
     112.01 - Заключение из MedicalCertificate
     """
