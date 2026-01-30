@@ -48,9 +48,13 @@ def directions_by_parent_cases_issledovaniye(cases_issledovaniye_ids):
             directions_issledovaniya.id as iss_id,
             directions_issledovaniya.research_id,
             to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm,
-            dn.parent_case_id as parent_case_iss_id
+            dn.parent_case_id as parent_case_iss_id,
+            pp.p_type
             FROM directions_issledovaniya
             LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
+            LEFT JOIN directory_researches dr on directions_issledovaniya.research_id = dr.id
+            LEFT JOIN podrazdeleniya_podrazdeleniya pp on dr.podrazdeleniye_id = pp.id
+            
             WHERE 
             directions_issledovaniya.napravleniye_id in (SELECT id from directions_napravleniya where directions_napravleniya.parent_case_id in %(cases_issledovaniye_ids)s)
             AND directions_issledovaniya.time_confirmation IS NOT NULL

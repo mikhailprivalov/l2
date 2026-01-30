@@ -36,11 +36,13 @@ def form_01(ws1, data):
     custom_researches_title = list(custom_research.values())
 
     # получить ЗАКРЫТЫЕ случаи за дату по компании
-    last_date_year = f"{current_year()}-12-31"
+    current_year_str = data['end_date'].split("-")[0]
+    last_date_year = f"{current_year_str}-12-31"
+
     closed_id = closed_company_cases_by_date(data['start_date'], data['end_date'], data['company_id'], last_date_year)
     male = CONTROL_AGE_MEDEXAM.get("м")
     female = CONTROL_AGE_MEDEXAM.get("ж")
-    adds_harmfull_title = set([CONTROL_AGE_MEDEXAM_MALE[i.age_year] if i.sex == "м" else CONTROL_AGE_MEDEXAM_FEMALE[i.age_year] for i in closed_id])
+    adds_harmfull_title = set([CONTROL_AGE_MEDEXAM_MALE.get(i.age_year) if i.sex == "м" else CONTROL_AGE_MEDEXAM_FEMALE.get(i.age_year) for i in closed_id])
     adds_harmfull = {i.title: i.id for i in HarmfulFactor.objects.filter(title__in={*adds_harmfull_title})}
     factors_id = {*set([i.factor_id for i in closed_id]), *adds_harmfull.values()}
 
@@ -163,13 +165,13 @@ def form_01(ws1, data):
     # получить все исследования, у к-рых в направлении родитель ссылка на случай
     result_iss_id = directions_by_parent_cases_issledovaniye(cases_iss)
 
-    result_iss_id_structure = {i.iss_id: {"parent": i.parent_case_iss_id, "research_id": i.research_id, "date_confirm": i.date_confirm} for i in result_iss_id}
+    result_iss_id_structure = {i.iss_id: {"parent": i.parent_case_iss_id, "research_id": i.research_id, "date_confirm": i.date_confirm, "p_type": i.p_type} for i in result_iss_id}
     result_iss_id_structure_by_parent = {}
     for k, v in result_iss_id_structure.items():
         if not result_iss_id_structure_by_parent.get(v["parent"]):
-            result_iss_id_structure_by_parent[v["parent"]] = [{"iss_id": k, "research_id": v["research_id"], "date_confirm": v["date_confirm"]}]
+            result_iss_id_structure_by_parent[v["parent"]] = [{"iss_id": k, "research_id": v["research_id"], "date_confirm": v["date_confirm"], "p_type": v["p_type"]}]
         else:
-            result_iss_id_structure_by_parent[v["parent"]].append({"iss_id": k, "research_id": v["research_id"], "date_confirm": v["date_confirm"]})
+            result_iss_id_structure_by_parent[v["parent"]].append({"iss_id": k, "research_id": v["research_id"], "date_confirm": v["date_confirm"], "p_type": v["p_type"]})
 
     # выполненные исследование все для всех пациентов
     research_issledovaniye_ids = [i.iss_id for i in result_iss_id]
@@ -192,6 +194,13 @@ def form_01(ws1, data):
             current_research_id = i.get("research_id")
             if closed_case_structure_data[k]["result_researches"].get(current_research_id):
                 closed_case_structure_data[k]["result_researches"][current_research_id]["date_confirm"] = i.get("date_confirm")
+                if i.get("p_type") == 2:
+                    diag_mkb10 = "Z01.7"
+                elif i.get("p_type") == 3:
+                    diag_mkb10 = "Z01.8"
+                else:
+                    diag_mkb10 = "Z10.0"
+                closed_case_structure_data[k]["result_researches"][current_research_id]["diag_mkb10"] = diag_mkb10
                 closed_case_structure_data[k]["result_researches"][current_research_id]["iss_id"] = i.get("iss_id")
                 if i.get("date_confirm"):
                     result_where_done = 1
