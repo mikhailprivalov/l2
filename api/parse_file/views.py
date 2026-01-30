@@ -131,7 +131,6 @@ def gen_commercial_offer(request):
             born_data = cells[born].strip().split(" ")[0]
             age = -1
             if born_data != "None":
-                print("born_data", born_data)
                 age = age_for_year(normalize_dots_date(born_data))
                 if "м" in cells[sex]:
                     adds_harmfull = CONTROL_AGE_MEDEXAM.get("м")
