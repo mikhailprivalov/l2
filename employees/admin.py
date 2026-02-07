@@ -15,7 +15,10 @@ from .models import (
     CashRegister,
     PlanDepartment,
     EmployeePositionCountWorkDayPerMonth,
-    EmployeeVacation, TabelDocuments, FactTimeWork, DocumentFactTimeWork,
+    EmployeeVacation,
+    TabelDocuments,
+    FactTimeWork,
+    DocumentFactTimeWork,
 )
 
 
