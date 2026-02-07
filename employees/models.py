@@ -1,11 +1,13 @@
 import calendar
 import copy
 import datetime
+import json
 from typing import Union, Optional
 
 import pytz
 from django.db import models
 from django.core.paginator import Paginator
+from django.utils.formats import date_format
 
 from employees.sql_func import get_employee_position, get_employee_work_time
 from hospitals.models import Hospitals
@@ -14,6 +16,8 @@ from laboratory.utils import strfdatetime, current_time
 from slog.models import Log
 from users.models import DoctorProfile
 from django.utils import timezone
+
+from utils.dates import try_strptime
 
 
 class Employee(models.Model):
@@ -962,3 +966,161 @@ class EmployeePositionCountWorkDayPerMonth(models.Model):
     class Meta:
         verbose_name = "Сотрудник - план финансовый за день"
         verbose_name_plural = "Сотрудники - план финансовый за день"
+
+
+class TabelDocuments(models.Model):
+    class Status(models.TextChoices):
+        APPROVED = "APPROVED", "Утвержден"
+        CHECK = "CHECK", "На проверке"
+        TO_CORRECT = "TO_CORRECT", "Исправить"
+
+    doc_confirmation = models.ForeignKey(DoctorProfile, null=True, blank=True, db_index=True, help_text="Профиль автора", on_delete=models.SET_NULL)
+    doc_confirmation_string = models.CharField(max_length=64, null=True, blank=True, default=None)
+    time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время подтверждения табеля")
+    time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время сохранения табеля")
+    month_tabel = models.DateField(help_text="Месяц учета", db_index=True)
+    department = models.ForeignKey(Department, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    is_actual = models.BooleanField(help_text="Акутальный", default=True)
+    version = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
+    parent_document = models.ForeignKey("self", related_name="parent_tabel_document", help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
+    status = models.CharField(max_length=20, null=True, blank=True, default=Status.CHECK, db_index=True, choices=Status.choices, help_text="Статус")
+    doc_change_status = models.ForeignKey(DoctorProfile, related_name="tabel_doc_change_status", null=True, blank=True, db_index=True, help_text="Профиль проверяющего", on_delete=models.SET_NULL)
+    doc_change_status_string = models.CharField(max_length=64, null=True, blank=True, default=None)
+    time_change_status = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время изменения статуса")
+
+    class Meta:
+        verbose_name = "Табель"
+        verbose_name_plural = "Табели"
+
+    def __str__(self):
+        month_text = date_format(self.month_tabel, "F Y")
+        department_text = self.department.name if self.department else "—"
+        status_text = self.get_status_display()
+        return f"{month_text} — {department_text} — {status_text}"
+
+    @staticmethod
+    def create_tabel_document(data, docprofile):
+        month_tabel = try_strptime(data["dateTabel"]).date()
+        department_pk = data["departmentPk"]
+        version = 1
+        parent_document = None
+        if data.get("parentDocumentPk", None):
+            parent_document = TabelDocuments.objects.get(pk=data["parentDocumentPk"])
+            version = parent_document.version + 1
+
+        td = TabelDocuments(
+            doc_confirmation=docprofile,
+            doc_confirmation_string=docprofile.get_full_fio(),
+            time_save=timezone.now(),
+            month_tabel=month_tabel,
+            department_id=department_pk,
+            is_actual=True,
+            parent_document_id=data.get("parentDocumentPk", None),
+            version=version,
+        ).save()
+        if data.get("withConfirm", None):
+            td.time_confirmation = timezone.now()
+            td.status = "STATUS_CHECK"
+            if parent_document:
+                parent_document.is_actual = False
+                parent_document.save()
+
+        td.save()
+
+    @staticmethod
+    def change_status_tabel_document(tabel_pk, data, docprofile):
+        td = TabelDocuments.objects.get(pk=tabel_pk)
+        td.doc_change_status = docprofile
+        td.doc_change_status_string = docprofile.get_full_fio()
+        td.time_change_status = timezone.now()
+        td.comment_checking = data.get("commentChecking", "")
+        td.status = data.get("status", "")
+        td.save()
+
+
+class FactTimeWork(models.Model):
+    class Status(models.TextChoices):
+        WORK = "WORK", "Работа"
+        HOLIDAY = "HOLIDAY", "Отпуск"
+        SICK = "SICK", "Больничный"
+        BUSINESS_TRIP = "BUSINESS_TRIP", "Командировка"
+        DISMISS = "DISMISS", "Уволен"
+
+    tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    employee = models.ForeignKey(EmployeePosition, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    date = models.DateField(help_text="Дата учета", db_index=True, default=None, blank=True, null=True)
+    night_hours = models.DecimalField(max_digits=10, decimal_places=2)
+    common_hours = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, null=True, blank=True, default=Status.WORK, db_index=True, choices=Status.choices, help_text="Статус")
+
+    class Meta:
+        verbose_name = "Время в табеле"
+        verbose_name_plural = "Время в табеле"
+
+
+class DocumentFactTimeWork(models.Model):
+    """
+    data_document = {"tabelDocumentPk": "", "personData": [
+                            {
+                                "snils": "121212121",
+                                "personLastname": "sds",
+                                "personFirstName": "sds",
+                                "personPatronymic": "sds",
+                                "employeeData": [
+                                    {
+                                        "postTitle": "postTitle",
+                                        "typePost": "typePost",
+                                        "departmentTitle": "departmentTitle",
+                                        "tabelNumber": "tabelNumber",
+                                        "dates": ["все даты месяца ч/з запятую"],
+                                        "nightHours": {"дата": "значение", "дата1": "значение", "дат2": "значение"},
+                                        "commonHours": {}
+                                    },
+                                ]
+                            },
+                        ]
+                    }
+    """
+
+    tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
+
+    class Meta:
+        verbose_name = "Табель документ"
+        verbose_name_plural = "Табель документы"
+
+    @staticmethod
+    def save_fact_time_work_document(tabel_pk, data_document):
+        if tabel_pk > -1:
+            document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+            document_fact_time.data_document = data_document
+            document_fact_time.save()
+
+    @staticmethod
+    def get_fact_time_work_document(tabel_pk):
+        data = ""
+        result = {}
+        if tabel_pk > -1:
+            document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+            data = json.loads(document_fact_time)
+            for person in data.get("personData") or []:
+                for employeee in person.get("employeeData") or []:
+                    tmp_dates = sorted(employeee.get("dates", []).copy())
+                    result[person][employeee]["tmp_night_hours_dates"] = ["" for i in range(len(tmp_dates))]
+                    result[person][employeee]["tmp_night_hours"] = employeee.get("nightHours", {})
+                    result[person][employeee]["tmp_common_hours"] = employeee.get("commonHours", {})
+
+        return result
+
+
+class Holidays(models.Model):
+    year = models.SmallIntegerField(blank=True, default=None, null=True)
+    day = models.DateField()
+
+    def __str__(self):
+        return f"{self.year} {self.day}"
+
+    class Meta:
+        verbose_name = "Праздничный день"
+        verbose_name_plural = "Праздничные дни"
