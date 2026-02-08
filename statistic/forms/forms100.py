@@ -194,12 +194,11 @@ def form_01(ws1, data):
             current_research_id = i.get("research_id")
             if closed_case_structure_data[k]["result_researches"].get(current_research_id):
                 closed_case_structure_data[k]["result_researches"][current_research_id]["date_confirm"] = i.get("date_confirm")
+                diag_mkb10 = "Z10.0"
                 if i.get("p_type") == 2:
                     diag_mkb10 = "Z01.7"
                 elif i.get("p_type") == 3:
                     diag_mkb10 = "Z01.8"
-                else:
-                    diag_mkb10 = "Z10.0"
                 closed_case_structure_data[k]["result_researches"][current_research_id]["diag_mkb10"] = diag_mkb10
                 closed_case_structure_data[k]["result_researches"][current_research_id]["iss_id"] = i.get("iss_id")
                 if i.get("date_confirm"):
@@ -341,7 +340,7 @@ def form_01(ws1, data):
             col_date = end_column_for_custom_filed
             ws1.cell(row=row, column=col_date).value = v.get("date_confirm")
             col_dig = end_column_for_custom_filed + 1
-            ws1.cell(row=row, column=col_dig).value = "Z10.01"
+            ws1.cell(row=row, column=col_dig).value = v.get("diag_mkb10")
 
             col_research_code = end_column_for_custom_filed + 2
             ws1.cell(row=row, column=col_research_code).value = v.get("code")

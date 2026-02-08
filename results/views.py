@@ -612,10 +612,11 @@ def result_print(request):
                         link = "research"
                     else:
                         type_form = "99901"
-                if iss.doc_confirmation.hospital.schema_docx:
-                    type_form = "10001"
-                    type_schema = "docx"
-                    link = "hospital"
+                if iss.doc_confirmation:
+                    if iss.doc_confirmation.hospital.schema_docx:
+                        type_form = "10001"
+                        type_schema = "docx"
+                        link = "hospital"
                 if type_form != 0 and type_schema != "docx":
                     current_type_form = str(type_form)
                     form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])

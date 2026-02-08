@@ -2016,8 +2016,10 @@ def statistic_xls(request):
             tmp_result = {}
             tmp_result["hospital"] = i.hospital_title
             tmp_result["direction_number"] = i.direction_num
-            tmp_result["date"] = i.date_confirm
-            tmp_result["time"] = i.time_confirm
+            tmp_result["date_create"] = i.date_create_direction
+            tmp_result["time_create"] = i.time_create_direction
+            tmp_result["date_confirm"] = i.date_confirm
+            tmp_result["time_confirm"] = i.time_confirm
             tmp_result["card_number"] = i.card_number
             tmp_result["patient_family"] = i.patient_family
             tmp_result["patient_name"] = i.patient_name
@@ -2085,8 +2087,11 @@ def statistic_xls(request):
                 tmp_result = {}
                 tmp_result["hospital"] = i.hospital_title
                 tmp_result["direction_number"] = i.direction_num
-                tmp_result["date"] = i.date_confirm
-                tmp_result["time"] = i.time_confirm
+                tmp_result["date_create"] = i.date_create
+                tmp_result["time_create"] = i.time_create
+
+                tmp_result["date_confirm"] = i.date_confirm
+                tmp_result["time_confirm"] = i.time_confirm
                 tmp_result["card_number"] = i.card_number
                 tmp_result["patient_family"] = i.patient_family
                 tmp_result["patient_name"] = i.patient_name

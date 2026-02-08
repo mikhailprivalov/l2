@@ -1018,6 +1018,10 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                     dp.patronymic as doc_patronymic,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_confirm,
                     to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'HH24:MI') AS time_confirm,
+                    
+                    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY') AS date_create_direction,
+                    to_char(directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s, 'HH24:MI') AS time_create_direction,
+                    
                     cc.number as card_number,
                     ci.family as patient_family,
                     ci.name as patient_name,
@@ -1031,7 +1035,7 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                 LEFT JOIN hospitals_hospitals hh ON hh.id = directions_napravleniya.hospital_id
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp ON pp.id = dr.podrazdeleniye_id
                 WHERE 
-                    time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                    directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
                     AND  
                       CASE WHEN %(hospital_id)s > 0 THEN
                           directions_napravleniya.hospital_id = %(hospital_id)s
@@ -1091,6 +1095,7 @@ def statistics_confirm_research_by_doctor(d_s, d_e, doctor_id):
                         directions_issledovaniya.doc_confirmation_id IS NOT NULL
                       END
                 ORDER BY
+                    directions_napravleniya.data_sozdaniya,
                     directions_issledovaniya.doc_confirmation_id,
                     directions_issledovaniya.time_confirmation,
                     directions_napravleniya.hospital_id,
