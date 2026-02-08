@@ -186,7 +186,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     if iss.doc_confirmation:
         objs.append(Paragraph(f"Врач-рентгенолог: {iss.doc_confirmation.get_full_fio()}", styleJustifiedDoctor))
     else:
-        objs.append(Paragraph(f"Врач-рентгенолог: Образец-Доктор", styleJustifiedDoctor))
+        objs.append(Paragraph("Врач-рентгенолог: Образец-Доктор", styleJustifiedDoctor))
     has_any_signature = kwargs.get('has_any_signature', False)
     if not has_any_signature:
         tbl = gen_table(iss.doc_confirmation)
