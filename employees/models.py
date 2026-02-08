@@ -1040,6 +1040,14 @@ class TabelDocument(models.Model):
         td.status = data.get("status", "")
         td.save()
 
+    @staticmethod
+    def get_tabel(year: int, month: int, department_id: int):
+        first_date_month = datetime.date(year, month, 1)
+        length_month = calendar.monthrange(year, month)[1]
+        last_date_month = datetime.date(year, month, length_month)
+        tabel_document = TabelDocument.objects.filter(month_tabel__gte=first_date_month, month_tabel__lte=last_date_month, department_id=department_id, is_actual=True).first()
+        return tabel_document
+
 
 class FactTimeWork(models.Model):
     class Status(models.TextChoices):

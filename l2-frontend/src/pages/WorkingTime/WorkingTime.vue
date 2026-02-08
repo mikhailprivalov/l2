@@ -101,6 +101,13 @@
           >
             PDF
           </button>
+          <button
+            class="btn btn-blue-nb"
+            :disabled="hasChange"
+            @click.prevent="getOrCreateTabel()"
+          >
+            Табель
+          </button>
         </div>
       </div>
     </div>
@@ -809,6 +816,11 @@ const downloadXlsx = async () => {
     link.remove();
     URL.revokeObjectURL(urlFile);
   }
+};
+
+const getOrCreateTabel = async () => {
+  window.open(`/api/working-time/get-or-create-tabel?year=${selectedYear.value}&month=${selectedMonth.value}
+  &departmentId=${selectedDepartment.value}`, '_blank');
 };
 
 </script>
