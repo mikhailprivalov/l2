@@ -146,7 +146,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         ],
         [
             Paragraph("Медицинская организация, осуществившая анализ(описание) результатов", style),
-            Paragraph(f"{iss.doc_confirmation.hospital.title} {iss.doc_confirmation.hospital.license_data}", style),
+            Paragraph(f"{iss.doc_save.hospital.title} {iss.doc_save.hospital.license_data}", style),
         ],
     ]
 
@@ -181,9 +181,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs.append(Spacer(1, 15 * mm))
 
-    moscow_dt = iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S")
+    moscow_dt = iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S") if iss.time_confirmation else "XX:XX:XX:XX:XX"
     objs.append(Paragraph(f"{moscow_dt} (МСК)", style))
-    objs.append(Paragraph(f"Врач-рентгенолог: {iss.doc_confirmation.get_full_fio()}", styleJustifiedDoctor))
+    if iss.doc_confirmation:
+        objs.append(Paragraph(f"Врач-рентгенолог: {iss.doc_confirmation.get_full_fio()}", styleJustifiedDoctor))
+    else:
+        objs.append(Paragraph(f"Врач-рентгенолог: Образец-Доктор", styleJustifiedDoctor))
     has_any_signature = kwargs.get('has_any_signature', False)
     if not has_any_signature:
         tbl = gen_table(iss.doc_confirmation)

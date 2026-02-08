@@ -16,8 +16,10 @@ def reestr_hospital_base(ws1, d1, d2, title):
     columns = [
         ('Клиника', 25),
         ('ID заявки/номер заявки', 10),
-        ('Дата', 10),
-        ('Время МСК', 8),
+        ('Дата создания (МСК)', 15),
+        ('Время создания (МСК)', 15),
+        ('Дата подтверждения (МСК)', 15),
+        ('Время подтверждения (МСК)', 15),
         ('№ карты', 15),
         ('ФИО пациента', 30),
         ('Код ОКМУ', 20),
@@ -57,20 +59,22 @@ def reestr_hospital_fill_data(ws1, result_query):
         r += 1
         ws1.cell(row=r, column=1).value = v.get("hospital", "-")
         ws1.cell(row=r, column=2).value = v.get("direction_number", "-")
-        ws1.cell(row=r, column=3).value = v.get("date", "-")
-        ws1.cell(row=r, column=4).value = v.get("time", "-")
-        ws1.cell(row=r, column=5).value = v.get("card_number", "-")
-        ws1.cell(row=r, column=6).value = f'{v.get("patient_family", "-")} {v.get("patient_name", "-")} {v.get("patient_patronymic", "-")}'
-        ws1.cell(row=r, column=7).value = v.get("service_code", "-")
-        ws1.cell(row=r, column=8).value = v.get("service", "-")
-        ws1.cell(row=r, column=9).value = v.get("department", "-")
-        ws1.cell(row=r, column=10).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
-        ws1.cell(row=r, column=11).value = v.get("tarif_coast", "-")
-        ws1.cell(row=r, column=12).value = v.get("tarif_contrast", "-")
-        ws1.cell(row=r, column=13).value = v.get("tarif_dynamic", "-")
-        ws1.cell(row=r, column=14).value = v.get("tarif_extension", "-")
-        ws1.cell(row=r, column=15).value = v.get("tarif_night", "-")
-        ws1.cell(row=r, column=16).value = f'=SUM({get_column_letter(11)}{r}:{get_column_letter(15)}{r})'
+        ws1.cell(row=r, column=3).value = v.get("date_create", "-")
+        ws1.cell(row=r, column=4).value = v.get("time_create", "-")
+        ws1.cell(row=r, column=5).value = v.get("date_confirm", "-")
+        ws1.cell(row=r, column=6).value = v.get("time_confirm", "-")
+        ws1.cell(row=r, column=7).value = v.get("card_number", "-")
+        ws1.cell(row=r, column=8).value = f'{v.get("patient_family", "-")} {v.get("patient_name", "-")} {v.get("patient_patronymic", "-")}'
+        ws1.cell(row=r, column=9).value = v.get("service_code", "-")
+        ws1.cell(row=r, column=10).value = v.get("service", "-")
+        ws1.cell(row=r, column=11).value = v.get("department", "-")
+        ws1.cell(row=r, column=12).value = f'{v.get("doctor_family", "-")} {v.get("doctor_name", "-")} {v.get("doctor_patronymic", "-")}'
+        ws1.cell(row=r, column=13).value = v.get("tarif_coast", "-")
+        ws1.cell(row=r, column=14).value = v.get("tarif_contrast", "-")
+        ws1.cell(row=r, column=15).value = v.get("tarif_dynamic", "-")
+        ws1.cell(row=r, column=16).value = v.get("tarif_extension", "-")
+        ws1.cell(row=r, column=17).value = v.get("tarif_night", "-")
+        ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(11)}{r}:{get_column_letter(15)}{r})'
     r_sum = r
     r += 1
     ws1.merge_cells(f"{get_column_letter(14)}{r}:{get_column_letter(15)}{r}")
