@@ -968,7 +968,7 @@ class EmployeePositionCountWorkDayPerMonth(models.Model):
         verbose_name_plural = "Сотрудники - план финансовый за день"
 
 
-class TabelDocuments(models.Model):
+class TabelDocument(models.Model):
     class Status(models.TextChoices):
         APPROVED = "APPROVED", "Утвержден"
         CHECK = "CHECK", "На проверке"
@@ -979,8 +979,8 @@ class TabelDocuments(models.Model):
     time_confirmation = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время подтверждения табеля")
     time_save = models.DateTimeField(null=True, blank=True, db_index=True, help_text="Время сохранения табеля")
     month_tabel = models.DateField(help_text="Месяц учета", db_index=True)
-    department = models.ForeignKey(Department, null=True, blank=True, default=None, on_delete=models.SET_NULL)
-    is_actual = models.BooleanField(help_text="Акутальный", default=True)
+    department = models.ForeignKey(Department, null=True, on_delete=models.SET_NULL)
+    is_actual = models.BooleanField(help_text="Актуальный", default=True)
     version = models.PositiveSmallIntegerField(default=None, db_index=True, blank=True, null=True)
     parent_document = models.ForeignKey("self", related_name="parent_tabel_document", help_text="Документ основание", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     comment_checking = models.TextField(blank=True, null=True, help_text="Комментарий от проверяющего")
@@ -1008,10 +1008,10 @@ class TabelDocuments(models.Model):
         version = 1
         parent_document = None
         if data.get("parentDocumentPk", None):
-            parent_document = TabelDocuments.objects.get(pk=data["parentDocumentPk"])
+            parent_document = TabelDocument.objects.get(pk=data["parentDocumentPk"])
             version = parent_document.version + 1
 
-        td = TabelDocuments(
+        td = TabelDocument(
             doc_confirmation=docprofile,
             doc_confirmation_string=docprofile.get_full_fio(),
             time_save=timezone.now(),
@@ -1020,7 +1020,7 @@ class TabelDocuments(models.Model):
             is_actual=True,
             parent_document_id=data.get("parentDocumentPk", None),
             version=version,
-        ).save()
+        )
         if data.get("withConfirm", None):
             td.time_confirmation = timezone.now()
             td.status = "STATUS_CHECK"
@@ -1031,10 +1031,10 @@ class TabelDocuments(models.Model):
         td.save()
 
     @staticmethod
-    def change_status_tabel_document(tabel_pk, data, docprofile):
-        td = TabelDocuments.objects.get(pk=tabel_pk)
-        td.doc_change_status = docprofile
-        td.doc_change_status_string = docprofile.get_full_fio()
+    def change_status_tabel_document(tabel_pk, data, doc_profile):
+        td = TabelDocument.objects.get(pk=tabel_pk)
+        td.doc_change_status = doc_profile
+        td.doc_change_status_string = doc_profile.get_full_fio()
         td.time_change_status = timezone.now()
         td.comment_checking = data.get("commentChecking", "")
         td.status = data.get("status", "")
@@ -1049,9 +1049,9 @@ class FactTimeWork(models.Model):
         BUSINESS_TRIP = "BUSINESS_TRIP", "Командировка"
         DISMISS = "DISMISS", "Уволен"
 
-    tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
-    employee = models.ForeignKey(EmployeePosition, null=True, blank=True, default=None, on_delete=models.SET_NULL)
-    date = models.DateField(help_text="Дата учета", db_index=True, default=None, blank=True, null=True)
+    tabel_document = models.ForeignKey(TabelDocument, null=True, on_delete=models.SET_NULL)
+    employee = models.ForeignKey(EmployeePosition, null=True, on_delete=models.SET_NULL)
+    date = models.DateField(help_text="Дата учета", db_index=True)
     night_hours = models.DecimalField(max_digits=10, decimal_places=2)
     common_hours = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, null=True, blank=True, default=Status.WORK, db_index=True, choices=Status.choices, help_text="Статус")
@@ -1061,7 +1061,7 @@ class FactTimeWork(models.Model):
         verbose_name_plural = "Время в табеле"
 
 
-class DocumentFactTimeWork(models.Model):
+class TabelFactTimeWorkRaw(models.Model):
     """
     data_document = {"tabelDocumentPk": "", "personData": [
                             {
@@ -1085,7 +1085,7 @@ class DocumentFactTimeWork(models.Model):
                     }
     """
 
-    tabel_document = models.ForeignKey(TabelDocuments, null=True, blank=True, default=None, on_delete=models.SET_NULL)
+    tabel_document = models.ForeignKey(TabelDocument, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
 
     class Meta:
@@ -1095,7 +1095,7 @@ class DocumentFactTimeWork(models.Model):
     @staticmethod
     def save_fact_time_work_document(tabel_pk, data_document):
         if tabel_pk > -1:
-            document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+            document_fact_time = TabelFactTimeWorkRaw.objects.get(pk=tabel_pk)
             document_fact_time.data_document = data_document
             document_fact_time.save()
 
@@ -1104,7 +1104,7 @@ class DocumentFactTimeWork(models.Model):
         data = ""
         result = {}
         if tabel_pk > -1:
-            document_fact_time = DocumentFactTimeWork.objects.get(pk=tabel_pk)
+            document_fact_time = TabelFactTimeWorkRaw.objects.get(pk=tabel_pk)
             data = json.loads(document_fact_time)
             for person in data.get("personData") or []:
                 for employeee in person.get("employeeData") or []:

@@ -16,9 +16,9 @@ from .models import (
     PlanDepartment,
     EmployeePositionCountWorkDayPerMonth,
     EmployeeVacation,
-    TabelDocuments,
+    TabelDocument,
     FactTimeWork,
-    DocumentFactTimeWork,
+    TabelFactTimeWorkRaw,
 )
 
 
@@ -131,7 +131,7 @@ class EmployeeVacationAdmin(admin.ModelAdmin):
         return obj.work_day_status.title if obj.work_day_status else '—'
 
 
-@admin.register(TabelDocuments)
+@admin.register(TabelDocument)
 class TabelDocumentAdmin(admin.ModelAdmin):
     list_display = ("department_title", "month_tabel_title", "is_actual", "version", "status")
     list_select_related = ("department",)
@@ -141,7 +141,7 @@ class TabelDocumentAdmin(admin.ModelAdmin):
 
     @admin.display(description="Месяц")
     def month_tabel_title(self, obj):
-        return date_format(obj.month_tabel, "F, Y")
+        return date_format(obj.month_tabel, "F, Y") if obj.month_tabel else "-"
 
     @admin.display(description="Подразделение")
     def department_title(self, obj):
@@ -155,7 +155,7 @@ class TabelFactTimeWorkAdmin(admin.ModelAdmin):
     raw_id_fields = ("employee",)
 
 
-@admin.register(DocumentFactTimeWork)
+@admin.register(TabelFactTimeWorkRaw)
 class TabelDataAdmin(admin.ModelAdmin):
     list_display = ("tabel_document", "tabel_document_month")
     list_display_links = ("tabel_document", "tabel_document_month")
