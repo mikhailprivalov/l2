@@ -29,6 +29,13 @@ def form_01(ws1, data):
         ('Организация', 30),
         ('Пациент', 30),
         ('Дата рождения', 15),
+
+        ('Услуга', 15),
+        ('Код услуги', 15),
+        ('Сообщение', 15),
+        ('Случай', 15),
+        ('Посещение', 15),
+
     ]
     row = 5
     for idx, column in enumerate(columns, 1):
@@ -36,7 +43,7 @@ def form_01(ws1, data):
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
 
-    sql_data = sql_01(data['research_id'], data['d_s'], data['d_e'])
+    sql_data = sql_01(tuple(data['research_id']), data['d_s'], data['d_e'])
     result = [
         {
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
@@ -48,6 +55,11 @@ def form_01(ws1, data):
             "hospital": i.hospital_title,
             "patient": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
             "patient_birthday": i.patient_birthday,
+            "service_title": i.research_title,
+            "message": i.amd_message,
+            "service_code": i.doctor_research_code if i.doctor_research_code else i.research_code,
+            "case_num": i.rmis_case_number,
+            "visit_num": i.rmis_visit_number,
         }
         for i in sql_data
     ]
@@ -65,6 +77,13 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=8).value = i.get("hospital")
         ws1.cell(row=row, column=9).value = i.get("patient")
         ws1.cell(row=row, column=10).value = i.get("patient_birthday")
+        ws1.cell(row=row, column=11).value = i.get("service_title")
+        ws1.cell(row=row, column=12).value = i.get("service_code")
+        ws1.cell(row=row, column=13).value = i.get("message")
+        ws1.cell(row=row, column=14).value = i.get("case_num")
+        ws1.cell(row=row, column=15).value = i.get("visit_num")
+        for k in range(15):
+            ws1.cell(row=row, column=k+1).style = style_border
     return ws1
 
 
@@ -90,15 +109,24 @@ def sql_01(research_id, d_s, d_e):
                     ci.family as patient_family,
                     ci.name as patient_name,
                     ci.patronymic as patient_patronymic,
-                    to_char(ci.birthday, 'DD.MM.YYYY') as patient_birthday
+                    to_char(ci.birthday, 'DD.MM.YYYY') as patient_birthday,
+                    dn.amd_message,
+                    dn.rmis_case_number,
+                    dn.rmis_visit_number,
+                    dn.amd_message,
+                    dr.title as research_title,
+                    dr.code as research_code,
+                    ud.service_code_ambulatory as doctor_research_code
+   
                     FROM directions_issledovaniya
                     LEFT JOIN directions_napravleniya dn ON dn.id = directions_issledovaniya.napravleniye_id
                     LEFT JOIN users_doctorprofile ud ON directions_issledovaniya.doc_confirmation_id=ud.id
                     LEFT JOIN clients_card cc ON cc.id=dn.client_id
                     LEFT JOIN clients_individual ci ON cc.individual_id=ci.id
                     LEFT JOIN hospitals_hospitals hh ON dn.hospital_id=hh.id
+                    LEFT JOIN directory_researches dr ON directions_issledovaniya.research_id=dr.id
                     WHERE 
-                      directions_issledovaniya.research_id=%(research_id)s
+                      directions_issledovaniya.research_id in %(research_id)s
                       AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
                       AND dn.rmis_number IS NOT NULL 
                     order by ud.id, directions_issledovaniya.time_confirmation
