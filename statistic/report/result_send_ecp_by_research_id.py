@@ -83,7 +83,7 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=14).value = i.get("case_num")
         ws1.cell(row=row, column=15).value = i.get("visit_num")
         for k in range(15):
-            ws1.cell(row=row, column=k+1).style = style_border
+            ws1.cell(row=row, column=k + 1).style = style_border
     return ws1
 
 
