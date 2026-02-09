@@ -34,7 +34,6 @@ def form_01(ws1, data):
         ('Сообщение', 15),
         ('Случай', 15),
         ('Посещение', 15),
-
     ]
     row = 5
     for idx, column in enumerate(columns, 1):
