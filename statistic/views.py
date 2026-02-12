@@ -2112,7 +2112,7 @@ def statistic_xls(request):
             if doctor > 0:
                 fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
                 title_fio = fio_doctor.get_fio()
-            response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_{}-{}-{}.xls\"".format(title_fio,date_start_o, date_end_o), tr)
+            response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_{}-{}-{}.xls\"".format(title_fio, date_start_o, date_end_o), tr)
             ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
             ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
