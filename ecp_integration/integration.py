@@ -119,6 +119,9 @@ def search_patient_ecp_by_person_id(person_id):
         return None
     patient = result['data'][0]
     patient_snils = patient.get("PersonSnils_Snils", "")
+    patient_snils = str(patient_snils)
+    if len(patient_snils) == 10:
+        patient_snils = f"0{patient_snils}"
     result = make_request_get(
         "PersonList",
         query=f"Sess_id={sess_id}&"

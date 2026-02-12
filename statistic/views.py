@@ -2042,7 +2042,6 @@ def statistic_xls(request):
         ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
     elif tp == "reestr-doctor":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_больницам_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Реестр по врачам")
@@ -2109,10 +2108,11 @@ def statistic_xls(request):
                 tmp_result["tarif_night"] = 0
                 tmp_result["total_summ"] = 0
                 row_report.append(tmp_result.copy())
-            title_fio = ""
+            title_fio = "Врачи"
             if doctor > 0:
                 fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
                 title_fio = fio_doctor.get_fio()
+            response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_{}-{}-{}.xls\"".format(title_fio, date_start_o, date_end_o), tr)
             ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
             ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 

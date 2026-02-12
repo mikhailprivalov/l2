@@ -1,7 +1,7 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from utils.db import namedtuplefetchall
-from laboratory.settings import TIME_ZONE
+from laboratory.settings import TIME_ZONE, USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND
 from django.db import connection
 
 
@@ -41,7 +41,7 @@ def form_01(ws1, data):
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
 
-    sql_data = sql_01(tuple(data['research_id']), data['d_s'], data['d_e'])
+    sql_data = sql_01(tuple(data['research_id']), data['d_s'], data['d_e'], USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND)
     result = [
         {
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
@@ -58,6 +58,7 @@ def form_01(ws1, data):
             "service_code": i.doctor_research_code if i.doctor_research_code else i.research_code,
             "case_num": i.rmis_case_number,
             "visit_num": i.rmis_visit_number,
+            "rmis_login": i.rmis_login,
         }
         for i in sql_data
     ]
@@ -80,12 +81,13 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=13).value = i.get("message")
         ws1.cell(row=row, column=14).value = i.get("case_num")
         ws1.cell(row=row, column=15).value = i.get("visit_num")
-        for k in range(15):
+        ws1.cell(row=row, column=16).value = i.get("rmis_login")
+        for k in range(16):
             ws1.cell(row=row, column=k + 1).style = style_border
     return ws1
 
 
-def sql_01(research_id, d_s, d_e):
+def sql_01(research_id, d_s, d_e, use_rmis_number):
     """
     Для журнала ВК-ДЛО
     :return:
@@ -111,10 +113,10 @@ def sql_01(research_id, d_s, d_e):
                     dn.amd_message,
                     dn.rmis_case_number,
                     dn.rmis_visit_number,
-                    dn.amd_message,
                     dr.title as research_title,
                     dr.code as research_code,
-                    ud.service_code_ambulatory as doctor_research_code
+                    ud.service_code_ambulatory as doctor_research_code,
+                    ud.rmis_login
    
                     FROM directions_issledovaniya
                     LEFT JOIN directions_napravleniya dn ON dn.id = directions_issledovaniya.napravleniye_id
@@ -126,10 +128,16 @@ def sql_01(research_id, d_s, d_e):
                     WHERE 
                       directions_issledovaniya.research_id in %(research_id)s
                       AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
-                      AND dn.rmis_number IS NOT NULL 
+                      AND dn.parent_id IS NULL
+                      AND 
+                      CASE when %(use_rmis_number)s = 1 THEN
+                         dn.rmis_number IS NOT NULL 
+                      when %(use_rmis_number)s = 0 THEN
+                         directions_issledovaniya.napravleniye_id IS NOT NULL
+                      END                                               
                     order by ud.id, directions_issledovaniya.time_confirmation
                 """,
-            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+            params={'research_id': research_id, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE, 'use_rmis_number': use_rmis_number},
         )
 
         rows = namedtuplefetchall(cursor)

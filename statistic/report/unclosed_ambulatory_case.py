@@ -79,6 +79,7 @@ def sql_01(d_start, d_end):
             WHERE
             directions_issledovaniya.time_confirmation is Null
             AND directions_issledovaniya.research_id in %(research_id_case)s
+            AND dn.cancel = false
             ORDER BY dn.data_sozdaniya
             """,
             params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE, 'research_id_case': RESEARCH_ID_CLOSE_CASE},

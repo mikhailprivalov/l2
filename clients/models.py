@@ -542,7 +542,11 @@ class Individual(models.Model):
         snils_doc = None
         if snils_type and patient_data.get('PersonSnils_Snils'):
             snils = patient_data['PersonSnils_Snils']
-            snils = ''.join([s for s in snils if s.isdigit()])
+            try:
+                snils = ''.join([s for s in snils if s.isdigit()])
+            except:
+
+                snils = f"0{str(snils)}"
             if not Document.objects.filter(individual=individual, document_type=snils_type).exists():
                 snils_doc = Document(
                     individual=individual,

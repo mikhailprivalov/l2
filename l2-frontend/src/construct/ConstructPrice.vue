@@ -589,7 +589,7 @@ export default {
     async updatePrice() {
       if (!this.priceDataIsFilled) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
-      } else if (this.l2_price_tariff_doctor && this.priceData.doctorId < 0) {
+      } else if (this.searchTypesObject === 'Тариф врача' && this.priceData.doctorId < 0) {
         this.$root.$emit('msg', 'error', 'Данные не заполнены');
       } else if (new Date(this.priceData.end) <= new Date(this.priceData.start)) {
         this.$root.$emit('msg', 'error', 'Дата конца раньше даты начала');
