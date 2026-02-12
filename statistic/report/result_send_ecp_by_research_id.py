@@ -111,7 +111,6 @@ def sql_01(research_id, d_s, d_e):
                     dn.amd_message,
                     dn.rmis_case_number,
                     dn.rmis_visit_number,
-                    dn.amd_message,
                     dr.title as research_title,
                     dr.code as research_code,
                     ud.service_code_ambulatory as doctor_research_code
@@ -126,6 +125,7 @@ def sql_01(research_id, d_s, d_e):
                     WHERE 
                       directions_issledovaniya.research_id in %(research_id)s
                       AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+                      AND dn.parent_id IS NULL
                       AND dn.rmis_number IS NOT NULL 
                     order by ud.id, directions_issledovaniya.time_confirmation
                 """,
