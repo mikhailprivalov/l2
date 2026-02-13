@@ -117,7 +117,10 @@ def form_01(request_data):
         if i[17]:
             res = divmod(i[17], 60)
         else:
-            res = (99, 99,)
+            res = (
+                99,
+                99,
+            )
         hour = res[0]
         if res[0] < 10:
             hour = f"0{res[0]}"
