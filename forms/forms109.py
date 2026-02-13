@@ -134,7 +134,7 @@ def form_01(request_data):
                 Paragraph(f"{strike_o}{i[3]}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i[2]}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i[11]} {i[12]} {i[13]}, {i[14]}{weight}{strike_cl}", style),
-                Paragraph(f"{strike_o}<font face='Symbola' size=13>\u23F1-</font> {open_bold_tag}{duration}{close_tag_bold} <br/>{i[4]}{strike_cl}", style),
+                Paragraph(f"{strike_o}<font face='Symbola' size=13>\u23f1-</font> {open_bold_tag}{duration}{close_tag_bold} <br/>{i[4]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{doc_fio}{strike_cl}", style),
                 Paragraph(f"{strike_o}{department}{strike_cl}", style),
                 Paragraph(f"{strike_o}{anesthetist_fio}{strike_cl}", style),
