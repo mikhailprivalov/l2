@@ -32,6 +32,7 @@ def form_01(request_data):
 
     pdfmetrics.registerFont(TTFont('PTAstraSerifBold', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Bold.ttf')))
     pdfmetrics.registerFont(TTFont('PTAstraSerifReg', os.path.join(FONTS_FOLDER, 'PTAstraSerif-Regular.ttf')))
+    pdfmetrics.registerFont(TTFont('Symbola', os.path.join(FONTS_FOLDER, 'Symbola.ttf')))
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -82,6 +83,8 @@ def form_01(request_data):
             Paragraph('Анестезиолог', styleTB),
         ],
     ]
+    open_bold_tag = '<font face ="PTAstraSerifBold" size=13>'
+    close_tag_bold = "</font>"
 
     for i in plans:
         doc_fio = ''
@@ -111,12 +114,25 @@ def form_01(request_data):
             weight = f", Вес-{primary_reception_data['weight']}"
         else:
             weight = ''
+        if i[17]:
+            print(i[17])
+            res = divmod(i[17], 60)
+        else:
+            res = (99, 99,)
+        hour = res[0]
+        if res[0] < 10:
+            hour = f"0{res[0]}"
+        min = res[1]
+        if res[1] < 10:
+            min = f"0{res[1]}"
+        duration = f"{hour}:{min}"
+
         opinion.append(
             [
                 Paragraph(f"{strike_o}{i[3]}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i[2]}{strike_cl}", styleCenter),
                 Paragraph(f"{strike_o}{i[11]} {i[12]} {i[13]}, {i[14]}{weight}{strike_cl}", style),
-                Paragraph(f"{strike_o}{i[4]}{strike_cl}", style),
+                Paragraph(f"{strike_o}<font face='Symbola' size=13>\u23F1-</font> {open_bold_tag}{duration}{close_tag_bold} <br/>{i[4]}{strike_cl}", style),
                 Paragraph(f"{strike_o}{doc_fio}{strike_cl}", style),
                 Paragraph(f"{strike_o}{department}{strike_cl}", style),
                 Paragraph(f"{strike_o}{anesthetist_fio}{strike_cl}", style),
