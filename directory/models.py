@@ -1186,7 +1186,7 @@ class PatternParamTogether(models.Model):
 
 
 class ParaclinicInputGroups(models.Model):
-    title = models.CharField(max_length=255, help_text="Название группы")
+    title = models.CharField(max_length=550, help_text="Название группы")
     show_title = models.BooleanField()
     research = models.ForeignKey(Researches, on_delete=models.CASCADE)
     order = models.IntegerField()
