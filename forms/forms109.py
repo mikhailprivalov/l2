@@ -115,7 +115,6 @@ def form_01(request_data):
         else:
             weight = ''
         if i[17]:
-            print(i[17])
             res = divmod(i[17], 60)
         else:
             res = (99, 99,)
