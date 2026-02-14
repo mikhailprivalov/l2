@@ -70,6 +70,11 @@ def get_requests(request):
     if search_type == 'card' and card_id:
         directions = directions.filter(client_id=card_id)
 
+    if search_type == 'cancel':
+        directions = directions.filter(cancel=True)
+    else:
+        directions = directions.filter(cancel=False)
+
     if date_from and date_to:
         try:
             search_date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
@@ -638,6 +643,7 @@ def get_requests_by_status(request):
         directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-issledovaniya__time_confirmation").distinct()
     else:
         directions = directions.filter(total_confirmed=False).order_by("-last_confirmed_at").distinct()
+    directions = directions.filter(cancel=False)
 
     directions_list = list(directions)
 
