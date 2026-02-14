@@ -18,15 +18,15 @@ def get_or_create_tabel_service(year: int, month: int, department_id: int, user)
 
     time_tracking_document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
     work_time_employee = get_employee_work_time(department_id, time_tracking_document.id, str(first_date_month))
-    converted_work_time_employee = convert_to_tabel_data(work_time_employee)
+    convert_to_tabel_data(work_time_employee)
 
     tabel_document = TabelDocument.get_tabel(first_date_month, last_date_month, department_id)
 
     if tabel_document:
-        # TODO сравниваем данные графика и табеля, если есть отличия, то создаем новую версию tabelDocument, FactTimeWork-s, TabelData
+        #  TODO сравниваем данные графика и табеля, если есть отличия, то создаем новую версию tabelDocument, FactTimeWork-s, TabelData
         pass
     else:
-        # TODO Создаем новые TabelDocument, FactTimeWork-s, TabelData
+        #  TODO Создаем новые TabelDocument, FactTimeWork-s, TabelData
         pass
 
     xlsx_tabel: Workbook = create_xlsx_tabel()
@@ -62,15 +62,15 @@ def convert_to_tabel_data(work_time_employee):
                     "bid_name": work_time.bid_name,
                     "department_name": work_time.department_name,
                     "tabel_number": work_time.tabel_number,
-                    "days": {}
-                }
+                    "days": {},
+                },
             }
         if work_time.day:
             # TODO Надо конвертировать диапозон часов (start, end time) в кол-во часов (night_hours, common_hours)
             employee_positions_data[work_time.employee_position_id]["work_hours"]["days"][work_time.day] = {
-                "status": work_time.work_day_status_id, # TODO здесь из таблицы в БД, в табеле ожидается из Choices, надо превращать
+                "status": work_time.work_day_status_id,  # TODO здесь из таблицы в БД, в табеле ожидается из Choices, надо превращать
                 "night_hours": "",
-                "common_hours": ""
+                "common_hours": "",
             }
 
     person_data_grouped_by_snils = {}
@@ -82,13 +82,14 @@ def convert_to_tabel_data(work_time_employee):
                 "person_family": employee_position["person_family"],
                 "person_name": employee_position["person_name"],
                 "person_patronymic": employee_position["person_patronymic"],
-                "work_hours": []
+                "work_hours": [],
             }
         person_data_grouped_by_snils[snils]["work_hours"].append(employee_position["work_hours"])
 
     person_data = [value for value in person_data_grouped_by_snils.values()]
 
     return person_data
+
 
 def create_xlsx_tabel(error_data=None):
     work_book: Workbook = openpyxl.Workbook()

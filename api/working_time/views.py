@@ -2,11 +2,10 @@ import json
 from io import BytesIO
 
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse, FileResponse
+from django.http import JsonResponse, FileResponse
 from openpyxl.workbook import Workbook
 
 from employees.services.get_or_create_tabel import get_or_create_tabel_service
-from forms.forms300 import form_01
 from laboratory.decorators import group_required
 from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition
 from laboratory.settings import SHIFTS_VARIANTS
@@ -89,6 +88,7 @@ def edit_lunch(request):
     lunch_duration_in_minutes = request_data.get("lunchDurationInMinutes")
     EmployeePosition.edit_lunch(employee_position_id, lunch_duration_in_minutes)
     return JsonResponse({"ok": True, "message": ""})
+
 
 @login_required()
 @group_required('График рабочего времени')
