@@ -21,6 +21,7 @@ constructor_help_message = [
     {"label": "-", "param": "%mother_name", "value": "Только имя матери"},
     {"label": "-", "param": "%mother_patronymic", "value": "Только отчество матери"},
     {"label": "-", "param": "%patient_born", "value": "Дата рождения пациента"},
+    {"label": "-", "param": "%patient_age_unit", "value": "Возраст с единицей измерения (лет/год/года/мес)"},
     {"label": "-", "param": "%mother_born", "value": "Дата рождения матери"},
     {"label": "-", "param": "%snils", "value": "СНИЛС"},
     {"label": "-", "param": "%mother_snils", "value": "СНИЛС-матери"},

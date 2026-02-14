@@ -2963,6 +2963,8 @@ def last_field_result(request):
         result = {"value": mother_data['patronymic']}
     elif request_data["fieldPk"].find('%patient_born') != -1:
         result = {"value": data['born']}
+    elif request_data["fieldPk"].find('%patient_age_unit') != -1:
+        result = {"value": c.individual.age_s(direction=Napravleniya.objects.get(pk=num_dir))}
     elif request_data["fieldPk"].find('%agent') != -1:
         agent_status = False
         p_agent = None

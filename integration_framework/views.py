@@ -1702,7 +1702,9 @@ def create_direction_by_param(body, request):
     if enp and (len(enp) != 16 or not enp.isdigit()):
         return {"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"}
 
-    snils = (patient.get("snils") or "").replace(" ", "").replace("-", "")
+    snils = (str(patient.get("snils")) or "").replace(" ", "").replace("-", "")
+    if len(snils) == 10:
+        snils = f"0{snils}"
 
     if not enp and not snils and not is_exclude_contorl_documnets:
         return {"ok": False, "message": "При пустом patient.enp должно быть передано patient.snils или patient.passportSerial+patient.passportNumber"}
