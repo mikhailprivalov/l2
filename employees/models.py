@@ -1041,10 +1041,7 @@ class TabelDocument(models.Model):
         td.save()
 
     @staticmethod
-    def get_tabel(year: int, month: int, department_id: int):
-        first_date_month = datetime.date(year, month, 1)
-        length_month = calendar.monthrange(year, month)[1]
-        last_date_month = datetime.date(year, month, length_month)
+    def get_tabel(first_date_month: datetime.date, last_date_month: datetime.date, department_id: int):
         tabel_document = TabelDocument.objects.filter(month_tabel__gte=first_date_month, month_tabel__lte=last_date_month, department_id=department_id, is_actual=True).first()
         return tabel_document
 
@@ -1074,19 +1071,24 @@ class TabelFactTimeWorkRaw(models.Model):
     data_document = {"tabelDocumentPk": "", "personData": [
                             {
                                 "snils": "121212121",
-                                "personLastname": "sds",
-                                "personFirstName": "sds",
-                                "personPatronymic": "sds",
-                                "employeeData": [
+                                "person_family": "sds",
+                                "person_name": "sds",
+                                "person_patronymic": "sds",
+                                "work_hours": [
                                     {
-                                        "postTitle": "postTitle",
-                                        "typePost": "typePost",
-                                        "departmentTitle": "departmentTitle",
-                                        "tabelNumber": "tabelNumber",
-                                        "dates": ["все даты месяца ч/з запятую"],
-                                        "nightHours": {"дата": "значение", "дата1": "значение", "дат2": "значение"},
-                                        "commonHours": {}
+                                        "position_name": "postTitle",
+                                        "bid_name": "bid_name",
+                                        "department_name": "department_name",
+                                        "tabel_number": "tabel_number",
+                                        "days": {"2026-02-01": {"statys": "WORK", "nightHours": 4, "commonHours": 4}}
                                     },
+                                    {
+                                        "position_name": "other_post_title",
+                                        "bid_name": "other_bid_name",
+                                        "department_name": "other_department_name",
+                                        "tabel_number": "other_tabel_number",
+                                        "days": {"2026-02-02": {"statys": "WORK", "nightHours": 4, "commonHours": 4}}
+                                    }
                                 ]
                             },
                         ]

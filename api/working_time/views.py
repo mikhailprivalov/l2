@@ -94,9 +94,9 @@ def edit_lunch(request):
 @group_required('График рабочего времени')
 def get_or_create_tabel(request):
     request_data = request.GET
-    year = request_data.get("year")
-    month = request_data.get("month")
-    department_id = request_data.get("departmentId")
+    year = int(request_data.get("year") or -1)
+    month = int(request_data.get("month") or -1)
+    department_id = int(request_data.get("departmentId") or -1)
     user = request.user
     result: Workbook = get_or_create_tabel_service(year, month, department_id, user)
     buffer = BytesIO()
