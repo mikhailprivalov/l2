@@ -103,6 +103,22 @@
               >
                 <i class="fa fa-print" /> Результат
               </button>
+              <button
+                v-if="!item.hasResult && 'cancel'!==searchMode"
+                class="cancel-direction-btn"
+                title="Отменить направление"
+                @click.stop="cancelDirection(item.id)"
+              >
+                Скрыть
+              </button>
+              <button
+                v-if="searchMode === 'cancel'"
+                class="cancel-direction-btn"
+                title="Вернуть направление"
+                @click.stop="cancelDirection(item.id)"
+              >
+                В работу
+              </button>
             </div>
             <div class="research-row">
               <div class="row">
@@ -411,6 +427,7 @@ const SEARCH_MODES = [
   { id: 'all', title: 'Мои заявки' },
   { id: 'card', title: 'Пациент' },
   { id: 'search', title: 'Организация' },
+  { id: 'cancel', title: 'Скрытые' },
 ];
 
 const SEARCH_MODES_MAP = new Map(SEARCH_MODES.map((m) => [m.id, m.title]));
@@ -640,6 +657,11 @@ const isHighlighted = (item: Request) => (
   && item.id
   && item.id.toString() === props.highlightedRequestId.toString()
 );
+
+const cancelDirection = async (pk: number) => {
+  await api('directions/cancel', { pk });
+  await getRequests();
+};
 
 const showRequestDetails = async (requestId: number) => {
   isLoadingDetails.value = true;
@@ -968,6 +990,29 @@ defineExpose({
 
   &:hover {
     background: #037a5a;
+  }
+
+  i {
+    font-size: 10px;
+  }
+}
+.cancel-direction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  background: #6C7A89;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #494949;
   }
 
   i {
