@@ -925,7 +925,7 @@ def directions_cancel(request):
             if iss.study_instance_uid or iss.study_instance_uid_tag:
                 response["cancel"] = False
                 response["ok"] = False
-        if direction.total_confirmed:
+        if direction.total_confirmed or direction.accept_who_doctor:
             response["cancel"] = False
             response["ok"] = False
         else:

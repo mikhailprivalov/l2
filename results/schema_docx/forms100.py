@@ -23,6 +23,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
         result_data = {i.attached: i.field_value for i in fields_values}
+        for k, v in result_data.items():
+            print(k, v)
         doc = DocxTemplate(current_template_file)
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount

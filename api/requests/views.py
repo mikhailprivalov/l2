@@ -117,6 +117,7 @@ def get_requests(request):
                 "patient": direction.client.individual.fio(),
                 "datetime": strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M'),
                 "hasImage": has_image,
+                "acceptWhoDoctor": True if direction.accept_time else False,
                 "hasResult": direction.total_confirmed,
                 "cardId": direction.client.pk,
                 "files": files,

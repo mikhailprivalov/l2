@@ -104,7 +104,7 @@
                 <i class="fa fa-print" /> Результат
               </button>
               <button
-                v-if="!item.hasResult && 'cancel'!==searchMode"
+                v-if="!item.hasResult && 'cancel'!==searchMode && !item.acceptWhoDoctor"
                 class="cancel-direction-btn"
                 title="Отменить направление"
                 @click.stop="cancelDirection(item.id)"
@@ -119,6 +119,10 @@
               >
                 В работу
               </button>
+              <span
+                v-if="item.acceptWhoDoctor && !item.hasResult"
+                class="accept-badge"
+              >Принято</span>
             </div>
             <div class="research-row">
               <div class="row">
@@ -470,6 +474,7 @@ type Request = {
   datetime: string;
   hasImage: boolean;
   hasResult: boolean;
+  acceptWhoDoctor: boolean;
   cardId: number;
   files: File[];
   researchTitle: string;
@@ -1147,6 +1152,20 @@ defineExpose({
 .cito-badge {
   display: inline-block;
   background: #5d7ce1;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  margin-right: 2px;
+  letter-spacing: 1px;
+  vertical-align: middle;
+}
+
+.accept-badge {
+  display: inline-block;
+  background: #046d93;
   color: #fff;
   font-size: 10px;
   font-weight: bold;
