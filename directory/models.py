@@ -1306,7 +1306,7 @@ class ParaclinicInputField(models.Model):
     for_extract_card = models.BooleanField(default=False, help_text="В выписку", blank=True)
     is_diag_table = models.BooleanField(default=False, help_text="Таблица диагнозов", blank=True)
     for_med_certificate = models.BooleanField(default=False, help_text="В справку", blank=True)
-    attached = models.CharField(max_length=20, help_text="Скреплено с полем другой услуги", blank=True, default=None, null=True, db_index=True)
+    attached = models.CharField(max_length=128, help_text="Скреплено с полем другой услуги", blank=True, default=None, null=True, db_index=True)
     not_edit = models.BooleanField(default=False, help_text="Не редактируемое", blank=True)
     control_param = models.TextField(default="", blank=True)
     operator_enter_param = models.BooleanField(default=False, help_text="Поле ввода для оператора(лаборанта)", blank=True)
