@@ -61,6 +61,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "research": iss.research.title,
             "hosp_confirmation": iss.doc_confirmation.hospital.title,
             "license_data": iss.doc_confirmation.hospital.license_data,
+            "direction_pk": direction.pk,
         }
         context = {**meta_info, **result_data}
         doc.render(context)
