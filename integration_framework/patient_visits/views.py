@@ -40,7 +40,7 @@ def data_by_direction(request):
     final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
-    if not iss.doc_confirmation or not result_l2.get("main_diagnos"):
+    if not iss.doc_confirmation or not result_l2.get("main_diagnos") or "-" in result_l2.get("main_diagnos"):
         direction.amd_message = "Ошибка - основной диагноз"
         direction.save()
         return Response({"patient": None, "diagnose_confirm": False})
@@ -53,8 +53,12 @@ def data_by_direction(request):
                     additional_data = {}
             except Exception:
                 additional_data = None
-    if not additional_data or not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
-        direction.amd_message = "Ошибка связи с внешним сервисом"
+    if not additional_data:
+        direction.amd_message = "Нет сведений по доктору"
+        direction.save()
+        return Response({"patient": None, "rmis_data_doctor": False})
+    if not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
+        direction.amd_message = "Нет логина или пароля"
         direction.save()
         return Response({"patient": None, "rmis_data_doctor": False})
 
