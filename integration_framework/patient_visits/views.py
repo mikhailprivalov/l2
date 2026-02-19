@@ -54,11 +54,11 @@ def data_by_direction(request):
             except Exception:
                 additional_data = None
     if not additional_data:
-        direction.amd_message = "Нет сведений по доктору"
+        direction.amd_message = f"Нет сведений по доктору {iss.doc_confirmation.get_fio()}"
         direction.save()
         return Response({"patient": None, "rmis_data_doctor": False})
     if not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
-        direction.amd_message = "Нет логина или пароля"
+        direction.amd_message = f"Нет логина(пароля) {iss.doc_confirmation.get_fio()}"
         direction.save()
         return Response({"patient": None, "rmis_data_doctor": False})
 
