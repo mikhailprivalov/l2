@@ -1336,12 +1336,21 @@ def form_02(request_data):
     if cda_data_result.get("в.э.-Сопутствующие табл"):
         accomponement_tbl = parse_accompanement_diagnos(cda_data_result.get("в.э.-Сопутствующие табл"))
         table_data["в.э.-Сопутствующие табл"] = accomponement_tbl
-
+    exists_eln = False
     if current_template_file:
         for section in body_paragraphs:
-            objs = check_section_param(objs, styles_obj, section, table_data, cda_data_result)
+            objs, exists_eln = check_section_param(objs, styles_obj, section, table_data, cda_data_result)
+    str_eln = ""
+    if exists_eln:
+        str_eln = "ЭЛН"
 
-    doc.build(objs)
+    def first_pages(canvas, document):
+        canvas.saveState()
+        canvas.setFont('PTAstraSerifBold', 14)
+        canvas.drawString(5 * mm, 288 * mm, str_eln)
+        canvas.restoreState()
+
+    doc.build(objs, onFirstPage=first_pages)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
@@ -1349,6 +1358,7 @@ def form_02(request_data):
 
 def check_section_param(objs, styles_obj, section, tbl_specification, cda_titles):
     default_empty_table_data = Paragraph("", styles_obj[section.get("style")])
+    exists_eln = False
     if section.get("Spacer"):
         height_spacer = section.get("spacer_data")
         objs.append(Spacer(1, height_spacer * mm))
@@ -1374,6 +1384,9 @@ def check_section_param(objs, styles_obj, section, tbl_specification, cda_titles
     elif section.get("text"):
         cda_titles_sec = section.get("cdaTitles")
         data_cda = [cda_titles.get(i) for i in cda_titles_sec if cda_titles.get(i)]
+        if cda_titles.get('в.э.-ЭЛН Номер'):
+            exists_eln = True
+
         if section.get("joinDiagTitle"):
             data_cda = join_diag_title_row(data_cda)
         difference = len(cda_titles_sec) - len(data_cda)
@@ -1381,7 +1394,7 @@ def check_section_param(objs, styles_obj, section, tbl_specification, cda_titles
             data_cda = [*data_cda, *["" for count in range(difference)]]
         data_cda = check_diagnos_row_is_dict(data_cda)
         objs.append(Paragraph(section.get("text").format(*data_cda), styles_obj[section.get("style")]))
-    return objs
+    return objs, exists_eln
 
 
 def join_diag_title_row(data_cda):
