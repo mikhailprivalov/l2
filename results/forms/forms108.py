@@ -265,14 +265,31 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         "Врач (ФИО)",
         "Медсестра (ФИО)",
         "Дата забора крови",
+        "Вид"
     ]
 
     data = title_fields_result(iss, title_fields)
     space_symbol = '&nbsp;'
     open_bold_tag = '<font face ="PTAstraSerifBold">'
     close_tag_bold = "</font>"
-    fwb.append(Paragraph(f'Наименование учреждения здравоохранения {data.get("Учреждение", "")}', style))
-    fwb.append(Paragraph(f'Отделение, палата  {data.get("Отделение", "")} - {data.get("Палата", "")}', style))
+    opinion = [
+        [
+            Paragraph(f'Наименование учреждения здравоохранения {data.get("Учреждение", "")}<br/>Отделение, палата  {data.get("Отделение", "")} - {data.get("Палата", "")}', style),
+            Paragraph(f'{data.get("Вид", "")}', styleCenterBold),
+        ]
+    ]
+    tbl = Table(opinion, colWidths=(140 * mm, 50 * mm))
+    tbl.setStyle(
+        TableStyle(
+            [
+                ('GRID', (0, 0), (-1, -1), 0.75, colors.white),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 0.1 * mm),
+                ('LEFTPADDING', (-1, 0), (-1, -1), 15 * mm),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]
+        )
+    )
+    fwb.append(tbl)
     fwb.append(Spacer(1, 5 * mm))
     fwb.append(Paragraph(f'НАПРАВЛЕНИЕ БИОЛОГИЧЕСКОГО МАТЕРИАЛА ДЛЯ ИССЛЕДОВАНИЯ <br/> НА ВИЧ* № {direction.pk}', styleCenterBold))
     fwb.append(Paragraph(f'{open_bold_tag}Фамилия:{close_tag_bold} {data.get("Фамилия", "")} {space_symbol * 15} {open_bold_tag}Имя:{close_tag_bold} {data.get("Имя", "")} ', style))
