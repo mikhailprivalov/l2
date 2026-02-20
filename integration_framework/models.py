@@ -220,6 +220,7 @@ class EquipmentReceive(models.Model):
     tag_instance_id = models.CharField(max_length=64, blank=True, null=True, default=None, help_text="study instance_id", db_index=True)
     equipment_title = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
     equipment_model = models.ForeignKey(Equipment, blank=True, null=True, default=None, db_index=True, on_delete=models.CASCADE)
+    ip_address = models.CharField(max_length=40, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - ip - адрес")
 
     def __str__(self):
         patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
