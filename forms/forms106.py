@@ -1343,6 +1343,7 @@ def form_02(request_data):
     str_eln = ""
     if exists_eln:
         str_eln = "ЭЛН"
+
     def first_pages(canvas, document):
         canvas.saveState()
         canvas.setFont('PTAstraSerifBold', 14)
