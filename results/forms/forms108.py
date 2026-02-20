@@ -265,7 +265,7 @@ def form_02(direction, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwar
         "Врач (ФИО)",
         "Медсестра (ФИО)",
         "Дата забора крови",
-        "Вид"
+        "Вид",
     ]
 
     data = title_fields_result(iss, title_fields)
