@@ -1081,7 +1081,7 @@ class TabelFactTimeWorkRaw(models.Model):
                                         "bid_name": "bid_name",
                                         "department_name": "department_name",
                                         "tabel_number": "tabel_number",
-                                        "days": {"2026-02-01": {"work_day_status": "", "nightHours": 4, "common_bours": 4}}
+                                        "days": {"2026-02-01": {"work_day_status": "", "nightHours": 4, "common_hours": 4}}
                                     },
                                     {
                                         "position_name": "other_post_title",

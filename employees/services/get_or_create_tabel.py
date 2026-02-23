@@ -54,6 +54,7 @@ def overlap(start1: datetime.datetime, end1: datetime.datetime, start2: datetime
     return max(end - start, datetime.timedelta(0))
 
 
+
 def calculate_day_night_hours(start_work: datetime.datetime, end_work: datetime.datetime):
     total_duration = end_work - start_work
 

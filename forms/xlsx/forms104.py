@@ -53,7 +53,6 @@ def form_01(request_data) -> Workbook:
     """
     Создает xlsx файл по форме графика рабочего времени
     """
-    # TODO подумать как разбить по страницам
 
     request_body = request_data.get("request_body")
     document_id = request_body.get("documentId")
