@@ -3,7 +3,7 @@ import datetime
 import openpyxl
 from openpyxl import Workbook
 
-from employees.models import Employee, EmployeePosition, TabelDocument, TimeTrackingDocument
+from employees.models import Employee, EmployeePosition, TabelDocument, TimeTrackingDocument, WorkDayStatus
 from employees.sql_func import get_employee_work_time
 from users.models import DoctorProfile
 
@@ -48,9 +48,50 @@ def validate_user(department_id, user):
     return {"ok": True, "message": ""}
 
 
+def overlap(start1: datetime.datetime, end1: datetime.datetime,
+            start2: datetime.datetime, end2: datetime.datetime) -> datetime.timedelta:
+    """Возвращает пересечение двух интервалов"""
+    start = max(start1, start2)
+    end = min(end1, end2)
+    return max(end - start, datetime.timedelta(0))
+
+def calculate_day_night_hours(start_work: str, end_work: str):
+    start_work = datetime.datetime.fromisoformat(start_work)
+    end_work = datetime.datetime.fromisoformat(end_work)
+    total_duration = end_work - start_work
+
+    day = start_work.date()
+    tz = start_work.tzinfo
+
+    night_intervals = [
+        (
+            datetime.datetime.combine(day, datetime.time(0, 0), tz),
+            datetime.datetime.combine(day, datetime.time(4, 0), tz),
+        ),
+        (
+            datetime.datetime.combine(day, datetime.time(22, 0), tz),
+            datetime.datetime.combine(day, datetime.time(23, 59, 59), tz)
+            + datetime.timedelta(seconds=1),
+        ),
+    ]
+    night_duration = datetime.timedelta(0)
+    for night_start, night_end in night_intervals:
+        night_duration += overlap(start_work, end_work, night_start, night_end)
+
+    day_duration = total_duration - night_duration
+
+    day_hours = round(day_duration.total_seconds() / 3600, 2),
+    night_hours =  round(night_duration.total_seconds() / 3600, 2),
+
+    return {"day_hours": day_hours, "night_hours": night_hours}
+
+
+
 def convert_to_tabel_data(work_time_employee):
     employee_positions_data = {}
+    work_day_statuses = WorkDayStatus.get_statuses_dict(full_title=True)
     for work_time in work_time_employee:
+        print(work_time, "чо есть вообще")
         if not employee_positions_data.get(work_time.employee_position_id):
             employee_positions_data[work_time.employee_position_id] = {
                 "snils": work_time.snils,
@@ -65,12 +106,15 @@ def convert_to_tabel_data(work_time_employee):
                     "days": {},
                 },
             }
+        print(work_time.day, "Часы на ребят")
         if work_time.day:
-            # TODO Надо конвертировать диапозон часов (start, end time) в кол-во часов (night_hours, common_hours)
+            work_day_status = work_day_statuses.get(work_time.work_day_status_id)
+            hours = calculate_day_night_hours(work_time.start_work, work_time.end_work)
+            print(hours)
             employee_positions_data[work_time.employee_position_id]["work_hours"]["days"][work_time.day] = {
-                "status": work_time.work_day_status_id,  # TODO здесь из таблицы в БД, в табеле ожидается из Choices, надо превращать
-                "night_hours": "",
-                "common_hours": "",
+                "work_day_status": work_day_status,
+                "night_hours": hours.get("night_hours"),
+                "day_hours": hours.get("day_hours"),
             }
 
     person_data_grouped_by_snils = {}

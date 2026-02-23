@@ -630,8 +630,8 @@ class WorkDayStatus(models.Model):
         return result
 
     @staticmethod
-    def get_short_statuses_dict():
-        result = {status.id: status.short_title for status in WorkDayStatus.objects.filter(hide=False)}
+    def get_statuses_dict(full_title: bool = False):
+        result = {status.id: status.title if full_title else status.short_title for status in WorkDayStatus.objects.filter(hide=False)}
         return result
 
 
@@ -1060,6 +1060,7 @@ class FactTimeWork(models.Model):
     night_hours = models.DecimalField(max_digits=10, decimal_places=2)
     common_hours = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, null=True, blank=True, default=Status.WORK, db_index=True, choices=Status.choices, help_text="Статус")
+    work_day_status = models.ForeignKey(WorkDayStatus, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL, verbose_name='Тип')
 
     class Meta:
         verbose_name = "Время в табеле"
@@ -1080,14 +1081,14 @@ class TabelFactTimeWorkRaw(models.Model):
                                         "bid_name": "bid_name",
                                         "department_name": "department_name",
                                         "tabel_number": "tabel_number",
-                                        "days": {"2026-02-01": {"statys": "WORK", "nightHours": 4, "commonHours": 4}}
+                                        "days": {"2026-02-01": {"work_day_status": "WORK", "nightHours": 4, "commonHours": 4}}
                                     },
                                     {
                                         "position_name": "other_post_title",
                                         "bid_name": "other_bid_name",
                                         "department_name": "other_department_name",
                                         "tabel_number": "other_tabel_number",
-                                        "days": {"2026-02-02": {"statys": "WORK", "nightHours": 4, "commonHours": 4}}
+                                        "days": {"2026-02-02": {"work_day_status": "WORK", "nightHours": 4, "commonHours": 4}}
                                     }
                                 ]
                             },

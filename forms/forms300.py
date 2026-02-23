@@ -279,7 +279,7 @@ def form_01(request_data):
     document_id = request_body.get("documentId")
     employees_work_time = request_body.get("employeesWorkTime")
     time_tracking_document: TimeTrackingDocument = TimeTrackingDocument.get_document_for_print(document_id)
-    work_day_statuses = WorkDayStatus.get_short_statuses_dict()
+    work_day_statuses = WorkDayStatus.get_statuses_dict()
 
     register_fonts()
     style_center = create_style(font_size=6, leading=6, alignment="center")
