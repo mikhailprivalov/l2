@@ -819,7 +819,7 @@ const downloadXlsx = async () => {
 };
 
 const getOrCreateTabel = async () => {
-  window.open(`/api/working-time/get-or-create-tabel?year=${selectedYear.value}&month=${selectedMonth.value}
+  window.open(`/api/working-time/get-or-create-tabel?year=${selectedYear.value}&month=${selectedMonth.value + 1}
   &departmentId=${selectedDepartment.value}`, '_blank');
 };
 

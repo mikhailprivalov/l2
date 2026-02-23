@@ -15,9 +15,8 @@ def get_or_create_tabel_service(year: int, month: int, department_id: int, user)
     first_date_month = datetime.date(year, month, 1)
     length_month = calendar.monthrange(year, month)[1]
     last_date_month = datetime.date(year, month, length_month)
-
     time_tracking_document = TimeTrackingDocument.get_document(first_date_month, last_date_month, department_id)
-    work_time_employee = get_employee_work_time(department_id, time_tracking_document.id, str(first_date_month))
+    work_time_employee = get_employee_work_time(department_id, time_tracking_document.pk, str(first_date_month))
     convert_to_tabel_data(work_time_employee)
 
     tabel_document = TabelDocument.get_tabel(first_date_month, last_date_month, department_id)
@@ -48,16 +47,14 @@ def validate_user(department_id, user):
     return {"ok": True, "message": ""}
 
 
-def overlap(start1: datetime.datetime, end1: datetime.datetime,
-            start2: datetime.datetime, end2: datetime.datetime) -> datetime.timedelta:
+def overlap(start1: datetime.datetime, end1: datetime.datetime, start2: datetime.datetime, end2: datetime.datetime) -> datetime.timedelta:
     """Возвращает пересечение двух интервалов"""
     start = max(start1, start2)
     end = min(end1, end2)
     return max(end - start, datetime.timedelta(0))
 
-def calculate_day_night_hours(start_work: str, end_work: str):
-    start_work = datetime.datetime.fromisoformat(start_work)
-    end_work = datetime.datetime.fromisoformat(end_work)
+
+def calculate_day_night_hours(start_work: datetime.datetime, end_work: datetime.datetime):
     total_duration = end_work - start_work
 
     day = start_work.date()
@@ -70,8 +67,7 @@ def calculate_day_night_hours(start_work: str, end_work: str):
         ),
         (
             datetime.datetime.combine(day, datetime.time(22, 0), tz),
-            datetime.datetime.combine(day, datetime.time(23, 59, 59), tz)
-            + datetime.timedelta(seconds=1),
+            datetime.datetime.combine(day, datetime.time(23, 59, 59), tz) + datetime.timedelta(seconds=1),
         ),
     ]
     night_duration = datetime.timedelta(0)
@@ -80,18 +76,16 @@ def calculate_day_night_hours(start_work: str, end_work: str):
 
     day_duration = total_duration - night_duration
 
-    day_hours = round(day_duration.total_seconds() / 3600, 2),
-    night_hours =  round(night_duration.total_seconds() / 3600, 2),
+    day_hours = (round(day_duration.total_seconds() / 3600, 2),)
+    night_hours = (round(night_duration.total_seconds() / 3600, 2),)
 
     return {"day_hours": day_hours, "night_hours": night_hours}
-
 
 
 def convert_to_tabel_data(work_time_employee):
     employee_positions_data = {}
     work_day_statuses = WorkDayStatus.get_statuses_dict(full_title=True)
     for work_time in work_time_employee:
-        print(work_time, "чо есть вообще")
         if not employee_positions_data.get(work_time.employee_position_id):
             employee_positions_data[work_time.employee_position_id] = {
                 "snils": work_time.snils,
@@ -106,15 +100,15 @@ def convert_to_tabel_data(work_time_employee):
                     "days": {},
                 },
             }
-        print(work_time.day, "Часы на ребят")
         if work_time.day:
+            hours = {}
             work_day_status = work_day_statuses.get(work_time.work_day_status_id)
-            hours = calculate_day_night_hours(work_time.start_work, work_time.end_work)
-            print(hours)
+            if not work_day_status:
+                hours = calculate_day_night_hours(work_time.start_work, work_time.end_work)
             employee_positions_data[work_time.employee_position_id]["work_hours"]["days"][work_time.day] = {
                 "work_day_status": work_day_status,
                 "night_hours": hours.get("night_hours"),
-                "day_hours": hours.get("day_hours"),
+                "common_hours": hours.get("day_hours"),
             }
 
     person_data_grouped_by_snils = {}

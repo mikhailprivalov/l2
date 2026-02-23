@@ -1081,14 +1081,14 @@ class TabelFactTimeWorkRaw(models.Model):
                                         "bid_name": "bid_name",
                                         "department_name": "department_name",
                                         "tabel_number": "tabel_number",
-                                        "days": {"2026-02-01": {"work_day_status": "WORK", "nightHours": 4, "commonHours": 4}}
+                                        "days": {"2026-02-01": {"work_day_status": "", "nightHours": 4, "common_bours": 4}}
                                     },
                                     {
                                         "position_name": "other_post_title",
                                         "bid_name": "other_bid_name",
                                         "department_name": "other_department_name",
                                         "tabel_number": "other_tabel_number",
-                                        "days": {"2026-02-02": {"work_day_status": "WORK", "nightHours": 4, "commonHours": 4}}
+                                        "days": {"2026-02-02": {"work_day_status": "Отпуск", "nightHours": None, "common_hours": None}}
                                     }
                                 ]
                             },
