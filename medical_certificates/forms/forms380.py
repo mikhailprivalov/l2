@@ -1481,7 +1481,7 @@ def form_11(request_data):
         "Дата осмотра",
         "Цех, участок ОПУ",
         "Диспансерная группа",
-        "Группа заболевания"
+        "Группа заболевания",
     ]
     result = fields_result_only_title_fields(iss, title_fields)
     disease_group = ""
