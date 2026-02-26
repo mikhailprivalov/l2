@@ -95,7 +95,10 @@ def get_plan_operations_by_params(request):
             if not i[7]:
                 total_duration_oper_minutes += i[13]
         else:
-            res = (99, 99,)
+            res = (
+                99,
+                99,
+            )
         hour = res[0]
         if res[0] < 10:
             hour = f"0{res[0]}"
