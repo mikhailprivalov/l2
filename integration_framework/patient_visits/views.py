@@ -35,12 +35,12 @@ def data_by_direction(request):
         return Response({"patient": None})
     result_l2 = get_direction_data_by_cda_group(direction.pk)
     result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
-    result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ")
+    result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ").replace("\t", "")
     json_data = json.loads(result_tempalte)
     final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
-    if not iss.doc_confirmation or not result_l2.get("main_diagnos") or "-" in result_l2.get("main_diagnos"):
+    if not iss.doc_confirmation or not result_l2.get("main_diagnos") or len(result_l2.get("main_diagnos")) < 3:
         direction.amd_message = "Ошибка - основной диагноз"
         direction.save()
         return Response({"patient": None, "diagnose_confirm": False})

@@ -67,6 +67,7 @@ def get_plan_operations_by_params(request):
     result = get_plans_by_params_sql(start_date, end_date, doc_operate_pk, doc_anesthetist_pk, department_pk)
 
     data = []
+    total_duration_oper_minutes = 0
     for i in result:
         hosp_nums_obj = hosp_get_hosp_direction(i[2])
         hosp_first_num = hosp_nums_obj[0].get('direction')
@@ -91,6 +92,8 @@ def get_plan_operations_by_params(request):
             tooltip_data.append(f"Обновил: {doctor} ({time})")
         if i[13]:
             res = divmod(i[13], 60)
+            if not i[7]:
+                total_duration_oper_minutes += i[13]
         else:
             res = (99, 99,)
         hour = res[0]
@@ -118,7 +121,15 @@ def get_plan_operations_by_params(request):
             }
         )
 
-    return JsonResponse({"result": data})
+    total_res = divmod(total_duration_oper_minutes, 60)
+    t_hour = total_res[0]
+    if total_res[0] < 10:
+        t_hour = f"0{total_res[0]}"
+    t_min = total_res[1]
+    if total_res[1] < 10:
+        t_min = f"0{total_res[1]}"
+
+    return JsonResponse({"result": data, "totalDuration": f"{t_hour}:{t_min}"})
 
 
 @login_required
