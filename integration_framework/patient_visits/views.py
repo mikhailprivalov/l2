@@ -170,6 +170,9 @@ def get_direction_data_by_cda_group(direction_pk):
                 data[i.cda_group_code] = [{i.title: i.value}]
             else:
                 data[i.cda_group_code].append({i.title: i.value})
+        if i.date_confirm:
+            date_inspection = i.date_confirm
+
     temp_result = {}
     for k, v in data.items():
         s = ""
@@ -184,6 +187,7 @@ def get_direction_data_by_cda_group(direction_pk):
     if main_diagnos:
         main_diagnos_code = main_diagnos.split(" ")[0]
         main_diagnos_code = main_diagnos_code.split(";")[0]
+
     return {
         "data": temp_result,
         "date_inspection": date_inspection,
