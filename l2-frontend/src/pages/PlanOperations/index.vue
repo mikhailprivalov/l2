@@ -22,6 +22,9 @@
         Печать
       </button>
     </div>
+    <div class="block">
+      Общее <i class="fa-solid fa-clock" /> {{ timeDuration }}
+    </div>
     <table
       class="table table-bordered"
       style="table-layout: fixed"
@@ -95,6 +98,7 @@ export default {
       title: 'План операций',
       pk_plan: '',
       data: [],
+      timeDuration: '',
       hirurgs: [],
       anestesiologs: [],
       departments: [],
@@ -185,7 +189,7 @@ export default {
     async load_data() {
       await this.$store.dispatch(actions.INC_LOADING);
       const [d1, d2] = this.dateRange.split('x');
-      const { result } = await plansPoint.getPlansByParams({
+      const { result, totalDuration } = await plansPoint.getPlansByParams({
         start_date: d1,
         end_date: d2,
         doc_operate_pk: this.filters.doc_operate_pk || -1,
@@ -193,6 +197,7 @@ export default {
         department_pk: this.filters.department_pk || -1,
       });
       this.data = result;
+      this.timeDuration = totalDuration;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
   },
@@ -203,5 +208,15 @@ export default {
 .buttons {
   margin-bottom: 5px;
   color: #cacfd2;
+  display: inline-block;
+}
+
+.block {
+  display: inline-block;
+  width: 400px;
+  margin-left: 130px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f0f0f;
 }
 </style>

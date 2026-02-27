@@ -1481,9 +1481,10 @@ def form_11(request_data):
         "Дата осмотра",
         "Цех, участок ОПУ",
         "Диспансерная группа",
+        "Группа заболевания",
     ]
     result = fields_result_only_title_fields(iss, title_fields)
-
+    disease_group = ""
     for i in result:
         if i["title"] == "Место работы":
             work_place = i["value"]
@@ -1507,9 +1508,11 @@ def form_11(request_data):
             department = i["value"]
         elif i["title"] == "Диспансерная группа":
             dispensary_group = i["value"]
+        elif i["title"] == "Группа заболевания":
+            disease_group = i["value"]
 
     fwb.append(Paragraph('Заключение по результатам', styleCenterBold))
-    fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) № {direction}', styleCenterBold))
+    fwb.append(Paragraph(f'{type_med_examination_padeg} медицинского осмотра (обследования) №', styleCenterBold))
     fwb.append(Spacer(1, 8 * mm))
     fwb.append(Paragraph(f'1. Ф.И.О:  {fio}, {born} ', style))
     fwb.append(Spacer(1, 3 * mm))
@@ -1526,7 +1529,7 @@ def form_11(request_data):
     fwb.append(
         Paragraph(
             f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
-            f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами заключение <u>{med_report}</u> ",
+            f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами; <u>{disease_group}</u> ",
             style,
         )
     )
