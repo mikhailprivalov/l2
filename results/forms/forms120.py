@@ -50,7 +50,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     styleJustifiedDoctor.firstLineIndent = 0
 
     objs = []
-    header_title = gen_header_title(iss.napravleniye.doc.hospital)
+
+    if iss.napravleniye.doc.podrazdeleniye.title_stamp_customer:
+        header_title = gen_header_title(iss.napravleniye.doc.podrazdeleniye)
+    else:
+        header_title = gen_header_title(iss.napravleniye.doc.hospital)
     objs.append(header_title)
 
     result = get_paraclinic_results_by_direction(iss.napravleniye_id)
@@ -197,12 +201,12 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     return fwb
 
 
-def gen_header_title(hospital):
-    file_jpg = hospital.get_title_stamp_executor_pdf()
-    width_stamp = hospital.width_stamp_jpg if hospital.width_stamp_jpg else 1
-    height_stamp = hospital.height_stamp_jpg if hospital.height_stamp_jpg else 1
-    x_offset = hospital.x_offset if hospital.x_offset else 1
-    y_offset = hospital.y_offset if hospital.y_offset else 1
+def gen_header_title(obj_where_store_stamp):
+    file_jpg = obj_where_store_stamp.get_title_stamp_executor_pdf()
+    width_stamp = obj_where_store_stamp.width_stamp_jpg if obj_where_store_stamp.width_stamp_jpg else 1
+    height_stamp = obj_where_store_stamp.height_stamp_jpg if obj_where_store_stamp.height_stamp_jpg else 1
+    x_offset = obj_where_store_stamp.x_offset if obj_where_store_stamp.x_offset else 1
+    y_offset = obj_where_store_stamp.y_offset if obj_where_store_stamp.y_offset else 1
     img = None
     if file_jpg:
         img = ImageWithOffset(file_jpg, width_stamp * mm, height_stamp * mm, x_offset=x_offset * mm, y_offset=y_offset * mm)

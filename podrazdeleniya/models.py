@@ -1,5 +1,8 @@
 from django.db import models
 
+from laboratory.settings import MEDIA_ROOT
+import os
+
 
 class Podrazdeleniya(models.Model):  # Модель подразделений
     HIDDEN = 0
@@ -68,6 +71,17 @@ class Podrazdeleniya(models.Model):  # Модель подразделений
         'directory.Researches', blank=True, default=None, null=True, verbose_name="Услуга стационара по котрой по умолчанию подгружаются шаблоны", on_delete=models.CASCADE
     )
     is_structure_data_in_protocol = models.BooleanField(default=False, help_text="Только структурированные текст в протоколе для всех пользователей подразделения")
+    title_stamp_customer = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="Ссылка на заголовок Закачика - клеше")
+    height_stamp_jpg = models.PositiveSmallIntegerField(blank=True, null=True, default=0, help_text="Высота заголовка-логотипа 50")
+    width_stamp_jpg = models.PositiveSmallIntegerField(blank=True, null=True, default=0, help_text="Ширина заголовка-логотипа 200")
+    x_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Х -10 ")
+    y_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Y 2 ")
+    time_zone = models.CharField(max_length=100, blank=True, null=True, default="Asia/Irkutsk", help_text="Europe/Moscow")
+
+    def get_title_stamp_executor_pdf(self):
+        if self.title_stamp_customer:
+            return os.path.join(MEDIA_ROOT, 'title_stamp_customer', self.title_stamp_customer)
+        return None
 
     def get_title(self):
         return self.short_title or self.title
