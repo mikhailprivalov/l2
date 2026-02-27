@@ -51,7 +51,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
 
     objs = []
 
-    if iss.napravleniye.doc.podrazdeleniye.title_stamp_customer:
+    if iss.napravleniye.doc.podrazdeleniye.title_stamp_executor:
         header_title = gen_header_title(iss.napravleniye.doc.podrazdeleniye)
     else:
         header_title = gen_header_title(iss.napravleniye.doc.hospital)
