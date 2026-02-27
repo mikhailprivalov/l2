@@ -101,7 +101,8 @@ def get_paraclinic_results_by_direction(pk_dir):
                 cda_groupfields.title as cda_title_group,
                 directory_paraclinicinputgroups.title as group_title,
                 cda_groupfields.code as cda_group_code,
-                cda_paraclinicfields.code as cda_field_code
+                cda_paraclinicfields.code as cda_field_code,
+                to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 FROM directions_issledovaniya
                 LEFT JOIN directions_paraclinicresult ON
                 directions_issledovaniya.id=directions_paraclinicresult.issledovaniye_id
