@@ -121,7 +121,7 @@ def get_paraclinic_results_by_direction(pk_dir):
               ORDER BY directory_paraclinicinputfield."order"
 
         """,
-            params={'num_dir': pk_dir},
+            params={'num_dir': pk_dir, 'tz': TIME_ZONE},
         )
         rows = namedtuplefetchall(cursor)
     return rows
