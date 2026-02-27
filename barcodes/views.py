@@ -190,7 +190,7 @@ def tubes(request, direction_implict_id=None):
                 continue
             st = ""
             if not tmp2.imported_from_rmis and not tmp2.external_order:
-                otd = list(tmp2.doc.podrazdeleniye.title.split(" ")) if tmp2.doc else []
+                otd = list(tmp2.doc.podrazdeleniye.title.split(" ")) if tmp2.doc.podrazdeleniye else []
                 if len(otd) > 1:
                     if "отделение" in otd[0].lower():
                         st = otd[1][:3] + "/о"
