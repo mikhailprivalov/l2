@@ -1042,7 +1042,13 @@ class TabelDocument(models.Model):
 
     @staticmethod
     def get_or_create_tabel(first_date_month: datetime.date, last_date_month: datetime.date, department_id: int):
-        tabel_document, created = TabelDocument.objects.get_or_create(month_tabel__gte=first_date_month, month_tabel__lte=last_date_month, department_id=department_id, is_actual=True)
+        tabel_document = TabelDocument.objects.filter(month_tabel__gte=first_date_month, month_tabel__lte=last_date_month, department_id=department_id, is_actual=True).first()
+        if not tabel_document:
+            tabel_document = TabelDocument.objects.create(
+                month_tabel=first_date_month,
+                department_id=department_id,
+                is_actual=True
+            )
         return tabel_document
 
 
@@ -1050,8 +1056,8 @@ class FactTimeWork(models.Model):
     tabel_document = models.ForeignKey(TabelDocument, null=True, on_delete=models.SET_NULL)
     employee_position = models.ForeignKey(EmployeePosition, null=True, on_delete=models.SET_NULL)
     date = models.DateField(help_text="Дата учета", db_index=True)
-    night_hours = models.DecimalField(max_digits=10, decimal_places=2)
-    common_hours = models.DecimalField(max_digits=10, decimal_places=2)
+    night_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    common_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     work_day_status = models.ForeignKey(WorkDayStatus, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL, verbose_name='Тип')
 
     class Meta:
@@ -1088,8 +1094,8 @@ class FactTimeWork(models.Model):
 
         day_duration = total_duration - night_duration
 
-        day_hours = (round(day_duration.total_seconds() / 3600, 2),)
-        night_hours = (round(night_duration.total_seconds() / 3600, 2),)
+        day_hours = round(day_duration.total_seconds() / 3600, 2)
+        night_hours = round(night_duration.total_seconds() / 3600, 2)
 
         return {"day_hours": day_hours, "night_hours": night_hours}
 
@@ -1115,6 +1121,8 @@ class FactTimeWork(models.Model):
                     day_hours = hours.get("day_hours")
                     night_hours = hours.get("night_hours")
                 day = FactTimeWork.objects.filter(tabel_document_id=tabel_document.pk, employee_position_id=employee_position_id, date=date).first()
+                print(day_hours)
+                print(night_hours)
                 if day:
                     day.common_hours = day_hours
                     day.night_hours = night_hours
