@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from laboratory.decorators import group_required
-from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition, TabelDocument, FactTimeWork
+from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition, FactTimeWork
 from laboratory.settings import SHIFTS_VARIANTS
 
 
