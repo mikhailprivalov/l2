@@ -1121,8 +1121,6 @@ class FactTimeWork(models.Model):
                     day_hours = hours.get("day_hours")
                     night_hours = hours.get("night_hours")
                 day = FactTimeWork.objects.filter(tabel_document_id=tabel_document.pk, employee_position_id=employee_position_id, date=date).first()
-                print(day_hours)
-                print(night_hours)
                 if day:
                     day.common_hours = day_hours
                     day.night_hours = night_hours
