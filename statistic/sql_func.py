@@ -1036,6 +1036,8 @@ def statistics_confirm_research_by_hospital_create(d_s, d_e, hospital_id):
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp ON pp.id = dr.podrazdeleniye_id
                 WHERE 
                     directions_napravleniya.data_sozdaniya AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                    AND
+                    directions_napravleniya.cancel = false
                     AND  
                       CASE WHEN %(hospital_id)s > 0 THEN
                           directions_napravleniya.hospital_id = %(hospital_id)s
@@ -1088,6 +1090,7 @@ def statistics_confirm_research_by_doctor(d_s, d_e, doctor_id):
                 LEFT JOIN podrazdeleniya_podrazdeleniya pp ON pp.id = dr.podrazdeleniye_id
                 WHERE 
                     time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s 
+                    AND directions_napravleniya.cancel = false
                     AND  
                       CASE WHEN %(doctor_id)s > 0 THEN
                           directions_issledovaniya.doc_confirmation_id = %(doctor_id)s

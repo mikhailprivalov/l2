@@ -7,6 +7,7 @@ class ResEquipment(admin.ModelAdmin):
     list_display = (
         'title',
         'hospital',
+        'ip_address',
     )
     list_display_links = ('title',)
 

@@ -921,10 +921,20 @@ def directions_cancel(request):
         response["forbidden"] = True
     elif Napravleniya.objects.filter(pk=pk).exists():
         direction = Napravleniya.objects.get(pk=pk)
-        direction.cancel = not direction.cancel
-        direction.save()
-        response["cancel"] = direction.cancel
-        Log(key=pk, type=5002, body="да" if direction.cancel else "нет", user=request.user.doctorprofile).save()
+        for iss in direction.issledovaniya_set.all():
+            if iss.study_instance_uid or iss.study_instance_uid_tag:
+                response["cancel"] = False
+                response["ok"] = False
+        if direction.total_confirmed or direction.accept_who_doctor:
+            response["cancel"] = False
+            response["ok"] = False
+        else:
+            direction.cancel = not direction.cancel
+            direction.save()
+            response["cancel"] = direction.cancel
+            response["ok"] = True
+            response["message"] = "Успешно отменена"
+            Log(key=pk, type=5002, body="да" if direction.cancel else "нет", user=request.user.doctorprofile).save()
     return JsonResponse(response)
 
 

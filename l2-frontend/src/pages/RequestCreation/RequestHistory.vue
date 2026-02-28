@@ -103,6 +103,26 @@
               >
                 <i class="fa fa-print" /> Результат
               </button>
+              <button
+                v-if="!item.hasResult && 'cancel'!==searchMode && !item.acceptWhoDoctor"
+                class="cancel-direction-btn"
+                title="Отменить направление"
+                @click.stop="cancelDirection(item.id)"
+              >
+                Скрыть
+              </button>
+              <button
+                v-if="searchMode === 'cancel'"
+                class="cancel-direction-btn"
+                title="Вернуть направление"
+                @click.stop="cancelDirection(item.id)"
+              >
+                В работу
+              </button>
+              <span
+                v-if="item.acceptWhoDoctor && !item.hasResult"
+                class="accept-badge"
+              >Принято</span>
             </div>
             <div class="research-row">
               <div class="row">
@@ -411,6 +431,7 @@ const SEARCH_MODES = [
   { id: 'all', title: 'Мои заявки' },
   { id: 'card', title: 'Пациент' },
   { id: 'search', title: 'Организация' },
+  { id: 'cancel', title: 'Скрытые' },
 ];
 
 const SEARCH_MODES_MAP = new Map(SEARCH_MODES.map((m) => [m.id, m.title]));
@@ -453,6 +474,7 @@ type Request = {
   datetime: string;
   hasImage: boolean;
   hasResult: boolean;
+  acceptWhoDoctor: boolean;
   cardId: number;
   files: File[];
   researchTitle: string;
@@ -640,6 +662,11 @@ const isHighlighted = (item: Request) => (
   && item.id
   && item.id.toString() === props.highlightedRequestId.toString()
 );
+
+const cancelDirection = async (pk: number) => {
+  await api('directions/cancel', { pk });
+  await getRequests();
+};
 
 const showRequestDetails = async (requestId: number) => {
   isLoadingDetails.value = true;
@@ -974,6 +1001,29 @@ defineExpose({
     font-size: 10px;
   }
 }
+.cancel-direction-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  background: #6C7A89;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #494949;
+  }
+
+  i {
+    font-size: 10px;
+  }
+}
 .image-status {
   font-size: 12px;
   font-weight: 500;
@@ -1102,6 +1152,20 @@ defineExpose({
 .cito-badge {
   display: inline-block;
   background: #5d7ce1;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 6px;
+  margin-right: 2px;
+  letter-spacing: 1px;
+  vertical-align: middle;
+}
+
+.accept-badge {
+  display: inline-block;
+  background: #046d93;
   color: #fff;
   font-size: 10px;
   font-weight: bold;

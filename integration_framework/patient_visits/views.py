@@ -35,12 +35,12 @@ def data_by_direction(request):
         return Response({"patient": None})
     result_l2 = get_direction_data_by_cda_group(direction.pk)
     result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
-    result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ")
+    result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ").replace("\t", "")
     json_data = json.loads(result_tempalte)
     final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
     iss = Issledovaniya.objects.filter(napravleniye=direction).first()
     additional_data = {}
-    if not iss.doc_confirmation or not result_l2.get("main_diagnos"):
+    if not iss.doc_confirmation or not result_l2.get("main_diagnos") or len(result_l2.get("main_diagnos")) < 3:
         direction.amd_message = "Ошибка - основной диагноз"
         direction.save()
         return Response({"patient": None, "diagnose_confirm": False})
@@ -53,8 +53,12 @@ def data_by_direction(request):
                     additional_data = {}
             except Exception:
                 additional_data = None
-    if not additional_data or not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
-        direction.amd_message = "Ошибка связи с внешним сервисом"
+    if not additional_data:
+        direction.amd_message = f"Нет сведений по доктору {iss.doc_confirmation.get_fio()}"
+        direction.save()
+        return Response({"patient": None, "rmis_data_doctor": False})
+    if not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
+        direction.amd_message = f"Нет логина(пароля) {iss.doc_confirmation.get_fio()}"
         direction.save()
         return Response({"patient": None, "rmis_data_doctor": False})
 
@@ -166,6 +170,9 @@ def get_direction_data_by_cda_group(direction_pk):
                 data[i.cda_group_code] = [{i.title: i.value}]
             else:
                 data[i.cda_group_code].append({i.title: i.value})
+        if i.date_confirm:
+            date_inspection = i.date_confirm
+
     temp_result = {}
     for k, v in data.items():
         s = ""
@@ -180,6 +187,7 @@ def get_direction_data_by_cda_group(direction_pk):
     if main_diagnos:
         main_diagnos_code = main_diagnos.split(" ")[0]
         main_diagnos_code = main_diagnos_code.split(";")[0]
+
     return {
         "data": temp_result,
         "date_inspection": date_inspection,
