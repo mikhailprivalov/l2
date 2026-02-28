@@ -150,9 +150,9 @@ class TabelDocumentAdmin(admin.ModelAdmin):
 
 @admin.register(FactTimeWork)
 class TabelFactTimeWorkAdmin(admin.ModelAdmin):
-    list_display = ("tabel_document", "employee", "date", "common_hours", "night_hours", "status")
-    list_display_links = ("tabel_document", "employee", "date", "common_hours", "night_hours", "status")
-    raw_id_fields = ("employee",)
+    list_display = ("tabel_document", "employee_position", "date", "common_hours", "night_hours", "work_day_status")
+    list_display_links = ("tabel_document", "employee_position", "date", "common_hours", "night_hours", "work_day_status")
+    raw_id_fields = ("employee_position",)
 
 
 @admin.register(TabelFactTimeWorkRaw)
