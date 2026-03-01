@@ -83,6 +83,10 @@ class SettingManager:
         return SettingManager.get("api_ecp_base_url", default='empty', default_type='s')
 
     @staticmethod
+    def use_rmq_for_sendlabresultecp():
+        return SettingManager.get("use_rmq_send_lab_result_ecp(", default='false', default_type='b')
+
+    @staticmethod
     def get_l2vi_base_url():
         return SettingManager.get("l2vi_base_url", default='empty', default_type='s')
 

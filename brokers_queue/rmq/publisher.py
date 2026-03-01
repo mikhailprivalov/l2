@@ -7,16 +7,20 @@ from laboratory.utils import current_time
 import simplejson as json
 
 
-def broker_publish_msg(message):
+def broker_publish_msg(message, use_exchange_name=None, use_routing_key=None):
     credentials = pika.PlainCredentials(RMQ_AUTH_PARAM.get("login"), RMQ_AUTH_PARAM.get("password"))  # если требуется аутентификация
     parameters = pika.ConnectionParameters(host=RMQ_AUTH_PARAM.get("address"), port=RMQ_AUTH_PARAM.get("port"), credentials=credentials, virtual_host='/')
 
     exchange_name = RMQ_AUTH_PARAM.get("exchange_name")
+    if use_exchange_name:
+        exchange_name = use_exchange_name
 
     cur_time = current_time().strftime("%Y%m%d%H:%M:%S")
     message_data = {'timestamp': cur_time, 'data': f"{message}", 'type': 'direction'}
 
     routing_key = RMQ_AUTH_PARAM.get("routing_key")
+    if use_routing_key:
+        routing_key = use_routing_key
     with pika.BlockingConnection(parameters) as conn:
         with conn.channel() as ch:
             ch.basic_publish(
