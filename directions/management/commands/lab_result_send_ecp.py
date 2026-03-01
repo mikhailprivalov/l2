@@ -18,11 +18,6 @@ class Command(BaseCommand):
         parser.add_argument('dirs', type=str)
 
     def handle(self, *args, **kwargs):
-        base = SettingManager.get_api_ecp_base_url()
-        if base != 'empty':
-            available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
-            if not available:
-                self.stdout.write({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
         if kwargs["dirs"]:
             dirs = kwargs["dirs"]
         else:
@@ -41,12 +36,17 @@ class Command(BaseCommand):
                 broker_publish_msg(i.pk, use_exchange_name=use_exchange_name, use_routing_key=use_routing_key)
                 i.need_resend_ecp = True
                 i.save()
-
-        res = send_lab_direction_to_ecp(directions)
-        self.stdout.write(f"{res}\n")
-        count = 0
-        for n in d_qs:
-            n.rmis_resend_services = True
-            n.save()
-            count += 1
-        self.stdout.write(f"{count}\n")
+        else:
+            base = SettingManager.get_api_ecp_base_url()
+            if base != 'empty':
+                available = check_server_port(base.split(":")[1].replace("//", ""), int(base.split(":")[2]))
+                if not available:
+                    self.stdout.write({"error": True, "message": "Cервер отправки в ЕЦП не доступен"})
+            res = send_lab_direction_to_ecp(directions)
+            self.stdout.write(f"{res}\n")
+            count = 0
+            for n in d_qs:
+                n.rmis_resend_services = True
+                n.save()
+                count += 1
+            self.stdout.write(f"{count}\n")
