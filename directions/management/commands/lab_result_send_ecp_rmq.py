@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 from directions.models import Napravleniya
 
 
-
 class Command(BaseCommand):
     help = "Отправить лабораторные результаты в ЕЦП"
 
