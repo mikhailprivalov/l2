@@ -258,6 +258,7 @@ def result_cpp_send(request):
 def direction_data(request):
     pk = request.GET.get("pk")
     research_pks = request.GET.get("research", "*")
+    type_research = request.GET.get("type_research", "*")
     only_cda = request.GET.get("onlyCDA", False)
 
     direction: directions.Napravleniya = directions.Napravleniya.objects.select_related("istochnik_f", "client", "client__individual", "client__base").get(pk=pk)
@@ -269,6 +270,10 @@ def direction_data(request):
         iss = iss.filter(research__pk__in=research_pks.split(","))
     for i in iss:
         if len(REMD_ONLY_RESEARCH) > 0 and i.research.pk not in REMD_ONLY_RESEARCH:
+            return Response({"ok": False})
+        if type_research == "lab" and i.research.podrazdeleniye.p_type != 2:
+            return Response({"ok": False})
+        if type_research == "paraclinic" and i.research.podrazdeleniye.p_type != 3:
             return Response({"ok": False})
 
     if not iss:
