@@ -1,14 +1,10 @@
 from dateutil.relativedelta import relativedelta
-
 from brokers_queue.rmq.publisher import broker_publish_msg
 from laboratory.settings import RMQ_AUTH_PARAM
 from laboratory.utils import current_time
 from django.core.management.base import BaseCommand
-
-from api.dicom import check_server_port
-from appconf.manager import SettingManager
 from directions.models import Napravleniya
-from l2vi.integration import send_lab_direction_to_ecp
+
 
 
 class Command(BaseCommand):
