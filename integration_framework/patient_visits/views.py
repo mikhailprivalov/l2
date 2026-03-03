@@ -118,6 +118,7 @@ def result_rmis_sent_direction(request):
     direction_id = data.get("directionId")
     rmis_case_number = data.get("rmis_case_number")
     rmis_visit_number = data.get("rmis_visit_number")
+    rmis_direction = data.get("EvnDirection_id")
     message = data.get("message")
     success = data.get("success")
     direction = Napravleniya.objects.filter(pk=direction_id).first()
@@ -128,6 +129,7 @@ def result_rmis_sent_direction(request):
     if success:
         direction.rmis_case_number = rmis_case_number
         direction.rmis_visit_number = rmis_visit_number
+        direction.rmis_number = rmis_direction
         direction.result_rmis_send = True
         direction.amd_message = ""
         direction.save()
