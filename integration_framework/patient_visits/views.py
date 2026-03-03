@@ -29,67 +29,70 @@ def data_by_direction(request):
     data = json.loads(request.body)
     direction_id = data.get("directionId")
     direction = Napravleniya.objects.filter(pk=direction_id).first()
-    if direction.received_by_rmq or direction.rmis_visit_number and direction.rmis_case_number:
+    if direction.received_by_rmq or direction.rmis_number or direction.rmis_visit_number and direction.rmis_case_number:
         direction.amd_message = "Ошибка- отправлен ранее"
         direction.save()
         return Response({"patient": None})
-    result_l2 = get_direction_data_by_cda_group(direction.pk)
-    result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
-    result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ").replace("\t", "")
-    json_data = json.loads(result_tempalte)
-    final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
-    iss = Issledovaniya.objects.filter(napravleniye=direction).first()
-    additional_data = {}
-    if not iss.doc_confirmation or not result_l2.get("main_diagnos") or len(result_l2.get("main_diagnos")) < 3:
-        direction.amd_message = "Ошибка - основной диагноз"
-        direction.save()
-        return Response({"patient": None, "diagnose_confirm": False})
+    if data.get("casePatient"):
+        result_l2 = get_direction_data_by_cda_group(direction.pk)
+        result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)
+        result_tempalte = result_tempalte.replace("\n", "").replace(";", "; ").replace("\t", "")
+        json_data = json.loads(result_tempalte)
+        final_proto = {k: string_to_unicode_escape(v) for k, v in json_data.items()}
+        iss = Issledovaniya.objects.filter(napravleniye=direction).first()
+        additional_data = {}
+        if not iss.doc_confirmation or not result_l2.get("main_diagnos") or len(result_l2.get("main_diagnos")) < 3:
+            direction.amd_message = "Ошибка - основной диагноз"
+            direction.save()
+            return Response({"patient": None, "diagnose_confirm": False})
 
-    if iss.doc_confirmation.additional_info:
-        if "{" in iss.doc_confirmation.additional_info and "}" in iss.doc_confirmation.additional_info:
-            try:
-                additional_data = json.loads(iss.doc_confirmation.additional_info)
-                if not additional_data or not isinstance(additional_data, dict):
-                    additional_data = {}
-            except Exception:
-                additional_data = None
-    if not additional_data:
-        direction.amd_message = f"Нет сведений по доктору {iss.doc_confirmation.get_fio()}"
-        direction.save()
-        return Response({"patient": None, "rmis_data_doctor": False})
-    if not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
-        direction.amd_message = f"Нет логина(пароля) {iss.doc_confirmation.get_fio()}"
-        direction.save()
-        return Response({"patient": None, "rmis_data_doctor": False})
+        if iss.doc_confirmation.additional_info:
+            if "{" in iss.doc_confirmation.additional_info and "}" in iss.doc_confirmation.additional_info:
+                try:
+                    additional_data = json.loads(iss.doc_confirmation.additional_info)
+                    if not additional_data or not isinstance(additional_data, dict):
+                        additional_data = {}
+                except Exception:
+                    additional_data = None
+        if not additional_data:
+            direction.amd_message = f"Нет сведений по доктору {iss.doc_confirmation.get_fio()}"
+            direction.save()
+            return Response({"patient": None, "rmis_data_doctor": False})
+        if not iss.doc_confirmation.rmis_login or not iss.doc_confirmation.rmis_password:
+            direction.amd_message = f"Нет логина(пароля) {iss.doc_confirmation.get_fio()}"
+            direction.save()
+            return Response({"patient": None, "rmis_data_doctor": False})
 
-    date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
-    time_inspection = iss.time_confirmation.strftime("%H:%M")
+        date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
+        time_inspection = iss.time_confirmation.strftime("%H:%M")
 
-    result = {
-        "patient": {
-            "family": direction.client.individual.family,
-            "name": direction.client.individual.name,
-            "patronymic": direction.client.individual.patronymic,
-            "birthday": direction.client.individual.bd(),
-        },
-        "service": {
-            "directionId": direction.pk,
-            "dateInspection": result_l2.get("date_inspection") if result_l2.get("date_inspection") else date_inspection,
-            "timeInspection": result_l2.get("time_inspection") if result_l2.get("time_inspection") else time_inspection,
-            "dateLatin": normalize_dots_date(result_l2.get("date_inspection")) if result_l2.get("date_inspection") else normalize_dots_date(date_inspection),
-            "protocolAdditionalData": final_proto,
-            "raw_data": result_tempalte,
-            "protocol": json_data,
-            "mainDiagnos": result_l2.get("main_diagnos"),
-            "outcomeVisit": result_l2.get("outcome_visit"),
-            "resultVisit": result_l2.get("result_visit"),
-            "main_diagnos_code": result_l2.get("main_diagnos_code"),
-            "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести",
-            "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
-            "code": iss.doc_confirmation.service_code_ambulatory if iss.doc_confirmation.service_code_ambulatory else iss.research.code,
-        },
-        "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
-    }
+        result = {
+            "patient": {
+                "family": direction.client.individual.family,
+                "name": direction.client.individual.name,
+                "patronymic": direction.client.individual.patronymic,
+                "birthday": direction.client.individual.bd(),
+            },
+            "service": {
+                "directionId": direction.pk,
+                "dateInspection": result_l2.get("date_inspection") if result_l2.get("date_inspection") else date_inspection,
+                "timeInspection": result_l2.get("time_inspection") if result_l2.get("time_inspection") else time_inspection,
+                "dateLatin": normalize_dots_date(result_l2.get("date_inspection")) if result_l2.get("date_inspection") else normalize_dots_date(date_inspection),
+                "protocolAdditionalData": final_proto,
+                "raw_data": result_tempalte,
+                "protocol": json_data,
+                "mainDiagnos": result_l2.get("main_diagnos"),
+                "outcomeVisit": result_l2.get("outcome_visit"),
+                "resultVisit": result_l2.get("result_visit"),
+                "main_diagnos_code": result_l2.get("main_diagnos_code"),
+                "general_condition": result_l2.get("general_condition") if result_l2.get("general_condition") else "Средней тяжести",
+                "character_illness": result_l2.get("character_illness") if result_l2.get("character_illness") else "острое",
+                "code": iss.doc_confirmation.service_code_ambulatory if iss.doc_confirmation.service_code_ambulatory else iss.research.code,
+            },
+            "doctor": {"additionalInfo": additional_data, "login": iss.doc_confirmation.rmis_login, "password": iss.doc_confirmation.rmis_password},
+        }
+    else:
+        result = {"directionId": direction.pk}
     direction.received_by_rmq = True
     direction.save()
     slog.Log(key=direction.pk, type=60029, body=f"получено очередью RMQ {direction.pk}").save()
