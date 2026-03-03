@@ -22,7 +22,7 @@ class Command(BaseCommand):
             d_qs = Napravleniya.objects.filter(pk__in=dirs)
         else:
             date = current_time() + relativedelta(days=-2)
-            d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False, last_confirmed_at__gte=date)
+            d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False, last_confirmed_at__gte=date, received_by_rmq=False)
         use_exchange_name = RMQ_AUTH_PARAM.get("lab_exchange_name")
         use_routing_key = RMQ_AUTH_PARAM.get("lab_routing_key")
         for i in d_qs:
