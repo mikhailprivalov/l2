@@ -46,17 +46,18 @@ def form_01(ws1, data):
     result_sql = {}
     for i in sql_data:
         if not result_sql.get(i.direction_number):
-            result_sql[i.direction_number] = {"doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
-                                              "date_confirm": i.date_confirm,
-                                              "date_create": i.date_create,
-                                              "patient": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
-                                              "patient_birthday": i.patient_birthday,
-                                              "status": "Да" if i.result_rmis_send else "Нет",
-                                              "rmis_id": i.rmis_number,
-                                              "case_num": i.rmis_case_number,
-                                              "message": i.amd_message,
-                                              "service_title": [i.research_title]
-                                              }
+            result_sql[i.direction_number] = {
+                "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
+                "date_confirm": i.date_confirm,
+                "date_create": i.date_create,
+                "patient": f"{i.patient_family} {i.patient_name} {i.patient_patronymic}",
+                "patient_birthday": i.patient_birthday,
+                "status": "Да" if i.result_rmis_send else "Нет",
+                "rmis_id": i.rmis_number,
+                "case_num": i.rmis_case_number,
+                "message": i.amd_message,
+                "service_title": [i.research_title],
+            }
         else:
             result_sql[i.direction_number]["service_title"].append(i.research_title)
 
