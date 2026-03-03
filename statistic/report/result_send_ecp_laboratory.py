@@ -40,7 +40,7 @@ def form_01(ws1, data):
         ws1.column_dimensions[get_column_letter(idx)].width = column[1]
         ws1.cell(row=row, column=idx).style = style_border
 
-    researches = list(Researches.objects.filter(podrazdeleniye_type=data['podr_type']).values_list("pk", flat=True))
+    researches = list(Researches.objects.filter(podrazdeleniye__p_type=data['type_podr']).values_list("pk", flat=True))
 
     sql_data = sql_01(tuple(researches), data['d_s'], data['d_e'], USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND)
     result_sql = {}
