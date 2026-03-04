@@ -322,7 +322,7 @@ def get_directions_for_send_rmq_by_researches(researches, d_s, d_e):
             AND di.research_id in %(researches)s 
             AND directions_napravleniya.parent_id is Null
             AND directions_napravleniya.received_by_rmq = false 
-            LIMIT 40
+            LIMIT 300
             """,
             params={'researches': researches, 'd_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
         )
