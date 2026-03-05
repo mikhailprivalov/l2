@@ -60,7 +60,7 @@ def form_01(ws1, data):
                 "message": i.amd_message,
                 "service_title": [i.research_title],
                 "disttict": i.ditrict_title,
-                "older_yet_send": i.yet_send_services
+                "older_yet_send": i.yet_send_services,
             }
         else:
             result_sql[i.direction_number]["service_title"].append(i.research_title)
