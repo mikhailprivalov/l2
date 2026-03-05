@@ -31,6 +31,7 @@ def data_by_direction(request):
     direction = Napravleniya.objects.filter(pk=direction_id).first()
     if direction.received_by_rmq or direction.rmis_number or direction.rmis_visit_number and direction.rmis_case_number:
         direction.amd_message = "Ошибка- отправлен ранее"
+        direction.received_by_rmq = True
         direction.save()
         return Response({"patient": None})
     if data.get("casePatient"):

@@ -27,12 +27,14 @@ def form_01(ws1, data):
         ('Дата создания', 15),
         ('Пациент', 30),
         ('Дата рождения', 15),
-        ('Услуги', 35),
+        ('Услуги', 45),
         ('Успех', 10),
         ('Номер L2', 25),
         ('Служебный ИД', 25),
         ('Случай', 15),
         ('Сообщение', 15),
+        ('Участок', 25),
+        ('Устаревший способ', 15),
     ]
     row = 5
     for idx, column in enumerate(columns, 1):
@@ -57,6 +59,8 @@ def form_01(ws1, data):
                 "case_num": i.rmis_case_number,
                 "message": i.amd_message,
                 "service_title": [i.research_title],
+                "disttict": i.ditrict_title,
+                "older_yet_send": i.yet_send_services
             }
         else:
             result_sql[i.direction_number]["service_title"].append(i.research_title)
@@ -77,6 +81,8 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=10).value = i.get("rmis_id")
         ws1.cell(row=row, column=11).value = i.get("case_num")
         ws1.cell(row=row, column=12).value = i.get("message")
+        ws1.cell(row=row, column=13).value = i.get("district")
+        ws1.cell(row=row, column=14).value = i.get("older_yet_send")
         for k in range(12):
             ws1.cell(row=row, column=k + 1).style = style_border
     return ws1
@@ -106,7 +112,9 @@ def sql_01(research_id, d_s, d_e, use_rmis_number):
                     dn.result_rmis_send,
                     dn.rmis_case_number,
                     dn.amd_message,
-                    dr.title as research_title
+                    dn.rmis_resend_services as yet_send_services,
+                    dr.title as research_title,
+                    cd.title as ditrict_title
                     
                     FROM directions_issledovaniya
                     LEFT JOIN directions_napravleniya dn ON dn.id = directions_issledovaniya.napravleniye_id
@@ -114,6 +122,7 @@ def sql_01(research_id, d_s, d_e, use_rmis_number):
                     LEFT JOIN clients_card cc ON cc.id=dn.client_id
                     LEFT JOIN clients_individual ci ON cc.individual_id=ci.id
                     LEFT JOIN directory_researches dr ON directions_issledovaniya.research_id=dr.id
+                    LEFT JOIN clients_district cd ON cc.district_id = cd.id
                     WHERE 
                       directions_issledovaniya.research_id in %(research_id)s 
                       AND
