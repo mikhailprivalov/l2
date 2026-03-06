@@ -104,6 +104,7 @@
           <button
             class="btn btn-blue-nb"
             :disabled="hasChange"
+            @click.prevent="downloadTabelXlsx()"
           >
             Табель
           </button>
@@ -815,6 +816,11 @@ const downloadXlsx = async () => {
     link.remove();
     URL.revokeObjectURL(urlFile);
   }
+};
+
+const downloadTabelXlsx = async () => {
+  window.open(`/forms/xlsx?type=104.02&year=${selectedYear.value}&month=${selectedMonth.value}&departmentId=
+  ${selectedDepartment.value}`, '_blank');
 };
 
 </script>

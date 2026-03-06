@@ -9,7 +9,7 @@ from django.db import models
 from django.core.paginator import Paginator
 from django.utils.formats import date_format
 
-from employees.sql_func import get_employee_position, get_employee_work_time
+from employees.sql_func import get_employee_position, get_employee_work_time, get_employee_fact_time_work
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
 from laboratory.utils import strfdatetime, current_time
@@ -18,6 +18,7 @@ from users.models import DoctorProfile
 from django.utils import timezone
 
 from utils.dates import try_strptime
+from utils.string import make_short_name_form
 
 
 class Employee(models.Model):
@@ -1131,6 +1132,55 @@ class FactTimeWork(models.Model):
                         work_day_status_id=work_day_status_id,
                     )
                 day.save()
+
+    @staticmethod
+    def get_month_days_template(year: int, month: int, length_month: int):
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"day_hours": "", "night_hours": "", "typeId": ""} for day in range(1, length_month + 1)}
+        return template_days
+
+    @staticmethod
+    def get_fact_time_work_employee(year: int, month: int, department_id: int):
+        first_date_month = datetime.date(year, month, 1)
+        length_month = calendar.monthrange(year, month)[1]
+        last_date_month = datetime.date(year, month, length_month)
+        tabel_document: TabelDocument = TabelDocument.get_or_create_tabel(first_date_month, last_date_month, department_id)
+
+        template_days = FactTimeWork.get_month_days_template(year, month, length_month)
+        employee_fact_time_work = get_employee_fact_time_work(department_id, tabel_document.pk, str(first_date_month))
+        grouped_result = {}
+
+        for fact_work_time in employee_fact_time_work:
+            if not grouped_result.get(fact_work_time.employee_position_id):
+                grouped_result[fact_work_time.employee_position_id] = {
+                    "employee_positon_id": fact_work_time.employee_position_id,
+                    "fio": make_short_name_form(fact_work_time.family, fact_work_time.name, fact_work_time.patronymic, True, True),
+                    "position_name": fact_work_time.position_name,
+                    "bid_type": fact_work_time.bid_name[:3] if fact_work_time.bid_name else "",
+                    "tabel_number": fact_work_time.tabel_number,
+                    "day_hours_sum": 0,
+                    "night_hours_sum": 0,
+                    "common_hours_sum": 0,
+                }
+                grouped_result[fact_work_time.employee_position_id].update(copy.deepcopy(template_days))
+            if fact_work_time.date:
+                day_hours = fact_work_time.day_hours if fact_work_time.day_hours else None
+                night_hours = fact_work_time.night_hours if fact_work_time.night_hours else None
+                type_id = fact_work_time.work_day_status_id if fact_work_time.work_day_status_id else None
+                tmp_work_time = {
+                    "day_hours": day_hours,
+                    "night_hours": night_hours,
+                    "type_id": type_id,
+                }
+                grouped_result[fact_work_time.employee_position_id][fact_work_time.date.strftime('%Y-%m-%d')].update(tmp_work_time)
+                if day_hours:
+                    grouped_result[fact_work_time.employee_position_id]["day_hours_sum"] += day_hours
+                    grouped_result[fact_work_time.employee_position_id]["common_hours_sum"] += day_hours
+                if night_hours:
+                    grouped_result[fact_work_time.employee_position_id]["night_hours_sum"] += night_hours
+                    grouped_result[fact_work_time.employee_position_id]["common_hours_sum"] += night_hours
+
+        result = [value for value in grouped_result.values()]
+        return {"result": result, "document": tabel_document}
 
 
 class TabelFactTimeWorkRaw(models.Model):
