@@ -1,10 +1,10 @@
 import json
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
 
-from forms.forms300 import form_01
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
 from laboratory.decorators import group_required
-from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition
+from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition, FactTimeWork
 from laboratory.settings import SHIFTS_VARIANTS
 
 
@@ -32,6 +32,7 @@ def update_time(request):
     month = request_data.get("month")
     changed_employee_work_time = request_data.get("changedEmployeesWorkTime")
     result = EmployeeWorkingHoursSchedule.update_time(department_id, year, month, changed_employee_work_time)
+    FactTimeWork.update_time(department_id, year, month, changed_employee_work_time)
     return JsonResponse(result)
 
 

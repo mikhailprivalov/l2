@@ -630,8 +630,8 @@ class WorkDayStatus(models.Model):
         return result
 
     @staticmethod
-    def get_short_statuses_dict():
-        result = {status.id: status.short_title for status in WorkDayStatus.objects.filter(hide=False)}
+    def get_statuses_dict(full_title: bool = False):
+        result = {status.id: status.title if full_title else status.short_title for status in WorkDayStatus.objects.filter(hide=False)}
         return result
 
 
@@ -1040,25 +1040,97 @@ class TabelDocument(models.Model):
         td.status = data.get("status", "")
         td.save()
 
+    @staticmethod
+    def get_or_create_tabel(first_date_month: datetime.date, last_date_month: datetime.date, department_id: int):
+        tabel_document = TabelDocument.objects.filter(month_tabel__gte=first_date_month, month_tabel__lte=last_date_month, department_id=department_id, is_actual=True).first()
+        if not tabel_document:
+            tabel_document = TabelDocument.objects.create(month_tabel=first_date_month, department_id=department_id, is_actual=True)
+        return tabel_document
+
 
 class FactTimeWork(models.Model):
-    class Status(models.TextChoices):
-        WORK = "WORK", "Работа"
-        HOLIDAY = "HOLIDAY", "Отпуск"
-        SICK = "SICK", "Больничный"
-        BUSINESS_TRIP = "BUSINESS_TRIP", "Командировка"
-        DISMISS = "DISMISS", "Уволен"
-
     tabel_document = models.ForeignKey(TabelDocument, null=True, on_delete=models.SET_NULL)
-    employee = models.ForeignKey(EmployeePosition, null=True, on_delete=models.SET_NULL)
+    employee_position = models.ForeignKey(EmployeePosition, null=True, on_delete=models.SET_NULL)
     date = models.DateField(help_text="Дата учета", db_index=True)
-    night_hours = models.DecimalField(max_digits=10, decimal_places=2)
-    common_hours = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=20, null=True, blank=True, default=Status.WORK, db_index=True, choices=Status.choices, help_text="Статус")
+    night_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    common_hours = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    work_day_status = models.ForeignKey(WorkDayStatus, null=True, blank=True, default=None, db_index=True, on_delete=models.SET_NULL, verbose_name='Тип')
 
     class Meta:
         verbose_name = "Время в табеле"
         verbose_name_plural = "Время в табеле"
+
+    @staticmethod
+    def overlap(start1: datetime.datetime, end1: datetime.datetime, start2: datetime.datetime, end2: datetime.datetime) -> datetime.timedelta:
+        """Возвращает пересечение двух интервалов"""
+        start = max(start1, start2)
+        end = min(end1, end2)
+        return max(end - start, datetime.timedelta(0))
+
+    @staticmethod
+    def calculate_day_night_hours(start_work: datetime.datetime, end_work: datetime.datetime):
+        total_duration = end_work - start_work
+
+        day = start_work.date()
+        tz = start_work.tzinfo
+
+        night_intervals = [
+            (
+                datetime.datetime.combine(day, datetime.time(0, 0), tz),
+                datetime.datetime.combine(day, datetime.time(4, 0), tz),
+            ),
+            (
+                datetime.datetime.combine(day, datetime.time(22, 0), tz),
+                datetime.datetime.combine(day, datetime.time(23, 59, 59), tz) + datetime.timedelta(seconds=1),
+            ),
+        ]
+        night_duration = datetime.timedelta(0)
+        for night_start, night_end in night_intervals:
+            night_duration += FactTimeWork.overlap(start_work, end_work, night_start, night_end)
+
+        day_duration = total_duration - night_duration
+
+        day_hours = round(day_duration.total_seconds() / 3600, 2)
+        night_hours = round(night_duration.total_seconds() / 3600, 2)
+
+        return {"day_hours": day_hours, "night_hours": night_hours}
+
+    @staticmethod
+    def update_time(department_id: int, year: int, month: int, changed_time: dict):
+        first_date_month = datetime.date(year, month, 1)
+        length_month = calendar.monthrange(year, month)[1]
+        last_date_month = datetime.date(year, month, length_month)
+        tabel_document: TabelDocument = TabelDocument.get_or_create_tabel(first_date_month, last_date_month, department_id)
+        for employee_position_id, work_times in changed_time.items():
+            for date, work_time in work_times.items():
+                day_hours = None
+                night_hours = None
+                start_time = work_time.get("startWorkTime")
+                end_time = work_time.get("endWorkTime")
+                work_day_status_id = work_time.get("typeId")
+                if start_time and end_time:
+                    start = datetime.datetime.strptime(f'{date} {start_time}', "%Y-%m-%d %H:%M")
+                    end = datetime.datetime.strptime(f'{date} {end_time}', "%Y-%m-%d %H:%M")
+                    if end_time == "00:00":
+                        end = end + datetime.timedelta(days=1)
+                    hours = FactTimeWork.calculate_day_night_hours(start, end)
+                    day_hours = hours.get("day_hours")
+                    night_hours = hours.get("night_hours")
+                day = FactTimeWork.objects.filter(tabel_document_id=tabel_document.pk, employee_position_id=employee_position_id, date=date).first()
+                if day:
+                    day.common_hours = day_hours
+                    day.night_hours = night_hours
+                    day.work_day_status_id = work_day_status_id
+                else:
+                    day = FactTimeWork(
+                        tabel_document_id=tabel_document.pk,
+                        employee_position_id=employee_position_id,
+                        date=date,
+                        common_hours=day_hours,
+                        night_hours=night_hours,
+                        work_day_status_id=work_day_status_id,
+                    )
+                day.save()
 
 
 class TabelFactTimeWorkRaw(models.Model):
@@ -1066,19 +1138,24 @@ class TabelFactTimeWorkRaw(models.Model):
     data_document = {"tabelDocumentPk": "", "personData": [
                             {
                                 "snils": "121212121",
-                                "personLastname": "sds",
-                                "personFirstName": "sds",
-                                "personPatronymic": "sds",
-                                "employeeData": [
+                                "person_family": "sds",
+                                "person_name": "sds",
+                                "person_patronymic": "sds",
+                                "work_hours": [
                                     {
-                                        "postTitle": "postTitle",
-                                        "typePost": "typePost",
-                                        "departmentTitle": "departmentTitle",
-                                        "tabelNumber": "tabelNumber",
-                                        "dates": ["все даты месяца ч/з запятую"],
-                                        "nightHours": {"дата": "значение", "дата1": "значение", "дат2": "значение"},
-                                        "commonHours": {}
+                                        "position_name": "postTitle",
+                                        "bid_name": "bid_name",
+                                        "department_name": "department_name",
+                                        "tabel_number": "tabel_number",
+                                        "days": {"2026-02-01": {"work_day_status": "", "nightHours": 4, "common_hours": 4}}
                                     },
+                                    {
+                                        "position_name": "other_post_title",
+                                        "bid_name": "other_bid_name",
+                                        "department_name": "other_department_name",
+                                        "tabel_number": "other_tabel_number",
+                                        "days": {"2026-02-02": {"work_day_status": "Отпуск", "nightHours": None, "common_hours": None}}
+                                    }
                                 ]
                             },
                         ]
@@ -1087,6 +1164,7 @@ class TabelFactTimeWorkRaw(models.Model):
 
     tabel_document = models.ForeignKey(TabelDocument, null=True, blank=True, default=None, on_delete=models.SET_NULL)
     data_document = models.TextField(blank=True, null=True, help_text="Данные документа")
+    data_document_hash = models.CharField(max_length=64, null=True)
 
     class Meta:
         verbose_name = "Табель документ"

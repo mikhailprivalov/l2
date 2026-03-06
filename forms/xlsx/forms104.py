@@ -53,13 +53,12 @@ def form_01(request_data) -> Workbook:
     """
     Создает xlsx файл по форме графика рабочего времени
     """
-    # TODO подумать как разбить по страницам
 
     request_body = request_data.get("request_body")
     document_id = request_body.get("documentId")
     employees_work_time = request_body.get("employeesWorkTime")
     time_tracking_document: TimeTrackingDocument = TimeTrackingDocument.get_document_for_print(document_id)
-    work_day_statuses = WorkDayStatus.get_short_statuses_dict()
+    work_day_statuses = WorkDayStatus.get_statuses_dict()
     current_date = datetime.datetime.now()
     current_month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=current_date)
     current_day = current_date.day

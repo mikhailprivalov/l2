@@ -101,6 +101,12 @@
           >
             PDF
           </button>
+          <button
+            class="btn btn-blue-nb"
+            :disabled="hasChange"
+          >
+            Табель
+          </button>
         </div>
       </div>
     </div>
