@@ -1044,11 +1044,7 @@ class TabelDocument(models.Model):
     def get_or_create_tabel(first_date_month: datetime.date, last_date_month: datetime.date, department_id: int):
         tabel_document = TabelDocument.objects.filter(month_tabel__gte=first_date_month, month_tabel__lte=last_date_month, department_id=department_id, is_actual=True).first()
         if not tabel_document:
-            tabel_document = TabelDocument.objects.create(
-                month_tabel=first_date_month,
-                department_id=department_id,
-                is_actual=True
-            )
+            tabel_document = TabelDocument.objects.create(month_tabel=first_date_month, department_id=department_id, is_actual=True)
         return tabel_document
 
 
