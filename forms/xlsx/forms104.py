@@ -43,6 +43,7 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
         result = ""
     return result
 
+
 def _parse_tabel_cell_data(work_day_statuses: Dict, cell_value: Dict):
     day_hours = cell_value.get("day_hours", 0)
     night_hours = cell_value.get("night_hours", 0)
@@ -254,9 +255,6 @@ def form_02(request_data):
     work_day_statuses = WorkDayStatus.get_statuses_dict()
     tabel_document_number = tabel_document.pk
     current_date = datetime.datetime.now()
-    current_month_name = pytils.dt.ru_strftime(u"%B", inflected=True, date=current_date)
-    current_day = current_date.day
-    current_year = current_date.year
     document_date = tabel_document.month_tabel
     document_month_name = pytils.dt.ru_strftime(u"%B", date=document_date)
     document_year = document_date.year
@@ -276,14 +274,12 @@ def form_02(request_data):
     thin_bottom_border = Border(bottom=thin_line)
     thin_border = Border(left=thin_line, top=thin_line, right=thin_line, bottom=thin_line)
     thick_line = Side(style="thick")
-    thick_bottom_border = Border(bottom=thick_line)
     alignment_center = Alignment(horizontal='center', vertical='center')
     alignment_center_wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
     alignment_right = Alignment(horizontal='right', vertical='center')
     alignment_left_wrap = Alignment(horizontal='left', vertical='center', wrap_text=True)
     font_bold = Font(bold=True)
     weekend_fill = PatternFill(start_color="ffe699", end_color="ffe699", fill_type="solid")
-
 
     work_book: Workbook = openpyxl.Workbook()
     work_book.remove(work_book.get_sheet_by_name("Sheet"))
@@ -431,11 +427,10 @@ def form_02(request_data):
         for day_number in range(1, sum_holidays_hours_col_number + 1):
             work_sheet.cell(row=third_row_table_number, column=day_number, value=day_number)
 
-
         for index_row, fact_time in enumerate(chunk_data):
             fio = fact_time.get("fio")
             tabel_number = fact_time.get("tabel_number")
-            position = fact_time.get("position")
+            position_name = fact_time.get("position_name")
             type_employment = fact_time.get("bid_type")
             occupied_volume = ""
             norm_hours = ""
@@ -454,7 +449,7 @@ def form_02(request_data):
             date_values = [_parse_tabel_cell_data(work_day_statuses, fact_time.get(date_key.strftime("%Y-%m-%d"))) for date_key in date_keys_sorted]
             work_sheet.cell(row=four_row_table_number + index_row, column=fio_col_number, value=fio)
             work_sheet.cell(row=four_row_table_number + index_row, column=tabel_number_col_number, value=tabel_number)
-            work_sheet.cell(row=four_row_table_number + index_row, column=position_col_number, value=position)
+            work_sheet.cell(row=four_row_table_number + index_row, column=position_col_number, value=position_name)
             work_sheet.cell(row=four_row_table_number + index_row, column=type_employment_col_number, value=type_employment)
             work_sheet.cell(row=four_row_table_number + index_row, column=occupied_volume_col_number, value=occupied_volume)
             work_sheet.cell(row=four_row_table_number + index_row, column=norm_hours_col_number, value=norm_hours)
@@ -463,7 +458,6 @@ def form_02(request_data):
             work_sheet.cell(row=four_row_table_number + index_row, column=sum_common_hours_col_number, value=sum_common_hours)
             work_sheet.cell(row=four_row_table_number + index_row, column=sum_night_hours_col_number, value=sum_night_hours)
             work_sheet.cell(row=four_row_table_number + index_row, column=sum_holidays_hours_col_number, value=sum_holidays_hours)
-
 
         signature_block_data = {
             "Главный врач": head_organization_fio,
@@ -481,13 +475,13 @@ def form_02(request_data):
             three_top_cell = work_sheet.cell(row=signature_block_start_row_number, column=3, value=fio)
             three_top_cell.border = thin_bottom_border
             three_top_cell.alignment = alignment_center
-            set_style_for_area(work_sheet, signature_block_start_row_number, signature_block_start_row_number, 8, 12, thin_bottom_border)
+            set_style_for_area(work_sheet, signature_block_start_row_number, signature_block_start_row_number, 8, 13, thin_bottom_border)
 
             first_bottom_cell = work_sheet.cell(row=signature_block_start_row_number + 1, column=1, value="(должность)")
             first_bottom_cell.alignment = alignment_center
             eight_bottom_cell = work_sheet.cell(row=signature_block_start_row_number + 1, column=8, value="(расшифровка подписи)")
             eight_bottom_cell.alignment = alignment_center
-            work_sheet.merge_cells(start_row=signature_block_start_row_number + 1, start_column=8, end_row=signature_block_start_row_number + 1, end_column=12)
+            work_sheet.merge_cells(start_row=signature_block_start_row_number + 1, start_column=8, end_row=signature_block_start_row_number + 1, end_column=13)
 
             signature_block_start_row_number += 3
 
@@ -498,8 +492,8 @@ def form_02(request_data):
         work_sheet.merge_cells(start_row=table_data_end_row_number + 3, start_column=20, end_row=table_data_end_row_number + 3, end_column=34)
 
         work_sheet.cell(row=table_data_end_row_number + 5, column=20, value="Исполнитель")
-        set_style_for_area(work_sheet, signature_block_start_row_number + 5, signature_block_start_row_number +5, 20, 36, thin_bottom_border)
         work_sheet.merge_cells(start_row=table_data_end_row_number + 5, start_column=22, end_row=table_data_end_row_number + 5, end_column=36)
+        set_style_for_area(work_sheet, table_data_end_row_number + 5, table_data_end_row_number + 5, 22, 36, thin_bottom_border)
 
         buh_signature_sub_title = work_sheet.cell(row=table_data_end_row_number + 6, column=22, value="(подпись)")
         buh_signature_sub_title.alignment = alignment_center
@@ -511,7 +505,7 @@ def form_02(request_data):
         bug_signature_day_second_double_quotes.alignment = alignment_right
 
         work_sheet.merge_cells(start_row=table_data_end_row_number + 8, start_column=22, end_row=table_data_end_row_number + 8, end_column=25)
-        set_style_for_area(work_sheet, signature_block_start_row_number + 8, signature_block_start_row_number + 8, 22, 25, thin_bottom_border)
+        set_style_for_area(work_sheet, table_data_end_row_number + 8, table_data_end_row_number + 8, 22, 25, thin_bottom_border)
 
         bug_signature_year_first_chunk = work_sheet.cell(row=table_data_end_row_number + 8, column=26, value="20")
         bug_signature_year_first_chunk.alignment = alignment_right
@@ -519,35 +513,20 @@ def form_02(request_data):
         bug_signature_year_second_chunk.border = thin_bottom_border
         work_sheet.cell(row=table_data_end_row_number + 8, column=28, value="г.")
 
+        min_row = table_data_end_row_number + 3
+        max_row = table_data_end_row_number + 9
+        min_col = 19
+        max_col = 38
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # TODO возможно, если надо будет один в один, придется для header, table_col_names и прочего заводить свои стили текста (размер, шрифт и т.д)
-        # TODO а тут мы соберем таблицу-табель)
-        # TODO и еще ниже блок подписей и прочих)
+        for row in work_sheet.iter_rows(min_row=min_row, max_row=max_row, min_col=min_col, max_col=max_col):
+            for cell in row:
+                cell_border = cell.border
+                border = Border(
+                    left=thick_line if cell.column == min_col else cell_border.left,
+                    right=thick_line if cell.column == max_col else cell_border.right,
+                    top=thick_line if cell.row == min_row else cell_border.top,
+                    bottom=thick_line if cell.row == max_row else cell_border.bottom,
+                )
+                cell.border = border
 
     return work_book
