@@ -43,6 +43,18 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
         result = ""
     return result
 
+def _parse_tabel_cell_data(work_day_statuses: Dict, cell_value: Dict):
+    day_hours = cell_value.get("day_hours", 0)
+    night_hours = cell_value.get("night_hours", 0)
+    type_id = cell_value.get("type_id")
+    if type_id:
+        result = work_day_statuses.get(int(type_id), "")
+    elif day_hours or night_hours:
+        result = f"{day_hours + night_hours}"
+    else:
+        result = ""
+    return result
+
 
 def chunked(data, size):
     for i in range(0, len(data), size):
@@ -258,12 +270,15 @@ def form_02(request_data):
     thin_line = Side(style='thin')
     thin_bottom_border = Border(bottom=thin_line)
     thin_border = Border(left=thin_line, top=thin_line, right=thin_line, bottom=thin_line)
+    thick_line = Side(style="thick")
+    thick_bottom_border = Border(bottom=thick_line)
     alignment_center = Alignment(horizontal='center', vertical='center')
     alignment_center_wrap = Alignment(horizontal='center', vertical='center', wrap_text=True)
     alignment_right = Alignment(horizontal='right', vertical='center')
     alignment_left_wrap = Alignment(horizontal='left', vertical='center', wrap_text=True)
     font_bold = Font(bold=True)
     weekend_fill = PatternFill(start_color="ffe699", end_color="ffe699", fill_type="solid")
+
 
     work_book: Workbook = openpyxl.Workbook()
     work_book.remove(work_book.get_sheet_by_name("Sheet"))
@@ -277,7 +292,8 @@ def form_02(request_data):
         first_row_table_number = 12
         second_row_table_number = 13
         third_row_table_number = 14
-        table_data_end_row_number = third_row_table_number + len(chunk_data) - 1
+        four_row_table_number = 15
+        table_data_end_row_number = four_row_table_number + len(chunk_data) - 1
 
         fio_col_number = 1
         tabel_number_col_number = 2
@@ -314,9 +330,10 @@ def form_02(request_data):
         work_sheet.column_dimensions[get_column_letter(sum_night_hours_col_number)].width = sum_night_hours_col_width
         work_sheet.column_dimensions[get_column_letter(sum_holidays_hours_col_number)].width = sum_holidays_hours_col_width
 
-        work_sheet.row_dimensions[first_row_table_number].height = 84.75
-        for row_number in range(third_row_table_number, table_data_end_row_number + 1):
-            work_sheet.row_dimensions[row_number].height = 45
+        work_sheet.row_dimensions[first_row_table_number].height = 15
+        work_sheet.row_dimensions[third_row_table_number].height = 15
+        for row_number in range(four_row_table_number, table_data_end_row_number + 1):
+            work_sheet.row_dimensions[row_number].height = 30
 
         work_sheet["AK1"] = "Приложение № 1 к"
         work_sheet["AK2"] = "приказу от '20' февраля 2025 г № 37"
@@ -377,6 +394,152 @@ def form_02(request_data):
         set_style_for_area(work_sheet, 7, 9, cell_c_number, cell_ag_number, thin_bottom_border)
         cell_al_number = 38
         set_style_for_area(work_sheet, 4, 10, cell_al_number, cell_al_number, thin_border)
+
+        set_style_for_area(work_sheet, first_row_table_number, table_data_end_row_number, fio_col_number, sum_holidays_hours_col_number, thin_border, alignment_center_wrap)
+        set_style_for_area(work_sheet, four_row_table_number, table_data_end_row_number, fio_col_number, fio_col_number, alignment_style=alignment_left_wrap)
+
+        for day_number in range(1, document_last_day_month):
+            date = datetime.date(document_year, document_month, day_number)
+            if date.weekday() in (5, 6):
+                day_col = day_number + (start_date_col_number - 1)
+                set_style_for_area(work_sheet, second_row_table_number, table_data_end_row_number, day_col, day_col, fill_style=weekend_fill)
+
+        merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, fio_col_number, norm_hours_col_number)
+        work_sheet.merge_cells(start_row=first_row_table_number, start_column=start_date_col_number, end_row=first_row_table_number, end_column=sum_common_hours_col_number)
+        # merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, sum_common_hours_col_number, sum_holidays_hours_col_number)
+
+        work_sheet.cell(row=first_row_table_number, column=fio_col_number, value="Фамилия имя отчество")
+        work_sheet.cell(row=first_row_table_number, column=tabel_number_col_number, value="Учетный номер")
+        work_sheet.cell(row=first_row_table_number, column=position_col_number, value="Должность (профессия)")
+        work_sheet.cell(row=first_row_table_number, column=type_employment_col_number, value="Вид занятости (осн, внутр, внеш)")
+        work_sheet.cell(row=first_row_table_number, column=occupied_volume_col_number, value="Занимаемый объем (согл ТД), шт ед")
+        work_sheet.cell(row=first_row_table_number, column=norm_hours_col_number, value="Норма часов на занимаемый объем")
+        work_sheet.cell(row=first_row_table_number, column=start_date_col_number, value="Числа месяца")
+
+        for date_number in range(document_last_day_month):
+            work_sheet.cell(row=second_row_table_number, column=date_number + start_date_col_number, value=date_number + 1)
+
+        work_sheet.cell(row=second_row_table_number, column=sum_common_hours_col_number, value="Всего отработано часов")
+        work_sheet.cell(row=second_row_table_number, column=sum_night_hours_col_number, value="Ночные")
+        work_sheet.cell(row=second_row_table_number, column=sum_holidays_hours_col_number, value="Праздничные, выходные")
+
+        for day_number in range(1, sum_holidays_hours_col_number + 1):
+            work_sheet.cell(row=third_row_table_number, column=day_number, value=day_number)
+
+
+        for index_row, fact_time in enumerate(chunk_data):
+            fio = fact_time.get("fio")
+            tabel_number = fact_time.get("tabel_number")
+            position = fact_time.get("position")
+            type_employment = fact_time.get("bid_type")
+            occupied_volume = ""
+            norm_hours = ""
+
+            sum_common_hours = fact_time.get("sum_common_hours")
+            sum_night_hours = fact_time.get("sum_night_hours")
+            sum_holidays_hours = fact_time.get("sum_holidays_hours")
+            date_keys = []
+            for key in fact_time.keys():
+                try:
+                    date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
+                    date_keys.append(date_key)
+                except ValueError:
+                    pass
+            date_keys_sorted = sorted(date_keys)
+            date_values = [_parse_tabel_cell_data(work_day_statuses, fact_time.get(date_key.strftime("%Y-%m-%d"))) for date_key in date_keys_sorted]
+            work_sheet.cell(row=four_row_table_number + index_row, column=fio_col_number, value=fio)
+            work_sheet.cell(row=four_row_table_number + index_row, column=tabel_number_col_number, value=tabel_number)
+            work_sheet.cell(row=four_row_table_number + index_row, column=position_col_number, value=position)
+            work_sheet.cell(row=four_row_table_number + index_row, column=type_employment_col_number, value=type_employment)
+            work_sheet.cell(row=four_row_table_number + index_row, column=occupied_volume_col_number, value=occupied_volume)
+            work_sheet.cell(row=four_row_table_number + index_row, column=norm_hours_col_number, value=norm_hours)
+            for index_date, date in enumerate(date_values):
+                work_sheet.cell(row=four_row_table_number + index_row, column=start_date_col_number + index_date, value=date)
+            work_sheet.cell(row=four_row_table_number + index_row, column=sum_common_hours_col_number, value=sum_common_hours)
+            work_sheet.cell(row=four_row_table_number + index_row, column=sum_night_hours_col_number, value=sum_night_hours)
+            work_sheet.cell(row=four_row_table_number + index_row, column=sum_holidays_hours_col_number, value=sum_holidays_hours)
+
+        organization_head_cell = work_sheet.cell(row=table_data_end_row_number + 2, column=1, value="Главный врач")
+        organization_head_cell.border = thin_bottom_border
+        organization_head_fio_cell = work_sheet.cell(row=table_data_end_row_number + 2, column=3, value="")
+        organization_head_fio_cell.border = thin_bottom_border
+        work_sheet.cell(row=table_data_end_row_number + 3, column=1, value="(должность)")
+        work_sheet.cell(row=table_data_end_row_number + 3, column=8, value="(расшифровка подписи)")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 3, start_column=8, end_row=table_data_end_row_number + 3, end_column=12)
+        work_sheet.cell(row=table_data_end_row_number + 3, column=20, value="Отметка бухгалтерии о принятии настоящего табеля")
+        department_head_cell = work_sheet.cell(row=table_data_end_row_number + 5, column=1, value="Зав. отделением")
+        department_head_cell.border = thin_bottom_border
+        department_head_fio_cell = work_sheet.cell(row=table_data_end_row_number + 5, column=3, value="")
+        department_head_fio_cell.border = thin_bottom_border
+        work_sheet.cell(row=table_data_end_row_number + 5, column=20, value="Исполнитель")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 5, start_column=22, end_row=table_data_end_row_number + 5, end_column=35)
+        work_sheet.cell(row=table_data_end_row_number + 6, column=1, value="(должность)")
+        work_sheet.cell(row=table_data_end_row_number + 6, column=8, value="(расшифровка подписи)")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 6, start_column=8, end_row=table_data_end_row_number + 6, end_column=12)
+        buh_signature_sub_title = work_sheet.cell(row=table_data_end_row_number + 6, column=22, value="(подпись)")
+        buh_signature_sub_title.alignment = alignment_center
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 6, start_column=22, end_row=table_data_end_row_number + 6, end_column=35)
+        older_nurse_cell = work_sheet.cell(row=table_data_end_row_number + 8, column=1, value="Старшая мед. сестра")
+        older_nurse_cell.border = thin_bottom_border
+        older_nurse_fio_cell = work_sheet.cell(row=table_data_end_row_number + 8, column=3, value="")
+        older_nurse_fio_cell.border = thin_bottom_border
+        work_sheet.cell(row=table_data_end_row_number + 8, column=8, value="(расшифровка подписи)")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 8, start_column=8, end_row=table_data_end_row_number + 8, end_column=12)
+        work_sheet.cell(row=table_data_end_row_number + 8, column=20, value='"')
+        work_sheet.cell(row=table_data_end_row_number + 8, column=21, value='"')
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 8, start_column=22, end_row=table_data_end_row_number + 8, end_column=25)
+        work_sheet.cell(row=table_data_end_row_number + 8, column=26, value="20")
+        number_year_cell = work_sheet.cell(row=table_data_end_row_number + 8, column=27, value="")
+        number_year_cell.border = thin_bottom_border
+        work_sheet.cell(row=table_data_end_row_number + 8, column=28, value="г.")
+
+        work_sheet.cell(row=table_data_end_row_number + 9, column=1, value="(должность)")
+        work_sheet.cell(row=table_data_end_row_number + 9, column=8, value="(расшифровка подписи)")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 9, start_column=8, end_row=table_data_end_row_number + 9, end_column=12)
+
+        hr_specialist_cell = work_sheet.cell(row=table_data_end_row_number + 11, column=1, value="Специалист о.к.")
+        hr_specialist_cell.border = thin_bottom_border
+        hr_specialist_fio_cell = work_sheet.cell(row=table_data_end_row_number + 11, column=3, value="")
+        hr_specialist_fio_cell.border = thin_bottom_border
+        work_sheet.cell(row=table_data_end_row_number + 12, column=1, value="(должность)")
+        work_sheet.cell(row=table_data_end_row_number + 12, column=8, value="(расшифровка подписи)")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 12, start_column=8, end_row=table_data_end_row_number + 12, end_column=12)
+
+        economist_cell = work_sheet.cell(row=table_data_end_row_number + 13, column=1, value="Экономист")
+        economist_cell.border = thin_bottom_border
+        economist_fio_cell =  work_sheet.cell(row=table_data_end_row_number + 13, column=3, value="")
+        economist_fio_cell.border = thin_bottom_border
+        work_sheet.cell(row=table_data_end_row_number + 13, column=1, value="(должность)")
+        work_sheet.cell(row=table_data_end_row_number + 13, column=8, value="(расшифровка подписи)")
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 13, start_column=8, end_row=table_data_end_row_number + 13, end_column=12)
+
+        work_sheet.cell(row=table_data_end_row_number + 14, column=1, value='"  "     20___г.')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         # TODO возможно, если надо будет один в один, придется для header, table_col_names и прочего заводить свои стили текста (размер, шрифт и т.д)
         # TODO а тут мы соберем таблицу-табель)

@@ -819,7 +819,7 @@ const downloadXlsx = async () => {
 };
 
 const downloadTabelXlsx = async () => {
-  window.open(`/forms/xlsx?type=104.02&year=${selectedYear.value}&month=${selectedMonth.value}&departmentId=
+  window.open(`/forms/xlsx?type=104.02&year=${selectedYear.value}&month=${selectedMonth.value + 1}&departmentId=
   ${selectedDepartment.value}`, '_blank');
 };
 
