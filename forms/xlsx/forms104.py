@@ -45,13 +45,13 @@ def _parse_cell_data(work_day_statuses: Dict, cell_value: Dict):
 
 
 def _parse_tabel_cell_data(work_day_statuses: Dict, cell_value: Dict):
-    day_hours = cell_value.get("day_hours", 0)
-    night_hours = cell_value.get("night_hours", 0)
+    day_hours = cell_value.get("day_hours") or 0
+    night_hours = cell_value.get("night_hours") or 0
     type_id = cell_value.get("type_id")
     if type_id:
         result = work_day_statuses.get(int(type_id), "")
     elif day_hours or night_hours:
-        result = f"{day_hours + night_hours}"
+        result = f"{day_hours + night_hours:.1f}"
     else:
         result = ""
     return result
@@ -407,7 +407,6 @@ def form_02(request_data):
 
         merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, fio_col_number, norm_hours_col_number)
         work_sheet.merge_cells(start_row=first_row_table_number, start_column=start_date_col_number, end_row=first_row_table_number, end_column=sum_common_hours_col_number)
-        # merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, sum_common_hours_col_number, sum_holidays_hours_col_number)
 
         work_sheet.cell(row=first_row_table_number, column=fio_col_number, value="Фамилия имя отчество")
         work_sheet.cell(row=first_row_table_number, column=tabel_number_col_number, value="Учетный номер")
@@ -435,9 +434,10 @@ def form_02(request_data):
             occupied_volume = ""
             norm_hours = ""
 
-            sum_common_hours = fact_time.get("sum_common_hours")
-            sum_night_hours = fact_time.get("sum_night_hours")
-            sum_holidays_hours = fact_time.get("sum_holidays_hours")
+            common_hours_sum = f'{fact_time.get("common_hours_sum"):.1f}'
+            night_hours_sum = f'{fact_time.get("night_hours_sum"):.1f}'
+            holidays_hours_sum = None
+
             date_keys = []
             for key in fact_time.keys():
                 try:
@@ -455,9 +455,9 @@ def form_02(request_data):
             work_sheet.cell(row=four_row_table_number + index_row, column=norm_hours_col_number, value=norm_hours)
             for index_date, date in enumerate(date_values):
                 work_sheet.cell(row=four_row_table_number + index_row, column=start_date_col_number + index_date, value=date)
-            work_sheet.cell(row=four_row_table_number + index_row, column=sum_common_hours_col_number, value=sum_common_hours)
-            work_sheet.cell(row=four_row_table_number + index_row, column=sum_night_hours_col_number, value=sum_night_hours)
-            work_sheet.cell(row=four_row_table_number + index_row, column=sum_holidays_hours_col_number, value=sum_holidays_hours)
+            work_sheet.cell(row=four_row_table_number + index_row, column=sum_common_hours_col_number, value=common_hours_sum)
+            work_sheet.cell(row=four_row_table_number + index_row, column=sum_night_hours_col_number, value=night_hours_sum)
+            work_sheet.cell(row=four_row_table_number + index_row, column=sum_holidays_hours_col_number, value=holidays_hours_sum)
 
         signature_block_data = {
             "Главный врач": head_organization_fio,
