@@ -266,6 +266,11 @@ def form_02(request_data):
     department_title = tabel_document.department.name
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
+    head_organization_fio = ""
+    head_department_fio = ""
+    older_nurse_fio = ""
+    hr_specialist_fio = ""
+    economist_fio = ""
 
     thin_line = Side(style='thin')
     thin_bottom_border = Border(bottom=thin_line)
@@ -459,74 +464,61 @@ def form_02(request_data):
             work_sheet.cell(row=four_row_table_number + index_row, column=sum_night_hours_col_number, value=sum_night_hours)
             work_sheet.cell(row=four_row_table_number + index_row, column=sum_holidays_hours_col_number, value=sum_holidays_hours)
 
-        organization_head_cell = work_sheet.cell(row=table_data_end_row_number + 2, column=1, value="Главный врач")
-        organization_head_cell.border = thin_bottom_border
-        organization_head_fio_cell = work_sheet.cell(row=table_data_end_row_number + 2, column=3, value="")
-        organization_head_fio_cell.border = thin_bottom_border
-        organization_head_fio_cell.alignment = alignment_center
 
-        work_sheet.cell(row=table_data_end_row_number + 3, column=1, value="(должность)")
-        work_sheet.cell(row=table_data_end_row_number + 3, column=8, value="(расшифровка подписи)")
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 3, start_column=8, end_row=table_data_end_row_number + 3, end_column=12)
-        work_sheet.cell(row=table_data_end_row_number + 3, column=20, value="Отметка бухгалтерии о принятии настоящего табеля")
+        signature_block_data = {
+            "Главный врач": head_organization_fio,
+            "Зав. отделения": head_department_fio,
+            "Старшая мед. сестра": older_nurse_fio,
+            "Специалист о.к.": hr_specialist_fio,
+            "Экономист": economist_fio,
+        }
 
-        department_head_cell = work_sheet.cell(row=table_data_end_row_number + 5, column=1, value="Зав. отделением")
-        department_head_cell.border = thin_bottom_border
-        department_head_fio_cell = work_sheet.cell(row=table_data_end_row_number + 5, column=3, value="")
-        department_head_fio_cell.border = thin_bottom_border
-        department_head_fio_cell.alignment = alignment_center
+        signature_block_start_row_number = table_data_end_row_number + 2
+        for position_title, fio in signature_block_data.items():
+            first_top_cell = work_sheet.cell(row=signature_block_start_row_number, column=1, value=position_title)
+            first_top_cell.border = thin_bottom_border
+            first_top_cell.alignment = alignment_center
+            three_top_cell = work_sheet.cell(row=signature_block_start_row_number, column=3, value=fio)
+            three_top_cell.border = thin_bottom_border
+            three_top_cell.alignment = alignment_center
+            set_style_for_area(work_sheet, signature_block_start_row_number, signature_block_start_row_number, 8, 12, thin_bottom_border)
+
+            first_bottom_cell = work_sheet.cell(row=signature_block_start_row_number + 1, column=1, value="(должность)")
+            first_bottom_cell.alignment = alignment_center
+            eight_bottom_cell = work_sheet.cell(row=signature_block_start_row_number + 1, column=8, value="(расшифровка подписи)")
+            eight_bottom_cell.alignment = alignment_center
+            work_sheet.merge_cells(start_row=signature_block_start_row_number + 1, start_column=8, end_row=signature_block_start_row_number + 1, end_column=12)
+
+            signature_block_start_row_number += 3
+
+        work_sheet.cell(row=table_data_end_row_number + 16, column=1, value='"  "     20___г.')
+
+        bug_signature_block_header = work_sheet.cell(row=table_data_end_row_number + 3, column=20, value="Отметка бухгалтерии о принятии настоящего табеля")
+        bug_signature_block_header.alignment = alignment_center
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 3, start_column=20, end_row=table_data_end_row_number + 3, end_column=34)
+
         work_sheet.cell(row=table_data_end_row_number + 5, column=20, value="Исполнитель")
-        executor_signature_cell = work_sheet.cell(row=table_data_end_row_number + 5, column=22, value="")
-        executor_signature_cell.border = thin_bottom_border
-        executor_signature_cell.alignment = alignment_center
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 5, start_column=22, end_row=table_data_end_row_number + 5, end_column=35)
+        set_style_for_area(work_sheet, signature_block_start_row_number + 5, signature_block_start_row_number +5, 20, 36, thin_bottom_border)
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 5, start_column=22, end_row=table_data_end_row_number + 5, end_column=36)
 
-        work_sheet.cell(row=table_data_end_row_number + 6, column=1, value="(должность)")
-        work_sheet.cell(row=table_data_end_row_number + 6, column=8, value="(расшифровка подписи)")
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 6, start_column=8, end_row=table_data_end_row_number + 6, end_column=12)
         buh_signature_sub_title = work_sheet.cell(row=table_data_end_row_number + 6, column=22, value="(подпись)")
         buh_signature_sub_title.alignment = alignment_center
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 6, start_column=22, end_row=table_data_end_row_number + 6, end_column=35)
+        work_sheet.merge_cells(start_row=table_data_end_row_number + 6, start_column=22, end_row=table_data_end_row_number + 6, end_column=34)
 
-        older_nurse_cell = work_sheet.cell(row=table_data_end_row_number + 8, column=1, value="Старшая мед. сестра")
-        older_nurse_cell.border = thin_bottom_border
-        older_nurse_fio_cell = work_sheet.cell(row=table_data_end_row_number + 8, column=3, value="")
-        older_nurse_fio_cell.border = thin_bottom_border
-        older_nurse_fio_cell.alignment = alignment_center
+        bug_signature_day_first_double_quotes = work_sheet.cell(row=table_data_end_row_number + 8, column=20, value='"')
+        bug_signature_day_first_double_quotes.alignment = alignment_right
+        bug_signature_day_second_double_quotes = work_sheet.cell(row=table_data_end_row_number + 8, column=21, value='"')
+        bug_signature_day_second_double_quotes.alignment = alignment_right
 
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 8, start_column=8, end_row=table_data_end_row_number + 8, end_column=12)
-        work_sheet.cell(row=table_data_end_row_number + 8, column=20, value='"')
-        work_sheet.cell(row=table_data_end_row_number + 8, column=21, value='"')
         work_sheet.merge_cells(start_row=table_data_end_row_number + 8, start_column=22, end_row=table_data_end_row_number + 8, end_column=25)
-        work_sheet.cell(row=table_data_end_row_number + 8, column=26, value="20")
-        number_year_cell = work_sheet.cell(row=table_data_end_row_number + 8, column=27, value="")
-        number_year_cell.border = thin_bottom_border
+        set_style_for_area(work_sheet, signature_block_start_row_number + 8, signature_block_start_row_number + 8, 22, 25, thin_bottom_border)
+
+        bug_signature_year_first_chunk = work_sheet.cell(row=table_data_end_row_number + 8, column=26, value="20")
+        bug_signature_year_first_chunk.alignment = alignment_right
+        bug_signature_year_second_chunk = work_sheet.cell(row=table_data_end_row_number + 8, column=27, value="")
+        bug_signature_year_second_chunk.border = thin_bottom_border
         work_sheet.cell(row=table_data_end_row_number + 8, column=28, value="г.")
 
-        work_sheet.cell(row=table_data_end_row_number + 9, column=1, value="(должность)")
-        work_sheet.cell(row=table_data_end_row_number + 9, column=8, value="(расшифровка подписи)")
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 9, start_column=8, end_row=table_data_end_row_number + 9, end_column=12)
-
-        hr_specialist_cell = work_sheet.cell(row=table_data_end_row_number + 11, column=1, value="Специалист о.к.")
-        hr_specialist_cell.border = thin_bottom_border
-        hr_specialist_fio_cell = work_sheet.cell(row=table_data_end_row_number + 11, column=3, value="")
-        hr_specialist_fio_cell.border = thin_bottom_border
-        hr_specialist_fio_cell.alignment = alignment_center
-
-        work_sheet.cell(row=table_data_end_row_number + 12, column=1, value="(должность)")
-        work_sheet.cell(row=table_data_end_row_number + 12, column=8, value="(расшифровка подписи)")
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 12, start_column=8, end_row=table_data_end_row_number + 12, end_column=12)
-
-        economist_cell = work_sheet.cell(row=table_data_end_row_number + 13, column=1, value="Экономист")
-        economist_cell.border = thin_bottom_border
-        economist_fio_cell =  work_sheet.cell(row=table_data_end_row_number + 13, column=3, value="")
-        economist_fio_cell.border = thin_bottom_border
-        economist_fio_cell.alignment = alignment_center
-        work_sheet.cell(row=table_data_end_row_number + 14, column=1, value="(должность)")
-        work_sheet.cell(row=table_data_end_row_number + 14, column=8, value="(расшифровка подписи)")
-        work_sheet.merge_cells(start_row=table_data_end_row_number + 14, start_column=8, end_row=table_data_end_row_number + 14, end_column=12)
-
-        work_sheet.cell(row=table_data_end_row_number + 15, column=1, value='"  "     20___г.')
 
 
 
