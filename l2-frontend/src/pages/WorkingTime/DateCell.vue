@@ -231,15 +231,6 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
   endWork.value = endTime;
 };
 
-// const countDaysCopy = ref(1);
-// watch(countDaysCopy, () => {
-//   if (countDaysCopy.value < 1) {
-//     countDaysCopy.value = 1;
-//   } else if (countDaysCopy.value > 31) {
-//     countDaysCopy.value = 31;
-//   }
-// });
-
 const timeOff = () => {
   selectedTimeOffLabel.value = findTimeOffLabel();
   startWork.value = null;
