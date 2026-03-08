@@ -104,6 +104,7 @@
           <button
             class="btn btn-blue-nb"
             :disabled="hasChange"
+            @click.prevent="downloadTabelXlsx()"
           >
             Табель
           </button>
@@ -382,9 +383,10 @@ const updateChangedEmployeesWorkTime = (
   endWorkTime: string = null,
   typeId: number = null,
   fullData: object = null,
+  lunchDuration: number = null,
 ) => {
   if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
-    changedEmployeesWorkTime.value[employeePositionId] = {};
+    changedEmployeesWorkTime.value[employeePositionId] = { lunchDuration };
   }
   if (fullData) {
     changedEmployeesWorkTime.value[employeePositionId][date] = fullData;
@@ -402,12 +404,13 @@ const changeWorkTime = async ({
   employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
+  const { lunchDuration } = row;
   row[date] = {
     startWorkTime,
     endWorkTime,
     typeId,
   };
-  updateChangedEmployeesWorkTime(employeePositionId, date, startWorkTime, endWorkTime, typeId);
+  updateChangedEmployeesWorkTime(employeePositionId, date, startWorkTime, endWorkTime, typeId, null, lunchDuration);
   if (nextDayEndWork) {
     const nextDay = nextDayEndWork;
     const nextDayString = moment(nextDay).format('YYYY-MM-DD');
@@ -417,7 +420,15 @@ const changeWorkTime = async ({
       endWorkTime: nextDayEnd,
       typeId,
     };
-    updateChangedEmployeesWorkTime(employeePositionId, nextDayString, '00:00', nextDayEnd, typeId);
+    updateChangedEmployeesWorkTime(
+      employeePositionId,
+      nextDayString,
+      '00:00',
+      nextDayEnd,
+      typeId,
+      null,
+      lunchDuration,
+    );
   }
 };
 
@@ -425,6 +436,7 @@ const fillInTemplateData = ({ templateData }) => {
   for (const employeePosition of employeesWorkTime.value) {
     if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
       const keys = Object.keys(employeePosition);
+      const { lunchDuration } = employeePosition;
       for (const key of keys) {
         if (moment(key, 'YYYY-MM-DD', true).isValid()) {
           employeePosition[key] = { ...templateData[key] };
@@ -435,6 +447,7 @@ const fillInTemplateData = ({ templateData }) => {
             null,
             null,
             { ...templateData[key] },
+            lunchDuration,
           );
         }
       }
@@ -455,9 +468,10 @@ const fillByEmployeeTemplate = async ({ action }) => {
   employeesWorkTime.value = result;
   for (const employeePosition of result) {
     const { employeePositionId } = employeePosition;
+    const { lunchDuration } = employeePosition;
     for (const [key, value] of Object.entries(employeePosition)) {
       if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-        updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value);
+        updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value, lunchDuration);
       }
     }
   }
@@ -468,6 +482,7 @@ const copyTop = ({ rowIndex }) => {
   const prevFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex - 1];
   const currentEmployeePosition = employeesWorkTime.value.find(employee => employee.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
+  const { lunchDuration } = currentEmployeePosition;
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
     if (moment(key, 'YYYY-MM-DD', true).isValid()) {
@@ -479,6 +494,7 @@ const copyTop = ({ rowIndex }) => {
         null,
         null,
         { ...prevFilteredEmployeePosition[key] },
+        lunchDuration,
       );
     }
   }
@@ -486,6 +502,7 @@ const copyTop = ({ rowIndex }) => {
 const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
     === employeePositionId);
+  const { lunchDuration } = currentEmployeePosition;
   const selectedEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
     === selectedEmployeePositionId);
   const keys = Object.keys(currentEmployeePosition);
@@ -499,6 +516,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
         null,
         null,
         { ...selectedEmployeePosition[key] },
+        lunchDuration,
       );
     }
   }
@@ -507,6 +525,7 @@ const clear = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
     === currentFilteredEmployeePosition.employeePositionId);
+  const { lunchDuration } = currentEmployeePosition;
   const keys = Object.keys(currentEmployeePosition);
   const emptyData = { startWorkTime: '', endWorkTime: '', typeId: null };
   for (const key of keys) {
@@ -519,6 +538,7 @@ const clear = ({ rowIndex }) => {
         null,
         null,
         { ...emptyData },
+        lunchDuration,
       );
     }
   }
@@ -561,6 +581,7 @@ const fillDayOff = ({
   const dayOffEndDate = moment(dayOffEnd);
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
       === employeePositionId);
+  const { lunchDuration } = currentEmployeePosition;
   const fullData = { startWorkTime: '', endWorkTime: '', typeId: workDayStatusId };
   for (let day = moment(dayOffStartDate); day <= dayOffEndDate; day.add(1, 'day')) {
     const date = day.format('YYYY-MM-DD');
@@ -572,6 +593,7 @@ const fillDayOff = ({
       null,
       null,
       { ...fullData },
+      lunchDuration,
     );
   }
 };
@@ -815,6 +837,11 @@ const downloadXlsx = async () => {
     link.remove();
     URL.revokeObjectURL(urlFile);
   }
+};
+
+const downloadTabelXlsx = async () => {
+  window.open(`/forms/xlsx?type=104.02&year=${selectedYear.value}&month=${selectedMonth.value + 1}&departmentId=
+  ${selectedDepartment.value}`, '_blank');
 };
 
 </script>

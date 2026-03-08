@@ -110,3 +110,55 @@ def get_employee_position(org_id: int, department_ids: tuple = None, position_id
         )
         row = namedtuplefetchall(cursor)
     return row
+
+
+def get_employee_fact_time_work(department_id: int, document_id: int, first_date_month: str):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT employees_employeeposition.id as employee_position_id,
+                   employees_employeeposition.lunch_duration,
+                   employees_employeeposition.date_dismissal,
+                   employees_employeeposition.date_transfer,
+                   employees_employeeposition.tabel_number,
+                   employees_employeeposition.rate,
+                   employees_department.id as department_id,
+                   employees_department.name as department_name,
+                   employees_position.name as position_name,
+                   employees_typeworktimeemployee.title as bid_name,
+                   employees_employee.family,
+                   employees_employee.name,
+                   employees_employee.patronymic,
+                   employees_employee.snils,
+                   fact_time_work_table.tabel_document_id,
+                   fact_time_work_table.work_time_id,
+                   fact_time_work_table.date,
+                   fact_time_work_table.day_hours,
+                   fact_time_work_table.night_hours,
+                   fact_time_work_table.work_day_status_id
+            FROM employees_employeeposition
+                     LEFT JOIN employees_typeworktimeemployee ON employees_employeeposition.type_work_time_id = employees_typeworktimeemployee.id
+                     INNER JOIN employees_position ON employees_employeeposition.position_id = employees_position.id
+                     INNER JOIN employees_employee ON employees_employeeposition.employee_id = employees_employee.id
+                     INNER JOIN employees_department ON employees_employeeposition.department_id = employees_department.id
+                     LEFT JOIN
+                 (SELECT employees_facttimework.employee_position_id,
+                         employees_facttimework.tabel_document_id,
+                         employees_facttimework.id as work_time_id,
+                         employees_facttimework.date,
+                         employees_facttimework.common_hours as day_hours,
+                         employees_facttimework.night_hours,
+                         employees_facttimework.work_day_status_id
+                  FROM employees_facttimework
+                  WHERE tabel_document_id = %(document_id)s) as fact_time_work_table
+                 ON fact_time_work_table.employee_position_id = employees_employeeposition.id
+            WHERE department_id = %(department_id)s
+              and employees_employeeposition.is_active = true
+              and (employees_employeeposition.date_dismissal IS NULL OR employees_employeeposition.date_dismissal > %(first_date_month)s)
+              AND (employees_employeeposition.date_transfer IS NULL OR employees_employeeposition.date_transfer > %(first_date_month)s)
+            ORDER BY family
+            """,
+            params={"department_id": department_id, "document_id": document_id, "first_date_month": first_date_month},
+        )
+        row = namedtuplefetchall(cursor)
+        return row
