@@ -243,8 +243,6 @@ const updateTime = async () => {
     const start = new Date(`${props.date} ${startWork.value}`);
     const endTime = endWork.value.split(':');
     nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
-    console.log(endWork.value <= startWork.value, endWork.value, startWork.value, 'Интересно');
-    console.log(nextDayEndWork.value);
     endWork.value = '00:00';
   }
   const propsWorkTime = props.workTime;
