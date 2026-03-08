@@ -807,6 +807,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
             return result_check
         for employee_position_id, work_times in changed_time.items():
             for date, work_time in work_times.items():
+                if date == "lunchDuration":
+                    continue
                 start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
                 end = f"{date} {work_time.get('endWorkTime')}" if work_time.get("endWorkTime") else None
                 if work_time.get("endWorkTime") == '00:00':
@@ -1103,6 +1105,7 @@ class FactTimeWork(models.Model):
         last_date_month = datetime.date(year, month, length_month)
         tabel_document: TabelDocument = TabelDocument.get_or_create_tabel(first_date_month, last_date_month, department_id)
         for employee_position_id, work_times in changed_time.items():
+            lunch_duration = work_times.pop("lunchDuration", None)
             for date, work_time in work_times.items():
                 day_hours = None
                 night_hours = None
@@ -1116,6 +1119,8 @@ class FactTimeWork(models.Model):
                         end = end + datetime.timedelta(days=1)
                     hours = FactTimeWork.calculate_day_night_hours(start, end)
                     day_hours = hours.get("day_hours")
+                    if lunch_duration:
+                        day_hours = max(day_hours - lunch_duration / 60, 0)
                     night_hours = hours.get("night_hours")
                 day = FactTimeWork.objects.filter(tabel_document_id=tabel_document.pk, employee_position_id=employee_position_id, date=date).first()
                 if day:
