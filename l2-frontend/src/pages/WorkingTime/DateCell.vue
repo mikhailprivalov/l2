@@ -231,14 +231,14 @@ const selectTime = (variantId: number, startTime: string, endTime: string) => {
   endWork.value = endTime;
 };
 
-const countDaysCopy = ref(1);
-watch(countDaysCopy, () => {
-  if (countDaysCopy.value < 1) {
-    countDaysCopy.value = 1;
-  } else if (countDaysCopy.value > 31) {
-    countDaysCopy.value = 31;
-  }
-});
+// const countDaysCopy = ref(1);
+// watch(countDaysCopy, () => {
+//   if (countDaysCopy.value < 1) {
+//     countDaysCopy.value = 1;
+//   } else if (countDaysCopy.value > 31) {
+//     countDaysCopy.value = 31;
+//   }
+// });
 
 const timeOff = () => {
   selectedTimeOffLabel.value = findTimeOffLabel();
@@ -252,6 +252,8 @@ const updateTime = async () => {
     const start = new Date(`${props.date} ${startWork.value}`);
     const endTime = endWork.value.split(':');
     nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
+    console.log(endWork.value <= startWork.value, endWork.value, startWork.value, 'Интересно');
+    console.log(nextDayEndWork.value);
     endWork.value = '00:00';
   }
   const propsWorkTime = props.workTime;
@@ -295,7 +297,9 @@ watch(selectedShift, () => {
     const shiftInMinutes = Number(selectedShift.value) * 60;
     const shiftWithLunch = shiftInMinutes + props.lunchDuration;
     const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));
-    if (end.getDate() > start.getDate()) {
+    const isNextDay = end.getDate() > start.getDate();
+    const isMidnight = end.getHours() === 0 && end.getMinutes() === 0;
+    if (isNextDay && !isMidnight) {
       endWork.value = '00:00';
       nextDayEndWork.value = end;
     } else {
