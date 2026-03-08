@@ -431,7 +431,7 @@ def form_02(request_data):
             tabel_number = fact_time.get("tabel_number")
             position_name = fact_time.get("position_name")
             type_employment = fact_time.get("bid_type")
-            occupied_volume = ""
+            occupied_volume = fact_time.get("rate")
             norm_hours = ""
 
             common_hours_sum = f'{fact_time.get("common_hours_sum"):.1f}'

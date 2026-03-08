@@ -121,6 +121,7 @@ def get_employee_fact_time_work(department_id: int, document_id: int, first_date
                    employees_employeeposition.date_dismissal,
                    employees_employeeposition.date_transfer,
                    employees_employeeposition.tabel_number,
+                   employees_employeeposition.rate,
                    employees_department.id as department_id,
                    employees_department.name as department_name,
                    employees_position.name as position_name,

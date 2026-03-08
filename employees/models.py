@@ -1162,6 +1162,7 @@ class FactTimeWork(models.Model):
                     "position_name": fact_work_time.position_name,
                     "bid_type": fact_work_time.bid_name[:3] if fact_work_time.bid_name else "",
                     "tabel_number": fact_work_time.tabel_number,
+                    "rate": fact_work_time.rate,
                     "day_hours_sum": 0,
                     "night_hours_sum": 0,
                     "common_hours_sum": 0,
