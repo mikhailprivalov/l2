@@ -18,7 +18,7 @@ def patologistology_buh(data, param_data):
         "doctor_fio": "",
         "date_confirm": "",
         "date_create": "",
-        "department": ""
+        "department": "",
     }
     match_keys = {
         "Полис ОМС": "polis",
