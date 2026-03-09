@@ -34,6 +34,7 @@ def patologistology_buh_base(ws1):
         ('Подтверждено', 30),
         ('Дата забора', 30),
         ('Дата создания', 30),
+        ('Отделение', 30),
     ]
     for idx, column in enumerate(columns, 1):
         ws1.cell(row=4, column=idx).value = column[0]
@@ -99,8 +100,9 @@ def patologistology_buh_data(ws1, data):
         ws1.cell(row=r, column=17).value = res["date_confirm"]
         ws1.cell(row=r, column=18).value = normalize_date(res["date_get"]) if res.get("date_get") else "-"
         ws1.cell(row=r, column=19).value = res["date_create"]
+        ws1.cell(row=r, column=20).value = res["department"]
 
-        rows = ws1[f'A{r}:S{r}']
+        rows = ws1[f'A{r}:T{r}']
         for row in rows:
             for cell in row:
                 cell.style = style_border_res

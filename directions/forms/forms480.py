@@ -62,7 +62,7 @@ def form_01(c: Canvas, dir: Napravleniya):
         barcode = eanbc.Ean13BarcodeWidget(dir.pk + 460000000000, humanReadable=0, barHeight=8 * mm, barWidth=1.25)
         dir_code = Drawing()
         dir_code.add(barcode)
-        renderPDF.draw(dir_code, c, 146 * mm, 259 * mm)
+        renderPDF.draw(dir_code, c, 146 * mm, 251 * mm)
 
         objs = []
         if dir.hospital:
@@ -128,6 +128,8 @@ def form_01(c: Canvas, dir: Napravleniya):
         is_aqua_material = '(да/нет)___________'
         purpose = 'Уточнение диагноза'
         department = ""
+        department_from_param = ""
+        type_medexam = ""
 
         for param in direction_params:
             if param.field_type == 24:
@@ -166,12 +168,17 @@ def form_01(c: Canvas, dir: Napravleniya):
                     patient_locality = f'{value.get("title", "")} -{value.get("code", "")}'
                 except:
                     patient_locality = "Городская -1, Сельская -2"
-            elif param.title == 'Отделение':
-                department = param.value
+            elif (param.title).lower() == 'отделение':
+                department_from_param = param.value
+            elif param.title == 'Вид помощи':
+                type_medexam = param.value
         if not dir.is_external:
             department = dir.get_doc_podrazdeleniye_title()
 
-        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {department}', style))
+        op_bold_tag = '<font face="PTAstraSerifBold">'
+        cl_bold_tag = '</font>'
+
+        objs.append(Paragraph(f'1. Отделение, направившее биопсийный (операционный) материал: {op_bold_tag}{type_medexam}{cl_bold_tag} - {department_from_param}{department}', style))
         objs.append(Paragraph(f'2. Фамилия, имя, отчество (при наличии) пациента: {dir.client.individual.fio()}', style))
         sex = dir.client.individual.sex
         if sex == "м":

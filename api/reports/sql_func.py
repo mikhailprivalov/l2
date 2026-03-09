@@ -37,9 +37,31 @@ def report_buh_gistology(directions):
         LEFT JOIN directions_paraclinicresult dp on directions_issledovaniya.id = dp.issledovaniye_id
         LEFT JOIN directory_paraclinicinputfield dpif on dp.field_id = dpif.id
         LEFT JOIN users_doctorprofile udpf on directions_issledovaniya.doc_confirmation_id = udpf.id
-        
         WHERE directions_issledovaniya.napravleniye_id in %(directions)s
         ORDER BY hh.title, dn.visit_date, dn.id
+
+        """,
+            params={'directions': directions, 'tz': TIME_ZONE},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def direction_params_result(directions):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """ 
+        SELECT
+        directions_directionparamsresult.napravleniye_id,
+        directions_directionparamsresult.title,
+        directions_directionparamsresult.value
+        FROM directions_directionparamsresult
+        WHERE directions_directionparamsresult.napravleniye_id in %(directions)s 
+        AND
+        directions_directionparamsresult.title = 'отделение'
+        
+        ORDER BY  directions_directionparamsresult.napravleniye_id
 
         """,
             params={'directions': directions, 'tz': TIME_ZONE},
