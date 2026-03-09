@@ -63,7 +63,9 @@ def statistic_params_search(request):
         directions_data = tuple(list(set(directions)))
         if param == "1":
             result = sql_func.report_buh_gistology(directions_data)
-            final_structure = handle_func.patologistology_buh(result)
+            direction_param_result = sql_func.direction_params_result(directions_data)
+            param_result = {i.napravleniye_id: i.value for i in direction_param_result}
+            final_structure = handle_func.patologistology_buh(result, param_result)
             ws = structure_sheet.patologistology_buh_base(ws)
             ws = structure_sheet.patologistology_buh_data(ws, final_structure)
 

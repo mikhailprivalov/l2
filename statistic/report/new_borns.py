@@ -1,11 +1,9 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
-from utils.dates import normalize_date
 from utils.db import namedtuplefetchall
 from laboratory.settings import TIME_ZONE
 from django.db import connection
-import simplejson as json
 
 
 def form_01(ws1, data):

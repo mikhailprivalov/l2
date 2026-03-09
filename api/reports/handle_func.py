@@ -1,4 +1,4 @@
-def patologistology_buh(data):
+def patologistology_buh(data, param_data):
     prev_direction = None
     step = 0
     result = []
@@ -18,6 +18,7 @@ def patologistology_buh(data):
         "doctor_fio": "",
         "date_confirm": "",
         "date_create": "",
+        "department": "",
     }
     match_keys = {
         "Полис ОМС": "polis",
@@ -52,6 +53,7 @@ def patologistology_buh(data):
         tmp_data["doctor_fio"] = f"{i.doctor_family} {i.doctor_name} {i.doctor_patronymic}"
         tmp_data["date_confirm"] = i.date_confirm if i.date_confirm else "-"
         tmp_data["date_create"] = i.char_date_create if i.char_date_create else "-"
+        tmp_data["department"] = param_data.get(i.direction_id) if param_data.get(i.direction_id) else "-"
         tmp_data["price_category"] = i.iss_price_category
         tmp_data["hospital"] = i.hosp_title
         tmp_data["visit_date"] = i.char_visit_date

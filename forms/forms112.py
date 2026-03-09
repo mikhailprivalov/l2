@@ -492,6 +492,8 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
             types_direction["isHospital"].add(d)
         elif iss_obj.research.is_form:
             types_direction["isForm"].add(d)
+        elif iss_obj.research.is_citology:
+            types_direction["islab"].add(d)
         elif (
             not iss_obj.research.is_form
             and not iss_obj.research.is_citology
