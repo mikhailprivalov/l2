@@ -3,7 +3,7 @@ from brokers_queue.rmq.publisher import broker_publish_msg
 from laboratory.settings import RMQ_AUTH_PARAM
 from laboratory.utils import current_time
 from django.core.management.base import BaseCommand
-from directions.models import Napravleniya
+from directions.models import Napravleniya, Issledovaniya
 
 
 class Command(BaseCommand):
@@ -26,6 +26,11 @@ class Command(BaseCommand):
         use_exchange_name = RMQ_AUTH_PARAM.get("lab_exchange_name")
         use_routing_key = RMQ_AUTH_PARAM.get("lab_routing_key")
         for i in d_qs:
+            iss = Issledovaniya.objects.filter(napravleniye_id=i.pk).first()
+            if not iss.research.podrazdeleniye:
+                continue
+            if iss.research.podrazdeleniye.p_type != 2:
+                continue
             broker_publish_msg(i.pk, use_exchange_name=use_exchange_name, use_routing_key=use_routing_key)
             i.need_resend_ecp = True
             i.save()
