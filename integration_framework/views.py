@@ -274,7 +274,7 @@ def direction_data(request):
         if type_research == "lab":
             if not i.research.podrazdeleniye:
                 return Response({"ok": False})
-            if not i.research.podrazdeleniye.p_type != 2:
+            if i.research.podrazdeleniye.p_type != 2:
                 return Response({"ok": False})
         if type_research == "paraclinic":
             if not i.research.podrazdeleniye:
