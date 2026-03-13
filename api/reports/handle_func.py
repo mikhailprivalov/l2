@@ -49,6 +49,7 @@ def patologistology_buh(data, param_data):
             is_rmis_number = "e"
 
         tmp_data["direction"] = f"{i.direction_id} - {is_rmis_number}"
+        tmp_data["result_rmis_send"] = i.result_rmis_send
         tmp_data["fin_source"] = i.iss_finsource_title
         tmp_data["doctor_fio"] = f"{i.doctor_family} {i.doctor_name} {i.doctor_patronymic}"
         tmp_data["date_confirm"] = i.date_confirm if i.date_confirm else "-"

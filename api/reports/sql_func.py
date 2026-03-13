@@ -15,6 +15,7 @@ def report_buh_gistology(directions):
         to_char(dn.data_sozdaniya AT TIME ZONE %(tz)s, 'DD.MM.YYYY HH24:MI') AS char_date_create,
         dn.visit_date,
         dn.rmis_number,
+        dn.result_rmis_send,
         
         di.title as iss_finsource_title,
         cp.title as iss_price_category,
