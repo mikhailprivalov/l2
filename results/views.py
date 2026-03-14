@@ -639,7 +639,13 @@ def result_print(request):
                     if type_schema != "docx":
                         fwb = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request, link=link)
                     else:
-                        pdf_out = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request, link=link)
+                        pdf_out, file_title = form_result(direction, iss, fwb, doc, leftnone, request.user, has_any_signature=has_any_signature, request=request, link=link)
+                        if file_title:
+                            file_title = iri_to_uri(file_title)
+                            if inline:
+                                response['Content-Disposition'] = f'inline; filename="{file_title}.pdf"'
+                            else:
+                                response['Content-Disposition'] = f'attachment; filename="{file_title}.pdf"'
                         response.write(pdf_out)
                         return response
                 elif not protocol_plain_text or request.user.doctorprofile.is_structure_data_in_protocol or request.user.doctorprofile.podrazdeleniye.is_structure_data_in_protocol:
