@@ -23,6 +23,11 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
         result_data = {i.attached: i.field_value for i in fields_values}
+        name_pdf_file = None
+        for k, v in result_data.items():
+            if "name_file" in k:
+                name_pdf_file = v.replace(" ", "_")
+
         doc = DocxTemplate(current_template_file)
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount
@@ -81,7 +86,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         pdf_out = pdf_all.getvalue()
         os.remove(f"{temp_file_dir}.pdf")
         os.remove(f"{temp_file_dir}.docx")
-        return pdf_out
+        return pdf_out, name_pdf_file
     except AttributeError as e:
         Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk, "message": "Версии библиотек не те"}})
     except Exception as e:
