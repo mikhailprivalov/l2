@@ -102,7 +102,7 @@ def patologistology_buh_data(ws1, data):
         ws1.cell(row=r, column=18).value = normalize_date(res["date_get"]) if res.get("date_get") else "-"
         ws1.cell(row=r, column=19).value = res["date_create"]
         ws1.cell(row=r, column=20).value = res["department"]
-        ws1.cell(row=r, column=21).value = "Да" if res["result_rmis_send"] else "Нет",
+        ws1.cell(row=r, column=21).value = "Да" if res.ger("result_rmis_send") else "Нет"
 
         rows = ws1[f'A{r}:T{r}']
         for row in rows:

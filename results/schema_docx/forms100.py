@@ -23,11 +23,13 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
         result_data = {i.attached: i.field_value for i in fields_values}
-        name_pdf_file = None
+        name_pdf_file = ""
         for k, v in result_data.items():
             if "name_file" in k:
-                name_pdf_file = v.replace(" ", "_")
-
+                name_pdf_file = f"{name_pdf_file}{k}"
+        if name_pdf_file:
+            name_pdf_file = f"{name_pdf_file}_{direction.pk}"
+            name_pdf_file = name_pdf_file.replace(" ", "_")
         doc = DocxTemplate(current_template_file)
         direction = Napravleniya.objects.filter(pk=iss.napravleniye_id).first()
         contrast_amount = direction.contrast_amount
