@@ -26,7 +26,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         name_pdf_file = ""
         for k, v in result_data.items():
             if "name_file" in k:
-                name_pdf_file = f"{name_pdf_file}{k}"
+                name_pdf_file = f"{name_pdf_file}{v}"
         if name_pdf_file:
             name_pdf_file = f"{name_pdf_file}_{direction.pk}"
             name_pdf_file = name_pdf_file.replace(" ", "_")
