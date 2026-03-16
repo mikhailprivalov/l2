@@ -144,6 +144,7 @@ def get_paraclinic_result_by_iss(pk_iss):
                 LEFT JOIN directory_paraclinicinputgroups ON
                 directory_paraclinicInputField.group_id=directory_paraclinicinputgroups.id
               WHERE directions_paraclinicresult.issledovaniye_id = %(pk_iss)s
+              ORDER BY directions_paraclinicresult.field_id
         """,
             params={'pk_iss': pk_iss},
         )
