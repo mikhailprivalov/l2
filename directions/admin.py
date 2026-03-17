@@ -39,7 +39,7 @@ from .models import (
     ParaclinicResult,
     NapravleniyaFiles,
     IndicatorResultByCurator,
-    DirectionQRCodeForResult
+    DirectionQRCodeForResult,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
