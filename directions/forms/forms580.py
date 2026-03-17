@@ -1,5 +1,8 @@
+import binascii
 import locale
 import os.path
+
+import cryptography
 import sys
 from copy import deepcopy
 from io import BytesIO
@@ -14,16 +17,69 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak
 from transliterate import translit
+
+from appconf.manager import SettingManager
 from directions.models import Napravleniya
-from laboratory.settings import FONTS_FOLDER
+from laboratory.settings import FONTS_FOLDER, DIRECTIONS_RESULT_KEY, PRINT_RESULT_FROM_QR_CODE
 from laboratory.utils import strdate, strtime
 from podrazdeleniya.models import Podrazdeleniya
 from utils import xh
 from reportlab.graphics.barcode import qr
 from reportlab.graphics.barcode import createBarcodeDrawing
+from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import base64
 
 from django.core.paginator import Paginator
 from reportlab.platypus.flowables import HRFlowable
+
+
+def generate_key_from_password(password: str, salt: bytes = None) -> tuple:
+    """Генерирует ключ из парольной фразы"""
+    if salt is None:
+        salt = os.urandom(16)
+
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=100000,
+    )
+    key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
+    return key, salt
+
+
+def encrypt_string(password: str, plain_text: str) -> str:
+    """Шифрует строку с использованием парольной фразы"""
+    salt = os.urandom(16)
+    key, _ = generate_key_from_password(password, salt)
+
+    cipher = Fernet(key)
+    encrypted_data = cipher.encrypt(plain_text.encode())
+
+    result = base64.urlsafe_b64encode(salt + encrypted_data).decode()
+    return result
+
+
+def decrypt_string(password: str, encrypted_string: str) -> str or dict:
+    """Дешифрует строку с использованием парольной фразы"""
+    try:
+        data = base64.urlsafe_b64decode(encrypted_string.encode())
+
+        salt = data[:16]
+        encrypted_data = data[16:]
+
+        key, _ = generate_key_from_password(password, salt)
+
+        cipher = Fernet(key)
+        decrypted_data = cipher.decrypt(encrypted_data)
+
+        return decrypted_data.decode()
+    except binascii.Error:
+        return {'error': 'Неверный QR-код'}
+    except cryptography.fernet.InvalidToken:
+        return {'error': 'Получите новый QR-код'}
 
 
 def form_01(request_data):
@@ -288,7 +344,44 @@ def form_01(request_data):
         objs.append(Spacer(1, 7 * mm))
         objs.append(Paragraph("Всего назначено: " + str(len(issledovaniya)), style))
         objs.append(Spacer(1, 3 * mm))
-        objs.append(HRFlowable(width=80 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black))
+
+        # QR-code для результатов направления
+        if PRINT_RESULT_FROM_QR_CODE:
+            objs.append(HRFlowable(width=80 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black, dash=(2, 4)))
+            qr_string = f"{dir.pk}"
+            qr_result_value = encrypt_string(DIRECTIONS_RESULT_KEY, qr_string)
+            qr_result = qr.QrCodeWidget(qr_result_value)
+            qr_result.barWidth = 70
+            qr_result.barHeight = 70
+            qr_result.qrVersion = 1
+            d = Drawing()
+            d.add(qr_result)
+
+            bcd = createBarcodeDrawing('QR', value=qr_result_value, width=150, height=150, humanReadable=0)
+            bcd.hAlign = 'LEFT'
+            bcd_title = Paragraph("QR-код для печати результатов", style)
+
+            opinion = [
+                [
+                  bcd_title,
+                ],
+                [
+                  bcd,
+                ],
+            ]
+
+            tbl = Table(opinion, colWidths=(75 * mm))
+            tbl.setStyle(
+                TableStyle(
+                    [
+                        ('GRID', (0, 0), (-1, -1), 0.1, colors.white),
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 10 * mm),
+                    ]
+                )
+            )
+            objs.append(Spacer(1, 1.7 * mm))
+            objs.append(tbl)
         objs.append(PageBreak())
 
     doc.build(objs)

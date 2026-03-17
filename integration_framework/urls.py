@@ -12,6 +12,7 @@ urlpatterns = [
     path('result/sendamd', views.result_amd_send),
     path('result/sendcpp', views.result_cpp_send),
     path('result/pdf', views.get_pdf_result),
+    path('result/pdf-from-qr', views.get_pdf_result_from_qr_code),
     path('external-result/pdf', views.external_get_pdf_result),
     path('direction/pdf', views.get_pdf_direction),
     path('direction/data', views.direction_data),

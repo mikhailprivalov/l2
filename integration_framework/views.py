@@ -93,7 +93,7 @@ from utils.nsi_directories import NSI
 from utils.response import status_response
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
-from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya, DirectionQRCodeForResult
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
 from .models import CrieOrder, ExternalService, IndividualAuth, IPLimitter
 from laboratory.settings import COVID_RESEARCHES_PK
@@ -2869,6 +2869,57 @@ def get_pdf_result(request):
     pk = data.get("pk")
     pdf_content = direction_pdf_result(pk)
     return JsonResponse({"result": pdf_content})
+
+
+@api_view(["POST"])
+@can_use_schedule_only
+def get_pdf_result_from_qr_code(request):
+    from directions.forms.forms580 import decrypt_string
+    from laboratory.settings import DIRECTIONS_RESULT_KEY
+
+    auth_header = request.headers.get('Authorization')
+    token = auth_header.split(' ')[1]
+
+    app = Application.objects.get(key=token)
+
+    data = json.loads(request.body)
+    pk_encrypted = data.get("pk")
+    pk = decrypt_string(DIRECTIONS_RESULT_KEY, pk_encrypted)
+    if 'error' in pk:
+        Log(key="", type=5005, body=json.dumps({"data": data, "answer": pk.get('error')}), user=None, application=app).save()
+        return JsonResponse({"error_message": pk.get('error')})
+    pk = int(pk)
+    try:
+        qrcode = DirectionQRCodeForResult.objects.get(qrcode_value=pk_encrypted)
+        qrcode_prints = qrcode.print_quantity
+        qrcode_does_not_exist = False
+    except DirectionQRCodeForResult.DoesNotExist:
+        qrcode_prints = 0
+        qrcode_does_not_exist = True
+
+    if qrcode_prints == 3:
+        Log(key=pk, type=5005, body=json.dumps({"data": data, "answer": 'Истекло количество попыток печати по данному QR-коду'}), user=None, application=app).save()
+        return JsonResponse({'error_message': 'Истекло количество попыток печати по данному QR-коду'})
+    else:
+        pdf_content = direction_pdf_result(pk)
+        if pdf_content is "" or None:
+            Log(key=pk, type=5005, body=json.dumps({"data": data, "answer": 'Результатов нет'}), user=None, application=app).save()
+            return JsonResponse({'error_message': 'Результатов нет'})
+
+        if qrcode_does_not_exist:
+            qrcode = DirectionQRCodeForResult(
+                direction_id=pk,
+                print_quantity=1,
+                qrcode_value=data.get("pk"),
+            )
+            qrcode.save()
+        else:
+            qrcode = DirectionQRCodeForResult.objects.get(qrcode_value=pk_encrypted)
+            qrcode.print_quantity = qrcode_prints + 1
+            qrcode.save()
+
+        Log(key=pk, type=5004, body=json.dumps({"data": data, "answer": 'Успешная печать результатов'}), user=None, application=app).save()
+        return JsonResponse({"result": pdf_content})
 
 
 @api_view(["POST"])

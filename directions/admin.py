@@ -39,6 +39,7 @@ from .models import (
     ParaclinicResult,
     NapravleniyaFiles,
     IndicatorResultByCurator,
+    DirectionQRCodeForResult
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -384,6 +385,18 @@ class ResStatementDocument(admin.ModelAdmin):
         'create_at',
     )
 
+class ResDirectionQRCodeForResult(admin.ModelAdmin):
+    list_display = (
+        'direction',
+        'qrcode_value',
+        'print_quantity',
+        'created_at',
+        'updated_at'
+    )
+
+    list_filter = ('created_at', 'updated_at')
+    search_fields = ('direction', )
+
 
 admin.site.register(TubesRegistration)
 admin.site.register(Result, ResultAdmin)
@@ -416,3 +429,4 @@ admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
 admin.site.register(StatementDocument, ResStatementDocument)
 admin.site.register(IndicatorResultByCurator, ResIndicatorResultByCurator)
+admin.site.register(DirectionQRCodeForResult, ResDirectionQRCodeForResult)
