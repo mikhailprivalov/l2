@@ -39,7 +39,7 @@ from .models import (
     ParaclinicResult,
     NapravleniyaFiles,
     IndicatorResultByCurator,
-    DirectionQRCodeForResult,
+    DirectionResultQRCodePrintInfo,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -386,11 +386,11 @@ class ResStatementDocument(admin.ModelAdmin):
     )
 
 
-class ResDirectionQRCodeForResult(admin.ModelAdmin):
+class DirectionResultQRCodePrintInfoAdmin(admin.ModelAdmin):
     list_display = (
         'direction',
         'qrcode_value',
-        'print_quantity',
+        'print_count',
         'created_at',
         'updated_at'
     )
@@ -430,4 +430,4 @@ admin.site.register(RegisteredOrders, RegisteredOrdersAdmin)
 admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
 admin.site.register(StatementDocument, ResStatementDocument)
 admin.site.register(IndicatorResultByCurator, ResIndicatorResultByCurator)
-admin.site.register(DirectionQRCodeForResult, ResDirectionQRCodeForResult)
+admin.site.register(DirectionResultQRCodePrintInfo, DirectionResultQRCodePrintInfoAdmin)

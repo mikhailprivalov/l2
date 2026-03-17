@@ -35,7 +35,6 @@ from reportlab.platypus.flowables import HRFlowable
 
 
 def generate_key_from_password(password: str, salt: bytes = None) -> tuple:
-    """Генерирует ключ из парольной фразы"""
     if salt is None:
         salt = os.urandom(16)
 
@@ -50,7 +49,6 @@ def generate_key_from_password(password: str, salt: bytes = None) -> tuple:
 
 
 def encrypt_string(password: str, plain_text: str) -> str:
-    """Шифрует строку с использованием парольной фразы"""
     salt = os.urandom(16)
     key, _ = generate_key_from_password(password, salt)
 
@@ -62,7 +60,6 @@ def encrypt_string(password: str, plain_text: str) -> str:
 
 
 def decrypt_string(password: str, encrypted_string: str) -> str or dict:
-    """Дешифрует строку с использованием парольной фразы"""
     try:
         data = base64.urlsafe_b64decode(encrypted_string.encode())
 
@@ -347,8 +344,7 @@ def form_01(request_data):
         # QR-code для результатов направления
         if PRINT_RESULT_FROM_QR_CODE:
             objs.append(HRFlowable(width=80 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black, dash=(2, 4)))
-            qr_string = f"{dir.pk}"
-            qr_result_value = encrypt_string(DIRECTIONS_RESULT_KEY, qr_string)
+            qr_result_value = encrypt_string(DIRECTIONS_RESULT_KEY, str(dir.pk))
             qr_result = qr.QrCodeWidget(qr_result_value)
             qr_result.barWidth = 70
             qr_result.barHeight = 70
