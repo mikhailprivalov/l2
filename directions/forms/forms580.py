@@ -18,7 +18,6 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, PageBreak
 from transliterate import translit
 
-from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from laboratory.settings import FONTS_FOLDER, DIRECTIONS_RESULT_KEY, PRINT_RESULT_FROM_QR_CODE
 from laboratory.utils import strdate, strtime
@@ -363,10 +362,10 @@ def form_01(request_data):
 
             opinion = [
                 [
-                  bcd_title,
+                    bcd_title,
                 ],
                 [
-                  bcd,
+                    bcd,
                 ],
             ]
 

@@ -3716,6 +3716,7 @@ class IndicatorResultByCurator(models.Model):
         verbose_name = 'Показатель-результат куратора'
         verbose_name_plural = 'Показатели-результаты кураторов'
 
+
 class DirectionQRCodeForResult(models.Model):
     direction = models.ForeignKey(Napravleniya, help_text='Номер направления', on_delete=models.CASCADE)
     qrcode_value = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Данные из QR-кода")

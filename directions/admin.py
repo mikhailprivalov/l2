@@ -385,6 +385,7 @@ class ResStatementDocument(admin.ModelAdmin):
         'create_at',
     )
 
+
 class ResDirectionQRCodeForResult(admin.ModelAdmin):
     list_display = (
         'direction',
@@ -395,7 +396,7 @@ class ResDirectionQRCodeForResult(admin.ModelAdmin):
     )
 
     list_filter = ('created_at', 'updated_at')
-    search_fields = ('direction', )
+    search_fields = ('direction',)
 
 
 admin.site.register(TubesRegistration)
