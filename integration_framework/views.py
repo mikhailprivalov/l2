@@ -2898,7 +2898,7 @@ def get_pdf_result_from_qr_code(request):
         return JsonResponse({'error_message': 'Истекло количество попыток печати по данному QR-коду'})
     else:
         pdf_content = direction_pdf_result(pk)
-        if pdf_content is "" or None:
+        if not pdf_content:
             Log(key=pk, type=5005, body=json.dumps({"data": data, "answer": 'Результатов нет'}), user=None, application=app).save()
             return JsonResponse({'error_message': 'Результатов нет'})
 

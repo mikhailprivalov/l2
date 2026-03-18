@@ -72,10 +72,8 @@ def decrypt_string(password: str, encrypted_string: str) -> str or dict:
         decrypted_data = cipher.decrypt(encrypted_data)
 
         return decrypted_data.decode()
-    except binascii.Error:
-        return {'error': 'Неверный QR-код'}
-    except cryptography.fernet.InvalidToken:
-        return {'error': 'Получите новый QR-код'}
+    except:
+        return {'error': f'Получите новый QR-код'}
 
 
 def form_01(request_data):
