@@ -75,7 +75,7 @@ from laboratory.settings import (
     DICOM_SERVER,
     COVID_RESEARCHES_PK,
     DIRECTIONS_RESULT_KEY,
-    TIME_ZONE
+    TIME_ZONE,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
