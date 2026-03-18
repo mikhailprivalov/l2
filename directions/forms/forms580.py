@@ -35,7 +35,6 @@ from reportlab.platypus.flowables import HRFlowable
 def generate_key_from_password(password: str, salt: bytes = None) -> tuple:
     if salt is None:
         salt = os.urandom(16)
-
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
@@ -49,10 +48,8 @@ def generate_key_from_password(password: str, salt: bytes = None) -> tuple:
 def encrypt_string(password: str, plain_text: str) -> str:
     salt = os.urandom(16)
     key, _ = generate_key_from_password(password, salt)
-
     cipher = Fernet(key)
     encrypted_data = cipher.encrypt(plain_text.encode())
-
     result = base64.urlsafe_b64encode(salt + encrypted_data).decode()
     return result
 
@@ -60,15 +57,11 @@ def encrypt_string(password: str, plain_text: str) -> str:
 def decrypt_string(password: str, encrypted_string: str) -> str or dict:
     try:
         data = base64.urlsafe_b64decode(encrypted_string.encode())
-
         salt = data[:16]
         encrypted_data = data[16:]
-
         key, _ = generate_key_from_password(password, salt)
-
         cipher = Fernet(key)
         decrypted_data = cipher.decrypt(encrypted_data)
-
         return decrypted_data.decode()
     except:
         return {'error': 'Получите новый QR-код'}
@@ -337,7 +330,6 @@ def form_01(request_data):
         objs.append(Paragraph("Всего назначено: " + str(len(issledovaniya)), style))
         objs.append(Spacer(1, 3 * mm))
 
-        # QR-code для результатов направления
         if PRINT_RESULT_FROM_QR_CODE:
             objs.append(HRFlowable(width=80 * mm, spaceAfter=3 * mm, spaceBefore=3 * mm, color=colors.black, dash=(2, 4)))
             qr_result_value = encrypt_string(DIRECTIONS_RESULT_KEY, str(dir.pk))
