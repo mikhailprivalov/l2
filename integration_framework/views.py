@@ -2885,8 +2885,7 @@ def get_pdf_result_from_qr_code(request):
         Log(key="", type=5005, body=json.dumps({"data": data, "answer": pk.get('error')}), user=None, application=app).save()
         return JsonResponse({"error_message": pk.get('error')})
     pk = int(pk)
-    if DirectionResultQRCodePrintInfo.objects.filter(qrcode_value=pk_encrypted).first():
-        qrcode = DirectionResultQRCodePrintInfo.objects.get(qrcode_value=pk_encrypted)
+    if qrcode := DirectionResultQRCodePrintInfo.objects.filter(qrcode_value=pk_encrypted).first():
         qrcode_prints = qrcode.print_count
         qrcode_does_not_exist = False
     else:
