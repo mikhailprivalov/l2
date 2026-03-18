@@ -436,6 +436,9 @@ RMQ_AUTH_PARAM = {}
 RMQ_RESEARCH_SEND = []
 USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND = 1
 
+PRINT_RESULT_FROM_QR_CODE = False
+DIRECTIONS_RESULT_KEY = ""
+
 TYPE_NUMBER_SYSTEM = []
 FTP_SETUP_TO_SEND_HL7_BY_RESEARCHES = {
     "msh": {"app_sender": "", "organization_sender": "", "app_receiver": "", "organization_receiver": ""},
