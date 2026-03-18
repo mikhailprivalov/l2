@@ -1,8 +1,6 @@
-import binascii
 import locale
 import os.path
 
-import cryptography
 import sys
 from copy import deepcopy
 from io import BytesIO
@@ -73,7 +71,7 @@ def decrypt_string(password: str, encrypted_string: str) -> str or dict:
 
         return decrypted_data.decode()
     except:
-        return {'error': f'Получите новый QR-код'}
+        return {'error': 'Получите новый QR-код'}
 
 
 def form_01(request_data):
