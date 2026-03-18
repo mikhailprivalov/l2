@@ -3,7 +3,6 @@ import collections
 import hashlib
 import os
 import html
-import uuid
 import zlib
 
 from django.core.paginator import Paginator
@@ -27,8 +26,6 @@ from doctor_schedule.views import get_hospital_resource, get_available_hospital_
 from external_system.models import ArchiveMedicalDocuments, InstrumentalResearchRefbook
 from ftp_orders.main import ServiceNotFoundException, InvalidOrderNumberException, FailedCreatingDirectionsException
 from integration_framework.authentication import can_use_schedule_only, IndividualAuthentication
-
-from laboratory import settings
 from plans.models import PlanHospitalization, PlanHospitalizationFiles, Messages
 from podrazdeleniya.models import Podrazdeleniya
 import random
@@ -48,6 +45,7 @@ from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework.response import Response
 
 import directions.models as directions
+from directions.forms.forms580 import decrypt_string
 from appconf.manager import SettingManager
 from clients.models import Individual, Card, CardBase, Phones
 from clients.sql_func import last_results_researches_by_time_ago
@@ -75,6 +73,9 @@ from laboratory.settings import (
     HOSPITAL_PKS_NOT_CONTROL_DOCUMENT_EXTERNAL_CREATE_DIRECTION,
     DICOM_SERVERS,
     DICOM_SERVER,
+    COVID_RESEARCHES_PK,
+    DIRECTIONS_RESULT_KEY,
+    TIME_ZONE,
 )
 from laboratory.utils import current_time, date_at_bound, strfdatetime
 from refprocessor.result_parser import ResultRight
@@ -93,10 +94,9 @@ from utils.nsi_directories import NSI
 from utils.response import status_response
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
-from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya
+from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya, DirectionResultQRCodePrintInfo
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
 from .models import CrieOrder, ExternalService, IndividualAuth, IPLimitter
-from laboratory.settings import COVID_RESEARCHES_PK
 from .tasks import send_code_cascade, stop_code_cascade
 from .utils import get_json_protocol_data, get_json_labortory_data, check_type_file, legal_auth_get, author_doctor
 from django.contrib.auth.models import User
@@ -2551,7 +2551,7 @@ def hosp_record_list(request):
             status_description = plan.why_cancel
         if plan.work_status == 3:
             slot_plan = plan.slot_fact.plan
-            status_description = slot_plan.datetime.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%d.%m.%Y %H:%M")
+            status_description = slot_plan.datetime.astimezone(pytz.timezone(TIME_ZONE)).strftime("%d.%m.%Y %H:%M")
         rows_files = []
         row_file: PlanHospitalizationFiles
         for row_file in PlanHospitalizationFiles.objects.filter(plan=plan).order_by("-created_at"):
@@ -2869,6 +2869,52 @@ def get_pdf_result(request):
     pk = data.get("pk")
     pdf_content = direction_pdf_result(pk)
     return JsonResponse({"result": pdf_content})
+
+
+@api_view(["POST"])
+@can_use_schedule_only
+def get_pdf_result_from_qr_code(request):
+    auth_header = request.headers.get('Authorization')
+    token = auth_header.split(' ')[1]
+    app = Application.objects.get(key=token)
+
+    data = json.loads(request.body)
+    pk_encrypted = data.get("pk")
+    pk = decrypt_string(DIRECTIONS_RESULT_KEY, pk_encrypted)
+    if 'error' in pk:
+        Log(key="", type=5005, body=json.dumps({"data": data, "answer": pk.get('error')}), user=None, application=app).save()
+        return JsonResponse({"error_message": pk.get('error')})
+    pk = int(pk)
+    if qrcode := DirectionResultQRCodePrintInfo.objects.filter(qrcode_value=pk_encrypted).first():
+        qrcode_prints = qrcode.print_count
+        qrcode_does_not_exist = False
+    else:
+        qrcode_prints = 0
+        qrcode_does_not_exist = True
+
+    if qrcode_prints == 3:
+        Log(key=pk, type=5005, body=json.dumps({"data": data, "answer": 'Истекло количество попыток печати по данному QR-коду'}), user=None, application=app).save()
+        return JsonResponse({'error_message': 'Истекло количество попыток печати по данному QR-коду'})
+    else:
+        pdf_content = direction_pdf_result(pk)
+        if not pdf_content:
+            Log(key=pk, type=5005, body=json.dumps({"data": data, "answer": 'Результатов нет'}), user=None, application=app).save()
+            return JsonResponse({'error_message': 'Результатов нет'})
+
+        if qrcode_does_not_exist:
+            qrcode = DirectionResultQRCodePrintInfo(
+                direction_id=pk,
+                print_count=1,
+                qrcode_value=data.get("pk"),
+            )
+            qrcode.save()
+        else:
+            qrcode = DirectionResultQRCodePrintInfo.objects.get(qrcode_value=pk_encrypted)
+            qrcode.print_count = qrcode_prints + 1
+            qrcode.save()
+
+        Log(key=pk, type=5004, body=json.dumps({"data": data, "answer": 'Успешная печать результатов'}), user=None, application=app).save()
+        return JsonResponse({"result": pdf_content})
 
 
 @api_view(["POST"])

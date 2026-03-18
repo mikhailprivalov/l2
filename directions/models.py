@@ -3715,3 +3715,15 @@ class IndicatorResultByCurator(models.Model):
     class Meta:
         verbose_name = 'Показатель-результат куратора'
         verbose_name_plural = 'Показатели-результаты кураторов'
+
+
+class DirectionResultQRCodePrintInfo(models.Model):
+    direction = models.ForeignKey(Napravleniya, help_text='Номер направления', on_delete=models.CASCADE)
+    qrcode_value = models.CharField(max_length=255, default=None, blank=True, null=True, help_text="Данные из QR-кода")
+    print_count = models.IntegerField(default=0, blank=True, null=True, help_text='Количество напечатанных результатов по QR-коду')
+    created_at = models.DateTimeField(auto_now_add=True, help_text='Дата и время первого использования штрих-кода')
+    updated_at = models.DateTimeField(auto_now=True, help_text='Дата и время последнего использования штрих-кода')
+
+    class Meta:
+        verbose_name = 'QR-код для печати результатов'
+        verbose_name_plural = 'QR-коды для печати результатов'
