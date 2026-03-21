@@ -6,6 +6,12 @@
     >
       <i
         v-tippy
+        class="fa fa-arrow-down icon-color"
+        title="Скопировать на колонку"
+        @click="copyToColumn"
+      />
+      <i
+        v-tippy
         class="fa-solid fa-copy icon-color"
         title="Предыдущую заполненную"
         @click="copyPrevFilled"
@@ -122,7 +128,7 @@ import moment from 'moment';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
 
-const emit = defineEmits(['changeWorkTime', 'copyPrevFilled']);
+const emit = defineEmits(['changeWorkTime', 'copyPrevFilled', 'copyToColumn']);
 const props = defineProps({
   workTime: {
     type: [Object, String],
@@ -324,6 +330,12 @@ watch(() => props.workTime, () => {
 
 const copyPrevFilled = () => {
   emit('copyPrevFilled', { date: props.date });
+};
+
+const copyToColumn = () => {
+  emit('copyToColumn', {
+    date: props.date, startWork: startWork.value, endWork: endWork.value, typeId: selectedTimeOff.value,
+  });
 };
 
 </script>
