@@ -56,6 +56,7 @@
           :department-lunch-duration="lunchDurationSelectedDepartment"
           @fillInTemplate="fillInTemplateData"
           @fillByEmployeeTemplate="fillByEmployeeTemplate"
+          @fillColumnByTemplate="fillColumnByTemplate"
         />
       </div>
       <div
@@ -473,6 +474,22 @@ const fillByEmployeeTemplate = async ({ action }) => {
       if (moment(key, 'YYYY-MM-DD', true).isValid()) {
         updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value, lunchDuration);
       }
+    }
+  }
+};
+
+const fillColumnByTemplate = ({
+  date, startWork, endWork, typeId,
+}) => {
+  for (const employeePosition of employeesWorkTime.value) {
+    const { lunchDuration } = employeePosition;
+    const { employeePositionId } = employeePosition;
+    if (checkboxOption.value.selectedRowKeys.length === 0) {
+      employeePosition[date] = { startWorkTime: startWork, endWorkTime: endWork, typeId };
+      updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
+    } else if (checkboxOption.value.selectedRowKeys.includes(employeePositionId)) {
+      employeePosition[date] = { startWorkTime: startWork, endWorkTime: endWork, typeId };
+      updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
     }
   }
 };
