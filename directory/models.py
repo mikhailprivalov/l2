@@ -339,6 +339,7 @@ class Researches(models.Model):
     is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
     is_complex = models.BooleanField(default=False, blank=True, help_text="Это комплексная услуга", db_index=True)
     is_lab = models.BooleanField(default=False, blank=True, help_text="Это для лаборатории", db_index=True)
+    is_layout_template = models.BooleanField(default=False, blank=True, help_text="Это шаблон для макета", db_index=True)
     site_type = models.ForeignKey(ResearchSite, default=None, null=True, blank=True, help_text="Место услуги", on_delete=models.SET_NULL, db_index=True)
     need_vich_code = models.BooleanField(default=False, blank=True, help_text="Необходимость указания кода вич в направлении")
     paraclinic_info = models.TextField(blank=True, default="", help_text="Если это параклиническое исследование - здесь указывается подготовка и кабинет")
@@ -442,6 +443,7 @@ class Researches(models.Model):
             16: dict(is_expertise=True),
             17: dict(is_case=True),
             18: dict(is_complex=True),
+            19: dict(is_layout_template=True),
         }
         return ts.get(t + 1, {})
 
@@ -476,6 +478,11 @@ class Researches(models.Model):
             # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
             # тип подразделения Podrazdeleniye.TYPES = 18,
             return -16
+        if self.is_layout_template:
+            # -16 потому что на фронт отдаётся тип подразделения 18, на фронте 2 - 18 = -16
+            # смотреть Researches.filter_type() complex=18 и SettingManager.en() complex=18
+            # тип подразделения Podrazdeleniye.TYPES = 18,
+            return -17
         return self.podrazdeleniye_id or -2
 
     @property
@@ -496,6 +503,7 @@ class Researches(models.Model):
             or self.is_monitoring
             or self.is_expertise
             or self.is_aux
+            or self.is_layout_template
         )
 
     def get_flag_types_n3(self):
@@ -1283,6 +1291,7 @@ class ParaclinicInputField(models.Model):
         (38, "Procedure list result"),
         (39, "Динамический справочник"),
         (40, "Dynamic table"),
+        (41, "Шаблон макета"),
     )
 
     title = models.CharField(max_length=400, help_text="Название поля ввода")

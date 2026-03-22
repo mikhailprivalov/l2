@@ -292,6 +292,9 @@ export default {
         if (this.modules.l2_case && this.can_edit_case) {
           d.push({ value: -14, label: 'Случаи' });
         }
+        if (this.modules.layout_template) {
+          d.push({ value: -17, label: 'Шаблоны' });
+        }
       }
 
       this.departments_of_type = d;

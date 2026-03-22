@@ -912,6 +912,21 @@
                       :permanent_directories_keys="permanent_directories_keys"
                       :permanent_directories="permanent_directories"
                     />
+                    <div v-else-if="row.field_type === 41">
+                      <strong>Шаблон-макет:</strong>
+                      <br>
+                      <Treeselect
+                        :value="row.values_to_input[0] || null"
+                        class="treeselect-wide"
+                        :multiple="false"
+                        :disable-branch-nodes="true"
+                        :options="layoutTemplates"
+                        placeholder="Шаблон не выбран"
+                        :append-to-body="true"
+                        :clearable="true"
+                        @input="e => e ? row.values_to_input = [e] : row.values_to_input = []"
+                      />
+                    </div>
                     <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                       <div
                         v-collapse-toggle
@@ -1165,6 +1180,7 @@
                         </option>
                         <option value="35">Врач</option>
                         <option value="39">Динамический справочник</option>
+                        <option value="41">Шаблон макет</option>
                       </select>
                     </label>
                   </div>
@@ -1428,6 +1444,7 @@ export default {
       cda_options: [],
       patternParams: [],
       dynamicDirectories: [],
+      layoutTemplates: [],
       autoRegisterRmisLocation: '',
       departmentForTemplatesField: null,
       departmentsForPermissions: [],
@@ -1544,6 +1561,7 @@ export default {
     await this.loadDepartmentsForPermissions();
     await this.load_deparments();
     await this.loadDynamicDirectories();
+    await this.loadLayoutTemplates();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1945,6 +1963,11 @@ export default {
     async loadDynamicDirectories() {
       const { rows } = await this.$api('dynamic-directory/list-treeselect');
       this.dynamicDirectories = rows;
+    },
+
+    async loadLayoutTemplates() {
+      const { rows } = await this.$api('layout-template/list-treeselect');
+      this.layoutTemplates = rows;
     },
     async loadcollectNsiCode() {
       const { rows } = await this.$api('external-system/fsidi-by-method', { method: this.currentMethod });

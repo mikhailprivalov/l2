@@ -11,6 +11,7 @@ const stateInitial = {
   tubes: {},
   researches_loaded: false,
   permanentDirectories: {},
+  LayoutTemplate: {},
   requiredStattalonFields: {},
   requiredStattalonFieldsLoaded: false,
   researchesPkRequiredStattalonFields: [],
