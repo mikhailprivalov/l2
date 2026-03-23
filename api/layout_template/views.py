@@ -21,7 +21,7 @@ def list_directories(request):
 @login_required
 def list_layout_template_treeselect(request):
     # return JsonResponse({'rows': [x.to_treeselect_json() for x in Directory.objects.filter(hide=False).order_by('title')]})
-    return JsonResponse({'rows': [{"id":1, "label": "Дата время"}, {"id":2, "label": "Дата время1111"}]})
+    return JsonResponse({'rows': [{"id": 1, "label": "Дата время"}, {"id": 2, "label": "Дата время1111"}]})
 
 
 @login_required
