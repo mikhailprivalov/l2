@@ -475,6 +475,17 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 41"
+                class="field-value"
+              >
+                <DynamicDirectoryField
+                  v-model="field.value"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                  :edit-title="`${group.title} ${field.title}`.trim()"
+                  :directory="field.values_to_input[0]"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
