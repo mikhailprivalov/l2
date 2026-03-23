@@ -630,6 +630,147 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_cert
         sick_title = group.title == "Сведения ЛН"
         if sick_title:
             sick_result = collections.OrderedDict()
+        # results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+        print(group.title)
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).order_by("field__order")
+        if results.exists():
+            if group.show_title and group.title != "" and not med_certificate:
+                txt += "<font face=\"FreeSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
+            vals = []
+            for r in results:
+                if med_certificate and not r.field.for_med_certificate:
+                    continue
+                field_type = r.get_field_type()
+                print(field_type)
+                if field_type == 41:
+                    research_layout_field = directory.Researches.objects.filter(pk=r.field.layout_link_research).first()
+                    fwb = get_result_for_layout_template(research_layout_field, iss, med_certificate, txt, fwb, style, styleBold,pw, leftnone, protocol_plain_text)
+                    continue
+                v = r.string_value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
+                v = v.replace('&lt;sub&gt;', '<sub>')
+                v = v.replace('&lt;/sub&gt;', '</sub>')
+                v = v.replace('&lt;sup&gt;', '<sup>')
+                v = v.replace('&lt;/sup&gt;', '</sup>')
+                if field_type == 1:
+                    vv = v.split('-')
+                    if len(vv) == 3:
+                        v = "{}.{}.{}".format(vv[2], vv[1], vv[0])
+                elif field_type in [11, 13]:
+                    v = '<font face="FreeSans" size="8">{}</font>'.format(v.replace("&lt;br/&gt;", " "))
+                elif field_type == 15:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
+                    dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
+                    file_tmp = os.path.join(dir_param, f'field_{date_now1}_{r.pk}.png')
+                    fwb.append(Spacer(1, 2 * mm))
+                    img = html_to_pdf(file_tmp, r.value, pw, leftnone)
+                    fwb.append(img)
+                    os.remove(file_tmp)
+                    continue
+                elif field_type == 16:
+                    v = json.loads(v)
+                    if not v['directions']:
+                        continue
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    aggr_lab = lab_iss_to_pdf(v)
+                    fwb.extend(aggr_lab)
+                    continue
+                elif field_type == 17:
+                    if v:
+                        v = json.loads(v)
+                        if not v['directions']:
+                            continue
+                        v = text_iss_to_pdf(v, protocol_plain_text)
+                elif field_type == 24:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    previous_laboratory = previous_laboratory_result(v)
+                    if not previous_laboratory:
+                        continue
+                    fwb.extend(previous_laboratory)
+                    continue
+                elif field_type == 38:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    previous_procedure_result = previous_procedure_list_result(v)
+                    if not previous_procedure_result:
+                        continue
+                    fwb.extend(previous_procedure_result)
+                    continue
+                elif field_type in [26, 25]:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    if v:
+                        fwb.append(Paragraph(r.field.get_title(), styleBold))
+                        fwb = previous_doc_refferal_result(v, fwb)
+                    continue
+                elif field_type == 27 and not r.field.is_diag_table:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    table_results = table_part_result(v)
+                    if not table_results:
+                        continue
+                    fwb.append(table_results)
+                    continue
+                elif field_type == 27 and r.field.is_diag_table:
+                    txt += "; ".join(vals)
+                    fwb.append(Paragraph(txt, style))
+                    txt = ''
+                    vals = []
+                    fwb.append(Spacer(1, 2 * mm))
+                    fwb.append(Paragraph(r.field.get_title(), styleBold))
+                    table_results = table_part_result_diag(v)
+                    if not table_results:
+                        continue
+                    fwb.append(table_results)
+                    continue
+                v = text_to_bold(v)
+                if r.field.get_title(force_type=field_type) != "":
+                    vals.append("{}:&nbsp;{}".format(r.field.get_title().replace('<', '&lt;').replace('>', '&gt;'), v))
+                else:
+                    vals.append(v)
+                if sick_title:
+                    sick_result[r.field.get_title(force_type=field_type)] = v
+
+            txt += "; ".join(vals)
+            txt = txt.strip()
+            if len(txt) > 0 and txt.strip()[-1] != ".":
+                txt += ". "
+            elif len(txt) > 0:
+                txt += " "
+    fwb.append(Paragraph(txt, style))
+    return fwb
+
+
+def get_result_for_layout_template(research_layout, iss, med_certificate, txt, fwb, style, styleBold,pw, leftnone, protocol_plain_text):
+    for group in directory.ParaclinicInputGroups.objects.filter(research=research_layout).order_by("order"):
+        print(group)
+        sick_title = group.title == "Сведения ЛН"
+        if sick_title:
+            sick_result = collections.OrderedDict()
         results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
         if results.exists():
             if group.show_title and group.title != "" and not med_certificate:
@@ -754,8 +895,6 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_cert
                 txt += ". "
             elif len(txt) > 0:
                 txt += " "
-    fwb.append(Paragraph(txt, style))
-    return fwb
 
 
 def microbiology_result(iss, fwb, doc):

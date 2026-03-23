@@ -1966,7 +1966,7 @@ export default {
     },
 
     async loadLayoutTemplates() {
-      const { rows } = await this.$api('layout-template/list-treeselect');
+      const { rows } = await this.$api('layout-template/list-treeselect', { pk: this.pk });
       this.layoutTemplates = rows;
     },
     async loadcollectNsiCode() {
