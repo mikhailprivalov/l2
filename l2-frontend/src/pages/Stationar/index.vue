@@ -636,16 +636,26 @@
             v-if="is_diary(row.research)"
             class="group"
           >
-            <div class="group-title">
+            <div
+              class="group-title"
+              style="z-index: 0;"
+            >
               Фармакотерапия
             </div>
             <div class="row">
               <div class="col-xs-12">
-                <PharmacotherapyInput
+                <PharmacotherapyTemplate
+                  v-if="!row.confirmed"
                   v-model="row.procedure_list"
-                  :pk="row.pk"
-                  :confirmed="row.confirmed"
+                  @template-data="row.procedure_list.push($event)"
                 />
+                <div class="sd">
+                  <PharmacotherapyInput
+                    v-model="row.procedure_list"
+                    :pk="row.pk"
+                    :confirmed="row.confirmed"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1052,6 +1062,7 @@ export default {
     ResearchesPicker: () => import('@/ui-cards/ResearchesPicker.vue'),
     Modal: () => import('@/ui-cards/Modal.vue'),
     PharmacotherapyInput: () => import('@/ui-cards/PharmacotherapyInput.vue'),
+    PharmacotherapyTemplate: () => import('@/ui-cards/PharmacotherapyTemplate.vue'),
     EDSDirection: () => import('@/ui-cards/EDSDirection.vue'),
   },
   mixins: [menuMixin],
