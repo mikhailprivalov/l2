@@ -46,7 +46,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate']);
+const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate', 'fillColumnByTemplate']);
 const monthDays = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
@@ -119,6 +119,14 @@ const fillByEmployeeTemplate = ({ action }) => {
   emit('fillByEmployeeTemplate', { action });
 };
 
+const fillColumnByTemplate = ({
+  date, startWork, endWork, typeId,
+}) => {
+  emit('fillColumnByTemplate', {
+    date, startWork, endWork, typeId,
+  });
+};
+
 const getColumns = () => {
   const columnTemplate = [
     {
@@ -166,7 +174,7 @@ const getColumns = () => {
             lunchDuration: props.departmentLunchDuration,
             showAdditionalButtons: true,
           },
-          on: { changeWorkTime: changeTemplateTime, copyPrevFilled: copyPrevFilledCell },
+          on: { changeWorkTime: changeTemplateTime, copyPrevFilled: copyPrevFilledCell, copyToColumn: fillColumnByTemplate },
         },
       ),
     };
