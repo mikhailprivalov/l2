@@ -48,23 +48,12 @@
             placeholder="Наименование шаблона"
           >
           <button
-            v-tippy
-            class="btn btn-blue-nb attached-button"
-            style="border-radius: 0"
-            type="button"
-            title="Возможности сохранения"
-            :disabled="isSearchButtonDisabled"
-            @click="checkTemplate"
-          >
-            Проверка
-          </button>
-          <button
             class="btn btn-blue-nb attached-button"
             type="button"
-            :disabled="isActionButtonDisabled"
-            @click="templateActionExecute"
+            :disabled="!templateTitle"
+            @click="updateTemplate"
           >
-            {{ templateActionButtonTitle }}
+            Сохранить шаблон
           </button>
         </div>
       </div>
@@ -76,7 +65,7 @@
 import TreeSelect from '@riophae/vue-treeselect';
 import moment from 'moment/moment';
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  getCurrentInstance, onMounted, ref,
 } from 'vue';
 import { POSITION } from 'vue-toastification/src/ts/constants';
 
@@ -120,21 +109,17 @@ const templates = ref(null);
 const selectedTemplate = ref(null);
 const selectedTemplateData = ref(null);
 const templateTitle = ref('');
-const originalTemplateTitle = ref('');
-const isTemplateChecked = ref(false);
-const templateAction = ref('');
-const templateActionButtonTitle = ref('Сохранить');
 
 const getTemplates = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const templatesData = await api('procedural-list/get-templates');
+  const templatesData = await api('procedural-list/get-drug-templates');
   templates.value = templatesData.data;
   await store.dispatch(actions.DEC_LOADING);
 };
 
 const getTemplateData = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const response = await api('procedural-list/get-selected-template-data', { template_id: selectedTemplate.value });
+  const response = await api('procedural-list/get-drug-template', { template_id: selectedTemplate.value });
   selectedTemplateData.value = response.data;
   await store.dispatch(actions.DEC_LOADING);
 
@@ -156,54 +141,9 @@ const getTemplateData = async () => {
       units: row.units,
       comment: row.comment,
     };
-
     emit('template-data', data);
   });
 };
-
-const isSearchButtonDisabled = computed(() => !templateTitle.value?.trim());
-
-const isActionButtonDisabled = computed(() => {
-  if (!templateTitle.value?.trim()) return true;
-  if (!isTemplateChecked.value) return true;
-  if (templateTitle.value !== originalTemplateTitle.value) return true;
-  return false;
-});
-
-const checkTemplate = async () => {
-  const response = await api('procedural-list/find-template-for-edit-or-add', {
-    template_title: templateTitle.value,
-  });
-
-  originalTemplateTitle.value = templateTitle.value;
-  isTemplateChecked.value = true;
-
-  // eslint-disable-next-line no-prototype-builtins
-  if (response.hasOwnProperty('template_access')) {
-    if (response.template_access) {
-      templateActionButtonTitle.value = 'Изменить';
-      templateAction.value = 'edit';
-      showToast(response.message, TOAST_TYPES.SUCCESS);
-    } else {
-      templateActionButtonTitle.value = 'Сохранить';
-      templateAction.value = '';
-      isTemplateChecked.value = false;
-      showToast(response.message, TOAST_TYPES.WARNING);
-    }
-  } else {
-    templateActionButtonTitle.value = 'Сохранить';
-    templateAction.value = 'add';
-    showToast(response.message, TOAST_TYPES.SUCCESS);
-  }
-};
-
-watch(templateTitle, (newValue, oldValue) => {
-  if (newValue !== originalTemplateTitle.value) {
-    isTemplateChecked.value = false;
-    templateActionButtonTitle.value = 'Сохранить';
-    templateAction.value = '';
-  }
-});
 
 const validateRows = () => {
   const rowsToAdd = ref([]);
@@ -242,7 +182,7 @@ const validateRows = () => {
   return rowsToAdd;
 };
 
-const addTemplate = async () => {
+const updateTemplate = async () => {
   const validatedRows = validateRows();
 
   if (!validatedRows) {
@@ -250,7 +190,7 @@ const addTemplate = async () => {
   }
 
   try {
-    const response = await api('procedural-list/add-template', {
+    const response = await api('procedural-list/update-drug-template', {
       template_title: templateTitle.value,
       rows: validatedRows.value,
     });
@@ -260,47 +200,11 @@ const addTemplate = async () => {
       await getTemplates();
       showToast(response.message, TOAST_TYPES.SUCCESS);
       // eslint-disable-next-line no-prototype-builtins
-    } else if (response.hasOwnProperty('warning')) {
-      showToast(response.warning, TOAST_TYPES.WARNING);
-      // eslint-disable-next-line no-prototype-builtins
-    } else if (response.hasOwnProperty('error')) {
-      showToast(response.error, TOAST_TYPES.ERROR);
-    }
-  } catch {
-    showToast('Ошибка при сохранении шаблона', TOAST_TYPES.ERROR);
-  }
-};
-
-const editTemplate = async () => {
-  const validatedRows = validateRows();
-
-  if (!validatedRows) {
-    return;
-  }
-
-  try {
-    const response = await api('procedural-list/edit-template', {
-      template_title: templateTitle.value,
-      rows: validatedRows.value,
-    });
-
-    // eslint-disable-next-line no-prototype-builtins
-    if (response.hasOwnProperty('message')) {
-      showToast(response.message, TOAST_TYPES.SUCCESS);
-      // eslint-disable-next-line no-prototype-builtins
     } else if (response.hasOwnProperty('error')) {
       showToast(response.error, TOAST_TYPES.ERROR);
     }
   } catch {
     showToast('Ошибка при изменении шаблона', TOAST_TYPES.ERROR);
-  }
-};
-
-const templateActionExecute = () => {
-  if (templateAction.value === 'add') {
-    addTemplate();
-  } else if (templateAction.value === 'edit') {
-    editTemplate();
   }
 };
 

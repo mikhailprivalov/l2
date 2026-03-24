@@ -10,9 +10,7 @@ urlpatterns = [
     path('department-procedures', views.procedure_aggregate),
     path('suitable-departments', views.get_suitable_departments),
     path('procedure-for-extract', views.procedure_for_extract),
-    path('get-templates', views.get_templates),
-    path('get-selected-template-data', views.get_selected_template_data),
-    path('find-template-for-edit-or-add', views.find_template_for_edit_or_add),
-    path('add-template', views.add_template),
-    path('edit-template', views.edit_template),
+    path('get-drug-templates', views.get_drug_templates),
+    path('get-drug-template', views.get_drug_template_by_id),
+    path('update-drug-template', views.update_drug_template),
 ]

@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import Prefetch
 from django.http import JsonResponse
 
-from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times
+from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times, get_drugs_template_rows
 from api.stationar.stationar_func import forbidden_edit_dir, hosp_get_hosp_direction
 from directions.models import Issledovaniya
 from laboratory.utils import strfdatetime
@@ -305,74 +305,44 @@ def procedure_for_extract(request):
 
 
 @login_required
-def get_templates(request):
+def get_drug_templates(request):
     doctor_profile = request.user.doctorprofile
     templates = DrugsTemplate.get_templates(doctor_profile, doctor_profile.podrazdeleniye)
     return JsonResponse({"data": templates})
 
 
 @login_required()
-def get_selected_template_data(request):
+def get_drug_template_by_id(request):
     request_data = json.loads(request.body)
+    rows = get_drugs_template_rows(request_data['template_id'])
     result = [{
         'drug': {
-            'pk': row.drug.pk,
-            'title': str(row.drug),
+            'pk': row.drug_pk,
+            'title': row.drug_title,
         },
-        'form_release': row.form_release.pk,
-        'method': row.method.pk,
+        'form_release': row.form_release,
+        'method': row.method,
         'dosage': row.dosage,
         'units': row.units,
         'days_count': row.days_count,
         'step': row.step,
         'comment': row.comment,
-        'times': [time.times_medication for time in row.times]
-    } for row in DrugsTemplatesRow.objects.filter(
-        template_id=request_data['template_id']
-    ).select_related(
-        'drug',
-        'form_release',
-        'method'
-    ).prefetch_related(
-        Prefetch(
-            'dtr_number',
-            queryset=DrugsTemplatesRowsTime.objects.all(),
-            to_attr='times'
-        )
-    )]
+        'times': row.times
+    } for row in rows]
 
     return JsonResponse({"data": result})
 
 
 def check_template(title, doctor_profile):
+    result = {}
     if template := DrugsTemplate.objects.filter(title=title).first():
-        my_template = False
         if template.doc_create == doctor_profile:
-            my_template = True
-
-        if my_template:
-            return {"template_access": True, "template_exists": True, "message": "Шаблон доступен для изменения"}
+            result["template_access"] = True
         else:
-            return {"template_access": False, "template_exists": True, "message": "Шаблон вам не принадлежит"}
+            result["template_access"] = False
     else:
-        return {"template_exists": False, "message": "Шаблон доступен для сохранения"}
-
-
-@login_required()
-def find_template_for_edit_or_add(request):
-    request_data = json.loads(request.body)
-    result = check_template(request_data['template_title'], request.user.doctorprofile)
-    if result.get("template_exists") is False and 'template_access' not in request_data:
-        return JsonResponse({
-            "template_exists": result.get("template_exists"),
-            "message": result.get("message"),
-        })
-    else:
-        return JsonResponse({
-            "template_access": result.get("template_access"),
-            "template_exists": result.get("template_exists"),
-            "message": result.get("message")
-        })
+        result["template_exists"] = False
+    return result
 
 
 def template_add_rows(template_pk, rows):
@@ -400,11 +370,11 @@ def template_add_rows(template_pk, rows):
 
 
 @login_required()
-def add_template(request):
+def update_drug_template(request):
     request_data = json.loads(request.body)
-    template_check = check_template(request_data['template_title'], request.user.doctorprofile)
-    if template_check.get("template_exists") is False and 'template_access' not in template_check:
-        try:
+    try:
+        template_check = check_template(request_data['template_title'], request.user.doctorprofile)
+        if template_check.get("template_exists") is False:
             template = DrugsTemplate(
                 title=request_data['template_title'],
                 doc_create=request.user.doctorprofile,
@@ -418,18 +388,7 @@ def add_template(request):
             )
             template_department.save()
             return JsonResponse({'message': 'Шаблон успешно сохранен'})
-        except:
-            return JsonResponse({'error': 'Ошибка при сохранении шаблона'})
-    else:
-        return JsonResponse({'warning': 'Шаблон уже существует'})
-
-
-@login_required()
-def edit_template(request):
-    request_data = json.loads(request.body)
-    template_check = check_template(request_data['template_title'], request.user.doctorprofile)
-    if template_check.get("template_exists") is True and template_check.get("template_access") is True:
-        try:
+        elif template_check.get("template_access") is True:
             template = DrugsTemplate.objects.get(title=request_data['template_title'])
             template_rows = DrugsTemplatesRow.objects.filter(template_id=template.pk)
             template_rows.delete()
@@ -437,7 +396,7 @@ def edit_template(request):
             template.who_update = request.user.doctorprofile
             template.save()
             return JsonResponse({'message': 'Шаблон успешно изменен'})
-        except:
-            return JsonResponse({'error': 'Ошибка при изменении шаблона'})
-    else:
-        return JsonResponse({'error': 'Нет прав для изменения'})
+        else:
+            return JsonResponse({'error': 'Шаблон вам не принадлежит'})
+    except:
+        return JsonResponse({'error': 'Ошибка при сохранении шаблона'})
