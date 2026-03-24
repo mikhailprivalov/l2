@@ -630,21 +630,28 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_cert
         sick_title = group.title == "Сведения ЛН"
         if sick_title:
             sick_result = collections.OrderedDict()
-        # results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
-        print(group.title)
-        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).order_by("field__order")
-        if results.exists():
-            if group.show_title and group.title != "" and not med_certificate:
-                txt += "<font face=\"FreeSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
-            vals = []
-            for r in results:
+        results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).exclude(value="").order_by("field__order")
+        # results = ParaclinicResult.objects.filter(issledovaniye=iss, field__group=group).order_by("field__order")
+        # if results.exists():
+        fields = directory.ParaclinicInputField.objects.filter(group=group)
+
+        if results.exists() and group.show_title and group.title != "" and not med_certificate:
+            txt += "<font face=\"FreeSansBold\">{}:</font>&nbsp;".format(group.title.replace('<', '&lt;').replace('>', '&gt;'))
+        vals = []
+        # if results.exists():
+        if fields.exists():
+            for field in fields:
+                r = ParaclinicResult.objects.filter(issledovaniye=iss, field=field).first()
                 if med_certificate and not r.field.for_med_certificate:
                     continue
-                field_type = r.get_field_type()
+                field_type = field.field_type
                 print(field_type)
                 if field_type == 41:
-                    research_layout_field = directory.Researches.objects.filter(pk=r.field.layout_link_research).first()
+                    research_layout_field = directory.Researches.objects.filter(pk=field.layout_link_research.pk).first()
                     fwb = get_result_for_layout_template(research_layout_field, iss, med_certificate, txt, fwb, style, styleBold,pw, leftnone, protocol_plain_text)
+                    txt = ''
+                    continue
+                if not r or not r.string_value:
                     continue
                 v = r.string_value.replace('<', '&lt;').replace('>', '&gt;').replace("\n", "<br/>")
                 v = v.replace('&lt;sub&gt;', '<sub>')
@@ -895,6 +902,8 @@ def get_result_for_layout_template(research_layout, iss, med_certificate, txt, f
                 txt += ". "
             elif len(txt) > 0:
                 txt += " "
+    fwb.append(Paragraph(txt, style))
+    return fwb
 
 
 def microbiology_result(iss, fwb, doc):
