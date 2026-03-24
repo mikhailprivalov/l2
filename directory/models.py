@@ -944,11 +944,9 @@ class Researches(models.Model):
             res_list["Комплексные услуги"] = {"Общие": []}
         return res_list
 
-
     @staticmethod
     def get_layaout_template_research(exclude_pk):
         return Researches.objects.filter(is_layout_template=True).exclude(pk=exclude_pk)
-
 
     def to_treeselect_json(self):
         return {

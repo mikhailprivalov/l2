@@ -2355,7 +2355,6 @@ def directions_paraclinic_result(request):
                         )
                         proc_obj.save()
                     else:
-                        print(proc_data["pk"])
                         proc_obj = ProcedureList.objects.get(pk=proc_data["pk"])
                         proc_obj.form_release = form_release
                         proc_obj.method = method
