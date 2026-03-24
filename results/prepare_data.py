@@ -790,7 +790,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_cert
                 field_type = field.field_type
                 if field_type == 41:
                     research_layout_field = directory.Researches.objects.filter(pk=field.layout_link_research.pk).first()
-                    txt = get_result_for_layout_template(research_layout_field, iss, med_certificate, txt, fwb, style, styleBold,pw, leftnone, protocol_plain_text)
+                    txt = get_result_for_layout_template(research_layout_field, iss, med_certificate, txt, fwb, style, styleBold, pw, leftnone, protocol_plain_text)
                     continue
                 if not r or not r.string_value:
                     continue
