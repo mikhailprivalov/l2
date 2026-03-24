@@ -60,12 +60,20 @@ class DrugsTemplate(models.Model):
         verbose_name_plural = 'Шаблоны лекарственных препаратов'
 
     @staticmethod
-    def get_templates(doctor_profile, department):
+    def get_templates(doctor_profile):
         templates = [{
             "id": template.pk,
             "label": f"{template.title} ({template.doc_create.fio.strip()})",
-        } for template in DrugsTemplate.objects.filter(Q(dtd_template__department=department) | Q(doc_create=doctor_profile))]
+        } for template in DrugsTemplate.objects.filter(Q(dtd_template__department=doctor_profile.podrazdeleniye) | Q(doc_create=doctor_profile))]
         return templates
+
+    @staticmethod
+    def is_template_exists(title):
+        return DrugsTemplate.objects.filter(title=title).first()
+
+    @staticmethod
+    def template_permission(template_pk, doctor_profile):
+        return DrugsTemplate.objects.filter(pk=template_pk, doc_create=doctor_profile).first()
 
 
 class DrugsTemplatesDepartment(models.Model):

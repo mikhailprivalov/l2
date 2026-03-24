@@ -77,15 +77,15 @@ def get_procedure_all_times(d_s, d_e):
     return row
 
 
-def get_drugs_template_rows(template_pk):
+def get_drugs_template_rows(template_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
             SELECT
-                template_row.id AS row_pk,
-                template_row.drug_id AS drug_pk,
-                template_row.form_release_id AS form_release,
-                template_row.method_id AS method,
+                template_row.id AS row_id,
+                template_row.drug_id AS drug_id,
+                template_row.form_release_id AS form_release_id,
+                template_row.method_id AS method_id,
                 template_row.dosage AS dosage,
                 template_row.units AS units,
                 template_row.days_count AS days_count,
@@ -103,7 +103,7 @@ def get_drugs_template_rows(template_pk):
             FROM pharmacotherapy_drugstemplatesrow template_row 
             INNER JOIN pharmacotherapy_drugs drug ON template_row.drug_id = drug.id
             WHERE template_row.template_id = %(template_id)s
-            """, params = {'template_id': template_pk}
+            """, params = {'template_id': template_id}
         )
         rows = namedtuplefetchall(cursor)
     return rows

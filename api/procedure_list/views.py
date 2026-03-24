@@ -306,8 +306,7 @@ def procedure_for_extract(request):
 
 @login_required
 def get_drug_templates(request):
-    doctor_profile = request.user.doctorprofile
-    templates = DrugsTemplate.get_templates(doctor_profile, doctor_profile.podrazdeleniye)
+    templates = DrugsTemplate.get_templates(request.user.doctorprofile)
     return JsonResponse({"data": templates})
 
 
@@ -317,11 +316,11 @@ def get_drug_template_by_id(request):
     rows = get_drugs_template_rows(request_data['template_id'])
     result = [{
         'drug': {
-            'pk': row.drug_pk,
+            'pk': row.drug_id,
             'title': row.drug_title,
         },
-        'form_release': row.form_release,
-        'method': row.method,
+        'form_release': row.form_release_id,
+        'method': row.method_id,
         'dosage': row.dosage,
         'units': row.units,
         'days_count': row.days_count,
@@ -331,18 +330,6 @@ def get_drug_template_by_id(request):
     } for row in rows]
 
     return JsonResponse({"data": result})
-
-
-def check_template(title, doctor_profile):
-    result = {}
-    if template := DrugsTemplate.objects.filter(title=title).first():
-        if template.doc_create == doctor_profile:
-            result["template_access"] = True
-        else:
-            result["template_access"] = False
-    else:
-        result["template_exists"] = False
-    return result
 
 
 def template_add_rows(template_pk, rows):
@@ -372,31 +359,32 @@ def template_add_rows(template_pk, rows):
 @login_required()
 def update_drug_template(request):
     request_data = json.loads(request.body)
+    doctor_profile = request.user.doctorprofile
     try:
-        template_check = check_template(request_data['template_title'], request.user.doctorprofile)
-        if template_check.get("template_exists") is False:
+        template = DrugsTemplate.is_template_exists(request_data['template_title'])
+        if not template:
             template = DrugsTemplate(
                 title=request_data['template_title'],
-                doc_create=request.user.doctorprofile,
-                who_update=request.user.doctorprofile,
+                doc_create=doctor_profile,
+                who_update=doctor_profile,
             )
             template.save()
             template_add_rows(template.pk, request_data['rows'])
             template_department = DrugsTemplatesDepartment(
                 template_id=template.pk,
-                department=request.user.doctorprofile.podrazdeleniye,
+                department=doctor_profile.podrazdeleniye,
             )
             template_department.save()
-            return JsonResponse({'message': 'Шаблон успешно сохранен'})
-        elif template_check.get("template_access") is True:
-            template = DrugsTemplate.objects.get(title=request_data['template_title'])
+            result = {'message': 'Шаблон успешно сохранен'}
+        elif template and DrugsTemplate.template_permission(template.pk, doctor_profile):
             template_rows = DrugsTemplatesRow.objects.filter(template_id=template.pk)
             template_rows.delete()
             template_add_rows(template.pk, request_data['rows'])
-            template.who_update = request.user.doctorprofile
+            template.who_update = doctor_profile
             template.save()
-            return JsonResponse({'message': 'Шаблон успешно изменен'})
+            result = {'message': 'Шаблон успешно изменен'}
         else:
-            return JsonResponse({'error': 'Шаблон вам не принадлежит'})
+            result = {'error': 'Шаблон вам не принадлежит'}
     except:
-        return JsonResponse({'error': 'Ошибка при сохранении шаблона'})
+        result = {'error': 'Ошибка при сохранении шаблона'}
+    return JsonResponse(result)
