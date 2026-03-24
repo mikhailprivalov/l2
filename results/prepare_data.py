@@ -913,7 +913,7 @@ def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_cert
     return fwb
 
 
-def get_result_for_layout_template(research_layout, iss, med_certificate, txt, fwb, style, styleBold,pw, leftnone, protocol_plain_text):
+def get_result_for_layout_template(research_layout, iss, med_certificate, txt, fwb, style, styleBold, pw, leftnone, protocol_plain_text):
     for group in directory.ParaclinicInputGroups.objects.filter(research=research_layout).order_by("order"):
         sick_title = group.title == "Сведения ЛН"
         if sick_title:
