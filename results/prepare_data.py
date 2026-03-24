@@ -1042,7 +1042,6 @@ def get_result_for_layout_template(research_layout, iss, med_certificate, txt, f
                 txt += ". "
             elif len(txt) > 0:
                 txt += " "
-    # fwb.append(Paragraph(txt, style))
     return txt
 
 
