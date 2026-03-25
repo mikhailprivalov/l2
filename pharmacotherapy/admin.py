@@ -50,13 +50,7 @@ class ResProcedureListTimes(admin.ModelAdmin):
 
 
 class DrugsTemplatesAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-        'doc_create',
-        'time_create',
-        'who_update',
-        'time_update'
-    )
+    list_display = ('title', 'doc_create', 'time_create', 'who_update', 'time_update')
     list_filter = ('time_create', 'time_update')
     search_fields = ('pk',)
 
@@ -83,7 +77,10 @@ class DrugsTemplatesRowsAdmin(admin.ModelAdmin):
         'comment',
     )
     list_filter = ('template',)
-    search_fields = ('pk', 'template',)
+    search_fields = (
+        'pk',
+        'template',
+    )
 
 
 class DrugsTemplatesRowsTimesAdmin(admin.ModelAdmin):
@@ -92,7 +89,10 @@ class DrugsTemplatesRowsTimesAdmin(admin.ModelAdmin):
         'times_medication',
     )
     list_filter = ('row',)
-    search_fields = ('pk', 'row',)
+    search_fields = (
+        'pk',
+        'row',
+    )
 
 
 admin.site.register(models.Drugs, DrugsAdmin)
