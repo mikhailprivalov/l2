@@ -3,11 +3,11 @@ import simplejson as json
 from django.db.models import Prefetch
 from django.http import JsonResponse
 
-from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times
+from api.procedure_list.sql_func import get_procedure_by_params, get_procedure_all_times, get_drugs_template_rows
 from api.stationar.stationar_func import forbidden_edit_dir, hosp_get_hosp_direction
 from directions.models import Issledovaniya
 from laboratory.utils import strfdatetime
-from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception
+from pharmacotherapy.models import ProcedureList, ProcedureListTimes, FormRelease, MethodsReception, DrugsTemplate, DrugsTemplatesRow, DrugsTemplatesRowsTime, DrugsTemplatesDepartment
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
 from pharmacotherapy.sql_func import get_pharmacotherapy_exec_by_directions
@@ -301,3 +301,98 @@ def procedure_for_extract(request):
     result.append(tmp_prescription.copy())
 
     return JsonResponse({"data": result})
+
+
+@login_required
+def get_drug_templates(request):
+    templates = DrugsTemplate.get_templates(request.user.doctorprofile)
+    return JsonResponse({"data": templates})
+
+
+@login_required()
+def get_drug_template_by_id(request):
+    request_data = json.loads(request.body)
+    rows = get_drugs_template_rows(request_data['template_id'])
+    result = [
+        {
+            'drug': {
+                'pk': row.drug_id,
+                'title': row.drug_title,
+            },
+            'form_release': row.form_release_id,
+            'method': row.method_id,
+            'dosage': row.dosage,
+            'units': row.units,
+            'days_count': row.days_count,
+            'step': row.step,
+            'comment': row.comment,
+            'times': row.times,
+        }
+        for row in rows
+    ]
+    return JsonResponse({"data": result})
+
+
+def template_add_rows(template_obj, rows):
+    for row in rows:
+        template_row = DrugsTemplatesRow(
+            template=template_obj,
+            drug_id=row['drugPk'],
+            form_release_id=row['form_release'],
+            method_id=row['method'],
+            dosage=row['dosage'],
+            units=row['units'],
+            days_count=row['countDays'],
+            step=row['step'],
+            comment=row['comment'],
+        )
+        template_row.save()
+        if row['timesSelected']:
+            for time in row['timesSelected']:
+                row_time = DrugsTemplatesRowsTime(
+                    row=template_row,
+                    times_medication=time,
+                )
+                row_time.save()
+
+
+@login_required()
+def update_drug_template(request):
+    request_data = json.loads(request.body)
+    doctor_profile = request.user.doctorprofile
+
+    template_id = request_data.get('template_id')
+    template_title = request_data.get('template_title')
+    rows = request_data.get('rows')
+    existing_template = DrugsTemplate.is_template_exists(template_title)
+
+    if template_id == -1:
+        if existing_template:
+            result = {'error': 'Шаблон существует'}
+        else:
+            new_template = DrugsTemplate.objects.create(
+                title=template_title,
+                doc_create=doctor_profile,
+                who_update=doctor_profile,
+            )
+            template_add_rows(new_template, rows)
+            DrugsTemplatesDepartment.objects.create(
+                template=new_template,
+                department=doctor_profile.podrazdeleniye,
+            )
+            result = {'message': 'Шаблон создан'}
+    else:
+        template_obj = DrugsTemplate.objects.filter(pk=template_id).first()
+        if existing_template and existing_template.pk != template_obj.pk:
+            result = {'error': 'Шаблон существует'}
+        elif not DrugsTemplate.template_permission(template_obj.pk, doctor_profile):
+            result = {'error': 'Нет прав на изменение'}
+        else:
+            DrugsTemplatesRow.objects.filter(template=template_obj).delete()
+            template_add_rows(template_obj, rows)
+            template_obj.title = template_title
+            template_obj.who_update = doctor_profile
+            template_obj.save()
+            result = {'message': 'Шаблон изменен'}
+
+    return JsonResponse(result)

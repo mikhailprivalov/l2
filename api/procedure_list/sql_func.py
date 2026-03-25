@@ -1,4 +1,5 @@
 from django.db import connection
+from utils.db import namedtuplefetchall
 from laboratory.settings import TIME_ZONE
 
 
@@ -74,3 +75,36 @@ def get_procedure_all_times(d_s, d_e):
         )
         row = cursor.fetchall()
     return row
+
+
+def get_drugs_template_rows(template_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                template_row.id AS row_id,
+                template_row.drug_id AS drug_id,
+                template_row.form_release_id AS form_release_id,
+                template_row.method_id AS method_id,
+                template_row.dosage AS dosage,
+                template_row.units AS units,
+                template_row.days_count AS days_count,
+                template_row.step AS step,
+                template_row.comment AS comment,
+                CONCAT(drug.mnn, ' (', drug.trade_name, ')') AS drug_title,
+                COALESCE(
+                    (
+                        SELECT JSON_AGG(row_time.times_medication)
+                        FROM pharmacotherapy_drugstemplatesrowstime row_time
+                        WHERE row_time.row_id = template_row.id
+                    ),
+                    '[]'::json
+                ) AS times
+            FROM pharmacotherapy_drugstemplatesrow template_row 
+            INNER JOIN pharmacotherapy_drugs drug ON template_row.drug_id = drug.id
+            WHERE template_row.template_id = %(template_id)s
+            """,
+            params={'template_id': template_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
