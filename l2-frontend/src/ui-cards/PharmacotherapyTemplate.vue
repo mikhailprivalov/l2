@@ -16,6 +16,7 @@
             :max-height="150"
             :clearable="false"
             class="attached-select"
+            @select="handleSelect"
           />
           <button
             class="btn btn-blue-nb attached-button"
@@ -23,7 +24,7 @@
             :disabled="!selectedTemplate"
             @click="getTemplateData"
           >
-            Загрузить шаблон
+            Загрузить
           </button>
         </div>
       </div>
@@ -42,6 +43,17 @@
           class="attached-group"
           style="margin-top: 1px"
         >
+          <label
+            class="attached-button"
+            style="margin-top: 7px; margin-right: 8px"
+          >
+            {{ templateActionTitle }}
+            <input
+              v-model="templateAction"
+              type="checkbox"
+              :disabled="!templateAction"
+            >
+          </label>
           <input
             v-model="templateTitle"
             class="form-control attached-input"
@@ -53,7 +65,7 @@
             :disabled="!templateTitle"
             @click="updateTemplate"
           >
-            Сохранить шаблон
+            Сохранить
           </button>
         </div>
       </div>
@@ -65,7 +77,7 @@
 import TreeSelect from '@riophae/vue-treeselect';
 import moment from 'moment/moment';
 import {
-  getCurrentInstance, onMounted, ref,
+  getCurrentInstance, onMounted, ref, watch,
 } from 'vue';
 import { POSITION } from 'vue-toastification/src/ts/constants';
 
@@ -109,11 +121,31 @@ const templates = ref(null);
 const selectedTemplate = ref(null);
 const selectedTemplateData = ref(null);
 const templateTitle = ref('');
+const templateAction = ref(false);
+const templateActionTitle = ref('Создать');
+
+watch(selectedTemplate, (newValue) => {
+  templateAction.value = !!newValue;
+});
+
+watch(templateAction, (newValue, oldValue) => {
+  if (oldValue) {
+    templateActionTitle.value = 'Создать';
+    templateTitle.value = '';
+    selectedTemplate.value = null;
+  } else if (newValue) {
+    templateActionTitle.value = 'Изменить';
+  }
+});
+
+const handleSelect = (node) => {
+  templateTitle.value = node.label.replace(/\s*\([^)]*\)/g, '').trim();
+};
 
 const getTemplates = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const templatesData = await api('procedural-list/get-drug-templates');
-  templates.value = templatesData.data;
+  const response = await api('procedural-list/get-drug-templates');
+  templates.value = response.data;
   await store.dispatch(actions.DEC_LOADING);
 };
 
@@ -190,17 +222,18 @@ const updateTemplate = async () => {
   }
 
   try {
+    const templateId = ref(null);
+    if (selectedTemplate.value) templateId.value = selectedTemplate.value;
     const response = await api('procedural-list/update-drug-template', {
+      template_id: templateId.value,
       template_title: templateTitle.value,
       rows: validatedRows.value,
     });
 
-    // eslint-disable-next-line no-prototype-builtins
-    if (response.hasOwnProperty('message')) {
+    if (response.message) {
       await getTemplates();
       showToast(response.message, TOAST_TYPES.SUCCESS);
-      // eslint-disable-next-line no-prototype-builtins
-    } else if (response.hasOwnProperty('error')) {
+    } else if (response.error) {
       showToast(response.error, TOAST_TYPES.ERROR);
     }
   } catch {
