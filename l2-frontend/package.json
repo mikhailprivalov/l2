@@ -38,7 +38,7 @@
     "inputmask": "^5.0.7",
     "jquery": "^3.7.1",
     "js-base64": "^3.7.2",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.23",
     "mini-css-extract-plugin": "^2.6.1",
     "moment": "^2.29.4",
     "pdfobject": "^2.2.8",
@@ -90,7 +90,7 @@
   "devDependencies": {
     "@babel/core": "^7.21.4",
     "@types/jquery": "^3.5.27",
-    "@types/lodash": "^4.14.194",
+    "@types/lodash": "^4.17.24",
     "@types/pdfobject": "^2.2.3",
     "@types/promise.prototype.finally": "^2.0.4",
     "@types/vue-router": "^2.0.0",
