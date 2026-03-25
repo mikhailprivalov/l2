@@ -222,7 +222,7 @@ const updateTemplate = async () => {
   }
 
   try {
-    const templateId = ref(null);
+    const templateId = ref(-1);
     if (selectedTemplate.value) templateId.value = selectedTemplate.value;
     const response = await api('procedural-list/update-drug-template', {
       template_id: templateId.value,

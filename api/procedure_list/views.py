@@ -334,10 +334,10 @@ def get_drug_template_by_id(request):
     return JsonResponse({"data": result})
 
 
-def template_add_rows(template_pk, rows):
+def template_add_rows(template_obj, rows):
     for row in rows:
         template_row = DrugsTemplatesRow(
-            template_id=template_pk,
+            template=template_obj,
             drug_id=row['drugPk'],
             form_release_id=row['form_release'],
             method_id=row['method'],
@@ -351,7 +351,7 @@ def template_add_rows(template_pk, rows):
         if row['timesSelected']:
             for time in row['timesSelected']:
                 row_time = DrugsTemplatesRowsTime(
-                    row_id=template_row.pk,
+                    row=template_row,
                     times_medication=time,
                 )
                 row_time.save()
@@ -361,60 +361,39 @@ def template_add_rows(template_pk, rows):
 def update_drug_template(request):
     request_data = json.loads(request.body)
     doctor_profile = request.user.doctorprofile
-    result = None
 
-    try:
-        template_id = request_data['template_id']
-        template_title = request_data['template_title']
-        rows = request_data['rows']
+    template_id = request_data.get('template_id')
+    template_title = request_data.get('template_title')
+    rows = request_data.get('rows')
+    existing_template = DrugsTemplate.is_template_exists(template_title)
 
-        if not template_title:
-            result = {'error': 'Не указано название шаблона'}
-        elif not rows:
-            result = {'error': 'Нет данных для сохранения'}
+    if template_id == -1:
+        if existing_template:
+            result = {'error': 'Шаблон с таким именем уже существует'}
         else:
-            template = None
-            if template_id is not None:
-                if template_by_id := DrugsTemplate.objects.filter(pk=template_id).first():
-                    template = template_by_id
-                else:
-                    result = {'error': 'Шаблон не найден'}
+            new_template = DrugsTemplate.objects.create(
+                title=template_title,
+                doc_create=doctor_profile,
+                who_update=doctor_profile,
+            )
+            template_add_rows(new_template, rows)
+            DrugsTemplatesDepartment.objects.create(
+                template=new_template,
+                department=doctor_profile.podrazdeleniye,
+            )
+            result = {'message': 'Шаблон успешно создан'}
+    else:
+        template_obj = DrugsTemplate.objects.filter(pk=template_id).first()
+        if existing_template and existing_template.pk != template_obj.pk:
+            result = {'error': 'Шаблон с таким именем уже существует'}
+        elif not DrugsTemplate.template_permission(template_obj.pk, doctor_profile):
+            result = {'error': 'У вас нет прав на изменение этого шаблона'}
+        else:
+            DrugsTemplatesRow.objects.filter(template=template_obj).delete()
+            template_add_rows(template_obj, rows)
+            template_obj.title = template_title
+            template_obj.who_update = doctor_profile
+            template_obj.save()
+            result = {'message': 'Шаблон успешно изменен'}
 
-            if result is None:
-                existing_template = DrugsTemplate.is_template_exists(template_title)
-
-                if not template:
-                    if existing_template:
-                        result = {'error': 'Шаблон с таким именем уже существует'}
-                    else:
-                        with transaction.atomic():
-                            new_template = DrugsTemplate.objects.create(
-                                title=template_title,
-                                doc_create=doctor_profile,
-                                who_update=doctor_profile,
-                            )
-                            template_add_rows(new_template.pk, rows)
-                            DrugsTemplatesDepartment.objects.create(
-                                template_id=new_template.pk,
-                                department=doctor_profile.podrazdeleniye,
-                            )
-                        result = {'message': 'Шаблон успешно создан'}
-
-                else:
-                    if not DrugsTemplate.template_permission(template.pk, doctor_profile):
-                        result = {'error': 'У вас нет прав на изменение этого шаблона'}
-                    elif existing_template and existing_template.pk != template.pk:
-                        result = {'error': 'Шаблон с таким именем уже существует'}
-                    else:
-                        with transaction.atomic():
-                            DrugsTemplatesRow.objects.filter(template_id=template.pk).delete()
-                            template_add_rows(template.pk, rows)
-                            template.title = template_title
-                            template.who_update = doctor_profile
-                            template.save()
-                        result = {'message': 'Шаблон успешно изменен'}
-        if result is None:
-            result = {'error': 'Ошибка при сохранении шаблона'}
-        return JsonResponse(result)
-    except:
-        return JsonResponse({'error': 'Ошибка при сохранении шаблона'})
+    return JsonResponse(result)
