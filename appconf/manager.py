@@ -209,6 +209,7 @@ class SettingManager:
                 ]
             },
             "consults_module": SettingManager.get("consults_module", default='false', default_type='b'),
+            "layout_template": SettingManager.get("layout_template", default='false', default_type='b'),
             "directions_params": SettingManager.get("directions_params", default='false', default_type='b'),
             "morfology": SettingManager.is_morfology_enabled(SettingManager.en()),
             "paraclinic_module": SettingManager.get("paraclinic_module", default='false', default_type='b'),

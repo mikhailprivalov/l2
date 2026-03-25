@@ -98,6 +98,7 @@ urlpatterns = [
     path('dashboards/', include('api.dashboards.urls')),
     path('districts/', include('api.districts.urls')),
     path('dynamic-directory/', include('api.dynamic_directory.urls')),
+    path('layout-template/', include('api.layout_template.urls')),
     path('health/', include('api.health.urls')),
     path('chats/', include('api.chats.urls')),
     path('ecp/', include('api.ecp.urls')),
