@@ -69,6 +69,7 @@ class DrugsTemplatesDepartmentsAdmin(admin.ModelAdmin):
     list_filter = ('template',)
     search_fields = ('pk', 'template')
 
+
 class DrugsTemplatesRowsAdmin(admin.ModelAdmin):
     list_display = (
         'template',

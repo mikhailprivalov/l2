@@ -61,10 +61,13 @@ class DrugsTemplate(models.Model):
 
     @staticmethod
     def get_templates(doctor_profile):
-        templates = [{
-            "id": template.pk,
-            "label": f"{template.title} ({template.doc_create.fio.strip()})",
-        } for template in DrugsTemplate.objects.filter(Q(dtd_template__department=doctor_profile.podrazdeleniye) | Q(doc_create=doctor_profile))]
+        templates = [
+            {
+                "id": template.pk,
+                "label": f"{template.title} ({template.doc_create.fio.strip()})",
+            }
+            for template in DrugsTemplate.objects.filter(Q(dtd_template__department=doctor_profile.podrazdeleniye) | Q(doc_create=doctor_profile))
+        ]
         return templates
 
     @staticmethod

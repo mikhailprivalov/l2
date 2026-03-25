@@ -1,8 +1,5 @@
-from tempfile import template
-
 import pytz_deprecation_shim as pytz
 import simplejson as json
-from django.db import transaction
 from django.db.models import Prefetch
 from django.http import JsonResponse
 
@@ -316,21 +313,23 @@ def get_drug_templates(request):
 def get_drug_template_by_id(request):
     request_data = json.loads(request.body)
     rows = get_drugs_template_rows(request_data['template_id'])
-    result = [{
-        'drug': {
-            'pk': row.drug_id,
-            'title': row.drug_title,
-        },
-        'form_release': row.form_release_id,
-        'method': row.method_id,
-        'dosage': row.dosage,
-        'units': row.units,
-        'days_count': row.days_count,
-        'step': row.step,
-        'comment': row.comment,
-        'times': row.times
-    } for row in rows]
-
+    result = [
+        {
+            'drug': {
+                'pk': row.drug_id,
+                'title': row.drug_title,
+            },
+            'form_release': row.form_release_id,
+            'method': row.method_id,
+            'dosage': row.dosage,
+            'units': row.units,
+            'days_count': row.days_count,
+            'step': row.step,
+            'comment': row.comment,
+            'times': row.times
+        }
+        for row in rows
+    ]
     return JsonResponse({"data": result})
 
 
