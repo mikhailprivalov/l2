@@ -221,23 +221,19 @@ const updateTemplate = async () => {
     return;
   }
 
-  try {
-    const templateId = ref(-1);
-    if (selectedTemplate.value) templateId.value = selectedTemplate.value;
-    const response = await api('procedural-list/update-drug-template', {
-      template_id: templateId.value,
-      template_title: templateTitle.value,
-      rows: validatedRows.value,
-    });
+  const templateId = ref(-1);
+  if (selectedTemplate.value) templateId.value = selectedTemplate.value;
+  const response = await api('procedural-list/update-drug-template', {
+    template_id: templateId.value,
+    template_title: templateTitle.value,
+    rows: validatedRows.value,
+  });
 
-    if (response.message) {
-      await getTemplates();
-      showToast(response.message, TOAST_TYPES.SUCCESS);
-    } else if (response.error) {
-      showToast(response.error, TOAST_TYPES.ERROR);
-    }
-  } catch {
-    showToast('Ошибка при изменении шаблона', TOAST_TYPES.ERROR);
+  if (response.message) {
+    await getTemplates();
+    showToast(response.message, TOAST_TYPES.SUCCESS);
+  } else if (response.error) {
+    showToast(response.error, TOAST_TYPES.ERROR);
   }
 };
 

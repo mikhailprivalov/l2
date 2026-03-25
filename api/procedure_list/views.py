@@ -368,7 +368,7 @@ def update_drug_template(request):
 
     if template_id == -1:
         if existing_template:
-            result = {'error': 'Шаблон с таким именем уже существует'}
+            result = {'error': 'Шаблон существует'}
         else:
             new_template = DrugsTemplate.objects.create(
                 title=template_title,
@@ -380,19 +380,19 @@ def update_drug_template(request):
                 template=new_template,
                 department=doctor_profile.podrazdeleniye,
             )
-            result = {'message': 'Шаблон успешно создан'}
+            result = {'message': 'Шаблон создан'}
     else:
         template_obj = DrugsTemplate.objects.filter(pk=template_id).first()
         if existing_template and existing_template.pk != template_obj.pk:
-            result = {'error': 'Шаблон с таким именем уже существует'}
+            result = {'error': 'Шаблон существует'}
         elif not DrugsTemplate.template_permission(template_obj.pk, doctor_profile):
-            result = {'error': 'У вас нет прав на изменение этого шаблона'}
+            result = {'error': 'Нет прав на изменение'}
         else:
             DrugsTemplatesRow.objects.filter(template=template_obj).delete()
             template_add_rows(template_obj, rows)
             template_obj.title = template_title
             template_obj.who_update = doctor_profile
             template_obj.save()
-            result = {'message': 'Шаблон успешно изменен'}
+            result = {'message': 'Шаблон изменен'}
 
     return JsonResponse(result)
