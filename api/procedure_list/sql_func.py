@@ -104,7 +104,7 @@ def get_drugs_template_rows(template_id):
             INNER JOIN pharmacotherapy_drugs drug ON template_row.drug_id = drug.id
             WHERE template_row.template_id = %(template_id)s
             """,
-            params={'template_id': template_id}
+            params={'template_id': template_id},
         )
         rows = namedtuplefetchall(cursor)
     return rows

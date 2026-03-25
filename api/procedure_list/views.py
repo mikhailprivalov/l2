@@ -326,7 +326,7 @@ def get_drug_template_by_id(request):
             'days_count': row.days_count,
             'step': row.step,
             'comment': row.comment,
-            'times': row.times
+            'times': row.times,
         }
         for row in rows
     ]
