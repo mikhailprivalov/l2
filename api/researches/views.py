@@ -686,6 +686,11 @@ def researches_update(request):
                                     department_template_field = ParaclinicFieldTemplateDepartment(
                                         paraclinic_field_id=f.pk, research_id=res.pk, department_id=department_template_pk, value=json.dumps(field["values_to_input"])
                                     )
+                                elif field.get("field_type", 0) == 41:
+                                    research_pk = field["values_to_input"]
+                                    f.input_templates = json.dumps(field["values_to_input"])
+                                    f.layout_link_research = DResearches.objects.filter(pk=research_pk[0]).first()
+                                    f.save()
                                 else:
                                     f.input_templates = json.dumps(field["values_to_input"])
                             elif ParaclinicInputField.objects.filter(pk=pk).exists():

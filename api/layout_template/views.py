@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.core.paginator import Paginator
 
+from directory.models import Researches
 from dynamic_directory.models import Directory, DirectoryRecord, DirectoryRecordValue, DirectoryRecordVersion
 from dynamic_directory.views import get_child_directories
 from utils.response import status_response
@@ -20,8 +21,9 @@ def list_directories(request):
 
 @login_required
 def list_layout_template_treeselect(request):
-    # return JsonResponse({'rows': [x.to_treeselect_json() for x in Directory.objects.filter(hide=False).order_by('title')]})
-    return JsonResponse({'rows': [{"id": 1, "label": "Дата время"}, {"id": 2, "label": "Дата время1111"}]})
+    request_data = json.loads(request.body)
+    pk = request_data['pk']
+    return JsonResponse({'rows': [x.to_treeselect_json() for x in Researches.get_layaout_template_research(exclude_pk=pk)]})
 
 
 @login_required

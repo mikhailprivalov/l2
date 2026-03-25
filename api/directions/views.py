@@ -2013,6 +2013,11 @@ def directions_paraclinic_form(request):
                         "fieldsInline": group.fields_inline,
                     }
                     for field in group.paraclinicinputfield_set.all():
+                        if field.field_type == 41:
+                            research_layout_templete = Researches.objects.filter(pk=field.layout_link_research.pk).first()
+                            iss = get_data_for_layout_template(research_layout_templete, iss, result_fields, fields_templates_by_department_data, i)
+                            continue
+
                         if "Протокол для оператора" in user_groups and not field.operator_enter_param:
                             continue
                         result_field: ParaclinicResult = result_fields.get(field.pk)
@@ -2089,6 +2094,69 @@ def directions_paraclinic_form(request):
     if not f:
         response["message"] = "Направление не найдено"
     return JsonResponse(response)
+
+
+def get_data_for_layout_template(research_layout, iss, result_fields, fields_templates_by_department_data, iss_obj):
+    for group in research_layout.paraclinicinputgroups_set.all():
+        g = {
+            "pk": group.pk,
+            "order": group.order,
+            "title": group.title,
+            "show_title": group.show_title,
+            "hide": group.hide,
+            "display_hidden": False,
+            "fields": [],
+            "visibility": group.visibility,
+            "fieldsInline": group.fields_inline,
+        }
+        for field in group.paraclinicinputfield_set.all():
+            # if "Протокол для оператора" in user_groups and not field.operator_enter_param:
+            #     continue
+            result_field: ParaclinicResult = result_fields.get(field.pk)
+            field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(iss_obj.time_confirmation))
+            values_to_input = ([] if not field.required or field_type not in [10, 12] or research_layout.is_monitoring else ['- Не выбрано']) + (
+                [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
+            )
+            if fields_templates_by_department_data:
+                values_to_input_by_department = fields_templates_by_department_data.get(field.pk)
+                if values_to_input_by_department:
+                    values_to_input = json.loads(values_to_input_by_department)
+
+            value = (
+                ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
+                if field_type not in [1, 20]
+                else (get_default_for_field(field_type, field.default_value) if not result_field else result_field.value)
+            )
+            if field_type in [2, 32, 33, 34, 36] and isinstance(value, str) and value.startswith('%'):
+                value = ''
+            elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
+                value = values_to_input[0]
+            g["fields"].append(
+                {
+                    "pk": field.pk,
+                    "order": field.order,
+                    "lines": field.lines,
+                    "title": field.short_title if field.short_title else field.title,
+                    "hide": field.hide,
+                    "values_to_input": values_to_input,
+                    "value": value,
+                    "field_type": field_type,
+                    "can_edit": field.can_edit_computed,
+                    "default_value": field.default_value,
+                    "visibility": field.visibility,
+                    "required": field.required or field.required_set_by_admin,
+                    "helper": field.helper,
+                    "controlParam": field.control_param,
+                    "not_edit": field.not_edit,
+                    "operator_enter_param": field.operator_enter_param,
+                    "deniedGroup": field.denied_group.name if field.denied_group else "",
+                    "isDiagTable": field.is_diag_table,
+                }
+            )
+        # current_group = g
+        iss["research"]["groups"].append(g)
+
+    return iss
 
 
 def get_default_for_field(field_type, default_value=None):

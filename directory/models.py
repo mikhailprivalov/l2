@@ -944,6 +944,16 @@ class Researches(models.Model):
             res_list["Комплексные услуги"] = {"Общие": []}
         return res_list
 
+    @staticmethod
+    def get_layaout_template_research(exclude_pk):
+        return Researches.objects.filter(is_layout_template=True).exclude(pk=exclude_pk)
+
+    def to_treeselect_json(self):
+        return {
+            'id': self.pk,
+            'label': self.title,
+        }
+
 
 class HospitalService(models.Model):
     TYPES = (
@@ -1302,6 +1312,7 @@ class ParaclinicInputField(models.Model):
     order = models.IntegerField()
     default_value = models.TextField(blank=True, default="")
     input_templates = models.TextField()
+    layout_link_research = models.ForeignKey("directory.Researches", default=None, null=True, blank=True, help_text="Ссылка на услугу шаблон", on_delete=models.SET_NULL)
     hide = models.BooleanField()
     lines = models.IntegerField(default=3)
     field_type = models.SmallIntegerField(default=0, choices=TYPES, blank=True)
