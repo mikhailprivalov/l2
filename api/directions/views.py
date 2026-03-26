@@ -2407,6 +2407,11 @@ def directions_paraclinic_result(request):
                 continue
             for field in group["fields"]:
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
+                if iss.research.is_gistology and iss.napravleniye.rmis_number and f.title == "Тип учреждения":
+                    if field["value"] != "Поликлиника" or field["value"] != "Стационар":
+                        response["message"] = "Заполните тип учреждения и услугу"
+                        return JsonResponse(response)
+
                 if not v_f.get(str(field["pk"]), True) and not (
                     iss.research.is_gistology
                     and (
@@ -2717,6 +2722,10 @@ def directions_paraclinic_result(request):
                 result_protocol = fields_result_only_title_fields(iss, field_titles)
                 data["result"] = result_protocol
                 gen_resul_cpp_file(iss, iss.research.cpp_template_files, data)
+
+            if iss.research.is_gistology:
+                if iss.napravleniye.rmis_number:
+
 
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
