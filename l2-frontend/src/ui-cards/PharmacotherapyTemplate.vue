@@ -49,9 +49,8 @@
           >
             {{ templateActionTitle }}
             <input
-              v-model="templateAction"
+              v-model="templateActionCheckbox"
               type="checkbox"
-              :disabled="!templateAction"
             >
           </label>
           <input
@@ -121,25 +120,23 @@ const templates = ref(null);
 const selectedTemplate = ref(null);
 const selectedTemplateData = ref(null);
 const templateTitle = ref('');
-const templateAction = ref(false);
+const templateAction = ref('create');
+const templateActionCheckbox = ref(false);
 const templateActionTitle = ref('Создать');
 
-watch(selectedTemplate, (newValue) => {
-  templateAction.value = !!newValue;
-});
-
-watch(templateAction, (newValue, oldValue) => {
+watch(templateActionCheckbox, (newValue, oldValue) => {
   if (oldValue) {
     templateActionTitle.value = 'Создать';
-    templateTitle.value = '';
-    selectedTemplate.value = null;
+    templateAction.value = 'create';
   } else if (newValue) {
     templateActionTitle.value = 'Изменить';
+    templateAction.value = 'update';
   }
 });
 
 const handleSelect = (node) => {
   templateTitle.value = node.label.replace(/\s*\([^)]*\)/g, '').trim();
+  templateActionCheckbox.value = true;
 };
 
 const getTemplates = async () => {
@@ -156,24 +153,26 @@ const getTemplateData = async () => {
   await store.dispatch(actions.DEC_LOADING);
 
   selectedTemplateData.value.forEach((row) => {
-    const data = {
-      pk: Math.random() + Math.random(),
-      isNew: true,
-      remove: false,
-      drug: row.drug.title,
-      drugPk: row.drug.pk,
-      timesSelected: row.times,
-      form_release: row.form_release,
-      method: row.method,
-      dosage: row.dosage,
-      step: row.step,
-      dateStart: moment().format('YYYY-MM-DD'),
-      dateEnd: null,
-      countDays: row.days_count,
-      units: row.units,
-      comment: row.comment,
-    };
-    emit('template-data', data);
+    if (!props.value.some(item => (item.drugPk === row.drug.pk) && (!item.remove))) {
+      const data = {
+        pk: Math.random() + Math.random(),
+        isNew: true,
+        remove: false,
+        drug: row.drug.title,
+        drugPk: row.drug.pk,
+        timesSelected: row.times,
+        form_release: row.form_release,
+        method: row.method,
+        dosage: row.dosage,
+        step: row.step,
+        dateStart: moment().format('YYYY-MM-DD'),
+        dateEnd: null,
+        countDays: row.days_count,
+        units: row.units,
+        comment: row.comment,
+      };
+      emit('template-data', data);
+    }
   });
 };
 
@@ -222,7 +221,7 @@ const updateTemplate = async () => {
   }
 
   const templateId = ref(-1);
-  if (selectedTemplate.value) templateId.value = selectedTemplate.value;
+  if (selectedTemplate.value && templateAction.value === 'update') templateId.value = selectedTemplate.value;
   const response = await api('procedural-list/update-drug-template', {
     template_id: templateId.value,
     template_title: templateTitle.value,
