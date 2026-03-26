@@ -2723,10 +2723,6 @@ def directions_paraclinic_result(request):
                 data["result"] = result_protocol
                 gen_resul_cpp_file(iss, iss.research.cpp_template_files, data)
 
-            if iss.research.is_gistology:
-                if iss.napravleniye.rmis_number:
-
-
             Log(key=pk, type=14, body="", user=request.user.doctorprofile).save()
         forbidden_edit = forbidden_edit_dir(iss.napravleniye_id)
         response["forbidden_edit"] = forbidden_edit or more_forbidden
