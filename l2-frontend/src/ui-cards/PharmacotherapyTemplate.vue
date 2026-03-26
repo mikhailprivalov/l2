@@ -153,7 +153,7 @@ const getTemplateData = async () => {
   await store.dispatch(actions.DEC_LOADING);
 
   selectedTemplateData.value.forEach((row) => {
-    if (!(props.value.some(item => (item.drugPk === row.drug.pk) && (!item.remove)))) {
+    if (!props.value.some(item => (item.drugPk === row.drug.pk) && (!item.remove))) {
       const data = {
         pk: Math.random() + Math.random(),
         isNew: true,

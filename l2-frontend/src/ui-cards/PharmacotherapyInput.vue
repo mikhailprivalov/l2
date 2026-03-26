@@ -184,7 +184,7 @@ export default {
   methods: {
     add(drugPk, drug) {
       // eslint-disable-next-line vue/no-mutating-props
-      if (!(this.value.some(item => (item.drugPk === drugPk) && (!item.remove)))) {
+      if (!this.value.some(item => (item.drugPk === drugPk) && (!item.remove))) {
         // eslint-disable-next-line vue/no-mutating-props
         this.value.push({
           pk: Math.random() + Math.random(),
