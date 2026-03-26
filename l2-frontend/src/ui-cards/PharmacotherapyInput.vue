@@ -184,26 +184,27 @@ export default {
   methods: {
     add(drugPk, drug) {
       // eslint-disable-next-line vue/no-mutating-props
-      if (this.value.some(item => (item.drugPk === drugPk) && (!item.remove))) return;
-      // eslint-disable-next-line vue/no-mutating-props
-      this.value.push({
-        pk: Math.random() + Math.random(),
-        isNew: true,
-        remove: false,
-        drug,
-        drugPk,
-        timesSelected: [],
-        form_release: -1,
-        method: -1,
-        dosage: 1,
-        step: 1,
-        dateStart: moment().format('YYYY-MM-DD'),
-        dateEnd: null,
-        countDays: 1,
-        units: null,
-        comment: '',
-      });
-      this.search = '';
+      if (!(this.value.some(item => (item.drugPk === drugPk) && (!item.remove)))) {
+        // eslint-disable-next-line vue/no-mutating-props
+        this.value.push({
+          pk: Math.random() + Math.random(),
+          isNew: true,
+          remove: false,
+          drug,
+          drugPk,
+          timesSelected: [],
+          form_release: -1,
+          method: -1,
+          dosage: 1,
+          step: 1,
+          dateStart: moment().format('YYYY-MM-DD'),
+          dateEnd: null,
+          countDays: 1,
+          units: null,
+          comment: '',
+        });
+        this.search = '';
+      }
     },
   },
 };

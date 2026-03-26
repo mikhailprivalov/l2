@@ -153,25 +153,26 @@ const getTemplateData = async () => {
   await store.dispatch(actions.DEC_LOADING);
 
   selectedTemplateData.value.forEach((row) => {
-    if (props.value.some(item => (item.drugPk === row.drug.pk) && (!item.remove))) return;
-    const data = {
-      pk: Math.random() + Math.random(),
-      isNew: true,
-      remove: false,
-      drug: row.drug.title,
-      drugPk: row.drug.pk,
-      timesSelected: row.times,
-      form_release: row.form_release,
-      method: row.method,
-      dosage: row.dosage,
-      step: row.step,
-      dateStart: moment().format('YYYY-MM-DD'),
-      dateEnd: null,
-      countDays: row.days_count,
-      units: row.units,
-      comment: row.comment,
-    };
-    emit('template-data', data);
+    if (!(props.value.some(item => (item.drugPk === row.drug.pk) && (!item.remove)))) {
+      const data = {
+        pk: Math.random() + Math.random(),
+        isNew: true,
+        remove: false,
+        drug: row.drug.title,
+        drugPk: row.drug.pk,
+        timesSelected: row.times,
+        form_release: row.form_release,
+        method: row.method,
+        dosage: row.dosage,
+        step: row.step,
+        dateStart: moment().format('YYYY-MM-DD'),
+        dateEnd: null,
+        countDays: row.days_count,
+        units: row.units,
+        comment: row.comment,
+      };
+      emit('template-data', data);
+    }
   });
 };
 
