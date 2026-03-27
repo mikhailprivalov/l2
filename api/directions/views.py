@@ -2408,7 +2408,7 @@ def directions_paraclinic_result(request):
             for field in group["fields"]:
                 f = ParaclinicInputField.objects.get(pk=field["pk"])
                 if iss.research.is_gistology and iss.napravleniye.rmis_number and f.title == "Тип учреждения":
-                    if field["value"] != "Поликлиника" or field["value"] != "Стационар":
+                    if field["value"] == "-":
                         response["message"] = "Заполните тип учреждения и услугу"
                         return JsonResponse(response)
 
