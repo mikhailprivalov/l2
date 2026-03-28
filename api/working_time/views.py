@@ -97,4 +97,3 @@ def get_holidays(request):
     month = request_data.get("month")
     holidays = Holidays.get_holidays(datetime.date(year, month, 1))
     return JsonResponse({"result": holidays})
-
