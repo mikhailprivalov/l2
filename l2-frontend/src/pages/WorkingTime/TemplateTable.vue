@@ -44,6 +44,14 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  holidays: {
+    type: Object,
+    required: true,
+  },
+  refreshKey: {
+    type: Number,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate', 'fillColumnByTemplate']);
@@ -152,6 +160,7 @@ const getColumns = () => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
+    const holiday = props.holidays[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,
       field: dateString,
@@ -159,6 +168,7 @@ const getColumns = () => {
       align: 'center',
       width: 47,
       isWeekend: weekend,
+      isHoliday: holiday,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
         {
@@ -187,18 +197,18 @@ const getColumns = () => {
   columns.value = columnTemplate;
 };
 
-watch(() => [props.year, props.month], () => {
-  if (props.year && props.month) {
-    monthDays.value = getMonthDays(props.year, props.month);
-    getColumns();
-    createTemplateData();
-  }
+watch(() => [props.refreshKey], () => {
+  monthDays.value = getMonthDays(props.year, props.month);
+  getColumns();
+  createTemplateData();
 }, { immediate: true });
 
 const cellStyleOption = ref({
   bodyCellClass: ({ column }) => {
     const result = [];
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('template-table-body-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('template-table-body-weekend-cell');
     }
     result.push('template-table-body-cell');

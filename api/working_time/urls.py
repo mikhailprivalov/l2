@@ -10,4 +10,5 @@ urlpatterns = [
     path('employee-transfer', views.employee_transfer),
     path('get-work-time-filling-by-employee-template', views.get_work_time_filling_by_employee_template),
     path('edit-lunch', views.edit_lunch),
+    path('get-holidays', views.get_holidays),
 ]
