@@ -1251,12 +1251,33 @@ class TabelFactTimeWorkRaw(models.Model):
 
 
 class Holidays(models.Model):
-    year = models.SmallIntegerField(blank=True, default=None, null=True)
+    class Kind(models.TextChoices):
+        HOLIDAY = "HOLIDAY", "Праздничный день"
+        WORKING = "WORKING", "Рабочий день"
+
     day = models.DateField()
+    kind = models.CharField(max_length=20, db_index=True, default=Kind.HOLIDAY, choices=Kind.choices, help_text="Тип")
+    shorten_minutes = models.PositiveSmallIntegerField(default=0, help_text="Сокращение рабочего времени, минуты")
 
     def __str__(self):
-        return f"{self.year} {self.day}"
+        return f"{self.day}"
 
     class Meta:
         verbose_name = "Праздничный день"
         verbose_name_plural = "Праздничные дни"
+
+    @staticmethod
+    def get_holidays(month: datetime.date = None, year: int = None):
+        holidays = Holidays.objects.all().order_by("day")
+        if month:
+            first_date_month = month.replace(day=1)
+            last_day_month = calendar.monthrange(month.year, month.month)[1]
+            end_date_month = month.replace(day=last_day_month)
+            holidays = holidays.filter(day__range=(first_date_month, end_date_month))
+        elif year:
+            holidays = holidays.filter(day__year=year)
+
+        result = {
+            holiday.day.strftime("%Y-%m-%d"): {"kind": holiday.kind, "shorten_minutes": None if holiday.kind == Holidays.Kind.HOLIDAY else holiday.shorten_minutes} for holiday in holidays
+        }
+        return result

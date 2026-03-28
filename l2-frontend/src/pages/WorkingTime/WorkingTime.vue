@@ -48,12 +48,13 @@
         v-show="documentCreated && filtersFull"
       >
         <TemplateTable
-          :year="selectedYear"
-          :month="selectedMonth"
           :shifts-variants="shiftsVariants"
           :time-options="timeOptions"
           :work-day-statuses="workDayStatuses"
           :department-lunch-duration="lunchDurationSelectedDepartment"
+          :holidays="holidays"
+          :refresh-key="templateTableRefreshKey"
+          :month-days="monthDays"
           @fillInTemplate="fillInTemplateData"
           @fillByEmployeeTemplate="fillByEmployeeTemplate"
           @fillColumnByTemplate="fillColumnByTemplate"
@@ -135,6 +136,7 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
 import FioCell from '@/pages/WorkingTime/FioCell.vue';
+import type { HolidaysMap } from '@/pages/WorkingTime/types/types';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -187,6 +189,18 @@ const getRefBooks = async () => {
   workDayStatuses.value = result.workDayStatuses;
   shiftsVariants.value = result.shiftsVariants;
 };
+
+const holidays = ref<HolidaysMap>({});
+const getHolidays = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result }: { result: HolidaysMap } = await api('/working-time/get-holidays', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  holidays.value = result;
+};
+
 const findDepartmentLunchDuration = () => {
   const currentDepartment = departments.value.find(department => department.id === selectedDepartment.value);
   lunchDurationSelectedDepartment.value = currentDepartment.lunchDuration ? currentDepartment.lunchDuration : 0;
@@ -275,9 +289,14 @@ const cellStyleOption = ref({
     if (row.bidType !== 'Осн') {
       result.push('table-body-bid-cell');
     }
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('table-body-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('table-body-weekend-cell');
     }
+    // if (column.isWeekend) {
+    //   result.push('table-body-weekend-cell');
+    // }
     if (row[column.key]?.blocked) {
       result.push('table-body-blocked-cell');
     }
@@ -295,7 +314,9 @@ const cellStyleOption = ref({
   headerCellClass: ({ column }) => {
     const result = [];
     const nonDateKey = ['position'];
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('table-header-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('table-header-weekend-cell');
     } else if (nonDateKey.includes(column.key)) {
       result.push('table-header-non-date-cell');
@@ -617,6 +638,7 @@ const fillDayOff = ({
 
 const columns = ref([]);
 
+const monthDays = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
   const currentMonth = month;
@@ -719,11 +741,12 @@ const getColumns = () => {
       field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 30, fixed: 'left',
     },
   ];
-  const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
+  const daysMonth = [...monthDays.value];
   const data = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
+    const holiday = holidays.value[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,
       field: dateString,
@@ -731,6 +754,7 @@ const getColumns = () => {
       align: 'center',
       width: 47,
       isWeekend: weekend,
+      isHoliday: holiday,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
         {
@@ -761,8 +785,12 @@ const getColumns = () => {
   columns.value = columnTemplate;
 };
 
-watch([selectedYear, selectedMonth], () => {
+const templateTableRefreshKey = ref(0);
+watch([selectedYear, selectedMonth], async () => {
   if (selectedYear.value && selectedMonth.value != null) {
+    monthDays.value = getMonthDays(selectedYear.value, selectedMonth.value);
+    await getHolidays();
+    templateTableRefreshKey.value += 1;
     getColumns();
   }
 }, { immediate: true });
@@ -947,12 +975,24 @@ const downloadTabelXlsx = async () => {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
+.table-body-holiday-cell {
+  background-color: #9fd8ff !important;
+  padding: 10px 0 !important;
+}
 .template-table-body-weekend-cell {
   background-color: #b6e3ff !important;
   padding: 0 !important;
 }
+.template-table-body-holiday-cell {
+  background-color: #9fd8ff !important;
+  padding: 0 !important;
+}
 .table-header-weekend-cell {
   background-color: #b6e3ff !important;
+  padding: 0 !important;
+}
+.table-header-holiday-cell {
+  background-color: #9fd8ff !important;
   padding: 0 !important;
 }
 .table-body-cell {

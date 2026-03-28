@@ -11,23 +11,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { PropType, ref, watch } from 'vue';
 import { VeTable } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment/moment';
 
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FillingCell from '@/pages/WorkingTime/FillingCell.vue';
+import type { HolidaysMap } from '@/pages/WorkingTime/types/types';
 
 const props = defineProps({
-  year: {
-    type: Number,
-    required: true,
-  },
-  month: {
-    type: Number,
-    required: true,
-  },
   workDayStatuses: {
     type: Array,
     required: true,
@@ -44,26 +37,27 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  holidays: {
+    type: Object as PropType<HolidaysMap>,
+    required: true,
+  },
+  refreshKey: {
+    type: Number,
+    required: true,
+  },
+  monthDays: {
+    type: Array,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate', 'fillColumnByTemplate']);
-const monthDays = ref([]);
-const getMonthDays = (year: number, month: number) => {
-  const days = [];
-  const currentMonth = month;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
 const columns = ref([]);
 
 const templateData = ref([]);
 const createTemplateData = () => {
   const result = {};
-  for (const col of monthDays.value) {
+  for (const col of props.monthDays) {
     const dateString = moment(col).format('YYYY-MM-DD');
     result[dateString] = { startWorkTime: '', endWorkTime: '', typeId: null };
   }
@@ -147,11 +141,12 @@ const getColumns = () => {
       ),
     },
   ];
-  const daysMonth = [...monthDays.value];
+  const daysMonth = [...props.monthDays];
   const data = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
+    const holiday = props.holidays[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,
       field: dateString,
@@ -159,6 +154,7 @@ const getColumns = () => {
       align: 'center',
       width: 47,
       isWeekend: weekend,
+      isHoliday: holiday,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
         {
@@ -187,18 +183,17 @@ const getColumns = () => {
   columns.value = columnTemplate;
 };
 
-watch(() => [props.year, props.month], () => {
-  if (props.year && props.month) {
-    monthDays.value = getMonthDays(props.year, props.month);
-    getColumns();
-    createTemplateData();
-  }
+watch(() => [props.refreshKey], () => {
+  getColumns();
+  createTemplateData();
 }, { immediate: true });
 
 const cellStyleOption = ref({
   bodyCellClass: ({ column }) => {
     const result = [];
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('template-table-body-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('template-table-body-weekend-cell');
     }
     result.push('template-table-body-cell');

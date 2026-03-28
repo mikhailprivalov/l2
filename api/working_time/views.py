@@ -1,10 +1,11 @@
+import datetime
 import json
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
 from laboratory.decorators import group_required
-from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition, FactTimeWork
+from employees.models import Department, EmployeeWorkingHoursSchedule, TimeTrackingDocument, WorkDayStatus, EmployeePosition, FactTimeWork, Holidays
 from laboratory.settings import SHIFTS_VARIANTS
 
 
@@ -86,3 +87,13 @@ def edit_lunch(request):
     lunch_duration_in_minutes = request_data.get("lunchDurationInMinutes")
     EmployeePosition.edit_lunch(employee_position_id, lunch_duration_in_minutes)
     return JsonResponse({"ok": True, "message": ""})
+
+
+@login_required()
+@group_required('График рабочего времени')
+def get_holidays(request):
+    request_data = json.loads(request.body)
+    year = request_data.get("year")
+    month = request_data.get("month")
+    holidays = Holidays.get_holidays(datetime.date(year, month, 1))
+    return JsonResponse({"result": holidays})
