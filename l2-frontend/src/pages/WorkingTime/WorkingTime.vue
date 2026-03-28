@@ -193,7 +193,10 @@ const getRefBooks = async () => {
 const holidays = ref<HolidaysMap>({});
 const getHolidays = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-holidays', { year: selectedYear.value, month: selectedMonth.value + 1 });
+  const { result }: { result: HolidaysMap } = await api('/working-time/get-holidays', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+  });
   await store.dispatch(actions.DEC_LOADING);
   holidays.value = result;
 };
