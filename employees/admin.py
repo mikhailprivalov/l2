@@ -18,7 +18,8 @@ from .models import (
     EmployeeVacation,
     TabelDocument,
     FactTimeWork,
-    TabelFactTimeWorkRaw, Holidays,
+    TabelFactTimeWorkRaw,
+    Holidays,
 )
 
 
