@@ -136,7 +136,7 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
 import FioCell from '@/pages/WorkingTime/FioCell.vue';
-import { HolidaysMap } from '@/pages/WorkingTime/types/types';
+import type { HolidaysMap } from '@/pages/WorkingTime/types/types';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;

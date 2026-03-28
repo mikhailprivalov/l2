@@ -11,13 +11,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { PropType, ref, watch } from 'vue';
 import { VeTable } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment/moment';
 
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FillingCell from '@/pages/WorkingTime/FillingCell.vue';
+import type { HolidaysMap } from '@/pages/WorkingTime/types/types';
 
 const props = defineProps({
   workDayStatuses: {
@@ -37,7 +38,7 @@ const props = defineProps({
     required: true,
   },
   holidays: {
-    type: Object,
+    type: Object as PropType<HolidaysMap>,
     required: true,
   },
   refreshKey: {
