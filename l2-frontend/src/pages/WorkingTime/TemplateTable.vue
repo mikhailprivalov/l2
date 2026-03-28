@@ -20,14 +20,6 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FillingCell from '@/pages/WorkingTime/FillingCell.vue';
 
 const props = defineProps({
-  year: {
-    type: Number,
-    required: true,
-  },
-  month: {
-    type: Number,
-    required: true,
-  },
   workDayStatuses: {
     type: Array,
     required: true,
@@ -52,26 +44,19 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  monthDays: {
+    type: Array,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate', 'fillColumnByTemplate']);
-const monthDays = ref([]);
-const getMonthDays = (year: number, month: number) => {
-  const days = [];
-  const currentMonth = month;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
 const columns = ref([]);
 
 const templateData = ref([]);
 const createTemplateData = () => {
   const result = {};
-  for (const col of monthDays.value) {
+  for (const col of props.monthDays) {
     const dateString = moment(col).format('YYYY-MM-DD');
     result[dateString] = { startWorkTime: '', endWorkTime: '', typeId: null };
   }
@@ -155,7 +140,7 @@ const getColumns = () => {
       ),
     },
   ];
-  const daysMonth = [...monthDays.value];
+  const daysMonth = [...props.monthDays];
   const data = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
@@ -198,7 +183,6 @@ const getColumns = () => {
 };
 
 watch(() => [props.refreshKey], () => {
-  monthDays.value = getMonthDays(props.year, props.month);
   getColumns();
   createTemplateData();
 }, { immediate: true });

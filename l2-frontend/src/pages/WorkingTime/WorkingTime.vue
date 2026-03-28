@@ -48,14 +48,13 @@
         v-show="documentCreated && filtersFull"
       >
         <TemplateTable
-          :year="selectedYear"
-          :month="selectedMonth"
           :shifts-variants="shiftsVariants"
           :time-options="timeOptions"
           :work-day-statuses="workDayStatuses"
           :department-lunch-duration="lunchDurationSelectedDepartment"
           :holidays="holidays"
           :refresh-key="templateTableRefreshKey"
+          :month-days="monthDays"
           @fillInTemplate="fillInTemplateData"
           @fillByEmployeeTemplate="fillByEmployeeTemplate"
           @fillColumnByTemplate="fillColumnByTemplate"
@@ -636,6 +635,7 @@ const fillDayOff = ({
 
 const columns = ref([]);
 
+const monthDays = ref([]);
 const getMonthDays = (year: number, month: number) => {
   const days = [];
   const currentMonth = month;
@@ -738,7 +738,7 @@ const getColumns = () => {
       field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 30, fixed: 'left',
     },
   ];
-  const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
+  const daysMonth = [...monthDays.value];
   const data = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
@@ -785,6 +785,7 @@ const getColumns = () => {
 const templateTableRefreshKey = ref(0);
 watch([selectedYear, selectedMonth], async () => {
   if (selectedYear.value && selectedMonth.value != null) {
+    monthDays.value = getMonthDays(selectedYear.value, selectedMonth.value);
     await getHolidays();
     templateTableRefreshKey.value += 1;
     getColumns();
