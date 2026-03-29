@@ -308,7 +308,6 @@ def make_menu(pages, groups, superuser, current_path=None):
         if is_hide_button and not superuser:
             continue
 
-
         page["active"] = current_path == page.get("url")
         menu.append(page)
     return menu
