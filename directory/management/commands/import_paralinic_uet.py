@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
-from directory.models import Culture, GroupCulture, Researches
+from directory.models import Researches
 
 
 class Command(BaseCommand):
@@ -9,16 +9,12 @@ class Command(BaseCommand):
         parser.add_argument('path', type=str)
 
     def handle(self, *args, **kwargs):
-        """
-        :param path - xlsx файл с микроорганизмами со столбцами:
-        Название, Группа, LIS(код)
-        """
         fp = kwargs["path"]
         self.stdout.write("Path: " + fp)
         wb = load_workbook(filename=fp)
         ws = wb[wb.sheetnames[0]]
         starts = False
-        code_price, title, uet = '', '',  ''
+        code_price, title, uet = '', '', ''
         for row in ws.rows:
             cells = [str(x.value) for x in row]
             if not starts:
@@ -33,4 +29,3 @@ class Command(BaseCommand):
                     continue
                 research.uet_refferal_doc = float(cells[uet])
                 research.save()
-                print('UET', cells[title], '--', cells[code_price], '--', cells[uet])  # noqa: T001
