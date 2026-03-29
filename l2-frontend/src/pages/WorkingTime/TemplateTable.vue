@@ -23,7 +23,7 @@ import {
   HolidaysMap, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
 } from '@/pages/WorkingTime/types/types';
 import { formatDateKey, formatDateTitle, isWeekend } from '@/pages/WorkingTime/utils/date';
-import { createEmptyWorkTimeDayCell, createWorkTimeDayCell } from '@/pages/WorkingTime/utils/workTime';
+import { createEmptyWorkTimeDayCell, createWorkTimeDayCell, hasWorkTimeDayCellValue } from '@/pages/WorkingTime/utils/workTime';
 
 const props = defineProps({
   workDayStatuses: {
@@ -90,8 +90,7 @@ const copyPrevFilledCell = ({ date }) => {
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   for (const key of sortedKeys) {
     const keyData = currentTemplateData[key];
-    const keyValues = Object.values(keyData).filter(value => value);
-    if (keyValues.length > 0) {
+    if (hasWorkTimeDayCellValue(keyData)) {
       currentTemplateData[date] = { ...keyData };
       break;
     }

@@ -52,3 +52,7 @@ export const createDayOffWorkTimeDayCell = (
   endWorkTime: null,
   typeId,
 });
+
+export const hasWorkTimeDayCellValue = (cell: WorkTimeDayCell): boolean => (
+  !!cell.startWorkTime || !!cell.endWorkTime || !!cell.typeId
+);
