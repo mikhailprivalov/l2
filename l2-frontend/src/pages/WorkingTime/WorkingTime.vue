@@ -143,7 +143,7 @@ import {
   SelectOptionItem, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem, WorkTimeDayCell,
 } from '@/pages/WorkingTime/types/types';
 import {
-  formatDateKey,
+  formatDateKey, formatDateTitle,
   getMonthDays, getYears, isISODateString, MONTHS,
 } from '@/pages/WorkingTime/utils/date';
 
@@ -717,7 +717,7 @@ const getColumns = () => {
   const daysMonth = [...monthDays.value];
   const data: TableColumn[] = daysMonth.map((col) => {
     const dateString = formatDateKey(col);
-    const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
+    const dateTitle = formatDateTitle(col);
     const weekend = [6, 0].includes(col.getDay());
     const holiday = holidays.value[dateString]?.kind === 'HOLIDAY';
     return {
