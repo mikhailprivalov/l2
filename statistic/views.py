@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone, dateformat
+from django.utils.encoding import iri_to_uri
 from django.views.decorators.csrf import csrf_exempt
 from openpyxl.reader.excel import load_workbook
 
@@ -1977,7 +1978,6 @@ def statistic_xls(request):
         else:
             ws = consolidates.consolidate_fill_data_doctors_by_type_department(ws, query_doctors, ws_and_finish_order[1])
     elif tp == "reestr-hospital":
-        response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_больницам_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
         wb = openpyxl.Workbook()
         wb.remove(wb.get_sheet_by_name('Sheet'))
         ws = wb.create_sheet("Реестр по больницам")
@@ -2002,6 +2002,8 @@ def statistic_xls(request):
         for coast in coast_research_price:
             price_hospitals[coast.price_name_id][coast.research_id] = float(coast.coast)
         row_report = []
+        title_hospital = "Больницы"
+        last_hospital = "Больницы"
         for i in data:
             tarif_coast = None
             coast_price_research = None
@@ -2037,7 +2039,12 @@ def statistic_xls(request):
             tmp_result["tarif_night"] = 0
             tmp_result["total_summ"] = 0
             row_report.append(tmp_result.copy())
+            last_hospital = i.hospital_title
+        if len(hospitals_id) == 1:
+            title_hospital = last_hospital
 
+        file_title = iri_to_uri(f"{title_hospital.replace(' ', '_')}")
+        response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
         ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам')
         ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
@@ -2112,7 +2119,8 @@ def statistic_xls(request):
             if doctor > 0:
                 fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
                 title_fio = fio_doctor.get_fio()
-            response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_по_{}-{}-{}.xls\"".format(title_fio, date_start_o, date_end_o), tr)
+            file_title = iri_to_uri(f"Врач_{title_fio.replace(' ', '_')}")
+            response['Content-Disposition'] = f'attachment; filename="{file_title}.xls"'
             ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
             ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
