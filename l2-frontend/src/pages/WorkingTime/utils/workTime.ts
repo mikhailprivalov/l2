@@ -1,7 +1,7 @@
 import { buildDateTime, isISODateString } from '@/pages/WorkingTime/utils/date';
-import { WorkTimeDayCell } from '@/pages/WorkingTime/types/types';
+import { EMPTY_WORK_TIME_DAY_CELL, WorkTimeDayCell } from '@/pages/WorkingTime/types/types';
 
-const calculateEmployeeTotals = (employee) => {
+export const calculateEmployeeWorkTimeTotals = (employee) => {
   let totalDiffTime = 0;
   const keys = Object.keys(employee);
   const lunchDuration = employee.lunchDuration * 60 * 1000;
@@ -31,4 +31,24 @@ const calculateEmployeeTotals = (employee) => {
   };
 };
 
-export default calculateEmployeeTotals;
+export const createEmptyWorkTimeDayCell = (): WorkTimeDayCell => ({
+  ...EMPTY_WORK_TIME_DAY_CELL,
+});
+
+export const createWorkTimeDayCell = (
+  startWorkTime: string | null = null,
+  endWorkTime: string | null = null,
+  typeId: number | null = null,
+): WorkTimeDayCell => ({
+  startWorkTime,
+  endWorkTime,
+  typeId,
+});
+
+export const createDayOffWorkTimeDayCell = (
+  typeId: number | null,
+): WorkTimeDayCell => ({
+  startWorkTime: null,
+  endWorkTime: null,
+  typeId,
+});

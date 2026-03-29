@@ -23,6 +23,7 @@ import {
   HolidaysMap, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
 } from '@/pages/WorkingTime/types/types';
 import { formatDateKey, formatDateTitle, isWeekend } from '@/pages/WorkingTime/utils/date';
+import { createEmptyWorkTimeDayCell, createWorkTimeDayCell } from '@/pages/WorkingTime/utils/workTime';
 
 const props = defineProps({
   workDayStatuses: {
@@ -63,7 +64,7 @@ const createTemplateData = () => {
   const result = {};
   for (const col of props.monthDays) {
     const dateString = formatDateKey(col);
-    result[dateString] = { startWorkTime: '', endWorkTime: '', typeId: null };
+    result[dateString] = createEmptyWorkTimeDayCell();
   }
   templateData.value = [{ ...result }];
 };
@@ -72,20 +73,12 @@ const changeTemplateTime = async ({
   date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
 }) => {
   const row = templateData.value[0];
-  row[date] = {
-    startWorkTime,
-    endWorkTime,
-    typeId,
-  };
+  row[date] = createWorkTimeDayCell(startWorkTime, endWorkTime, typeId);
   if (nextDayEndWork) {
     const nextDay = nextDayEndWork;
     const nextDayString = formatDateKey(nextDay);
     const nextDayEnd = moment(nextDay).format('HH:mm');
-    row[nextDayString] = {
-      startWorkTime: '00:00',
-      endWorkTime: nextDayEnd,
-      typeId,
-    };
+    row[nextDayString] = createWorkTimeDayCell('00:00', nextDayEnd, typeId);
   }
 };
 
