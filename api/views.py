@@ -28,7 +28,8 @@ from laboratory.settings import (
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
     MEDEXAM_FIN_SOURCE_TITLE,
-    MAGAZINE_REPORT, USE_COMBO_ROLE,
+    MAGAZINE_REPORT,
+    USE_COMBO_ROLE,
 )
 from statistic.models import TypeReport
 from utils.response import status_response
