@@ -18,19 +18,22 @@ import moment from 'moment/moment';
 
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FillingCell from '@/pages/WorkingTime/FillingCell.vue';
-import type { HolidaysMap } from '@/pages/WorkingTime/types/types';
+import {
+  EMPTY_WORK_TIME_DAY_CELL,
+  HolidaysMap, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
+} from '@/pages/WorkingTime/types/types';
 
 const props = defineProps({
   workDayStatuses: {
-    type: Array,
+    type: Array as PropType<WorkDayStatusItem[]>,
     required: true,
   },
   shiftsVariants: {
-    type: Array,
+    type: Array as PropType<ShiftVariantItem[]>,
     required: true,
   },
   timeOptions: {
-    type: Array,
+    type: Array as PropType<TimeOptionItem[]>,
     required: true,
   },
   departmentLunchDuration: {
@@ -46,13 +49,13 @@ const props = defineProps({
     required: true,
   },
   monthDays: {
-    type: Array,
+    type: Array as PropType<Date[]>,
     required: true,
   },
 });
 
 const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate', 'fillColumnByTemplate']);
-const columns = ref([]);
+const columns = ref<TableColumn[]>([]);
 
 const templateData = ref([]);
 const createTemplateData = () => {
@@ -90,7 +93,7 @@ const copyPrevFilledCell = ({ date }) => {
   const currentTemplateData = templateData.value[0];
   const sortedKeys = Object.keys(currentTemplateData)
     .filter(key => new Date(key) < currentDay)
-    .sort((a, b) => new Date(b) - new Date(a));
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   for (const key of sortedKeys) {
     const keyData = currentTemplateData[key];
     const keyValues = Object.values(keyData).filter(value => value);
@@ -122,7 +125,7 @@ const fillColumnByTemplate = ({
 };
 
 const getColumns = () => {
-  const columnTemplate = [
+  const columnTemplate: TableColumn[] = [
     {
       field: 'button',
       key: 'button',
@@ -142,7 +145,7 @@ const getColumns = () => {
     },
   ];
   const daysMonth = [...props.monthDays];
-  const data = daysMonth.map((col) => {
+  const data: TableColumn[] = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
@@ -159,7 +162,7 @@ const getColumns = () => {
         DateCell,
         {
           props: {
-            workTime: row[column.field] ? row[column.field] : '',
+            workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
             employeePositionId: row.employeePositionId,
             date: column.key,
             dateTitle,
@@ -176,7 +179,7 @@ const getColumns = () => {
     };
   });
   columnTemplate.push(...data);
-  const endTable = {
+  const endTable: TableColumn = {
     field: 'total', key: 'total', title: '', align: 'center', width: 72, fixed: 'right',
   };
   columnTemplate.push(endTable);

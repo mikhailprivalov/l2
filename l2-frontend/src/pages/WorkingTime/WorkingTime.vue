@@ -136,55 +136,41 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
 import FioCell from '@/pages/WorkingTime/FioCell.vue';
-import type { HolidaysMap } from '@/pages/WorkingTime/types/types';
+import {
+  DepartmentItem, EMPTY_WORK_TIME_DAY_CELL,
+  GetEmployeesWorkTimeResult,
+  HolidaysMap, RefBooksResponse,
+  SelectOptionItem, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem, WorkTimeDayCell,
+} from '@/pages/WorkingTime/types/types';
+import {
+  getMonthDays, getYears, isISODateString, MONTHS,
+} from '@/pages/WorkingTime/utils/date';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const currentDate = ref(new Date());
 
 const selectedMonth = ref(currentDate.value.getMonth());
-const months = ref([
-  { id: 0, label: 'Январь' },
-  { id: 1, label: 'Февраль' },
-  { id: 2, label: 'Март' },
-  { id: 3, label: 'Апрель' },
-  { id: 4, label: 'Май' },
-  { id: 5, label: 'Июнь' },
-  { id: 6, label: 'Июль' },
-  { id: 7, label: 'Август' },
-  { id: 8, label: 'Сентябрь' },
-  { id: 9, label: 'Октябрь' },
-  { id: 10, label: 'Ноябрь' },
-  { id: 11, label: 'Декабрь' },
-]);
+const months = ref<SelectOptionItem[]>(MONTHS);
 
 const selectedYear = ref(currentDate.value.getFullYear());
-const years = ref([]);
-
-const getYears = (yearStart = 2023) => {
-  let start = yearStart;
-  currentDate.value.getFullYear();
-  while (start <= currentDate.value.getFullYear()) {
-    years.value.push({ id: start, label: String(start) });
-    start++;
-  }
-};
+const years = ref<SelectOptionItem[]>(getYears(currentDate.value.getFullYear()));
 
 const selectedDepartment = ref(null);
 const lunchDurationSelectedDepartment = ref(0);
-const departments = ref([]);
+const departments = ref<DepartmentItem[]>([]);
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-departments');
+  const { result }: { result: DepartmentItem[] } = await api('/working-time/get-departments');
   await store.dispatch(actions.DEC_LOADING);
   departments.value = result;
 };
 
-const shiftsVariants = ref([]);
-const workDayStatuses = ref([]);
+const shiftsVariants = ref<ShiftVariantItem[]>([]);
+const workDayStatuses = ref<WorkDayStatusItem[]>([]);
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const result = await api('/working-time/get-ref-books');
+  const result: RefBooksResponse = await api('/working-time/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
   workDayStatuses.value = result.workDayStatuses;
   shiftsVariants.value = result.shiftsVariants;
@@ -212,15 +198,14 @@ watch(selectedDepartment, () => {
 
 onMounted(() => {
   getDepartments();
-  getYears();
   getRefBooks();
 });
 
 const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value != null && selectedDepartment.value));
-const timeOptions = computed(() => (store.getters.modules.working_time_variants
+const timeOptions = computed<TimeOptionItem[]>(() => (store.getters.modules.working_time_variants
   ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
-const documentId = ref(null);
+const documentId = ref<number | null>(null);
 const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
@@ -229,8 +214,11 @@ const changedEmployeesWorkTime = ref({});
 const hasChange = ref(false);
 
 const getEmployeesWorkTime = async () => {
+  employeesWorkTime.value = [];
+  changedEmployeesWorkTime.value = {};
+  hasChange.value = false;
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-work-time', {
+  const { result }: { result: GetEmployeesWorkTimeResult } = await api('/working-time/get-work-time', {
     year: selectedYear.value,
     month: selectedMonth.value + 1,
     departmentId: selectedDepartment.value,
@@ -243,8 +231,6 @@ const getEmployeesWorkTime = async () => {
   documentId.value = documentPk;
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
-  changedEmployeesWorkTime.value = {};
-  hasChange.value = false;
 };
 
 watch(employeesWorkTime, () => {
@@ -253,8 +239,8 @@ watch(employeesWorkTime, () => {
     const keys = Object.keys(employee);
     const lunchDuration = employee.lunchDuration * 60 * 1000;
     for (const key of keys) {
-      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-        const currentDay = employee[key];
+      if (isISODateString(key)) {
+        const currentDay: WorkTimeDayCell = employee[key];
         if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
           const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
           let endTime;
@@ -263,7 +249,7 @@ watch(employeesWorkTime, () => {
           } else {
             endTime = new Date(`${key} ${currentDay.endWorkTime}`);
           }
-          const dayDiffTime = endTime - startTime - lunchDuration;
+          const dayDiffTime = endTime.getTime() - startTime.getTime() - lunchDuration;
           totalDiffTime += dayDiffTime;
         }
       }
@@ -294,9 +280,6 @@ const cellStyleOption = ref({
     } else if (column.isWeekend) {
       result.push('table-body-weekend-cell');
     }
-    // if (column.isWeekend) {
-    //   result.push('table-body-weekend-cell');
-    // }
     if (row[column.key]?.blocked) {
       result.push('table-body-blocked-cell');
     }
@@ -460,7 +443,7 @@ const fillInTemplateData = ({ templateData }) => {
       const keys = Object.keys(employeePosition);
       const { lunchDuration } = employeePosition;
       for (const key of keys) {
-        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+        if (isISODateString(key)) {
           employeePosition[key] = { ...templateData[key] };
           updateChangedEmployeesWorkTime(
             employeePosition.employeePositionId,
@@ -492,7 +475,7 @@ const fillByEmployeeTemplate = async ({ action }) => {
     const { employeePositionId } = employeePosition;
     const { lunchDuration } = employeePosition;
     for (const [key, value] of Object.entries(employeePosition)) {
-      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+      if (isISODateString(key)) {
         updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value, lunchDuration);
       }
     }
@@ -523,7 +506,7 @@ const copyTop = ({ rowIndex }) => {
   const { lunchDuration } = currentEmployeePosition;
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
-    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+    if (isISODateString(key)) {
       currentEmployeePosition[key] = { ...prevFilteredEmployeePosition[key] };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
@@ -545,7 +528,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
     === selectedEmployeePositionId);
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
-    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+    if (isISODateString(key)) {
       currentEmployeePosition[key] = { ...selectedEmployeePosition[key] };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
@@ -567,7 +550,7 @@ const clear = ({ rowIndex }) => {
   const keys = Object.keys(currentEmployeePosition);
   const emptyData = { startWorkTime: '', endWorkTime: '', typeId: null };
   for (const key of keys) {
-    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+    if (isISODateString(key)) {
       currentEmployeePosition[key] = { ...emptyData };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
@@ -636,25 +619,14 @@ const fillDayOff = ({
   }
 };
 
-const columns = ref([]);
+const columns = ref<TableColumn[]>([]);
 
-const monthDays = ref([]);
-const getMonthDays = (year: number, month: number) => {
-  const days = [];
-  const currentMonth = month;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
-
+const monthDays = ref<Date[]>([]);
 const firstDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value, 1)).format('YYYY-MM-DD'));
 const lastDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value + 1, 0)).format('YYYY-MM-DD'));
 
 const getColumns = () => {
-  const columnTemplate = [
+  const columnTemplate: TableColumn[] = [
     {
       field: 'checkbox', key: 'checkbox', type: 'checkbox', title: '', align: 'center', width: 25, fixed: 'left',
     },
@@ -742,7 +714,7 @@ const getColumns = () => {
     },
   ];
   const daysMonth = [...monthDays.value];
-  const data = daysMonth.map((col) => {
+  const data: TableColumn[] = daysMonth.map((col) => {
     const dateString = moment(col).format('YYYY-MM-DD');
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
@@ -759,7 +731,7 @@ const getColumns = () => {
         DateCell,
         {
           props: {
-            workTime: row[column.field] ? row[column.field] : '',
+            workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
             employeePositionId: row.employeePositionId,
             date: column.key,
             workDayStatuses: workDayStatuses.value,
@@ -774,10 +746,10 @@ const getColumns = () => {
     };
   });
   columnTemplate.push(...data);
-  const totalHoursCol = {
+  const totalHoursCol: TableColumn = {
     field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
-  const totalHoursWithMinCol = {
+  const totalHoursWithMinCol: TableColumn = {
     field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 42, fixed: 'right',
   };
   columnTemplate.push(totalHoursCol);
