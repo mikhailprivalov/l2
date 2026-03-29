@@ -42,3 +42,5 @@ export const getYears = (currentYear: number, yearStart = 2023): SelectOptionIte
 };
 
 export const isISODateString = (value: string): boolean => moment(value, 'YYYY-MM-DD', true).isValid();
+
+export const formatDateKey = (date: Date): string => moment(date).format('YYYY-MM-DD');

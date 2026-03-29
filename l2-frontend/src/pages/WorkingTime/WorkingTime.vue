@@ -143,6 +143,7 @@ import {
   SelectOptionItem, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem, WorkTimeDayCell,
 } from '@/pages/WorkingTime/types/types';
 import {
+  formatDateKey,
   getMonthDays, getYears, isISODateString, MONTHS,
 } from '@/pages/WorkingTime/utils/date';
 
@@ -418,7 +419,7 @@ const changeWorkTime = async ({
   updateChangedEmployeesWorkTime(employeePositionId, date, startWorkTime, endWorkTime, typeId, null, lunchDuration);
   if (nextDayEndWork) {
     const nextDay = nextDayEndWork;
-    const nextDayString = moment(nextDay).format('YYYY-MM-DD');
+    const nextDayString = formatDateKey(nextDay);
     const nextDayEnd = moment(nextDay).format('HH:mm');
     row[nextDayString] = {
       startWorkTime: '00:00',
@@ -622,8 +623,8 @@ const fillDayOff = ({
 const columns = ref<TableColumn[]>([]);
 
 const monthDays = ref<Date[]>([]);
-const firstDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value, 1)).format('YYYY-MM-DD'));
-const lastDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value + 1, 0)).format('YYYY-MM-DD'));
+const firstDayMonth = computed(() => formatDateKey(new Date(selectedYear.value, selectedMonth.value, 1)));
+const lastDayMonth = computed(() => formatDateKey(new Date(selectedYear.value, selectedMonth.value + 1, 0)));
 
 const getColumns = () => {
   const columnTemplate: TableColumn[] = [
@@ -715,7 +716,7 @@ const getColumns = () => {
   ];
   const daysMonth = [...monthDays.value];
   const data: TableColumn[] = daysMonth.map((col) => {
-    const dateString = moment(col).format('YYYY-MM-DD');
+    const dateString = formatDateKey(col);
     const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
     const weekend = [6, 0].includes(col.getDay());
     const holiday = holidays.value[dateString]?.kind === 'HOLIDAY';
