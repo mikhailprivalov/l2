@@ -48,3 +48,5 @@ export const formatDateKey = (date: Date): string => moment(date).format('YYYY-M
 export const formatDateTitle = (date: Date): string => date.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
 
 export const isWeekend = (date: Date): boolean => [6, 0].includes(date.getDay());
+
+export const buildDateTime = (date: string, time: string): Date => new Date(`${date} ${time}`);

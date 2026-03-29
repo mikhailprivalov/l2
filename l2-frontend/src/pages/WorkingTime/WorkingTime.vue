@@ -146,6 +146,7 @@ import {
   formatDateKey, formatDateTitle,
   getMonthDays, getYears, isISODateString, isWeekend, MONTHS,
 } from '@/pages/WorkingTime/utils/date';
+import calculateEmployeeTotals from '@/pages/WorkingTime/utils/workTime';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -236,31 +237,9 @@ const getEmployeesWorkTime = async () => {
 
 watch(employeesWorkTime, () => {
   for (const employee of employeesWorkTime.value) {
-    let totalDiffTime = 0;
-    const keys = Object.keys(employee);
-    const lunchDuration = employee.lunchDuration * 60 * 1000;
-    for (const key of keys) {
-      if (isISODateString(key)) {
-        const currentDay: WorkTimeDayCell = employee[key];
-        if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
-          const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-          let endTime;
-          if (currentDay.endWorkTime === '00:00') {
-            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
-          } else {
-            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-          }
-          const dayDiffTime = endTime.getTime() - startTime.getTime() - lunchDuration;
-          totalDiffTime += dayDiffTime;
-        }
-      }
-    }
-    const totalDiffSec = totalDiffTime / (1000 * 60);
-    const totalHoursDecimal = totalDiffSec / 60;
-    const totalHours = Math.trunc(totalHoursDecimal);
-    const totalMin = totalDiffSec % 60;
-    employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
-    employee.totalHours = `${totalHours}ч ${totalMin}м`;
+    const { totalHoursDecimal, totalHours } = calculateEmployeeTotals(employee);
+    employee.totalHoursDecimal = totalHoursDecimal;
+    employee.totalHours = totalHours;
   }
 }, { deep: true });
 
