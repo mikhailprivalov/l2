@@ -215,6 +215,22 @@ const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
+
+const recalculateEmployeeTotals = (employee) => {
+  const { totalHoursDecimal, totalHours } = calculateEmployeeWorkTimeTotals(employee);
+  // TODO необходимо сделать возврат нового значения, убрать мутацию, везде где вызывается эта функция
+  // eslint-disable-next-line no-param-reassign
+  employee.totalHoursDecimal = totalHoursDecimal;
+  // eslint-disable-next-line no-param-reassign
+  employee.totalHours = totalHours;
+};
+
+const recalculateAllEmployeeTotals = () => {
+  for (const employee of employeesWorkTime.value) {
+    recalculateEmployeeTotals(employee);
+  }
+};
+
 const changedEmployeesWorkTime = ref({});
 const hasChange = ref(false);
 
@@ -233,18 +249,11 @@ const getEmployeesWorkTime = async () => {
     data, documentPk, documentIsBlocked, documentIsCreated,
   } = result;
   employeesWorkTime.value = data;
+  recalculateAllEmployeeTotals();
   documentId.value = documentPk;
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
 };
-
-watch(employeesWorkTime, () => {
-  for (const employee of employeesWorkTime.value) {
-    const { totalHoursDecimal, totalHours } = calculateEmployeeWorkTimeTotals(employee);
-    employee.totalHoursDecimal = totalHoursDecimal;
-    employee.totalHours = totalHours;
-  }
-}, { deep: true });
 
 watch([selectedYear, selectedMonth, selectedDepartment], () => {
   if (filtersFull.value) {
@@ -410,6 +419,7 @@ const changeWorkTime = async ({
       lunchDuration,
     );
   }
+  recalculateEmployeeTotals(row);
 };
 
 const fillInTemplateData = ({ templateData }) => {
@@ -431,6 +441,7 @@ const fillInTemplateData = ({ templateData }) => {
           );
         }
       }
+      recalculateEmployeeTotals(employeePosition);
     }
   }
   checkboxOption.value.selectedRowKeys = [];
@@ -446,6 +457,7 @@ const fillByEmployeeTemplate = async ({ action }) => {
   });
   await store.dispatch(actions.DEC_LOADING);
   employeesWorkTime.value = result;
+  recalculateAllEmployeeTotals();
   for (const employeePosition of result) {
     const { employeePositionId } = employeePosition;
     const { lunchDuration } = employeePosition;
@@ -466,9 +478,11 @@ const fillColumnByTemplate = ({
     if (checkboxOption.value.selectedRowKeys.length === 0) {
       employeePosition[date] = createWorkTimeDayCell(startWork, endWork, typeId);
       updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
+      recalculateEmployeeTotals(employeePosition);
     } else if (checkboxOption.value.selectedRowKeys.includes(employeePositionId)) {
       employeePosition[date] = createWorkTimeDayCell(startWork, endWork, typeId);
       updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
+      recalculateEmployeeTotals(employeePosition);
     }
   }
 };
@@ -494,6 +508,7 @@ const copyTop = ({ rowIndex }) => {
       );
     }
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
@@ -516,6 +531,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
       );
     }
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 const clear = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
@@ -538,6 +554,7 @@ const clear = ({ rowIndex }) => {
       );
     }
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 
 const employeeTransfer = async ({ employeePositionId, date }) => {
@@ -592,6 +609,7 @@ const fillDayOff = ({
       lunchDuration,
     );
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 
 const columns = ref<TableColumn[]>([]);
