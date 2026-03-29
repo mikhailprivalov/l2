@@ -144,7 +144,7 @@ import {
 } from '@/pages/WorkingTime/types/types';
 import {
   formatDateKey, formatDateTitle,
-  getMonthDays, getYears, isISODateString, MONTHS,
+  getMonthDays, getYears, isISODateString, isWeekend, MONTHS,
 } from '@/pages/WorkingTime/utils/date';
 
 const store = useStore();
@@ -718,7 +718,7 @@ const getColumns = () => {
   const data: TableColumn[] = daysMonth.map((col) => {
     const dateString = formatDateKey(col);
     const dateTitle = formatDateTitle(col);
-    const weekend = [6, 0].includes(col.getDay());
+    const weekend = isWeekend(col);
     const holiday = holidays.value[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,

@@ -22,7 +22,7 @@ import {
   EMPTY_WORK_TIME_DAY_CELL,
   HolidaysMap, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
 } from '@/pages/WorkingTime/types/types';
-import { formatDateKey, formatDateTitle } from '@/pages/WorkingTime/utils/date';
+import {formatDateKey, formatDateTitle, isWeekend} from '@/pages/WorkingTime/utils/date';
 
 const props = defineProps({
   workDayStatuses: {
@@ -149,7 +149,7 @@ const getColumns = () => {
   const data: TableColumn[] = daysMonth.map((col) => {
     const dateString = formatDateKey(col);
     const dateTitle = formatDateTitle(col);
-    const weekend = [6, 0].includes(col.getDay());
+    const weekend = isWeekend(col);
     const holiday = props.holidays[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,
