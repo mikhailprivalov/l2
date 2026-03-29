@@ -28,7 +28,7 @@ from laboratory.settings import (
     USE_TFOMS_DISTRICT,
     TYPE_COMPANY_SET_DIRECTION_PDF,
     MEDEXAM_FIN_SOURCE_TITLE,
-    MAGAZINE_REPORT,
+    MAGAZINE_REPORT, USE_COMBO_ROLE,
 )
 from statistic.models import TypeReport
 from utils.response import status_response
@@ -696,7 +696,14 @@ def current_user_info(request):
             ret["hospital_title"] = doctorprofile.get_hospital_title()
             ret["all_hospitals_users_control"] = doctorprofile.all_hospitals_users_control
             ret["specialities"] = [] if not doctorprofile.specialities else [doctorprofile.specialities.title]
-            ret["groups"] = list(user.groups.values_list("name", flat=True))
+            database_groups = list(user.groups.values_list("name", flat=True))
+            tmp_groups = []
+            for i in database_groups:
+                if USE_COMBO_ROLE.get(i):
+                    tmp_groups.extend(USE_COMBO_ROLE.get(i))
+            tmp_groups.extend(list(user.groups.values_list("name", flat=True)))
+            # ret["groups"] = list(user.groups.values_list("name", flat=True))
+            ret["groups"] = list(set(tmp_groups))
             if SYSTEM_AS_VI:
                 for i in range(len(ret["groups"])):
                     if ret["groups"][i] == "Картотека L2":
