@@ -941,7 +941,7 @@ const downloadTabelXlsx = async () => {
   padding: 10px 0 !important;
 }
 .table-body-holiday-cell {
-  background-color: #9fd8ff !important;
+  background-color: #8ccfff !important;
   padding: 10px 0 !important;
 }
 .template-table-body-weekend-cell {
@@ -949,7 +949,7 @@ const downloadTabelXlsx = async () => {
   padding: 0 !important;
 }
 .template-table-body-holiday-cell {
-  background-color: #9fd8ff !important;
+  background-color: #8ccfff !important;
   padding: 0 !important;
 }
 .table-header-weekend-cell {
@@ -957,7 +957,7 @@ const downloadTabelXlsx = async () => {
   padding: 0 !important;
 }
 .table-header-holiday-cell {
-  background-color: #9fd8ff !important;
+  background-color: #8ccfff !important;
   padding: 0 !important;
 }
 .table-body-cell {
