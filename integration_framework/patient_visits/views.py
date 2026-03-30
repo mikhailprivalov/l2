@@ -197,7 +197,7 @@ def get_direction_data_by_cda_group(direction_pk):
                 if not val or not isinstance(val, dict):
                     pass
                 else:
-                    main_diagnos_code = main_diagnos.get("code")
+                    main_diagnos_code = val.get("code")
             except Exception:
                 pass
         else:
