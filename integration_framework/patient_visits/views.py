@@ -191,8 +191,18 @@ def get_direction_data_by_cda_group(direction_pk):
         temp_result[k] = s.replace('"', '').replace("'", "").replace("/", "|").replace("\\", "|")
     temp_result = {str(k): v for k, v in temp_result.items()}
     if main_diagnos:
-        main_diagnos_code = main_diagnos.split(" ")[0]
-        main_diagnos_code = main_diagnos_code.split(";")[0]
+        if "{" in main_diagnos and "}" in main_diagnos:
+            try:
+                val = json.loads(main_diagnos)
+                if not val or not isinstance(val, dict):
+                    pass
+                else:
+                    main_diagnos_code = main_diagnos.get("code")
+            except Exception:
+                pass
+        else:
+            main_diagnos_code = main_diagnos.split(" ")[0]
+            main_diagnos_code = main_diagnos_code.split(";")[0]
 
     return {
         "data": temp_result,
