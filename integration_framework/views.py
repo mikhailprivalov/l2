@@ -326,6 +326,7 @@ def direction_data(request):
                 additional_data_create_direction = None
 
     date_direction_create = direction.data_sozdaniya.strftime("%d.%m.%Y")
+    date_last_confirmed_at = direction.last_confirmed_at.strftime("%d.%m.%Y")
 
     return Response(
         {
@@ -333,6 +334,7 @@ def direction_data(request):
             "pk": pk,
             "createdAt": direction.data_sozdaniya,
             "createdAtAsStr": date_direction_create,
+            "totalConfirmedAtAsStr": date_last_confirmed_at,
             "patient": {
                 "id": card.pk,
                 **card.get_data_individual(full_empty=True, only_json_serializable=True),
