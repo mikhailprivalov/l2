@@ -11,61 +11,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { PropType, ref, watch } from 'vue';
 import { VeTable } from 'vue-easytable';
 import 'vue-easytable/libs/theme-default/index.css';
 import moment from 'moment/moment';
 
 import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FillingCell from '@/pages/WorkingTime/FillingCell.vue';
+import {
+  EMPTY_WORK_TIME_DAY_CELL,
+  HolidaysMap, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
+} from '@/pages/WorkingTime/types/types';
+import { formatDateKey, formatDateTitle, isWeekend } from '@/pages/WorkingTime/utils/date';
+import { createEmptyWorkTimeDayCell, createWorkTimeDayCell, hasWorkTimeDayCellValue } from '@/pages/WorkingTime/utils/workTime';
 
 const props = defineProps({
-  year: {
-    type: Number,
-    required: true,
-  },
-  month: {
-    type: Number,
-    required: true,
-  },
   workDayStatuses: {
-    type: Array,
+    type: Array as PropType<WorkDayStatusItem[]>,
     required: true,
   },
   shiftsVariants: {
-    type: Array,
+    type: Array as PropType<ShiftVariantItem[]>,
     required: true,
   },
   timeOptions: {
-    type: Array,
+    type: Array as PropType<TimeOptionItem[]>,
     required: true,
   },
   departmentLunchDuration: {
     type: Number,
     required: true,
   },
+  holidays: {
+    type: Object as PropType<HolidaysMap>,
+    required: true,
+  },
+  refreshKey: {
+    type: Number,
+    required: true,
+  },
+  monthDays: {
+    type: Array as PropType<Date[]>,
+    required: true,
+  },
 });
 
 const emit = defineEmits(['fillInTemplate', 'fillByEmployeeTemplate', 'fillColumnByTemplate']);
-const monthDays = ref([]);
-const getMonthDays = (year: number, month: number) => {
-  const days = [];
-  const currentMonth = month;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
-const columns = ref([]);
+const columns = ref<TableColumn[]>([]);
 
 const templateData = ref([]);
 const createTemplateData = () => {
   const result = {};
-  for (const col of monthDays.value) {
-    const dateString = moment(col).format('YYYY-MM-DD');
-    result[dateString] = { startWorkTime: '', endWorkTime: '', typeId: null };
+  for (const col of props.monthDays) {
+    const dateString = formatDateKey(col);
+    result[dateString] = createEmptyWorkTimeDayCell();
   }
   templateData.value = [{ ...result }];
 };
@@ -74,20 +73,12 @@ const changeTemplateTime = async ({
   date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
 }) => {
   const row = templateData.value[0];
-  row[date] = {
-    startWorkTime,
-    endWorkTime,
-    typeId,
-  };
+  row[date] = createWorkTimeDayCell(startWorkTime, endWorkTime, typeId);
   if (nextDayEndWork) {
     const nextDay = nextDayEndWork;
-    const nextDayString = moment(nextDay).format('YYYY-MM-DD');
+    const nextDayString = formatDateKey(nextDay);
     const nextDayEnd = moment(nextDay).format('HH:mm');
-    row[nextDayString] = {
-      startWorkTime: '00:00',
-      endWorkTime: nextDayEnd,
-      typeId,
-    };
+    row[nextDayString] = createWorkTimeDayCell('00:00', nextDayEnd, typeId);
   }
 };
 
@@ -96,11 +87,10 @@ const copyPrevFilledCell = ({ date }) => {
   const currentTemplateData = templateData.value[0];
   const sortedKeys = Object.keys(currentTemplateData)
     .filter(key => new Date(key) < currentDay)
-    .sort((a, b) => new Date(b) - new Date(a));
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
   for (const key of sortedKeys) {
     const keyData = currentTemplateData[key];
-    const keyValues = Object.values(keyData).filter(value => value);
-    if (keyValues.length > 0) {
+    if (hasWorkTimeDayCellValue(keyData)) {
       currentTemplateData[date] = { ...keyData };
       break;
     }
@@ -128,7 +118,7 @@ const fillColumnByTemplate = ({
 };
 
 const getColumns = () => {
-  const columnTemplate = [
+  const columnTemplate: TableColumn[] = [
     {
       field: 'button',
       key: 'button',
@@ -147,11 +137,12 @@ const getColumns = () => {
       ),
     },
   ];
-  const daysMonth = [...monthDays.value];
-  const data = daysMonth.map((col) => {
-    const dateString = moment(col).format('YYYY-MM-DD');
-    const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
-    const weekend = [6, 0].includes(col.getDay());
+  const daysMonth = [...props.monthDays];
+  const data: TableColumn[] = daysMonth.map((col) => {
+    const dateString = formatDateKey(col);
+    const dateTitle = formatDateTitle(col);
+    const weekend = isWeekend(col);
+    const holiday = props.holidays[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,
       field: dateString,
@@ -159,11 +150,12 @@ const getColumns = () => {
       align: 'center',
       width: 47,
       isWeekend: weekend,
+      isHoliday: holiday,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
         {
           props: {
-            workTime: row[column.field] ? row[column.field] : '',
+            workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
             employeePositionId: row.employeePositionId,
             date: column.key,
             dateTitle,
@@ -180,25 +172,24 @@ const getColumns = () => {
     };
   });
   columnTemplate.push(...data);
-  const endTable = {
+  const endTable: TableColumn = {
     field: 'total', key: 'total', title: '', align: 'center', width: 72, fixed: 'right',
   };
   columnTemplate.push(endTable);
   columns.value = columnTemplate;
 };
 
-watch(() => [props.year, props.month], () => {
-  if (props.year && props.month) {
-    monthDays.value = getMonthDays(props.year, props.month);
-    getColumns();
-    createTemplateData();
-  }
+watch(() => [props.refreshKey], () => {
+  getColumns();
+  createTemplateData();
 }, { immediate: true });
 
 const cellStyleOption = ref({
   bodyCellClass: ({ column }) => {
     const result = [];
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('template-table-body-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('template-table-body-weekend-cell');
     }
     result.push('template-table-body-cell');

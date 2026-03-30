@@ -19,6 +19,7 @@ from .models import (
     TabelDocument,
     FactTimeWork,
     TabelFactTimeWorkRaw,
+    Holidays,
 )
 
 
@@ -164,3 +165,9 @@ class TabelDataAdmin(admin.ModelAdmin):
     @admin.display(description="Месяц табеля")
     def tabel_document_month(self, obj):
         return date_format(obj.tabel_document.month_tabel, "F, Y") if obj.tabel_document else "-"
+
+
+@admin.register(Holidays)
+class HolidaysAdmin(admin.ModelAdmin):
+    list_display = ("day", "kind", "shorten_minutes")
+    list_filter = ("kind",)

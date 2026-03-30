@@ -120,18 +120,22 @@
 
 <script setup lang="ts">
 import {
-  computed, ref, watch,
+  computed, PropType, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import moment from 'moment';
 
 import RadioFieldById from '@/fields/RadioFieldById.vue';
+import {
+  ShiftVariantItem, TimeOptionItem, WorkDayStatusItem, WorkTimeDayCell,
+} from '@/pages/WorkingTime/types/types';
+import { buildDateTime } from '@/pages/WorkingTime/utils/date';
 
 const emit = defineEmits(['changeWorkTime', 'copyPrevFilled', 'copyToColumn']);
 const props = defineProps({
   workTime: {
-    type: [Object, String],
+    type: Object as PropType<WorkTimeDayCell>,
     required: true,
     default: () => ({}),
   },
@@ -149,17 +153,17 @@ const props = defineProps({
     default: null,
   },
   workDayStatuses: {
-    type: Array,
+    type: Array as PropType<WorkDayStatusItem[]>,
     required: true,
     default: () => [],
   },
   shiftsVariants: {
-    type: Array,
+    type: Array as PropType<ShiftVariantItem[]>,
     required: true,
     default: () => [],
   },
   timeOptions: {
-    type: Array,
+    type: Array as PropType<TimeOptionItem[]>,
     required: true,
     default: () => [],
   },
@@ -231,7 +235,7 @@ const clear = () => {
     });
   }
 };
-const selectTime = (variantId: number, startTime: string, endTime: string) => {
+const selectTime = (variantId: number | string, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
   startWork.value = startTime;
   endWork.value = endTime;
@@ -246,7 +250,7 @@ const timeOff = () => {
 
 const updateTime = async () => {
   if ((startWork.value && endWork.value) && endWork.value <= startWork.value && endWork.value !== '00:00') {
-    const start = new Date(`${props.date} ${startWork.value}`);
+    const start = buildDateTime(props.date, startWork.value);
     const endTime = endWork.value.split(':');
     nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
     endWork.value = '00:00';
@@ -288,7 +292,7 @@ const selectedShift = ref(null);
 
 watch(selectedShift, () => {
   if (selectedShift.value) {
-    const start = new Date(`${props.date} ${startWork.value}`);
+    const start = buildDateTime(props.date, startWork.value);
     const shiftInMinutes = Number(selectedShift.value) * 60;
     const shiftWithLunch = shiftInMinutes + props.lunchDuration;
     const end = new Date(start.getTime() + (shiftWithLunch * 60 * 1000));

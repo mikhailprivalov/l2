@@ -829,16 +829,22 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return {"ok": True, "message": ""}
 
     @staticmethod
-    def fill_by_template(action: str, date_key, value, employee_positions, current_employee_position_id, lunch_duration_in_minutes):
+    def fill_by_template(action: str, date_key, value, current_employee_position, lunch_duration_in_minutes, holidays):
         """
-        Заполняет если это НЕ выходной день.
+        Заполняет если это НЕ выходной день и НЕ праздничный день.
         Заполняет если выбрано "заменить" или если выбрано дописать и значение не было заполнено до этого
         """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
         result = value
-        day_is_weekday = date_key.isoweekday() in [6, 7]
-        if not day_is_weekday and (action == "replace" or (action == "add" and value_is_empty)):
-            current_employee_position: EmployeePosition = employee_positions.filter(pk=current_employee_position_id).first()
+        is_weekend_or_holiday = (
+            date_key.isoweekday() in (6, 7)
+            or holidays.get(date_key.strftime("%Y-%m-%d"))
+        )
+        is_valid_action = (
+            action == "replace"
+            or (action == "add" and value_is_empty)
+        )
+        if is_valid_action and not is_weekend_or_holiday:
             start_work_time_employee = current_employee_position.work_start
             daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
             end_work_time_in_minutes = 0
@@ -860,16 +866,18 @@ class EmployeeWorkingHoursSchedule(models.Model):
         employees_work_time = EmployeeWorkingHoursSchedule.get_work_time_employee(year, month, department_id)
         employee_position_ids = set()
         employees_work_time_data = employees_work_time.get("data")
+        holidays = Holidays.get_holidays(datetime.date(year, month, 1))
         for employee_work_time in employees_work_time_data:
             employee_position_ids.add(employee_work_time.get("employeePositionId"))
         employee_positions = EmployeePosition.get_by_ids(employee_position_ids)
         for employee_work_time in employees_work_time_data:
             current_employee_position_id = employee_work_time.get("employeePositionId")
             lunch_duration = employee_work_time.get("lunchDuration")
+            current_employee_position = employee_positions.filter(pk=current_employee_position_id).first()
             for key, value in employee_work_time.items():
                 try:
                     date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
-                    new_value = EmployeeWorkingHoursSchedule.fill_by_template(action, date_key, value, employee_positions, current_employee_position_id, lunch_duration)
+                    new_value = EmployeeWorkingHoursSchedule.fill_by_template(action, date_key, value, current_employee_position, lunch_duration, holidays)
                     employee_work_time[key] = new_value
                 except ValueError:
                     continue
@@ -1251,12 +1259,33 @@ class TabelFactTimeWorkRaw(models.Model):
 
 
 class Holidays(models.Model):
-    year = models.SmallIntegerField(blank=True, default=None, null=True)
+    class Kind(models.TextChoices):
+        HOLIDAY = "HOLIDAY", "Праздничный день"
+        WORKING = "WORKING", "Рабочий день"
+
     day = models.DateField()
+    kind = models.CharField(max_length=20, db_index=True, default=Kind.HOLIDAY, choices=Kind.choices, help_text="Тип")
+    shorten_minutes = models.PositiveSmallIntegerField(default=0, help_text="Сокращение рабочего времени, минуты")
 
     def __str__(self):
-        return f"{self.year} {self.day}"
+        return f"{self.day}"
 
     class Meta:
         verbose_name = "Праздничный день"
         verbose_name_plural = "Праздничные дни"
+
+    @staticmethod
+    def get_holidays(month: datetime.date = None, year: int = None):
+        holidays = Holidays.objects.all().order_by("day")
+        if month:
+            first_date_month = month.replace(day=1)
+            last_day_month = calendar.monthrange(month.year, month.month)[1]
+            end_date_month = month.replace(day=last_day_month)
+            holidays = holidays.filter(day__range=(first_date_month, end_date_month))
+        elif year:
+            holidays = holidays.filter(day__year=year)
+
+        result = {
+            holiday.day.strftime("%Y-%m-%d"): {"kind": holiday.kind, "shorten_minutes": None if holiday.kind == Holidays.Kind.HOLIDAY else holiday.shorten_minutes} for holiday in holidays
+        }
+        return result

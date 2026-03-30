@@ -48,12 +48,13 @@
         v-show="documentCreated && filtersFull"
       >
         <TemplateTable
-          :year="selectedYear"
-          :month="selectedMonth"
           :shifts-variants="shiftsVariants"
           :time-options="timeOptions"
           :work-day-statuses="workDayStatuses"
           :department-lunch-duration="lunchDurationSelectedDepartment"
+          :holidays="holidays"
+          :refresh-key="templateTableRefreshKey"
+          :month-days="monthDays"
           @fillInTemplate="fillInTemplateData"
           @fillByEmployeeTemplate="fillByEmployeeTemplate"
           @fillColumnByTemplate="fillColumnByTemplate"
@@ -135,58 +136,62 @@ import DateCell from '@/pages/WorkingTime/DateCell.vue';
 import FioHeader from '@/pages/WorkingTime/FioHeader.vue';
 import PositionHeader from '@/pages/WorkingTime/PositionHeader.vue';
 import FioCell from '@/pages/WorkingTime/FioCell.vue';
+import {
+  DepartmentItem, EMPTY_WORK_TIME_DAY_CELL,
+  GetEmployeesWorkTimeResult,
+  HolidaysMap, RefBooksResponse,
+  SelectOptionItem, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
+} from '@/pages/WorkingTime/types/types';
+import {
+  formatDateKey, formatDateTitle,
+  getMonthDays, getYears, isISODateString, isWeekend, MONTHS,
+} from '@/pages/WorkingTime/utils/date';
+import {
+  calculateEmployeeWorkTimeTotals, createDayOffWorkTimeDayCell,
+  createEmptyWorkTimeDayCell, createWorkTimeDayCell,
+} from '@/pages/WorkingTime/utils/workTime';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const currentDate = ref(new Date());
 
 const selectedMonth = ref(currentDate.value.getMonth());
-const months = ref([
-  { id: 0, label: 'Январь' },
-  { id: 1, label: 'Февраль' },
-  { id: 2, label: 'Март' },
-  { id: 3, label: 'Апрель' },
-  { id: 4, label: 'Май' },
-  { id: 5, label: 'Июнь' },
-  { id: 6, label: 'Июль' },
-  { id: 7, label: 'Август' },
-  { id: 8, label: 'Сентябрь' },
-  { id: 9, label: 'Октябрь' },
-  { id: 10, label: 'Ноябрь' },
-  { id: 11, label: 'Декабрь' },
-]);
+const months = ref<SelectOptionItem[]>(MONTHS);
 
 const selectedYear = ref(currentDate.value.getFullYear());
-const years = ref([]);
-
-const getYears = (yearStart = 2023) => {
-  let start = yearStart;
-  currentDate.value.getFullYear();
-  while (start <= currentDate.value.getFullYear()) {
-    years.value.push({ id: start, label: String(start) });
-    start++;
-  }
-};
+const years = ref<SelectOptionItem[]>(getYears(currentDate.value.getFullYear()));
 
 const selectedDepartment = ref(null);
 const lunchDurationSelectedDepartment = ref(0);
-const departments = ref([]);
+const departments = ref<DepartmentItem[]>([]);
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-departments');
+  const { result }: { result: DepartmentItem[] } = await api('/working-time/get-departments');
   await store.dispatch(actions.DEC_LOADING);
   departments.value = result;
 };
 
-const shiftsVariants = ref([]);
-const workDayStatuses = ref([]);
+const shiftsVariants = ref<ShiftVariantItem[]>([]);
+const workDayStatuses = ref<WorkDayStatusItem[]>([]);
 const getRefBooks = async () => {
   await store.dispatch(actions.INC_LOADING);
-  const result = await api('/working-time/get-ref-books');
+  const result: RefBooksResponse = await api('/working-time/get-ref-books');
   await store.dispatch(actions.DEC_LOADING);
   workDayStatuses.value = result.workDayStatuses;
   shiftsVariants.value = result.shiftsVariants;
 };
+
+const holidays = ref<HolidaysMap>({});
+const getHolidays = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result }: { result: HolidaysMap } = await api('/working-time/get-holidays', {
+    year: selectedYear.value,
+    month: selectedMonth.value + 1,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  holidays.value = result;
+};
+
 const findDepartmentLunchDuration = () => {
   const currentDepartment = departments.value.find(department => department.id === selectedDepartment.value);
   lunchDurationSelectedDepartment.value = currentDepartment.lunchDuration ? currentDepartment.lunchDuration : 0;
@@ -198,25 +203,43 @@ watch(selectedDepartment, () => {
 
 onMounted(() => {
   getDepartments();
-  getYears();
   getRefBooks();
 });
 
 const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value != null && selectedDepartment.value));
-const timeOptions = computed(() => (store.getters.modules.working_time_variants
+const timeOptions = computed<TimeOptionItem[]>(() => (store.getters.modules.working_time_variants
   ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
-const documentId = ref(null);
+const documentId = ref<number | null>(null);
 const documentCreated = ref(false);
 const documentBlocked = ref(false);
 
 const employeesWorkTime = ref([]);
+
+const recalculateEmployeeTotals = (employee) => {
+  const { totalHoursDecimal, totalHours } = calculateEmployeeWorkTimeTotals(employee);
+  // TODO необходимо сделать возврат нового значения, убрать мутацию, везде где вызывается эта функция
+  // eslint-disable-next-line no-param-reassign
+  employee.totalHoursDecimal = totalHoursDecimal;
+  // eslint-disable-next-line no-param-reassign
+  employee.totalHours = totalHours;
+};
+
+const recalculateAllEmployeeTotals = () => {
+  for (const employee of employeesWorkTime.value) {
+    recalculateEmployeeTotals(employee);
+  }
+};
+
 const changedEmployeesWorkTime = ref({});
 const hasChange = ref(false);
 
 const getEmployeesWorkTime = async () => {
+  employeesWorkTime.value = [];
+  changedEmployeesWorkTime.value = {};
+  hasChange.value = false;
   await store.dispatch(actions.INC_LOADING);
-  const { result } = await api('/working-time/get-work-time', {
+  const { result }: { result: GetEmployeesWorkTimeResult } = await api('/working-time/get-work-time', {
     year: selectedYear.value,
     month: selectedMonth.value + 1,
     departmentId: selectedDepartment.value,
@@ -226,42 +249,11 @@ const getEmployeesWorkTime = async () => {
     data, documentPk, documentIsBlocked, documentIsCreated,
   } = result;
   employeesWorkTime.value = data;
+  recalculateAllEmployeeTotals();
   documentId.value = documentPk;
   documentCreated.value = documentIsCreated;
   documentBlocked.value = documentIsBlocked;
-  changedEmployeesWorkTime.value = {};
-  hasChange.value = false;
 };
-
-watch(employeesWorkTime, () => {
-  for (const employee of employeesWorkTime.value) {
-    let totalDiffTime = 0;
-    const keys = Object.keys(employee);
-    const lunchDuration = employee.lunchDuration * 60 * 1000;
-    for (const key of keys) {
-      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
-        const currentDay = employee[key];
-        if (currentDay.startWorkTime && currentDay.endWorkTime && !currentDay.typeId) {
-          const startTime = new Date(`${key} ${currentDay.startWorkTime}`);
-          let endTime;
-          if (currentDay.endWorkTime === '00:00') {
-            endTime = new Date(startTime.getFullYear(), startTime.getMonth(), startTime.getDate() + 1, 0, 0);
-          } else {
-            endTime = new Date(`${key} ${currentDay.endWorkTime}`);
-          }
-          const dayDiffTime = endTime - startTime - lunchDuration;
-          totalDiffTime += dayDiffTime;
-        }
-      }
-    }
-    const totalDiffSec = totalDiffTime / (1000 * 60);
-    const totalHoursDecimal = totalDiffSec / 60;
-    const totalHours = Math.trunc(totalHoursDecimal);
-    const totalMin = totalDiffSec % 60;
-    employee.totalHoursDecimal = totalHoursDecimal.toFixed(1);
-    employee.totalHours = `${totalHours}ч ${totalMin}м`;
-  }
-}, { deep: true });
 
 watch([selectedYear, selectedMonth, selectedDepartment], () => {
   if (filtersFull.value) {
@@ -275,7 +267,9 @@ const cellStyleOption = ref({
     if (row.bidType !== 'Осн') {
       result.push('table-body-bid-cell');
     }
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('table-body-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('table-body-weekend-cell');
     }
     if (row[column.key]?.blocked) {
@@ -295,7 +289,9 @@ const cellStyleOption = ref({
   headerCellClass: ({ column }) => {
     const result = [];
     const nonDateKey = ['position'];
-    if (column.isWeekend) {
+    if (column.isHoliday) {
+      result.push('table-header-holiday-cell');
+    } else if (column.isWeekend) {
       result.push('table-header-weekend-cell');
     } else if (nonDateKey.includes(column.key)) {
       result.push('table-header-non-date-cell');
@@ -406,21 +402,13 @@ const changeWorkTime = async ({
 }) => {
   const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
   const { lunchDuration } = row;
-  row[date] = {
-    startWorkTime,
-    endWorkTime,
-    typeId,
-  };
+  row[date] = createWorkTimeDayCell(startWorkTime, endWorkTime, typeId);
   updateChangedEmployeesWorkTime(employeePositionId, date, startWorkTime, endWorkTime, typeId, null, lunchDuration);
   if (nextDayEndWork) {
     const nextDay = nextDayEndWork;
-    const nextDayString = moment(nextDay).format('YYYY-MM-DD');
+    const nextDayString = formatDateKey(nextDay);
     const nextDayEnd = moment(nextDay).format('HH:mm');
-    row[nextDayString] = {
-      startWorkTime: '00:00',
-      endWorkTime: nextDayEnd,
-      typeId,
-    };
+    row[nextDayString] = createWorkTimeDayCell('00:00', nextDayEnd, typeId);
     updateChangedEmployeesWorkTime(
       employeePositionId,
       nextDayString,
@@ -431,6 +419,7 @@ const changeWorkTime = async ({
       lunchDuration,
     );
   }
+  recalculateEmployeeTotals(row);
 };
 
 const fillInTemplateData = ({ templateData }) => {
@@ -439,7 +428,7 @@ const fillInTemplateData = ({ templateData }) => {
       const keys = Object.keys(employeePosition);
       const { lunchDuration } = employeePosition;
       for (const key of keys) {
-        if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+        if (isISODateString(key)) {
           employeePosition[key] = { ...templateData[key] };
           updateChangedEmployeesWorkTime(
             employeePosition.employeePositionId,
@@ -452,6 +441,7 @@ const fillInTemplateData = ({ templateData }) => {
           );
         }
       }
+      recalculateEmployeeTotals(employeePosition);
     }
   }
   checkboxOption.value.selectedRowKeys = [];
@@ -467,11 +457,12 @@ const fillByEmployeeTemplate = async ({ action }) => {
   });
   await store.dispatch(actions.DEC_LOADING);
   employeesWorkTime.value = result;
+  recalculateAllEmployeeTotals();
   for (const employeePosition of result) {
     const { employeePositionId } = employeePosition;
     const { lunchDuration } = employeePosition;
     for (const [key, value] of Object.entries(employeePosition)) {
-      if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+      if (isISODateString(key)) {
         updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value, lunchDuration);
       }
     }
@@ -485,11 +476,13 @@ const fillColumnByTemplate = ({
     const { lunchDuration } = employeePosition;
     const { employeePositionId } = employeePosition;
     if (checkboxOption.value.selectedRowKeys.length === 0) {
-      employeePosition[date] = { startWorkTime: startWork, endWorkTime: endWork, typeId };
+      employeePosition[date] = createWorkTimeDayCell(startWork, endWork, typeId);
       updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
+      recalculateEmployeeTotals(employeePosition);
     } else if (checkboxOption.value.selectedRowKeys.includes(employeePositionId)) {
-      employeePosition[date] = { startWorkTime: startWork, endWorkTime: endWork, typeId };
+      employeePosition[date] = createWorkTimeDayCell(startWork, endWork, typeId);
       updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
+      recalculateEmployeeTotals(employeePosition);
     }
   }
 };
@@ -502,7 +495,7 @@ const copyTop = ({ rowIndex }) => {
   const { lunchDuration } = currentEmployeePosition;
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
-    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+    if (isISODateString(key)) {
       currentEmployeePosition[key] = { ...prevFilteredEmployeePosition[key] };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
@@ -515,6 +508,7 @@ const copyTop = ({ rowIndex }) => {
       );
     }
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
@@ -524,7 +518,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
     === selectedEmployeePositionId);
   const keys = Object.keys(currentEmployeePosition);
   for (const key of keys) {
-    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+    if (isISODateString(key)) {
       currentEmployeePosition[key] = { ...selectedEmployeePosition[key] };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
@@ -537,6 +531,7 @@ const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
       );
     }
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 const clear = ({ rowIndex }) => {
   const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
@@ -544,9 +539,9 @@ const clear = ({ rowIndex }) => {
     === currentFilteredEmployeePosition.employeePositionId);
   const { lunchDuration } = currentEmployeePosition;
   const keys = Object.keys(currentEmployeePosition);
-  const emptyData = { startWorkTime: '', endWorkTime: '', typeId: null };
+  const emptyData = createEmptyWorkTimeDayCell();
   for (const key of keys) {
-    if (moment(key, 'YYYY-MM-DD', true).isValid()) {
+    if (isISODateString(key)) {
       currentEmployeePosition[key] = { ...emptyData };
       updateChangedEmployeesWorkTime(
         currentEmployeePosition.employeePositionId,
@@ -559,6 +554,7 @@ const clear = ({ rowIndex }) => {
       );
     }
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 
 const employeeTransfer = async ({ employeePositionId, date }) => {
@@ -599,7 +595,7 @@ const fillDayOff = ({
   const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
       === employeePositionId);
   const { lunchDuration } = currentEmployeePosition;
-  const fullData = { startWorkTime: '', endWorkTime: '', typeId: workDayStatusId };
+  const fullData = createDayOffWorkTimeDayCell(workDayStatusId);
   for (let day = moment(dayOffStartDate); day <= dayOffEndDate; day.add(1, 'day')) {
     const date = day.format('YYYY-MM-DD');
     currentEmployeePosition[date] = { ...fullData };
@@ -613,26 +609,17 @@ const fillDayOff = ({
       lunchDuration,
     );
   }
+  recalculateEmployeeTotals(currentEmployeePosition);
 };
 
-const columns = ref([]);
+const columns = ref<TableColumn[]>([]);
 
-const getMonthDays = (year: number, month: number) => {
-  const days = [];
-  const currentMonth = month;
-  const date = new Date(year, currentMonth);
-  while (date.getMonth() === currentMonth) {
-    days.push(new Date(date));
-    date.setDate(date.getDate() + 1);
-  }
-  return days;
-};
-
-const firstDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value, 1)).format('YYYY-MM-DD'));
-const lastDayMonth = computed(() => moment(new Date(selectedYear.value, selectedMonth.value + 1, 0)).format('YYYY-MM-DD'));
+const monthDays = ref<Date[]>([]);
+const firstDayMonth = computed(() => formatDateKey(new Date(selectedYear.value, selectedMonth.value, 1)));
+const lastDayMonth = computed(() => formatDateKey(new Date(selectedYear.value, selectedMonth.value + 1, 0)));
 
 const getColumns = () => {
-  const columnTemplate = [
+  const columnTemplate: TableColumn[] = [
     {
       field: 'checkbox', key: 'checkbox', type: 'checkbox', title: '', align: 'center', width: 25, fixed: 'left',
     },
@@ -719,11 +706,12 @@ const getColumns = () => {
       field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 30, fixed: 'left',
     },
   ];
-  const daysMonth = getMonthDays(selectedYear.value, selectedMonth.value);
-  const data = daysMonth.map((col) => {
-    const dateString = moment(col).format('YYYY-MM-DD');
-    const dateTitle = col.toLocaleDateString('ru-RU', { weekday: 'short', day: '2-digit' });
-    const weekend = [6, 0].includes(col.getDay());
+  const daysMonth = [...monthDays.value];
+  const data: TableColumn[] = daysMonth.map((col) => {
+    const dateString = formatDateKey(col);
+    const dateTitle = formatDateTitle(col);
+    const weekend = isWeekend(col);
+    const holiday = holidays.value[dateString]?.kind === 'HOLIDAY';
     return {
       key: dateString,
       field: dateString,
@@ -731,11 +719,12 @@ const getColumns = () => {
       align: 'center',
       width: 47,
       isWeekend: weekend,
+      isHoliday: holiday,
       renderBodyCell: ({ row, column }, h) => h(
         DateCell,
         {
           props: {
-            workTime: row[column.field] ? row[column.field] : '',
+            workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
             employeePositionId: row.employeePositionId,
             date: column.key,
             workDayStatuses: workDayStatuses.value,
@@ -750,10 +739,10 @@ const getColumns = () => {
     };
   });
   columnTemplate.push(...data);
-  const totalHoursCol = {
+  const totalHoursCol: TableColumn = {
     field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
-  const totalHoursWithMinCol = {
+  const totalHoursWithMinCol: TableColumn = {
     field: 'totalHours', key: 'totalHours', title: 'чч:мм', align: 'center', width: 42, fixed: 'right',
   };
   columnTemplate.push(totalHoursCol);
@@ -761,8 +750,12 @@ const getColumns = () => {
   columns.value = columnTemplate;
 };
 
-watch([selectedYear, selectedMonth], () => {
+const templateTableRefreshKey = ref(0);
+watch([selectedYear, selectedMonth], async () => {
   if (selectedYear.value && selectedMonth.value != null) {
+    monthDays.value = getMonthDays(selectedYear.value, selectedMonth.value);
+    await getHolidays();
+    templateTableRefreshKey.value += 1;
     getColumns();
   }
 }, { immediate: true });
@@ -947,12 +940,24 @@ const downloadTabelXlsx = async () => {
   background-color: #b6e3ff !important;
   padding: 10px 0 !important;
 }
+.table-body-holiday-cell {
+  background-color: #8ccfff !important;
+  padding: 10px 0 !important;
+}
 .template-table-body-weekend-cell {
   background-color: #b6e3ff !important;
   padding: 0 !important;
 }
+.template-table-body-holiday-cell {
+  background-color: #8ccfff !important;
+  padding: 0 !important;
+}
 .table-header-weekend-cell {
   background-color: #b6e3ff !important;
+  padding: 0 !important;
+}
+.table-header-holiday-cell {
+  background-color: #8ccfff !important;
   padding: 0 !important;
 }
 .table-body-cell {
