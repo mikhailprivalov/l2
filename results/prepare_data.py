@@ -612,7 +612,7 @@ def structure_data_for_result(iss, fwb, doc, leftnone, med_certificate):
     return fwb
 
 
-def plaint_tex_for_result_old(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate):
+def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate):
     pw = doc.width
     sick_result = None
     txt = ""
@@ -758,7 +758,7 @@ def plaint_tex_for_result_old(iss, fwb, doc, leftnone, protocol_plain_text, med_
     return fwb
 
 
-def plaint_tex_for_result(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate):
+def plaint_tex_for_result_new(iss, fwb, doc, leftnone, protocol_plain_text, med_certificate):
     pw = doc.width
     sick_result = None
     txt = ""
