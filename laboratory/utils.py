@@ -6,8 +6,7 @@ from django.db import reset_queries, connection
 from django.utils import timezone
 import pytz_deprecation_shim as pytz
 
-from laboratory.settings import TIME_ZONE
-
+from laboratory.settings import TIME_ZONE, USE_COMBO_ROLE
 
 TZ = pytz.timezone(TIME_ZONE)
 
@@ -136,3 +135,23 @@ def date_at_bound(date, indicator="max"):
 def str_date(param, indicator="max"):
     d = datetime.strptime(param, '%d.%m.%Y')
     return date_at_bound(d, indicator=indicator)
+
+
+def check_comborole_for_user(user, check_simple_role=None, check_group_names=[]):
+    detail_user_group = []
+    groups_user = [str(x) for x in user.groups.all()]
+    for i in groups_user:
+        if USE_COMBO_ROLE.get(i):
+            detail_user_group.extend(USE_COMBO_ROLE.get(i))
+
+    is_user_has_true_group = False
+    if check_simple_role:
+        if check_simple_role in detail_user_group:
+            is_user_has_true_group = True
+
+    if len(check_group_names) > 0:
+        for i in check_group_names:
+            if i in detail_user_group:
+                is_user_has_true_group = True
+                break
+    return is_user_has_true_group

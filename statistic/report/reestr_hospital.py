@@ -74,13 +74,13 @@ def reestr_hospital_fill_data(ws1, result_query):
         ws1.cell(row=r, column=15).value = v.get("tarif_dynamic", "-")
         ws1.cell(row=r, column=16).value = v.get("tarif_extension", "-")
         ws1.cell(row=r, column=17).value = v.get("tarif_night", "-")
-        ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(11)}{r}:{get_column_letter(15)}{r})'
+        ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(13)}{r}:{get_column_letter(17)}{r})'
     r_sum = r
     r += 1
     ws1.merge_cells(f"{get_column_letter(14)}{r}:{get_column_letter(15)}{r}")
     megre_cell = ws1[f"{get_column_letter(14)}{r}"]
     megre_cell.value = 'ВСЕГО сумма, руб'
     megre_cell.style = style_border2
-    ws1.cell(row=r, column=16).value = f'=SUM({get_column_letter(16)}{6}:{get_column_letter(16)}{r_sum})'
-    ws1.cell(row=r, column=16).style = style_border2
+    ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(18)}{6}:{get_column_letter(18)}{r_sum})'
+    ws1.cell(row=r, column=18).style = style_border2
     return ws1

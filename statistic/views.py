@@ -24,6 +24,7 @@ from directory.models import Researches
 from hospitals.models import Hospitals
 from laboratory import settings
 from laboratory import utils
+from laboratory.utils import check_comborole_for_user
 from researches.models import Tubes
 from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
@@ -104,6 +105,7 @@ def statistic_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
 
     request_data = request.POST if request.method == "POST" else request.GET
+    print("request_data", request_data)
     pk = request_data.get("pk", "")
     tp = request_data.get("type", "")
     date_start_o = request_data.get("date-start", "")
@@ -134,6 +136,8 @@ def statistic_xls(request):
     unlimited_access = False
     if hasattr(request.user, 'unlimited_access'):
         unlimited_access = True
+
+    print('unlimited_access', unlimited_access)
 
     if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"] and not unlimited_access:
         for i in UNLIMIT_PERIOD_STATISTIC_GROUP:
@@ -2375,8 +2379,8 @@ def statistic_xls(request):
 
     elif tp == "statistics-workload":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Нагрузка.xlsx\"", tr)
-        user_groups = request.user.groups.values_list('name', flat=True)
-        if 'Статистика-моя нагрузка' not in user_groups:
+        # user_groups = request.user.groups.values_list('name', flat=True)
+        if not check_comborole_for_user(request.user, check_simple_role='Статистика-моя нагрузка'):
             return True
 
         doctor = request.user.doctorprofile.pk
@@ -2427,6 +2431,11 @@ def statistic_xls(request):
                 tmp_result = {}
                 tmp_result["hospital"] = i.hospital_title
                 tmp_result["direction_number"] = i.direction_num
+                tmp_result["date_create"] = i.date_create
+                tmp_result["time_create"] = i.time_create
+
+                tmp_result["date_confirm"] = i.date_confirm
+                tmp_result["time_confirm"] = i.time_confirm
                 tmp_result["date"] = i.date_confirm
                 tmp_result["time"] = i.time_confirm
                 tmp_result["card_number"] = i.card_number
