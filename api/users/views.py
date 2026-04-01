@@ -39,6 +39,11 @@ def auth(request):
 
         if not user.doctorprofile.check_totp(totp_password, ip):
             return status_response(False, message="Неверный код двухфакторной аутентификации")
+        if user.doctorprofile.dismissed:
+            return status_response(False, message="Не активный пользователь")
+
+        if user.doctorprofile.hospital.hide:
+            return status_response(False, message="Организация не активна")
 
         if user.is_active:
             login(request, user)
