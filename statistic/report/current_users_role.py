@@ -1,7 +1,7 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from utils.db import namedtuplefetchall
-from laboratory.settings import TIME_ZONE, USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND, USE_COMBO_ROLE
+from laboratory.settings import USE_COMBO_ROLE
 from django.db import connection
 
 
