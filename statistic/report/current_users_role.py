@@ -40,7 +40,7 @@ def form_01(ws1, data):
             "hospital_status": "Скрыт" if i.hospital_hide else "Доступен",
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
             "doctor_active": "Нет" if i.dismissed or i.hospital_hide else "Да",
-            "doctor_detail_role": i.group_name
+            "doctor_detail_role": i.group_name,
         }
         for i in sql_data
     ]
