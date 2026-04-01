@@ -2956,6 +2956,7 @@ class ParaclinicResult(models.Model):
     value = models.TextField()
     value_json = JSONField(default=dict, blank=True)
 
+
     def get_field_type(self, default_field_type=None, is_confirmed_strict=None):
         return (
             self.field_type

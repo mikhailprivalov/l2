@@ -1,7 +1,7 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 from utils.db import namedtuplefetchall
-from laboratory.settings import TIME_ZONE, USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND
+from laboratory.settings import TIME_ZONE, USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND, USE_COMBO_ROLE
 from django.db import connection
 
 
@@ -40,11 +40,13 @@ def form_01(ws1, data):
             "hospital_status": "Скрыт" if i.hospital_hide else "Доступен",
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
             "doctor_active": "Нет" if i.dismissed or i.hospital_hide else "Да",
-            "doctor_detail_role": ", ".join(i.group_name)
+            "doctor_detail_role": i.group_name
         }
         for i in sql_data
     ]
     step = 0
+    combo_role = list(USE_COMBO_ROLE.keys())
+    print(combo_role)
     for i in result:
         row += 1
         step += 1
@@ -53,8 +55,17 @@ def form_01(ws1, data):
         ws1.cell(row=row, column=3).value = i.get("hospital_status")
         ws1.cell(row=row, column=4).value = i.get("doctor")
         ws1.cell(row=row, column=5).value = i.get("doctor_active")
-        ws1.cell(row=row, column=6).value = ""
-        ws1.cell(row=row, column=7).value = i.get("doctor_detail_role")
+        combo_user = [r for r in i.get('doctor_detail_role') if r in combo_role]
+        detail_combo_role = []
+        for cu in combo_user:
+            detail_combo_role.extend(USE_COMBO_ROLE.get(cu))
+        ws1.cell(row=row, column=6).value = ", ".join(combo_user)
+        detail_role_str = ", ".join(i.get("doctor_detail_role"))
+        if len(detail_combo_role) > 0:
+            detail_combo_str = ", ".join(detail_combo_role)
+        else:
+            detail_combo_str = ""
+        ws1.cell(row=row, column=7).value = f"{detail_role_str}, {detail_combo_str}"
         for k in range(7):
             ws1.cell(row=row, column=k + 1).style = style_border2
     return ws1
