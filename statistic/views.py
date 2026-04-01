@@ -24,6 +24,7 @@ from directory.models import Researches
 from hospitals.models import Hospitals
 from laboratory import settings
 from laboratory import utils
+from laboratory.utils import check_comborole_for_user
 from researches.models import Tubes
 from results.sql_func import get_expertis_child_iss_by_issledovaniya, get_expertis_results_by_issledovaniya
 from users.models import DoctorProfile
@@ -2375,8 +2376,8 @@ def statistic_xls(request):
 
     elif tp == "statistics-workload":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Нагрузка.xlsx\"", tr)
-        user_groups = request.user.groups.values_list('name', flat=True)
-        if 'Статистика-моя нагрузка' not in user_groups:
+        # user_groups = request.user.groups.values_list('name', flat=True)
+        if not check_comborole_for_user(request.user, check_simple_role='Статистика-моя нагрузка'):
             return True
 
         doctor = request.user.doctorprofile.pk
@@ -2427,6 +2428,11 @@ def statistic_xls(request):
                 tmp_result = {}
                 tmp_result["hospital"] = i.hospital_title
                 tmp_result["direction_number"] = i.direction_num
+                tmp_result["date_create"] = i.date_create
+                tmp_result["time_create"] = i.time_create
+
+                tmp_result["date_confirm"] = i.date_confirm
+                tmp_result["time_confirm"] = i.time_confirm
                 tmp_result["date"] = i.date_confirm
                 tmp_result["time"] = i.time_confirm
                 tmp_result["card_number"] = i.card_number

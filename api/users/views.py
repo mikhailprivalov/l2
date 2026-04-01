@@ -288,5 +288,5 @@ def cancel_restricted_directions(request):
 @login_required
 @group_required('Статистика-реестры')
 def get_doctors_by_group(request):
-    result = [{"id": -1, "label": "Все"}, *[{"id": x.pk, "label": x.get_full_fio()} for x in DoctorProfile.objects.filter(user__groups__name=GROUP_USER_FOR_FILTER).order_by('family')]]
+    result = [{"id": -1, "label": "Все"}, *[{"id": x.pk, "label": x.get_full_fio()} for x in DoctorProfile.objects.filter(user__groups__name__in=GROUP_USER_FOR_FILTER).order_by('family')]]
     return JsonResponse({"rows": result})
