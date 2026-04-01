@@ -1,6 +1,6 @@
 from dateutil.relativedelta import relativedelta
 from brokers_queue.rmq.publisher import broker_publish_msg
-from laboratory.settings import RMQ_AUTH_PARAM
+from laboratory.settings import RMQ_AUTH_PARAM, PERIOD_DAYS_SEND_RESULT_ECP
 from laboratory.utils import current_time
 from django.core.management.base import BaseCommand
 from directions.models import Napravleniya, Issledovaniya
@@ -21,7 +21,7 @@ class Command(BaseCommand):
             dirs = [int(i) for i in dirs.split(",")]
             d_qs = Napravleniya.objects.filter(pk__in=dirs)
         else:
-            date = current_time() + relativedelta(days=-3)
+            date = current_time() + relativedelta(days=PERIOD_DAYS_SEND_RESULT_ECP)
             d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_number=None, rmis_case_number=None, last_confirmed_at__gte=date)
         use_exchange_name = RMQ_AUTH_PARAM.get("lab_exchange_name")
         use_routing_key = RMQ_AUTH_PARAM.get("lab_routing_key")
