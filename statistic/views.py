@@ -105,7 +105,6 @@ def statistic_xls(request):
     response = HttpResponse(content_type='application/ms-excel')
 
     request_data = request.POST if request.method == "POST" else request.GET
-    print("request_data", request_data)
     pk = request_data.get("pk", "")
     tp = request_data.get("type", "")
     date_start_o = request_data.get("date-start", "")
@@ -136,8 +135,6 @@ def statistic_xls(request):
     unlimited_access = False
     if hasattr(request.user, 'unlimited_access'):
         unlimited_access = True
-
-    print('unlimited_access', unlimited_access)
 
     if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"] and not unlimited_access:
         for i in UNLIMIT_PERIOD_STATISTIC_GROUP:
