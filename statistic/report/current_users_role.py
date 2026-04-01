@@ -46,7 +46,6 @@ def form_01(ws1, data):
     ]
     step = 0
     combo_role = list(USE_COMBO_ROLE.keys())
-    print(combo_role)
     for i in result:
         row += 1
         step += 1
