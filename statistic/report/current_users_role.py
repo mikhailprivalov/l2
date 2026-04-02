@@ -21,9 +21,9 @@ def form_01(ws1, data):
     columns = [
         ('№ п.п.', 10),
         ('Организация', 30),
-        ('Статус МО', 30),
-        ('Пользователь', 30),
-        ('Статус пользователя', 30),
+        ('Статус МО', 20),
+        ('Пользователь', 35),
+        ('Статус пользователя', 20),
         ('Роль', 30),
         ('Детали-роли', 50),
         ('Закрепленные клиники', 50),
@@ -41,7 +41,7 @@ def form_01(ws1, data):
             "hospital_status": "Скрыт" if i.hospital_hide else "Доступен",
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
             "doctor_active": "Не активен" if i.dismissed or i.hospital_hide else "Активен",
-            "doctor_detail_role": i.group_name,
+            "doctor_detail_role": list(set(i.group_name)),
             "assigned_hospital": i.hospitals_title,
         }
         for i in sql_data
