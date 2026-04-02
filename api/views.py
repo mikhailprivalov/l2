@@ -3252,7 +3252,7 @@ def get_types_report(request):
 @login_required
 @group_required("Статистика-журналы")
 def get_types_magazine(request):
-    data = [{"id": k, "label": v.get("label")} for k, v in MAGAZINE_REPORT.items()]
+    data = [{"id": k, "label": v.get("label"), "showPeriodDate": v.get("show_date")} for k, v in MAGAZINE_REPORT.items()]
     return JsonResponse({"data": data})
 
 

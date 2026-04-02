@@ -747,7 +747,7 @@ export default {
     },
     async load_doctors() {
       await this.$store.dispatch(actions.INC_LOADING);
-      const { users } = await usersPoint.loadUsersByGroup({ group: ['Тариф врача'] });
+      const { users } = await usersPoint.loadUsersByGroup({ group: ['Тариф врача', 'Врач-диагностики'] });
       this.doctors = users;
       await this.$store.dispatch(actions.DEC_LOADING);
     },
