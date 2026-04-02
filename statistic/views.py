@@ -2044,7 +2044,7 @@ def statistic_xls(request):
         if len(hospitals_id) == 1:
             title_hospital = last_hospital
 
-        file_title = iri_to_uri(f"{title_hospital.replace(' ', '_')}")
+        file_title = iri_to_uri(f"Реестр_{title_hospital.replace(' ', '_')}")
         response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
         ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам')
         ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
@@ -2120,9 +2120,9 @@ def statistic_xls(request):
             if doctor > 0:
                 fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
                 title_fio = fio_doctor.get_fio()
-            file_title = iri_to_uri(f"Врач_{title_fio.replace(' ', '_')}")
-            response['Content-Disposition'] = f'attachment; filename="{file_title}.xls"'
-            ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
+            file_title = iri_to_uri(f"Реестр_Врач_{title_fio.replace(' ', '_')}")
+            response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
+            ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}_{date_start_o}_{date_end_o}')
             ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
 
     elif tp == "statistics-registry-profit":

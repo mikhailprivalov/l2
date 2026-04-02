@@ -312,6 +312,7 @@
               :options="typesMagazine"
               :clearable="true"
               placeholder="Тип журнала"
+              @input="selectMagazineValue"
             />
           </div>
           <div
@@ -388,7 +389,7 @@
           </div>
 
           <DatePicker
-            v-if="checkReportParam(PARAMS_TYPES.DATE_RANGE)"
+            v-if="checkReportParam(PARAMS_TYPES.DATE_RANGE) && showPeriodElement"
             :key="PARAMS_TYPES.DATE_RANGE"
             v-model="values.dateRange"
             mode="date"
@@ -819,6 +820,7 @@ const getVaues = () => ({
   researchSet: null,
   typeReport: null,
   typeMagazine: null,
+  showPeriodElement: true,
   typeDepartment: null,
   depByType: null,
   user: null,
@@ -855,6 +857,7 @@ const jsonv = data => encodeURIComponent(JSON.stringify(data));
       PARAMS_TYPES,
       selectedCategory: null,
       selectedReport: null,
+      showPeriodElement: true,
       values: getVaues(),
       masks: {
         iso: 'DD.MM.YYYY',
@@ -920,6 +923,8 @@ export default class Statistics extends Vue {
   selectedCategory: string | null;
 
   selectedReport: string | number | null;
+
+  showPeriodElement: any;
 
   values: any;
 
@@ -1104,6 +1109,19 @@ export default class Statistics extends Vue {
     }
 
     return this.currentCategory.reports[this.selectedReport];
+  }
+
+  selectMagazineValue() {
+    this.showPeriodElement = true;
+    if (this.values.typeMagazine) {
+      for (const tm of this.typesMagazine) {
+        if (tm.id === this.values.typeMagazine) {
+          if (tm?.showPeriodDate === false) {
+            this.showPeriodElement = false;
+          }
+        }
+      }
+    }
   }
 
   makeBaseWithAllSource(base) {

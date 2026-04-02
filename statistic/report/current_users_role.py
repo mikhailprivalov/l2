@@ -22,10 +22,11 @@ def form_01(ws1, data):
         ('№ п.п.', 10),
         ('Организация', 30),
         ('Статус МО', 30),
-        ('Врач', 30),
-        ('Статус врача', 30),
-        ('Комбо-роль', 30),
+        ('Пользователь', 30),
+        ('Статус пользователя', 30),
+        ('Роль', 30),
         ('Детали-роли', 50),
+        ('Закрепленные клиники', 50),
     ]
     row = 5
     for idx, column in enumerate(columns, 1):
@@ -39,8 +40,9 @@ def form_01(ws1, data):
             "hospital_title": i.hospital_title,
             "hospital_status": "Скрыт" if i.hospital_hide else "Доступен",
             "doctor": f"{i.doc_family} {i.doc_name} {i.doc_patronymic}",
-            "doctor_active": "Нет" if i.dismissed or i.hospital_hide else "Да",
+            "doctor_active": "Не активен" if i.dismissed or i.hospital_hide else "Активен",
             "doctor_detail_role": i.group_name,
+            "assigned_hospital": i.hospitals_title,
         }
         for i in sql_data
     ]
@@ -65,7 +67,9 @@ def form_01(ws1, data):
         else:
             detail_combo_str = ""
         ws1.cell(row=row, column=7).value = f"{detail_role_str}, {detail_combo_str}"
-        for k in range(7):
+        assigned_hospital = ", ".join(i.get("assigned_hospital"))
+        ws1.cell(row=row, column=8).value = assigned_hospital
+        for k in range(8):
             ws1.cell(row=row, column=k + 1).style = style_border2
     return ws1
 
@@ -92,7 +96,15 @@ def sql_01():
                         LEFT JOIN auth_user_groups aug ON auth_group.id=aug.group_id
                         WHERE aug.user_id = users_doctorprofile.user_id
                     ), '[]'::json
-                    ) AS group_name              
+                    ) AS group_name,
+                    COALESCE(
+                    (
+                        SELECT JSON_AGG(hh.title)
+                        FROM users_permissionhospitalprotocoldoctorprofile
+                        LEFT JOIN hospitals_hospitals hh ON hh.id=users_permissionhospitalprotocoldoctorprofile.hospital_id
+                        WHERE users_permissionhospitalprotocoldoctorprofile.doctor_profile_id = users_doctorprofile.id
+                    ), '[]'::json
+                    ) AS hospitals_title
                     FROM users_doctorprofile
                     LEFT JOIN hospitals_hospitals hh ON users_doctorprofile.hospital_id = hh.id    
                     order by hh.id, users_doctorprofile.family
