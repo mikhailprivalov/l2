@@ -79,6 +79,8 @@ def get_med_protocols(request):
                 "name2": direction_iss.get(k)["patient_patronymic"],
                 "bdate": direction_iss.get(k)["patient_birthday"],
                 "snils": v.get("снилс", ""),
+                "inn_mo": hospital.inn,
+                "kpp_mo": hospital.kpp,
                 "workplace": companies.get(direction_iss.get(k)["work_place_db_id"])["title"],
                 "inn": companies.get(direction_iss.get(k)["work_place_db_id"])["inn"],
                 "profid": direction_iss.get(k)["dir"],
