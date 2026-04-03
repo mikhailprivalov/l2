@@ -29,6 +29,7 @@ class Hospitals(models.Model):
     phones = models.CharField(max_length=128, blank=True, default='', help_text="Телефон больницы")
     ogrn = models.CharField(max_length=16, blank=True, default='', help_text="ОГРН больницы")
     inn = models.CharField(max_length=12, blank=True, default='', help_text=" ИНН больницы")
+    kpp = models.CharField(max_length=9, blank=True, default='', help_text=" КПП больницы")
     www = models.CharField(max_length=128, blank=True, default='', help_text="Сайт больницы")
     rmis_org_id = models.CharField(max_length=12, blank=True, default='', help_text="ID организации в РМИС")
     email = models.CharField(max_length=128, blank=True, default='', help_text="email")
