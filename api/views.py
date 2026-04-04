@@ -661,7 +661,6 @@ def current_user_info(request):
         "user_services": [],
         "loading": False,
         "cashRegisterShift": {"cashRegisterId": None, "shiftId": None},
-        "allowed_employee_departments": [],
     }
     if ret["auth"]:
         request.user.doctorprofile.mark_as_online()
@@ -717,7 +716,6 @@ def current_user_info(request):
             ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
             shift_data = Shift.get_open_shift_by_operator(request.user.doctorprofile.id)
             ret["cashRegisterShift"] = {"cashRegisterId": shift_data["cash_register_id"], "shiftId": shift_data["shift_id"]}
-            ret["allowed_employee_departments"] = employees_models.DoctorProfileDepartment.get_doctor_departments_ids(doctorprofile)
 
             try:
                 connections.close_all()
@@ -1449,7 +1447,7 @@ def users_view(request):
     distrits_qs = District.objects.all().order_by("title")
     districts = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in distrits_qs]]
 
-    employee_departments = [{"id": department.pk, "label": department.name} for department in employees_models.Department.get_active_departments(hospital_pk)]
+    employee_departments = employees_models.Department.get_active(hospital_pk)
 
     return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions, "districts": districts, "employee_departments": employee_departments})
 

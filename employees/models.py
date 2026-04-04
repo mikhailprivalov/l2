@@ -411,6 +411,24 @@ class Department(models.Model):
         unique_together = ('hospital', 'name')
         ordering = ('hospital__short_title', 'hospital__title', 'name')
 
+    @staticmethod
+    def get_active_departments_for_user(user, hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+        user_is_admin = user.is_superuser
+        user_allowed_departments = DoctorProfileDepartment.get_doctor_departments_ids(user.doctorprofile)
+        if user_is_admin:
+            departments = [
+                {"id": department.pk, "label": department.name, "lunchDuration": department.lunch_duration}
+                for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
+            ]
+        else:
+            departments = [
+                {"id": department.pk, "label": department.name, "lunchDuration": department.lunch_duration}
+                for department in Department.objects.filter(is_active=True, hospital_id=hospital_id, pk__in=user_allowed_departments).order_by('name')
+            ]
+        return departments
+
 
 class TypeWorkTimeEmployee(models.Model):
     title = models.CharField(max_length=255, help_text='Занятость (осн | внутр.свом| внеш. совм)')
@@ -837,14 +855,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
         result = value
-        is_weekend_or_holiday = (
-            date_key.isoweekday() in (6, 7)
-            or holidays.get(date_key.strftime("%Y-%m-%d"))
-        )
-        is_valid_action = (
-            action == "replace"
-            or (action == "add" and value_is_empty)
-        )
+        is_weekend_or_holiday = date_key.isoweekday() in (6, 7) or holidays.get(date_key.strftime("%Y-%m-%d"))
+        is_valid_action = action == "replace" or (action == "add" and value_is_empty)
         if is_valid_action and not is_weekend_or_holiday:
             start_work_time_employee = current_employee_position.work_start
             daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
@@ -1318,21 +1330,17 @@ class DoctorProfileDepartment(models.Model):
             ).delete()
 
         if ids_to_create:
-            DoctorProfileDepartment.objects.bulk_create([
-                DoctorProfileDepartment(
-                    doctor_profile=doctor_profile,
-                    department_id=department_id,
-                )
-                for department_id in ids_to_create
-            ])
-
+            DoctorProfileDepartment.objects.bulk_create(
+                [
+                    DoctorProfileDepartment(
+                        doctor_profile=doctor_profile,
+                        department_id=department_id,
+                    )
+                    for department_id in ids_to_create
+                ]
+            )
 
     @staticmethod
     def get_doctor_departments_ids(doctor_profile: DoctorProfile):
         result = DoctorProfileDepartment.objects.filter(doctor_profile_id=doctor_profile.id).values_list("department_id", flat=True)
         return list(result)
-
-
-
-
-
