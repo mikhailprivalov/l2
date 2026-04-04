@@ -19,7 +19,8 @@ from .models import (
     TabelDocument,
     FactTimeWork,
     TabelFactTimeWorkRaw,
-    Holidays, DoctorProfileDepartment,
+    Holidays,
+    DoctorProfileDepartment,
 )
 
 

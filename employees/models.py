@@ -9,7 +9,6 @@ from django.db import models
 from django.core.paginator import Paginator
 from django.utils.formats import date_format
 
-from api.views import departments
 from employees.sql_func import get_employee_position, get_employee_work_time, get_employee_fact_time_work
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
@@ -415,19 +414,23 @@ class Department(models.Model):
     def get_active_departments_for_user(user, hospital_id: int = None):
         if not hospital_id:
             hospital_id = Hospitals.objects.get(is_default=True)
-        user_is_admin = user.is_superuser
-        user_allowed_departments = DoctorProfileDepartment.get_doctor_departments_ids(user.doctorprofile)
-        if user_is_admin:
-            departments = [
-                {"id": department.pk, "label": department.name, "lunchDuration": department.lunch_duration}
-                for department in Department.objects.filter(is_active=True, hospital_id=hospital_id).order_by('name')
-            ]
-        else:
-            departments = [
-                {"id": department.pk, "label": department.name, "lunchDuration": department.lunch_duration}
-                for department in Department.objects.filter(is_active=True, hospital_id=hospital_id, pk__in=user_allowed_departments).order_by('name')
-            ]
-        return departments
+
+        queryset = Department.objects.filter(
+            is_active=True,
+            hospital_id=hospital_id,
+        ).order_by("name")
+
+        if not user.is_superuser:
+            allowed_ids = DoctorProfileDepartment.get_doctor_departments_ids(user.doctorprofile)
+            queryset = queryset.filter(pk__in=allowed_ids)
+        return [
+            {
+                "id": department.pk,
+                "label": department.name,
+                "lunchDuration": department.lunch_duration,
+            }
+            for department in queryset
+        ]
 
 
 class TypeWorkTimeEmployee(models.Model):
