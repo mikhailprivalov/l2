@@ -13,6 +13,7 @@ from directions.views import create_case_by_cards
 from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam, StatisticPattern
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
+import employees.models as employees_models
 from laboratory.settings import (
     SYSTEM_AS_VI,
     SOME_LINKS,
@@ -660,6 +661,7 @@ def current_user_info(request):
         "user_services": [],
         "loading": False,
         "cashRegisterShift": {"cashRegisterId": None, "shiftId": None},
+        "allowed_employee_departments": [],
     }
     if ret["auth"]:
         request.user.doctorprofile.mark_as_online()
@@ -715,6 +717,7 @@ def current_user_info(request):
             ret["can_edit_all_department"] = doctorprofile.all_hospitals_users_control
             shift_data = Shift.get_open_shift_by_operator(request.user.doctorprofile.id)
             ret["cashRegisterShift"] = {"cashRegisterId": shift_data["cash_register_id"], "shiftId": shift_data["shift_id"]}
+            ret["allowed_employee_departments"] = employees_models.DoctorProfileDepartment.get_doctor_departments_ids(doctorprofile)
 
             try:
                 connections.close_all()
@@ -1446,7 +1449,9 @@ def users_view(request):
     distrits_qs = District.objects.all().order_by("title")
     districts = [{"pk": -1, "title": "Не выбрано"}, *[{"pk": s.pk, "title": s.title} for s in distrits_qs]]
 
-    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions, "districts": districts})
+    employee_departments = [{"id": department.pk, "label": department.name} for department in employees_models.Department.get_active_departments(hospital_pk)]
+
+    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions, "districts": districts, "employee_departments": employee_departments})
 
 
 @login_required
@@ -1493,6 +1498,7 @@ def user_view(request):
             "notControlAnketa": False,
             "additionalInfo": "{}",
             "dismissed": False,
+            "allowed_employee_departments": [],
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1512,6 +1518,7 @@ def user_view(request):
                     resource_researches_temp[i.scheduleresource_id] = temp_result.copy()
         resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
         department_doctors = users.DoctorProfile.objects.filter(podrazdeleniye_id=doc.podrazdeleniye_id)
+        allowed_employee_departments = employees_models.DoctorProfileDepartment.get_doctor_departments_ids(doc)
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1552,6 +1559,7 @@ def user_view(request):
             "department_doctors": [{"id": x.pk, "label": f"{x.get_fio()}"} for x in department_doctors],
             "additionalInfo": doc.additional_info,
             "dismissed": doc.dismissed,
+            "allowed_employee_departments": allowed_employee_departments,
         }
 
     return JsonResponse({"user": data})
@@ -1587,6 +1595,7 @@ def user_save_view(request):
     date_stop_external_access = ud.get("date_stop_external_access")
     additional_info = ud.get("additionalInfo", "{}")
     dismissed = ud.get("dismissed", False)
+    allowed_employee_departments = ud.get("allowed_employee_departments", [])
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1715,6 +1724,8 @@ def user_save_view(request):
             doc.save()
             if doc.email and send_password:
                 doc.reset_password()
+
+    employees_models.DoctorProfileDepartment.save_doctor_departments(doc, allowed_employee_departments)
 
     data_doc_profile = {key: value for key, value in doc.dict_data.items()}
     data_doc_profile["id"] = doc.pk

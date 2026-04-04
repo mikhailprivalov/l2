@@ -9,6 +9,7 @@ from django.db import models
 from django.core.paginator import Paginator
 from django.utils.formats import date_format
 
+from api.views import departments
 from employees.sql_func import get_employee_position, get_employee_work_time, get_employee_fact_time_work
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
@@ -1289,3 +1290,49 @@ class Holidays(models.Model):
             holiday.day.strftime("%Y-%m-%d"): {"kind": holiday.kind, "shorten_minutes": None if holiday.kind == Holidays.Kind.HOLIDAY else holiday.shorten_minutes} for holiday in holidays
         }
         return result
+
+
+class DoctorProfileDepartment(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, db_index=True, null=True, on_delete=models.SET_NULL)
+    department = models.ForeignKey(Department, null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"{self.doctor_profile} - {self.department_id}"
+
+    class Meta:
+        verbose_name = "Разрешенное подразделение"
+        verbose_name_plural = "Разрешенные подразделения"
+
+    @staticmethod
+    def save_doctor_departments(doctor_profile: DoctorProfile, allowed_department_ids: list):
+        new_ids = set(allowed_department_ids)
+        current_ids = set(DoctorProfileDepartment.objects.filter(doctor_profile_id=doctor_profile.id).values_list("department_id", flat=True))
+
+        ids_to_delete = current_ids - new_ids
+        ids_to_create = new_ids - current_ids
+
+        if ids_to_delete:
+            DoctorProfileDepartment.objects.filter(
+                doctor_profile=doctor_profile,
+                department_id__in=ids_to_delete,
+            ).delete()
+
+        if ids_to_create:
+            DoctorProfileDepartment.objects.bulk_create([
+                DoctorProfileDepartment(
+                    doctor_profile=doctor_profile,
+                    department_id=department_id,
+                )
+                for department_id in ids_to_create
+            ])
+
+
+    @staticmethod
+    def get_doctor_departments_ids(doctor_profile: DoctorProfile):
+        result = DoctorProfileDepartment.objects.filter(doctor_profile_id=doctor_profile.id).values_list("department_id", flat=True)
+        return list(result)
+
+
+
+
+
