@@ -482,7 +482,9 @@ def add_appendix_direction_list(appendix_direction_list, dir_temp):
     types_direction = {"islab": set(), "isDocrefferal": set(), "isParaclinic": set(), "isGistology": set(), "isHospital": set(), "isForm": set()}
     for d in dir_temp:
         iss_obj = Issledovaniya.objects.filter(napravleniye_id=d).first()
-        if iss_obj.research.is_doc_refferal:
+        if iss_obj.research.is_lab:
+            types_direction["islab"].add(d)
+        elif iss_obj.research.is_doc_refferal:
             types_direction["isDocrefferal"].add(d)
         elif iss_obj.research.is_paraclinic:
             types_direction["isParaclinic"].add(d)
