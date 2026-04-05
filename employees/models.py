@@ -410,6 +410,28 @@ class Department(models.Model):
         unique_together = ('hospital', 'name')
         ordering = ('hospital__short_title', 'hospital__title', 'name')
 
+    @staticmethod
+    def get_active_departments_for_user(user, hospital_id: int = None):
+        if not hospital_id:
+            hospital_id = Hospitals.objects.get(is_default=True)
+
+        queryset = Department.objects.filter(
+            is_active=True,
+            hospital_id=hospital_id,
+        ).order_by("name")
+
+        if not user.is_superuser:
+            allowed_ids = DoctorProfileDepartment.get_doctor_departments_ids(user.doctorprofile)
+            queryset = queryset.filter(pk__in=allowed_ids)
+        return [
+            {
+                "id": department.pk,
+                "label": department.name,
+                "lunchDuration": department.lunch_duration,
+            }
+            for department in queryset
+        ]
+
 
 class TypeWorkTimeEmployee(models.Model):
     title = models.CharField(max_length=255, help_text='Занятость (осн | внутр.свом| внеш. совм)')
@@ -836,14 +858,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
         result = value
-        is_weekend_or_holiday = (
-            date_key.isoweekday() in (6, 7)
-            or holidays.get(date_key.strftime("%Y-%m-%d"))
-        )
-        is_valid_action = (
-            action == "replace"
-            or (action == "add" and value_is_empty)
-        )
+        is_weekend_or_holiday = date_key.isoweekday() in (6, 7) or holidays.get(date_key.strftime("%Y-%m-%d"))
+        is_valid_action = action == "replace" or (action == "add" and value_is_empty)
         if is_valid_action and not is_weekend_or_holiday:
             start_work_time_employee = current_employee_position.work_start
             daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
@@ -1289,3 +1305,45 @@ class Holidays(models.Model):
             holiday.day.strftime("%Y-%m-%d"): {"kind": holiday.kind, "shorten_minutes": None if holiday.kind == Holidays.Kind.HOLIDAY else holiday.shorten_minutes} for holiday in holidays
         }
         return result
+
+
+class DoctorProfileDepartment(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, db_index=True, null=True, on_delete=models.SET_NULL)
+    department = models.ForeignKey(Department, null=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"{self.doctor_profile} - {self.department_id}"
+
+    class Meta:
+        verbose_name = "Разрешенное подразделение"
+        verbose_name_plural = "Разрешенные подразделения"
+
+    @staticmethod
+    def save_doctor_departments(doctor_profile: DoctorProfile, allowed_department_ids: list):
+        new_ids = set(allowed_department_ids)
+        current_ids = set(DoctorProfileDepartment.objects.filter(doctor_profile_id=doctor_profile.id).values_list("department_id", flat=True))
+
+        ids_to_delete = current_ids - new_ids
+        ids_to_create = new_ids - current_ids
+
+        if ids_to_delete:
+            DoctorProfileDepartment.objects.filter(
+                doctor_profile=doctor_profile,
+                department_id__in=ids_to_delete,
+            ).delete()
+
+        if ids_to_create:
+            DoctorProfileDepartment.objects.bulk_create(
+                [
+                    DoctorProfileDepartment(
+                        doctor_profile=doctor_profile,
+                        department_id=department_id,
+                    )
+                    for department_id in ids_to_create
+                ]
+            )
+
+    @staticmethod
+    def get_doctor_departments_ids(doctor_profile: DoctorProfile):
+        result = DoctorProfileDepartment.objects.filter(doctor_profile_id=doctor_profile.id).values_list("department_id", flat=True)
+        return list(result)

@@ -20,6 +20,7 @@ from .models import (
     FactTimeWork,
     TabelFactTimeWorkRaw,
     Holidays,
+    DoctorProfileDepartment,
 )
 
 
@@ -171,3 +172,8 @@ class TabelDataAdmin(admin.ModelAdmin):
 class HolidaysAdmin(admin.ModelAdmin):
     list_display = ("day", "kind", "shorten_minutes")
     list_filter = ("kind",)
+
+
+@admin.register(DoctorProfileDepartment)
+class DoctorProfileDepartmentAdmin(admin.ModelAdmin):
+    list_display = ("doctor_profile", "department")

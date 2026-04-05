@@ -931,6 +931,26 @@
               </div>
             </div>
           </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">График: разрешенные подразделения</span>
+              <Treeselect
+                v-model="user.allowed_employee_departments"
+                class="treeselect-nbr treeselect-wide treeselect-34px"
+                :multiple="true"
+                :disable-branch-nodes="true"
+                :options="employeeDepartments"
+                placeholder="Выберите подразделения"
+                :append-to-body="true"
+                :clearable="true"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
@@ -1046,6 +1066,7 @@ const setupResource = ref(false);
 const resourceTemplatesList = ref([]);
 const currentResourcePk = ref(-1);
 const currentResourceTitle = ref('');
+const employeeDepartments = ref([]);
 const user = ref({
   username: '',
   password: '',
@@ -1086,6 +1107,7 @@ const user = ref({
   groups_list: [],
   position: null,
   speciality: null,
+  allowed_employee_departments: [],
 });
 const selectedHospital = ref(-1);
 const openPk = ref(-2);
@@ -1225,6 +1247,7 @@ const loadUsers = async (prevClr = false) => {
   positions.value = data.positions;
   districts.value = data.districts;
   doctorProfiles.value = data.doctorProfiles;
+  employeeDepartments.value = data.employee_departments;
   await store.dispatch(actions.DEC_LOADING);
 };
 
@@ -1316,6 +1339,7 @@ const close = async () => {
     department_doctors: [],
     additionalInfo: '{}',
     dismissed: false,
+    allowed_employee_departments: [],
   };
   currentResourcePk.value = -1;
   currentResourceTitle.value = '';
