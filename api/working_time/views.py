@@ -12,7 +12,8 @@ from laboratory.settings import SHIFTS_VARIANTS
 @login_required()
 @group_required('График рабочего времени')
 def get_departments(request):
-    departments = Department.get_active()
+    user = request.user
+    departments = Department.get_active_departments_for_user(user)
     return JsonResponse({"result": departments})
 
 
