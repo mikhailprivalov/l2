@@ -39,7 +39,7 @@ from .models import (
     ParaclinicResult,
     NapravleniyaFiles,
     IndicatorResultByCurator,
-    DirectionResultQRCodePrintInfo,
+    DirectionResultQRCodePrintInfo, ParaclinicResultIndicator,
 )
 
 admin.site.register(IstochnikiFinansirovaniya)
@@ -399,6 +399,19 @@ class DirectionResultQRCodePrintInfoAdmin(admin.ModelAdmin):
     search_fields = ('direction',)
 
 
+class ParaclinicResultIndicatorAdmin(admin.ModelAdmin):
+    list_display = (
+        'issledovaniye',
+        'doctor_profile',
+        'field',
+        'value',
+        'updated_at',
+    )
+
+    list_filter = ('doctor_profile',)
+    search_fields = ('issledovaniye',)
+
+
 admin.site.register(TubesRegistration)
 admin.site.register(Result, ResultAdmin)
 admin.site.register(ParaclinicResult, ParaclinicResultAdmin)
@@ -431,3 +444,4 @@ admin.site.register(ExternalAdditionalOrder, ExternalAdditionalOrderAdmin)
 admin.site.register(StatementDocument, ResStatementDocument)
 admin.site.register(IndicatorResultByCurator, ResIndicatorResultByCurator)
 admin.site.register(DirectionResultQRCodePrintInfo, DirectionResultQRCodePrintInfoAdmin)
+admin.site.register(ParaclinicResultIndicator, ParaclinicResultIndicatorAdmin)

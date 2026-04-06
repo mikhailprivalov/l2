@@ -171,6 +171,13 @@ def menu(request):
                     "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
                     "module": "l2_extra_notifications",
                 },
+                {
+                    "url": '/ui/indicator-curator',
+                    "title": "Показатели куратора",
+                    "nt": False,
+                    "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
+                    "module": "l2_indicator_curator",
+                },
                 {"url": '/ui/plan-pharmacotherapy', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
                 {"url": '/ui/monitorings/enter', "title": "Заполнение мониторингов", "nt": False, "access": ["Заполнение мониторингов"], "module": "l2_monitorings"},
                 {"url": '/ui/monitorings/report', "title": "Просмотр мониторингов", "nt": False, "access": ["Просмотр мониторингов"], "module": "l2_monitorings"},

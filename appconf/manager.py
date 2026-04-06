@@ -164,6 +164,7 @@ class SettingManager:
                     "eds",
                     "profcenter",
                     "extra_notifications",
+                    "indicator_curator",
                     "monitorings",
                     "schedule",
                     "expertise",

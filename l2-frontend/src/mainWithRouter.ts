@@ -234,6 +234,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/indicator-curator',
+      name: 'indicator_curator',
+      component: () => import('@/pages/IndicatorСurator.vue'),
+      meta: {
+        title: 'Показатели куратора извещения',
+        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача', 'Заполнение экстренных извещений'],
+        module: 'l2_indicator_curator',
+      },
+    },
+    {
       path: '/ui/monitorings/enter',
       name: 'monitorings_enter',
       component: () => import('@/pages/MonitoringsEnter.vue'),
