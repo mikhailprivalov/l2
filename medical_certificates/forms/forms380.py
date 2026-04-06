@@ -1482,6 +1482,7 @@ def form_11(request_data):
         "Цех, участок ОПУ",
         "Диспансерная группа",
         "Группа заболевания",
+        "Допуск к работе",
     ]
     result = fields_result_only_title_fields(iss, title_fields)
     disease_group = ""
@@ -1508,7 +1509,7 @@ def form_11(request_data):
             department = i["value"]
         elif i["title"] == "Диспансерная группа":
             dispensary_group = i["value"]
-        elif i["title"] == "Группа заболевания":
+        elif i["title"] == "Допуск к работ":
             disease_group = i["value"]
 
     fwb.append(Paragraph('Заключение по результатам', styleCenterBold))
@@ -1531,7 +1532,7 @@ def form_11(request_data):
     fwb.append(
         Paragraph(
             f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
-            f"<u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами; <u>{disease_group}</u> ",
+            f"<u>{disease_group}</u> ",
             style,
         )
     )
@@ -1678,6 +1679,7 @@ def form_12(request_data):
         "Дата осмотра",
         "Цех, участок ОПУ",
         "Группа здоровья",
+        "Допуск к работе",
     ]
     result = fields_result_only_title_fields(iss, title_fields)
     for i in result:
