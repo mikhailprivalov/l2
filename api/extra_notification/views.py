@@ -13,7 +13,6 @@ from directory.models import ParaclinicInputGroups, ParaclinicInputField
 from laboratory.decorators import group_required
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from laboratory.utils import strdate
-from utils.dates import normalize_dots_date
 
 
 @login_required

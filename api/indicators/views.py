@@ -10,11 +10,9 @@ from utils.dates import normalize_dots_date
 
 def search_indicator(request):
     request_data = json.loads(request.body)
-    # status - 0 новые, 1-присвоенные номера от ЭпидЦентра, 2 - все
     status = int(request_data.get("status", 2))
     hospital = int(request_data.get("hospital", -1))
     date_period = request_data["datePeriod"]
-    print(date_period)
     time_start = f'{normalize_dots_date(date_period[0])} {request_data.get("time_start", "00:00")}:00'
     time_end = f'{normalize_dots_date(date_period[1])} {request_data.get("time_end", "23:59")}:59:999999'
     datetime_start = datetime.datetime.strptime(time_start, '%Y-%m-%d %H:%M:%S')
@@ -46,5 +44,4 @@ def search_indicator(request):
                 'curatorFieldBallValue': i.ball_curator_value,
             }
         )
-
     return JsonResponse({'rows': result})
