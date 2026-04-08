@@ -151,4 +151,5 @@ urlpatterns = [
     path('get-departments-with-exclude', views.get_departments_with_exclude),
     path('requests/', include('api.requests.urls')),
     path('logs/', include('api.logs.urls')),
+    path('indicators/', include('api.indicators.urls')),
 ]

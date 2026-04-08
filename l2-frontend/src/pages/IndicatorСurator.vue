@@ -41,7 +41,7 @@
                 <!--                  :brn="false"-->
                 <!--                />-->
                 <DateRange
-                  v-model="datePeriod"
+                  v-model="params.datePeriod"
                 />
 
               </span>
@@ -69,15 +69,6 @@
             href="#"
             @click.prevent="load()"
           >перезагрузить данные</a>
-          <a
-            v-if="canEdit"
-            class="a-under pull-right"
-            href="#"
-            style="padding-right: 10px"
-            @click.prevent="covid()"
-          >
-            covid-json
-          </a>
         </div>
       </div>
     </form>
@@ -104,7 +95,6 @@
           <col style="width: 120px">
           <col style="width: 120px">
           <col style="width: 160px">
-          <col style="width: 120px">
           <col style="width: 120px">
           <col style="width: 120px">
         </colgroup>
@@ -221,7 +211,7 @@ import { ExtraNotificationData } from '@/types/extraNotification';
 import DateRange from '@/ui-cards/DateRange.vue';
 
 interface Params {
-  date: string;
+  datePeriod: any;
   status: number;
   hospital: number;
 }
@@ -242,7 +232,7 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
       rows: EMPTY_ROWS,
       loaded: false,
       params: {
-        date: moment().format('YYYY-MM-DD'),
+        // date: moment().format('YYYY-MM-DD'),
         status: 2,
         hospital: -1,
         datePeriod: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
@@ -305,7 +295,8 @@ export default class ExtraNotification extends Vue {
   }
 
   get watchParams() {
-    return _.pick(this.params, ['date', 'status', 'hospital', 'datePeriod']);
+    // return _.pick(this.params, ['date', 'status', 'hospital', 'datePeriod']);
+    return _.pick(this.params, ['status', 'hospital', 'datePeriod']);
   }
 
   get visibleHospitals() {
@@ -334,15 +325,11 @@ export default class ExtraNotification extends Vue {
 
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
-    const data = await this.$api('extra-notification/search', this.params);
+    const data = await this.$api('indicators/search-indicator', this.params);
     this.rows = data.rows;
     this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
-  }
-
-  covid() {
-    window.open(`/forms/covid-result?date=${this.params.date}`);
   }
 }
 </script>
