@@ -3108,6 +3108,18 @@ class ParaclinicResult(models.Model):
         verbose_name_plural = 'Результаты описательные'
 
 
+class ParaclinicResultIndicator(models.Model):
+    issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
+    field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
+    value = models.TextField()
+    doctor_profile = models.ForeignKey(DoctorProfile, db_index=True, null=True, default=None, blank=True, help_text='Куратор показателя', on_delete=models.SET_NULL)
+    updated_at = models.DateTimeField(auto_now=True, help_text='Дата и время последнего изменения')
+
+    class Meta:
+        verbose_name = 'Результат показателя куратора'
+        verbose_name_plural = 'Результаты показателей кураторов'
+
+
 class DirectionParamsResult(models.Model):
     napravleniye = models.ForeignKey(Napravleniya, null=True, help_text='Направление для которого сохранены дополнительные параметры', db_index=True, on_delete=models.CASCADE)
     title = models.CharField(default='', max_length=400, help_text='Название поля ввода')

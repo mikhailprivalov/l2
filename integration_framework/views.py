@@ -1832,7 +1832,7 @@ def create_direction_by_param(body, request):
     open_skob = "{"
     close_skob = "}"
 
-    diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10, hide=False).order_by("code").first()
+    diag_mcb10_data = directions.Diagnoses.objects.filter(d_type="mkb10.4", code=diag_mkb10).order_by("code").first()
     diag_mkb10 = f'{open_skob}"code": "{diag_mcb10_data.code}", "title": "{diag_mcb10_data.title}", "id":"{diag_mcb10_data.pk}"{close_skob}'
     obtain_material = {
         1: "эндоскопическая биопсия—1",

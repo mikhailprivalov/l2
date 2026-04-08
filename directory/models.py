@@ -334,6 +334,7 @@ class Researches(models.Model):
     is_global_direction_params = models.BooleanField(default=False, blank=True, help_text="Глобальные параметры", db_index=True)
     is_case_params = models.BooleanField(default=False, blank=True, help_text="Параметры для случая", db_index=True)
     is_monitoring = models.BooleanField(default=False, blank=True, help_text="Это мониторинг", db_index=True)
+    for_curator = models.BooleanField(default=False, blank=True, help_text="Заполняет куратор", db_index=True)
     is_expertise = models.BooleanField(default=False, blank=True, help_text="Это экспертиза", db_index=True)
     is_aux = models.BooleanField(default=False, blank=True, help_text="Это вспомогательный", db_index=True)
     is_case = models.BooleanField(default=False, blank=True, help_text="Это случай", db_index=True)
