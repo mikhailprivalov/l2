@@ -2110,6 +2110,10 @@ class Napravleniya(models.Model):
                     return "need"
         return "not_need"
 
+    @staticmethod
+    def is_direction(direction_id):
+        return Napravleniya.objects.filter(pk=direction_id).first()
+
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
@@ -2633,6 +2637,10 @@ class Issledovaniya(models.Model):
     @staticmethod
     def get_iss_id_by_directions(directions):
         return list(Issledovaniya.objects.filter(napravleniye_id__in=directions).values_list("pk", flat=True))
+
+    @staticmethod
+    def is_issledovaniye(direction_id):
+        return Issledovaniya.objects.filter(napravleniye_id=direction_id).first()
 
     class Meta:
         verbose_name = 'Назначение на исследование'
@@ -3589,6 +3597,8 @@ class DirectionsHistory(models.Model):
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
     old_card = models.ForeignKey(Clients.Card, related_name='old_card', help_text="Старая карта", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     new_card = models.ForeignKey(Clients.Card, related_name='new_card', help_text="Новая карта", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    old_parent = models.ForeignKey(Issledovaniya, related_name='old_parent', blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    new_parent = models.ForeignKey(Issledovaniya, related_name='new_parent', blank=True, null=True, default=None, on_delete=models.SET_NULL)
     old_fio_born = models.CharField(max_length=200, blank=True, help_text="ФИО д.р старой карты")
     new_fio_born = models.CharField(max_length=200, blank=True, help_text="ФИО д.р новой карты")
     date_change = models.DateTimeField(default=timezone.now, help_text='Время изменения владельца направления')
@@ -3610,6 +3620,32 @@ class DirectionsHistory(models.Model):
                 dir.client = new_card
                 dir.save()
                 dir_history = DirectionsHistory(direction=dir, old_card=old_card, new_card=new_card, old_fio_born=old_fio_born, new_fio_born=new_fio_born, who_change=user)
+                dir_history.save()
+
+        return directions
+
+    @staticmethod
+    def change_parent(old_history_number, new_history_number, document_id, user):
+        old_direction = Napravleniya.objects.filter(id=old_history_number).first()
+        old_issledovaniye = Issledovaniya.objects.filter(napravleniye=old_direction).first()
+        old_card = Clients.Card.objects.filter(id=old_direction.client_id, base__internal_type=True).first()
+        old_fio_born = old_card.get_fio_w_card()
+
+        new_direction = Napravleniya.objects.filter(id=new_history_number).first()
+        new_issledovaniye = Issledovaniya.objects.filter(napravleniye=new_direction).first()
+        new_card = Clients.Card.objects.filter(id=new_direction.client_id, base__internal_type=True).first()
+        new_fio_born = new_card.get_fio_w_card()
+
+        with transaction.atomic():
+            if document_id == -1:
+                directions = Napravleniya.objects.select_for_update().filter(parent=old_issledovaniye)
+            else:
+                directions = Napravleniya.objects.select_for_update().filter(id=document_id)
+            for dir in directions:
+                dir.client = new_card
+                dir.parent = new_issledovaniye
+                dir.save()
+                dir_history = DirectionsHistory(direction=dir, old_parent=old_issledovaniye, new_parent=new_issledovaniye, old_card=old_card, new_card=new_card, old_fio_born=old_fio_born, new_fio_born=new_fio_born, who_change=user)
                 dir_history.save()
 
         return directions

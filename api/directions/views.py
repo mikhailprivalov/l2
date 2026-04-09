@@ -3752,6 +3752,54 @@ def change_owner_direction(request):
 
 
 @login_required
+@group_required("Управление иерархией истории")
+def is_history(request):
+    ok = False
+    request_data = json.loads(request.body)
+    hist_id = request_data.get("target_history")
+    if hist_id.isdigit():
+        history = Napravleniya.is_direction(int(hist_id))
+        iss = Issledovaniya.is_issledovaniye(int(hist_id))
+        if history and iss:
+            ok = True
+    else:
+        ok = False
+    return JsonResponse({"histOk": ok})
+
+
+@login_required
+@group_required("Управление иерархией истории")
+def is_document(request):
+    ok = False
+    request_data = json.loads(request.body)
+    doc_id = request_data.get('target_document')
+    if doc_id == -1:
+        ok = True
+    else:
+        if doc_id.isdigit():
+            document = Napravleniya.is_direction(int(doc_id))
+            if document:
+                ok = True
+        else:
+            ok = False
+    return JsonResponse({"docOk": ok})
+
+
+@login_required
+@group_required("Управление иерархией истории")
+def change_parent_direction(request):
+    user = request.user.doctorprofile
+    request_data = json.loads(request.body)
+    new_history_number = int(request_data.get('new_history_number'))
+    old_history_number = int(request_data.get('old_history_number'))
+    document_number = int(request_data.get('target_document_number'))
+    directions = DirectionsHistory.change_parent(old_history_number, new_history_number, document_number, user)
+    directions = ', '.join([str(d.pk) for d in directions])
+
+    return JsonResponse({"directions": directions})
+
+
+@login_required
 def directions_result_year(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)
