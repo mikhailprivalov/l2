@@ -3621,7 +3621,6 @@ class DirectionsHistory(models.Model):
                 dir.save()
                 dir_history = DirectionsHistory(direction=dir, old_card=old_card, new_card=new_card, old_fio_born=old_fio_born, new_fio_born=new_fio_born, who_change=user)
                 dir_history.save()
-
         return directions
 
     @staticmethod
@@ -3630,15 +3629,18 @@ class DirectionsHistory(models.Model):
         old_issledovaniye = Issledovaniya.objects.filter(napravleniye=old_direction).first()
         old_card = Clients.Card.objects.filter(id=old_direction.client_id, base__internal_type=True).first()
         old_fio_born = old_card.get_fio_w_card()
-
         new_direction = Napravleniya.objects.filter(id=new_history_number).first()
         new_issledovaniye = Issledovaniya.objects.filter(napravleniye=new_direction).first()
         new_card = Clients.Card.objects.filter(id=new_direction.client_id, base__internal_type=True).first()
         new_fio_born = new_card.get_fio_w_card()
-
         with transaction.atomic():
             if document_id == -1:
                 directions = Napravleniya.objects.select_for_update().filter(parent=old_issledovaniye)
+                plan_operations = old_card.operation_plans.filter(direction=str(old_history_number))
+                for plan_operation in plan_operations:
+                    plan_operation.direction = str(new_history_number)
+                    plan_operation.patient_card = new_card
+                    plan_operation.save()
             else:
                 directions = Napravleniya.objects.select_for_update().filter(id=document_id)
             for dir in directions:
@@ -3647,7 +3649,6 @@ class DirectionsHistory(models.Model):
                 dir.save()
                 dir_history = DirectionsHistory(direction=dir, old_parent=old_issledovaniye, new_parent=new_issledovaniye, old_card=old_card, new_card=new_card, old_fio_born=old_fio_born, new_fio_born=new_fio_born, who_change=user)
                 dir_history.save()
-
         return directions
 
 

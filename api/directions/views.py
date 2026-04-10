@@ -3795,7 +3795,6 @@ def change_parent_direction(request):
     document_number = int(request_data.get('target_document_number'))
     directions = DirectionsHistory.change_parent(old_history_number, new_history_number, document_number, user)
     directions = ', '.join([str(d.pk) for d in directions])
-
     return JsonResponse({"directions": directions})
 
 
