@@ -3655,7 +3655,7 @@ class DirectionsHistory(models.Model):
                     new_card=new_card,
                     old_fio_born=old_fio_born,
                     new_fio_born=new_fio_born,
-                    who_change=user
+                    who_change=user,
                 )
                 dir_history.save()
         return directions
