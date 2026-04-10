@@ -3647,7 +3647,16 @@ class DirectionsHistory(models.Model):
                 dir.client = new_card
                 dir.parent = new_issledovaniye
                 dir.save()
-                dir_history = DirectionsHistory(direction=dir, old_parent=old_issledovaniye, new_parent=new_issledovaniye, old_card=old_card, new_card=new_card, old_fio_born=old_fio_born, new_fio_born=new_fio_born, who_change=user)
+                dir_history = DirectionsHistory(
+                    direction=dir,
+                    old_parent=old_issledovaniye,
+                    new_parent=new_issledovaniye,
+                    old_card=old_card,
+                    new_card=new_card,
+                    old_fio_born=old_fio_born,
+                    new_fio_born=new_fio_born,
+                    who_change=user
+                )
                 dir_history.save()
         return directions
 
