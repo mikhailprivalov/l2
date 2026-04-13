@@ -38,7 +38,7 @@
                 № Истории
               </div>
               <input
-                v-model="currentDirectionHistoryOpen"
+                v-model="currentHospCaseOpen"
                 class="form-control"
                 readonly
               >
@@ -49,7 +49,7 @@
               </div>
               <div class="row-v">
                 <input
-                  v-model="targetHistory"
+                  v-model="targetHospCase"
                   class="form-control"
                 >
               </div>
@@ -78,7 +78,7 @@
             <div class="buttons">
               <button
                 class="btn btn-blue-nb btn-sm"
-                :class="[{ btndisable: !targetHistory || (!checkBoxAllDocuments && !targetDocument) }]"
+                :class="[{ btndisable: !targetHospCase || (!checkBoxAllDocuments && !targetDocument) }]"
                 @click="moveDocsExecute"
               >
                 Перенести документы
@@ -122,12 +122,11 @@ const root = getCurrentInstance().proxy.$root;
 const refs = getCurrentInstance().proxy.$refs;
 
 const moveDocs = ref(false);
-const cardPk = ref(null);
 const patientFio = ref('');
-const targetHistory = ref(null);
+const targetHospCase = ref(null);
 const targetDocument = ref(null);
 const checkBoxAllDocuments = ref(true);
-const currentDirectionHistoryOpen = ref('');
+const currentHospCaseOpen = ref('');
 
 watch(checkBoxAllDocuments, (oldValue) => {
   if (oldValue) {
@@ -140,47 +139,37 @@ const hideMoveDocs = () => {
 };
 
 const moveDocsExecute = async () => {
-  const { histOk } = await api('directions/is-history', { target_history: targetHistory.value });
-  if (!histOk) {
-    root.$emit('msg', 'error', 'История не найдена');
-    return;
-  }
-
-  const targetDocumentId = ref(-1);
+  const targetDocumentId = ref('-1');
   if (targetDocument.value) {
     targetDocumentId.value = targetDocument.value;
   }
 
-  const { docOk } = await api('directions/is-document', { target_document: targetDocumentId.value });
-  if (!docOk) {
-    root.$emit('msg', 'error', 'Документ не найден');
+  const data = await api('directions/change-parent-direction', {
+    old_hosp_case_id: currentHospCaseOpen.value,
+    new_hosp_case_id: targetHospCase.value,
+    hosp_case_doc_id: targetDocumentId.value,
+  });
+  if (data.directions) {
+    root.$emit('msg', 'ok', 'Документы успешно перенесены');
+    root.$emit('msg', 'ok', `Номера: ${data.directions}`);
+  } else {
+    root.$emit('msg', 'error', 'Указаны неверные данные');
     return;
   }
 
-  await store.dispatch(actions.INC_LOADING);
-  const data = await api('directions/change-parent-direction', {
-    old_history_number: currentDirectionHistoryOpen.value,
-    new_history_number: targetHistory.value,
-    target_document_number: targetDocumentId.value,
-  });
-  root.$emit('msg', 'ok', 'Документы успешно перенесены');
-  root.$emit('msg', 'ok', `Номера: ${data.directions}`);
-  await store.dispatch(actions.DEC_LOADING);
-
   hideMoveDocs();
-  root.$emit('open-history', currentDirectionHistoryOpen.value);
+  root.$emit('open-history', currentHospCaseOpen.value);
 };
 
 onMounted(() => {
   root.$on('current_history_direction', (data) => {
-    currentDirectionHistoryOpen.value = data.history_num;
-    cardPk.value = data.patient.card_pk;
+    currentHospCaseOpen.value = data.history_num;
     patientFio.value = data.patient.fio_age?.split('+')[0];
   });
   root.$on('hide_move_docs', () => {
     if (refs.modal) {
       refs.modal.$el.style.display = 'none';
-      targetHistory.value = null;
+      targetHospCase.value = null;
       targetDocument.value = null;
       checkBoxAllDocuments.value = true;
       moveDocs.value = false;

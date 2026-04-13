@@ -3624,33 +3624,31 @@ class DirectionsHistory(models.Model):
         return directions
 
     @staticmethod
-    def change_parent(old_history_number, new_history_number, document_id, user):
-        old_direction = Napravleniya.objects.filter(id=old_history_number).first()
-        old_issledovaniye = Issledovaniya.objects.filter(napravleniye=old_direction).first()
-        old_card = Clients.Card.objects.filter(id=old_direction.client_id, base__internal_type=True).first()
+    def change_parent(old_hosp_case_id, new_hosp_case_id, hosp_case_doc_id, user):
+        old_iss = Issledovaniya.objects.filter(napravleniye_id=old_hosp_case_id).first()
+        old_card = Clients.Card.objects.filter(id=old_iss.napravleniye.client_id).first()
         old_fio_born = old_card.get_fio_w_card()
-        new_direction = Napravleniya.objects.filter(id=new_history_number).first()
-        new_issledovaniye = Issledovaniya.objects.filter(napravleniye=new_direction).first()
-        new_card = Clients.Card.objects.filter(id=new_direction.client_id, base__internal_type=True).first()
+        new_iss = Issledovaniya.objects.filter(napravleniye_id=new_hosp_case_id).first()
+        new_card = Clients.Card.objects.filter(id=new_iss.napravleniye.client_id).first()
         new_fio_born = new_card.get_fio_w_card()
         with transaction.atomic():
-            if document_id == -1:
-                directions = Napravleniya.objects.select_for_update().filter(parent=old_issledovaniye)
-                plan_operations = old_card.operation_plans.filter(direction=str(old_history_number))
+            if hosp_case_doc_id == -1:
+                directions = Napravleniya.objects.select_for_update().filter(parent=old_iss)
+                plan_operations = old_card.operation_plans.filter(direction=str(old_hosp_case_id))
                 for plan_operation in plan_operations:
-                    plan_operation.direction = str(new_history_number)
+                    plan_operation.direction = str(new_hosp_case_id)
                     plan_operation.patient_card = new_card
                     plan_operation.save()
             else:
-                directions = Napravleniya.objects.select_for_update().filter(id=document_id)
+                directions = Napravleniya.objects.select_for_update().filter(id=hosp_case_doc_id)
             for dir in directions:
                 dir.client = new_card
-                dir.parent = new_issledovaniye
+                dir.parent = new_iss
                 dir.save()
                 dir_history = DirectionsHistory(
                     direction=dir,
-                    old_parent=old_issledovaniye,
-                    new_parent=new_issledovaniye,
+                    old_parent=old_iss,
+                    new_parent=new_iss,
                     old_card=old_card,
                     new_card=new_card,
                     old_fio_born=old_fio_born,

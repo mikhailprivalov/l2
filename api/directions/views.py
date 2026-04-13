@@ -3751,38 +3751,24 @@ def change_owner_direction(request):
     return JsonResponse({"directions": directions})
 
 
-@login_required
-@group_required("Управление иерархией истории")
-def is_history(request):
-    ok = False
-    request_data = json.loads(request.body)
-    hist_id = request_data.get("target_history")
-    if hist_id.isdigit():
-        history = Napravleniya.is_direction(int(hist_id))
-        iss = Issledovaniya.is_issledovaniye(int(hist_id))
-        if history and iss:
-            ok = True
-    else:
-        ok = False
-    return JsonResponse({"histOk": ok})
+def data_is_int(string):
+    s = string.strip()
+    return s.isdigit() or (s.startswith('-') and s[1:].isdigit())
 
 
-@login_required
-@group_required("Управление иерархией истории")
-def is_document(request):
+def check_hosp_case_data(request_data):
     ok = False
-    request_data = json.loads(request.body)
-    doc_id = request_data.get('target_document')
-    if doc_id == -1:
+    if data_is_int(request_data.get('new_hosp_case_id')) and data_is_int(request_data.get('hosp_case_doc_id')):
         ok = True
-    else:
-        if doc_id.isdigit():
-            document = Napravleniya.is_direction(int(doc_id))
-            if document:
-                ok = True
+    if ok:
+        hosp_case = Napravleniya.is_direction(int(request_data.get('new_hosp_case_id')))
+        hosp_case_iss = Issledovaniya.is_issledovaniye(int(request_data.get('new_hosp_case_id')))
+        hosp_case_doc = Napravleniya.is_direction(int(request_data.get('hosp_case_doc_id')))
+        if hosp_case and hosp_case_iss and (hosp_case_doc or int(request_data.get('hosp_case_doc_id')) == -1):
+            ok = True
         else:
             ok = False
-    return JsonResponse({"docOk": ok})
+    return ok
 
 
 @login_required
@@ -3790,11 +3776,15 @@ def is_document(request):
 def change_parent_direction(request):
     user = request.user.doctorprofile
     request_data = json.loads(request.body)
-    new_history_number = int(request_data.get('new_history_number'))
-    old_history_number = int(request_data.get('old_history_number'))
-    document_number = int(request_data.get('target_document_number'))
-    directions = DirectionsHistory.change_parent(old_history_number, new_history_number, document_number, user)
-    directions = ', '.join([str(d.pk) for d in directions])
+    directions = None
+    print(request_data)
+    old_hosp_case_id = int(request_data.get('old_hosp_case_id'))
+    print(old_hosp_case_id)
+    if check_hosp_case_data(request_data):
+        hosp_case_doc_id = int(request_data.get('hosp_case_doc_id'))
+        new_hosp_case_id = int(request_data.get('new_hosp_case_id'))
+        directions = DirectionsHistory.change_parent(old_hosp_case_id, new_hosp_case_id, hosp_case_doc_id, user)
+        directions = ', '.join([str(d.pk) for d in directions])
     return JsonResponse({"directions": directions})
 
 
