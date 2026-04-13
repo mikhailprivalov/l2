@@ -3,11 +3,21 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+import directions
 from clients.models import Individual, Card
+from directions.models import Napravleniya, IstochnikiFinansirovaniya
+from directory.models import Researches
+from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
 from integration_framework.models import EquipmentReceive
 import simplejson as json
 import re
+
+from integration_framework.views import limit_str
+from django.db import transaction
+
+from slog.models import Log
+from users.models import DoctorProfile
 
 
 @api_view(['POST'])
@@ -114,17 +124,62 @@ def dcm_order_create(request):
     if not card:
         return Response({"ok": False, "message": "Карта не найдена или не создана"})
 
-
-
-
-
-
-
-
-
     order_data = body.get("orderData", {})
+    order_internal_id = order_data.get("internalId", "")
 
+    if order_internal_id is None:
+        return Response({"ok": False, "message": "Некорректный номер заказа orderData.internalId"})
+    else:
+        id_in_hospital = limit_str(order_internal_id, 15)
+        if Napravleniya.objects.filter(id_in_hospital=id_in_hospital, hospital=hospital).first():
+            return Response({"ok": False, "message": f"Уже существует номер заказа {id_in_hospital} в orderData.internalId для текуще организации"})
 
+    fsidi_code = order_data.get("fsidiCode", "")
+    researches = Researches.objects.filter(nsi_id=fsidi_code, hide=False)
+    if len(researches) > 1:
+        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД{fsidi_code} больше одного"})
+    elif len(researches) > 1:
+        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД- {fsidi_code} отсутствует "})
+    else:
+        service_pk = Researches.objects.filter(hide=False, nsi_id=fsidi_code).first().pk
+    operator_created_id = order_data.get("operatorCreatedId")
+    if not operator_created_id:
+        return Response({"ok": False, "message": "Не указан id-оператора"})
+    doc_profile = DoctorProfile.objects.filter(id=operator_created_id).first()
+    if doc_profile.hospital != hospital:
+        return Response({"ok": False, "message": "Id-оператора не верный"})
+    financing_source = IstochnikiFinansirovaniya.objects.filter(title__iexact="омс", base__internal_type=True).first()
+    services = [service_pk]
+    with transaction.atomic():
+        result = Napravleniya.gen_napravleniya_by_issledovaniya(
+            card.pk,
+            "",
+            financing_source.pk,
+            "",
+            None,
+            doc_profile,
+            {-1: services},
+            {},
+            False,
+            {},
+            hospital_override=hospital.pk,
+            id_in_hospital=id_in_hospital,
+        )
+        if not result["r"]:
+            raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
 
+        Log.log(
+            id_in_hospital,
+            190004,
+            doc_profile,
+            {
+                "org": hospital.safe_short_title,
+                "content": body,
+                "service": services,
+                "directions": result["list_id"],
+                "card": card.number_with_type(),
+                "internalId": id_in_hospital
+            },
+        )
 
-    return Response({"result": True})
+    return Response({"ok": True, "message": "", "directions": result["list_id"]})
