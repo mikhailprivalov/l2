@@ -3777,9 +3777,7 @@ def change_parent_direction(request):
     user = request.user.doctorprofile
     request_data = json.loads(request.body)
     directions = None
-    print(request_data)
     old_hosp_case_id = int(request_data.get('old_hosp_case_id'))
-    print(old_hosp_case_id)
     if check_hosp_case_data(request_data):
         hosp_case_doc_id = int(request_data.get('hosp_case_doc_id'))
         new_hosp_case_id = int(request_data.get('new_hosp_case_id'))

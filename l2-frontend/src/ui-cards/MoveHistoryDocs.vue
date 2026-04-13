@@ -114,10 +114,7 @@ import {
 
 import Modal from '@/ui-cards/Modal.vue';
 import api from '@/api';
-import * as actions from '@/store/action-types';
-import { useStore } from '@/store';
 
-const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 const refs = getCurrentInstance().proxy.$refs;
 
