@@ -18,7 +18,7 @@ from laboratory.utils import current_time
 
 
 class PlanOperations(models.Model):
-    patient_card = models.ForeignKey(Card, null=True, help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
+    patient_card = models.ForeignKey(Card, null=True, related_name="operation_plans", help_text='Карта пациента', db_index=True, on_delete=models.SET_NULL)
     direction = models.CharField(max_length=128, default=None, blank=True, null=True, help_text="Номер истории")
     date = models.DateTimeField(null=True, blank=True, help_text='Время на операцию', db_index=True)
     doc_operate = models.ForeignKey(DoctorProfile, default=None, blank=True, null=True, related_name="doc_operate", help_text='Кто опрерирует', on_delete=models.SET_NULL)

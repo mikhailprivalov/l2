@@ -117,6 +117,10 @@
         </ul>
         <ExpertiseStatus v-if="meta.showExpertiseStatus" />
         <PrintQueue v-if="meta.showPrintQueue" />
+        <MoveHistoryDocs
+          v-if="meta.showMoveDocsButton &&
+            ($store.getters.user_data.groups || []).includes('Управление иерархией истории')"
+        />
         <ul class="nav navbar-right navbar-nav">
           <li v-if="hasNewVersion">
             <button
@@ -212,6 +216,7 @@ import ShiftButton from '@/ui-cards/CashRegisters/ShiftButton.vue';
     RmisLink: () => import('@/ui-cards/RmisLink.vue'),
     Favorites: () => import('@/ui-cards/Favorites.vue'),
     PrintQueue: () => import('@/ui-cards/PrintQueue.vue'),
+    MoveHistoryDocs: () => import('@/ui-cards/MoveHistoryDocs.vue'),
     HelpLinkField: () => import('@/ui-cards/HelpLinkField.vue'),
     OperationPlans: () => import('@/ui-cards/OperationPlans.vue'),
     LaboratoryHeader: () => import('@/ui-cards/LaboratoryHeader.vue'),

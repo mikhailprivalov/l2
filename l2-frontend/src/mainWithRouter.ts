@@ -574,6 +574,7 @@ const router = new Router({
         showOperationPlans: true,
         showExpertiseStatus: true,
         showPrintQueue: true,
+        showMoveDocsButton: true,
       },
     },
     {
