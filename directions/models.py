@@ -3616,19 +3616,17 @@ class DirectionsHistory(models.Model):
         return directions
 
     @staticmethod
-    def change_parent(old_hosp_direction_id, new_hosp_direction_id, child_direction_id, user):
-        old_hosp_direction_iss = Issledovaniya.objects.filter(napravleniye_id=old_hosp_direction_id).first()
+    def change_parent(old_hosp_direction_iss, new_hosp_direction_iss, child_direction_id, user):
         old_card = Clients.Card.objects.filter(id=old_hosp_direction_iss.napravleniye.client_id).first()
         old_fio_born = old_card.get_fio_w_card()
-        new_hosp_direction_iss = Issledovaniya.objects.filter(napravleniye_id=new_hosp_direction_id).first()
         new_card = Clients.Card.objects.filter(id=new_hosp_direction_iss.napravleniye.client_id).first()
         new_fio_born = new_card.get_fio_w_card()
         with transaction.atomic():
             if child_direction_id == -1:
                 directions = Napravleniya.objects.select_for_update().filter(parent=old_hosp_direction_iss)
-                plan_operations = old_card.operation_plans.filter(direction=str(old_hosp_direction_id))
+                plan_operations = old_card.operation_plans.filter(direction=str(old_hosp_direction_iss.napravleniye.id))
                 for plan_operation in plan_operations:
-                    plan_operation.direction = str(new_hosp_direction_id)
+                    plan_operation.direction = str(new_hosp_direction_iss.napravleniye.id)
                     plan_operation.patient_card = new_card
                     plan_operation.save()
             else:
