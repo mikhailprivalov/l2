@@ -3589,6 +3589,8 @@ class DirectionsHistory(models.Model):
     direction = models.ForeignKey(Napravleniya, on_delete=models.CASCADE)
     old_card = models.ForeignKey(Clients.Card, related_name='old_card', help_text="Старая карта", blank=True, null=True, default=None, on_delete=models.SET_NULL)
     new_card = models.ForeignKey(Clients.Card, related_name='new_card', help_text="Новая карта", blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    old_parent = models.ForeignKey(Issledovaniya, related_name='old_parent', blank=True, null=True, default=None, on_delete=models.SET_NULL)
+    new_parent = models.ForeignKey(Issledovaniya, related_name='new_parent', blank=True, null=True, default=None, on_delete=models.SET_NULL)
     old_fio_born = models.CharField(max_length=200, blank=True, help_text="ФИО д.р старой карты")
     new_fio_born = models.CharField(max_length=200, blank=True, help_text="ФИО д.р новой карты")
     date_change = models.DateTimeField(default=timezone.now, help_text='Время изменения владельца направления')
@@ -3611,7 +3613,39 @@ class DirectionsHistory(models.Model):
                 dir.save()
                 dir_history = DirectionsHistory(direction=dir, old_card=old_card, new_card=new_card, old_fio_born=old_fio_born, new_fio_born=new_fio_born, who_change=user)
                 dir_history.save()
+        return directions
 
+    @staticmethod
+    def change_parent(old_hosp_direction_iss, new_hosp_direction_iss, child_direction_id, user):
+        old_card = old_hosp_direction_iss.napravleniye.client
+        old_fio_born = old_card.get_fio_w_card()
+        new_card = new_hosp_direction_iss.napravleniye.client
+        new_fio_born = new_card.get_fio_w_card()
+        with transaction.atomic():
+            if child_direction_id == -1:
+                directions = Napravleniya.objects.select_for_update().filter(parent=old_hosp_direction_iss)
+                plan_operations = old_card.operation_plans.filter(direction=str(old_hosp_direction_iss.napravleniye.id))
+                for plan_operation in plan_operations:
+                    plan_operation.direction = str(new_hosp_direction_iss.napravleniye.id)
+                    plan_operation.patient_card = new_card
+                    plan_operation.save()
+            else:
+                directions = Napravleniya.objects.select_for_update().filter(id=child_direction_id, parent=old_hosp_direction_iss)
+            for dir in directions:
+                dir.client = new_card
+                dir.parent = new_hosp_direction_iss
+                dir.save()
+                dir_history = DirectionsHistory(
+                    direction=dir,
+                    old_parent=old_hosp_direction_iss,
+                    new_parent=new_hosp_direction_iss,
+                    old_card=old_card,
+                    new_card=new_card,
+                    old_fio_born=old_fio_born,
+                    new_fio_born=new_fio_born,
+                    who_change=user,
+                )
+                dir_history.save()
         return directions
 
 

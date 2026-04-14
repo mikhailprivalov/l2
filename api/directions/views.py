@@ -3752,6 +3752,26 @@ def change_owner_direction(request):
 
 
 @login_required
+@group_required("Управление иерархией истории")
+def change_parent_direction(request):
+    user = request.user.doctorprofile
+    request_data = json.loads(request.body)
+    directions = None
+    try:
+        old_hosp_direction_id = request_data.get('old_hosp_direction_id')
+        new_hosp_direction_id = int(request_data.get('new_hosp_direction_id'))
+        child_direction_id = int(request_data.get('child_direction_id'))
+        old_hosp_direction_iss = Issledovaniya.objects.filter(napravleniye_id=old_hosp_direction_id).first()
+        new_hosp_direction_iss = Issledovaniya.objects.filter(napravleniye_id=new_hosp_direction_id).first()
+        if new_hosp_direction_iss.research.is_hospital:
+            directions = DirectionsHistory.change_parent(old_hosp_direction_iss, new_hosp_direction_iss, child_direction_id, user)
+            directions = ', '.join([str(d.pk) for d in directions])
+    except:
+        pass
+    return JsonResponse({"directions": directions})
+
+
+@login_required
 def directions_result_year(request):
     request_data = json.loads(request.body)
     is_lab = request_data.get('isLab', False)

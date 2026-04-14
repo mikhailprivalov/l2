@@ -43,6 +43,7 @@ urlpatterns = [
     path('directions-type-date', views.directions_type_date),
     path('directions-created-date', views.directions_created_date),
     path('change-owner-direction', views.change_owner_direction),
+    path('change-parent-direction', views.change_parent_direction),
     path('tubes-for-get', views.tubes_for_get),
     path('tubes-register-get', views.tubes_register_get),
     path('tubes-for-confirm', views.tubes_for_confirm),
