@@ -4,6 +4,7 @@ import json
 from django.http import JsonResponse
 
 from api.indicators.sql_func import indicator_sql
+from external_system.models import CuratorCdaFields, CdaFields
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from utils.dates import normalize_dots_date
 
@@ -29,6 +30,10 @@ def search_indicator(request):
                 'result': [],
             }
         )
+
+    doctorprofile = request.user.doctorprofile
+    indicators = CuratorCdaFields.objects.filter(curator=doctorprofile).values_list("indicator_pk", flat=True)
+    cda_pks = CdaFields.objects.filter(pk__in=indicators).values_list("pk", flat=True)
 
     result_extra = indicator_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
     result = []

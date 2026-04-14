@@ -613,6 +613,7 @@ class Individual(models.Model):
         gender = data.get('gender', '').lower().strip()
         bdate = data.get('birthdate', '').split(' ')[0]
         insurer_full_code = data.get('insurer_full_code', '')
+        owner = data.get('owner', None)
 
         if gender == 'm':
             gender = 'м'
@@ -762,7 +763,7 @@ class Individual(models.Model):
                 enp_doc = i.add_or_update_doc(enp_type, '', enp, insurer_full_code, enp_date_begin)
 
             print('Sync L2 card')  # noqa: T001
-            card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data)
+            card = Card.add_l2_card(individual=i, polis=enp_doc, address=address, force=True, updated_data=updated_data, owner=owner)
             print(card)  # noqa: T001
 
             card.get_card_documents()
