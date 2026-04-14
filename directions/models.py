@@ -3617,9 +3617,9 @@ class DirectionsHistory(models.Model):
 
     @staticmethod
     def change_parent(old_hosp_direction_iss, new_hosp_direction_iss, child_direction_id, user):
-        old_card = Clients.Card.objects.filter(id=old_hosp_direction_iss.napravleniye.client_id).first()
+        old_card = old_hosp_direction_iss.napravleniye.client
         old_fio_born = old_card.get_fio_w_card()
-        new_card = Clients.Card.objects.filter(id=new_hosp_direction_iss.napravleniye.client_id).first()
+        new_card = new_hosp_direction_iss.napravleniye.client
         new_fio_born = new_card.get_fio_w_card()
         with transaction.atomic():
             if child_direction_id == -1:
