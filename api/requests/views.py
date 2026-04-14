@@ -37,7 +37,7 @@ def check_hospital_access(doctor_profile, hospital_id):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_requests(request):
     request_data = json.loads(request.body)
     date_from = request_data.get('dateFrom')
@@ -131,7 +131,7 @@ def get_requests(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_equipment_list(request):
     doctor_equipments = DoctorProfileEquipment.objects.filter(doctor_profile=request.user.doctorprofile).select_related('equipment')
 
@@ -148,7 +148,7 @@ def get_equipment_list(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_request_images(request):
     request_data = json.loads(request.body)
     date = request_data.get('date')
@@ -233,7 +233,7 @@ def get_request_images(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_image_details(request):
     request_data = json.loads(request.body)
     image_id = request_data.get('imageId')
@@ -280,7 +280,7 @@ def get_image_details(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def create_request(request):
     request_data = json.loads(request.body)
     patient_id = request_data.get('patientId')
@@ -349,7 +349,7 @@ def create_request(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def link_image_to_request(request):
     request_data = json.loads(request.body)
     image_id = request_data.get('imageId')
@@ -408,7 +408,7 @@ def link_image_to_request(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_request_details(request):
     request_data = json.loads(request.body)
     request_id = request_data.get('requestId')
@@ -473,7 +473,7 @@ def get_request_details(request):
 
 
 @login_required
-@group_required("Заполнение заявок")
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_request_params(request):
     request_data = json.loads(request.body)
     request_id = request_data.get('requestId')
@@ -549,7 +549,7 @@ def get_request_params(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
 def get_unlinked_requests(request):
     request_data = json.loads(request.body)
     date = request_data.get("date")
@@ -615,7 +615,7 @@ def direction_to_request(direction, doctor_profile):
 
 
 @login_required
-@group_required("Заполнение заявок")
+@group_required("Заполнение заявок", "Врач-диагностики")
 def get_requests_by_status(request):
     request_data = json.loads(request.body)
     search_date = '-'.join(request_data.get("date").split(".")[::-1])
@@ -658,7 +658,7 @@ def get_requests_by_status(request):
 
 
 @login_required
-@group_required("Заполнение заявок")
+@group_required("Заполнение заявок", "Врач-диагностики")
 def get_request_by_number(request):
     request_data = json.loads(request.body)
     number = request_data.get("number")
@@ -681,7 +681,7 @@ def get_request_by_number(request):
 
 
 @login_required
-@group_required("Заполнение заявок")
+@group_required("Заполнение заявок", "Врач-диагностики")
 def accept_request(request):
     request_data = json.loads(request.body)
     request_id = request_data.get("requestId")
@@ -715,7 +715,7 @@ def accept_request(request):
 
 
 @login_required
-@group_required("Заполнение заявок")
+@group_required("Заполнение заявок", "Врач-диагностики")
 def cancel_accept_request(request):
     request_data = json.loads(request.body)
     request_id = request_data.get("requestId")
@@ -753,7 +753,7 @@ def cancel_accept_request(request):
 
 
 @login_required
-@group_required("Заполнение заявок")
+@group_required("Заполнение заявок", "Врач-диагностики")
 def get_permissions_doctor(request):
     access_hospital = PermissionHospitalProtocolDoctorProfile.get_access_hospital_by_doctor(request.user.doctorprofile)
     return JsonResponse({"hospitals": access_hospital})

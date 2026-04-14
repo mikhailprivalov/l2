@@ -167,6 +167,16 @@ def dcm_order_create(request):
         )
         if not result["r"]:
             raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
+        direction_id = result["list_id"][0]
+        direction = Napravleniya.objects.filter(id = direction_id).first()
+        direction.is_cito = order_data.get('cito', False)
+        direction.is_request = True
+        direction.contrast_amount = order_data.get('contrastAmount', '')
+        direction.dose = order_data.get('dose', '')
+        direction.anamnesis = order_data.get('anamnesis', '')
+        direction.direction_comment = order_data.get('comment', '')
+        direction.fact_research_date = order_data.get('dateStudy', '') or None
+        direction.fact_research_time = order_data.get('time', '') or None
 
         Log.log(
             id_in_hospital,
@@ -183,3 +193,17 @@ def dcm_order_create(request):
         )
 
     return Response({"ok": True, "message": "", "directions": result["list_id"]})
+
+
+@api_view(['POST'])
+def dcm_study_link(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+    hospital = request.user.hospital
+
+    internal_id = body.get("internalId")
+    direction_num = body.get("directionNum")
+
+    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital=hospital)
