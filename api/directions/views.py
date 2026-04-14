@@ -3758,14 +3758,12 @@ def change_parent_direction(request):
     request_data = json.loads(request.body)
     directions = None
     try:
-        old_hosp_case_id = request_data.get('old_hosp_case_id')
-        new_hosp_case_id = int(request_data.get('new_hosp_case_id'))
-        hosp_case_doc_id = int(request_data.get('hosp_case_doc_id'))
-        hosp_case = Napravleniya.objects.filter(pk=new_hosp_case_id).first()
-        hosp_case_iss = Issledovaniya.objects.filter(napravleniye_id=new_hosp_case_id).first()
-        hosp_case_doc = Napravleniya.objects.filter(pk=hosp_case_doc_id).first()
-        if hosp_case and hosp_case_iss and (hosp_case_doc or hosp_case_doc_id == -1):
-            directions = DirectionsHistory.change_parent(old_hosp_case_id, new_hosp_case_id, hosp_case_doc_id, user)
+        old_hosp_direction_id = request_data.get('old_hosp_direction_id')
+        new_hosp_direction_id = int(request_data.get('new_hosp_direction_id'))
+        child_direction_id = int(request_data.get('child_direction_id'))
+        new_hosp_direction_iss = Issledovaniya.objects.filter(napravleniye_id=new_hosp_direction_id).first()
+        if new_hosp_direction_iss.research.is_hospital:
+            directions = DirectionsHistory.change_parent(old_hosp_direction_id, new_hosp_direction_id, child_direction_id, user)
             directions = ', '.join([str(d.pk) for d in directions])
     except:
         pass

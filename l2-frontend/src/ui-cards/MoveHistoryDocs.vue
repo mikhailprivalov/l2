@@ -38,7 +38,7 @@
                 № Истории
               </div>
               <input
-                v-model="currentHospCaseOpen"
+                v-model="oldHospDirectionId"
                 class="form-control"
                 readonly
               >
@@ -49,7 +49,7 @@
               </div>
               <div class="row-v">
                 <input
-                  v-model="targetHospCase"
+                  v-model="newHospDirectionId"
                   class="form-control"
                 >
               </div>
@@ -68,7 +68,7 @@
               </div>
               <div class="row-v">
                 <input
-                  v-model="targetDocument"
+                  v-model="childDirectionId"
                   class="form-control"
                   :readonly="checkBoxAllDocuments"
                   :placeholder="checkBoxAllDocuments ? 'Будут перенесены все документы' : 'Введите номер документа'"
@@ -78,7 +78,7 @@
             <div class="buttons">
               <button
                 class="btn btn-blue-nb btn-sm"
-                :class="[{ btndisable: !targetHospCase || (!checkBoxAllDocuments && !targetDocument) }]"
+                :class="[{ btndisable: !newHospDirectionId || (!checkBoxAllDocuments && !childDirectionId) }]"
                 @click="moveDocsExecute"
               >
                 Перенести документы
@@ -120,14 +120,14 @@ const refs = getCurrentInstance().proxy.$refs;
 
 const moveDocs = ref(false);
 const patientFio = ref('');
-const targetHospCase = ref(null);
-const targetDocument = ref(null);
+const oldHospDirectionId = ref(null);
+const newHospDirectionId = ref(null);
+const childDirectionId = ref(null);
 const checkBoxAllDocuments = ref(true);
-const currentHospCaseOpen = ref('');
 
 watch(checkBoxAllDocuments, (oldValue) => {
   if (oldValue) {
-    targetDocument.value = null;
+    childDirectionId.value = null;
   }
 });
 
@@ -136,38 +136,34 @@ const hideMoveDocs = () => {
 };
 
 const moveDocsExecute = async () => {
-  const targetDocumentId = ref(-1);
-  if (targetDocument.value) {
-    targetDocumentId.value = targetDocument.value;
-  }
-
   const data = await api('directions/change-parent-direction', {
-    old_hosp_case_id: currentHospCaseOpen.value,
-    new_hosp_case_id: targetHospCase.value,
-    hosp_case_doc_id: targetDocumentId.value,
+    old_hosp_direction_id: oldHospDirectionId.value,
+    new_hosp_direction_id: newHospDirectionId.value,
+    child_direction_id: childDirectionId.value ?? -1,
   });
   if (data.directions) {
     root.$emit('msg', 'ok', 'Документы успешно перенесены');
     root.$emit('msg', 'ok', `Номера: ${data.directions}`);
   } else {
+    childDirectionId.value = null;
     root.$emit('msg', 'error', 'Указаны неверные данные');
     return;
   }
 
   hideMoveDocs();
-  root.$emit('open-history', currentHospCaseOpen.value);
+  root.$emit('open-history', oldHospDirectionId.value);
 };
 
 onMounted(() => {
   root.$on('current_history_direction', (data) => {
-    currentHospCaseOpen.value = data.history_num;
+    oldHospDirectionId.value = data.history_num;
     patientFio.value = data.patient.fio_age?.split('+')[0];
   });
   root.$on('hide_move_docs', () => {
     if (refs.modal) {
       refs.modal.$el.style.display = 'none';
-      targetHospCase.value = null;
-      targetDocument.value = null;
+      newHospDirectionId.value = null;
+      childDirectionId.value = null;
       checkBoxAllDocuments.value = true;
       moveDocs.value = false;
     }
