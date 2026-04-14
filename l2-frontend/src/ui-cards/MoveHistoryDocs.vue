@@ -136,7 +136,7 @@ const hideMoveDocs = () => {
 };
 
 const moveDocsExecute = async () => {
-  const targetDocumentId = ref('-1');
+  const targetDocumentId = ref(-1);
   if (targetDocument.value) {
     targetDocumentId.value = targetDocument.value;
   }

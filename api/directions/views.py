@@ -3751,38 +3751,24 @@ def change_owner_direction(request):
     return JsonResponse({"directions": directions})
 
 
-def data_is_int(string):
-    s = string.strip()
-    return s.isdigit() or (s.startswith('-') and s[1:].isdigit())
-
-
-def check_hosp_case_data(request_data):
-    ok = False
-    if data_is_int(request_data.get('new_hosp_case_id')) and data_is_int(request_data.get('hosp_case_doc_id')):
-        ok = True
-    if ok:
-        hosp_case = Napravleniya.is_direction(int(request_data.get('new_hosp_case_id')))
-        hosp_case_iss = Issledovaniya.is_issledovaniye(int(request_data.get('new_hosp_case_id')))
-        hosp_case_doc = Napravleniya.is_direction(int(request_data.get('hosp_case_doc_id')))
-        if hosp_case and hosp_case_iss and (hosp_case_doc or int(request_data.get('hosp_case_doc_id')) == -1):
-            ok = True
-        else:
-            ok = False
-    return ok
-
-
 @login_required
 @group_required("Управление иерархией истории")
 def change_parent_direction(request):
     user = request.user.doctorprofile
     request_data = json.loads(request.body)
     directions = None
-    old_hosp_case_id = int(request_data.get('old_hosp_case_id'))
-    if check_hosp_case_data(request_data):
-        hosp_case_doc_id = int(request_data.get('hosp_case_doc_id'))
+    try:
+        old_hosp_case_id = request_data.get('old_hosp_case_id')
         new_hosp_case_id = int(request_data.get('new_hosp_case_id'))
-        directions = DirectionsHistory.change_parent(old_hosp_case_id, new_hosp_case_id, hosp_case_doc_id, user)
-        directions = ', '.join([str(d.pk) for d in directions])
+        hosp_case_doc_id = int(request_data.get('hosp_case_doc_id'))
+        hosp_case = Napravleniya.objects.filter(pk=new_hosp_case_id).first()
+        hosp_case_iss = Issledovaniya.objects.filter(napravleniye_id=new_hosp_case_id).first()
+        hosp_case_doc = Napravleniya.objects.filter(pk=hosp_case_doc_id).first()
+        if hosp_case and hosp_case_iss and (hosp_case_doc or hosp_case_doc_id == -1):
+            directions = DirectionsHistory.change_parent(old_hosp_case_id, new_hosp_case_id, hosp_case_doc_id, user)
+            directions = ', '.join([str(d.pk) for d in directions])
+    except:
+        pass
     return JsonResponse({"directions": directions})
 
 

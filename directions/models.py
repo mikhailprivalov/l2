@@ -2110,10 +2110,6 @@ class Napravleniya(models.Model):
                     return "need"
         return "not_need"
 
-    @staticmethod
-    def is_direction(direction_id):
-        return Napravleniya.objects.filter(pk=direction_id).first()
-
     class Meta:
         verbose_name = 'Направление'
         verbose_name_plural = 'Направления'
@@ -2637,10 +2633,6 @@ class Issledovaniya(models.Model):
     @staticmethod
     def get_iss_id_by_directions(directions):
         return list(Issledovaniya.objects.filter(napravleniye_id__in=directions).values_list("pk", flat=True))
-
-    @staticmethod
-    def is_issledovaniye(direction_id):
-        return Issledovaniya.objects.filter(napravleniye_id=direction_id).first()
 
     class Meta:
         verbose_name = 'Назначение на исследование'
