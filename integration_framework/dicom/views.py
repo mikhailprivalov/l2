@@ -169,7 +169,7 @@ def dcm_order_create(request):
         if not result["r"]:
             raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
         direction_id = result["list_id"][0]
-        direction = Napravleniya.objects.filter(id = direction_id).first()
+        direction = Napravleniya.objects.filter(id=direction_id).first()
         direction.is_cito = order_data.get('cito', False)
         direction.is_request = True
         direction.contrast_amount = order_data.get('contrastAmount', '')
