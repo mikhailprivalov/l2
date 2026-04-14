@@ -3,7 +3,7 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-import directions
+from api.requests.views import link_image_to_request
 from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
 from directory.models import Researches
@@ -12,6 +12,7 @@ from hospitals.models import Hospitals
 from integration_framework.models import EquipmentReceive
 import simplejson as json
 import re
+from django.http import HttpRequest
 
 from integration_framework.views import limit_str
 from django.db import transaction
@@ -205,5 +206,21 @@ def dcm_study_link(request):
 
     internal_id = body.get("internalId")
     direction_num = body.get("directionNum")
+    study_instance_uid = body.get("studyInstanceUID")
 
     direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital=hospital)
+
+    try:
+        equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid)
+    except EquipmentReceive.DoesNotExist:
+        return Response({"ok": False, "message": "Изображение не найдено в PACS исполнителя"})
+
+    imageId = equipment_receive.pk
+    request_id = direction.pk
+    doc_profile = direction.doc
+
+    body_data = json.dumps({"imageId": imageId, "request_id": request_id})
+    http_obj = HttpRequest()
+    http_obj._body = body_data
+    http_obj.user = doc_profile.user
+    return link_image_to_request(http_obj)
