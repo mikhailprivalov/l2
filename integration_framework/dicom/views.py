@@ -30,40 +30,42 @@ def get_meta_tags(request):
 
 @api_view(['POST'])
 def dcm_order_create(request):
+    body = json.loads(request.body)
+    print(body)
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
     oid_org = body.get("oid", {})
     if not oid_org:
-        return {"ok": False, "message": "Должно быть указано oid"}
+        return Response({"ok": False, "message": "Должно быть указано oid"})
     hospital = None
     if not hospital:
         hospital = Hospitals.objects.filter(oid=oid_org).first()
 
     if not hospital:
-        return {"ok": False, "message": "Организация не найдена"}
+        return Response({"ok": False, "message": "Организация не найдена"})
 
     if not request.user.hospitals.filter(pk=hospital.pk).exists():
-        return {"ok": False, "message": "Нет доступа в переданную организацию"}
+        return Response({"ok": False, "message": "Нет доступа в переданную организацию"})
 
     patient = body.get("patient", {})
     enp = (patient.get("enp") or "").replace(" ", "")
 
     if enp and (len(enp) != 16 or not enp.isdigit()):
-        return {"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"}
+        return Response({"ok": False, "message": "Неверные данные полиса, должно быть 16 чисел"})
 
     snils = (str(patient.get("snils")) or "").replace(" ", "").replace("-", "")
     if len(snils) == 10:
         snils = f"0{snils}"
 
     if snils and not petrovna.validate_snils(snils):
-        return {"ok": False, "message": "patient.snils: не прошёл валидацию"}
+        return Response({"ok": False, "message": "patient.snils: не прошёл валидацию"})
 
-    lastname = str(patient.get("lastName") or "")
-    firstname = str(patient.get("firstName") or "")
-    patronymic = str(patient.get("patronymicName") or "")
-    birthdate = str(patient.get("birthDate") or "")
+    lastname = str(patient.get("lastname") or "")
+    firstname = str(patient.get("firstname") or "")
+    patronymic = str(patient.get("patronymic") or "")
+    birthdate = str(patient.get("birthdate") or "")
     sex = patient.get("sex") or ""
     if sex == "m":
         sex = "м"
@@ -71,22 +73,22 @@ def dcm_order_create(request):
         sex = "ж"
 
     if not enp and not (lastname and firstname and birthdate):
-        return {"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"}
+        return Response({"ok": False, "message": "При пустом patient.enp должно быть передано поле patient.individual"})
 
     if lastname and not firstname:
-        return {"ok": False, "message": "При передаче lastname должен быть передан и firstname"}
+        return Response({"ok": False, "message": "При передаче lastname должен быть передан и firstname"})
 
     if firstname and not lastname:
-        return {"ok": False, "message": "При передаче firstname должен быть передан и lastname"}
+        return Response({"ok": False, "message": "При передаче firstname должен быть передан и lastname"})
 
     if firstname and lastname and not birthdate:
-        return {"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"}
+        return Response({"ok": False, "message": "При передаче firstname и lastname должно быть передано поле birthdate"})
 
     if birthdate and (not re.fullmatch(r"\d{4}-\d\d-\d\d", birthdate) or birthdate[0] not in ["1", "2"]):
-        return {"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"}
+        return Response({"ok": False, "message": "birthdate должно соответствовать формату YYYY-MM-DD"})
 
     if birthdate and sex not in ["м", "ж"]:
-        return {"ok": False, "message": 'sex должно быть "м" или "ж"'}
+        return Response({"ok": False, "message": 'sex должно быть "м" или "ж"'})
 
     individual, individuals = None, None
     if enp:
@@ -96,8 +98,9 @@ def dcm_order_create(request):
 
     if not individual and snils:
         individuals = Individual.objects.filter(document__number=snils, document__document_type__title="СНИЛС")
-    if individuals.exists():
-        individual = individuals.objects.filter(owner=hospital, owner_patient_id=patient["internalId"]).first()
+    if individuals:
+        if individuals.exists():
+            individual = individuals.objects.filter(owner=hospital, owner_patient_id=patient["internalId"]).first()
 
     card = None
     if not individual and lastname:
@@ -106,8 +109,8 @@ def dcm_order_create(request):
                 "family": lastname,
                 "name": firstname,
                 "patronymic": patronymic,
-                "sex": patient["sex"],
-                "birthday": patient["birthdate"],
+                "sex": sex,
+                "birthday": birthdate,
                 "snils": patient["snils"],
             },
             hospital,
@@ -136,11 +139,13 @@ def dcm_order_create(request):
             return Response({"ok": False, "message": f"Уже существует номер заказа {id_in_hospital} в orderData.internalId для текуще организации"})
 
     fsidi_code = order_data.get("fsidiCode", "")
+    if not fsidi_code:
+        return Response({"ok": False, "message": "Не указа ФСИДИ КОД"})
     researches = Researches.objects.filter(nsi_id=fsidi_code, hide=False)
     if len(researches) > 1:
         return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД{fsidi_code} больше одного"})
-    elif len(researches) > 1:
-        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД- {fsidi_code} отсутствует "})
+    elif len(researches) < 1:
+        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД- {fsidi_code} отсутствует"})
     else:
         service_pk = Researches.objects.filter(hide=False, nsi_id=fsidi_code).first().pk
     operator_created_id = order_data.get("operatorCreatedId")
@@ -148,8 +153,8 @@ def dcm_order_create(request):
         return Response({"ok": False, "message": "Не указан id-оператора"})
     doc_profile = DoctorProfile.objects.filter(id=operator_created_id).first()
     if doc_profile.hospital != hospital:
-        return Response({"ok": False, "message": "Id-оператора не верный"})
-    financing_source = IstochnikiFinansirovaniya.objects.filter(title__iexact="омс", base__internal_type=True).first()
+        return Response({"ok": False, "message": "Id-оператора не принадлежит вашей организации"})
+    financing_source = IstochnikiFinansirovaniya.objects.filter(title="ОМС", base__internal_type=True).first()
     services = [service_pk]
     with transaction.atomic():
         result = Napravleniya.gen_napravleniya_by_issledovaniya(
@@ -176,8 +181,15 @@ def dcm_order_create(request):
         direction.dose = order_data.get('dose', '')
         direction.anamnesis = order_data.get('anamnesis', '')
         direction.direction_comment = order_data.get('comment', '')
-        direction.fact_research_date = order_data.get('dateStudy', '') or None
-        direction.fact_research_time = order_data.get('time', '') or None
+        date_study = order_data.get('dateStudy', '')
+        date_study = date_study.split(" ")
+        date_fact, time_fact = None, None
+        if len(date_study) > 1:
+            date_fact = date_study[0]
+            time_fact = date_study[1]
+        direction.fact_research_date = date_fact
+        direction.fact_research_time = time_fact
+        direction.save()
 
         Log.log(
             id_in_hospital,
