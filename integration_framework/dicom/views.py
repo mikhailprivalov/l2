@@ -30,7 +30,6 @@ def get_meta_tags(request):
 
 @api_view(['POST'])
 def dcm_order_create(request):
-    body = json.loads(request.body)
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
