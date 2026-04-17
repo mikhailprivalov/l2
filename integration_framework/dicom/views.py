@@ -217,19 +217,20 @@ def dcm_study_link(request):
     internal_id = body.get("internalId")
     direction_num = body.get("directionNum")
     study_instance_uid = body.get("studyInstanceUID")
+    equipment_model_id = body.get("deviceId")
 
     direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital=hospital)
 
     try:
-        equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid)
+        equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid, equipment_model_id=equipment_model_id)
     except EquipmentReceive.DoesNotExist:
         return Response({"ok": False, "message": "Изображение не найдено в PACS исполнителя"})
 
-    imageId = equipment_receive.pk
+    image_id = equipment_receive.pk
     request_id = direction.pk
     doc_profile = direction.doc
 
-    body_data = json.dumps({"imageId": imageId, "request_id": request_id})
+    body_data = json.dumps({"imageId": image_id, "request_id": request_id})
     http_obj = HttpRequest()
     http_obj._body = body_data
     http_obj.user = doc_profile.user
