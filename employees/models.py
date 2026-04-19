@@ -851,30 +851,54 @@ class EmployeeWorkingHoursSchedule(models.Model):
         return {"ok": True, "message": ""}
 
     @staticmethod
-    def fill_by_template(action: str, date_key, value, current_employee_position, lunch_duration_in_minutes, holidays):
+    def fill_by_template(action: str, date_key: datetime.datetime, value, current_employee_position, lunch_duration_in_minutes, holidays):
         """
-        Заполняет если это НЕ выходной день и НЕ праздничный день.
-        Заполняет если выбрано "заменить" или если выбрано дописать и значение не было заполнено до этого
+            Заполняет рабочие дни по шаблону работника.
+
+            Рабочий день:
+            - будний день вне holidays
+            - или день с kind=WORKING (например, рабочая суббота)
+
+            Не заполняет праздники (HOLIDAY) и обычные выходные.
+
+            Заполняет если:
+            - action == "replace"
+            - action == "add" и текущее значение пустое
+
+            Учитывает shorten_minutes (сокращает рабочий день).
         """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
-        result = value
-        is_weekend_or_holiday = date_key.isoweekday() in (6, 7) or holidays.get(date_key.strftime("%Y-%m-%d"))
         is_valid_action = action == "replace" or (action == "add" and value_is_empty)
-        if is_valid_action and not is_weekend_or_holiday:
-            start_work_time_employee = current_employee_position.work_start
-            daily_hours_norm_in_minutes = current_employee_position.daily_hours_norm
-            end_work_time_in_minutes = 0
-            if lunch_duration_in_minutes and daily_hours_norm_in_minutes:
-                end_work_time_in_minutes = daily_hours_norm_in_minutes + lunch_duration_in_minutes
-            elif daily_hours_norm_in_minutes:
-                end_work_time_in_minutes = daily_hours_norm_in_minutes
-            start_work_time_by_employee_template = datetime.datetime.combine(date_key.date(), start_work_time_employee)
-            end_work_time_by_employee_template = start_work_time_by_employee_template + datetime.timedelta(minutes=end_work_time_in_minutes)
-            result = {
-                "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
-                "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
-                "typeId": "",
-            }
+        if not is_valid_action:
+            return value
+
+        holiday_info: dict = holidays.get(date_key.strftime("%Y-%m-%d")) or {}
+        holiday_kind = holiday_info.get("kind")
+        shorten_minutes: Optional[int] = holiday_info.get("shorten_minutes") or 0
+
+        if holiday_info:
+            is_working_day = holiday_kind == Holidays.Kind.WORKING
+        else:
+            is_working_day = date_key.isoweekday() not in (6, 7)
+
+        if not is_working_day:
+            return value
+
+        start_work_time_employee: datetime.time = current_employee_position.work_start
+        daily_hours_norm_in_minutes: int = current_employee_position.daily_hours_norm or 0
+        lunch_duration_in_minutes: int = lunch_duration_in_minutes or 0
+
+        total_minutes: int = daily_hours_norm_in_minutes + lunch_duration_in_minutes - shorten_minutes
+        total_minutes = max(total_minutes, 0)
+
+        start_work_time_by_employee_template = datetime.datetime.combine(date_key.date(), start_work_time_employee)
+        end_work_time_by_employee_template = start_work_time_by_employee_template + datetime.timedelta(minutes=total_minutes)
+
+        result = {
+            "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
+            "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
+            "typeId": "",
+        }
         return result
 
     @staticmethod
