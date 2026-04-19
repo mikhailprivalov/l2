@@ -256,7 +256,7 @@ def form_01(request_data) -> Workbook:
 
 def form_02(request_data):
     """
-       Создает xlsx файл по форме табеля рабочего времени
+    Создает xlsx файл по форме табеля рабочего времени
     """
     year = request_data.get("year")
     month = request_data.get("month")
@@ -425,7 +425,6 @@ def form_02(request_data):
                 set_style_for_area(work_sheet, second_row_table_number, table_data_end_row_number, day_col, day_col, fill_style=holiday_fill)
             elif is_weekday:
                 set_style_for_area(work_sheet, second_row_table_number, table_data_end_row_number, day_col, day_col, fill_style=weekend_fill)
-
 
         merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, fio_col_number, norm_hours_col_number)
         work_sheet.merge_cells(start_row=first_row_table_number, start_column=start_date_col_number, end_row=first_row_table_number, end_column=sum_common_hours_col_number)

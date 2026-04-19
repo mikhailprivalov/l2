@@ -279,7 +279,9 @@ def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_
     return table_body
 
 
-def _create_work_time_schedule_table(style_center, style_left, document_date: datetime.date, document_last_day_month: int, employees_work_time: List[Dict], work_day_statuses: dict, holidays: dict) -> Table:
+def _create_work_time_schedule_table(
+    style_center, style_left, document_date: datetime.date, document_last_day_month: int, employees_work_time: List[Dict], work_day_statuses: dict, holidays: dict
+) -> Table:
     data = [
         *_create_work_time_schedule_table_header(style_center, document_last_day_month),
         *_create_work_time_schedule_table_body(employees_work_time, work_day_statuses, style_center, style_left),
