@@ -255,6 +255,9 @@ def form_01(request_data) -> Workbook:
 
 
 def form_02(request_data):
+    """
+       Создает xlsx файл по форме табеля рабочего времени
+    """
     year = request_data.get("year")
     month = request_data.get("month")
     department_id = request_data.get("departmentId")
@@ -273,6 +276,7 @@ def form_02(request_data):
     department_title = tabel_document.department.name
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
+    holidays = Holidays.get_holidays(datetime.date(document_year, document_month, 1))
     head_organization_fio = ""
     head_department_fio = ""
     older_nurse_fio = ""
@@ -288,7 +292,8 @@ def form_02(request_data):
     alignment_right = Alignment(horizontal='right', vertical='center')
     alignment_left_wrap = Alignment(horizontal='left', vertical='center', wrap_text=True)
     font_bold = Font(bold=True)
-    weekend_fill = PatternFill(start_color="ffe699", end_color="ffe699", fill_type="solid")
+    weekend_fill = PatternFill(start_color="FFE699", end_color="FFE699", fill_type="solid")
+    holiday_fill = PatternFill(start_color="D4B86A", end_color="D4B86A", fill_type="solid")
 
     work_book: Workbook = openpyxl.Workbook()
     work_book.remove(work_book.get_sheet_by_name("Sheet"))
@@ -410,9 +415,17 @@ def form_02(request_data):
 
         for day_number in range(1, document_last_day_month):
             date = datetime.date(document_year, document_month, day_number)
-            if date.weekday() in (5, 6):
-                day_col = day_number + (start_date_col_number - 1)
+            day_col = day_number + (start_date_col_number - 1)
+
+            holiday_info = holidays.get(date.strftime("%Y-%m-%d")) or {}
+            holiday_kind = holiday_info.get("kind")
+            is_holiday = holiday_kind == Holidays.Kind.HOLIDAY
+            is_weekday = date.isoweekday() in (6, 7)
+            if is_holiday:
+                set_style_for_area(work_sheet, second_row_table_number, table_data_end_row_number, day_col, day_col, fill_style=holiday_fill)
+            elif is_weekday:
                 set_style_for_area(work_sheet, second_row_table_number, table_data_end_row_number, day_col, day_col, fill_style=weekend_fill)
+
 
         merge_cells_by_row(work_sheet, first_row_table_number, second_row_table_number, fio_col_number, norm_hours_col_number)
         work_sheet.merge_cells(start_row=first_row_table_number, start_column=start_date_col_number, end_row=first_row_table_number, end_column=sum_common_hours_col_number)
