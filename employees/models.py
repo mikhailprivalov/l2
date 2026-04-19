@@ -853,19 +853,19 @@ class EmployeeWorkingHoursSchedule(models.Model):
     @staticmethod
     def fill_by_template(action: str, date_key: datetime.datetime, value, current_employee_position, lunch_duration_in_minutes, holidays):
         """
-            Заполняет рабочие дни по шаблону работника.
+        Заполняет рабочие дни по шаблону работника.
 
-            Рабочий день:
-            - будний день вне holidays
-            - или день с kind=WORKING (например, рабочая суббота)
+        Рабочий день:
+        - будний день вне holidays
+        - или день с kind=WORKING (например, рабочая суббота)
 
-            Не заполняет праздники (HOLIDAY) и обычные выходные.
+        Не заполняет праздники (HOLIDAY) и обычные выходные.
 
-            Заполняет если:
-            - action == "replace"
-            - action == "add" и текущее значение пустое
+        Заполняет если:
+        - action == "replace"
+        - action == "add" и текущее значение пустое
 
-            Учитывает shorten_minutes (сокращает рабочий день).
+        Учитывает shorten_minutes (сокращает рабочий день).
         """
         value_is_empty = all(not value.get(key) for key in ['startWorkTime', 'endWorkTime', 'typeId'])
         is_valid_action = action == "replace" or (action == "add" and value_is_empty)
