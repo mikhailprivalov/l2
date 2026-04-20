@@ -611,6 +611,8 @@
             <span class="input-group-btn">
               <Treeselect
                 v-model="group.cdaOption"
+                v-tippy="{ placement: 'left', arrow: true }"
+                :title="getTreeSelectLabel(group.cdaOption, cda_options)"
                 class="treeselect-wide treeselect-noborder-left"
                 :class="group.hide? 'hide-treeselect' : ''"
                 :disabled="group.hide"
@@ -736,6 +738,8 @@
                         <strong>CDA-отношение:</strong>
                         <Treeselect
                           v-model="row.cdaOption"
+                          v-tippy="{ placement: 'bottom', arrow: true }"
+                          :title="getTreeSelectLabel(row.cdaOption, cda_options)"
                           class="treeselect treeselect-26px"
                           :multiple="false"
                           :disable-branch-nodes="true"
@@ -1309,6 +1313,7 @@ import LoadFile from '@/ui-cards/LoadFile.vue';
 import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
+import { getTreeSelectLabel } from '@/utils';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1590,6 +1595,7 @@ export default {
     clearTimeout(this.timeoutThree);
   },
   methods: {
+    getTreeSelectLabel,
     onLoadFileGroup(importData) {
       try {
         const { groups: [group] } = JSON.parse(importData);
