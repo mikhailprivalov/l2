@@ -413,3 +413,9 @@ export const selectFile = (contentType: string | null): Promise<File> => new Pro
 export const setLocalStorageDataJson = (name, value) => {
   window.localStorage.setItem(name, JSON.stringify(value));
 };
+
+export const getTreeSelectLabel = (id, options) => {
+  if (!id) return '';
+  const option = options.find(opt => opt.id === id);
+  return option ? option.label : '';
+};
