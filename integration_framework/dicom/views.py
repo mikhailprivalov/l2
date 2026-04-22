@@ -212,15 +212,20 @@ def dcm_study_link(request):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
-    hospital = request.user.hospital
+    # hospital = request.user.hospital
+    hospitals = request.user.hospitals.all()
+    permission_hospitals = [i for i in hospitals]
+
+    # articles = Article.objects.filter(tags__name='django').filter(tags__name='python')
+    # Application.objects.filter(key=api_key).exists()
 
     internal_id = body.get("internalId")
     direction_num = body.get("directionNum")
     study_instance_uid = body.get("studyInstanceUID")
     equipment_model_id = body.get("deviceId")
+    operatorCreatedId = body.get("operatorCreatedId")
 
-    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital=hospital)
-
+    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital__in=permission_hospitals, doc_id=operatorCreatedId).first()
     try:
         equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid, equipment_model_id=equipment_model_id)
     except EquipmentReceive.DoesNotExist:
@@ -228,7 +233,7 @@ def dcm_study_link(request):
 
     image_id = equipment_receive.pk
     request_id = direction.pk
-    doc_profile = direction.doc
+    doc_profile = DoctorProfile.objects.filter(id=operatorCreatedId).first()
 
     body_data = json.dumps({"imageId": image_id, "request_id": request_id})
     http_obj = HttpRequest()

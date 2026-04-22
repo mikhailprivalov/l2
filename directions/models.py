@@ -1279,6 +1279,8 @@ class Napravleniya(models.Model):
                 period_param_year=period_param_year,
             ).first()
         elif type_period == 'PERIOD_WEEK':
+            if not period_param_year:
+                period_param_year = week_date_start_end[2].year
             monitoring_exists = MonitoringResult.objects.filter(
                 research=research,
                 hospital=current_hospital,
