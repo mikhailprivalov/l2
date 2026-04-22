@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.units import mm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table
 
-from employees.models import TimeTrackingDocument, WorkDayStatus
+from employees.models import TimeTrackingDocument, WorkDayStatus, Holidays
 from forms.utils import register_fonts, create_style, create_table
 from hospitals.models import Hospitals
 
@@ -176,7 +176,7 @@ def _create_work_time_schedule_table_header(style_center, document_last_day_mont
     return header_table_data
 
 
-def _create_work_time_schedule_table_style() -> List[Tuple]:
+def _create_work_time_schedule_table_style(document_date: datetime.date, document_last_day_month: int, holidays: dict) -> List[Tuple]:
     table_style = [
         ("GRID", (0, 0), (-1, -1), 0.75, colors.black),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -193,6 +193,25 @@ def _create_work_time_schedule_table_style() -> List[Tuple]:
         ("BOTTOMPADDING", (0, 0), (-1, -1), 1),
         ("TOPPADDING", (0, 0), (-1, -1), -1),
     ]
+    weekend_fill_color = "#FFE699"
+    holiday_fill_color = "#D4B86A"
+    date_start_col = 7
+    date_header_row = 2
+    row_end = -1
+    dates = [datetime.date(document_date.year, document_date.month, number_day) for number_day in range(1, document_last_day_month + 1)]
+    fill_style = []
+    for offset, date in enumerate(dates):
+        col = date_start_col + offset
+        holiday_info = holidays.get(date.strftime("%Y-%m-%d")) or {}
+        holiday_kind = holiday_info.get("kind")
+        is_holiday = holiday_kind == Holidays.Kind.HOLIDAY
+        is_weekday = date.isoweekday() in (6, 7)
+        if is_holiday:
+            fill_style.append(("BACKGROUND", (col, date_header_row), (col, row_end), holiday_fill_color))
+        elif is_weekday:
+            fill_style.append(("BACKGROUND", (col, date_header_row), (col, row_end), weekend_fill_color))
+    table_style.extend(fill_style)
+
     return table_style
 
 
@@ -260,12 +279,14 @@ def _create_work_time_schedule_table_body(employees_work_time: List[Dict], work_
     return table_body
 
 
-def _create_work_time_schedule_table(style_center, style_left, document_last_day_month: int, employees_work_time: List[Dict], work_day_statuses: Dict) -> Table:
+def _create_work_time_schedule_table(
+    style_center, style_left, document_date: datetime.date, document_last_day_month: int, employees_work_time: List[Dict], work_day_statuses: dict, holidays: dict
+) -> Table:
     data = [
         *_create_work_time_schedule_table_header(style_center, document_last_day_month),
         *_create_work_time_schedule_table_body(employees_work_time, work_day_statuses, style_center, style_left),
     ]
-    style = _create_work_time_schedule_table_style()
+    style = _create_work_time_schedule_table_style(document_date, document_last_day_month, holidays)
     cols_widths = _create_work_time_schedule_table_cols_widths(document_last_day_month)
     table = create_table(data, style, cols_widths, "LEFT", 1, 2)
     return table
@@ -293,8 +314,9 @@ def form_01(request_data):
     department_title = time_tracking_document.department.name
     organization: Hospitals = request_data.get("hospital")
     organization_title = organization.safe_short_title
+    holidays = Holidays.get_holidays(datetime.date(document_year, document_month, 1))
 
-    work_time_schedule_table = _create_work_time_schedule_table(style_center, style_left, document_last_day_month, employees_work_time, work_day_statuses)
+    work_time_schedule_table = _create_work_time_schedule_table(style_center, style_left, document_date, document_last_day_month, employees_work_time, work_day_statuses, holidays)
     document_data = [work_time_schedule_table]
 
     meta_context = {
