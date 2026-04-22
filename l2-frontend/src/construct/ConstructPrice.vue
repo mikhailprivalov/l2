@@ -113,6 +113,8 @@
           >
             <Treeselect
               v-model="priceData.company"
+              v-tippy
+              :title="priceData.companyTitle"
               :multiple="false"
               :disable-branch-nodes="true"
               class="treeselect-wide treeselect-nbr"
@@ -611,6 +613,7 @@ export default {
         if (ok) {
           this.$root.$emit('msg', 'ok', 'Прайс обновлен');
           await this.getPrices();
+          await this.getPriceData();
         } else {
           this.$root.$emit('msg', 'error', message);
         }

@@ -419,3 +419,9 @@ export const getTreeSelectLabel = (id, options) => {
   const option = options.find(opt => opt.id === id);
   return option ? option.label : '';
 };
+
+export const getTreeSelectLabelAsyncLoad = (id, options) => {
+  if (!id) return '';
+  const option = options.find(opt => opt.id === id);
+  return option ? option.label : '';
+};
