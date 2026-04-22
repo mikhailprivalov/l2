@@ -3,7 +3,6 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from api.models import Application
 from api.requests.views import link_image_to_request
 from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
@@ -19,7 +18,7 @@ from integration_framework.views import limit_str
 from django.db import transaction
 
 from slog.models import Log
-from users.models import DoctorProfile, DoctorProfileEquipment
+from users.models import DoctorProfile
 
 
 @api_view(['POST'])

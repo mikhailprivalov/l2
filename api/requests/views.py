@@ -363,8 +363,6 @@ def link_image_to_request(request):
     except EquipmentReceive.DoesNotExist:
         return status_response(False, "Изображение не найдено")
 
-    print("equipment_receive.study_instance_uid_tag", equipment_receive.study_instance_uid_tag)
-
     equipment = equipment_receive.equipment_model
 
     if not equipment:
