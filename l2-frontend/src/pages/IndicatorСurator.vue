@@ -90,7 +90,7 @@
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
           <col style="width: 300px">
-          <col style="width: 160px">
+          <col style="width: 90px">
           <col>
           <col style="width: 120px">
           <col style="width: 120px">
@@ -139,42 +139,34 @@
             <td>
               {{ r.hospital }}
             </td>
-            <td>{{ r.patient }} {{ r.born }}</td>
             <td>
               <a
                 :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.mainDirection}}`"
                 target="_blank"
                 class="a-under"
               >
-                {{ r.mainDirection }}
+                {{ r.direction }}
               </a>
             </td>
             <td>
-              {{ r.mainConfirm }}
+              {{ r.indicatorTitle }}
+            </td>
+            <td>
+              {{ r.hospitalValue }}
+            </td>
+            <td>
+              {{ r.score || '–' }}
             </td>
             <td class="cl-td">
-              <ExtraNotificationFastEditor
-                :data="r"
-                :can-edit="canEdit"
-              />
+              -
             </td>
             <td>
-              {{ r.slaveConfirm || '–' }}
-            </td>
-            <td>
-              <a
-                v-if="r.slaveDir"
-                :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.slaveDir}}`"
-                class="a-under"
-                target="_blank"
+              <input
+                v-model="toPrint[r.slaveDir]"
+                type="checkbox"
               >
-                {{ r.slaveDir }}
-              </a>
             </td>
-            <td
-              class="text-center cl-td"
-              :class="[r.slaveConfirm ? 'checkbox-color' : '']"
-            >
+            <td>
               <input
                 v-model="toPrint[r.slaveDir]"
                 type="checkbox"

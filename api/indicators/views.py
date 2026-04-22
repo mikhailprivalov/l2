@@ -4,6 +4,7 @@ import json
 from django.http import JsonResponse
 
 from api.indicators.sql_func import indicator_sql
+from directory.models import ParaclinicInputField, ParaclinicInputGroups
 from external_system.models import CuratorCdaFields, CdaFields
 from laboratory.settings import EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK
 from utils.dates import normalize_dots_date
@@ -32,21 +33,45 @@ def search_indicator(request):
         )
 
     doctorprofile = request.user.doctorprofile
-    indicators = CuratorCdaFields.objects.filter(curator=doctorprofile).values_list("indicator_pk", flat=True)
+    print("doctorprofile", doctorprofile)
+    indicators = CuratorCdaFields.objects.filter(curator=doctorprofile).values_list("indicator_id", flat=True)
     cda_pks = CdaFields.objects.filter(pk__in=indicators).values_list("pk", flat=True)
+    print(cda_pks)
+    groups_obj = ParaclinicInputGroups.objects.filter(cda_option__in=cda_pks)
+    print("groups_obj", groups_obj)
+    fields_obj = ParaclinicInputField.objects.filter(group__in=groups_obj).values_list("pk", flat=True)
+    print("fields_obj", fields_obj)
 
-    result_extra = indicator_sql(EXTRA_MASTER_RESEARCH_PK, EXTRA_SLAVE_RESEARCH_PK, datetime_start, datetime_end, hospital, status)
+
+    result_extra = indicator_sql(tuple(fields_obj), datetime_start, datetime_end)
     result = []
+    prev_direction, prev_group = None, None
+    step = 0
+    current_result = {}
     for i in result_extra:
-        result.append(
-            {
+        if step == 0:
+            current_result = {
+                "direction": i.direction_id,
+                "issledovaniye": i.issledovaniye_id,
                 'hospital': i.hospital_title,
-                'direction': i.direction_id,
-                'indicatorTitle': i.indicator_title,
-                'indicatorHospitalValue': i.indicator_hospital_value,
-                'ballHospitalValue': i.ball_hospital_value,
-                'curatorFieldValue': i.indicator_curator_value,
-                'curatorFieldBallValue': i.ball_curator_value,
+                'indicatorTitle': i.group_title,
             }
-        )
+
+        if (prev_direction != i.direction_id or prev_group != i.group_title) and step != 0:
+            result.append(current_result.copy())
+            current_result = {
+                "direction": i.direction_id,
+                "issledovaniye": i.issledovaniye_id,
+                'hospital': i.hospital_title,
+                'indicatorTitle': i.group_title,
+            }
+        if "значение" in i.field_title.lower():
+            current_result['hospitalValue'] = i.result_value
+        if "балл" in i.field_title.lower():
+            current_result['score'] = i.result_value
+        step += 1
+        prev_direction = i.direction_id
+        prev_group = i.group_title
+    result.append(current_result.copy())
+
     return JsonResponse({'rows': result})

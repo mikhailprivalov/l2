@@ -3,6 +3,7 @@ from django.db.models import Q
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+from api.models import Application
 from api.requests.views import link_image_to_request
 from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
@@ -18,7 +19,7 @@ from integration_framework.views import limit_str
 from django.db import transaction
 
 from slog.models import Log
-from users.models import DoctorProfile
+from users.models import DoctorProfile, DoctorProfileEquipment
 
 
 @api_view(['POST'])
@@ -212,15 +213,28 @@ def dcm_study_link(request):
         return Response({"ok": False, "message": "Некорректный auth токен"})
 
     body = json.loads(request.body)
-    hospital = request.user.hospital
+    # hospital = request.user.hospital
+    hospitals = request.user.hospitals.all()
+    permission_hospitals = [i for i in hospitals]
+
+    # articles = Article.objects.filter(tags__name='django').filter(tags__name='python')
+    # Application.objects.filter(key=api_key).exists()
 
     internal_id = body.get("internalId")
     direction_num = body.get("directionNum")
     study_instance_uid = body.get("studyInstanceUID")
     equipment_model_id = body.get("deviceId")
+    operatorCreatedId = body.get("operatorCreatedId")
 
-    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital=hospital)
+    print("direction_num", direction_num)
+    print("permission_hospitals", permission_hospitals)
+    print("internal_id", internal_id)
 
+    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital__in=permission_hospitals, doc_id=operatorCreatedId).first()
+    print("direction", direction)
+
+    print("study_instance_uid", study_instance_uid)
+    print("equipment_model_id", equipment_model_id)
     try:
         equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid, equipment_model_id=equipment_model_id)
     except EquipmentReceive.DoesNotExist:
@@ -228,7 +242,7 @@ def dcm_study_link(request):
 
     image_id = equipment_receive.pk
     request_id = direction.pk
-    doc_profile = direction.doc
+    doc_profile = DoctorProfile.objects.filter(id=operatorCreatedId).first()
 
     body_data = json.dumps({"imageId": image_id, "request_id": request_id})
     http_obj = HttpRequest()
