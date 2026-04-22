@@ -33,16 +33,10 @@ def search_indicator(request):
         )
 
     doctorprofile = request.user.doctorprofile
-    print("doctorprofile", doctorprofile)
     indicators = CuratorCdaFields.objects.filter(curator=doctorprofile).values_list("indicator_id", flat=True)
     cda_pks = CdaFields.objects.filter(pk__in=indicators).values_list("pk", flat=True)
-    print(cda_pks)
     groups_obj = ParaclinicInputGroups.objects.filter(cda_option__in=cda_pks)
-    print("groups_obj", groups_obj)
     fields_obj = ParaclinicInputField.objects.filter(group__in=groups_obj).values_list("pk", flat=True)
-    print("fields_obj", fields_obj)
-
-
     result_extra = indicator_sql(tuple(fields_obj), datetime_start, datetime_end)
     result = []
     prev_direction, prev_group = None, None

@@ -226,15 +226,7 @@ def dcm_study_link(request):
     equipment_model_id = body.get("deviceId")
     operatorCreatedId = body.get("operatorCreatedId")
 
-    print("direction_num", direction_num)
-    print("permission_hospitals", permission_hospitals)
-    print("internal_id", internal_id)
-
     direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital__in=permission_hospitals, doc_id=operatorCreatedId).first()
-    print("direction", direction)
-
-    print("study_instance_uid", study_instance_uid)
-    print("equipment_model_id", equipment_model_id)
     try:
         equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid, equipment_model_id=equipment_model_id)
     except EquipmentReceive.DoesNotExist:
