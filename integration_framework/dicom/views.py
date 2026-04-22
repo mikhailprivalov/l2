@@ -235,7 +235,7 @@ def dcm_study_link(request):
     request_id = direction.pk
     doc_profile = DoctorProfile.objects.filter(id=operatorCreatedId).first()
 
-    body_data = json.dumps({"imageId": image_id, "request_id": request_id})
+    body_data = json.dumps({"imageId": image_id, "requestId": request_id})
     http_obj = HttpRequest()
     http_obj._body = body_data
     http_obj.user = doc_profile.user
