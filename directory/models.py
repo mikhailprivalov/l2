@@ -1303,6 +1303,7 @@ class ParaclinicInputField(models.Model):
         (39, "Динамический справочник"),
         (40, "Dynamic table"),
         (41, "Шаблон макета"),
+        (42, "Ссылка на документ(ы)")
     )
 
     title = models.CharField(max_length=400, help_text="Название поля ввода")

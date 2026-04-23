@@ -1185,6 +1185,7 @@
                         <option value="35">Врач</option>
                         <option value="39">Динамический справочник</option>
                         <option value="41">Шаблон макет</option>
+                        <option value="42">Ссылка на документ(ы)</option>
                       </select>
                     </label>
                   </div>
