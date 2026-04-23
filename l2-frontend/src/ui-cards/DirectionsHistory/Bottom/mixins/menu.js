@@ -40,6 +40,21 @@ const menuItems = [
     },
   },
   {
+    title: 'Перенести в другую карту',
+    onlyForTypes: [3],
+    requiredGroup: 'Управление иерархией истории',
+    handler() {
+      if (this.checked.length > 1) {
+        this.$dialog.alert({
+          title: 'Количество не может быть больше 1',
+          okText: 'OK',
+        });
+      } else {
+        this.isOpenMoveDirectionToCard = true;
+      }
+    },
+  },
+  {
     title: 'Назначить главное направление',
     onlyForTypes: [3],
     requiredGroup: 'Врач стационара',
