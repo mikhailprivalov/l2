@@ -9,6 +9,8 @@ from api.dicom import check_server_port
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from l2vi.integration import send_lab_direction_to_ecp
+from django.db import connection
+from utils.db import namedtuplefetchall
 
 
 class Command(BaseCommand):
@@ -27,7 +29,7 @@ class Command(BaseCommand):
             d_qs = Napravleniya.objects.filter(pk__in=dirs)
         else:
             date = current_time() + relativedelta(days=-2)
-            d_qs = Napravleniya.objects.filter(total_confirmed=True, ecp_direction_number=None, rmis_resend_services=False, last_confirmed_at__gte=date)
+            d_qs = sql_01(date)
         if SettingManager.use_rmq_for_sendlabresultecp():
             use_exchange_name = RMQ_AUTH_PARAM.get("lab_exchange_name")
             use_routing_key = RMQ_AUTH_PARAM.get("lab_routing_key")
@@ -50,3 +52,36 @@ class Command(BaseCommand):
                 n.save()
                 count += 1
             self.stdout.write(f"{count}\n")
+
+
+def sql_01(d_s):
+    """
+    Для журнала новородок первичные
+    :return:
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+                SELECT
+                    directions_napravleniya.id as pk
+                    
+                    FROM directions_napravleniya
+                    LEFT JOIN directions_issledovaniya di on directions_napravleniya.id = di.napravleniye_id
+                    LEFT JOIN directory_researches dr on di.research_id = dr.id
+                    WHERE 
+                      directions_napravleniya.total_confirmed = true
+                      AND
+                      directions_napravleniya.ecp_direction_number is NULL 
+                      AND
+                      directions_napravleniya.rmis_resend_services=False
+                      AND
+                      directions_napravleniya.last_confirmed_at > %(d_start)s
+                      AND dr.is_paraclinic = true 
+                      AND dr.is_lab = true
+                    order by directions_napravleniya.id
+                """,
+            params={'d_start': d_s},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
