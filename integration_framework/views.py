@@ -403,6 +403,7 @@ def issledovaniye_data(request):
     ignore_sample = request.GET.get("ignoreSample") == "true"
     ignore_fsli = request.GET.get("ignoreFsli") == "true"
     need_ecp_code = request.GET.get("needEcpCode") == "true"
+    use_ecp2_code = request.GET.get("ecp2Code") == "true"
     i = directions.Issledovaniya.objects.get(pk=pk)
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
@@ -448,7 +449,7 @@ def issledovaniye_data(request):
                 {
                     "pk": "",
                     "value": value,
-                    "ecpId": ecp_data[1],
+                    "ecpId": ecp_data[1] if not use_ecp2_code else ecp_data[2],
                 }
             )
     else:
@@ -487,7 +488,7 @@ def issledovaniye_data(request):
                     "unitCode": u.code if u else None,
                     "ref": refs,
                     "interpretation": "N" if norm and norm[0] == ResultRight.RESULT_MODE_NORMAL else "A",
-                    "ecpId": r.fraction.get_ecp_code(),
+                    "ecpId": r.fraction.get_ecp_code(use_ecp2_code),
                 }
             )
 
