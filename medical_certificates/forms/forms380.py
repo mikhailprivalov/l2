@@ -1535,8 +1535,7 @@ def form_11(request_data):
         result_6 = f"<u>{disease_group}</u>"
     fwb.append(
         Paragraph(
-            f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
-            f"{result_6}",
+            f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования):{result_6}",
             style,
         )
     )
