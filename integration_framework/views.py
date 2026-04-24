@@ -404,6 +404,7 @@ def issledovaniye_data(request):
     ignore_fsli = request.GET.get("ignoreFsli") == "true"
     need_ecp_code = request.GET.get("needEcpCode") == "true"
     use_ecp2_code = request.GET.get("ecp2Code") == "true"
+    ignore_paraclinic = request.GET.get("ignoreParaclinic") == "true"
     i = directions.Issledovaniya.objects.get(pk=pk)
 
     sample = directions.TubesRegistration.objects.filter(issledovaniya=i, time_get__isnull=False).first()
@@ -428,7 +429,7 @@ def issledovaniye_data(request):
 
     results_data = []
     ecpResearchId = None
-    if i.research.is_paraclinic and i.research.is_lab:
+    if i.research.is_paraclinic and i.research.is_lab and not ignore_paraclinic:
         ecp_data = (i.research.auto_register_on_rmis_location).split("#")
         if len(ecp_data) > 1:
             ecpResearchId = ecp_data[0]
