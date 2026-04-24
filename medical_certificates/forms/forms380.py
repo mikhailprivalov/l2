@@ -3,7 +3,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 
 from directions.models import ParaclinicResult, Issledovaniya, Napravleniya
 from hospitals.models import Hospitals
-from laboratory.settings import FONTS_FOLDER, TITLES_FIELDS_MEDEXAM_DRIVER, SHOW_DIRECTION_PK_IN_MEDICAL_EXAM_FORM
+from laboratory.settings import FONTS_FOLDER, TITLES_FIELDS_MEDEXAM_DRIVER, SHOW_DIRECTION_PK_IN_MEDICAL_EXAM_FORM, SHOW_RESTRICTIONS
 from laboratory.utils import strfdatetime
 from results.prepare_data import text_to_bold, fields_result_only_title_fields
 from reportlab.platypus import Paragraph, Spacer, Table, TableStyle, SimpleDocTemplate, PageBreak, HRFlowable, Image
@@ -1529,10 +1529,13 @@ def form_11(request_data):
     fwb.append(Paragraph(f"5 Вредный производственный фактор или вид работы: согласно приказу № 29Н - {harmful_factor}", style))
     fwb.append(Spacer(1, 3 * mm))
     fwb.append(Spacer(1, 3 * mm))
+    if SHOW_RESTRICTIONS:
+        result_6 = f" <u>{restrictions}</u> медицинские противопоказания к работе с вредными и/или опасными веществами и производственными факторами"
+    else:
+        result_6 = f"<u>{disease_group}</u>"
     fwb.append(
         Paragraph(
-            f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования): "
-            f"<u>{disease_group}</u> ",
+            f"6. Согласно результатам проведенного <u>{type_med_examination_padeg}</u> медицинского осмотра (обследования):{result_6}",
             style,
         )
     )
