@@ -51,6 +51,12 @@
       :directions_checked="directions_checked"
       :kk="kk"
     />
+    <MoveDirectionToCard
+      v-if="isOpenMoveDirectionToCard"
+      :card_pk="card_pk"
+      :directions_checked="directions_checked"
+      :kk="kk"
+    />
   </div>
 </template>
 
@@ -60,9 +66,10 @@ import { valuesToString } from '@/utils';
 import menuMixin from './mixins/menu';
 import { forDirs } from '../../../forms';
 import DirectionsChangeParent from '../../../modals/DirectionsChangeParent.vue';
+import MoveDirectionToCard from '../../../modals/MoveDirectionToCard.vue';
 
 export default {
-  components: { DirectionsChangeParent },
+  components: { DirectionsChangeParent, MoveDirectionToCard },
   mixins: [menuMixin],
   props: {
     checked: {
@@ -89,6 +96,7 @@ export default {
   },
   data() {
     return {
+      isOpenMoveDirectionToCard: false,
       isOpenChangeParent: false,
       disabled_forms: [],
     };
@@ -133,6 +141,7 @@ export default {
   },
   mounted() {
     this.$root.$on('hide_pe', this.change_parent_hide);
+    this.$root.$on('hide_move_direction', this.move_direction_to_card_hide);
     this.get_disabled_forms();
   },
   methods: {
@@ -141,6 +150,9 @@ export default {
     },
     change_parent_hide() {
       this.isOpenChangeParent = false;
+    },
+    move_direction_to_card_hide() {
+      this.isOpenMoveDirectionToCard = false;
     },
     async get_disabled_forms() {
       const resultData = await this.$api('disabled-forms');
