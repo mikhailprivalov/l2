@@ -1646,8 +1646,8 @@ class Fractions(models.Model):
     def get_fsli_code(self):
         return (self.fsli or "").strip()
 
-    def get_ecp_code(self):
-        if SettingManager.get("use_ecp2_code", default='false', default_type='b'):
+    def get_ecp_code(self, use_ecp2_code):
+        if SettingManager.get("use_ecp2_code", default='false', default_type='b') or use_ecp2_code:
             return (self.ecp_id_synonym or "").strip()
         else:
             return (self.ecp_id or "").strip()

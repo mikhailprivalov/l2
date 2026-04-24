@@ -514,6 +514,7 @@ COMMAND_DOCX_2_PDF = ""
 GROUP_USER_FOR_FILTER = []
 PERIOD_DAYS_SEND_RESULT_ECP = -1
 
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:
