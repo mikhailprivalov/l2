@@ -2211,6 +2211,7 @@ class ParaclinicInputFieldFileSettings(models.Model):
       ]
     }
     """
+
     field = models.OneToOneField(
         ParaclinicInputField,
         on_delete=models.CASCADE,
