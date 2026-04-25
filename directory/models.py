@@ -2165,6 +2165,7 @@ class ControlAppointmentDependentResearch(models.Model):
         verbose_name = "Контроль назначения зависимых услуга"
         verbose_name_plural = "Контроль назначения зависимых услуга"
 
+
 class ParaclinicInputFieldFileSettings(models.Model):
     """
     Модель для хранения настроек конкретного поля с типом (42, "файл")
