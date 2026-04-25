@@ -43,7 +43,8 @@ from laboratory.settings import (
     RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
     AUTO_PRINT_RESEARCH_DIRECTION,
     NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
-    MEDIA_ROOT, PARACLINIC_FILE_STORAGE,
+    MEDIA_ROOT,
+    PARACLINIC_FILE_STORAGE,
 )
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
