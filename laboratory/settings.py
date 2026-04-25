@@ -565,7 +565,7 @@ PARACLINIC_FILE_MIME_MAP = {
 PARACLINIC_FILE_SECURITY = {
     "check_mime": True,
     "check_extension": True,
-    "block_double_extension": True,   # file.pdf.exe
+    "block_double_extension": True,  # file.pdf.exe
     "sanitize_filename": True,
 }
 
