@@ -931,6 +931,11 @@
                         @input="e => e ? row.values_to_input = [e] : row.values_to_input = []"
                       />
                     </div>
+                    <!--Тип поля (42, "Файл")-->
+                    <FileField
+                      v-else-if="row.field_type === 42"
+                      :row="row"
+                    />
                     <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                       <div
                         v-collapse-toggle
@@ -1185,6 +1190,7 @@
                         <option value="35">Врач</option>
                         <option value="39">Динамический справочник</option>
                         <option value="41">Шаблон макет</option>
+                        <option value="42">Файл</option>
                       </select>
                     </label>
                   </div>
@@ -1314,6 +1320,7 @@ import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 import { getTreeSelectLabel } from '@/utils';
+import FileField from '@/construct/ParaclinicResearchEditorComponents/FieldTypes/FileField.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1322,6 +1329,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    FileField,
     LinkFieldModal,
     FileAddModal,
     ResearchPermissionsModal,
