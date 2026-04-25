@@ -5,6 +5,7 @@ import logging
 import uuid
 
 from django.db.models import Max
+from django.utils.text import get_valid_filename
 
 from api.sql_func import dispensarization_research
 from cda.integration import get_required_signatures
@@ -42,7 +43,7 @@ from laboratory.settings import (
     RESEARCHES_EXCLUDE_AUTO_MEDICAL_EXAMINATION,
     AUTO_PRINT_RESEARCH_DIRECTION,
     NEED_ORDER_DIRECTION_FOR_DEFAULT_HOSPITAL,
-    MEDIA_ROOT,
+    MEDIA_ROOT, PARACLINIC_FILE_STORAGE,
 )
 from laboratory.celery import app as celeryapp
 from odii.integration import add_task_request, add_task_result
@@ -3785,3 +3786,54 @@ class DirectionResultQRCodePrintInfo(models.Model):
     class Meta:
         verbose_name = 'QR-код для печати результатов'
         verbose_name_plural = 'QR-коды для печати результатов'
+
+
+def paraclinic_result_file_upload_to(instance, filename: str) -> str:
+    """
+    Функция генерации имени пути файла с учетом настроек из settings.py
+    """
+    storage_settings = PARACLINIC_FILE_STORAGE or {}
+
+    base_path = storage_settings.get("base_path", "issledovania_files")
+    use_uuid_filename = storage_settings.get("use_uuid_filename", True)
+
+    original_filename = get_valid_filename(os.path.basename(filename))
+    name, extension = os.path.splitext(original_filename)
+    extension = extension.lower()
+
+    if use_uuid_filename:
+        filename = f"{uuid.uuid4().hex}{extension}"
+    else:
+        filename = original_filename
+
+    return (
+        f"{base_path}/"
+        f"{instance.result.issledovaniye_id}/"
+        f"{instance.result_id}/"
+        f"{filename}"
+    )
+
+
+class ParaclinicResultFile(models.Model):
+    """
+    Модель для хранения файлов
+    Загруженных в протокол, в поле с типом (42, "Файл")
+    """
+    result = models.ForeignKey(
+        ParaclinicResult,
+        on_delete=models.CASCADE,
+        related_name="files",
+    )
+
+    file = models.FileField(upload_to=paraclinic_result_file_upload_to)
+
+    original_name = models.CharField(max_length=500)
+    extension = models.CharField(max_length=20)
+    mime_type = models.CharField(max_length=255, blank=True, default="")
+    size = models.PositiveBigIntegerField()
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Результат файл"
+        verbose_name_plural = "Результат файл"
