@@ -3820,6 +3820,7 @@ class ParaclinicResultFile(models.Model):
     Модель для хранения файлов
     Загруженных в протокол, в поле с типом (42, "Файл")
     """
+
     result = models.ForeignKey(
         ParaclinicResult,
         on_delete=models.CASCADE,
