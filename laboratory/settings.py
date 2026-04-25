@@ -515,7 +515,7 @@ GROUP_USER_FOR_FILTER = []
 PERIOD_DAYS_SEND_RESULT_ECP = -1
 SHOW_RESTRICTIONS = False
 
-### Настройки для полей протоколов с типом "Файл" ###
+# ----- Настройки для полей протоколов с типом "Файл" -----
 
 # Лимиты, которые нельзя превысить, даже через конструктор
 PARACLINIC_FILE_HARD_LIMITS = {
