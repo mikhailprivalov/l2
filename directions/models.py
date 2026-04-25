@@ -3807,12 +3807,7 @@ def paraclinic_result_file_upload_to(instance, filename: str) -> str:
     else:
         filename = original_filename
 
-    return (
-        f"{base_path}/"
-        f"{instance.result.issledovaniye_id}/"
-        f"{instance.result_id}/"
-        f"{filename}"
-    )
+    return f"{base_path}/" f"{instance.result.issledovaniye_id}/" f"{instance.result_id}/" f"{filename}"
 
 
 class ParaclinicResultFile(models.Model):
