@@ -90,7 +90,7 @@ from laboratory.settings import (
     TUBE_MAX_RESEARCH_WITH_SHARE,
     CDA_ID_FOR_DATE_CLOSE_CASE,
     WEB_PLUGIN_LINK_STUDY,
-    RMQ_RESEARCH_SEND,
+    RMQ_RESEARCH_SEND, NOT_CONTROL_VISIT_RESEARCH_ID,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -1664,7 +1664,7 @@ def directions_paraclinic_form(request):
             SettingManager.get("control_visit_gistology", default='false', default_type='b')
             and not all_confirmed
             and d.research().is_gistology
-            and (d.visit_date is None or d.register_number is None)
+            and (d.visit_date is None or d.register_number is None) and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID
         ):
             response["message"] = "Отсутствует дата регистрации"
             return JsonResponse(response)
