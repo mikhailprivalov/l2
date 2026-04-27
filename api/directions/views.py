@@ -1665,7 +1665,8 @@ def directions_paraclinic_form(request):
             SettingManager.get("control_visit_gistology", default='false', default_type='b')
             and not all_confirmed
             and d.research().is_gistology
-            and (d.visit_date is None or d.register_number is None) and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID
+            and (d.visit_date is None or d.register_number is None)
+            and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID
         ):
             response["message"] = "Отсутствует дата регистрации"
             return JsonResponse(response)
