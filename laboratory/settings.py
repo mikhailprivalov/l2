@@ -516,6 +516,71 @@ PERIOD_DAYS_SEND_RESULT_ECP = -1
 SHOW_RESTRICTIONS = False
 NOT_CONTROL_VISIT_RESEARCH_ID = []
 
+# ----- Настройки для полей протоколов с типом "Файл" -----
+
+# Лимиты, которые нельзя превысить, даже через конструктор
+PARACLINIC_FILE_HARD_LIMITS = {
+    #
+    "max_files": 20,
+    "max_file_size_mb": 100,
+    "max_total_size_mb": 500,
+}
+
+# Настройки по умолчанию, что подставятся в конструкторе
+PARACLINIC_FILE_DEFAULTS = {
+    "min_files": 0,
+    "max_files": 5,
+    "max_file_size_mb": 20,
+    "max_total_size_mb": 100,
+    "allowed_extensions": ["pdf", "docx", "xlsx", "jpg", "jpeg", "png"],
+}
+
+# Доступные расширения файлов для конструктора
+PARACLINIC_FILE_ALLOWED_EXTENSIONS = [
+    "pdf",
+    "doc",
+    "docx",
+    "xls",
+    "xlsx",
+    "jpg",
+    "jpeg",
+    "png",
+    "xml",
+    "zip",
+]
+
+# Маппинг расширение > MIME-тип
+PARACLINIC_FILE_MIME_MAP = {
+    "pdf": ["application/pdf"],
+    "docx": ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+    "xlsx": ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+    "xls": ["application/vnd.ms-excel"],
+    "jpg": ["image/jpeg"],
+    "jpeg": ["image/jpeg"],
+    "png": ["image/png"],
+    "xml": ["application/xml", "text/xml"],
+    "zip": ["application/zip"],
+}
+
+# Настройки защиты
+PARACLINIC_FILE_SECURITY = {
+    "check_mime": True,
+    "check_extension": True,
+    "block_double_extension": True,  # file.pdf.exe
+    "sanitize_filename": True,
+}
+
+# Настройки хранилища
+PARACLINIC_FILE_STORAGE = {
+    "base_path": "issledovania_files/",
+    "use_uuid_filename": True,  # чтобы избежать конфликтов
+}
+
+# Поведение при конфликте имен (сохранить оба (add uuid), перезаписать, выдать ошибку)
+PARACLINIC_FILE_NAME_POLICY = {
+    "mode": "unique",  # unique | overwrite | error
+}
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

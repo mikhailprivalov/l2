@@ -1303,6 +1303,7 @@ class ParaclinicInputField(models.Model):
         (39, "Динамический справочник"),
         (40, "Dynamic table"),
         (41, "Шаблон макета"),
+        (42, "Файл"),
     )
 
     title = models.CharField(max_length=400, help_text="Название поля ввода")
@@ -2163,3 +2164,75 @@ class ControlAppointmentDependentResearch(models.Model):
     class Meta:
         verbose_name = "Контроль назначения зависимых услуга"
         verbose_name_plural = "Контроль назначения зависимых услуга"
+
+
+class ParaclinicInputFieldFileSettings(models.Model):
+    """
+    Модель для хранения настроек конкретного поля с типом (42, "файл")
+    file_rules поле с JSON, для хранения правил по файлу/файлам
+    Например, что можно загружать только определенные наборы файлов
+    (1 PDF, 1 XLSX) или (2 PDF) или (2 XLSX)
+    Примерная структура:
+    {
+      "mode": "one_of",
+      "variants": [
+        {"pdf": 1, "xlsx": 1},
+        {"pdf": 2},
+        {"xlsx": 2}
+      ]
+    }
+    Дальше возможно расширение более детальное, позволяющее настраивать валидацию наборов файлов
+    Например:
+    {
+      "mode": "one_of",
+      "variants": [
+        {
+          "code": "pdf_and_xlsx",
+          "title": "PDF + XLSX",
+          "files": [
+            {
+              "kind": "pdf_report",
+              "title": "PDF-отчет",
+              "extensions": ["pdf"],
+              "min_count": 1,
+              "max_count": 1,
+              "filename_pattern": "^report_.*\\.pdf$"
+            },
+            {
+              "kind": "xlsx_table",
+              "title": "Excel-таблица",
+              "extensions": ["xlsx"],
+              "min_count": 1,
+              "max_count": 1,
+              "filename_pattern": "^table_.*\\.xlsx$"
+            }
+          ]
+        }
+      ]
+    }
+    """
+
+    field = models.OneToOneField(
+        ParaclinicInputField,
+        on_delete=models.CASCADE,
+        related_name="file_settings",
+    )
+
+    min_count_files = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_count_files = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    max_file_size_mb = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_total_size_mb = models.PositiveSmallIntegerField(null=True, blank=True)
+
+    allowed_extensions = models.JSONField(default=list, blank=True)
+    allowed_mime_types = models.JSONField(default=list, blank=True)
+
+    filename_pattern = models.CharField(max_length=500, blank=True, default="")
+    filename_pattern_description = models.CharField(max_length=500, blank=True, default="")
+    strict_filename = models.BooleanField(default=False)
+
+    file_rules = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        verbose_name = "Настройка для поля 'файл'"
+        verbose_name_plural = "Настройки для полей 'файлов'"
