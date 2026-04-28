@@ -255,9 +255,9 @@ def result_print(request):
             '',
             '',
             Paragraph(
-                f'Результат из <font face="OpenSansBoldItalic">{"VI-MIS" if SYSTEM_AS_VI else "L²"}</font>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
+                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
                 % (
-                    '<font face="OpenSansLight">(L2-irk.ru)</font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
+                    '<font face="OpenSansLight"></font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
                     d.hospital_short_title,
                     d.hospital_www,
                     d.hospital_phones,
