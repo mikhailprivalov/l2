@@ -255,7 +255,7 @@ def result_print(request):
             '',
             '',
             Paragraph(
-                f'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
+                '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;%s<br/><br/>%s<br/>%s<br/>%s'
                 % (
                     '<font face="OpenSansLight"></font>' if region == '38' else 'DEMO' if region == 'DEMO' else '',
                     d.hospital_short_title,
