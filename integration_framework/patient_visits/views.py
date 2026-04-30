@@ -63,6 +63,8 @@ def data_by_direction(request):
             direction.amd_message = f"Нет логина(пароля) {iss.doc_confirmation.get_fio()}"
             direction.save()
             return Response({"patient": None, "rmis_data_doctor": False})
+        if iss.research.is_lab and iss.research.is_paraclinic:
+            return Response({"patient": None, "isCitology": True})
 
         date_inspection = iss.time_confirmation.strftime("%d.%m.%Y")
         time_inspection = iss.time_confirmation.strftime("%H:%M")
