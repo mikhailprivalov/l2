@@ -10,7 +10,7 @@ import pytz_deprecation_shim as pytz
 from api.models import ManageDoctorProfileAnalyzer, Analyzer
 from cash_registers.models import Shift
 from directions.views import create_case_by_cards
-from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam, StatisticPattern
+from directory.models import Researches, SetResearch, SetOrderResearch, PatientControlParam, StatisticPattern, Contrasts
 from doctor_schedule.models import ScheduleResource
 from ecp_integration.integration import get_reserves_ecp, get_slot_ecp
 import employees.models as employees_models
@@ -3508,3 +3508,11 @@ def get_departments_with_exclude(request):
     request_data = json.loads(request.body)
     departments = Podrazdeleniya.get_all_departments(request_data.get("exclude_type"))
     return JsonResponse({"data": departments})
+
+
+@login_required
+def contrasts_collect(request):
+    contrasts = Contrasts.objects.filter(hide=False)
+    contrasts_data = [{"id": -1, "label": "Не выбрано"}]
+    contrasts_data.extend([{"id": i.pk, "label": i.title} for i in contrasts])
+    return JsonResponse({"data": contrasts_data})

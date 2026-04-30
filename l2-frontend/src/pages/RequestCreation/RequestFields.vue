@@ -22,27 +22,50 @@
               />
             </div>
           </div>
-          <FormulateInput
+          <div class="half-width">
+            <FormulateInput
+              type="number"
+              name="dose"
+              label="Доза"
+              placeholder="мЗв"
+            />
+          </div>
+          <div
             class="half-width"
-            type="number"
-            name="dose"
-            label="Доза"
-            placeholder="мЗв"
-          />
+            style="padding-top: 25px; display: flex; gap: 20px;"
+          >
+            <FormulateInput
+              type="checkbox"
+              name="cito"
+              label="Cito"
+            />
+            <FormulateInput
+              type="checkbox"
+              name="isDynamic"
+              label="Динамика"
+            />
+          </div>
+        </div>
+        <div class="request-fields">
+          <div class="half-width">
+            <label class="formulate-input-label date-time-label">Контраст</label>
+            <treeselect
+              v-model="formValues.currentContrast"
+              :multiple="false"
+              :options="contrastOptions"
+              placeholder="Выберите контраст"
+              @input="onInput"
+            />
+          </div>
           <FormulateInput
             class="half-width"
             type="number"
             name="contrastAmount"
-            label="Объем контраста"
             placeholder="Объём, мг"
-          />
-          <FormulateInput
-            class="third-width cito-checkbox"
-            type="checkbox"
-            name="cito"
-            label="Cito"
+            label="Объём"
           />
         </div>
+
         <div class="request-fields">
           <FormulateInput
             class="full-width"
@@ -134,10 +157,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import isEqual from 'lodash/isEqual';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import useNotify from '@/hooks/useNotify';
+import researchesPoint from '@/api/researches-point';
 
 const props = defineProps<{ value: Record<string, any> }>();
 
@@ -147,10 +173,24 @@ const emit = defineEmits<{
   (e: 'create:request'): void
 }>();
 
-const formValues = ref({ ...props.value });
+const formValues = ref({ ...props.value, currentContrast: props.value.currentContrast || null });
 const selectedFile = ref<File | null>(null);
 const fileInput = ref<HTMLInputElement>();
 const notify = useNotify();
+
+const contrastOptions = ref([]);
+
+async function getContrastsCollect() {
+  const response = await researchesPoint.getContrastCollect();
+  contrastOptions.value = response.data;
+}
+
+onMounted(() => {
+  getContrastsCollect();
+  if (!props.value.currentContrast) {
+    formValues.value.currentContrast = -1;
+  }
+});
 
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Б';
@@ -282,7 +322,9 @@ watch(() => props.value, (val) => {
   display: flex;
   gap: 12px;
   margin-bottom: 6px;
+  flex-wrap: nowrap;
 }
+
 .half-width {
   flex: 1 1 0;
   min-width: 0;
@@ -476,6 +518,11 @@ watch(() => props.value, (val) => {
 .date-time-fields {
   display: flex;
   gap: 6px;
+}
+
+.width-treeselect {
+  display: flex;
+  width: 100px;
 }
 
 .date-time-label {
