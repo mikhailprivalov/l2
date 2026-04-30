@@ -601,9 +601,7 @@ class Napravleniya(models.Model):
     fact_research_date = models.DateField(blank=True, null=True, default=None, help_text='Фактическая дата проведения исследования')
     fact_research_time = models.TimeField(blank=True, null=True, default=None, help_text='Фактическое время проведения исследования')
     contrast_amount = models.CharField(max_length=50, default='', blank=True, help_text='Объем контраста')
-    type_contrast = models.ForeignKey(
-        directory.Contrasts, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Вид контраста'
-    )
+    type_contrast = models.ForeignKey(directory.Contrasts, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Вид контраста')
     text_contrast = models.CharField(max_length=50, default='', blank=True, help_text='Вид контраста текстом')
     dose = models.CharField(max_length=50, default='', blank=True, help_text='Доза')
     anamnesis = models.TextField(default='', blank=True, help_text='Краткий анамнез')
