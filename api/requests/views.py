@@ -485,9 +485,11 @@ def get_request_details(request):
         "anamnesis": direction.anamnesis or '',
         "comment": direction.direction_comment or '',
         "isCito": direction.is_cito,
+        "isDynamic": direction.is_dynamic,
         "hasImage": has_image,
         "researches": researches,
         "files": files,
+        "contrastText": direction.text_contrast or '',
     }
 
     return JsonResponse({"success": True, "data": details})
@@ -560,6 +562,10 @@ def get_request_params(request):
 
     if direction.direction_comment:
         params["comment"] = direction.direction_comment
+    if direction.is_dynamic:
+        params["isDynamic"] = direction.is_dynamic
+    if direction.text_contrast:
+        params["textContrast"] = direction.text_contrast
 
     files = []
     for file_obj in direction.napravleniyafiles_set.all():

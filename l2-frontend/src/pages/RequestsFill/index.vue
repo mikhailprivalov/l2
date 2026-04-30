@@ -211,7 +211,7 @@
                     class="info-row"
                   >
                     <span class="info-label">Объём контраста</span>
-                    <span class="info-value">{{ requestParams.contrastAmount }} мл</span>
+                    <span class="info-value">{{ requestParams.contrastAmount }} мл ({{ requestParams.textContrast }})</span>
                   </div>
                   <div class="info-row">
                     <span class="info-label">Срочность</span>
@@ -221,6 +221,16 @@
                         class="cito-badge"
                       >CITO</span>
                       <template v-else>Обычная</template>
+                    </span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">Динамика</span>
+                    <span class="info-value">
+                      <span
+                        v-if="requestParams.isDynamic"
+                        class="cito-badge"
+                      >Да</span>
+                      <template v-else>Нет</template>
                     </span>
                   </div>
                   <div class="info-row">
