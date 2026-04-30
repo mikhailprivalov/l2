@@ -367,13 +367,8 @@ class ResConstructorResearchAccessDepartment(admin.ModelAdmin):
 
 
 class ResContrasts(admin.ModelAdmin):
-    list_display = (
-        'title',
-
-    )
-    list_display_links = (
-        'title',
-    )
+    list_display = ('title',)
+    list_display_links = ('title',)
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
