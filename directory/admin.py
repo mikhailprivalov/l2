@@ -366,6 +366,11 @@ class ResConstructorResearchAccessDepartment(admin.ModelAdmin):
             return ""
 
 
+class ResContrasts(admin.ModelAdmin):
+    list_display = ('title',)
+    list_display_links = ('title',)
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -409,3 +414,4 @@ admin.site.register(models.LaboratoryMaterial)
 admin.site.register(models.SubGroupDirectory)
 admin.site.register(models.SubGroupPadrazdeleniye)
 admin.site.register(models.ConstructorEditAccessResearch, ResConstructorResearchAccessDepartment)
+admin.site.register(models.Contrasts, ResContrasts)

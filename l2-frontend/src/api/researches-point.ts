@@ -54,4 +54,9 @@ export default generator({
     url: 'researches/researches-required-stattalon-fields',
     onReject: {},
   },
+  getContrastCollect: {
+    method: 'get',
+    url: 'contrasts-collect',
+    onReject: {},
+  },
 });

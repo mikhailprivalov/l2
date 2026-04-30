@@ -429,7 +429,10 @@ def issledovaniye_data(request):
 
     results_data = []
     ecpResearchId = None
-    if i.research.is_paraclinic and i.research.is_lab and not ignore_paraclinic:
+    if i.research.is_paraclinic and i.research.is_lab and ignore_paraclinic:
+        return Response({"ok": False, "ignore_paraclinic": ignore_paraclinic})
+
+    if i.research.is_paraclinic and i.research.is_lab:
         ecp_data = (i.research.auto_register_on_rmis_location).split("#")
         if len(ecp_data) > 1:
             ecpResearchId = ecp_data[0]

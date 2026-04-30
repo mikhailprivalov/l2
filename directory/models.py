@@ -2236,3 +2236,15 @@ class ParaclinicInputFieldFileSettings(models.Model):
     class Meta:
         verbose_name = "Настройка для поля 'файл'"
         verbose_name_plural = "Настройки для полей 'файлов'"
+
+
+class Contrasts(models.Model):
+    title = models.CharField(max_length=255, help_text="Название контраста")
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие набора", db_index=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Контраст"
+        verbose_name_plural = "Контрасты"
