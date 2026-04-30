@@ -46,12 +46,6 @@ class Command(BaseCommand):
             directions = [i.pk for i in d_qs]
             res = send_lab_direction_to_ecp(directions)
             self.stdout.write(f"{res}\n")
-            count = 0
-            for n in d_qs:
-                n.rmis_resend_services = True
-                n.save()
-                count += 1
-            self.stdout.write(f"{count}\n")
 
 
 def sql_01(d_s):
@@ -73,7 +67,7 @@ def sql_01(d_s):
                       AND
                       directions_napravleniya.ecp_direction_number is NULL 
                       AND
-                      directions_napravleniya.rmis_resend_services=False
+                      directions_napravleniya.rmis_resend_services=false
                       AND
                       directions_napravleniya.last_confirmed_at > %(d_start)s
                       AND dr.is_paraclinic = true 

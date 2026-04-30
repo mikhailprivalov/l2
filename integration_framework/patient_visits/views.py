@@ -137,6 +137,7 @@ def result_rmis_sent_direction(request):
         direction.rmis_visit_number = rmis_visit_number
         direction.rmis_number = rmis_direction
         direction.result_rmis_send = True
+        direction.rmis_resend_services = True
         direction.amd_message = ""
         direction.save()
 
