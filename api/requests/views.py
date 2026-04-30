@@ -339,18 +339,21 @@ def create_request(request):
             direction.text_contrast = contrast_type.title
         direction.fact_research_date = request_fields.get('date', '') or None
         direction.fact_research_time = request_fields.get('time', '') or None
-        direction.save(update_fields=['is_cito',
-                                      'is_request',
-                                      'contrast_amount',
-                                      'dose',
-                                      'anamnesis',
-                                      'direction_comment',
-                                      'fact_research_date',
-                                      'fact_research_time',
-                                      'type_contrast',
-                                      'text_contrast',
-                                      'is_dynamic']
-                       )
+        direction.save(
+            update_fields=[
+                'is_cito',
+                'is_request',
+                'contrast_amount',
+                'dose',
+                'anamnesis',
+                'direction_comment',
+                'fact_research_date',
+                'fact_research_time',
+                'type_contrast',
+                'text_contrast',
+                'is_dynamic',
+            ]
+        )
 
         for file_data in files:
             if 'url' in file_data and file_data['url'].startswith('data:'):
