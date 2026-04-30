@@ -91,6 +91,7 @@
               class="research-title"
             >
               {{ item.researchTitle }}
+              <br>
               <span
                 v-if="item.isCito"
                 class="cito-badge"
@@ -350,8 +351,19 @@
                   >{{ requestDetails.contrastAmount || '(не указан)' }}</span>
                 </div>
                 <div class="detail-row">
+                  <span class="detail-label">Контраст:</span>
+                  <span
+                    class="detail-value"
+                    :class="{ 'empty-value': !requestDetails.contrastText }"
+                  >{{ requestDetails.contrastText || '(не указан)' }}</span>
+                </div>
+                <div class="detail-row">
                   <span class="detail-label">Срочность:</span>
                   <span class="detail-value">{{ requestDetails.isCito ? 'Cito' : 'Обычное' }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Динамика:</span>
+                  <span class="detail-value">{{ requestDetails.isDynamic ? 'Да' : 'Нет' }}</span>
                 </div>
                 <div class="detail-row">
                   <span class="detail-label">Привязанное изображение:</span>
