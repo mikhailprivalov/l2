@@ -596,10 +596,15 @@ class Napravleniya(models.Model):
     need_resend_cpp = models.BooleanField(default=False, blank=True, help_text='Требуется отправка в ЦПП')
     ecp_direction_number = models.CharField(max_length=64, default=None, blank=True, null=True, db_index=True, help_text='Id-направления ЕЦП')
     is_cito = models.BooleanField(default=False, blank=True, help_text='Срочное исполнение')
+    is_dynamic = models.BooleanField(default=False, blank=True, help_text='Динамика описание')
     is_request = models.BooleanField(default=False, blank=True, db_index=True, help_text='Флаг заявки')
     fact_research_date = models.DateField(blank=True, null=True, default=None, help_text='Фактическая дата проведения исследования')
     fact_research_time = models.TimeField(blank=True, null=True, default=None, help_text='Фактическое время проведения исследования')
     contrast_amount = models.CharField(max_length=50, default='', blank=True, help_text='Объем контраста')
+    type_contrast = models.ForeignKey(
+        directory.Contrasts, default=None, blank=True, null=True, on_delete=models.PROTECT, help_text='Вид контраста'
+    )
+    text_contrast = models.CharField(max_length=50, default='', blank=True, help_text='Вид контраста текстом')
     dose = models.CharField(max_length=50, default='', blank=True, help_text='Доза')
     anamnesis = models.TextField(default='', blank=True, help_text='Краткий анамнез')
     direction_comment = models.TextField(default='', blank=True, help_text='Комментарий к направлению')

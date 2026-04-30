@@ -9,6 +9,7 @@ import uuid
 from django.utils import timezone
 
 from appconf.manager import SettingManager
+from directory.models import Contrasts
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
@@ -325,14 +326,31 @@ def create_request(request):
         direction = Napravleniya.objects.get(pk=direction_id)
 
         direction.is_cito = request_fields.get('cito', False)
+        direction.is_dynamic = request_fields.get('isDynamic', False)
         direction.is_request = True
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
+        current_contrast = request_fields.get('currentContrast', '')
+        contrast_type = Contrasts.objects.filter(pk=int(current_contrast)).first()
+        if contrast_type:
+            direction.type_contrast = contrast_type
+            direction.text_contrast = contrast_type.title
         direction.fact_research_date = request_fields.get('date', '') or None
         direction.fact_research_time = request_fields.get('time', '') or None
-        direction.save(update_fields=['is_cito', 'is_request', 'contrast_amount', 'dose', 'anamnesis', 'direction_comment', 'fact_research_date', 'fact_research_time'])
+        direction.save(update_fields=['is_cito',
+                                      'is_request',
+                                      'contrast_amount',
+                                      'dose',
+                                      'anamnesis',
+                                      'direction_comment',
+                                      'fact_research_date',
+                                      'fact_research_time',
+                                      'type_contrast',
+                                      'text_contrast',
+                                      'is_dynamic']
+                       )
 
         for file_data in files:
             if 'url' in file_data and file_data['url'].startswith('data:'):
