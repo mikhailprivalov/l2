@@ -1,84 +1,73 @@
 <template>
-  <div class="wrapper-component">
+  <div>
     <div class="section">
-      <label>Минимум файлов
-        <input
-          v-model.number="settings.minFiles"
-          class="form-control"
-          type="number"
-          min="0"
-        >
-      </label>
-      <label>Максимум файлов
-        <input
-          v-model.number="settings.maxFiles"
-          class="form-control"
-          type="number"
-          min="1"
-        >
-      </label>
-      <label>
-        Максимальный размер одного файла, МБ
-        <input
-          v-model.number="settings.maxFileSizeMb"
-          class="form-control"
-          type="number"
-          min="1"
-        >
-      </label>
-      <label>
-        Максимальный суммарный размер, МБ
-        <input
-          v-model.number="settings.maxTotalSizeMb"
-          class="form-control"
-          type="number"
-          min="1"
-        >
-      </label>
+      <div class="file-form-row">
+        <label class="file-form-field--small">Минимум файлов
+          <input
+            v-model.number="settings.minFiles"
+            class="form-control"
+            type="number"
+            min="0"
+          >
+        </label>
+        <label class="file-form-field--small">Максимум файлов
+          <input
+            v-model.number="settings.maxFiles"
+            class="form-control"
+            type="number"
+            min="1"
+          >
+        </label>
+        <label class="file-form-field--medium">
+          Максимальный размер одного файла, МБ
+          <input
+            v-model.number="settings.maxFileSizeMb"
+            class="form-control"
+            type="number"
+            min="1"
+          >
+        </label>
+        <label class="file-form-field--medium">
+          Максимальный суммарный размер, МБ
+          <input
+            v-model.number="settings.maxTotalSizeMb"
+            class="form-control"
+            type="number"
+            min="1"
+          >
+        </label>
+      </div>
       <label>
         Разрешенные расширения
-        <select
+        <Treeselect
           v-model="settings.allowedExtensions"
-          class="form-control"
-          multiple
-        >
-          <option
-            v-for="extension in availableExtensions"
-            :key="extension"
-            :value="extension"
-          >
-            {{ extension }}
-          </option>
-        </select>
+          :options="availableExtensions"
+          class="treeselect-34px"
+          placeholder="pdf, xlsx ..."
+          :multiple="true"
+        />
       </label>
     </div>
     <div class="section">
-      <label>
-        Regexp имени файла
-        <input
-          v-model="settings.filenamePattern"
-          class="form-control"
-          placeholder="^report_.*\\.pdf$"
-        >
-      </label>
+      <div class="file-form-row">
+        <label class="file-form-field--medium">
+          Regexp имени файла
+          <input
+            v-model="settings.filenamePattern"
+            class="form-control"
+            placeholder="^report_.*\\.pdf$"
+          >
+        </label>
 
-      <label>
-        Описание правила имени
-        <input
-          v-model="settings.filenamePatternDescription"
-          class="form-control"
-          placeholder="Файл должен начинаться с report_"
-        >
-      </label>
-
-      <label>
-        <input
-          v-model="settings.strictFilename"
-          class="form-control"
-          type="checkbox"
-        >
-        Строго проверять имя файла
-      </label>
+        <label class="file-form-field--full">
+          Описание правила имени
+          <input
+            v-model="settings.filenamePatternDescription"
+            class="form-control"
+            placeholder="Файл должен начинаться с report_"
+          >
+        </label>
+      </div>
     </div>
     <div class="section">
       <label>
@@ -90,12 +79,14 @@
       </label>
 
       <div v-if="settings.rulesEnabled">
-        <label>
-          Режим правил
-          <select v-model="settings.rulesMode">
-            <option value="exact">Точный набор</option>
-            <option value="one_of">Один из вариантов</option>
-          </select>
+        <label class="rules-mode">
+          <span>Режим правил</span>
+          <Treeselect
+            v-model="settings.rulesMode"
+            :options="rulesMode"
+            class="treeselect-29px rules-mode-select"
+            :clearable="false"
+          />
         </label>
 
         <div
@@ -103,12 +94,12 @@
           :key="variantIndex"
           class="rule-variant"
         >
-          <div class="rule-variant__header">
+          <div class="rule-variant--header">
             <strong>Вариант {{ variantIndex + 1 }}</strong>
 
             <button
               v-if="settings.rulesVariants.length > 1"
-              type="button"
+              class="btn btn-blue-nb rule-variant--delete"
               @click="removeRuleVariant(variantIndex)"
             >
               Удалить вариант
@@ -148,7 +139,7 @@
             >
 
             <button
-              type="button"
+              class="btn btn-blue-nb rule-item--delete"
               @click="removeRuleItem(variantIndex, itemIndex)"
             >
               Удалить
@@ -156,7 +147,7 @@
           </div>
 
           <button
-            type="button"
+            class="btn btn-blue-nb rule-item--add"
             @click="addRuleItem(variantIndex)"
           >
             Добавить расширение
@@ -164,8 +155,8 @@
         </div>
 
         <button
-          v-if="settings.rulesMode === 'one_of'"
-          type="button"
+          v-if="settings.rulesMode === 'oneOf'"
+          class="btn btn-blue-nb rule-variant--add"
           @click="addRuleVariant"
         >
           Добавить вариант
@@ -176,10 +167,11 @@
 </template>
 
 <script setup lang="ts">
-
 import {
-  PropType, reactive, watch,
+  PropType, reactive, ref, watch,
 } from 'vue';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import { ParaclinicInputFieldRow } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearcEditor';
 import { FileFieldSettings } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
@@ -191,18 +183,17 @@ const props = defineProps({
   },
 });
 // availableExtensions придет с бэка
-const availableExtensions = [
-  'pdf',
-  'doc',
-  'docx',
-  'xls',
-  'xlsx',
-  'jpg',
-  'jpeg',
-  'png',
-  'xml',
-  'zip',
-];
+const availableExtensions = ref([
+  { id: 'pdf', label: 'pdf' },
+  { id: 'docx', label: 'docx' },
+  { id: 'xlsx', label: 'xlsx' },
+  { id: 'jpeg', label: 'jpeg' },
+]);
+
+const rulesMode = ref([
+  { id: 'exact', label: 'Точный набор' },
+  { id: 'oneOf', label: 'Один из вариантов' },
+]);
 
 const settings = reactive<FileFieldSettings>({
   // Сюда настройки из бэкэнда
@@ -220,8 +211,8 @@ const settings = reactive<FileFieldSettings>({
   filenamePatternDescription: '',
   strictFilename: false,
 
-  rulesEnabled: false,
-  rulesMode: 'exact',
+  rulesEnabled: true,
+  rulesMode: 'oneOf',
   rulesVariants: [
     {
       items: [
@@ -284,10 +275,6 @@ const removeRuleItem = (variantIndex: number, itemIndex: number) => {
 </script>
 
 <style scoped lang="scss">
-.wrapper-component {
-  margin-top: 5px;
-}
-
 .section {
   margin-top: 12px;
   display: flex;
@@ -295,6 +282,58 @@ const removeRuleItem = (variantIndex: number, itemIndex: number) => {
   gap: 8px;
 }
 
+.file-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.file-form-field--small {
+  flex: 0 0 130px;
+  margin-bottom: 0;
+}
+
+.file-form-field--medium {
+  flex: 0 0 260px;
+  margin-bottom: 0;
+}
+
+.file-form-field--full {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+::v-deep .treeselect-34px .vue-treeselect {
+  &__control {
+    border: 1px solid #aab2bd !important;
+  }
+}
+
+::v-deep .treeselect-29px .vue-treeselect {
+  &__control {
+    height: 29px !important;
+    border: 1px solid #aab2bd !important;
+  }
+
+  &__placeholder,
+  &__single-value {
+    line-height: 29px !important;
+  }
+}
+
+.rules-mode {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rules-mode > span {
+  white-space: nowrap;
+}
+.rules-mode-select {
+  width: 190px;
+}
 .rule-variant {
   border: 1px solid #e5e7eb;
   border-radius: 6px;
@@ -305,16 +344,35 @@ const removeRuleItem = (variantIndex: number, itemIndex: number) => {
   gap: 8px;
 }
 
-.rule-variant__header {
+.rule-variant--header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 13px;
 }
 
+.rule-variant--delete {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.rule-variant--add {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.rule-item--delete {
+  padding: 2px 6px;
+  font-size: 11px;
+}
+.rule-item--add {
+  padding: 4px 8px;
+  font-size: 12px;
+  align-self: flex-start;
+}
+
 .rule-item {
   display: flex;
-  align-items: center;
   gap: 8px;
 
   input {
@@ -332,34 +390,6 @@ const removeRuleItem = (variantIndex: number, itemIndex: number) => {
     width: 120px;
   }
 
-  button {
-    padding: 2px 6px;
-    font-size: 11px;
-    border: none;
-    background: #ef4444;
-    color: white;
-    border-radius: 4px;
-    cursor: pointer;
-
-    &:hover {
-      background: #dc2626;
-    }
-  }
-}
-
-button {
-  align-self: flex-start;
-  padding: 4px 8px;
-  font-size: 12px;
-  border: none;
-  border-radius: 4px;
-  background: #3b82f6;
-  color: white;
-  cursor: pointer;
-
-  &:hover {
-    background: #2563eb;
-  }
 }
 
 select {
