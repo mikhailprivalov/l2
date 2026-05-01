@@ -1,4 +1,4 @@
-export type FileRulesMode = 'exact' | 'one_of'
+export type FileRulesMode = 'exact' | 'oneOf'
 
 export type FileRuleItem = {
   extension: string
