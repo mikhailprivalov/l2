@@ -934,8 +934,7 @@
                     <!--Тип поля (42, "Файл")-->
                     <FileField
                       v-else-if="row.field_type === 42"
-                      :model-value="row.file_settings"
-                      @update:model-value="row.file_settings = $event"
+                      v-model="row.file_settings"
                     />
                     <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                       <div

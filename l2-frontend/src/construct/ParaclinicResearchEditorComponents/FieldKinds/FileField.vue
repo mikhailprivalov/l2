@@ -166,20 +166,18 @@
 
 <script setup lang="ts">
 import {
-  computed,
-  PropType, reactive, ref, watch,
+  computed, reactive, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-import { ParaclinicInputFieldRow } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearchEditor';
 import { FileFieldSettings, SelectOption } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
 
 const props = defineProps<{
-  modelValue: FileFieldSettings | null
+  value: FileFieldSettings | null
 }>();
 
-const emit = defineEmits<{(e: 'update:modelValue', value: FileFieldSettings): void
+const emit = defineEmits<{(e: 'input', value: FileFieldSettings): void
 }>();
 
 const createDefaultSettings = (): FileFieldSettings => ({
@@ -198,6 +196,10 @@ const createDefaultSettings = (): FileFieldSettings => ({
   rulesVariants: [],
 });
 
+const settings = reactive<FileFieldSettings>({
+  ...createDefaultSettings(),
+  ...(props.value ?? {}),
+});
 
 // availableExtensions придет с бэка
 const availableExtensions = ref<SelectOption[]>([
@@ -212,11 +214,6 @@ const rulesMode = ref<SelectOption[]>([
   { id: 'oneOf', label: 'Один из вариантов' },
 ]);
 
-const settings = reactive<FileFieldSettings>({
-  ...createDefaultSettings(),
-  ...(props.modelValue ?? {}),
-});
-
 const ruleExtensionsOptions = computed<SelectOption[]>(() => settings.allowedExtensions.map((extension) => ({
   id: extension,
   label: extension,
@@ -229,7 +226,7 @@ watch(
       .map((variant) => ({
         ...variant,
         items: variant.items.filter(
-          (item) => item.extension && allowedExtensions.includes(item.extension),
+          (item) => !item.extension || allowedExtensions.includes(item.extension),
         ),
       }))
       .filter((variant) => variant.items.length > 0);
@@ -247,18 +244,7 @@ watch(
 watch(
   settings,
   (value) => {
-    emit('update:modelValue', JSON.parse(JSON.stringify(value)));
-  },
-  { deep: true },
-);
-
-watch(
-  () => props.modelValue,
-  (value) => {
-    Object.assign(settings, {
-      ...createDefaultSettings(),
-      ...(value ?? {}),
-    });
+    emit('input', JSON.parse(JSON.stringify(value)));
   },
   { deep: true },
 );
