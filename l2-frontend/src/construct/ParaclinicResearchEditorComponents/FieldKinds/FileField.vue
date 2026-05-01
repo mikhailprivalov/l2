@@ -175,12 +175,30 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { ParaclinicInputFieldRow } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearchEditor';
 import { FileFieldSettings, SelectOption } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
 
-const props = defineProps({
-  row: {
-    type: Object as PropType<ParaclinicInputFieldRow>,
-    required: true,
-  },
+const props = defineProps<{
+  modelValue: FileFieldSettings | null
+}>();
+
+const emit = defineEmits<{(e: 'update:modelValue', value: FileFieldSettings): void
+}>();
+
+const createDefaultSettings = (): FileFieldSettings => ({
+  minFiles: null,
+  maxFiles: null,
+  maxFileSizeMb: null,
+  maxTotalSizeMb: null,
+  allowedExtensions: [],
+
+  filenamePattern: '',
+  filenamePatternDescription: '',
+  strictFilename: false,
+
+  rulesEnabled: false,
+  rulesMode: 'exact',
+  rulesVariants: [],
 });
+
+
 // availableExtensions придет с бэка
 const availableExtensions = ref<SelectOption[]>([
   { id: 'pdf', label: 'pdf' },
@@ -195,24 +213,8 @@ const rulesMode = ref<SelectOption[]>([
 ]);
 
 const settings = reactive<FileFieldSettings>({
-  // Сюда настройки из бэкэнда
-  minFiles: 0,
-  maxFiles: 5,
-  maxFileSizeMb: 20,
-  maxTotalSizeMb: 100,
-  allowedExtensions: ['pdf', 'xlsx', 'docx'],
-
-  checkMime: true,
-  blockDoubleExtension: true,
-  sanitizeFilename: true,
-
-  filenamePattern: '',
-  filenamePatternDescription: '',
-  strictFilename: false,
-
-  rulesEnabled: true,
-  rulesMode: 'oneOf',
-  rulesVariants: [],
+  ...createDefaultSettings(),
+  ...(props.modelValue ?? {}),
 });
 
 const ruleExtensionsOptions = computed<SelectOption[]>(() => settings.allowedExtensions.map((extension) => ({
@@ -240,6 +242,25 @@ watch(
       settings.rulesVariants.splice(1);
     }
   },
+);
+
+watch(
+  settings,
+  (value) => {
+    emit('update:modelValue', JSON.parse(JSON.stringify(value)));
+  },
+  { deep: true },
+);
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    Object.assign(settings, {
+      ...createDefaultSettings(),
+      ...(value ?? {}),
+    });
+  },
+  { deep: true },
 );
 
 const addRuleVariant = () => {

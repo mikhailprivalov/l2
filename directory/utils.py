@@ -4,7 +4,7 @@ from directory.models import (
     ParaclinicInputGroups,
     ParaclinicInputField,
     PatientControlParam,
-    PatternParam,
+    PatternParam, ParaclinicInputFieldFileSettings,
 )
 import simplejson as json
 
@@ -86,9 +86,8 @@ def get_researches_details(pk, templates_department_pk=None):
                 "cdaOption": group.cda_option_id if group.cda_option else -1,
             }
 
-            for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
-                g["fields"].append(
-                    {
+            for field in ParaclinicInputField.objects.filter(group=group).select_related("file_settings").order_by("order"):
+                field_data = {
                         "pk": field.pk,
                         "order": field.order,
                         "lines": field.lines,
@@ -117,7 +116,11 @@ def get_researches_details(pk, templates_department_pk=None):
                         "patternParam": field.statistic_pattern_param_id if field.statistic_pattern_param else -1,
                         "newGroupId": None,
                     }
-                )
+
+                if field.field_type == 42:
+                    field_data["file_settings"] = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+
+                g["fields"].append(field_data)
             response["groups"].append(g)
     return response
 

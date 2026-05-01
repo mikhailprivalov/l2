@@ -17,10 +17,6 @@ export type FileFieldSettings = {
 
   allowedExtensions: string[]
 
-  checkMime: boolean
-  blockDoubleExtension: boolean
-  sanitizeFilename: boolean
-
   filenamePattern: string
   filenamePatternDescription: string
   strictFilename: boolean

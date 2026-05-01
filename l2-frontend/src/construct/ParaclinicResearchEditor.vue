@@ -934,7 +934,8 @@
                     <!--Тип поля (42, "Файл")-->
                     <FileField
                       v-else-if="row.field_type === 42"
-                      :row="row"
+                      :model-value="row.file_settings"
+                      @update:model-value="row.file_settings = $event"
                     />
                     <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                       <div
@@ -1817,6 +1818,7 @@ export default {
         patientControlParam: field.patientControlParam ?? -1,
         cdaOption: field.cdaOption ?? -1,
         patternParam: field.patternParam ?? -1,
+        file_settings: field.file_settings ?? null,
       });
     },
     add_group(groupSettings: any = {}) {
