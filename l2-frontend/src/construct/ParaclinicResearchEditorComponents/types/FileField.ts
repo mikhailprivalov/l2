@@ -29,3 +29,7 @@ export type FileFieldSettings = {
   rulesMode: FileRulesMode
   rulesVariants: FileRuleVariant[]
 }
+export type SelectOption = {
+  id: string | number
+  label: string
+}

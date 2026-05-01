@@ -99,6 +99,7 @@
 
             <button
               v-if="settings.rulesVariants.length > 1"
+              type="button"
               class="btn btn-blue-nb rule-variant--delete"
               @click="removeRuleVariant(variantIndex)"
             >
@@ -106,30 +107,24 @@
             </button>
           </div>
 
+          <div class="rule-item rule-item--header">
+            <span>Расширение</span>
+            <span>Кол-во</span>
+            <span />
+          </div>
+
           <div
             v-for="(item, itemIndex) in variant.items"
             :key="itemIndex"
             class="rule-item"
           >
-            <select
+            <Treeselect
               v-model="item.extension"
-              class="rule-item__extension"
-            >
-              <option
-                value=""
-                disabled
-              >
-                Выберите расширение
-              </option>
-
-              <option
-                v-for="extension in settings.allowedExtensions"
-                :key="extension"
-                :value="extension"
-              >
-                {{ extension }}
-              </option>
-            </select>
+              :options="ruleExtensionsOptions"
+              class="treeselect-29px rule-item--extension"
+              placeholder="pdf, xlsx ..."
+              :clearable="false"
+            />
 
             <input
               v-model.number="item.count"
@@ -139,6 +134,7 @@
             >
 
             <button
+              type="button"
               class="btn btn-blue-nb rule-item--delete"
               @click="removeRuleItem(variantIndex, itemIndex)"
             >
@@ -147,6 +143,7 @@
           </div>
 
           <button
+            type="button"
             class="btn btn-blue-nb rule-item--add"
             @click="addRuleItem(variantIndex)"
           >
@@ -155,11 +152,12 @@
         </div>
 
         <button
-          v-if="settings.rulesMode === 'oneOf'"
+          v-if="settings.rulesVariants.length === 0 || settings.rulesMode === 'oneOf'"
+          type="button"
           class="btn btn-blue-nb rule-variant--add"
           @click="addRuleVariant"
         >
-          Добавить вариант
+          {{ settings.rulesVariants.length === 0 ? 'Добавить правило' : 'Добавить вариант' }}
         </button>
       </div>
     </div>
@@ -168,13 +166,14 @@
 
 <script setup lang="ts">
 import {
+  computed,
   PropType, reactive, ref, watch,
 } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import { ParaclinicInputFieldRow } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearcEditor';
-import { FileFieldSettings } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
+import { FileFieldSettings, SelectOption } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
 
 const props = defineProps({
   row: {
@@ -183,14 +182,14 @@ const props = defineProps({
   },
 });
 // availableExtensions придет с бэка
-const availableExtensions = ref([
+const availableExtensions = ref<SelectOption[]>([
   { id: 'pdf', label: 'pdf' },
   { id: 'docx', label: 'docx' },
   { id: 'xlsx', label: 'xlsx' },
   { id: 'jpeg', label: 'jpeg' },
 ]);
 
-const rulesMode = ref([
+const rulesMode = ref<SelectOption[]>([
   { id: 'exact', label: 'Точный набор' },
   { id: 'oneOf', label: 'Один из вариантов' },
 ]);
@@ -213,29 +212,33 @@ const settings = reactive<FileFieldSettings>({
 
   rulesEnabled: true,
   rulesMode: 'oneOf',
-  rulesVariants: [
-    {
-      items: [
-        {
-          extension: '',
-          count: 1,
-        },
-      ],
-    },
-  ],
+  rulesVariants: [],
 });
+
+const ruleExtensionsOptions = computed<SelectOption[]>(() => settings.allowedExtensions.map((extension) => ({
+  id: extension,
+  label: extension,
+})));
 
 watch(
   () => [...settings.allowedExtensions],
   (allowedExtensions) => {
-    settings.rulesVariants.forEach((variant) => {
-      variant.items.forEach((item) => {
-        if (item.extension && !allowedExtensions.includes(item.extension)) {
-          // eslint-disable-next-line no-param-reassign
-          item.extension = '';
-        }
-      });
-    });
+    settings.rulesVariants = settings.rulesVariants
+      .map((variant) => ({
+        ...variant,
+        items: variant.items.filter(
+          (item) => item.extension && allowedExtensions.includes(item.extension),
+        ),
+      }))
+      .filter((variant) => variant.items.length > 0);
+  },
+);
+watch(
+  () => settings.rulesMode,
+  (newMode, oldMode) => {
+    if (oldMode === 'oneOf' && newMode === 'exact' && settings.rulesVariants.length > 1) {
+      settings.rulesVariants.splice(1);
+    }
   },
 );
 
@@ -243,7 +246,7 @@ const addRuleVariant = () => {
   settings.rulesVariants.push({
     items: [
       {
-        extension: '',
+        extension: null,
         count: 1,
       },
     ],
@@ -256,19 +259,18 @@ const removeRuleVariant = (index: number) => {
 
 const addRuleItem = (variantIndex: number) => {
   settings.rulesVariants[variantIndex].items.push({
-    extension: '',
+    extension: null,
     count: 1,
   });
 };
 
 const removeRuleItem = (variantIndex: number, itemIndex: number) => {
-  settings.rulesVariants[variantIndex].items.splice(itemIndex, 1);
+  const variant = settings.rulesVariants[variantIndex];
 
-  if (settings.rulesVariants[variantIndex].items.length === 0) {
-    settings.rulesVariants[variantIndex].items.push({
-      extension: '',
-      count: 1,
-    });
+  variant.items.splice(itemIndex, 1);
+
+  if (variant.items.length === 0) {
+    settings.rulesVariants.splice(variantIndex, 1);
   }
 };
 
@@ -361,10 +363,6 @@ const removeRuleItem = (variantIndex: number, itemIndex: number) => {
   font-size: 12px;
 }
 
-.rule-item--delete {
-  padding: 2px 6px;
-  font-size: 11px;
-}
 .rule-item--add {
   padding: 4px 8px;
   font-size: 12px;
@@ -372,42 +370,34 @@ const removeRuleItem = (variantIndex: number, itemIndex: number) => {
 }
 
 .rule-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 140px 70px auto;
   gap: 8px;
+  align-items: center;
 
-  input {
-    padding: 4px 6px;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-
-  input[type="number"] {
-    width: 70px;
-  }
-
-  input[type="text"] {
-    width: 120px;
-  }
-
-}
-
-select {
-  padding: 4px 6px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 12px;
-}
-.rule-item__extension {
-  width: 140px;
-}
-.rule-item {
   input,
   select {
+    width: 100%;
     padding: 4px 6px;
     border: 1px solid #d1d5db;
     border-radius: 4px;
     font-size: 12px;
   }
+}
+.rule-item--header {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: -4px;
+}
+
+.rule-item--delete {
+  justify-self: start;
+  padding: 2px 6px;
+  font-size: 11px;
+}
+
+.rule-item--extension {
+  width: 100%;
 }
 </style>
