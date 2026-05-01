@@ -30,6 +30,7 @@ class Command(BaseCommand):
         else:
             date = current_time() + relativedelta(days=-2)
             d_qs = sql_01(date)
+            self.stdout.write(f"{len(d_qs)}\n")
         if SettingManager.use_rmq_for_sendlabresultecp():
             use_exchange_name = RMQ_AUTH_PARAM.get("lab_exchange_name")
             use_routing_key = RMQ_AUTH_PARAM.get("lab_routing_key")
