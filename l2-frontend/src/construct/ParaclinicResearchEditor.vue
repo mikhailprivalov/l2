@@ -1320,7 +1320,7 @@ import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 import { getTreeSelectLabel } from '@/utils';
-import FileField from '@/construct/ParaclinicResearchEditorComponents/FieldTypes/FileField.vue';
+import FileField from '@/construct/ParaclinicResearchEditorComponents/FieldKinds/FileField.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
