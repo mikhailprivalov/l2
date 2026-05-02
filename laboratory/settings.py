@@ -530,23 +530,16 @@ PARACLINIC_FILE_HARD_LIMITS = {
 PARACLINIC_FILE_DEFAULTS = {
     "min_files": 0,
     "max_files": 5,
-    "max_file_size_mb": 20,
-    "max_total_size_mb": 100,
-    "allowed_extensions": ["pdf", "docx", "xlsx", "jpg", "jpeg", "png"],
+    "max_file_size_mb": 10,
+    "max_total_size_mb": 30,
+    "allowed_extensions": ["pdf", "jpeg"],
 }
 
 # Доступные расширения файлов для конструктора
 PARACLINIC_FILE_ALLOWED_EXTENSIONS = [
     "pdf",
-    "doc",
     "docx",
-    "xls",
     "xlsx",
-    "jpg",
-    "jpeg",
-    "png",
-    "xml",
-    "zip",
 ]
 
 # Маппинг расширение > MIME-тип
