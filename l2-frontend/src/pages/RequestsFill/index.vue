@@ -210,8 +210,8 @@
                     v-if="requestParams.contrastAmount"
                     class="info-row"
                   >
-                    <span class="info-label">Объём контраста</span>
-                    <span class="info-value">{{ requestParams.contrastAmount }} мл ({{ requestParams.textContrast }})</span>
+                    <span class="info-label">Контраст, объём </span>
+                    <span class="info-value">{{ requestParams.textContrast }}, {{ requestParams.contrastAmount }} мл </span>
                   </div>
                   <div class="info-row">
                     <span class="info-label">Срочность</span>
@@ -223,14 +223,15 @@
                       <template v-else>Обычная</template>
                     </span>
                   </div>
-                  <div class="info-row">
-                    <span class="info-label">Динамика</span>
+                  <div
+                    v-if="requestParams.isDynamic"
+                    class="info-row"
+                  >
+                    <span class="info-label dynamic-red">Динамика</span>
                     <span class="info-value">
                       <span
-                        v-if="requestParams.isDynamic"
                         class="cito-badge"
-                      >Да</span>
-                      <template v-else>Нет</template>
+                      >Сравнить</span>
                     </span>
                   </div>
                   <div class="info-row">
@@ -1056,6 +1057,11 @@ onBeforeUnmount(() => {
   min-width: 140px;
   flex-shrink: 0;
   font-size: 13px;
+}
+
+.dynamic-red {
+  color: #ff6b6b;
+  font-weight: bold;
 }
 
 .detail-value {
