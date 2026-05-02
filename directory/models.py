@@ -2246,7 +2246,6 @@ class ParaclinicInputFieldFileSettings(models.Model):
             "maxFileSizeMb": settings.max_file_size_mb,
             "maxTotalSizeMb": settings.max_total_size_mb,
             "allowedExtensions": settings.allowed_extensions or [],
-
             "filenamePattern": settings.filename_pattern or "",
             "filenamePatternDescription": settings.filename_pattern_description or "",
 
