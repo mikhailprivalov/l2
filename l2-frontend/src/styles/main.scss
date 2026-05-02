@@ -1996,6 +1996,14 @@ input[type="date"].form-control {
   }
 }
 
+.vue-treeselect__menu-container {
+  z-index: 10000 !important;
+}
+
+.vue-treeselect--append-to-body .vue-treeselect__menu-container {
+  z-index: 9999;
+}
+
 .input-group-btn {
   .vue-treeselect {
     min-width: 220px;
