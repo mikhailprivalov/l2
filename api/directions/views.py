@@ -2050,7 +2050,7 @@ def directions_paraclinic_form(request):
                         file_settings = None
                         files = []
 
-                        if field_type == 42: # Тип поля "42, файл"
+                        if field_type == 42:  # Тип поля "42, файл"
                             file_settings = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
                             value = ""
 
