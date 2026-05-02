@@ -4,7 +4,7 @@
       <div class="file-form-row">
         <label class="file-form-field--small">Минимум файлов
           <input
-            v-model.number="settings.minFiles"
+            v-model.number="formSettings.minFiles"
             class="form-control"
             type="number"
             min="0"
@@ -12,7 +12,7 @@
         </label>
         <label class="file-form-field--small">Максимум файлов
           <input
-            v-model.number="settings.maxFiles"
+            v-model.number="formSettings.maxFiles"
             class="form-control"
             type="number"
             min="1"
@@ -21,7 +21,7 @@
         <label class="file-form-field--medium">
           Максимальный размер одного файла, МБ
           <input
-            v-model.number="settings.maxFileSizeMb"
+            v-model.number="formSettings.maxFileSizeMb"
             class="form-control"
             type="number"
             min="1"
@@ -30,7 +30,7 @@
         <label class="file-form-field--medium">
           Максимальный суммарный размер, МБ
           <input
-            v-model.number="settings.maxTotalSizeMb"
+            v-model.number="formSettings.maxTotalSizeMb"
             class="form-control"
             type="number"
             min="1"
@@ -40,7 +40,7 @@
       <label>
         Разрешенные расширения
         <Treeselect
-          v-model="settings.allowedExtensions"
+          v-model="formSettings.allowedExtensions"
           :options="availableExtensions"
           class="treeselect-34px"
           placeholder="pdf, xlsx ..."
@@ -53,7 +53,7 @@
         <label class="file-form-field--medium">
           Regexp имени файла
           <input
-            v-model="settings.filenamePattern"
+            v-model="formSettings.filenamePattern"
             class="form-control"
             placeholder="^report_.*\\.pdf$"
           >
@@ -62,7 +62,7 @@
         <label class="file-form-field--full">
           Описание правила имени
           <input
-            v-model="settings.filenamePatternDescription"
+            v-model="formSettings.filenamePatternDescription"
             class="form-control"
             placeholder="Файл должен начинаться с report_"
           >
@@ -72,17 +72,17 @@
     <div class="section">
       <label>
         <input
-          v-model="settings.rulesEnabled"
+          v-model="formSettings.rulesEnabled"
           type="checkbox"
         >
         Включить правила состава файлов
       </label>
 
-      <div v-if="settings.rulesEnabled">
+      <div v-if="formSettings.rulesEnabled">
         <label class="rules-mode">
           <span>Режим правил</span>
           <Treeselect
-            v-model="settings.rulesMode"
+            v-model="formSettings.rulesMode"
             :options="rulesMode"
             class="treeselect-29px rules-mode-select"
             :clearable="false"
@@ -90,7 +90,7 @@
         </label>
 
         <div
-          v-for="(variant, variantIndex) in settings.rulesVariants"
+          v-for="(variant, variantIndex) in formSettings.rulesVariants"
           :key="variantIndex"
           class="rule-variant"
         >
@@ -98,7 +98,7 @@
             <strong>Вариант {{ variantIndex + 1 }}</strong>
 
             <button
-              v-if="settings.rulesVariants.length > 1"
+              v-if="formSettings.rulesVariants.length > 1"
               type="button"
               class="btn btn-blue-nb rule-variant--delete"
               @click="removeRuleVariant(variantIndex)"
@@ -152,12 +152,12 @@
         </div>
 
         <button
-          v-if="settings.rulesVariants.length === 0 || settings.rulesMode === 'oneOf'"
+          v-if="formSettings.rulesVariants.length === 0 || formSettings.rulesMode === 'oneOf'"
           type="button"
           class="btn btn-blue-nb rule-variant--add"
           @click="addRuleVariant"
         >
-          {{ settings.rulesVariants.length === 0 ? 'Добавить правило' : 'Добавить вариант' }}
+          {{ formSettings.rulesVariants.length === 0 ? 'Добавить правило' : 'Добавить вариант' }}
         </button>
       </div>
     </div>
@@ -171,58 +171,70 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-import { FileFieldSettings, SelectOption } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
+import { FileFieldConstructorSettings, FileFieldSettings, SelectOption } from
+  '@/construct/ParaclinicResearchEditorComponents/types/FileField';
 
 const props = defineProps<{
   value: FileFieldSettings | null
+  settings: FileFieldConstructorSettings | null
 }>();
 
 const emit = defineEmits<{(e: 'input', value: FileFieldSettings): void
 }>();
 
-const createDefaultSettings = (): FileFieldSettings => ({
-  minFiles: null,
-  maxFiles: null,
-  maxFileSizeMb: null,
-  maxTotalSizeMb: null,
-  allowedExtensions: [],
+const getDefaultAllowedExtensions = (): string[] => {
+  const availableExtensionsSet = new Set(props.settings?.fileFieldAllowedExtensions ?? []);
+  const defaultExtensions = props.settings?.fileFieldDefaultSettings?.allowed_extensions ?? [];
 
-  filenamePattern: '',
-  filenamePatternDescription: '',
-  strictFilename: false,
+  return defaultExtensions.filter((extension) => availableExtensionsSet.has(extension));
+};
 
-  rulesEnabled: false,
-  rulesMode: 'exact',
-  rulesVariants: [],
-});
+const createDefaultSettings = (): FileFieldSettings => {
+  const backendDefaults = props.settings?.fileFieldDefaultSettings;
 
-const settings = reactive<FileFieldSettings>({
+  return {
+    minFiles: backendDefaults?.min_files ?? 1,
+    maxFiles: backendDefaults?.max_files ?? 1,
+    maxFileSizeMb: backendDefaults?.max_file_size_mb ?? 20,
+    maxTotalSizeMb: backendDefaults?.max_total_size_mb ?? 50,
+    allowedExtensions: getDefaultAllowedExtensions(),
+
+    filenamePattern: '',
+    filenamePatternDescription: '',
+    strictFilename: false,
+
+    rulesEnabled: false,
+    rulesMode: 'exact',
+    rulesVariants: [],
+  };
+};
+
+const formSettings = reactive<FileFieldSettings>({
   ...createDefaultSettings(),
   ...(props.value ?? {}),
 });
 
-// availableExtensions придет с бэка
-const availableExtensions = ref<SelectOption[]>([
-  { id: 'pdf', label: 'pdf' },
-  { id: 'docx', label: 'docx' },
-  { id: 'xlsx', label: 'xlsx' },
-  { id: 'jpeg', label: 'jpeg' },
-]);
+const availableExtensions = computed<SelectOption[]>(() => (
+  props.settings?.fileFieldAllowedExtensions ?? []
+).map((extension) => ({
+  id: extension,
+  label: extension,
+})));
 
 const rulesMode = ref<SelectOption[]>([
   { id: 'exact', label: 'Точный набор' },
   { id: 'oneOf', label: 'Один из вариантов' },
 ]);
 
-const ruleExtensionsOptions = computed<SelectOption[]>(() => settings.allowedExtensions.map((extension) => ({
+const ruleExtensionsOptions = computed<SelectOption[]>(() => formSettings.allowedExtensions.map((extension) => ({
   id: extension,
   label: extension,
 })));
 
 watch(
-  () => [...settings.allowedExtensions],
+  () => [...formSettings.allowedExtensions],
   (allowedExtensions) => {
-    settings.rulesVariants = settings.rulesVariants
+    formSettings.rulesVariants = formSettings.rulesVariants
       .map((variant) => ({
         ...variant,
         items: variant.items.filter(
@@ -233,16 +245,16 @@ watch(
   },
 );
 watch(
-  () => settings.rulesMode,
+  () => formSettings.rulesMode,
   (newMode, oldMode) => {
-    if (oldMode === 'oneOf' && newMode === 'exact' && settings.rulesVariants.length > 1) {
-      settings.rulesVariants.splice(1);
+    if (oldMode === 'oneOf' && newMode === 'exact' && formSettings.rulesVariants.length > 1) {
+      formSettings.rulesVariants.splice(1);
     }
   },
 );
 
 watch(
-  settings,
+  formSettings,
   (value) => {
     emit('input', JSON.parse(JSON.stringify(value)));
   },
@@ -250,7 +262,7 @@ watch(
 );
 
 const addRuleVariant = () => {
-  settings.rulesVariants.push({
+  formSettings.rulesVariants.push({
     items: [
       {
         extension: null,
@@ -261,23 +273,23 @@ const addRuleVariant = () => {
 };
 
 const removeRuleVariant = (index: number) => {
-  settings.rulesVariants.splice(index, 1);
+  formSettings.rulesVariants.splice(index, 1);
 };
 
 const addRuleItem = (variantIndex: number) => {
-  settings.rulesVariants[variantIndex].items.push({
+  formSettings.rulesVariants[variantIndex].items.push({
     extension: null,
     count: 1,
   });
 };
 
 const removeRuleItem = (variantIndex: number, itemIndex: number) => {
-  const variant = settings.rulesVariants[variantIndex];
+  const variant = formSettings.rulesVariants[variantIndex];
 
   variant.items.splice(itemIndex, 1);
 
   if (variant.items.length === 0) {
-    settings.rulesVariants.splice(variantIndex, 1);
+    formSettings.rulesVariants.splice(variantIndex, 1);
   }
 };
 

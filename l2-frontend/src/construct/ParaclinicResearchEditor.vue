@@ -935,6 +935,7 @@
                     <FileField
                       v-else-if="row.field_type === 42"
                       v-model="row.file_settings"
+                      :settings="file_field_settings"
                     />
                     <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                       <div
@@ -1321,6 +1322,8 @@ import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 import { getTreeSelectLabel } from '@/utils';
 import FileField from '@/construct/ParaclinicResearchEditorComponents/FieldKinds/FileField.vue';
+import { FileFieldConstructorSettings } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
+import { GetRefBooksResponse } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearchEditor';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1474,6 +1477,7 @@ export default {
       showLinkFieldModal: false,
       currentLinkFieldId: null,
       currentLinkFieldValue: null,
+      file_field_settings: null as FileFieldConstructorSettings | null,
     };
   },
   computed: {
@@ -1575,6 +1579,7 @@ export default {
     await this.load_deparments();
     await this.loadDynamicDirectories();
     await this.loadLayoutTemplates();
+    await this.getRefBooks();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -2048,6 +2053,16 @@ export default {
         }
       }
       this.closeLinkFieldModal();
+    },
+    async getRefBooks() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const result = await this.$api('construct/descriptive/get-ref-books') as GetRefBooksResponse;
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.file_field_settings = {
+        fileFieldLimits: result.file_field_limits,
+        fileFieldDefaultSettings: result.file_field_default_settings,
+        fileFieldAllowedExtensions: result.file_field_allowed_extensions,
+      };
     },
   },
 };
