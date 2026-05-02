@@ -1646,11 +1646,7 @@ def directions_paraclinic_form(request):
                         'research__paraclinicinputgroups_set',
                         queryset=ParaclinicInputGroups.objects.filter(hide=False)
                         .order_by("order")
-                        .prefetch_related(Prefetch('paraclinicinputfield_set',
-                                                   queryset=ParaclinicInputField.objects
-                                                   .filter(hide=False)
-                                                   .select_related("file_settings")
-                                                   .order_by("order"))),
+                        .prefetch_related(Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False).select_related("file_settings").order_by("order"))),
                     ),
                     Prefetch('recipe_set', queryset=Recipe.objects.all().order_by('pk')),
                 )
