@@ -9,7 +9,7 @@
     tabindex="0"
     @click="focusField"
     @paste="handlePaste"
-    @dragenter.prevent="handleDragEnter"
+    @draчgenter.prevent="handleDragEnter"
     @dragover.prevent="handleDragOver"
     @dragleave.prevent="handleDragLeave"
     @drop.prevent="handleDrop"
@@ -65,7 +65,7 @@
 
         <div class="file-result-field__info">
           <a
-            v-if="file.url && !file.isNew"
+            v-if="!file.isNew && file.url"
             class="file-result-field__name"
             :href="file.url"
             target="_blank"
@@ -114,31 +114,7 @@
 import { computed, ref } from 'vue';
 
 import type { FileFieldSettings } from '@/types/Descriptive/Fields/FileField';
-
-export type ExistingFileFieldValueFile = {
-  pk: number
-  originalName: string
-  extension: string
-  mimeType: string
-  size: number
-  url: string
-  createdAt: string
-  isNew?: false
-}
-
-export type NewFileFieldValueFile = {
-  tempId: string
-  originalName: string
-  extension: string
-  mimeType: string
-  size: number
-  file: File
-  isNew: true
-}
-
-export type FileFieldValueFile = ExistingFileFieldValueFile | NewFileFieldValueFile
-
-export type FileFieldValue = FileFieldValueFile[]
+import { FileFieldValue, FileFieldValueFile, NewFileFieldValueFile } from '@/forms/types/FileResultField';
 
 const props = defineProps<{
   value: FileFieldValue | null
@@ -146,8 +122,7 @@ const props = defineProps<{
   disabled?: boolean
 }>();
 
-const emit = defineEmits<{
-  (e: 'input', value: FileFieldValue): void
+const emit = defineEmits<{(e: 'input', value: FileFieldValue): void
 }>();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -164,6 +139,67 @@ const files = computed<FileFieldValue>({
 });
 
 const isActive = computed(() => dragDepth.value > 0 && !props.disabled);
+
+function getFileExtension(filename: string): string {
+  const parts = filename.split('.');
+
+  if (parts.length < 2) {
+    return '';
+  }
+
+  return parts[parts.length - 1].toLowerCase();
+}
+
+function createTempId(): string {
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getFileKey(file: FileFieldValueFile): string {
+  if ('pk' in file) {
+    return `existing-${file.pk}`;
+  }
+
+  return `new-${file.tempId}`;
+}
+
+function getExtensionLabel(file: FileFieldValueFile): string {
+  const extension = file.extension || getFileExtension(file.originalName);
+
+  return extension ? extension.slice(0, 5).toUpperCase() : 'FILE';
+}
+
+function formatFileSize(size: number): string {
+  if (!size) {
+    return '0 Б';
+  }
+
+  const units = ['Б', 'КБ', 'МБ', 'ГБ'];
+  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+  const value = size / (1024 ** index);
+
+  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+function addFiles(rawFiles: File[]) {
+  if (!rawFiles.length) {
+    return;
+  }
+
+  const newFiles: NewFileFieldValueFile[] = rawFiles.map(file => ({
+    tempId: createTempId(),
+    originalName: file.name,
+    extension: getFileExtension(file.name),
+    mimeType: file.type || '',
+    size: file.size,
+    file,
+    isNew: true,
+  }));
+
+  files.value = [
+    ...files.value,
+    ...newFiles,
+  ];
+}
 
 function focusField() {
   dropZoneRef.value?.focus();
@@ -238,69 +274,8 @@ function handlePaste(event: ClipboardEvent) {
   addFiles(pastedFiles);
 }
 
-function addFiles(rawFiles: File[]) {
-  if (!rawFiles.length) {
-    return;
-  }
-
-  const newFiles: NewFileFieldValueFile[] = rawFiles.map(file => ({
-    tempId: createTempId(),
-    originalName: file.name,
-    extension: getFileExtension(file.name),
-    mimeType: file.type || '',
-    size: file.size,
-    file,
-    isNew: true,
-  }));
-
-  files.value = [
-    ...files.value,
-    ...newFiles,
-  ];
-}
-
 function removeFile(fileToRemove: FileFieldValueFile) {
   files.value = files.value.filter(file => getFileKey(file) !== getFileKey(fileToRemove));
-}
-
-function getFileKey(file: FileFieldValueFile): string {
-  if ('pk' in file) {
-    return `existing-${file.pk}`;
-  }
-
-  return `new-${file.tempId}`;
-}
-
-function getFileExtension(filename: string): string {
-  const parts = filename.split('.');
-
-  if (parts.length < 2) {
-    return '';
-  }
-
-  return parts[parts.length - 1].toLowerCase();
-}
-
-function getExtensionLabel(file: FileFieldValueFile): string {
-  const extension = file.extension || getFileExtension(file.originalName);
-
-  return extension ? extension.slice(0, 5).toUpperCase() : 'FILE';
-}
-
-function formatFileSize(size: number): string {
-  if (!size) {
-    return '0 Б';
-  }
-
-  const units = ['Б', 'КБ', 'МБ', 'ГБ'];
-  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
-  const value = size / (1024 ** index);
-
-  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
-}
-
-function createTempId(): string {
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 </script>
 
