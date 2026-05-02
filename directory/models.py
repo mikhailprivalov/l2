@@ -2268,10 +2268,14 @@ class ParaclinicInputFieldFileSettings(models.Model):
 
         rules_enabled = file_settings.get("rulesEnabled", False)
 
-        file_rules = {
-            "mode": file_settings.get("rulesMode", "exact"),
-            "variants": file_settings.get("rulesVariants", []),
-        } if rules_enabled else {}
+        file_rules = (
+            {
+                "mode": file_settings.get("rulesMode", "exact"),
+                "variants": file_settings.get("rulesVariants", []),
+            }
+            if rules_enabled
+            else {}
+        )
 
         settings, _ = ParaclinicInputFieldFileSettings.objects.get_or_create(
             field=field,
