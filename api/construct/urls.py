@@ -26,5 +26,5 @@ urlpatterns = [
     path('tubes/get-tubes', views.get_tubes),
     path('tubes/update-tube', views.update_tube),
     path('tubes/create-tube', views.create_tube),
-    path('descriptive/get-ref-books', views.get_descriptive_ref_books)
+    path('descriptive/get-ref-books', views.get_descriptive_ref_books),
 ]
