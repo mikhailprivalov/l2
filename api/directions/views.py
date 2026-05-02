@@ -75,8 +75,9 @@ from directions.models import (
     GeneratorValuesAreOver,
     NoGenerator,
     ComplexResearchAccountPerson,
+    ParaclinicResultFile,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService, ParaclinicInputFieldFileSettings
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -1645,7 +1646,11 @@ def directions_paraclinic_form(request):
                         'research__paraclinicinputgroups_set',
                         queryset=ParaclinicInputGroups.objects.filter(hide=False)
                         .order_by("order")
-                        .prefetch_related(Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False).order_by("order"))),
+                        .prefetch_related(Prefetch('paraclinicinputfield_set',
+                                                   queryset=ParaclinicInputField.objects
+                                                   .filter(hide=False)
+                                                   .select_related("file_settings")
+                                                   .order_by("order"))),
                     ),
                     Prefetch('recipe_set', queryset=Recipe.objects.all().order_by('pk')),
                 )
@@ -2002,7 +2007,7 @@ def directions_paraclinic_form(request):
                             }
                         )
 
-                result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i)}
+                result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i).prefetch_related("files")}
 
                 fields_templates_by_department_data = None
                 if i.research.templates_by_department:
@@ -2031,6 +2036,7 @@ def directions_paraclinic_form(request):
                             continue
                         result_field: ParaclinicResult = result_fields.get(field.pk)
                         field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(i.time_confirmation))
+
                         values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + (
                             [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
                         )
@@ -2040,10 +2046,32 @@ def directions_paraclinic_form(request):
                                 values_to_input = json.loads(values_to_input_by_department)
 
                         value = (
-                            ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
+                            ((field.default_value if field_type not in [3, 11, 13, 14, 30, 42] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]
                             else (get_default_for_field(field_type, field.default_value) if not result_field else result_field.value)
                         )
+
+                        file_settings = None
+                        files = []
+
+                        if field_type == 42: # Тип поля "42, файл"
+                            file_settings = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+                            value = ""
+
+                            if result_field:
+                                files = [
+                                    {
+                                        "pk": file.pk,
+                                        "originalName": file.original_name,
+                                        "extension": file.extension,
+                                        "mimeType": file.mime_type,
+                                        "size": file.size,
+                                        "url": file.file.url,
+                                        "createdAt": strdatetimeru(file.created_at),
+                                    }
+                                    for file in result_field.files.all()
+                                ]
+
                         if field_type in [2, 32, 33, 34, 36] and isinstance(value, str) and value.startswith('%'):
                             value = ''
                         elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
@@ -2068,6 +2096,8 @@ def directions_paraclinic_form(request):
                                 "operator_enter_param": field.operator_enter_param,
                                 "deniedGroup": field.denied_group.name if field.denied_group else "",
                                 "isDiagTable": field.is_diag_table,
+                                "file_settings": file_settings,
+                                "files": files,
                             }
                         )
                     iss["research"]["groups"].append(g)
@@ -2238,6 +2268,32 @@ def directions_anesthesia_load(request):
     return JsonResponse({'data': tb_data, 'row_category': row_category})
 
 
+def _load_paraclinic_result_request_body(request):
+    """
+    Читает тело запроса для directions_paraclinic_result.
+    Возвращает (data_dict, files_dict).
+
+    - При обычном JSON-запросе тело берётся из request.body, файлов нет.
+    - При multipart/form-data:
+        * JSON-payload лежит в поле "form" (см. http-common.smartCall).
+          Так как фронт передаёт его через Blob, Django парсит его как файл
+          и кладёт в request.FILES (а не в request.POST). Поэтому проверяем оба места.
+        * Сами файлы — в request.FILES, кроме служебного ключа "form".
+    """
+    content_type = (request.content_type or "").lower()
+    if content_type.startswith("multipart/form-data"):
+        form_raw = request.POST.get("form")
+        if form_raw is None:
+            form_file = request.FILES.get("form")
+            if form_file is not None:
+                form_raw = form_file.read().decode("utf-8")
+        if not form_raw:
+            form_raw = "{}"
+        files = {key: value for key, value in request.FILES.items() if key != "form"}
+        return json.loads(form_raw), files
+    return json.loads(request.body), {}
+
+
 @group_required("Вспомогательные документы", "Врач параклиники", "Врач консультаций", "Врач стационара", "t, ad, p", "Заполнение мониторингов", "Свидетельство о смерти-доступ")
 def directions_paraclinic_result(request):
     TADP = SettingManager.get("tadp", default='Температура', default_type='s')
@@ -2250,7 +2306,8 @@ def directions_paraclinic_result(request):
             "whoExecuted": None,
         },
     }
-    rb = json.loads(request.body)
+    rb, request_files = _load_paraclinic_result_request_body(request)
+    files_by_field = {}
     request_data = rb.get("data", {})
     pk = request_data.get("pk", -1)
     stationar_research = request_data.get("stationar_research", -1)
@@ -2464,6 +2521,13 @@ def directions_paraclinic_result(request):
                     iss.medical_examination = datetime.strptime(field["value"], "%Y-%m-%d").date()
 
                 f_result.save()
+                if f.field_type == 42:
+                    files_by_field[field["pk"]] = ParaclinicResultFile.sync_field_files(
+                        f_result=f_result,
+                        payload_files=field.get("files") or [],
+                        uploaded_files=request_files,
+                        field_pk=field["pk"],
+                    )
                 if "Протокол для оператора" in g:
                     IssledovaniyaResultLaborant.save_result_operator(iss, f, f.field_type, field["value"], request.user.doctorprofile)
                 if iss.research.is_monitoring:
@@ -2667,6 +2731,7 @@ def directions_paraclinic_result(request):
             "whoConfirmed": (None if not iss.doc_confirmation or not iss.time_confirmation else f"{iss.doc_confirmation}, {strdatetime(iss.time_confirmation)}"),
             "whoExecuted": None if not iss.time_confirmation or not iss.executor_confirmation else str(iss.executor_confirmation),
         }
+        response["files_by_field"] = files_by_field
         Log(key=pk, type=13, body="", user=request.user.doctorprofile).save()
         if with_confirm:
             if iss.napravleniye:

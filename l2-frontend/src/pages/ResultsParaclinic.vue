@@ -1843,7 +1843,7 @@ import RmisLink from '@/ui-cards/RmisLink.vue';
 import EDSDirection from '@/ui-cards/EDSDirection.vue';
 import patientsPoint from '@/api/patients-point';
 import * as actions from '@/store/action-types';
-import directionsPoint from '@/api/directions-point';
+import directionsPoint, { paraclinicResultSaveSmart } from '@/api/directions-point';
 import SelectPickerM from '@/fields/SelectPickerM.vue';
 import researchesPoint from '@/api/researches-point';
 import Modal from '@/ui-cards/Modal.vue';
@@ -2789,20 +2789,34 @@ export default {
         fields,
       };
     },
+    apply_files_by_field(iss, filesByField) {
+      if (!filesByField || !iss?.research?.groups) {
+        return;
+      }
+      for (const group of iss.research.groups) {
+        if (!group?.fields) {
+          continue;
+        }
+        for (const field of group.fields) {
+          if (field.field_type === 42 && filesByField[field.pk]) {
+            field.files = filesByField[field.pk];
+          }
+        }
+      }
+    },
     save(iss) {
       this.hide_results();
       this.inserted = false;
       this.$store.dispatch(actions.INC_LOADING);
-      directionsPoint
-        .paraclinicResultSave({
-          data: {
-            ...iss,
-            direction: this.data.direction,
-            coExecutor: this.data.direction.coExecutor,
-          },
-          with_confirm: false,
-          visibility_state: this.visibility_state(iss),
-        })
+      paraclinicResultSaveSmart({
+        data: {
+          ...iss,
+          direction: this.data.direction,
+          coExecutor: this.data.direction.coExecutor,
+        },
+        with_confirm: false,
+        visibility_state: this.visibility_state(iss),
+      })
         .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -2816,6 +2830,7 @@ export default {
               // eslint-disable-next-line no-param-reassign
               iss.whoExecuted = data.execData.whoExecuted;
             }
+            this.apply_files_by_field(iss, data.files_by_field);
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
             this.reload_if_need();
@@ -2837,16 +2852,15 @@ export default {
       this.hide_results();
       this.inserted = false;
       this.$store.dispatch(actions.INC_LOADING);
-      directionsPoint
-        .paraclinicResultSave({
-          data: {
-            ...iss,
-            direction: this.data.direction,
-            coExecutor: this.data.direction.coExecutor,
-          },
-          with_confirm: true,
-          visibility_state: this.visibility_state(iss),
-        })
+      paraclinicResultSaveSmart({
+        data: {
+          ...iss,
+          direction: this.data.direction,
+          coExecutor: this.data.direction.coExecutor,
+        },
+        with_confirm: true,
+        visibility_state: this.visibility_state(iss),
+      })
         .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -2871,6 +2885,7 @@ export default {
               // eslint-disable-next-line no-param-reassign
               iss.whoExecuted = data.execData.whoExecuted;
             }
+            this.apply_files_by_field(iss, data.files_by_field);
             this.data.direction.amd = data.amd;
             this.data.direction.amd_number = data.amd_number;
             this.data.direction.all_confirmed = this.data.researches.every((r) => Boolean(r.confirmed));

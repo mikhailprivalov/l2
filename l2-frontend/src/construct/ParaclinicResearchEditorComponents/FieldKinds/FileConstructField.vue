@@ -171,8 +171,11 @@ import {
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
-import { FileFieldConstructorSettings, FileFieldSettings, SelectOption } from
-  '@/construct/ParaclinicResearchEditorComponents/types/FileField';
+import {
+  FileFieldConstructorSettings,
+  SelectOption,
+} from '@/construct/ParaclinicResearchEditorComponents/types/FileСonstructField';
+import { FileFieldSettings } from '@/types/Descriptive/Fields/FileField';
 
 const props = defineProps<{
   value: FileFieldSettings | null
