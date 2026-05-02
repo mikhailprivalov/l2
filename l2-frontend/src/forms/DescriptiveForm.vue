@@ -80,6 +80,7 @@
                       28: 1,
                       30: 1,
                       39: 1,
+                      42: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -485,6 +486,17 @@
                   :directory="field.values_to_input[0]"
                 />
               </div>
+              <!--Тип поля (42, "Файл")-->
+              <div
+                v-else-if="field.field_type === 42"
+                class="field-value"
+              >
+                <FileResultField
+                  v-model="field.value"
+                  :settings="field.file_settings"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
               <div
                 v-if="field.helper"
                 v-tippy="{
@@ -508,6 +520,7 @@
 
 <script lang="ts">
 import LPress from '@/ui-cards/LPress.vue';
+import FileResultField from '@/forms/Fields/FileResultField.vue';
 
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -518,6 +531,7 @@ import { enterField, leaveField } from './utils';
 export default {
   name: 'DescriptiveForm',
   components: {
+    FileResultField,
     FastTemplates,
     InputTemplates,
     VisibilityGroupWrapper,

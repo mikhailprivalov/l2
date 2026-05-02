@@ -1,0 +1,27 @@
+export type FileRulesMode = 'exact' | 'oneOf'
+
+export type FileRuleItem = {
+  extension: string
+  count: number
+}
+
+export type FileRuleVariant = {
+  items: FileRuleItem[]
+}
+
+export type FileFieldSettings = {
+  minFiles: number | null
+  maxFiles: number | null
+  maxFileSizeMb: number | null
+  maxTotalSizeMb: number | null
+
+  allowedExtensions: string[]
+
+  filenamePattern: string
+  filenamePatternDescription: string
+  strictFilename: boolean
+
+  rulesEnabled: boolean
+  rulesMode: FileRulesMode
+  rulesVariants: FileRuleVariant[]
+}
