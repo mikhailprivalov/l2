@@ -532,7 +532,7 @@ PARACLINIC_FILE_DEFAULTS = {
     "max_files": 5,
     "max_file_size_mb": 10,
     "max_total_size_mb": 30,
-    "allowed_extensions": ["pdf", "jpeg"],
+    "allowed_extensions": [],
 }
 
 # Доступные расширения файлов для конструктора
