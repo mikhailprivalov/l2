@@ -4,14 +4,13 @@
 
 <script setup lang="ts">
 
-import { FileFieldSettings } from '@/types/Descriptive/Fields/FileField';
 
 const props = defineProps<{
   value: unknown | null
-  settings: FileFieldSettings | null
+  settings: unknown | null
 }>();
 
-const emit = defineEmits<{(e: 'input', value: FileFieldSettings): void
+const emit = defineEmits<{(e: 'input', value: unknown): void
 }>();
 
 </script>
