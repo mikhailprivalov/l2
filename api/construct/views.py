@@ -3,6 +3,7 @@ from django.http import JsonResponse
 import simplejson as json
 from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory, ComplexService, ReleationsFT, Fractions
 from laboratory.decorators import group_required
+from laboratory.settings import PARACLINIC_FILE_HARD_LIMITS, PARACLINIC_FILE_DEFAULTS, PARACLINIC_FILE_ALLOWED_EXTENSIONS
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from slog.models import Log
@@ -269,4 +270,14 @@ def create_tube(request):
     result = Tubes.create_tube(title, short_title, color)
     if result["ok"]:
         Log.log(result["data"], 250001, request.user.doctorprofile, {"tube_id": result["data"], "title": title, "short_title": short_title, "color": color})
+    return JsonResponse(result)
+
+
+@login_required
+@group_required("Конструктор: Параклинические (описательные) исследования")
+def get_descriptive_ref_books(request):
+    file_field_limits = PARACLINIC_FILE_HARD_LIMITS
+    file_field_default_settings = PARACLINIC_FILE_DEFAULTS
+    file_field_allowed_extensions = PARACLINIC_FILE_ALLOWED_EXTENSIONS
+    result = {"file_field_limits": file_field_limits, "file_field_default_settings": file_field_default_settings, "file_field_allowed_extensions": file_field_allowed_extensions}
     return JsonResponse(result)

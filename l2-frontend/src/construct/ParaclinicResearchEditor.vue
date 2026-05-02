@@ -931,6 +931,12 @@
                         @input="e => e ? row.values_to_input = [e] : row.values_to_input = []"
                       />
                     </div>
+                    <!--Тип поля (42, "Файл")-->
+                    <FileField
+                      v-else-if="row.field_type === 42"
+                      v-model="row.file_settings"
+                      :settings="file_field_settings"
+                    />
                     <v-collapse-wrapper v-show="[0, 10, 12, 13, 14, 19, 22, 23, 27].includes(row.field_type)">
                       <div
                         v-collapse-toggle
@@ -1185,6 +1191,7 @@
                         <option value="35">Врач</option>
                         <option value="39">Динамический справочник</option>
                         <option value="41">Шаблон макет</option>
+                        <option value="42">Файл</option>
                       </select>
                     </label>
                   </div>
@@ -1314,6 +1321,9 @@ import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 import { getTreeSelectLabel } from '@/utils';
+import FileField from '@/construct/ParaclinicResearchEditorComponents/FieldKinds/FileField.vue';
+import { FileFieldConstructorSettings } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
+import { GetRefBooksResponse } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearchEditor';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1322,6 +1332,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
+    FileField,
     LinkFieldModal,
     FileAddModal,
     ResearchPermissionsModal,
@@ -1466,6 +1477,7 @@ export default {
       showLinkFieldModal: false,
       currentLinkFieldId: null,
       currentLinkFieldValue: null,
+      file_field_settings: null as FileFieldConstructorSettings | null,
     };
   },
   computed: {
@@ -1567,6 +1579,7 @@ export default {
     await this.load_deparments();
     await this.loadDynamicDirectories();
     await this.loadLayoutTemplates();
+    await this.getRefBooks();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1809,6 +1822,7 @@ export default {
         patientControlParam: field.patientControlParam ?? -1,
         cdaOption: field.cdaOption ?? -1,
         patternParam: field.patternParam ?? -1,
+        file_settings: field.file_settings ?? null,
       });
     },
     add_group(groupSettings: any = {}) {
@@ -2039,6 +2053,16 @@ export default {
         }
       }
       this.closeLinkFieldModal();
+    },
+    async getRefBooks() {
+      await this.$store.dispatch(actions.INC_LOADING);
+      const result = await this.$api('construct/descriptive/get-ref-books') as GetRefBooksResponse;
+      await this.$store.dispatch(actions.DEC_LOADING);
+      this.file_field_settings = {
+        fileFieldLimits: result.file_field_limits,
+        fileFieldDefaultSettings: result.file_field_default_settings,
+        fileFieldAllowedExtensions: result.file_field_allowed_extensions,
+      };
     },
   },
 };

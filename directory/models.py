@@ -2174,38 +2174,17 @@ class ParaclinicInputFieldFileSettings(models.Model):
     (1 PDF, 1 XLSX) или (2 PDF) или (2 XLSX)
     Примерная структура:
     {
-      "mode": "one_of",
-      "variants": [
-        {"pdf": 1, "xlsx": 1},
-        {"pdf": 2},
-        {"xlsx": 2}
-      ]
-    }
-    Дальше возможно расширение более детальное, позволяющее настраивать валидацию наборов файлов
-    Например:
-    {
-      "mode": "one_of",
+      "mode": "oneOf",
       "variants": [
         {
-          "code": "pdf_and_xlsx",
-          "title": "PDF + XLSX",
-          "files": [
-            {
-              "kind": "pdf_report",
-              "title": "PDF-отчет",
-              "extensions": ["pdf"],
-              "min_count": 1,
-              "max_count": 1,
-              "filename_pattern": "^report_.*\\.pdf$"
-            },
-            {
-              "kind": "xlsx_table",
-              "title": "Excel-таблица",
-              "extensions": ["xlsx"],
-              "min_count": 1,
-              "max_count": 1,
-              "filename_pattern": "^table_.*\\.xlsx$"
-            }
+          "items": [
+            { "extension": "pdf", "count": 1 },
+            { "extension": "xlsx", "count": 1 }
+          ]
+        },
+        {
+          "items": [
+            { "extension": "pdf", "count": 2 }
           ]
         }
       ]
@@ -2236,6 +2215,82 @@ class ParaclinicInputFieldFileSettings(models.Model):
     class Meta:
         verbose_name = "Настройка для поля 'файл'"
         verbose_name_plural = "Настройки для полей 'файлов'"
+
+    @staticmethod
+    def get_file_field_settings(field: ParaclinicInputField) -> dict | None:
+        if field.field_type != 42:
+            return None
+
+        settings = getattr(field, "file_settings", None)
+
+        if settings is None:
+            return {
+                "minFiles": None,
+                "maxFiles": None,
+                "maxFileSizeMb": None,
+                "maxTotalSizeMb": None,
+                "allowedExtensions": [],
+                "filenamePattern": "",
+                "filenamePatternDescription": "",
+                "strictFilename": False,
+                "rulesEnabled": False,
+                "rulesMode": "exact",
+                "rulesVariants": [],
+            }
+
+        file_rules = settings.file_rules or {}
+
+        return {
+            "minFiles": settings.min_count_files,
+            "maxFiles": settings.max_count_files,
+            "maxFileSizeMb": settings.max_file_size_mb,
+            "maxTotalSizeMb": settings.max_total_size_mb,
+            "allowedExtensions": settings.allowed_extensions or [],
+            "filenamePattern": settings.filename_pattern or "",
+            "filenamePatternDescription": settings.filename_pattern_description or "",
+            "rulesEnabled": bool(file_rules.get("variants")),
+            "rulesMode": file_rules.get("mode", "exact"),
+            "rulesVariants": file_rules.get("variants", []),
+        }
+
+    @staticmethod
+    def update_file_field_settings(field: ParaclinicInputField, file_settings: dict | None):
+
+        # Если поменялся тип поля - удаляем настройки
+        if field.field_type != 42:
+            ParaclinicInputFieldFileSettings.objects.filter(field=field).delete()
+            return
+
+        # Если очистили
+        if file_settings is None:
+            ParaclinicInputFieldFileSettings.objects.filter(field=field).delete()
+            return
+
+        rules_enabled = file_settings.get("rulesEnabled", False)
+
+        file_rules = (
+            {
+                "mode": file_settings.get("rulesMode", "exact"),
+                "variants": file_settings.get("rulesVariants", []),
+            }
+            if rules_enabled
+            else {}
+        )
+
+        settings, _ = ParaclinicInputFieldFileSettings.objects.get_or_create(
+            field=field,
+        )
+
+        settings.min_count_files = file_settings.get("minFiles")
+        settings.max_count_files = file_settings.get("maxFiles")
+        settings.max_file_size_mb = file_settings.get("maxFileSizeMb")
+        settings.max_total_size_mb = file_settings.get("maxTotalSizeMb")
+        settings.allowed_extensions = file_settings.get("allowedExtensions") or []
+
+        settings.filename_pattern = file_settings.get("filenamePattern", "")
+        settings.filename_pattern_description = file_settings.get("filenamePatternDescription", "")
+        settings.file_rules = file_rules
+        settings.save()
 
 
 class Contrasts(models.Model):

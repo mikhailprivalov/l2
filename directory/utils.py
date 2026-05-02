@@ -5,6 +5,7 @@ from directory.models import (
     ParaclinicInputField,
     PatientControlParam,
     PatternParam,
+    ParaclinicInputFieldFileSettings,
 )
 import simplejson as json
 
@@ -86,38 +87,41 @@ def get_researches_details(pk, templates_department_pk=None):
                 "cdaOption": group.cda_option_id if group.cda_option else -1,
             }
 
-            for field in ParaclinicInputField.objects.filter(group=group).order_by("order"):
-                g["fields"].append(
-                    {
-                        "pk": field.pk,
-                        "order": field.order,
-                        "lines": field.lines,
-                        "for_extract_card": field.for_extract_card,
-                        "sign_organization": field.sign_organization,
-                        "title": field.title,
-                        "short_title": field.short_title,
-                        "default": field.default_value,
-                        "visibility": field.visibility,
-                        "hide": field.hide,
-                        "values_to_input": json.loads(field.input_templates) if not templates_department_pk else json.loads(templates_fields_data.get(field.pk, '[]')),
-                        "field_type": field.field_type,
-                        "can_edit": field.can_edit_computed,
-                        "required": field.required,
-                        "not_edit": field.not_edit,
-                        "operator_enter_param": field.operator_enter_param,
-                        "is_diag_table": field.is_diag_table,
-                        "for_talon": field.for_talon,
-                        "for_med_certificate": field.for_med_certificate,
-                        "helper": field.helper,
-                        "new_value": "",
-                        "attached": field.attached,
-                        "controlParam": field.control_param,
-                        "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1,
-                        "cdaOption": field.cda_option_id if field.cda_option else -1,
-                        "patternParam": field.statistic_pattern_param_id if field.statistic_pattern_param else -1,
-                        "newGroupId": None,
-                    }
-                )
+            for field in ParaclinicInputField.objects.filter(group=group).select_related("file_settings").order_by("order"):
+                field_data = {
+                    "pk": field.pk,
+                    "order": field.order,
+                    "lines": field.lines,
+                    "for_extract_card": field.for_extract_card,
+                    "sign_organization": field.sign_organization,
+                    "title": field.title,
+                    "short_title": field.short_title,
+                    "default": field.default_value,
+                    "visibility": field.visibility,
+                    "hide": field.hide,
+                    "values_to_input": json.loads(field.input_templates) if not templates_department_pk else json.loads(templates_fields_data.get(field.pk, '[]')),
+                    "field_type": field.field_type,
+                    "can_edit": field.can_edit_computed,
+                    "required": field.required,
+                    "not_edit": field.not_edit,
+                    "operator_enter_param": field.operator_enter_param,
+                    "is_diag_table": field.is_diag_table,
+                    "for_talon": field.for_talon,
+                    "for_med_certificate": field.for_med_certificate,
+                    "helper": field.helper,
+                    "new_value": "",
+                    "attached": field.attached,
+                    "controlParam": field.control_param,
+                    "patientControlParam": field.patient_control_param_id if field.patient_control_param else -1,
+                    "cdaOption": field.cda_option_id if field.cda_option else -1,
+                    "patternParam": field.statistic_pattern_param_id if field.statistic_pattern_param else -1,
+                    "newGroupId": None,
+                }
+
+                if field.field_type == 42:
+                    field_data["file_settings"] = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+
+                g["fields"].append(field_data)
             response["groups"].append(g)
     return response
 

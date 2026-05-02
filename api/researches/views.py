@@ -34,6 +34,7 @@ from directory.models import (
     ParaclinicFieldTemplateDepartment,
     ConstructorEditAccessResearch,
     Researches,
+    ParaclinicInputFieldFileSettings,
 )
 from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor, get_lab_researches_with_tests_params
 from directory.utils import get_researches_details
@@ -739,6 +740,7 @@ def researches_update(request):
                                     f.input_templates = json.dumps(field["values_to_input"])
                             if f:
                                 f.save()
+                                ParaclinicInputFieldFileSettings.update_file_field_settings(field=f, file_settings=field.get("file_settings"))
                                 if department_template_field:
                                     department_template_field.save()
                             if field.get("newGroupId"):
