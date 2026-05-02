@@ -53,6 +53,7 @@
               v-model="formValues.currentContrast"
               :multiple="false"
               :options="contrastOptions"
+              :append-to-body="true"
               placeholder="Выберите контраст"
               @input="onInput"
             />
