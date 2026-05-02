@@ -492,7 +492,7 @@
                 class="field-value"
               >
                 <FileResultField
-                  v-model="field.value"
+                  v-model="field.files"
                   :settings="field.file_settings"
                   :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />

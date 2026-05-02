@@ -76,7 +76,7 @@ from directions.models import (
     NoGenerator,
     ComplexResearchAccountPerson,
 )
-from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService
+from directory.models import Fractions, ParaclinicInputGroups, ParaclinicTemplateName, ParaclinicInputField, HospitalService, Researches, AuxService, ParaclinicInputFieldFileSettings
 from laboratory import settings
 from laboratory import utils
 from laboratory.decorators import group_required
@@ -1645,7 +1645,11 @@ def directions_paraclinic_form(request):
                         'research__paraclinicinputgroups_set',
                         queryset=ParaclinicInputGroups.objects.filter(hide=False)
                         .order_by("order")
-                        .prefetch_related(Prefetch('paraclinicinputfield_set', queryset=ParaclinicInputField.objects.filter(hide=False).order_by("order"))),
+                        .prefetch_related(Prefetch('paraclinicinputfield_set',
+                                                   queryset=ParaclinicInputField.objects
+                                                   .filter(hide=False)
+                                                   .select_related("file_settings")
+                                                   .order_by("order"))),
                     ),
                     Prefetch('recipe_set', queryset=Recipe.objects.all().order_by('pk')),
                 )
@@ -2002,7 +2006,7 @@ def directions_paraclinic_form(request):
                             }
                         )
 
-                result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i)}
+                result_fields = {x.field_id: x for x in ParaclinicResult.objects.filter(issledovaniye=i).prefetch_related("files")}
 
                 fields_templates_by_department_data = None
                 if i.research.templates_by_department:
@@ -2031,6 +2035,7 @@ def directions_paraclinic_form(request):
                             continue
                         result_field: ParaclinicResult = result_fields.get(field.pk)
                         field_type = field.field_type if not result_field else result_field.get_field_type(default_field_type=field.field_type, is_confirmed_strict=bool(i.time_confirmation))
+
                         values_to_input = ([] if not field.required or field_type not in [10, 12] or i.research.is_monitoring else ['- Не выбрано']) + (
                             [] if field.input_templates == '[]' or not field.input_templates else json.loads(field.input_templates)
                         )
@@ -2040,10 +2045,32 @@ def directions_paraclinic_form(request):
                                 values_to_input = json.loads(values_to_input_by_department)
 
                         value = (
-                            ((field.default_value if field_type not in [3, 11, 13, 14, 30] else '') if not result_field else result_field.value)
+                            ((field.default_value if field_type not in [3, 11, 13, 14, 30, 42] else '') if not result_field else result_field.value)
                             if field_type not in [1, 20]
                             else (get_default_for_field(field_type, field.default_value) if not result_field else result_field.value)
                         )
+
+                        file_settings = None
+                        files = []
+
+                        if field_type == 42: # Тип поля "42, файл"
+                            file_settings = ParaclinicInputFieldFileSettings.get_file_field_settings(field)
+                            value = ""
+
+                            if result_field:
+                                files = [
+                                    {
+                                        "pk": file.pk,
+                                        "originalName": file.original_name,
+                                        "extension": file.extension,
+                                        "mimeType": file.mime_type,
+                                        "size": file.size,
+                                        "url": file.file.url,
+                                        "createdAt": strdatetimeru(file.created_at),
+                                    }
+                                    for file in result_field.files.all()
+                                ]
+
                         if field_type in [2, 32, 33, 34, 36] and isinstance(value, str) and value.startswith('%'):
                             value = ''
                         elif field_type in [10, 12] and not value and len(values_to_input) > 0 and field.required:
@@ -2068,6 +2095,8 @@ def directions_paraclinic_form(request):
                                 "operator_enter_param": field.operator_enter_param,
                                 "deniedGroup": field.denied_group.name if field.denied_group else "",
                                 "isDiagTable": field.is_diag_table,
+                                "file_settings": file_settings,
+                                "files": files,
                             }
                         )
                     iss["research"]["groups"].append(g)
