@@ -4,7 +4,8 @@ from directory.models import (
     ParaclinicInputGroups,
     ParaclinicInputField,
     PatientControlParam,
-    PatternParam, ParaclinicInputFieldFileSettings,
+    PatternParam,
+    ParaclinicInputFieldFileSettings,
 )
 import simplejson as json
 
