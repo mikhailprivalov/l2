@@ -2274,12 +2274,23 @@ def _load_paraclinic_result_request_body(request):
     Возвращает (data_dict, files_dict).
 
     - При обычном JSON-запросе тело берётся из request.body, файлов нет.
-    - При multipart/form-data — JSON лежит в поле "form" (см. http-common.smartCall),
-      а сами файлы — в request.FILES.
+    - При multipart/form-data:
+        * JSON-payload лежит в поле "form" (см. http-common.smartCall).
+          Так как фронт передаёт его через Blob, Django парсит его как файл
+          и кладёт в request.FILES (а не в request.POST). Поэтому проверяем оба места.
+        * Сами файлы — в request.FILES, кроме служебного ключа "form".
     """
     content_type = (request.content_type or "").lower()
     if content_type.startswith("multipart/form-data"):
-        return json.loads(request.POST.get("form", "{}")), request.FILES
+        form_raw = request.POST.get("form")
+        if form_raw is None:
+            form_file = request.FILES.get("form")
+            if form_file is not None:
+                form_raw = form_file.read().decode("utf-8")
+        if not form_raw:
+            form_raw = "{}"
+        files = {key: value for key, value in request.FILES.items() if key != "form"}
+        return json.loads(form_raw), files
     return json.loads(request.body), {}
 
 

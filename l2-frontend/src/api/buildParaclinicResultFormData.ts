@@ -15,7 +15,8 @@ type FilePayloadItem = {
 const FILE_FIELD_TYPE = 42;
 const FILE_FORM_DATA_KEY_PREFIX = 'paraclinic_file';
 
-const isPlainObject = (value: any): value is Record<string, any> => value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof File)
+const isPlainObject = (value: any): value is Record<string, any> => value !== null && typeof value === 'object'
+  && !Array.isArray(value) && !(value instanceof File)
     && !(value instanceof Blob);
 
 const cloneValue = (value: any): any => {
@@ -45,7 +46,7 @@ const buildFilesManifest = (
   let hasNewFiles = false;
 
   for (const file of files || []) {
-    if (file && file.isNew && file.file instanceof File && file.tempId) {
+    if (file?.isNew && file.file instanceof File && file.tempId) {
       const key = `${FILE_FORM_DATA_KEY_PREFIX}:${fieldPk}:${file.tempId}`;
 
       formData.append(key, file.file, file.originalName || file.file.name);
