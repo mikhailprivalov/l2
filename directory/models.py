@@ -2248,7 +2248,6 @@ class ParaclinicInputFieldFileSettings(models.Model):
             "allowedExtensions": settings.allowed_extensions or [],
             "filenamePattern": settings.filename_pattern or "",
             "filenamePatternDescription": settings.filename_pattern_description or "",
-
             "rulesEnabled": bool(file_rules.get("variants")),
             "rulesMode": file_rules.get("mode", "exact"),
             "rulesVariants": file_rules.get("variants", []),
