@@ -3904,7 +3904,4 @@ class ParaclinicResultFile(models.Model):
                 size=ni["size"],
             )
 
-        return [
-            ParaclinicResultFile.serialize(f)
-            for f in ParaclinicResultFile.objects.filter(result=f_result).order_by("created_at", "pk")
-        ]
+        return [ParaclinicResultFile.serialize(f) for f in ParaclinicResultFile.objects.filter(result=f_result).order_by("created_at", "pk")]
