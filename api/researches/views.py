@@ -33,7 +33,8 @@ from directory.models import (
     ParaclinicTemplateNameDepartment,
     ParaclinicFieldTemplateDepartment,
     ConstructorEditAccessResearch,
-    Researches, ParaclinicInputFieldFileSettings,
+    Researches,
+    ParaclinicInputFieldFileSettings,
 )
 from directory.sql_func import get_constructor_edit_access_by_research_id, get_constructor_edit_access_by_department_or_doctor, get_lab_researches_with_tests_params
 from directory.utils import get_researches_details
