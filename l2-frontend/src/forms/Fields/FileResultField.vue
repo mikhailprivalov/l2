@@ -1,7 +1,5 @@
 <template>
-  <div>
-    <span>Тут будет интересный текст</span>
-  </div>
+  <div />
 </template>
 
 <script setup lang="ts">
