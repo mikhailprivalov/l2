@@ -832,21 +832,20 @@ def direction_data_for_link(request):
     for dir_id, rows in groups.items():
         is_lab = len(rows) > 1
         first = rows[0]
-        is_descriptive = any([
-            first['is_treatment'], first['is_stom'], first['is_doc_refferal'],
-            first['is_paraclinic'], first['is_microbiology'], first['is_form']
-        ])
+        is_descriptive = any([first['is_treatment'], first['is_stom'], first['is_doc_refferal'], first['is_paraclinic'], first['is_microbiology'], first['is_form']])
 
-        result.append({
-            "id": dir_id,
-            "label": " | ".join(r['res_title'] for r in rows),
-            "hosp_direction_id": None if is_lab else first['hosp_direction_id'],
-            "is_hosp": not is_lab and first['is_hospital'],
-            "is_slave_hospital": not is_lab and first['is_slave_hospital'],
-            "is_descriptive": not is_lab and is_descriptive,
-            "is_case": not is_lab and first['is_case'],
-            "is_lab": is_lab,
-        })
+        result.append(
+            {
+                "id": dir_id,
+                "label": " | ".join(r['res_title'] for r in rows),
+                "hosp_direction_id": None if is_lab else first['hosp_direction_id'],
+                "is_hosp": not is_lab and first['is_hospital'],
+                "is_slave_hospital": not is_lab and first['is_slave_hospital'],
+                "is_descriptive": not is_lab and is_descriptive,
+                "is_case": not is_lab and first['is_case'],
+                "is_lab": is_lab,
+            }
+        )
 
     return JsonResponse({'result': result})
 
