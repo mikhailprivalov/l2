@@ -821,8 +821,6 @@ def direction_data_for_link(request):
         is_microbiology=F('research__is_microbiology'),
         is_form=F('research__is_form'),
     )
-    .values('direction_id', 'res_title', 'hosp_direction_id', 'is_hospital', 'is_slave_hospital', 'is_case',
-            'is_treatment', 'is_stom', 'is_doc_refferal', 'is_paraclinic', 'is_microbiology', 'is_form'))
 
     groups = collections.defaultdict(list)
     for row in data:
