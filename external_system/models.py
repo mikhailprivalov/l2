@@ -99,7 +99,7 @@ class CdaFields(models.Model):
     is_indicator = models.BooleanField(default=False, blank=True, help_text="Это показатель для Куратора", db_index=True)
 
     def __str__(self):
-        return f"{self.pk} - {self.title}"
+        return f"{self.code} - {self.title} - {self.pk}"
 
     @staticmethod
     def get_cda_params(is_doc_refferal, is_treatment, is_form, is_extract):

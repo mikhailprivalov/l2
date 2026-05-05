@@ -96,7 +96,6 @@
           <col style="width: 120px">
           <col style="width: 160px">
           <col style="width: 120px">
-          <col style="width: 120px">
         </colgroup>
         <thead>
           <tr>
@@ -107,75 +106,18 @@
             <th>Балл, МО</th>
             <th>Значение, куратор</th>
             <th>Балл, куратор</th>
-            <th class="text-center">
-              <a
-                v-if="toPrintNumbers.length > 0"
-                v-tippy
-                href="#"
-                class="a-under"
-                title="Печать выбранных"
-                @click.prevent="print"
-              >
-                <i class="fas fa-print" />
-              </a>
-              <a
-                v-if="toPrintNumbers.length > 0"
-                v-tippy
-                href="#"
-                class="a-under"
-                title="JSON-file"
-                @click.prevent="savejson()"
-              >
-                <i class="fas fa-poll-h" />
-              </a>
-            </th>
           </tr>
         </thead>
         <tbody>
-          <tr
+          <IndicatorCuratorRow
             v-for="r in rows"
-            :key="r.mainDirection"
-          >
-            <td>
-              {{ r.hospital }}
-            </td>
-            <td>
-              <a
-                :href="`/ui/results/descriptive#{&quot;pk&quot;:${r.mainDirection}}`"
-                target="_blank"
-                class="a-under"
-              >
-                {{ r.direction }}
-              </a>
-            </td>
-            <td>
-              {{ r.indicatorTitle }}
-            </td>
-            <td>
-              {{ r.hospitalValue }}
-            </td>
-            <td>
-              {{ r.score || '–' }}
-            </td>
-            <td class="cl-td">
-              -
-            </td>
-            <td>
-              <input
-                v-model="toPrint[r.slaveDir]"
-                type="checkbox"
-              >
-            </td>
-            <td>
-              <input
-                v-model="toPrint[r.slaveDir]"
-                type="checkbox"
-              >
-            </td>
-          </tr>
+            :key="`${r.issledovaniye}-${r.direction}-${r.indicatorTitle}`"
+            :row="r"
+            @row-updated="onRowUpdated"
+          />
           <tr v-if="rows.length === 0">
             <td
-              colspan="8"
+              colspan="7"
               class="text-center"
             >
               не найдено
@@ -197,6 +139,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import DocCallRow from '@/pages/DocCallRow.vue';
+import IndicatorCuratorRow from '@/pages/IndicatorCuratorRow.vue';
 import DateFieldNav2 from '@/fields/DateFieldNav2.vue';
 import ExtraNotificationFastEditor from '@/ui-cards/ExtraNotificationFastEditor.vue';
 import { ExtraNotificationData } from '@/types/extraNotification';
@@ -216,6 +159,7 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
     ExtraNotificationFastEditor,
     DateFieldNav2,
     DocCallRow,
+    IndicatorCuratorRow,
     Treeselect,
   },
   data() {
@@ -229,8 +173,6 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
         hospital: -1,
         datePeriod: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       },
-
-      toPrint: {},
     };
   },
   beforeMount() {
@@ -275,8 +217,6 @@ export default class ExtraNotification extends Vue {
 
   hospitals: any[];
 
-  toPrint: any;
-
   get canEdit() {
     for (const g of this.$store.getters.user_data.groups || []) {
       if (g === 'Заполнение экстренных извещений') {
@@ -295,33 +235,23 @@ export default class ExtraNotification extends Vue {
     return this.canEdit ? this.hospitals : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
   }
 
-  get toPrintNumbers() {
-    return Object.keys(this.toPrint).filter(k => this.toPrint[k]);
-  }
-
-  print() {
-    const ids = this.toPrintNumbers;
-    window.open(`/forms/extra-nofication?pk=[${ids}]`);
-    for (const i of ids) {
-      this.toPrint[i] = false;
-    }
-  }
-
-  savejson() {
-    const ids = this.toPrintNumbers;
-    window.open(`/forms/json-nofication?pk=[${ids}]`);
-    for (const i of ids) {
-      this.toPrint[i] = false;
-    }
-  }
-
   async load() {
     await this.$store.dispatch(actions.INC_LOADING);
     const data = await this.$api('indicators/search-indicator', this.params);
     this.rows = data.rows;
-    this.toPrint = data.rows.reduce((a, r) => ({ ...a, [r.slaveDir]: false }), {});
     await this.$store.dispatch(actions.DEC_LOADING);
     this.loaded = true;
+  }
+
+  onRowUpdated(updatedRow: any) {
+    const rowIndex = this.rows.findIndex((r: any) => (
+      r.issledovaniye === updatedRow.issledovaniye
+      && r.direction === updatedRow.direction
+      && r.indicatorTitle === updatedRow.indicatorTitle
+    ));
+    if (rowIndex !== -1) {
+      this.$set(this.rows, rowIndex, updatedRow);
+    }
   }
 }
 </script>
