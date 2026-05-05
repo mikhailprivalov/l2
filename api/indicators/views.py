@@ -128,7 +128,7 @@ def search_indicator(request):
     group_to_curator_field = {}
     group_to_score_field = {}
     for field in fields:
-        if field.field_type == 10 and field.group_id not in group_to_curator_field:
+        if field.field_type in [10, 18] and field.group_id not in group_to_curator_field:
             group_to_curator_field[field.group_id] = field
         if field.field_type == 3 and field.group_id not in group_to_score_field:
             group_to_score_field[field.group_id] = field
@@ -198,6 +198,7 @@ def search_indicator(request):
         score_field = group_to_score_field.get(row.get("groupId"))
         if not curator_field:
             row["curatorFieldPk"] = None
+            row["curatorFieldType"] = None
             row["curatorVariants"] = []
             row["curatorValue"] = ""
             row["curatorScoreFieldPk"] = score_field.pk if score_field else None
@@ -207,11 +208,12 @@ def search_indicator(request):
             continue
 
         variants = _parse_input_templates(curator_field)
-        default_value = variants[0] if variants else ""
+        default_value = variants[0] if curator_field.field_type == 10 and variants else ""
         value = saved_values.get((row["issledovaniye"], curator_field.pk), default_value)
         formula = _normalize_formula_for_curator(score_field.default_value, curator_field.pk) if score_field else ""
         row["curatorFieldPk"] = curator_field.pk
-        row["curatorVariants"] = variants
+        row["curatorFieldType"] = curator_field.field_type
+        row["curatorVariants"] = variants if curator_field.field_type == 10 else []
         row["curatorValue"] = value
         row["curatorScoreFieldPk"] = score_field.pk if score_field else None
         row["curatorScoreFormula"] = formula

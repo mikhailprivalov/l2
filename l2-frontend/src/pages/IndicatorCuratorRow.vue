@@ -23,9 +23,15 @@
     </td>
     <td class="cl-td">
       <TreeSelectField
-        v-if="localRow.curatorFieldPk && localRow.curatorVariants && localRow.curatorVariants.length > 0"
+        v-if="localRow.curatorFieldPk && localRow.curatorFieldType === 10 && localRow.curatorVariants &&
+          localRow.curatorVariants.length > 0"
         :value="localRow.curatorValue"
         :variants="localRow.curatorVariants"
+        @modified="saveCuratorValue($event)"
+      />
+      <NumberField
+        v-else-if="localRow.curatorFieldPk && localRow.curatorFieldType === 18"
+        :value="localRow.curatorValue"
         @modified="saveCuratorValue($event)"
       />
       <span v-else>–</span>
@@ -38,11 +44,13 @@
 
 <script lang="ts">
 import TreeSelectField from '@/fields/TreeSelectField.vue';
+import NumberField from '@/fields/NumberField.vue';
 
 export default {
   name: 'IndicatorCuratorRow',
   components: {
     TreeSelectField,
+    NumberField,
   },
   props: {
     row: {
