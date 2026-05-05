@@ -44,7 +44,7 @@
               :class="{
                 disabled: confirmed,
                 empty: notFilled.includes(field.pk),
-                'field-vertical-simple': [16, 17].includes(field.field_type) && pk,
+                'field-vertical-simple': [16, 17, 43].includes(field.field_type) && pk,
                 required: field.required,
               }"
               :title="field.required && 'обязательно для заполнения'"
@@ -81,6 +81,7 @@
                       30: 1,
                       39: 1,
                       42: 1,
+                      43: 1,
                     }[field.field_type]
                 "
                 :pk="field.pk"
@@ -498,6 +499,17 @@
                 />
               </div>
               <div
+                v-else-if="field.field_type === 43"
+                class="field-value"
+                style="margin: 0; padding-right: 5px"
+              >
+                <LinkToDocumentField
+                  v-model="field.value"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                  @edit-link-field-value="field.value = $event"
+                />
+              </div>
+              <div
                 v-if="field.helper"
                 v-tippy="{
                   placement: 'left',
@@ -563,6 +575,7 @@ export default {
     DoctorProfileTreeselectField: () => import('@/fields/DoctorProfileTreeselectField.vue'),
     ProcedureListResult: () => import('@/fields/ProcedureListResult.vue'),
     DynamicDirectoryField: () => import('@/fields/DynamicDirectoryField.vue'),
+    LinkToDocumentField: () => import('@/fields/LinkToDocumentField.vue'),
   },
   props: {
     research: {
