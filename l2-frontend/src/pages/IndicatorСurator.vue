@@ -107,15 +107,66 @@
             <th>Значение, куратор</th>
             <th>Балл, куратор</th>
           </tr>
+          <tr>
+            <th>
+              <input
+                v-model.trim="columnFilters.hospital"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+            <th>
+              <input
+                v-model.trim="columnFilters.direction"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+            <th>
+              <input
+                v-model.trim="columnFilters.indicatorTitle"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+            <th>
+              <input
+                v-model.trim="columnFilters.hospitalValue"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+            <th>
+              <input
+                v-model.trim="columnFilters.score"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+            <th>
+              <input
+                v-model.trim="columnFilters.curatorValue"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+            <th>
+              <input
+                v-model.trim="columnFilters.curatorScore"
+                class="form-control input-sm"
+                placeholder="Фильтр..."
+              >
+            </th>
+          </tr>
         </thead>
         <tbody>
           <IndicatorCuratorRow
-            v-for="r in rows"
+            v-for="r in filteredRows"
             :key="`${r.issledovaniye}-${r.direction}-${r.indicatorTitle}`"
             :row="r"
             @row-updated="onRowUpdated"
           />
-          <tr v-if="rows.length === 0">
+          <tr v-if="filteredRows.length === 0">
             <td
               colspan="7"
               class="text-center"
@@ -173,6 +224,15 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
         hospital: -1,
         datePeriod: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       },
+      columnFilters: {
+        hospital: '',
+        direction: '',
+        indicatorTitle: '',
+        hospitalValue: '',
+        score: '',
+        curatorValue: '',
+        curatorScore: '',
+      },
     };
   },
   beforeMount() {
@@ -213,6 +273,8 @@ export default class ExtraNotification extends Vue {
 
   rows: ExtraNotificationData[];
 
+  columnFilters: Record<string, string>;
+
   loaded: boolean;
 
   hospitals: any[];
@@ -233,6 +295,32 @@ export default class ExtraNotification extends Vue {
 
   get visibleHospitals() {
     return this.canEdit ? this.hospitals : this.hospitals.filter(h => h.id === this.$store.getters.user_data.hospital);
+  }
+
+  get filteredRows() {
+    const toValue = (value: any) => String(value ?? '').toLowerCase();
+    const filters = {
+      hospital: toValue(this.columnFilters.hospital),
+      direction: toValue(this.columnFilters.direction),
+      indicatorTitle: toValue(this.columnFilters.indicatorTitle),
+      hospitalValue: toValue(this.columnFilters.hospitalValue),
+      score: toValue(this.columnFilters.score),
+      curatorValue: toValue(this.columnFilters.curatorValue),
+      curatorScore: toValue(this.columnFilters.curatorScore),
+    };
+    const hasFilters = Object.values(filters).some(Boolean);
+    if (!hasFilters) {
+      return this.rows;
+    }
+    return this.rows.filter((row: any) => (
+      toValue(row.hospital).includes(filters.hospital)
+      && toValue(row.direction).includes(filters.direction)
+      && toValue(row.indicatorTitle).includes(filters.indicatorTitle)
+      && toValue(row.hospitalValue).includes(filters.hospitalValue)
+      && toValue(row.score).includes(filters.score)
+      && toValue(row.curatorValue).includes(filters.curatorValue)
+      && toValue(row.curatorScore).includes(filters.curatorScore)
+    ));
   }
 
   async load() {
@@ -304,6 +392,10 @@ export default class ExtraNotification extends Vue {
     position: sticky;
     top: -1px;
     background: #fff;
+  }
+
+  thead input {
+    min-width: 80px;
   }
 }
 
