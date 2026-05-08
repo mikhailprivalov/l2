@@ -56,7 +56,7 @@ def _split_ternary(formula: str):
             c_pos = i
             break
     if q_pos != -1 and c_pos != -1:
-        return formula[:q_pos], formula[q_pos + 1:c_pos], formula[c_pos + 1:]
+        return formula[:q_pos], formula[q_pos + 1 : c_pos], formula[c_pos + 1 :]
     return None
 
 
