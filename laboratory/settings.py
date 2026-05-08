@@ -515,6 +515,7 @@ GROUP_USER_FOR_FILTER = []
 PERIOD_DAYS_SEND_RESULT_ECP = -1
 SHOW_RESTRICTIONS = False
 NOT_CONTROL_VISIT_RESEARCH_ID = []
+PERIOD_HAOURS_SEND_RESULT_ECP = -100
 
 # ----- Настройки для полей протоколов с типом "Файл" -----
 
