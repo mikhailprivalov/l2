@@ -60,19 +60,6 @@ def _split_ternary(formula: str):
     return None
 
 
-def _safe_eval_expr(expr: str):
-    is_empty = lambda v: not v
-    is_filled = lambda v: not is_empty(v)
-    return eval(
-        expr,
-        {"__builtins__": {}},
-        {
-            "isEmpty": is_empty,
-            "isFilled": is_filled,
-        },
-    )
-
-
 def _calculate_curator_score(formula: str, curator_value):
     if not formula:
         return ""
