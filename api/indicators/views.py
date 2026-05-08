@@ -79,7 +79,6 @@ def _calculate_curator_score(formula: str, curator_value):
     return "1"
 
 
-
 @require_POST
 def search_indicator(request):
     request_data = json.loads(request.body)
