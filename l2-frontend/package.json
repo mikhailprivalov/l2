@@ -114,7 +114,7 @@
     "sass": "~1.32",
     "sass-loader": "^10.1.1",
     "thread-loader": "^4.0.1",
-    "typescript": "~5.0.4",
+    "typescript": "~6.0.3",
     "url-loader": "^4.1.1",
     "vue-eslint-parser": "^9.1.1",
     "webpack": "4",
