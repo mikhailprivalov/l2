@@ -76,23 +76,8 @@ def _safe_eval_expr(expr: str):
 def _calculate_curator_score(formula: str, curator_value):
     if not formula:
         return ""
-    print("curator_value", curator_value)
-    safe_value = json.dumps("" if curator_value is None else str(curator_value))
-    print("safe_value", safe_value)
-    prepared = formula.replace("[_curator_value_]", safe_value)
-    ternary_parts = _split_ternary(prepared)
-    return "6"
-    # try:
-    #     if ternary_parts:
-    #         cond, left, right = ternary_parts
-    #         cond_eval = _safe_eval_expr(_replace_js_operators(cond.strip()))
-    #         branch = left if cond_eval else right
-    #         result = _safe_eval_expr(_replace_js_operators(branch.strip()))
-    #     else:
-    #         result = _safe_eval_expr(_replace_js_operators(prepared.strip()))
-    # except Exception:
-    #     return ""
-    # return "" if result is None else str(result)
+    return "1"
+
 
 
 @require_POST
@@ -245,14 +230,9 @@ def save_indicator_value(request):
         },
     )
     score_value = ""
-    print("score_field_pk, score_formula")
-    print(score_field_pk, score_formula)
     if score_field_pk and score_formula:
         score_field = ParaclinicInputField.objects.get(pk=score_field_pk)
-        print("score_formula, value")
-        print(score_formula, value)
         score_value = _calculate_curator_score(score_formula, value)
-        print(score_value)
         ParaclinicResultIndicator.objects.update_or_create(
             issledovaniye=issledovaniye,
             field=score_field,

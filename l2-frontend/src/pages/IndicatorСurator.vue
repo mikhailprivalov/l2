@@ -69,6 +69,12 @@
             href="#"
             @click.prevent="load()"
           >перезагрузить данные</a>
+          <a
+            class="a-under pull-right"
+            style="margin-right: 12px"
+            href="#"
+            @click.prevent="resetColumnFilters()"
+          >сбросить фильтры</a>
         </div>
       </div>
     </form>
@@ -90,10 +96,10 @@
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
           <col style="width: 300px">
-          <col style="width: 90px">
+          <col style="width: 130px">
           <col>
           <col style="width: 120px">
-          <col style="width: 120px">
+          <col style="width: 90px">
           <col style="width: 160px">
           <col style="width: 120px">
         </colgroup>
@@ -109,53 +115,81 @@
           </tr>
           <tr>
             <th>
-              <input
-                v-model.trim="columnFilters.hospital"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.hospital"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="hospitalFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
             <th>
-              <input
-                v-model.trim="columnFilters.direction"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.direction"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="directionFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
             <th>
-              <input
-                v-model.trim="columnFilters.indicatorTitle"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.indicatorTitle"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="indicatorTitleFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
             <th>
-              <input
-                v-model.trim="columnFilters.hospitalValue"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.hospitalValue"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="hospitalValueFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
             <th>
-              <input
-                v-model.trim="columnFilters.score"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.score"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="scoreFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
             <th>
-              <input
-                v-model.trim="columnFilters.curatorValue"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.curatorValue"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="curatorValueFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
             <th>
-              <input
-                v-model.trim="columnFilters.curatorScore"
-                class="form-control input-sm"
-                placeholder="Фильтр..."
-              >
+              <treeselect
+                v-model="columnFilters.curatorScore"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="curatorScoreFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
             </th>
           </tr>
         </thead>
@@ -204,6 +238,31 @@ interface Params {
 
 const EMPTY_ROWS: ExtraNotificationData[] = [];
 
+const makeOptions = (values: any[], numeric = false) => {
+  const normalized = Array.from(new Set(
+    values
+      .map(v => String(v ?? '').trim())
+      .filter(v => v !== ''),
+  ));
+  if (numeric) {
+    normalized.sort((a, b) => Number(a) - Number(b));
+  } else {
+    normalized.sort((a, b) => a.localeCompare(b, 'ru'));
+  }
+  return normalized.map(v => ({ id: v, label: v }));
+};
+
+const normalizeFilterValue = (value: any) => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  const normalized = String(value).trim();
+  if (normalized === '' || normalized.toLowerCase() === 'null' || normalized.toLowerCase() === 'undefined') {
+    return null;
+  }
+  return normalized;
+};
+
 @Component({
   components: {
     DateRange,
@@ -225,13 +284,13 @@ const EMPTY_ROWS: ExtraNotificationData[] = [];
         datePeriod: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       },
       columnFilters: {
-        hospital: '',
-        direction: '',
-        indicatorTitle: '',
-        hospitalValue: '',
-        score: '',
-        curatorValue: '',
-        curatorScore: '',
+        hospital: null,
+        direction: null,
+        indicatorTitle: null,
+        hospitalValue: null,
+        score: null,
+        curatorValue: null,
+        curatorScore: null,
       },
     };
   },
@@ -273,7 +332,7 @@ export default class ExtraNotification extends Vue {
 
   rows: ExtraNotificationData[];
 
-  columnFilters: Record<string, string>;
+  columnFilters: Record<string, string | null>;
 
   loaded: boolean;
 
@@ -298,29 +357,57 @@ export default class ExtraNotification extends Vue {
   }
 
   get filteredRows() {
-    const toValue = (value: any) => String(value ?? '').toLowerCase();
+    const toValue = (value: any) => String(value ?? '');
     const filters = {
-      hospital: toValue(this.columnFilters.hospital),
-      direction: toValue(this.columnFilters.direction),
-      indicatorTitle: toValue(this.columnFilters.indicatorTitle),
-      hospitalValue: toValue(this.columnFilters.hospitalValue),
-      score: toValue(this.columnFilters.score),
-      curatorValue: toValue(this.columnFilters.curatorValue),
-      curatorScore: toValue(this.columnFilters.curatorScore),
+      hospital: normalizeFilterValue(this.columnFilters.hospital),
+      direction: normalizeFilterValue(this.columnFilters.direction),
+      indicatorTitle: normalizeFilterValue(this.columnFilters.indicatorTitle),
+      hospitalValue: normalizeFilterValue(this.columnFilters.hospitalValue),
+      score: normalizeFilterValue(this.columnFilters.score),
+      curatorValue: normalizeFilterValue(this.columnFilters.curatorValue),
+      curatorScore: normalizeFilterValue(this.columnFilters.curatorScore),
     };
-    const hasFilters = Object.values(filters).some(Boolean);
+    const hasFilters = Object.values(filters).some(v => v !== null);
     if (!hasFilters) {
       return this.rows;
     }
     return this.rows.filter((row: any) => (
-      toValue(row.hospital).includes(filters.hospital)
-      && toValue(row.direction).includes(filters.direction)
-      && toValue(row.indicatorTitle).includes(filters.indicatorTitle)
-      && toValue(row.hospitalValue).includes(filters.hospitalValue)
-      && toValue(row.score).includes(filters.score)
-      && toValue(row.curatorValue).includes(filters.curatorValue)
-      && toValue(row.curatorScore).includes(filters.curatorScore)
+      (filters.hospital === null || toValue(row.hospital) === filters.hospital)
+      && (filters.direction === null || toValue(row.direction) === filters.direction)
+      && (filters.indicatorTitle === null || toValue(row.indicatorTitle) === filters.indicatorTitle)
+      && (filters.hospitalValue === null || toValue(row.hospitalValue) === filters.hospitalValue)
+      && (filters.score === null || toValue(row.score) === filters.score)
+      && (filters.curatorValue === null || toValue(row.curatorValue) === filters.curatorValue)
+      && (filters.curatorScore === null || toValue(row.curatorScore) === filters.curatorScore)
     ));
+  }
+
+  get hospitalFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.hospital));
+  }
+
+  get directionFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.direction), true);
+  }
+
+  get indicatorTitleFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.indicatorTitle));
+  }
+
+  get hospitalValueFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.hospitalValue));
+  }
+
+  get scoreFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.score), true);
+  }
+
+  get curatorValueFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.curatorValue));
+  }
+
+  get curatorScoreFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => r.curatorScore), true);
   }
 
   async load() {
@@ -340,6 +427,18 @@ export default class ExtraNotification extends Vue {
     if (rowIndex !== -1) {
       this.$set(this.rows, rowIndex, updatedRow);
     }
+  }
+
+  resetColumnFilters() {
+    this.columnFilters = {
+      hospital: null,
+      direction: null,
+      indicatorTitle: null,
+      hospitalValue: null,
+      score: null,
+      curatorValue: null,
+      curatorScore: null,
+    };
   }
 }
 </script>
@@ -394,8 +493,30 @@ export default class ExtraNotification extends Vue {
     background: #fff;
   }
 
-  thead input {
-    min-width: 80px;
+  thead .vue-treeselect {
+    min-width: 90px;
+    font-size: 12px;
+  }
+
+  thead tr:last-child th {
+    padding: 0;
+  }
+
+  thead tr:last-child th ::v-deep .vue-treeselect__control {
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 28px;
+    height: 28px;
+  }
+
+  thead tr:last-child th ::v-deep .vue-treeselect__single-value {
+    line-height: 28px;
+  }
+
+  thead tr:last-child th ::v-deep .vue-treeselect__input-container {
+    padding-top: 0;
+    padding-bottom: 0;
   }
 }
 

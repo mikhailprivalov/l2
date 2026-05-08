@@ -241,7 +241,7 @@ class EquipmentReceive(models.Model):
         eqr = None
         if not study_instance_uid_tag:
             Log(
-                key="",
+                key=f"{data.get('tag_patient_name')}",
                 type=6001,
                 body=data,
                 user=None,
