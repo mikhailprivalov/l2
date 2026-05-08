@@ -155,16 +155,8 @@ def search_indicator(request):
         result.append(current_result.copy())
 
     issledovaniye_ids = [r["issledovaniye"] for r in result]
-    curator_field_ids = [
-        group_to_curator_field[r["groupId"]].pk
-        for r in result
-        if r.get("groupId") in group_to_curator_field
-    ]
-    score_field_ids = [
-        group_to_score_field[r["groupId"]].pk
-        for r in result
-        if r.get("groupId") in group_to_score_field
-    ]
+    curator_field_ids = [group_to_curator_field[r["groupId"]].pk for r in result if r.get("groupId") in group_to_curator_field]
+    score_field_ids = [group_to_score_field[r["groupId"]].pk for r in result if r.get("groupId") in group_to_score_field]
     all_field_ids = list(set(curator_field_ids + score_field_ids))
 
     saved_values = {}
