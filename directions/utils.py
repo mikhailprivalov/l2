@@ -4,7 +4,7 @@ import simplejson as json
 
 from brokers_queue.rmq.publisher import broker_publish_msg
 from directions.sql_func import get_directions_for_send_ecp_by_researches, get_directions_for_send_ecp_by_dirs, get_directions_for_send_rmq_by_dirs, get_directions_for_send_rmq_by_researches
-from laboratory.settings import REMD_ONLY_RESEARCH, RMQ_RESEARCH_SEND
+from laboratory.settings import REMD_ONLY_RESEARCH, RMQ_RESEARCH_SEND, PERIOD_HAOURS_SEND_RESULT_ECP
 from laboratory.utils import current_time
 from api.dicom import check_server_port
 from appconf.manager import SettingManager
@@ -87,7 +87,7 @@ def gistology_result_send(dirs=''):
 
 def direction_result_send_rmq(dirs=''):
     current_time_ecp_upload = SettingManager.rmis_upload_minutes_interval()
-    date_start = current_time(only_date=False) + relativedelta(hours=-100)
+    date_start = current_time(only_date=False) + relativedelta(hours=PERIOD_HAOURS_SEND_RESULT_ECP)
     date_start = date_start.strftime('%Y%m%d %H:%M:%S')
     date_end = current_time(only_date=False) + relativedelta(minutes=-current_time_ecp_upload)
     date_end = date_end.strftime('%Y%m%d %H:%M:%S')
