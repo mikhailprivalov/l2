@@ -36,7 +36,7 @@ from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, F
 from django.http import HttpRequest
 from django.http import JsonResponse
 from django.utils import dateformat
@@ -794,6 +794,75 @@ def directions_history(request):
         )
     res['directions'] = final_result
     return JsonResponse(res)
+
+
+@login_required
+def direction_data_for_link(request):
+    request_data = json.loads(request.body)
+    request_mode = request_data.get('mode')
+
+    ids = request_data.get('direction_id') or request_data.get('directions_id')
+    if request_mode == 'multiple':
+        directions_ids = ids.split(',')
+    else:
+        directions_ids = [int(ids)]
+
+    data = (
+        Issledovaniya.objects.filter(napravleniye_id__in=directions_ids)
+        .annotate(
+            direction_id=F('napravleniye_id'),
+            res_title=F('research__title'),
+            hosp_direction_id=F('napravleniye__parent__napravleniye_id'),
+            is_hospital=F('research__is_hospital'),
+            is_slave_hospital=F('research__is_slave_hospital'),
+            is_case=F('research__is_case'),
+            is_treatment=F('research__is_treatment'),
+            is_stom=F('research__is_stom'),
+            is_doc_refferal=F('research__is_doc_refferal'),
+            is_paraclinic=F('research__is_paraclinic'),
+            is_microbiology=F('research__is_microbiology'),
+            is_form=F('research__is_form'),
+        )
+        .values(
+            'direction_id',
+            'res_title',
+            'hosp_direction_id',
+            'is_hospital',
+            'is_slave_hospital',
+            'is_case',
+            'is_treatment',
+            'is_stom',
+            'is_doc_refferal',
+            'is_paraclinic',
+            'is_microbiology',
+            'is_form',
+        )
+    )
+
+    groups = collections.defaultdict(list)
+    for row in data:
+        groups[row['direction_id']].append(row)
+
+    result = []
+    for dir_id, rows in groups.items():
+        is_lab = len(rows) > 1
+        first = rows[0]
+        is_descriptive = any([first['is_treatment'], first['is_stom'], first['is_doc_refferal'], first['is_paraclinic'], first['is_microbiology'], first['is_form']])
+
+        result.append(
+            {
+                "id": dir_id,
+                "label": " | ".join(r['res_title'] for r in rows),
+                "hosp_direction_id": None if is_lab else first['hosp_direction_id'],
+                "is_hosp": not is_lab and first['is_hospital'],
+                "is_slave_hospital": not is_lab and first['is_slave_hospital'],
+                "is_descriptive": not is_lab and is_descriptive,
+                "is_case": not is_lab and first['is_case'],
+                "is_lab": is_lab,
+            }
+        )
+
+    return JsonResponse({'result': result})
 
 
 def get_data_parent(parent_id):

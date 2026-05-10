@@ -1192,6 +1192,7 @@
                         <option value="39">Динамический справочник</option>
                         <option value="41">Шаблон макет</option>
                         <option value="42">Файл</option>
+                        <option value="43">Ссылка на документ(ы)</option>
                       </select>
                     </label>
                   </div>
