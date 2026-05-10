@@ -12,7 +12,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Indenter, Table, TableStyle
+from reportlab.platypus import Indenter, Table, TableStyle, PageBreak
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, KeepTogether
 
 from api.procedure_list.views import get_procedure_by_dir
@@ -730,6 +730,8 @@ def form_01(request_data):
             values_matrix[7][time_index] = Paragraph(temperature, styleCheckMark)
         time_index += 1
 
+    step_count = count_table
+
     for count in range(count_table):
         title_page = [
             Indenter(left=0 * mm),
@@ -782,7 +784,9 @@ def form_01(request_data):
         )
 
         objs.append(tbl)
-        objs.append(Spacer(1, 41 * mm))
+        step_count -= 1
+        if step_count > 0:
+            objs.append(PageBreak())
 
     doc.build(objs)
     pdf = buffer.getvalue()

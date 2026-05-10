@@ -1,4 +1,17 @@
+import api from '@/api';
+
 import { generator } from './http-common';
+import { buildParaclinicResultFormData, ParaclinicResultPayload } from './buildParaclinicResultFormData';
+
+export const paraclinicResultSaveSmart = async (payload: ParaclinicResultPayload): Promise<any> => {
+  const { jsonPayload, formData } = buildParaclinicResultFormData(payload);
+
+  if (formData) {
+    return api('directions/paraclinic_result', null, null, jsonPayload, formData);
+  }
+
+  return api('directions/paraclinic_result', null, null, jsonPayload);
+};
 
 export default generator({
   sendDirections: {

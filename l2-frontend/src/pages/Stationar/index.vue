@@ -1015,7 +1015,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import * as actions from '@/store/action-types';
 import stationarPoint from '@/api/stationar-point';
 import Patient from '@/types/patient';
-import directionsPoint from '@/api/directions-point';
+import directionsPoint, { paraclinicResultSaveSmart } from '@/api/directions-point';
 import IssStatus from '@/ui-cards/IssStatus.vue';
 import { vField, vGroup } from '@/components/visibility-triggers';
 import researchesPoint from '@/api/researches-point';
@@ -1550,22 +1550,36 @@ export default {
       }
       this.load_directions(this.opened_list_key, noСlose);
     },
+    apply_files_by_field(iss, filesByField) {
+      if (!filesByField || !iss?.research?.groups) {
+        return;
+      }
+      for (const group of iss.research.groups) {
+        if (!group?.fields) {
+          continue;
+        }
+        for (const field of group.fields) {
+          if (field.field_type === 42 && filesByField[field.pk]) {
+            field.files = filesByField[field.pk];
+          }
+        }
+      }
+    },
     save(iss) {
       this.hide_results();
       this.$store.dispatch(actions.INC_LOADING);
-      directionsPoint
-        .paraclinicResultSave({
-          force: true,
-          data: {
-            ...iss,
-            direction: {
-              pk: this.opened_form_pk,
-            },
-            stationar_research: this.stationar_research,
+      paraclinicResultSaveSmart({
+        force: true,
+        data: {
+          ...iss,
+          direction: {
+            pk: this.opened_form_pk,
           },
-          with_confirm: false,
-          visibility_state: this.visibility_state(iss),
-        })
+          stationar_research: this.stationar_research,
+        },
+        with_confirm: false,
+        visibility_state: this.visibility_state(iss),
+      })
         .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -1573,6 +1587,7 @@ export default {
             iss.saved = true;
             // eslint-disable-next-line no-param-reassign
             iss.research.transfer_direction_iss = data.transfer_direction_iss;
+            this.apply_files_by_field(iss, data.files_by_field);
             if (iss.procedure_list) {
               for (const pl of iss.procedure_list) {
                 pl.isNew = false;
@@ -1600,25 +1615,24 @@ export default {
       if (!this.newTransfer) {
         this.stationar_research = -1;
       }
-      return directionsPoint
-        .paraclinicResultSave({
-          force: true,
-          data: {
-            ...iss,
-            direction: {
-              pk: this.opened_form_pk,
-            },
-            stationar_research: this.stationar_research,
+      return paraclinicResultSaveSmart({
+        force: true,
+        data: {
+          ...iss,
+          direction: {
+            pk: this.opened_form_pk,
           },
-          with_confirm: true,
-          visibility_state: this.visibility_state(iss),
-          parent_child_data: {
-            parent_iss: this.parent_issledovaniye,
-            current_direction: this.direction,
-            current_iss: this.iss,
-            child_iss: this.child_issledovaniye,
-          },
-        })
+          stationar_research: this.stationar_research,
+        },
+        with_confirm: true,
+        visibility_state: this.visibility_state(iss),
+        parent_child_data: {
+          parent_iss: this.parent_issledovaniye,
+          current_direction: this.direction,
+          current_iss: this.iss,
+          child_iss: this.child_issledovaniye,
+        },
+      })
         .then((data) => {
           if (data.ok) {
             this.$root.$emit('msg', 'ok', 'Сохранено');
@@ -1638,6 +1652,7 @@ export default {
             this.forbidden_edit = data.forbidden_edit;
             this.soft_forbidden = data.soft_forbidden;
             this.stationar_research = -1;
+            this.apply_files_by_field(iss, data.files_by_field);
             if (iss.procedure_list) {
               for (const pl of iss.procedure_list) {
                 pl.isNew = false;

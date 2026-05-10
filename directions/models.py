@@ -3837,3 +3837,71 @@ class ParaclinicResultFile(models.Model):
     class Meta:
         verbose_name = "Результат файл"
         verbose_name_plural = "Результат файл"
+
+    @staticmethod
+    def serialize(file: 'ParaclinicResultFile') -> dict:
+        from laboratory.utils import strdatetimeru
+
+        return {
+            "pk": file.pk,
+            "originalName": file.original_name,
+            "extension": file.extension,
+            "mimeType": file.mime_type,
+            "size": file.size,
+            "url": file.file.url,
+            "createdAt": strdatetimeru(file.created_at),
+        }
+
+    @staticmethod
+    def sync_field_files(*, f_result: 'ParaclinicResult', payload_files: list, uploaded_files, field_pk) -> list:
+        """
+        Синхронизирует файлы для поля результата.
+
+        payload_files — манифест с фронта (см. l2-frontend/src/api/buildParaclinicResultFormData.ts):
+            - {pk, originalName, extension, mimeType, size}                — оставить
+            - {tempId, originalName, extension, mimeType, size, isNew=True} — добавить
+        uploaded_files — request.FILES (Django MultiValueDict). Файлы лежат под ключом
+            "paraclinic_file:{field_pk}:{tempId}".
+
+        Возвращает актуальный список сериализованных файлов поля.
+        """
+        keep_pks = []
+        new_items = []
+
+        for item in payload_files or []:
+            if item.get("isNew") and item.get("tempId"):
+                key = f"paraclinic_file:{field_pk}:{item['tempId']}"
+                uf = uploaded_files.get(key) if uploaded_files else None
+                if not uf:
+                    continue
+                ext = (item.get("extension") or os.path.splitext(uf.name)[1].lstrip(".")).lower()
+                new_items.append(
+                    {
+                        "uploaded": uf,
+                        "original_name": item.get("originalName") or uf.name,
+                        "extension": ext,
+                        "mime_type": item.get("mimeType") or getattr(uf, "content_type", "") or "",
+                        "size": uf.size,
+                    }
+                )
+            elif item.get("pk"):
+                keep_pks.append(item["pk"])
+
+        for old in ParaclinicResultFile.objects.filter(result=f_result).exclude(pk__in=keep_pks):
+            try:
+                old.file.delete(save=False)
+            except Exception:
+                pass
+            old.delete()
+
+        for ni in new_items:
+            ParaclinicResultFile.objects.create(
+                result=f_result,
+                file=ni["uploaded"],
+                original_name=ni["original_name"],
+                extension=ni["extension"],
+                mime_type=ni["mime_type"],
+                size=ni["size"],
+            )
+
+        return [ParaclinicResultFile.serialize(f) for f in ParaclinicResultFile.objects.filter(result=f_result).order_by("created_at", "pk")]
