@@ -932,7 +932,7 @@
                       />
                     </div>
                     <!--Тип поля (42, "Файл")-->
-                    <FileField
+                    <FileConstructField
                       v-else-if="row.field_type === 42"
                       v-model="row.file_settings"
                       :settings="file_field_settings"
@@ -1321,9 +1321,9 @@ import ResearchPermissionsModal from '@/construct/ResearchPermissionsModal.vue';
 import FileAddModal from '@/modals/FileAddModal.vue';
 import LinkFieldModal from '@/construct/LinkFieldModal.vue';
 import { getTreeSelectLabel } from '@/utils';
-import FileField from '@/construct/ParaclinicResearchEditorComponents/FieldKinds/FileField.vue';
-import { FileFieldConstructorSettings } from '@/construct/ParaclinicResearchEditorComponents/types/FileField';
 import { GetRefBooksResponse } from '@/construct/ParaclinicResearchEditorComponents/types/ParaclinicResearchEditor';
+import { FileFieldConstructorSettings } from '@/construct/ParaclinicResearchEditorComponents/types/FileСonstructField';
+import FileConstructField from '@/construct/ParaclinicResearchEditorComponents/FieldKinds/FileConstructField.vue';
 
 import FastTemplatesEditor from './FastTemplatesEditor.vue';
 
@@ -1332,7 +1332,7 @@ Vue.use(Vue2Filters);
 export default {
   name: 'ParaclinicResearchEditor',
   components: {
-    FileField,
+    FileConstructField,
     LinkFieldModal,
     FileAddModal,
     ResearchPermissionsModal,
