@@ -204,6 +204,21 @@ class PatientToBed(models.Model):
         verbose_name_plural = 'История коек'
 
 
+class PatientToBedDateComment(models.Model):
+    patient_to_bed = models.ForeignKey(PatientToBed, db_index=True, on_delete=models.CASCADE)
+    date_comment = models.DateField(null=True, default=None, blank=True, help_text="День госпитализации; NULL — устаревшие общие записи (не используются)")
+    comment = models.CharField(max_length=255, default="", help_text="Комментарий на указанную дату")
+
+    def __str__(self):
+        if self.patient_to_bed:
+            return f'{self.patient_to_bed}'
+        return f"{self.patient_to_bed} {self.date_comment} {self.comment}"
+
+    class Meta:
+        verbose_name = 'Историю комментариев для койки'
+        verbose_name_plural = 'История комментария для койки'
+
+
 class PatientStationarWithoutBeds(models.Model):
     direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
     department = models.ForeignKey(Podrazdeleniya, db_index=True, on_delete=models.CASCADE, null=True)

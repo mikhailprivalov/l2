@@ -1,13 +1,16 @@
 from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 import simplejson as json
+from collections import defaultdict
+
 from django.db import transaction
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID
 from laboratory.utils import current_time
-from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
+from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds
 from directions.models import Napravleniya
 from slog.models import Log
 from utils.response import status_response
@@ -31,6 +34,53 @@ def _accompanying_child_from_request(request_data):
         return "", "-"
     sex = (ACCOMPANYING_CHILD.get(raw) or "-")[:2]
     return raw[:10], sex
+
+
+def _patient_fields_from_direction_client(direction_pk: int):
+    """ФИО, пол, д.р., возраст из карты направления (Napravleniya.client.individual)."""
+    nap = Napravleniya.objects.select_related("client__individual").filter(pk=direction_pk).first()
+    if not nap:
+        return None
+    ind = nap.client.individual
+    patient_fio_text = (ind.fio(short=False, full=False, npf=False) or "").strip()[:128]
+    patient_sex = ((ind.sex or "м").strip()[:2] if (ind.sex or "").strip() else "м")
+    birthday = ind.birthday
+    patient_age_text = ""
+    if birthday:
+        today = datetime.date.today()
+        years = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+        if years >= 0:
+            patient_age_text = str(min(years, 999))[:3]
+    return patient_fio_text, patient_sex, birthday, patient_age_text
+
+
+def _save_ptb_date_comment(patient_to_bed, comment_date, comment_raw):
+    """Один комментарий на календарную дату: PatientToBedDateComment с непустым date_comment."""
+    if comment_date is None:
+        return
+    text = (comment_raw or "").strip()[:255]
+    PatientToBedDateComment.objects.filter(patient_to_bed=patient_to_bed, date_comment=comment_date).delete()
+    if text:
+        PatientToBedDateComment.objects.create(
+            patient_to_bed=patient_to_bed,
+            date_comment=comment_date,
+            comment=text,
+        )
+
+
+def _replicate_ptb_comment_to_following_days(patient_to_bed, from_date, comment_raw):
+    """Тот же текст комментария на все дни после from_date до конца периода (plan/date_out), включительно."""
+    if from_date is None:
+        return
+    ends = [d for d in (patient_to_bed.plan_date_out, patient_to_bed.date_out) if d is not None]
+    if not ends:
+        return
+    period_end = min(ends)
+    text = (comment_raw or "").strip()[:255]
+    d = from_date + datetime.timedelta(days=1)
+    while d <= period_end:
+        _save_ptb_date_comment(patient_to_bed, d, text)
+        d += datetime.timedelta(days=1)
 
 
 _HOSP_OPEN_END = datetime.date(2200, 1, 1)
@@ -420,7 +470,25 @@ def get_hospitalization_calendar(request):
         patients_qs = PatientToBed.objects.filter(bed_id__in=bed_ids).select_related("doctor", "direction__client__individual")
         if doctor_id:
             patients_qs = patients_qs.filter(doctor_id=doctor_id)
-        for item in patients_qs:
+        items = list(patients_qs)
+        visible_pks = []
+        for item in items:
+            item_start = item.plan_date_in or item.date_in
+            ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
+            item_end = min(ends) if ends else end_date
+            if item_end < start_date or item_start > end_date:
+                continue
+            visible_pks.append(item.pk)
+        comments_by_ptb = defaultdict(dict)
+        if visible_pks:
+            for row in PatientToBedDateComment.objects.filter(
+                patient_to_bed_id__in=visible_pks,
+                date_comment__isnull=False,
+                date_comment__gte=start_date,
+                date_comment__lte=end_date,
+            ):
+                comments_by_ptb[row.patient_to_bed_id][str(row.date_comment)] = row.comment or ""
+        for item in items:
             item_start = item.plan_date_in or item.date_in
             ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
             item_end = min(ends) if ends else end_date
@@ -429,6 +497,13 @@ def get_hospitalization_calendar(request):
             fio = item.patient_fio_text or ""
             if not fio and item.direction_id:
                 fio = item.direction.client.individual.fio()
+            date_comments = {}
+            for d_str, txt in comments_by_ptb.get(item.pk, {}).items():
+                d = parse_date(d_str)
+                if d is None:
+                    continue
+                if item_start <= d <= item_end:
+                    date_comments[d_str] = txt
             records.append(
                 {
                     "pk": item.pk,
@@ -446,6 +521,7 @@ def get_hospitalization_calendar(request):
                     "patient_age_text": item.patient_age_text,
                     "accompanyng_child_type": item.accompanyng_child_type or "",
                     "accompanyng_child_sex": item.accompanyng_child_sex or "-",
+                    "date_comments": date_comments,
                 }
             )
     return JsonResponse({"ok": True, "message": "", "data": {"chambers": list(chambers_map.values()), "records": records}})
@@ -465,6 +541,7 @@ def save_hospitalization_by_fio(request):
     direction_id = request_data.get("direction_id")
     plan_date_in = _parse_ymd_date(request_data.get("plan_date_in"))
     plan_date_out = _parse_ymd_date(request_data.get("plan_date_out"))
+    comment = (request_data.get("comment") or "").strip()[:255]
     acc_type, acc_sex = _accompanying_child_from_request(request_data)
     user = request.user
     bed = Bed.objects.filter(pk=bed_id).select_related("chamber").first()
@@ -491,6 +568,23 @@ def save_hospitalization_by_fio(request):
         if did <= 0 or not Napravleniya.objects.filter(pk=did).exists():
             return status_response(False, "Направление не найдено")
         direction_fk = did
+    auto_default_period = bool(request_data.get("auto_default_period"))
+    if auto_default_period and plan_date_in and plan_date_out is None:
+        period_days = getattr(settings, "PERIOD_DAYS_DEFAULT_HOSPITALIZATION", 3)
+        try:
+            period_days = int(period_days)
+        except (TypeError, ValueError):
+            period_days = 3
+        if period_days < 1:
+            period_days = 1
+        plan_date_out = plan_date_in + datetime.timedelta(days=period_days - 1)
+    if bool(request_data.get("fill_patient_from_direction")) and direction_fk:
+        filled = _patient_fields_from_direction_client(direction_fk)
+        if not filled:
+            return status_response(False, "Направление не найдено")
+        patient_fio_text, patient_sex, birthday, patient_age_text = filled
+    if not patient_fio_text:
+        return status_response(False, "Укажите ФИО пациента")
     patient_to_bed = PatientToBed(
         direction_id=direction_fk,
         bed_id=bed_id,
@@ -505,6 +599,13 @@ def save_hospitalization_by_fio(request):
         accompanyng_child_sex=acc_sex,
     )
     patient_to_bed.save()
+    comment_date = _parse_ymd_date(request_data.get("comment_date"))
+    if comment_date is None and comment and plan_date_in:
+        comment_date = plan_date_in
+    if comment_date is not None:
+        _save_ptb_date_comment(patient_to_bed, comment_date, comment)
+        if bool(request_data.get("comment_replicate_following")):
+            _replicate_ptb_comment_to_following_days(patient_to_bed, comment_date, comment)
     Log.log(
         bed_id,
         230000,
@@ -526,6 +627,7 @@ def update_hospitalization_record(request):
     patient_age_text = (request_data.get("patient_age_text") or "").strip()[:3]
     plan_date_in = _parse_ymd_date(request_data.get("plan_date_in"))
     plan_date_out = _parse_ymd_date(request_data.get("plan_date_out"))
+    comment = (request_data.get("comment") or "").strip()[:255]
     acc_type, acc_sex = _accompanying_child_from_request(request_data)
     user = request.user
     record = PatientToBed.objects.filter(pk=record_pk).select_related("bed__chamber").first()
@@ -558,6 +660,11 @@ def update_hospitalization_record(request):
     record.accompanyng_child_type = acc_type
     record.accompanyng_child_sex = acc_sex
     record.save()
+    comment_date = _parse_ymd_date(request_data.get("comment_date"))
+    if comment_date is not None:
+        _save_ptb_date_comment(record, comment_date, comment)
+        if bool(request_data.get("comment_replicate_following")):
+            _replicate_ptb_comment_to_following_days(record, comment_date, comment)
     Log.log(
         record.bed_id,
         230006,
@@ -682,6 +789,12 @@ def move_hospitalization_to_bed(request):
             new.date_out = tail_date_out
         new.save()
         PatientToBed.objects.filter(pk=new.pk).update(date_in=move_from_date)
+        PatientToBedDateComment.objects.filter(
+            patient_to_bed=old,
+            date_comment__isnull=False,
+            date_comment__gte=move_from_date,
+        ).update(patient_to_bed=new)
+        PatientToBedDateComment.objects.filter(patient_to_bed=old, date_comment__isnull=True).delete()
         Log.log(
             target_bed_id,
             230007,

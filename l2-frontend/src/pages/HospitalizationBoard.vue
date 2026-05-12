@@ -68,7 +68,8 @@
       </div>
     </div>
 
-    <div class="calendar-wrap">
+    <div class="board-body">
+      <div class="calendar-wrap">
       <div class="doctor-badges">
         <button
           type="button"
@@ -153,32 +154,34 @@
                   :key="`${bed.pk}-${day.key}-${rec.pk}`"
                   class="record record--draggable"
                   draggable="true"
-                  :title="recordHoverTitle(rec)"
+                  :title="recordHoverTitle(rec, day.key)"
                   @dragstart.stop="onPatientDragStart($event, rec)"
                   @dragend="onPatientDragEnd"
                 >
                   <div class="record-line record-line--patient">
                     <span class="record-patient">
-                      <template v-if="surnameFromFio(rec.patient_fio)">
+                      <span class="record-patient-name-wrap">
+                        <template v-if="surnameFromFio(rec.patient_fio)">
+                          <span
+                            class="record-patient-surname"
+                            :class="genderColorClass(rec.patient_sex)"
+                          >
+                            <template v-if="viewMode === 'month'">
+                              {{ monthSurnameShort(rec) }}
+                            </template>
+                            <template v-else>
+                              {{ surnameFromFio(rec.patient_fio) }}
+                            </template>
+                          </span><span
+                            v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
+                            class="record-patient-age"
+                          > - {{ cellPatientAgePart(rec) }}</span>
+                        </template>
                         <span
-                          class="record-patient-surname"
-                          :class="genderColorClass(rec.patient_sex)"
-                        >
-                          <template v-if="viewMode === 'month'">
-                            {{ monthSurnameShort(rec) }}
-                          </template>
-                          <template v-else>
-                            {{ surnameFromFio(rec.patient_fio) }}
-                          </template>
-                        </span><span
-                          v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
-                          class="record-patient-age"
-                        > - {{ cellPatientAgePart(rec) }}</span>
-                      </template>
-                      <span
-                        v-else
-                        class="record-sex--muted"
-                      >—</span>
+                          v-else
+                          class="record-sex--muted"
+                        >—</span>
+                      </span>
                     </span>
                     <span class="record-line-actions">
                       <a
@@ -206,9 +209,14 @@
                       >{{ accompanyingDisplayLetter(rec) }}</span>
                     </span>
                   </div>
-                  <div class="record-rule" />
                   <div class="record-line record-line--doctor">
-                    {{ formatCellDoctorSurname(rec) || '\u00a0' }}
+                    <span class="record-doctor-line-inner">
+                      <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
+                        v-if="commentForRecordDay(rec, day.key).trim()"
+                        class="record-comment-after-doctor"
+                        :title="commentForRecordDay(rec, day.key)"
+                      > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
+                    </span>
                   </div>
                 </div>
               </td>
@@ -224,6 +232,52 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+      <aside class="board-patients-aside">
+        <h5 class="board-patients-heading">
+          Пациенты
+        </h5>
+        <input
+          v-model.trim="unallocatedSearch"
+          class="form-control input-sm board-patients-search"
+          type="text"
+          placeholder="Поиск"
+        >
+        <div class="board-patients-scroll">
+          <p
+            v-if="!departmentPk"
+            class="text-muted small board-patients-empty"
+          >
+            Выберите подразделение
+          </p>
+          <template v-else>
+            <div
+              v-for="p in unallocatedPatientsFiltered"
+              :key="p.direction_pk"
+              class="board-patient-row"
+              draggable="true"
+              @dragstart="onUnallocatedPatientDragStart($event, p)"
+              @dragend="onUnallocatedPatientDragEnd"
+            >
+              <a
+                class="board-patient-link"
+                target="_blank"
+                rel="noopener noreferrer"
+                :href="stationarHref(p.direction_pk)"
+                :class="unallocatedGenderClass(p)"
+                @click.stop
+                @mousedown.stop
+              >{{ p.short_fio }}</a>
+              <i
+                class="fa-solid fa-child-reaching board-patient-icon"
+                :class="unallocatedGenderClass(p)"
+              />
+              <span class="board-patient-age">{{ p.age }}л.</span>
+            </div>
+          </template>
+        </div>
+      </aside>
     </div>
 
     <div
@@ -363,6 +417,28 @@
               >
             </div>
           </div>
+          <div class="form-group">
+            <label>Комментарий на выбранную дату</label>
+            <textarea
+              v-model.trim="editingForm.commentText"
+              class="form-control"
+              rows="2"
+              maxlength="255"
+              placeholder="Только для дня, с которого открыто окно"
+            />
+            <div class="checkbox edit-modal-comment-replicate">
+              <label>
+                <input
+                  v-model="editingForm.commentReplicateFollowing"
+                  type="checkbox"
+                >
+                Проставить на все следующие дни до даты окончания
+              </label>
+              <p class="help-block small text-muted">
+                Нужна заполненная дата окончания в записи; иначе действует только выбранный день.
+              </p>
+            </div>
+          </div>
         </div>
         <div class="panel-footer modal-actions">
           <button
@@ -410,6 +486,17 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 type ViewMode = 'day' | 'week' | 'month'
 
+const DND_UNALLOCATED_DIRECTION = 'application/x-l2-board-unallocated-direction';
+
+interface UnallocatedPatient {
+  direction_pk: number;
+  fio: string;
+  short_fio: string;
+  age: number;
+  sex: string;
+  service_title?: string;
+}
+
 interface DepartmentOption {
   id: number;
   label: string;
@@ -447,6 +534,8 @@ interface CalendarRecord {
   plan_date_out: string | null;
   accompanyng_child_type?: string;
   accompanyng_child_sex?: string;
+  /** YYYY-MM-DD → текст комментария на этот день */
+  date_comments?: Record<string, string>;
 }
 
 const store = useStore();
@@ -476,10 +565,14 @@ const editingForm = ref({
   doctorPk: null as number | null,
   doctorFio: '',
   accompanyngChildType: null as string | null,
+  commentText: '',
+  commentReplicateFollowing: false,
 });
 
 const dragOverCellKey = ref('');
 const suppressCellClick = ref(false);
+const unallocatedPatients = ref<UnallocatedPatient[]>([]);
+const unallocatedSearch = ref('');
 
 const visibleDays = computed(() => {
   let start = anchorDate.value.clone();
@@ -519,6 +612,11 @@ const chamberRows = computed(() => chambers.value.map((row) => {
   });
   return { ...row, beds };
 }));
+
+const commentForRecordDay = (rec: CalendarRecord, dayKey: string) => {
+  const raw = rec.date_comments?.[dayKey] ?? '';
+  return (raw && String(raw)) || '';
+};
 
 const isDayInRecordSpan = (rec: CalendarRecord, dayKey: string) => {
   const start = moment(rec.plan_date_in || rec.date_in);
@@ -607,7 +705,7 @@ const cellPatientAgePart = (record: CalendarRecord) => {
   return '';
 };
 
-const recordHoverTitle = (rec: CalendarRecord) => {
+const recordHoverTitle = (rec: CalendarRecord, dayKey: string) => {
   const parts: string[] = [];
   if ((rec.patient_fio || '').trim()) {
     parts.push(rec.patient_fio.trim());
@@ -619,10 +717,29 @@ const recordHoverTitle = (rec: CalendarRecord) => {
   if (rec.direction_pk != null && rec.direction_pk > 0) {
     parts.push(`Направление: ${rec.direction_pk}`);
   }
+  const c = commentForRecordDay(rec, dayKey).trim();
+  if (c) {
+    parts.push(`Комментарий: ${c}`);
+  }
   return parts.join(' · ');
 };
 
 const formatCellDoctorSurname = (record: CalendarRecord) => surnameFromFio(record.doctor_fio);
+
+const CELL_COMMENT_DISPLAY_MAX = 45;
+const CELL_COMMENT_DISPLAY_MAX_MONTH = 22;
+
+const cellCommentAfterDoctor = (record: CalendarRecord, dayKey: string) => {
+  const raw = commentForRecordDay(record, dayKey).trim();
+  if (!raw) {
+    return '';
+  }
+  const max = viewMode.value === 'month' ? CELL_COMMENT_DISPLAY_MAX_MONTH : CELL_COMMENT_DISPLAY_MAX;
+  if (raw.length <= max) {
+    return raw;
+  }
+  return `${raw.slice(0, max)}…`;
+};
 
 /** Как в ManageChambers / DirectionsHistory: hash с JSON для экрана стационара */
 const stationarHref = (directionPk: number) => (
@@ -716,6 +833,35 @@ const loadDoctors = async () => {
   doctors.value = response.data || [];
 };
 
+const loadUnallocatedPatients = async () => {
+  if (!departmentPk.value) {
+    unallocatedPatients.value = [];
+    return;
+  }
+  const row = await api('chambers/get-unallocated-patients', {
+    department_pk: departmentPk.value,
+  });
+  unallocatedPatients.value = Array.isArray(row.data) ? row.data : [];
+};
+
+const unallocatedPatientsFiltered = computed(() => {
+  const q = unallocatedSearch.value.trim().toLowerCase();
+  if (!q) {
+    return unallocatedPatients.value;
+  }
+  return unallocatedPatients.value.filter((p) => (p.fio || '').toLowerCase().includes(q));
+});
+
+const unallocatedGenderClass = (p: UnallocatedPatient) => {
+  if (p.sex === 'ж') {
+    return 'board-patient--women';
+  }
+  if (p.sex === 'м') {
+    return 'board-patient--man';
+  }
+  return '';
+};
+
 const loadCalendar = async () => {
   if (!departmentPk.value || visibleDays.value.length === 0) {
     return;
@@ -780,6 +926,18 @@ const onCellDragLeave = (e: DragEvent, bedPk: number, dayKey: string) => {
   }
 };
 
+const onUnallocatedPatientDragStart = (e: DragEvent, p: UnallocatedPatient) => {
+  e.stopPropagation();
+  e.dataTransfer?.setData(DND_UNALLOCATED_DIRECTION, JSON.stringify({ direction_pk: p.direction_pk }));
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'copy';
+  }
+};
+
+const onUnallocatedPatientDragEnd = () => {
+  dragOverCellKey.value = '';
+};
+
 const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recordPkRaw: string) => {
   const recordPk = Number.parseInt(recordPkRaw, 10);
   if (Number.isNaN(recordPk) || !departmentPk.value) {
@@ -809,19 +967,90 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
   if (ok) {
     root.$emit('msg', 'ok', 'Пациент перенесён');
     await loadCalendar();
+    await loadUnallocatedPatients();
   } else {
     root.$emit('msg', 'error', message || 'Не удалось перенести пациента');
   }
 };
 
+const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: string) => {
+  if (!departmentPk.value) {
+    return;
+  }
+  let directionPk: number;
+  try {
+    const o = JSON.parse(raw) as { direction_pk?: number };
+    directionPk = Number(o.direction_pk);
+  } catch {
+    root.$emit('msg', 'error', 'Некорректные данные перетаскивания');
+    return;
+  }
+  if (!Number.isFinite(directionPk) || directionPk <= 0) {
+    root.$emit('msg', 'error', 'Некорректное направление');
+    return;
+  }
+  const record = getRecordForDay(bedPk, dayKey);
+  await store.dispatch(actions.INC_LOADING);
+  let result;
+  if (record?.pk) {
+    result = await api('chambers/update-hospitalization-record', {
+      record_pk: record.pk,
+      doctor_id: record.doctor_pk ?? null,
+      patient_fio_text: record.patient_fio || '',
+      patient_sex: record.patient_sex || 'м',
+      birthday: record.birthday || null,
+      patient_age_text: record.patient_age_text || '',
+      plan_date_in: record.plan_date_in || record.date_in || null,
+      plan_date_out: record.plan_date_out || record.date_out || null,
+      accompanyng_child_type: record.accompanyng_child_type || '',
+      direction_id: directionPk,
+      comment_date: dayKey,
+      comment: commentForRecordDay(record, dayKey),
+    });
+  } else {
+    result = await api('chambers/save-hospitalization-by-fio', {
+      department_pk: departmentPk.value,
+      bed_id: bedPk,
+      doctor_id: null,
+      direction_id: directionPk,
+      patient_fio_text: '',
+      patient_sex: 'м',
+      birthday: null,
+      patient_age_text: '',
+      plan_date_in: dayKey,
+      plan_date_out: null,
+      auto_default_period: true,
+      fill_patient_from_direction: true,
+      accompanyng_child_type: '',
+      comment_date: dayKey,
+      comment: '',
+    });
+  }
+  await store.dispatch(actions.DEC_LOADING);
+  if (result?.ok) {
+    root.$emit('msg', 'ok', record?.pk ? 'Направление привязано' : 'Госпитализация создана');
+    await loadCalendar();
+    await loadUnallocatedPatients();
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Не удалось выполнить операцию');
+  }
+};
+
 const onCellDrop = async (e: DragEvent, bedPk: number, dayKey: string) => {
   dragOverCellKey.value = '';
+  const panelDir = e.dataTransfer?.getData(DND_UNALLOCATED_DIRECTION);
+  if (panelDir) {
+    await onDirectionFromPanelDrop(bedPk, dayKey, panelDir);
+    return;
+  }
   const hospMove = e.dataTransfer?.getData('application/x-l2-hospitalization-move');
   if (hospMove) {
     await onPatientBedDrop(bedPk, dayKey, hospMove);
     return;
   }
-  const docRaw = e.dataTransfer?.getData('application/x-l2-doctor-pk') || e.dataTransfer?.getData('text/plain') || '';
+  const docFromMime = e.dataTransfer?.getData('application/x-l2-doctor-pk') || '';
+  const plain = e.dataTransfer?.getData('text/plain') || '';
+  const docRaw = docFromMime || (plain.startsWith('hosp-move:') ? '' : plain);
   if (docRaw.startsWith('hosp-move:')) {
     return;
   }
@@ -846,11 +1075,14 @@ const onCellDrop = async (e: DragEvent, bedPk: number, dayKey: string) => {
     plan_date_out: record.plan_date_out || record.date_out || null,
     accompanyng_child_type: record.accompanyng_child_type || '',
     direction_id: record.direction_pk ?? null,
+    comment_date: dayKey,
+    comment: commentForRecordDay(record, dayKey),
   });
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Врач назначен');
     await loadCalendar();
+    await loadUnallocatedPatients();
   } else {
     root.$emit('msg', 'error', message || 'Не удалось назначить врача');
   }
@@ -882,6 +1114,8 @@ const openEditModal = (bedPk: number, dayKey: string) => {
     doctorPk: record?.doctor_pk ?? null,
     doctorFio: (record?.doctor_fio || '').trim(),
     accompanyngChildType: (record?.accompanyng_child_type && String(record.accompanyng_child_type).trim()) || null,
+    commentText: record ? commentForRecordDay(record, dayKey) : '',
+    commentReplicateFollowing: false,
   };
   isEditModalOpen.value = true;
 };
@@ -916,6 +1150,7 @@ const saveEditingCell = async () => {
     }
     directionIdPayload = n;
   }
+  const commentPayload = editingForm.value.commentText.trim().slice(0, 255);
   await store.dispatch(actions.INC_LOADING);
   let result;
   if (editingRecordPk.value) {
@@ -930,6 +1165,9 @@ const saveEditingCell = async () => {
       plan_date_in: editingForm.value.planDateIn,
       plan_date_out: editingForm.value.planDateOut,
       accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      comment_date: editingDayKey.value,
+      comment: commentPayload,
+      comment_replicate_following: editingForm.value.commentReplicateFollowing,
     });
   } else {
     result = await api('chambers/save-hospitalization-by-fio', {
@@ -944,6 +1182,9 @@ const saveEditingCell = async () => {
       plan_date_in: editingForm.value.planDateIn,
       plan_date_out: editingForm.value.planDateOut,
       accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      comment_date: editingDayKey.value,
+      comment: commentPayload,
+      comment_replicate_following: editingForm.value.commentReplicateFollowing,
     });
   }
   await store.dispatch(actions.DEC_LOADING);
@@ -951,6 +1192,7 @@ const saveEditingCell = async () => {
     root.$emit('msg', 'ok', 'Данные сохранены');
     closeEditModal();
     await loadCalendar();
+    await loadUnallocatedPatients();
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось сохранить запись');
   }
@@ -970,6 +1212,7 @@ const clearBedFromModal = async () => {
     closeEditModal();
     records.value = [];
     await loadCalendar();
+    await loadUnallocatedPatients();
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось освободить койку');
   }
@@ -977,6 +1220,7 @@ const clearBedFromModal = async () => {
 
 watch([departmentPk, viewMode, anchorDate, doctorPk], async () => {
   await loadCalendar();
+  await loadUnallocatedPatients();
 });
 
 watch(departmentPk, async () => {
@@ -992,6 +1236,94 @@ onMounted(async () => {
 <style scoped lang="scss">
 .board-page {
   padding: 10px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.board-body {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.board-patients-aside {
+  flex: 0 0 280px;
+  width: 280px;
+  max-width: 280px;
+  border-left: 1px solid #ddd;
+  padding: 0 0 8px 12px;
+  margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: hsla(30, 3%, 97%, 1);
+}
+
+.board-patients-heading {
+  text-align: center;
+  margin: 8px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.board-patients-search {
+  margin-bottom: 8px;
+}
+
+.board-patients-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
+}
+
+.board-patient-row {
+  margin: 5px 0;
+  padding: 6px 8px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.board-patient-row:active {
+  cursor: grabbing;
+}
+
+.board-patient-link {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-patient-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.board-patient-age {
+  flex-shrink: 0;
+  color: #333;
+}
+
+.board-patient--women {
+  color: #ff73ea;
+}
+
+.board-patient--man {
+  color: #00bfff;
 }
 
 .toolbar {
@@ -1014,6 +1346,8 @@ onMounted(async () => {
   width: 100%;
   container-type: inline-size;
   container-name: calendar-wrap;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .doctor-badges {
@@ -1199,6 +1533,19 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+.record-patient-name-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  width: fit-content;
+  max-width: 100%;
+  border-bottom: 1px solid #bbb;
+  padding-bottom: 1px;
+  margin-bottom: 2px;
+  vertical-align: baseline;
+  min-width: 0;
+}
+
 .record-patient-surname {
   min-width: 0;
   overflow: hidden;
@@ -1213,16 +1560,31 @@ onMounted(async () => {
   color: #333;
 }
 
-.record-rule {
-  margin: 2px 0 1px;
-  border-top: 1px solid #bbb;
-}
-
 .record-line--doctor {
   font-weight: 500;
   color: #555;
   font-size: 10px;
   min-height: 1.1em;
+  margin-top: 2px;
+  min-width: 0;
+}
+
+.record-doctor-line-inner {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.record-doctor-name {
+  font-weight: 500;
+  color: #555;
+}
+
+.record-comment-after-doctor {
+  font-weight: 400;
+  color: #777;
 }
 
 .record-line-actions {
@@ -1340,5 +1702,13 @@ onMounted(async () => {
 
 .modal-doctor-clear {
   flex-shrink: 0;
+}
+
+.edit-modal-comment-replicate {
+  margin-top: 8px;
+}
+
+.edit-modal-comment-replicate .help-block {
+  margin-bottom: 0;
 }
 </style>
