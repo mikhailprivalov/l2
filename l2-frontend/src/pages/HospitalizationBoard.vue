@@ -36,7 +36,7 @@
               <button
                 class="btn btn-default"
                 :class="{ active: viewMode === 'month' }"
-                @click="viewMode = 'month'"
+                @click="setViewMonth"
               >
                 Месяц
               </button>
@@ -92,7 +92,19 @@
           {{ doctor.fio }}
         </button>
       </div>
-      <table class="table table-bordered table-condensed calendar-table">
+      <table
+        class="table table-bordered table-condensed calendar-table"
+        :class="{ 'calendar-table--month': viewMode === 'month' }"
+      >
+        <colgroup>
+          <col class="calendar-col-chamber" />
+          <col class="calendar-col-bed" />
+          <col
+            v-for="day in visibleDays"
+            :key="`col-${day.key}`"
+            class="calendar-col-day"
+          />
+        </colgroup>
         <thead>
           <tr>
             <th class="sticky-col chamber-col">
@@ -141,7 +153,7 @@
                   :key="`${bed.pk}-${day.key}-${rec.pk}`"
                   class="record record--draggable"
                   draggable="true"
-                  :title="rec.patient_fio"
+                  :title="recordHoverTitle(rec)"
                   @dragstart.stop="onPatientDragStart($event, rec)"
                   @dragend="onPatientDragEnd"
                 >
@@ -151,8 +163,15 @@
                         <span
                           class="record-patient-surname"
                           :class="genderColorClass(rec.patient_sex)"
-                        >{{ surnameFromFio(rec.patient_fio) }}</span><span
-                          v-if="cellPatientAgePart(rec)"
+                        >
+                          <template v-if="viewMode === 'month'">
+                            {{ monthSurnameShort(rec) }}
+                          </template>
+                          <template v-else>
+                            {{ surnameFromFio(rec.patient_fio) }}
+                          </template>
+                        </span><span
+                          v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
                           class="record-patient-age"
                         > - {{ cellPatientAgePart(rec) }}</span>
                       </template>
@@ -162,6 +181,23 @@
                       >—</span>
                     </span>
                     <span class="record-line-actions">
+                      <a
+                        v-if="rec.direction_pk != null && rec.direction_pk > 0"
+                        :href="stationarHref(rec.direction_pk)"
+                        class="record-direction-link"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        :title="`Направление ${rec.direction_pk} (стационар)`"
+                        @click.stop
+                        @mousedown.stop
+                      >
+                        <template v-if="viewMode === 'month'">
+                          {{ monthDirectionIdShort(rec.direction_pk) }}
+                        </template>
+                        <template v-else>
+                          {{ rec.direction_pk }}
+                        </template>
+                      </a>
                       <span
                         v-if="accompanyingDisplayLetter(rec)"
                         class="record-accompany-letter"
@@ -457,8 +493,8 @@ const visibleDays = computed(() => {
     end = anchorDate.value.clone().endOf('isoWeek');
   }
   if (viewMode.value === 'month') {
-    start = anchorDate.value.clone().startOf('month');
-    end = anchorDate.value.clone().endOf('month');
+    start = anchorDate.value.clone().startOf('day');
+    end = anchorDate.value.clone().add(31, 'days').endOf('day');
   }
   const days: Array<{ key: string, label: string }> = [];
   const cursor = start.clone();
@@ -533,6 +569,30 @@ const surnameFromFio = (fio: string | null | undefined) => {
   return s.split(/\s+/)[0] || '';
 };
 
+const MONTH_CELL_SURNAME_CHARS = 10;
+const MONTH_CELL_DIRECTION_CHARS = 7;
+
+/** Режим «месяц»: одна строка, фамилия не длиннее 10 символов */
+const monthSurnameShort = (rec: CalendarRecord) => {
+  const sur = surnameFromFio(rec.patient_fio);
+  if (!sur) {
+    return '';
+  }
+  if (sur.length <= MONTH_CELL_SURNAME_CHARS) {
+    return sur;
+  }
+  return `${sur.slice(0, MONTH_CELL_SURNAME_CHARS)}…`;
+};
+
+/** Режим «месяц»: номер направления не длиннее 7 символов */
+const monthDirectionIdShort = (directionPk: number) => {
+  const s = String(directionPk);
+  if (s.length <= MONTH_CELL_DIRECTION_CHARS) {
+    return s;
+  }
+  return `${s.slice(0, MONTH_CELL_DIRECTION_CHARS)}…`;
+};
+
 const cellPatientAgePart = (record: CalendarRecord) => {
   const fromText = (record.patient_age_text || '').trim();
   if (fromText) {
@@ -547,7 +607,27 @@ const cellPatientAgePart = (record: CalendarRecord) => {
   return '';
 };
 
+const recordHoverTitle = (rec: CalendarRecord) => {
+  const parts: string[] = [];
+  if ((rec.patient_fio || '').trim()) {
+    parts.push(rec.patient_fio.trim());
+  }
+  const age = cellPatientAgePart(rec);
+  if (age) {
+    parts.push(`Возраст: ${age}`);
+  }
+  if (rec.direction_pk != null && rec.direction_pk > 0) {
+    parts.push(`Направление: ${rec.direction_pk}`);
+  }
+  return parts.join(' · ');
+};
+
 const formatCellDoctorSurname = (record: CalendarRecord) => surnameFromFio(record.doctor_fio);
+
+/** Как в ManageChambers / DirectionsHistory: hash с JSON для экрана стационара */
+const stationarHref = (directionPk: number) => (
+  `/ui/stationar#{%22pk%22:${directionPk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`
+);
 
 const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
   const r = getRecordForDay(bedPk, dayKey);
@@ -597,13 +677,19 @@ const goToday = () => {
   anchorDate.value = moment();
 };
 
+/** Режим «Месяц»: 32 дня от сегодня (сегодня … сегодня+31) */
+const setViewMonth = () => {
+  anchorDate.value = moment().startOf('day');
+  viewMode.value = 'month';
+};
+
 const navigate = (direction: number) => {
   if (viewMode.value === 'day') {
     anchorDate.value = anchorDate.value.clone().add(direction, 'day');
   } else if (viewMode.value === 'week') {
     anchorDate.value = anchorDate.value.clone().add(direction, 'week');
   } else {
-    anchorDate.value = anchorDate.value.clone().add(direction, 'month');
+    anchorDate.value = anchorDate.value.clone().add(direction * 32, 'days');
   }
 };
 
@@ -925,6 +1011,9 @@ onMounted(async () => {
 .calendar-wrap {
   overflow: auto;
   max-height: calc(100vh - 220px);
+  width: 100%;
+  container-type: inline-size;
+  container-name: calendar-wrap;
 }
 
 .doctor-badges {
@@ -954,19 +1043,83 @@ onMounted(async () => {
 
 .calendar-table {
   table-layout: fixed;
-  min-width: 1100px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Месяц: столбец даты в 2 раза уже, чем столбец даты недели (доля (100%−фикс)/7 пополам) */
+.calendar-table--month {
+  width: auto;
+  min-width: 100%;
+}
+
+.calendar-table--month .calendar-col-day {
+  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  min-width: 0;
+}
+
+.calendar-table--month .day-col,
+.calendar-table--month .day-cell {
+  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  min-width: 0;
+  max-width: calc((100cqi - 112px - 64px) / 7 / 2);
+}
+
+.calendar-table--month .day-cell {
+  overflow: hidden;
+}
+
+.calendar-table--month .record-line--patient {
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.calendar-table--month .record-patient {
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.calendar-table--month .record-patient-surname {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 11em;
+}
+
+.calendar-table--month .record-line-actions {
+  flex-shrink: 0;
+}
+
+.calendar-col-chamber {
+  width: 112px;
+}
+
+.calendar-col-bed {
+  width: 64px;
+}
+
+.calendar-col-day {
+  width: auto;
 }
 
 .chamber-col {
-  width: 96px;
+  width: 112px;
+  min-width: 112px;
+  max-width: 112px;
 }
 
 .bed-col {
-  width: 70px;
+  width: 64px;
+  min-width: 64px;
+  max-width: 64px;
 }
 
 .day-col {
-  width: 96px;
+  width: auto;
+  min-width: 0;
   text-align: center;
 }
 
@@ -981,11 +1134,14 @@ onMounted(async () => {
 }
 
 .bed-col.sticky-col {
-  left: 96px;
+  left: 112px;
 }
 
 .chamber-cell {
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bed-cell {
@@ -998,6 +1154,9 @@ onMounted(async () => {
   vertical-align: top;
   padding: 3px 4px;
   cursor: pointer;
+  width: auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .day-cell--drop-hover {
@@ -1008,7 +1167,7 @@ onMounted(async () => {
 .record {
   background: transparent;
   color: inherit;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.25;
   text-align: left;
 }
@@ -1071,6 +1230,20 @@ onMounted(async () => {
   align-items: center;
   gap: 3px;
   flex-shrink: 0;
+}
+
+.record-direction-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0d47a1;
+  text-decoration: underline;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.record-direction-link:hover,
+.record-direction-link:focus {
+  color: #1565c0;
 }
 
 .record-accompany-letter {
