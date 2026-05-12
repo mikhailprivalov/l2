@@ -169,7 +169,7 @@ class Bed(models.Model):
 
 
 class PatientToBed(models.Model):
-    direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
+    direction = models.ForeignKey("directions.Napravleniya", null=True, default=None, blank=True, db_index=True, on_delete=models.CASCADE)
     doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
     bed = models.ForeignKey(Bed, db_index=True, on_delete=models.CASCADE)
     date_in = models.DateField(auto_now_add=True)
@@ -177,9 +177,17 @@ class PatientToBed(models.Model):
     plan_date_in = models.DateField(null=True, default=None, blank=True)
     plan_date_out = models.DateField(null=True, default=None, blank=True)
     patient_fio_text = models.CharField(null=True, blank=True, default='', max_length=128, help_text='ФИО пациента текстом')
+    patient_sex = models.CharField(max_length=2, default="м", help_text="Пол", db_index=True)
+    birthday = models.DateField(default=None, null=True, blank=True, help_text="Дата рождения", db_index=True)
+    patient_age_text = models.CharField(null=True, blank=True, default='', max_length=3, help_text='возраст пациента текстом')
+    accompanyng_child_type = models.CharField(null=True, blank=True, default='', max_length=10, help_text='Сопровождающий ребенка')
+    accompanyng_child_sex = models.CharField(max_length=2, default="-", help_text="Пол опровождающего", db_index=True)
+    is_day_hosp = models.BooleanField(default=False, blank=True, help_text="Дневной стационар",)
 
     def __str__(self):
-        return f'{self.direction.client.individual.fio()}'
+        if self.direction_id:
+            return f'{self.direction.client.individual.fio()}'
+        return self.patient_fio_text or f'PatientToBed#{self.pk}'
 
     @staticmethod
     def update_doctor(doctor_id, patient_to_bed, is_assign):
