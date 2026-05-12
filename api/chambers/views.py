@@ -22,6 +22,7 @@ from .sql_func import (
     load_plan_operations_next_day,
 )
 
+
 def _accompanying_child_from_request(request_data):
     raw = (request_data.get("accompanyng_child_type") or "").strip()
     if not raw:
