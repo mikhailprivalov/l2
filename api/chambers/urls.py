@@ -11,6 +11,7 @@ urlpatterns = [
     path('save-hospitalization-by-fio', views.save_hospitalization_by_fio),
     path('move-hospitalization-to-bed', views.move_hospitalization_to_bed),
     path('update-hospitalization-record', views.update_hospitalization_record),
+    path('set-hospitalization-day-hosp', views.set_hospitalization_day_hosp),
     path('clear-patient-from-bed', views.clear_patient_from_bed),
     path('extract-patient-bed', views.extract_patient_bed),
     path('get-attending-doctors', views.get_attending_doctors),

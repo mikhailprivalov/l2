@@ -70,169 +70,303 @@
 
     <div class="board-body">
       <div class="calendar-wrap">
-      <div class="doctor-badges">
-        <button
-          type="button"
-          class="badge badge-secondary doctor-badge-btn"
-          :class="{ active: doctorPk === -1 }"
-          @click="doctorPk = -1"
+        <div class="doctor-badges">
+          <button
+            type="button"
+            class="badge badge-secondary doctor-badge-btn"
+            :class="{ active: doctorPk === -1 }"
+            @click="doctorPk = -1"
+          >
+            Все врачи
+          </button>
+          <button
+            v-for="doctor in doctors"
+            :key="doctor.pk"
+            type="button"
+            draggable="true"
+            class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
+            :class="{ active: doctorPk === doctor.pk }"
+            @click="doctorPk = doctor.pk"
+            @dragstart="onDoctorDragStart($event, doctor.pk)"
+            @dragend="onDoctorDragEnd"
+          >
+            {{ doctor.fio }}
+          </button>
+        </div>
+        <table
+          class="table table-bordered table-condensed calendar-table"
+          :class="{ 'calendar-table--month': viewMode === 'month' }"
         >
-          Все врачи
-        </button>
-        <button
-          v-for="doctor in doctors"
-          :key="doctor.pk"
-          type="button"
-          draggable="true"
-          class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
-          :class="{ active: doctorPk === doctor.pk }"
-          @click="doctorPk = doctor.pk"
-          @dragstart="onDoctorDragStart($event, doctor.pk)"
-          @dragend="onDoctorDragEnd"
-        >
-          {{ doctor.fio }}
-        </button>
-      </div>
-      <table
-        class="table table-bordered table-condensed calendar-table"
-        :class="{ 'calendar-table--month': viewMode === 'month' }"
-      >
-        <colgroup>
-          <col class="calendar-col-chamber" />
-          <col class="calendar-col-bed" />
-          <col
-            v-for="day in visibleDays"
-            :key="`col-${day.key}`"
-            class="calendar-col-day"
-          />
-        </colgroup>
-        <thead>
-          <tr>
-            <th class="sticky-col chamber-col">
-              Палата
-            </th>
-            <th class="sticky-col bed-col">
-              Койка
-            </th>
-            <th
+          <colgroup>
+            <col class="calendar-col-chamber">
+            <col class="calendar-col-bed">
+            <col
               v-for="day in visibleDays"
-              :key="day.key"
-              class="day-col"
+              :key="`col-${day.key}`"
+              class="calendar-col-day"
             >
-              {{ day.label }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="row in chamberRows">
-            <tr
-              v-for="(bed, bedIdx) in row.beds"
-              :key="`${row.pk}-${bed.pk}`"
-            >
-              <td
-                v-if="bedIdx === 0"
-                :rowspan="row.beds.length || 1"
-                class="sticky-col chamber-col chamber-cell"
-              >
-                {{ row.label }}
-              </td>
-              <td class="sticky-col bed-col bed-cell">
-                {{ bed.bed_number }}
-              </td>
-              <td
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="sticky-col chamber-col">
+                Палата
+              </th>
+              <th class="sticky-col bed-col">
+                Койка
+              </th>
+              <th
                 v-for="day in visibleDays"
-                :key="`${bed.pk}-${day.key}`"
-                class="day-cell"
-                :class="{ 'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key) }"
-                @click="openEditModal(bed.pk, day.key)"
-                @dragover.prevent="onCellDragOver(bed.pk, day.key)"
-                @dragleave="onCellDragLeave($event, bed.pk, day.key)"
-                @drop.prevent="onCellDrop($event, bed.pk, day.key)"
+                :key="day.key"
+                class="day-col"
               >
-                <div
-                  v-for="rec in cellRecordList(bed.pk, day.key)"
-                  :key="`${bed.pk}-${day.key}-${rec.pk}`"
-                  class="record record--draggable"
-                  draggable="true"
-                  :title="recordHoverTitle(rec, day.key)"
-                  @dragstart.stop="onPatientDragStart($event, rec)"
-                  @dragend="onPatientDragEnd"
+                {{ day.label }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <template v-for="row in chamberRows">
+              <tr
+                v-for="(bed, bedIdx) in row.beds"
+                :key="`${row.pk}-${bed.pk}`"
+              >
+                <td
+                  v-if="bedIdx === 0"
+                  :rowspan="row.beds.length || 1"
+                  class="sticky-col chamber-col chamber-cell"
                 >
-                  <div class="record-line record-line--patient">
-                    <span class="record-patient">
-                      <span class="record-patient-name-wrap">
-                        <template v-if="surnameFromFio(rec.patient_fio)">
+                  {{ row.label }}
+                </td>
+                <td class="sticky-col bed-col bed-cell">
+                  {{ bed.bed_number }}
+                </td>
+                <td
+                  v-for="day in visibleDays"
+                  :key="`${bed.pk}-${day.key}`"
+                  class="day-cell"
+                  :class="{ 'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key) }"
+                  @click="openEditModal(bed.pk, day.key)"
+                  @dragover.prevent="onCellDragOver(bed.pk, day.key)"
+                  @dragleave="onCellDragLeave($event, bed.pk, day.key)"
+                  @drop.prevent="onCellDrop($event, bed.pk, day.key)"
+                >
+                  <div
+                    v-for="rec in cellRecordList(bed.pk, day.key)"
+                    :key="`${bed.pk}-${day.key}-${rec.pk}`"
+                    class="record record--draggable"
+                    draggable="true"
+                    :title="recordHoverTitle(rec, day.key)"
+                    @dragstart.stop="onPatientDragStart($event, rec)"
+                    @dragend="onPatientDragEnd"
+                  >
+                    <div class="record-line record-line--patient">
+                      <span class="record-patient">
+                        <span class="record-patient-name-wrap">
+                          <template v-if="surnameFromFio(rec.patient_fio)">
+                            <span
+                              class="record-patient-surname"
+                              :class="genderColorClass(rec.patient_sex)"
+                            >
+                              <template v-if="viewMode === 'month'">
+                                {{ monthSurnameShort(rec) }}
+                              </template>
+                              <template v-else>
+                                {{ surnameFromFio(rec.patient_fio) }}
+                              </template>
+                            </span><span
+                              v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
+                              class="record-patient-age"
+                            > - {{ cellPatientAgePart(rec) }}</span>
+                          </template>
                           <span
-                            class="record-patient-surname"
-                            :class="genderColorClass(rec.patient_sex)"
-                          >
-                            <template v-if="viewMode === 'month'">
-                              {{ monthSurnameShort(rec) }}
-                            </template>
-                            <template v-else>
-                              {{ surnameFromFio(rec.patient_fio) }}
-                            </template>
-                          </span><span
-                            v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
-                            class="record-patient-age"
-                          > - {{ cellPatientAgePart(rec) }}</span>
-                        </template>
-                        <span
-                          v-else
-                          class="record-sex--muted"
-                        >—</span>
+                            v-else
+                            class="record-sex--muted"
+                          >—</span>
+                        </span>
                       </span>
-                    </span>
-                    <span class="record-line-actions">
-                      <a
-                        v-if="rec.direction_pk != null && rec.direction_pk > 0"
-                        :href="stationarHref(rec.direction_pk)"
-                        class="record-direction-link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        :title="`Направление ${rec.direction_pk} (стационар)`"
-                        @click.stop
-                        @mousedown.stop
-                      >
-                        <template v-if="viewMode === 'month'">
-                          {{ monthDirectionIdShort(rec.direction_pk) }}
-                        </template>
-                        <template v-else>
-                          {{ rec.direction_pk }}
-                        </template>
-                      </a>
-                      <span
-                        v-if="accompanyingDisplayLetter(rec)"
-                        class="record-accompany-letter"
-                        :class="genderColorClass(rec.accompanyng_child_sex)"
-                        :title="accompanyingLetterTitle(rec)"
-                      >{{ accompanyingDisplayLetter(rec) }}</span>
-                    </span>
+                      <span class="record-line-actions">
+                        <a
+                          v-if="rec.direction_pk != null && rec.direction_pk > 0"
+                          :href="stationarHref(rec.direction_pk)"
+                          class="record-direction-link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          :title="`Направление ${rec.direction_pk} (стационар)`"
+                          @click.stop
+                          @mousedown.stop
+                        >
+                          <template v-if="viewMode === 'month'">
+                            {{ monthDirectionIdShort(rec.direction_pk) }}
+                          </template>
+                          <template v-else>
+                            {{ rec.direction_pk }}
+                          </template>
+                        </a>
+                        <span
+                          v-if="accompanyingDisplayLetter(rec)"
+                          class="record-accompany-letter"
+                          :class="genderColorClass(rec.accompanyng_child_sex)"
+                          :title="accompanyingLetterTitle(rec)"
+                        >{{ accompanyingDisplayLetter(rec) }}</span>
+                        <span
+                          v-if="rec.is_day_hosp"
+                          class="record-day-hosp-badge"
+                          title="Дневной стационар"
+                        >ДС</span>
+                      </span>
+                    </div>
+                    <div class="record-line record-line--doctor">
+                      <span class="record-doctor-line-inner">
+                        <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
+                          v-if="commentForRecordDay(rec, day.key).trim()"
+                          class="record-comment-after-doctor"
+                          :title="commentForRecordDay(rec, day.key)"
+                        > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
+                      </span>
+                    </div>
                   </div>
-                  <div class="record-line record-line--doctor">
-                    <span class="record-doctor-line-inner">
-                      <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
-                        v-if="commentForRecordDay(rec, day.key).trim()"
-                        class="record-comment-after-doctor"
-                        :title="commentForRecordDay(rec, day.key)"
-                      > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
-                    </span>
-                  </div>
-                </div>
+                </td>
+              </tr>
+            </template>
+            <tr v-if="chamberRows.length === 0">
+              <td
+                colspan="100"
+                class="text-center"
+              >
+                Нет палат или данных за выбранный период
               </td>
             </tr>
-          </template>
-          <tr v-if="chamberRows.length === 0">
-            <td
-              colspan="100"
-              class="text-center"
-            >
-              Нет палат или данных за выбранный период
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+
+        <div class="strip-board-block">
+          <p class="strip-board-hint text-muted small">
+            Дневной стационар
+          </p>
+          <table
+            class="table table-bordered table-condensed calendar-table calendar-table--strip"
+            :class="{ 'calendar-table--month': viewMode === 'month' }"
+          >
+            <colgroup>
+              <col class="calendar-col-strip-sidebar">
+              <col
+                v-for="day in visibleDays"
+                :key="`strip-col-${day.key}`"
+                class="calendar-col-day"
+              >
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="sticky-col strip-sidebar-col strip-sidebar-th">
+                  Днёвники
+                </th>
+                <th
+                  v-for="day in visibleDays"
+                  :key="`strip-h-${day.key}`"
+                  class="day-col"
+                >
+                  {{ day.label }}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="(srow, sidx) in stripRows"
+                :key="srow.rowId"
+              >
+                <td class="sticky-col strip-sidebar-col strip-sidebar-cell">
+                  {{ srow.record ? '●' : '—' }}
+                </td>
+                <td
+                  v-for="day in visibleDays"
+                  :key="`${srow.rowId}-${day.key}`"
+                  class="day-cell"
+                  :class="{ 'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key) }"
+                  @click="openStripCellModal(sidx, day.key)"
+                  @dragover.prevent="onStripCellDragOver(sidx, day.key)"
+                  @dragleave="onStripCellDragLeave($event, sidx, day.key)"
+                  @drop.prevent="onStripCellDrop($event, sidx, day.key)"
+                >
+                  <div
+                    v-for="rec in cellStripRecordList(srow, day.key)"
+                    :key="`strip-${srow.rowId}-${day.key}-${rec.pk}`"
+                    class="record record--draggable"
+                    draggable="true"
+                    :title="recordHoverTitle(rec, day.key)"
+                    @dragstart.stop="onStripPatientDragStart($event, srow, rec)"
+                    @dragend="onPatientDragEnd"
+                  >
+                    <div class="record-line record-line--patient">
+                      <span class="record-patient">
+                        <span class="record-patient-name-wrap">
+                          <template v-if="surnameFromFio(rec.patient_fio)">
+                            <span
+                              class="record-patient-surname"
+                              :class="genderColorClass(rec.patient_sex)"
+                            >
+                              <template v-if="viewMode === 'month'">
+                                {{ monthSurnameShort(rec) }}
+                              </template>
+                              <template v-else>
+                                {{ surnameFromFio(rec.patient_fio) }}
+                              </template>
+                            </span><span
+                              v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
+                              class="record-patient-age"
+                            > - {{ cellPatientAgePart(rec) }}</span>
+                          </template>
+                          <span
+                            v-else
+                            class="record-sex--muted"
+                          >—</span>
+                        </span>
+                      </span>
+                      <span class="record-line-actions">
+                        <a
+                          v-if="rec.direction_pk != null && rec.direction_pk > 0"
+                          :href="stationarHref(rec.direction_pk)"
+                          class="record-direction-link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          :title="`Направление ${rec.direction_pk} (стационар)`"
+                          @click.stop
+                          @mousedown.stop
+                        >
+                          <template v-if="viewMode === 'month'">
+                            {{ monthDirectionIdShort(rec.direction_pk) }}
+                          </template>
+                          <template v-else>
+                            {{ rec.direction_pk }}
+                          </template>
+                        </a>
+                        <span
+                          v-if="accompanyingDisplayLetter(rec)"
+                          class="record-accompany-letter"
+                          :class="genderColorClass(rec.accompanyng_child_sex)"
+                          :title="accompanyingLetterTitle(rec)"
+                        >{{ accompanyingDisplayLetter(rec) }}</span>
+                        <span
+                          v-if="rec.is_day_hosp"
+                          class="record-day-hosp-badge"
+                          title="Дневной стационар"
+                        >ДС</span>
+                      </span>
+                    </div>
+                    <div class="record-line record-line--doctor">
+                      <span class="record-doctor-line-inner">
+                        <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
+                          v-if="commentForRecordDay(rec, day.key).trim()"
+                          class="record-comment-after-doctor"
+                          :title="commentForRecordDay(rec, day.key)"
+                        > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <aside class="board-patients-aside">
         <h5 class="board-patients-heading">
@@ -487,6 +621,7 @@ import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 type ViewMode = 'day' | 'week' | 'month'
 
 const DND_UNALLOCATED_DIRECTION = 'application/x-l2-board-unallocated-direction';
+const STRIP_LOCALSTORAGE_PREFIX = 'l2-hospitalization-board-strip-v1';
 
 interface UnallocatedPatient {
   direction_pk: number;
@@ -536,6 +671,13 @@ interface CalendarRecord {
   accompanyng_child_sex?: string;
   /** YYYY-MM-DD → текст комментария на этот день */
   date_comments?: Record<string, string>;
+  /** Дневной стационар (в т.ч. запись в «черновике» доски) */
+  is_day_hosp?: boolean;
+}
+
+interface StripRow {
+  rowId: string;
+  record: CalendarRecord | null;
 }
 
 const store = useStore();
@@ -554,6 +696,7 @@ const isEditModalOpen = ref(false);
 const editingBedPk = ref<number | null>(null);
 const editingDayKey = ref('');
 const editingRecordPk = ref<number | null>(null);
+const editingStripRowId = ref<string | null>(null);
 const editingForm = ref({
   patientFioText: '',
   directionIdText: '',
@@ -570,7 +713,88 @@ const editingForm = ref({
 });
 
 const dragOverCellKey = ref('');
+const dragOverStripCellKey = ref('');
 const suppressCellClick = ref(false);
+
+const newStripRowId = () => (
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+);
+
+const stripRows = ref<StripRow[]>([{ rowId: newStripRowId(), record: null }]);
+
+const normalizeStripTrailingEmpty = () => {
+  while (
+    stripRows.value.length > 1
+    && stripRows.value[stripRows.value.length - 1].record === null
+    && stripRows.value[stripRows.value.length - 2].record === null
+  ) {
+    stripRows.value.pop();
+  }
+  if (stripRows.value.length === 0) {
+    stripRows.value.push({ rowId: newStripRowId(), record: null });
+    return;
+  }
+  const last = stripRows.value[stripRows.value.length - 1];
+  if (last.record !== null) {
+    stripRows.value.push({ rowId: newStripRowId(), record: null });
+  }
+};
+
+const persistStripToStorage = () => {
+  const dept = departmentPk.value;
+  if (dept == null) {
+    return;
+  }
+  try {
+    localStorage.setItem(
+      `${STRIP_LOCALSTORAGE_PREFIX}:${dept}`,
+      JSON.stringify({ rows: stripRows.value }),
+    );
+  } catch {
+    /* quota / private mode */
+  }
+};
+
+const initStripRowsForDepartment = (dept: number | null) => {
+  if (dept == null) {
+    stripRows.value = [{ rowId: newStripRowId(), record: null }];
+    return;
+  }
+  try {
+    const raw = localStorage.getItem(`${STRIP_LOCALSTORAGE_PREFIX}:${dept}`);
+    if (raw) {
+      const parsed = JSON.parse(raw) as {
+        rows?: Array<{ rowId?: string, record?: CalendarRecord | null, recordPk?: number | null }>
+      };
+      if (Array.isArray(parsed.rows) && parsed.rows.length) {
+        stripRows.value = parsed.rows.map((r) => ({
+          rowId: (r.rowId && String(r.rowId)) || newStripRowId(),
+          record: r.record || null,
+        }));
+        normalizeStripTrailingEmpty();
+        return;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  stripRows.value = [{ rowId: newStripRowId(), record: null }];
+};
+
+const isRecordPkOnStrip = (pk: number) => stripRows.value.some((r) => r.record?.pk === pk);
+
+const removeStripRecordPk = (pk: number) => {
+  for (const row of stripRows.value) {
+    if (row.record?.pk === pk) {
+      row.record = null;
+    }
+  }
+  normalizeStripTrailingEmpty();
+  persistStripToStorage();
+};
+
 const unallocatedPatients = ref<UnallocatedPatient[]>([]);
 const unallocatedSearch = ref('');
 
@@ -636,13 +860,36 @@ const isDayInRecordSpan = (rec: CalendarRecord, dayKey: string) => {
   return !d.isAfter(end, 'day');
 };
 
+const stripRecordPkSet = computed(() => {
+  const s = new Set<number>();
+  for (const row of stripRows.value) {
+    if (row.record?.pk != null) {
+      s.add(row.record.pk);
+    }
+  }
+  return s;
+});
+
+const stripDirectionPkSet = computed(() => {
+  const s = new Set<number>();
+  for (const row of stripRows.value) {
+    const dirPk = row.record?.direction_pk;
+    if (dirPk != null && dirPk > 0) {
+      s.add(dirPk);
+    }
+  }
+  return s;
+});
+
+const recordsForMainGrid = computed(() => records.value.filter((r) => !stripRecordPkSet.value.has(r.pk)));
+
 const recordByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord>();
   const days = visibleDays.value;
   if (!days.length) {
     return map;
   }
-  for (const record of records.value) {
+  for (const record of recordsForMainGrid.value) {
     const start = moment(record.plan_date_in || record.date_in);
     if (!start.isValid()) {
       continue;
@@ -751,6 +998,19 @@ const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
   return r ? [r] : [];
 };
 
+const stripCellKey = (rowIdx: number, dayKey: string) => `strip-${rowIdx}-${dayKey}`;
+
+const cellStripRecordList = (row: StripRow, dayKey: string): CalendarRecord[] => {
+  if (!row.record) {
+    return [];
+  }
+  const rec = row.record;
+  if (!rec || !isDayInRecordSpan(rec, dayKey)) {
+    return [];
+  }
+  return [rec];
+};
+
 const accompanyingDisplayLetter = (record: CalendarRecord) => {
   const t = (record.accompanyng_child_type || '').trim();
   if (!t) {
@@ -845,11 +1105,12 @@ const loadUnallocatedPatients = async () => {
 };
 
 const unallocatedPatientsFiltered = computed(() => {
+  const list = unallocatedPatients.value.filter((p) => !stripDirectionPkSet.value.has(p.direction_pk));
   const q = unallocatedSearch.value.trim().toLowerCase();
   if (!q) {
-    return unallocatedPatients.value;
+    return list;
   }
-  return unallocatedPatients.value.filter((p) => (p.fio || '').toLowerCase().includes(q));
+  return list.filter((p) => (p.fio || '').toLowerCase().includes(q));
 });
 
 const unallocatedGenderClass = (p: UnallocatedPatient) => {
@@ -892,6 +1153,7 @@ const onDoctorDragStart = (e: DragEvent, doctorPkInner: number) => {
 
 const onDoctorDragEnd = () => {
   dragOverCellKey.value = '';
+  dragOverStripCellKey.value = '';
 };
 
 const onPatientDragStart = (e: DragEvent, rec: CalendarRecord) => {
@@ -903,8 +1165,18 @@ const onPatientDragStart = (e: DragEvent, rec: CalendarRecord) => {
   }
 };
 
+const onStripPatientDragStart = (e: DragEvent, row: StripRow, rec: CalendarRecord) => {
+  e.stopPropagation();
+  e.dataTransfer?.setData('application/x-l2-strip-row-id', row.rowId);
+  e.dataTransfer?.setData('text/plain', `strip-row:${row.rowId}:${rec.pk}`);
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move';
+  }
+};
+
 const onPatientDragEnd = () => {
   dragOverCellKey.value = '';
+  dragOverStripCellKey.value = '';
   suppressCellClick.value = true;
   window.setTimeout(() => {
     suppressCellClick.value = false;
@@ -926,6 +1198,69 @@ const onCellDragLeave = (e: DragEvent, bedPk: number, dayKey: string) => {
   }
 };
 
+const onStripCellDragOver = (rowIdx: number, dayKey: string) => {
+  dragOverStripCellKey.value = stripCellKey(rowIdx, dayKey);
+};
+
+const onStripCellDragLeave = (e: DragEvent, rowIdx: number, dayKey: string) => {
+  const current = e.currentTarget as Node | null;
+  const related = e.relatedTarget as Node | null;
+  if (current && related && current.contains(related)) {
+    return;
+  }
+  if (dragOverStripCellKey.value === stripCellKey(rowIdx, dayKey)) {
+    dragOverStripCellKey.value = '';
+  }
+};
+
+const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => {
+  dragOverStripCellKey.value = '';
+  const hospMove = e.dataTransfer?.getData('application/x-l2-hospitalization-move');
+  if (!hospMove) {
+    return;
+  }
+  const recordPk = Number.parseInt(hospMove, 10);
+  if (Number.isNaN(recordPk)) {
+    return;
+  }
+  const rec = records.value.find((r) => r.pk === recordPk);
+  if (!rec) {
+    root.$emit('msg', 'error', 'Запись не найдена');
+    return;
+  }
+  if (!isDayInRecordSpan(rec, dayKey)) {
+    root.$emit('msg', 'error', 'Дата вне периода госпитализации');
+    return;
+  }
+  if (isRecordPkOnStrip(recordPk)) {
+    root.$emit('msg', 'error', 'Запись уже в черновике');
+    return;
+  }
+  let idx = rowIdx;
+  if (stripRows.value[idx]?.record != null) {
+    const emptyAt = stripRows.value.findIndex((r) => r.record === null);
+    if (emptyAt >= 0) {
+      idx = emptyAt;
+    } else {
+      stripRows.value.push({ rowId: newStripRowId(), record: null });
+      idx = stripRows.value.length - 1;
+    }
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const { ok: okClear, message: msgClear } = await api('chambers/clear-patient-from-bed', {
+    record_pk: recordPk,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (!okClear) {
+    root.$emit('msg', 'error', msgClear || 'Не удалось освободить койку');
+    return;
+  }
+  stripRows.value[idx].record = { ...rec };
+  normalizeStripTrailingEmpty();
+  persistStripToStorage();
+  await loadCalendar();
+};
+
 const onUnallocatedPatientDragStart = (e: DragEvent, p: UnallocatedPatient) => {
   e.stopPropagation();
   e.dataTransfer?.setData(DND_UNALLOCATED_DIRECTION, JSON.stringify({ direction_pk: p.direction_pk }));
@@ -936,6 +1271,7 @@ const onUnallocatedPatientDragStart = (e: DragEvent, p: UnallocatedPatient) => {
 
 const onUnallocatedPatientDragEnd = () => {
   dragOverCellKey.value = '';
+  dragOverStripCellKey.value = '';
 };
 
 const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recordPkRaw: string) => {
@@ -952,8 +1288,14 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
     root.$emit('msg', 'error', 'Нельзя перенести на дату вне периода госпитализации');
     return;
   }
+  const fromStrip = isRecordPkOnStrip(recordPk);
   if (sourceRec.bed_pk === targetBedPk) {
-    root.$emit('msg', 'error', 'Выберите другую койку');
+    if (!fromStrip) {
+      root.$emit('msg', 'error', 'Выберите другую койку');
+      return;
+    }
+    removeStripRecordPk(recordPk);
+    await loadCalendar();
     return;
   }
   await store.dispatch(actions.INC_LOADING);
@@ -963,6 +1305,9 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
     target_bed_id: targetBedPk,
     move_from_date: targetDayKey,
   });
+  if (ok) {
+    removeStripRecordPk(recordPk);
+  }
   await store.dispatch(actions.DEC_LOADING);
   if (ok) {
     root.$emit('msg', 'ok', 'Пациент перенесён');
@@ -970,6 +1315,49 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
     await loadUnallocatedPatients();
   } else {
     root.$emit('msg', 'error', message || 'Не удалось перенести пациента');
+  }
+};
+
+const onStripToBedDrop = async (targetBedPk: number, targetDayKey: string, stripRowId: string) => {
+  if (!departmentPk.value) {
+    return;
+  }
+  const row = stripRows.value.find((r) => r.rowId === stripRowId);
+  const record = row?.record || null;
+  if (!record) {
+    root.$emit('msg', 'error', 'Запись в черновике не найдена');
+    return;
+  }
+  if (!isDayInRecordSpan(record, targetDayKey)) {
+    root.$emit('msg', 'error', 'Нельзя вернуть запись на дату вне периода госпитализации');
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const result = await api('chambers/save-hospitalization-by-fio', {
+    department_pk: departmentPk.value,
+    bed_id: targetBedPk,
+    doctor_id: record.doctor_pk ?? null,
+    direction_id: record.direction_pk ?? null,
+    patient_fio_text: record.patient_fio || '',
+    patient_sex: record.patient_sex || 'м',
+    birthday: record.birthday || null,
+    patient_age_text: record.patient_age_text || '',
+    plan_date_in: record.plan_date_in || record.date_in || targetDayKey,
+    plan_date_out: record.plan_date_out || record.date_out || null,
+    accompanyng_child_type: record.accompanyng_child_type || '',
+    comment_date: targetDayKey,
+    comment: commentForRecordDay(record, targetDayKey),
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (result?.ok) {
+    row.record = null;
+    normalizeStripTrailingEmpty();
+    persistStripToStorage();
+    root.$emit('msg', 'ok', 'Запись возвращена на койку');
+    await loadCalendar();
+    await loadUnallocatedPatients();
+  } else {
+    root.$emit('msg', 'error', result?.message || 'Не удалось вернуть запись на койку');
   }
 };
 
@@ -1043,6 +1431,11 @@ const onCellDrop = async (e: DragEvent, bedPk: number, dayKey: string) => {
     await onDirectionFromPanelDrop(bedPk, dayKey, panelDir);
     return;
   }
+  const stripRowId = e.dataTransfer?.getData('application/x-l2-strip-row-id');
+  if (stripRowId) {
+    await onStripToBedDrop(bedPk, dayKey, stripRowId);
+    return;
+  }
   const hospMove = e.dataTransfer?.getData('application/x-l2-hospitalization-move');
   if (hospMove) {
     await onPatientBedDrop(bedPk, dayKey, hospMove);
@@ -1093,13 +1486,10 @@ const closeEditModal = () => {
   editingBedPk.value = null;
   editingDayKey.value = '';
   editingRecordPk.value = null;
+  editingStripRowId.value = null;
 };
 
-const openEditModal = (bedPk: number, dayKey: string) => {
-  if (suppressCellClick.value) {
-    return;
-  }
-  const record = getRecordForDay(bedPk, dayKey);
+const fillEditModalFromRecord = (record: CalendarRecord | null, bedPk: number, dayKey: string) => {
   editingBedPk.value = bedPk;
   editingDayKey.value = dayKey;
   editingRecordPk.value = record?.pk || null;
@@ -1117,6 +1507,33 @@ const openEditModal = (bedPk: number, dayKey: string) => {
     commentText: record ? commentForRecordDay(record, dayKey) : '',
     commentReplicateFollowing: false,
   };
+};
+
+const openEditModal = (bedPk: number, dayKey: string) => {
+  if (suppressCellClick.value) {
+    return;
+  }
+  editingStripRowId.value = null;
+  const record = getRecordForDay(bedPk, dayKey);
+  fillEditModalFromRecord(record ?? null, bedPk, dayKey);
+  isEditModalOpen.value = true;
+};
+
+const openStripCellModal = (rowIdx: number, dayKey: string) => {
+  if (suppressCellClick.value) {
+    return;
+  }
+  const row = stripRows.value[rowIdx];
+  if (!row?.record) {
+    return;
+  }
+  const { record } = row;
+  if (!record || !isDayInRecordSpan(record, dayKey)) {
+    return;
+  }
+  editingStripRowId.value = row.rowId;
+  fillEditModalFromRecord(record, record.bed_pk, dayKey);
+  editingRecordPk.value = null;
   isEditModalOpen.value = true;
 };
 
@@ -1150,7 +1567,38 @@ const saveEditingCell = async () => {
     }
     directionIdPayload = n;
   }
+
+  if (editingForm.value.planDateIn && editingForm.value.planDateOut
+      && editingForm.value.planDateIn > editingForm.value.planDateOut) {
+    root.$emit('msg', 'error', 'Дата начала не может быть позже даты окончания');
+    return;
+  }
   const commentPayload = editingForm.value.commentText.trim().slice(0, 255);
+  if (editingStripRowId.value) {
+    const row = stripRows.value.find((r) => r.rowId === editingStripRowId.value);
+    const rec = row?.record;
+    if (!row || !rec) {
+      root.$emit('msg', 'error', 'Запись черновика не найдена');
+      return;
+    }
+    rec.patient_fio = editingForm.value.patientFioText;
+    rec.patient_sex = editingForm.value.patientSex || 'м';
+    rec.birthday = editingForm.value.birthday || null;
+    rec.patient_age_text = editingForm.value.patientAgeText;
+    rec.plan_date_in = editingForm.value.planDateIn || null;
+    rec.plan_date_out = editingForm.value.planDateOut || null;
+    rec.date_in = editingForm.value.planDateIn || rec.date_in;
+    rec.date_out = editingForm.value.planDateOut || rec.date_out;
+    rec.doctor_pk = editingForm.value.doctorPk;
+    rec.doctor_fio = editingForm.value.doctorFio;
+    rec.accompanyng_child_type = editingForm.value.accompanyngChildType || '';
+    rec.direction_pk = directionIdPayload;
+    rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
+    persistStripToStorage();
+    root.$emit('msg', 'ok', 'Данные черновика сохранены');
+    closeEditModal();
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   let result;
   if (editingRecordPk.value) {
@@ -1223,9 +1671,10 @@ watch([departmentPk, viewMode, anchorDate, doctorPk], async () => {
   await loadUnallocatedPatients();
 });
 
-watch(departmentPk, async () => {
+watch(departmentPk, async (d) => {
   await loadDoctors();
   doctorPk.value = -1;
+  initStripRowsForDepartment(d);
 });
 
 onMounted(async () => {
@@ -1615,6 +2064,18 @@ onMounted(async () => {
   user-select: none;
 }
 
+.record-day-hosp-badge {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+  margin-left: 4px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
 .record-sex--male {
   color: #0d47a1;
 }
@@ -1710,5 +2171,68 @@ onMounted(async () => {
 
 .edit-modal-comment-replicate .help-block {
   margin-bottom: 0;
+}
+
+.strip-board-block {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+}
+
+.strip-board-hint {
+  margin: 0 0 8px;
+}
+
+.calendar-table--strip {
+  background: #fafafa;
+}
+
+.calendar-col-strip-sidebar {
+  width: 176px;
+}
+
+.strip-sidebar-col {
+  width: 176px;
+  min-width: 176px;
+  max-width: 176px;
+}
+
+.strip-sidebar-th {
+  font-size: 12px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.strip-sidebar-cell {
+  text-align: center;
+  color: #888;
+  vertical-align: middle;
+}
+
+.calendar-table--strip .strip-sidebar-col.sticky-col {
+  left: 0;
+  background: #f5f5f5;
+  z-index: 3;
+}
+
+.calendar-table--strip.calendar-table--month {
+  width: auto;
+  min-width: 100%;
+}
+
+.calendar-table--strip.calendar-table--month .calendar-col-day {
+  width: calc((100cqi - 176px) / 7 / 2);
+  min-width: 0;
+}
+
+.calendar-table--strip.calendar-table--month .day-col,
+.calendar-table--strip.calendar-table--month .day-cell {
+  width: calc((100cqi - 176px) / 7 / 2);
+  min-width: 0;
+  max-width: calc((100cqi - 176px) / 7 / 2);
+}
+
+.calendar-table--strip.calendar-table--month .day-cell {
+  overflow: hidden;
 }
 </style>

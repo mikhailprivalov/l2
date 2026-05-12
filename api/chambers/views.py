@@ -522,6 +522,7 @@ def get_hospitalization_calendar(request):
                     "accompanyng_child_type": item.accompanyng_child_type or "",
                     "accompanyng_child_sex": item.accompanyng_child_sex or "-",
                     "date_comments": date_comments,
+                    "is_day_hosp": bool(item.is_day_hosp),
                 }
             )
     return JsonResponse({"ok": True, "message": "", "data": {"chambers": list(chambers_map.values()), "records": records}})
@@ -557,6 +558,7 @@ def save_hospitalization_by_fio(request):
     #     direction_id = _resolve_direction_id_by_fio(patient_fio_text, department_id)
     # if not direction_id:
     #     return status_response(False, "Не найдено направление для указанного ФИО")
+
     if PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         return status_response(False, "Койка уже занята")
     direction_fk = None
@@ -672,6 +674,36 @@ def update_hospitalization_record(request):
         {"record_pk": record.pk, "direction_id": record.direction_id, "bed_id": record.bed_id, "department_id": department_id},
     )
     return JsonResponse({"ok": True, "message": "", "result": {"pk": record.pk}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def set_hospitalization_day_hosp(request):
+    request_data = json.loads(request.body)
+    record_pk = request_data.get("record_pk")
+    if record_pk is None or "is_day_hosp" not in request_data:
+        return status_response(False, "Недостаточно данных")
+    try:
+        record_pk = int(record_pk)
+    except (TypeError, ValueError):
+        return status_response(False, "Некорректный идентификатор записи")
+    is_day_hosp = bool(request_data.get("is_day_hosp"))
+    user = request.user
+    record = PatientToBed.objects.filter(pk=record_pk).select_related("bed__chamber").first()
+    if not record:
+        return status_response(False, "Запись не найдена")
+    department_id = record.bed.chamber.podrazdelenie_id
+    if not Chamber.check_user(user, department_id):
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    record.is_day_hosp = is_day_hosp
+    record.save(update_fields=["is_day_hosp"])
+    Log.log(
+        record.bed_id,
+        230009,
+        user.doctorprofile,
+        {"record_pk": record.pk, "is_day_hosp": is_day_hosp, "department_id": department_id},
+    )
+    return JsonResponse({"ok": True, "message": "", "result": {"pk": record.pk, "is_day_hosp": is_day_hosp}})
 
 
 @login_required
