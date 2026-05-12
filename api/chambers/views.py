@@ -22,6 +22,7 @@ from .sql_func import (
     load_plan_operations_next_day,
 )
 
+
 def _accompanying_child_from_request(request_data):
     raw = (request_data.get("accompanyng_child_type") or "").strip()
     if not raw:
@@ -91,12 +92,7 @@ def _resolve_direction_id_by_fio(fio_text, department_id):
     family = fio_parts[0] if len(fio_parts) > 0 else ""
     name = fio_parts[1] if len(fio_parts) > 1 else ""
     patronymic = fio_parts[2] if len(fio_parts) > 2 else ""
-    direction = (
-        Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id)
-        .select_related("client__individual")
-        .order_by("-id")
-        .first()
-    )
+    direction = Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id).select_related("client__individual").order_by("-id").first()
     if family:
         direction_qs = Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id).select_related("client__individual").order_by("-id")
         direction_qs = direction_qs.filter(client__individual__family__iexact=family)
@@ -620,12 +616,7 @@ def move_hospitalization_to_bed(request):
         return status_response(False, "Некорректные идентификаторы")
     user = request.user
     with transaction.atomic():
-        old = (
-            PatientToBed.objects.select_for_update()
-            .filter(pk=record_pk)
-            .select_related("bed__chamber")
-            .first()
-        )
+        old = PatientToBed.objects.select_for_update().filter(pk=record_pk).select_related("bed__chamber").first()
         if not old:
             return status_response(False, "Запись не найдена")
         src_dept = old.bed.chamber.podrazdelenie_id
