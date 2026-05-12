@@ -182,7 +182,7 @@ class PatientToBed(models.Model):
     patient_age_text = models.CharField(null=True, blank=True, default='', max_length=3, help_text='возраст пациента текстом')
     accompanyng_child_type = models.CharField(null=True, blank=True, default='', max_length=10, help_text='Сопровождающий ребенка')
     accompanyng_child_sex = models.CharField(max_length=2, default="-", help_text="Пол опровождающего", db_index=True)
-    is_day_hosp = models.BooleanField(default=False, blank=True, help_text="Дневной стационар",)
+    is_day_hosp = models.BooleanField(default=False, blank=True, help_text="Дневной стационар")
 
     def __str__(self):
         if self.direction_id:
