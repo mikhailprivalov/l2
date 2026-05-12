@@ -92,12 +92,7 @@ def _resolve_direction_id_by_fio(fio_text, department_id):
     family = fio_parts[0] if len(fio_parts) > 0 else ""
     name = fio_parts[1] if len(fio_parts) > 1 else ""
     patronymic = fio_parts[2] if len(fio_parts) > 2 else ""
-    direction = (
-        Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id)
-        .select_related("client__individual")
-        .order_by("-id")
-        .first()
-    )
+    direction = Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id).select_related("client__individual").order_by("-id").first()
     if family:
         direction_qs = Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id).select_related("client__individual").order_by("-id")
         direction_qs = direction_qs.filter(client__individual__family__iexact=family)
