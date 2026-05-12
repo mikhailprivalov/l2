@@ -616,12 +616,7 @@ def move_hospitalization_to_bed(request):
         return status_response(False, "Некорректные идентификаторы")
     user = request.user
     with transaction.atomic():
-        old = (
-            PatientToBed.objects.select_for_update()
-            .filter(pk=record_pk)
-            .select_related("bed__chamber")
-            .first()
-        )
+        old = PatientToBed.objects.select_for_update().filter(pk=record_pk).select_related("bed__chamber").first()
         if not old:
             return status_response(False, "Запись не найдена")
         src_dept = old.bed.chamber.podrazdelenie_id
