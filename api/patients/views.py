@@ -932,6 +932,19 @@ def edit_doc(request):
     return JsonResponse({"ok": True})
 
 
+@login_required
+def delete_doc(request):
+    data = json.loads(request.body)
+    is_user_su = request.user.is_superuser
+    doc_pk = data.get("pk")
+    ok = False
+    if is_user_su:
+        doc = Document.objects.get(pk=doc_pk)
+        doc.delete()
+        ok = True
+    return JsonResponse({"ok": ok})
+
+
 def update_cdu(request):
     request_data = json.loads(request.body)
     card = Card.objects.get(pk=request_data["card_pk"])
