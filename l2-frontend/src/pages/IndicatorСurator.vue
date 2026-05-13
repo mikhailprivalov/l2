@@ -45,36 +45,8 @@
                 />
 
               </span>
-              <span class="input-group-addon">Статус</span>
-              <select
-                v-model="params.status"
-                class="form-control"
-              >
-                <option :value="2">
-                  Все
-                </option>
-                <option :value="0">
-                  Новые
-                </option>
-                <option :value="1">
-                  Выполнены
-                </option>
-              </select>
             </div>
           </div>
-        </div>
-        <div style="margin-top: 5px">
-          <a
-            class="a-under pull-right"
-            href="#"
-            @click.prevent="load()"
-          >перезагрузить данные</a>
-          <a
-            class="a-under pull-right"
-            style="margin-right: 12px"
-            href="#"
-            @click.prevent="resetColumnFilters()"
-          >сбросить фильтры</a>
         </div>
       </div>
     </form>
@@ -232,7 +204,6 @@ import DateRange from '@/ui-cards/DateRange.vue';
 
 interface Params {
   datePeriod: any;
-  status: number;
   hospital: number;
 }
 
@@ -279,7 +250,6 @@ const normalizeFilterValue = (value: any) => {
       loaded: false,
       params: {
         // date: moment().format('YYYY-MM-DD'),
-        status: 2,
         hospital: -1,
         datePeriod: [moment().format('DD.MM.YYYY'), moment().format('DD.MM.YYYY')],
       },
@@ -348,8 +318,7 @@ export default class ExtraNotification extends Vue {
   }
 
   get watchParams() {
-    // return _.pick(this.params, ['date', 'status', 'hospital', 'datePeriod']);
-    return _.pick(this.params, ['status', 'hospital', 'datePeriod']);
+    return _.pick(this.params, ['hospital', 'datePeriod']);
   }
 
   get visibleHospitals() {
@@ -427,18 +396,6 @@ export default class ExtraNotification extends Vue {
     if (rowIndex !== -1) {
       this.$set(this.rows, rowIndex, updatedRow);
     }
-  }
-
-  resetColumnFilters() {
-    this.columnFilters = {
-      hospital: null,
-      direction: null,
-      indicatorTitle: null,
-      hospitalValue: null,
-      score: null,
-      curatorValue: null,
-      curatorScore: null,
-    };
   }
 }
 </script>

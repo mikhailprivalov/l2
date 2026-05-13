@@ -7,7 +7,7 @@ from django.views.decorators.http import require_POST
 
 from api.indicators.sql_func import indicator_sql
 from directory.models import ParaclinicInputField, ParaclinicInputGroups
-from directions.models import Issledovaniya, ParaclinicResultIndicator
+from directions.models import ParaclinicResultIndicator
 from external_system.models import CuratorCdaFields, CdaFields
 from utils.dates import normalize_dots_date
 
@@ -27,49 +27,9 @@ def _normalize_formula_for_curator(formula: str, curator_field_pk: int):
     return re.sub(rf"\{{{curator_field_pk}\}}", "[_curator_value_]", formula)
 
 
-def _replace_js_operators(expr: str):
-    expr = expr.replace("&&", " and ").replace("||", " or ")
-    expr = re.sub(r"(?<![=!])!(?!=)", " not ", expr)
-    return expr
-
-
-def _split_ternary(formula: str):
-    depth = 0
-    quote = None
-    q_pos = -1
-    c_pos = -1
-    for i, ch in enumerate(formula):
-        if quote:
-            if ch == quote and (i == 0 or formula[i - 1] != "\\"):
-                quote = None
-            continue
-        if ch in ("'", '"'):
-            quote = ch
-            continue
-        if ch == "(":
-            depth += 1
-        elif ch == ")":
-            depth = max(depth - 1, 0)
-        elif ch == "?" and depth == 0 and q_pos == -1:
-            q_pos = i
-        elif ch == ":" and depth == 0 and q_pos != -1:
-            c_pos = i
-            break
-    if q_pos != -1 and c_pos != -1:
-        return formula[:q_pos], formula[q_pos + 1 : c_pos], formula[c_pos + 1 :]
-    return None
-
-
-def _calculate_curator_score(formula: str, curator_value):
-    if not formula:
-        return ""
-    return "1"
-
-
 @require_POST
 def search_indicator(request):
     request_data = json.loads(request.body)
-    status = int(request_data.get("status", 2))
     hospital = int(request_data.get("hospital", -1))
     date_period = request_data["datePeriod"]
     time_start = f'{normalize_dots_date(date_period[0])} {request_data.get("time_start", "00:00")}:00'
@@ -193,30 +153,25 @@ def save_indicator_value(request):
     field_pk = int(request_data.get("fieldPk", 0))
     value = request_data.get("value", "")
     score_field_pk = int(request_data.get("scoreFieldPk", 0))
-    score_formula = request_data.get("scoreFormula", "")
+    curator_score_value = request_data.get("curatorScore", "")
     if not iss_pk or not field_pk:
         return JsonResponse({"ok": False, "message": "issledovaniye and fieldPk are required"}, status=400)
 
-    issledovaniye = Issledovaniya.objects.get(pk=iss_pk)
-    field = ParaclinicInputField.objects.get(pk=field_pk)
     ParaclinicResultIndicator.objects.update_or_create(
-        issledovaniye=issledovaniye,
-        field=field,
+        issledovaniye_id=iss_pk,
+        field_id=field_pk,
         defaults={
             "value": value,
             "doctor_profile": request.user.doctorprofile,
         },
     )
-    score_value = ""
-    if score_field_pk and score_formula:
-        score_field = ParaclinicInputField.objects.get(pk=score_field_pk)
-        score_value = _calculate_curator_score(score_formula, value)
+    if score_field_pk:
         ParaclinicResultIndicator.objects.update_or_create(
-            issledovaniye=issledovaniye,
-            field=score_field,
+            issledovaniye_id=iss_pk,
+            field_id=score_field_pk,
             defaults={
-                "value": score_value,
+                "value": curator_score_value,
                 "doctor_profile": request.user.doctorprofile,
             },
         )
-    return JsonResponse({"ok": True, "curatorScore": score_value})
+    return JsonResponse({"ok": True, "curatorScore": curator_score_value})
