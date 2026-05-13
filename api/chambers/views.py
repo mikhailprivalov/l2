@@ -43,7 +43,7 @@ def _patient_fields_from_direction_client(direction_pk: int):
         return None
     ind = nap.client.individual
     patient_fio_text = (ind.fio(short=False, full=False, npf=False) or "").strip()[:128]
-    patient_sex = ((ind.sex or "м").strip()[:2] if (ind.sex or "").strip() else "м")
+    patient_sex = (ind.sex or "м").strip()[:2] if (ind.sex or "").strip() else "м"
     birthday = ind.birthday
     patient_age_text = ""
     if birthday:
