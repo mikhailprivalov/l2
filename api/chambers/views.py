@@ -1,22 +1,157 @@
 from laboratory.decorators import group_required
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 import simplejson as json
-from django.http import JsonResponse
+from collections import defaultdict
 
-from laboratory.settings import CHAMBER_DOCTOR_GROUP_ID
+from django.db import transaction
+from django.http import JsonResponse
+from django.utils.dateparse import parse_date
+
+from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID
 from laboratory.utils import current_time
-from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
+from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds
+from directions.models import Napravleniya
 from slog.models import Log
 from utils.response import status_response
 import datetime
 from .sql_func import (
     load_patient_without_bed_by_department,
     load_attending_doctor_by_department,
+    load_attending_doctor_by_department_and_group_title,
     load_patients_stationar_unallocated_sql,
     load_chambers_and_beds_by_department,
     get_closing_protocols,
     load_plan_operations_next_day,
 )
+
+
+def _accompanying_child_from_request(request_data):
+    raw = (request_data.get("accompanyng_child_type") or "").strip()
+    if not raw:
+        return "", "-"
+    if raw not in ACCOMPANYING_CHILD:
+        return "", "-"
+    sex = (ACCOMPANYING_CHILD.get(raw) or "-")[:2]
+    return raw[:10], sex
+
+
+def _patient_fields_from_direction_client(direction_pk: int):
+    """ФИО, пол, д.р., возраст из карты направления (Napravleniya.client.individual)."""
+    nap = Napravleniya.objects.select_related("client__individual").filter(pk=direction_pk).first()
+    if not nap:
+        return None
+    ind = nap.client.individual
+    patient_fio_text = (ind.fio(short=False, full=False, npf=False) or "").strip()[:128]
+    patient_sex = (ind.sex or "м").strip()[:2] if (ind.sex or "").strip() else "м"
+    birthday = ind.birthday
+    patient_age_text = ""
+    if birthday:
+        today = datetime.date.today()
+        years = today.year - birthday.year - ((today.month, today.day) < (birthday.month, birthday.day))
+        if years >= 0:
+            patient_age_text = str(min(years, 999))[:3]
+    return patient_fio_text, patient_sex, birthday, patient_age_text
+
+
+def _save_ptb_date_comment(patient_to_bed, comment_date, comment_raw):
+    """Один комментарий на календарную дату: PatientToBedDateComment с непустым date_comment."""
+    if comment_date is None:
+        return
+    text = (comment_raw or "").strip()[:255]
+    PatientToBedDateComment.objects.filter(patient_to_bed=patient_to_bed, date_comment=comment_date).delete()
+    if text:
+        PatientToBedDateComment.objects.create(
+            patient_to_bed=patient_to_bed,
+            date_comment=comment_date,
+            comment=text,
+        )
+
+
+def _replicate_ptb_comment_to_following_days(patient_to_bed, from_date, comment_raw):
+    """Тот же текст комментария на все дни после from_date до конца периода (plan/date_out), включительно."""
+    if from_date is None:
+        return
+    ends = [d for d in (patient_to_bed.plan_date_out, patient_to_bed.date_out) if d is not None]
+    if not ends:
+        return
+    period_end = min(ends)
+    text = (comment_raw or "").strip()[:255]
+    d = from_date + datetime.timedelta(days=1)
+    while d <= period_end:
+        _save_ptb_date_comment(patient_to_bed, d, text)
+        d += datetime.timedelta(days=1)
+
+
+_HOSP_OPEN_END = datetime.date(2200, 1, 1)
+
+
+def _hosp_visual_start(item):
+    return item.plan_date_in or item.date_in
+
+
+def _hosp_visual_end(item):
+    ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
+    if ends:
+        return min(ends)
+    return _HOSP_OPEN_END
+
+
+def _hosp_uses_plan_calendar(item):
+    return item.plan_date_in is not None or item.plan_date_out is not None
+
+
+def _hosp_tail_end_date(item):
+    ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
+    return min(ends) if ends else None
+
+
+def _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk=None):
+    """Пересечение с другой записью PatientToBed на этой койке, диапазон [from_d, to_d] включительно; to_d=None — бессрочно."""
+    to_eff = to_d if to_d is not None else _HOSP_OPEN_END
+    if from_d > to_eff:
+        return False
+    qs = PatientToBed.objects.filter(bed_id=bed_id)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    for o in qs:
+        os_d = _hosp_visual_start(o)
+        oe_d = _hosp_visual_end(o)
+        if from_d <= oe_d and to_eff >= os_d:
+            return True
+    return False
+
+
+def _parse_ymd_date(value):
+    if not value:
+        return None
+    parsed = parse_date(value)
+    if parsed:
+        return parsed
+    try:
+        return datetime.datetime.strptime(value, "%d.%m.%Y").date()
+    except Exception:
+        return None
+
+
+def _resolve_direction_id_by_fio(fio_text, department_id):
+    fio = " ".join((fio_text or "").split()).strip()
+    if not fio:
+        return None
+    fio_parts = fio.split(" ")
+    family = fio_parts[0] if len(fio_parts) > 0 else ""
+    name = fio_parts[1] if len(fio_parts) > 1 else ""
+    patronymic = fio_parts[2] if len(fio_parts) > 2 else ""
+    direction = Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id).select_related("client__individual").order_by("-id").first()
+    if family:
+        direction_qs = Napravleniya.objects.filter(cancel=False, hospital_department_override_id=department_id).select_related("client__individual").order_by("-id")
+        direction_qs = direction_qs.filter(client__individual__family__iexact=family)
+        if name:
+            direction_qs = direction_qs.filter(client__individual__name__iexact=name)
+        if patronymic:
+            direction_qs = direction_qs.filter(client__individual__patronymic__iexact=patronymic)
+        direction = direction_qs.first()
+    return direction.pk if direction else None
 
 
 @login_required
@@ -162,7 +297,20 @@ def extract_patient_bed(request):
 def get_attending_doctors(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    if CHAMBER_DOCTOR_GROUP_ID:
+    only_stationar_role = bool(request_data.get('only_stationar_role', False))
+    if only_stationar_role:
+        attending_doctors = load_attending_doctor_by_department_and_group_title(department_pk, 'Врач стационара')
+        doctors = [
+            {
+                "pk": doctor.id,
+                "fio": f'{doctor.family} {doctor.name} {doctor.patronymic if doctor.patronymic else ""}',
+                "short_fio": f'{doctor.family} {doctor.name[0]}. {doctor.patronymic[0] if doctor.patronymic else ""}.',
+                "highlight": False,
+            }
+            for doctor in attending_doctors
+        ]
+        result = {"ok": True, "message": "", "data": doctors}
+    elif CHAMBER_DOCTOR_GROUP_ID:
         group_id = CHAMBER_DOCTOR_GROUP_ID
         attending_doctors = load_attending_doctor_by_department(department_pk, group_id)
         doctors = [
@@ -284,3 +432,412 @@ def delete_patient_without_bed(request):
         },
     )
     return status_response(True)
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def get_accompanying_child_options(request):
+    options = [{"id": k, "label": f"{k} ({v})"} for k, v in ACCOMPANYING_CHILD.items()]
+    return JsonResponse({"ok": True, "message": "", "data": options})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def get_hospitalization_calendar(request):
+    request_data = json.loads(request.body)
+    department_id = request_data.get("department_pk", -1)
+    doctor_id = request_data.get("doctor_pk")
+    start_date = _parse_ymd_date(request_data.get("start_date"))
+    end_date = _parse_ymd_date(request_data.get("end_date"))
+    if not start_date or not end_date:
+        return JsonResponse({"ok": False, "message": "Период обязателен", "data": {"chambers": [], "records": []}})
+    chambers_rows = load_chambers_and_beds_by_department(department_id)
+    chambers_map = {}
+    bed_ids = []
+    beds_included = set()
+    for row in chambers_rows:
+        if not chambers_map.get(row.chamber_id):
+            chambers_map[row.chamber_id] = {"pk": row.chamber_id, "label": row.chamber_title, "beds": []}
+        if row.bed_id:
+            key = (row.chamber_id, row.bed_id)
+            if key in beds_included:
+                continue
+            beds_included.add(key)
+            chambers_map[row.chamber_id]["beds"].append({"pk": row.bed_id, "bed_number": row.bed_number})
+            bed_ids.append(row.bed_id)
+    records = []
+    if bed_ids:
+        patients_qs = PatientToBed.objects.filter(bed_id__in=bed_ids).select_related("doctor", "direction__client__individual")
+        if doctor_id:
+            patients_qs = patients_qs.filter(doctor_id=doctor_id)
+        items = list(patients_qs)
+        visible_pks = []
+        for item in items:
+            item_start = item.plan_date_in or item.date_in
+            ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
+            item_end = min(ends) if ends else end_date
+            if item_end < start_date or item_start > end_date:
+                continue
+            visible_pks.append(item.pk)
+        comments_by_ptb = defaultdict(dict)
+        if visible_pks:
+            for row in PatientToBedDateComment.objects.filter(
+                patient_to_bed_id__in=visible_pks,
+                date_comment__isnull=False,
+                date_comment__gte=start_date,
+                date_comment__lte=end_date,
+            ):
+                comments_by_ptb[row.patient_to_bed_id][str(row.date_comment)] = row.comment or ""
+        for item in items:
+            item_start = item.plan_date_in or item.date_in
+            ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
+            item_end = min(ends) if ends else end_date
+            if item_end < start_date or item_start > end_date:
+                continue
+            fio = item.patient_fio_text or ""
+            if not fio and item.direction_id:
+                fio = item.direction.client.individual.fio()
+            date_comments = {}
+            for d_str, txt in comments_by_ptb.get(item.pk, {}).items():
+                d = parse_date(d_str)
+                if d is None:
+                    continue
+                if item_start <= d <= item_end:
+                    date_comments[d_str] = txt
+            records.append(
+                {
+                    "pk": item.pk,
+                    "bed_pk": item.bed_id,
+                    "doctor_pk": item.doctor_id,
+                    "doctor_fio": item.doctor.get_fio() if item.doctor_id else "",
+                    "direction_pk": item.direction_id,
+                    "patient_fio": fio,
+                    "date_in": str(item.date_in) if item.date_in else None,
+                    "date_out": str(item.date_out) if item.date_out else None,
+                    "plan_date_in": str(item.plan_date_in) if item.plan_date_in else None,
+                    "plan_date_out": str(item.plan_date_out) if item.plan_date_out else None,
+                    "patient_sex": item.patient_sex,
+                    "birthday": str(item.birthday) if item.birthday else None,
+                    "patient_age_text": item.patient_age_text,
+                    "accompanyng_child_type": item.accompanyng_child_type or "",
+                    "accompanyng_child_sex": item.accompanyng_child_sex or "-",
+                    "date_comments": date_comments,
+                    "is_day_hosp": bool(item.is_day_hosp),
+                }
+            )
+    return JsonResponse({"ok": True, "message": "", "data": {"chambers": list(chambers_map.values()), "records": records}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def save_hospitalization_by_fio(request):
+    request_data = json.loads(request.body)
+    bed_id = request_data.get("bed_id")
+    doctor_id = request_data.get("doctor_id")
+    department_id = request_data.get("department_pk")
+    patient_fio_text = (request_data.get("patient_fio_text") or "").strip()
+    patient_sex = (request_data.get("patient_sex") or "м").strip()[:2]
+    birthday = _parse_ymd_date(request_data.get("birthday"))
+    patient_age_text = (request_data.get("patient_age_text") or "").strip()[:3]
+    direction_id = request_data.get("direction_id")
+    plan_date_in = _parse_ymd_date(request_data.get("plan_date_in"))
+    plan_date_out = _parse_ymd_date(request_data.get("plan_date_out"))
+    comment = (request_data.get("comment") or "").strip()[:255]
+    acc_type, acc_sex = _accompanying_child_from_request(request_data)
+    user = request.user
+    bed = Bed.objects.filter(pk=bed_id).select_related("chamber").first()
+    if not bed:
+        return status_response(False, "ID кровати обязателен")
+    if bed.chamber.podrazdelenie_id != department_id:
+        return status_response(False, "Койка не принадлежит подразделению")
+    user_can_edit = Chamber.check_user(user, department_id)
+    if not user_can_edit:
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    # if not direction_id:
+    #     print("department_id", department_id, "--", department_id)
+    #     direction_id = _resolve_direction_id_by_fio(patient_fio_text, department_id)
+    # if not direction_id:
+    #     return status_response(False, "Не найдено направление для указанного ФИО")
+
+    if PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
+        return status_response(False, "Койка уже занята")
+    direction_fk = None
+    if "direction_id" in request_data and request_data.get("direction_id") not in (None, "", 0, "0"):
+        try:
+            did = int(request_data.get("direction_id"))
+        except (TypeError, ValueError):
+            return status_response(False, "Некорректный номер направления")
+        if did <= 0 or not Napravleniya.objects.filter(pk=did).exists():
+            return status_response(False, "Направление не найдено")
+        direction_fk = did
+    auto_default_period = bool(request_data.get("auto_default_period"))
+    if auto_default_period and plan_date_in and plan_date_out is None:
+        period_days = getattr(settings, "PERIOD_DAYS_DEFAULT_HOSPITALIZATION", 3)
+        try:
+            period_days = int(period_days)
+        except (TypeError, ValueError):
+            period_days = 3
+        if period_days < 1:
+            period_days = 1
+        plan_date_out = plan_date_in + datetime.timedelta(days=period_days - 1)
+    if bool(request_data.get("fill_patient_from_direction")) and direction_fk:
+        filled = _patient_fields_from_direction_client(direction_fk)
+        if not filled:
+            return status_response(False, "Направление не найдено")
+        patient_fio_text, patient_sex, birthday, patient_age_text = filled
+    if not patient_fio_text:
+        return status_response(False, "Укажите ФИО пациента")
+    patient_to_bed = PatientToBed(
+        direction_id=direction_fk,
+        bed_id=bed_id,
+        doctor_id=doctor_id,
+        plan_date_in=plan_date_in,
+        plan_date_out=plan_date_out,
+        patient_fio_text=patient_fio_text,
+        patient_sex=patient_sex or "м",
+        birthday=birthday,
+        patient_age_text=patient_age_text,
+        accompanyng_child_type=acc_type,
+        accompanyng_child_sex=acc_sex,
+    )
+    patient_to_bed.save()
+    comment_date = _parse_ymd_date(request_data.get("comment_date"))
+    if comment_date is None and comment and plan_date_in:
+        comment_date = plan_date_in
+    if comment_date is not None:
+        _save_ptb_date_comment(patient_to_bed, comment_date, comment)
+        if bool(request_data.get("comment_replicate_following")):
+            _replicate_ptb_comment_to_following_days(patient_to_bed, comment_date, comment)
+    Log.log(
+        bed_id,
+        230000,
+        user.doctorprofile,
+        {"direction_id": direction_id, "bed_id": bed_id, "department_id": department_id, "patient_to_bed": patient_to_bed.pk},
+    )
+    return JsonResponse({"ok": True, "message": "", "result": {"pk": patient_to_bed.pk}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def update_hospitalization_record(request):
+    request_data = json.loads(request.body)
+    record_pk = request_data.get("record_pk")
+    doctor_id = request_data.get("doctor_id")
+    patient_fio_text = (request_data.get("patient_fio_text") or "").strip()
+    patient_sex = (request_data.get("patient_sex") or "м").strip()[:2]
+    birthday = _parse_ymd_date(request_data.get("birthday"))
+    patient_age_text = (request_data.get("patient_age_text") or "").strip()[:3]
+    plan_date_in = _parse_ymd_date(request_data.get("plan_date_in"))
+    plan_date_out = _parse_ymd_date(request_data.get("plan_date_out"))
+    comment = (request_data.get("comment") or "").strip()[:255]
+    acc_type, acc_sex = _accompanying_child_from_request(request_data)
+    user = request.user
+    record = PatientToBed.objects.filter(pk=record_pk).select_related("bed__chamber").first()
+    if not record:
+        return status_response(False, "Запись не найдена")
+    department_id = record.bed.chamber.podrazdelenie_id
+    if not Chamber.check_user(user, department_id):
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
+        return status_response(False, "Дата начала не может быть позже даты окончания")
+    if "direction_id" in request_data:
+        dir_raw = request_data.get("direction_id")
+        if dir_raw in (None, "", 0, "0"):
+            record.direction_id = None
+        else:
+            try:
+                did = int(dir_raw)
+            except (TypeError, ValueError):
+                return status_response(False, "Некорректный номер направления")
+            if did <= 0 or not Napravleniya.objects.filter(pk=did).exists():
+                return status_response(False, "Направление не найдено")
+            record.direction_id = did
+    record.doctor_id = doctor_id if doctor_id else None
+    record.patient_fio_text = patient_fio_text
+    record.patient_sex = patient_sex or "м"
+    record.birthday = birthday
+    record.patient_age_text = patient_age_text
+    record.plan_date_in = plan_date_in
+    record.plan_date_out = plan_date_out
+    record.accompanyng_child_type = acc_type
+    record.accompanyng_child_sex = acc_sex
+    record.save()
+    comment_date = _parse_ymd_date(request_data.get("comment_date"))
+    if comment_date is not None:
+        _save_ptb_date_comment(record, comment_date, comment)
+        if bool(request_data.get("comment_replicate_following")):
+            _replicate_ptb_comment_to_following_days(record, comment_date, comment)
+    Log.log(
+        record.bed_id,
+        230006,
+        user.doctorprofile,
+        {"record_pk": record.pk, "direction_id": record.direction_id, "bed_id": record.bed_id, "department_id": department_id},
+    )
+    return JsonResponse({"ok": True, "message": "", "result": {"pk": record.pk}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def set_hospitalization_day_hosp(request):
+    request_data = json.loads(request.body)
+    record_pk = request_data.get("record_pk")
+    if record_pk is None or "is_day_hosp" not in request_data:
+        return status_response(False, "Недостаточно данных")
+    try:
+        record_pk = int(record_pk)
+    except (TypeError, ValueError):
+        return status_response(False, "Некорректный идентификатор записи")
+    is_day_hosp = bool(request_data.get("is_day_hosp"))
+    user = request.user
+    record = PatientToBed.objects.filter(pk=record_pk).select_related("bed__chamber").first()
+    if not record:
+        return status_response(False, "Запись не найдена")
+    department_id = record.bed.chamber.podrazdelenie_id
+    if not Chamber.check_user(user, department_id):
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    record.is_day_hosp = is_day_hosp
+    record.save(update_fields=["is_day_hosp"])
+    Log.log(
+        record.bed_id,
+        230009,
+        user.doctorprofile,
+        {"record_pk": record.pk, "is_day_hosp": is_day_hosp, "department_id": department_id},
+    )
+    return JsonResponse({"ok": True, "message": "", "result": {"pk": record.pk, "is_day_hosp": is_day_hosp}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def clear_patient_from_bed(request):
+    request_data = json.loads(request.body)
+    record_pk = request_data.get("record_pk")
+    if not record_pk:
+        return status_response(False, "Недостаточно данных")
+    try:
+        record_pk = int(record_pk)
+    except (TypeError, ValueError):
+        return status_response(False, "Некорректные идентификаторы")
+    user = request.user
+    record = PatientToBed.objects.filter(pk=record_pk).select_related("bed__chamber").first()
+    if not record:
+        return status_response(False, "Запись не найдена")
+    department_id = record.bed.chamber.podrazdelenie_id
+    if not Chamber.check_user(user, department_id):
+        return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    bed_id_log = record.bed_id
+    direction_id_log = record.direction_id
+    rec_pk = record.pk
+    record.delete()
+    Log.log(
+        bed_id_log,
+        230008,
+        user.doctorprofile,
+        {"record_pk": rec_pk, "direction_id": direction_id_log, "bed_id": bed_id_log, "department_id": department_id},
+    )
+    return JsonResponse({"ok": True, "message": "", "result": {"pk": rec_pk}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def move_hospitalization_to_bed(request):
+    request_data = json.loads(request.body)
+    record_pk = request_data.get("record_pk")
+    target_bed_id = request_data.get("target_bed_id")
+    move_from_date = _parse_ymd_date(request_data.get("move_from_date"))
+    department_pk = request_data.get("department_pk")
+    if not record_pk or not target_bed_id or not move_from_date or not department_pk:
+        return status_response(False, "Недостаточно данных для переноса")
+    try:
+        record_pk = int(record_pk)
+        target_bed_id = int(target_bed_id)
+        department_pk = int(department_pk)
+    except (TypeError, ValueError):
+        return status_response(False, "Некорректные идентификаторы")
+    user = request.user
+    with transaction.atomic():
+        old = PatientToBed.objects.select_for_update().filter(pk=record_pk).select_related("bed__chamber").first()
+        if not old:
+            return status_response(False, "Запись не найдена")
+        src_dept = old.bed.chamber.podrazdelenie_id
+        if src_dept != department_pk:
+            return status_response(False, "Запись не относится к выбранному подразделению")
+        if not Chamber.check_user(user, src_dept):
+            return status_response(False, "Пользователь не принадлежит к данному подразделению")
+        tgt_bed = Bed.objects.select_related("chamber").filter(pk=target_bed_id).first()
+        if not tgt_bed or tgt_bed.chamber.podrazdelenie_id != src_dept:
+            return status_response(False, "Целевая койка недоступна")
+        if old.bed_id == target_bed_id:
+            return status_response(False, "Укажите другую койку")
+        vstart = _hosp_visual_start(old)
+        vend = _hosp_visual_end(old)
+        if move_from_date < vstart or move_from_date > vend:
+            return status_response(False, "Дата вне периода текущей госпитализации")
+        uses_plan = _hosp_uses_plan_calendar(old)
+        tail_plan_out = old.plan_date_out
+        tail_date_out = old.date_out
+        tail_end = _hosp_tail_end_date(old)
+        if _bed_range_has_overlap(target_bed_id, move_from_date, tail_end, None):
+            return status_response(False, "На целевой койке уже есть пациент в этот период")
+        if move_from_date <= vstart:
+            old.bed_id = target_bed_id
+            old.save(update_fields=["bed_id"])
+            Log.log(
+                target_bed_id,
+                230007,
+                user.doctorprofile,
+                {
+                    "record_pk": old.pk,
+                    "target_bed_id": target_bed_id,
+                    "move_from_date": str(move_from_date),
+                    "mode": "full_move",
+                    "department_id": department_pk,
+                },
+            )
+            return JsonResponse({"ok": True, "message": "", "result": {"pk": old.pk, "split": False}})
+        prev_day = move_from_date - datetime.timedelta(days=1)
+        if prev_day < vstart:
+            return status_response(False, "Некорректная дата разделения")
+        if uses_plan:
+            old.plan_date_out = prev_day
+            old.date_out = prev_day
+            old.save(update_fields=["plan_date_out", "date_out"])
+        else:
+            old.date_out = prev_day
+            old.save(update_fields=["date_out"])
+        new = PatientToBed(
+            bed_id=target_bed_id,
+            direction_id=old.direction_id,
+            doctor_id=old.doctor_id,
+            plan_date_in=move_from_date if uses_plan else None,
+            plan_date_out=tail_plan_out if uses_plan else None,
+            patient_fio_text=old.patient_fio_text or "",
+            patient_sex=old.patient_sex or "м",
+            birthday=old.birthday,
+            patient_age_text=old.patient_age_text or "",
+            accompanyng_child_type=old.accompanyng_child_type or "",
+            accompanyng_child_sex=old.accompanyng_child_sex or "-",
+        )
+        if not uses_plan:
+            new.date_out = tail_date_out
+        new.save()
+        PatientToBed.objects.filter(pk=new.pk).update(date_in=move_from_date)
+        PatientToBedDateComment.objects.filter(
+            patient_to_bed=old,
+            date_comment__isnull=False,
+            date_comment__gte=move_from_date,
+        ).update(patient_to_bed=new)
+        PatientToBedDateComment.objects.filter(patient_to_bed=old, date_comment__isnull=True).delete()
+        Log.log(
+            target_bed_id,
+            230007,
+            user.doctorprofile,
+            {
+                "old_record_pk": old.pk,
+                "new_record_pk": new.pk,
+                "target_bed_id": target_bed_id,
+                "move_from_date": str(move_from_date),
+                "mode": "split",
+                "department_id": department_pk,
+            },
+        )
+        return JsonResponse({"ok": True, "message": "", "result": {"pk": new.pk, "split": True, "old_pk": old.pk}})

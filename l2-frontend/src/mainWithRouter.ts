@@ -790,6 +790,20 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/hospitalization-board',
+      name: 'hospitalization-board',
+      component: () => import('@/pages/HospitalizationBoard.vue'),
+      meta: {
+        title: 'Календарь госпитализаций',
+        groups: [
+          'Оператор лечащего врача',
+          'Лечащий врач',
+        ],
+        module: 'l2_hosp',
+        fullPageLayout: true,
+      },
+    },
+    {
       path: '/ui/turnovers',
       name: 'Turnovers',
       component: () => import('@/pages/Turnovers/Turnovers.vue'),

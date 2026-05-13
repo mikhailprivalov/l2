@@ -575,6 +575,9 @@ PARACLINIC_FILE_NAME_POLICY = {
     "mode": "unique",  # unique | overwrite | error
 }
 
+ACCOMPANYING_CHILD = {'мама': 'Ж', 'папа': 'М', 'бабушка': 'Ж', 'дедушка': 'М'}
+PERIOD_DEFAULT_HOSPITALI = 3
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

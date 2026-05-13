@@ -123,6 +123,34 @@ def load_attending_doctor_by_department(department_id, group_id):
     return rows
 
 
+def load_attending_doctor_by_department_and_group_title(department_id, group_title):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            users_doctorprofile.id,
+            users_doctorprofile.family,
+            users_doctorprofile.name,
+            users_doctorprofile.patronymic
+
+            FROM users_doctorprofile
+            LEFT JOIN auth_user ON users_doctorprofile.user_id = auth_user.id
+            LEFT JOIN auth_user_groups ON auth_user.id = auth_user_groups.user_id
+            LEFT JOIN auth_group ON auth_user_groups.group_id = auth_group.id
+            WHERE
+            auth_group.name = %(group_title)s
+            AND users_doctorprofile.podrazdeleniye_id = %(department_id)s
+            AND users_doctorprofile.dismissed = false
+
+            ORDER BY family
+            """,
+            params={"department_id": department_id, "group_title": group_title},
+        )
+
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def load_chambers_and_beds_by_department(department_id):
     with connection.cursor() as cursor:
         cursor.execute(
