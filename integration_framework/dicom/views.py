@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view
 from api.requests.views import link_image_to_request
 from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
-from directory.models import Researches
+from directory.models import Researches, Contrasts
 from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
 from integration_framework.models import EquipmentReceive
@@ -137,15 +137,17 @@ def dcm_order_create(request):
             return Response({"ok": False, "message": f"Уже существует номер заказа {id_in_hospital} в orderData.internalId для текуще организации"})
 
     fsidi_code = order_data.get("fsidiCode", "")
+    nmu_code = order_data.get("nmuCode", "")
+
     if not fsidi_code:
         return Response({"ok": False, "message": "Не указа ФСИДИ КОД"})
-    researches = Researches.objects.filter(nsi_id=fsidi_code, hide=False)
+    researches = Researches.objects.filter(nsi_id=fsidi_code, code__icontains=nmu_code, hide=False)
     if len(researches) > 1:
         return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД{fsidi_code} больше одного"})
     elif len(researches) < 1:
         return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД- {fsidi_code} отсутствует"})
     else:
-        service_pk = Researches.objects.filter(hide=False, nsi_id=fsidi_code).first().pk
+        service_pk = Researches.objects.filter(hide=False, nsi_id=fsidi_code, code__icontains=nmu_code).first().pk
     operator_created_id = order_data.get("operatorCreatedId")
     if not operator_created_id:
         return Response({"ok": False, "message": "Не указан id-оператора"})
@@ -179,6 +181,7 @@ def dcm_order_create(request):
         direction.dose = order_data.get('dose', '')
         direction.anamnesis = order_data.get('anamnesis', '')
         direction.direction_comment = order_data.get('comment', '')
+        direction.is_dynamic = order_data.get('isDynamic', False)
         date_study = order_data.get('dateStudy', '')
         date_study = date_study.split(" ")
         date_fact, time_fact = None, None
@@ -187,6 +190,11 @@ def dcm_order_create(request):
             time_fact = date_study[1]
         direction.fact_research_date = date_fact
         direction.fact_research_time = time_fact
+        contrast_type_id = order_data.get("contrastTypeId", -1)
+        contrast_type = Contrasts.objects.filter(pk=int(contrast_type_id)).first()
+        if contrast_type:
+            direction.type_contrast = contrast_type
+            direction.text_contrast = contrast_type.title
         direction.save()
 
         Log.log(
