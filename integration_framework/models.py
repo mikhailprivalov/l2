@@ -1,3 +1,4 @@
+import psycopg2
 from django.db.models import Q
 from django.utils import timezone
 
@@ -10,12 +11,14 @@ from django.db import models
 from directory.models import Researches
 from equipment.models import Equipment
 from hospitals.models import Hospitals
+from laboratory.settings import DATABASES, SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT
 from laboratory.utils import strdate
 from slog.models import Log
 from users.models import DoctorProfile
 from utils.models import ChoiceArrayField
 import simplejson as json
 from django.core.cache import cache
+from utils.db import namedtuplefetchall
 
 
 class IntegrationNamespace(models.Model):
@@ -234,6 +237,28 @@ class EquipmentReceive(models.Model):
         return f"[{status}] {patient_name}{patient_id_info} - {naprav_info} - {uid_short} - {date_str}"
 
     @staticmethod
+    def get_equipment_receive():
+        id_equipment_receive = None
+        database = DATABASES.get("default")["NAME"]
+        user = DATABASES.get("default")["USER"]
+        password = DATABASES.get("default")["PASSWORD"]
+        address = DATABASES.get("default")["HOST"]
+        port = DATABASES.get("default")["PORT"]
+        connection = psycopg2.connect(database=database, user=user, password=password, host=address, port=port)
+        cursor = connection.cursor()
+        for query in SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT:
+            cursor.execute(query)
+            rows = namedtuplefetchall(cursor)
+            if len(rows) > 0:
+                equipment_receive = rows[0]
+                id_equipment_receive = equipment_receive.id
+                break
+
+        cursor.close()
+        connection.close()
+        return id_equipment_receive
+
+    @staticmethod
     def save_meta_tag_from_dicom_server(request):
         data = json.loads(request.body)
         cache_key = f"dcm:study_instance_uid:{data.get('study_instance_uid_tag')}"
@@ -250,9 +275,13 @@ class EquipmentReceive(models.Model):
             tag_manufacturer_model_name = data.get("tag_manufacturer_model_name")
             tag_institution_name = data.get("tag_institution_name")
             tag_station_name = data.get("tag_station_name")
+            tag_sender_ip = data.get("tag_sender_ip")
             equipment_model = Equipment.objects.filter(
                 Q(manufacturer=tag_manufacturer) & Q(station_name=tag_station_name) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name))
             ).first()
+
+            # pk_equipment_receive = EquipmentReceive.get_equipment_receive()
+            # equipment_model = Equipment.objects.filter(pk=pk_equipment_receive)
             if equipment_model:
                 eqr = EquipmentReceive(
                     tag_patient_name=data.get("tag_patient_name"),
@@ -270,6 +299,7 @@ class EquipmentReceive(models.Model):
                     study_instance_uid_tag=data.get("study_instance_uid_tag"),
                     equipment_model=equipment_model,
                     equipment_title=equipment_model.title,
+                    ip_address=tag_sender_ip,
                 ).save()
                 cache.set(cache_key, data.get('study_instance_uid_tag'), 60 * 60 * 24)
         return eqr
