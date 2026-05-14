@@ -2267,7 +2267,7 @@ class ParaclinicInputFieldFileSettings(models.Model):
         }
 
     @staticmethod
-    def update_file_field_settings(field: ParaclinicInputField, file_settings: dict | None):
+    def update_file_field_settings(field: ParaclinicInputField, file_settings: dict):
 
         # Если поменялся тип поля - удаляем настройки
         if field.field_type != 42:
