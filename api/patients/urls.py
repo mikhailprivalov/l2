@@ -16,6 +16,7 @@ urlpatterns = [
     path('individuals/search', views.individual_search),
     path('individuals/sex', views.get_sex_by_param),
     path('individuals/edit-doc', views.edit_doc),
+    path('individuals/delete-doc', views.delete_doc),
     path('individuals/edit-agent', views.edit_agent),
     path('individuals/update-cdu', views.update_cdu),
     path('individuals/update-wia', views.update_wia),

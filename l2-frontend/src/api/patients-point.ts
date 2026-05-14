@@ -16,6 +16,8 @@ const individualSex = creator({ url: 'patients/individuals/sex' }, { sex: 'м' }
 
 const editDoc = creator({ url: 'patients/individuals/edit-doc' }, {});
 
+const deleteDoc = creator({ url: 'patients/individuals/delete-doc' });
+
 const editAgent = creator({ url: 'patients/individuals/edit-agent' }, {});
 
 const updateCdu = creator({ url: 'patients/individuals/update-cdu' }, {});
@@ -66,6 +68,7 @@ export default {
   individualsSearch,
   individualSex,
   editDoc,
+  deleteDoc,
   updateCdu,
   updateWIA,
   editAgent,

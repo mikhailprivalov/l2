@@ -573,7 +573,7 @@
               </td>
               <td>
                 <a
-                  v-if="!d.from_rmis"
+                  v-if="!d.from_rmis || isSu"
                   href="#"
                   @click.prevent="edit_document(d.id)"
                 ><i class="fa fa-pencil" /></a>
@@ -1095,6 +1095,16 @@
                 Сохранить
               </button>
             </div>
+            <div class="col-xs-4 l2-card-doc-footer-col">
+              <button
+                v-if="isSu && document_to_edit > -1"
+                class="btn btn-danger btn-block l2-card-doc-delete-btn"
+                type="button"
+                @click="delete_doc"
+              >
+                Удалить
+              </button>
+            </div>
           </div>
         </div>
       </Modal>
@@ -1469,6 +1479,9 @@ export default {
     },
     can_change_owner_directions() {
       return (this.$store.getters.user_data.groups || []).includes('Управление иерархией истории');
+    },
+    isSu() {
+      return Boolean(this.$store.getters.user_data?.su);
     },
     agent_types_excluded() {
       return this.card.agent_types.filter((t) => !this.card.excluded_types.includes(t.key));
@@ -1871,6 +1884,21 @@ export default {
       this.hide_modal_doc_edit();
       await this.$store.dispatch(actions.DEC_LOADING);
     },
+    async delete_doc() {
+      try {
+        await this.$dialog.confirm('Вы уверены, что хотите удалить документ?');
+      } catch (e) {
+        return;
+      }
+      await this.$store.dispatch(actions.INC_LOADING);
+      await patientsPoint.deleteDoc({ pk: this.document_to_edit });
+      await this.load_data();
+      this.document = {
+        number: '',
+      };
+      this.hide_modal_doc_edit();
+      await this.$store.dispatch(actions.DEC_LOADING);
+    },
     async save_agent() {
       if (!this.valid_agent) {
         return;
@@ -2050,5 +2078,16 @@ export default {
   .form-control:last-child {
     flex: 1 calc(100% - 80px);
   }
+}
+
+.l2-card-doc-footer-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+}
+
+.l2-card-doc-delete-btn {
+  flex: 1 0 auto;
+  min-height: 34px;
 }
 </style>
