@@ -129,7 +129,7 @@
             v-model="fraction.ecpIdSynonymfr"
             :class="fraction.hide ? 'hide-background form-control fraction-input' : 'form-control fraction-input'"
             placeholder="Введите код"
-            maxlength="16"
+            maxlength="160"
             :disabled="fraction.hide"
           >
         </td>

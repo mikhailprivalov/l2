@@ -182,6 +182,17 @@ class SubGroupDirectory(models.Model):
         verbose_name_plural = "Подгруппы услуг"
 
 
+class CategoryDirectory(models.Model):
+    title = models.CharField(max_length=128, help_text="Категория услуги")
+
+    def __str__(self):
+        return "%s" % self.title
+
+    class Meta:
+        verbose_name = "Категория услуги"
+        verbose_name_plural = "Категории услуг"
+
+
 class SubGroupPadrazdeleniye(models.Model):
     subgroup = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.CASCADE)
     podrazdeleniye = models.ForeignKey(Podrazdeleniya, help_text="Лаборатория", db_index=True, null=True, blank=True, default=None, on_delete=models.CASCADE)
@@ -400,6 +411,7 @@ class Researches(models.Model):
     ecp_id_synonym = models.CharField(max_length=160, default="", blank=True, verbose_name="Код услуги в ЕЦП-синоним")
     laboratory_material = models.ForeignKey(LaboratoryMaterial, blank=True, default=None, null=True, help_text="Биоматериал", on_delete=models.SET_NULL)
     sub_group = models.ForeignKey(SubGroupDirectory, blank=True, default=None, null=True, help_text="Подгруппа", on_delete=models.SET_NULL)
+    category = models.ForeignKey(CategoryDirectory, blank=True, default=None, null=True, help_text="Категория", on_delete=models.SET_NULL)
     laboratory_duration = models.CharField(max_length=3, default="", blank=True, verbose_name="Срок выполнения")
     is_need_send_egisz = models.BooleanField(blank=True, default=False, help_text="Требуется отправка документав ЕГИСЗ")
     count_volume_material_for_tube = models.FloatField(default=0, verbose_name="Количество материала для емкости в долях", blank=True)
