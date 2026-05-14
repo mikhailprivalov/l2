@@ -34,6 +34,11 @@ def data_by_direction(request):
         direction.received_by_rmq = True
         direction.save()
         return Response({"patient": None})
+    if direction.amd_message == "{'level': 'error', 'service': 'l2ecp'}":
+        direction.amd_message = "{'level': 'error', 'service': 'l2ecp'} - часть результата ушло"
+        direction.received_by_rmq = True
+        direction.save()
+        return Response({"patient": None})
     if data.get("casePatient"):
         result_l2 = get_direction_data_by_cda_group(direction.pk)
         result_tempalte = gen_result_cda_files("protocol/proto.js", result_l2)

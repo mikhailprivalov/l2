@@ -25,14 +25,21 @@ def form_01(request_data) -> Workbook:
 
     for research in researches:
         if Researches.check_exclude(research):
-            research_dict[research.id] = {"internal_code": research.internal_code, "research_title": research.title, "research_code": research.code, **price_template}
+            research_dict[research.id] = {
+                "internal_code": research.internal_code,
+                "research_title": research.title,
+                "research_code": research.code,
+                "fsidi": research.nsi_id,
+                "category": research.categoty_title,
+                **price_template
+            }
 
     coasts = get_coasts(price_ids)
     for coast in coasts:
         if research_dict.get(coast.research_id):
             research_dict[coast.research_id][coast.price_name_id] = str(coast.coast)
 
-    headers = ["Код по прайсу", "Услуга", "Код ОКМУ"]
+    headers = ["Код по прайсу", "Услуга", "Код ОКМУ", "ФСИДИ", "Категория"]
     headers.extend(price_titles)
     work_sheet.append(headers)
 
