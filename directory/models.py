@@ -2230,7 +2230,7 @@ class ParaclinicInputFieldFileSettings(models.Model):
         verbose_name_plural = "Настройки для полей 'файлов'"
 
     @staticmethod
-    def get_file_field_settings(field: ParaclinicInputField) -> dict | None:
+    def get_file_field_settings(field: ParaclinicInputField):
         if field.field_type != 42:
             return None
 
