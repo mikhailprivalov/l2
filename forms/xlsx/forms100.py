@@ -31,7 +31,7 @@ def form_01(request_data) -> Workbook:
                 "research_code": research.code,
                 "fsidi": research.nsi_id,
                 "category": research.categoty_title,
-                **price_template
+                **price_template,
             }
 
     coasts = get_coasts(price_ids)
