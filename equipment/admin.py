@@ -8,6 +8,11 @@ class ResEquipment(admin.ModelAdmin):
         'title',
         'hospital',
         'ip_address',
+        'manufacturer',
+        'manufacturer_model_name',
+        'station_name',
+        'institution_name',
+        'device_serial_number',
     )
     list_display_links = ('title',)
 

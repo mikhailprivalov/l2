@@ -237,7 +237,7 @@ class EquipmentReceive(models.Model):
         return f"[{status}] {patient_name}{patient_id_info} - {naprav_info} - {uid_short} - {date_str}"
 
     @staticmethod
-    def get_equipment_receive():
+    def get_equipment_receive(manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param=''):
         id_equipment_receive = None
         database = DATABASES.get("default")["NAME"]
         user = DATABASES.get("default")["USER"]
@@ -247,11 +247,14 @@ class EquipmentReceive(models.Model):
         connection = psycopg2.connect(database=database, user=user, password=password, host=address, port=port)
         cursor = connection.cursor()
         for query in SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT:
+            query.replace('manufacturer_param', manufacturer_param).replace('manufacturer_model_name_param', manufacturer_model_name_param).replace(
+                'institution_name_param', institution_name_param
+            ).replace('ip_address_param', ip_address_param).replace('station_name_param', station_name_param)
+
             cursor.execute(query)
             rows = namedtuplefetchall(cursor)
             if len(rows) > 0:
-                equipment_receive = rows[0]
-                id_equipment_receive = equipment_receive.id
+                id_equipment_receive = rows[0].id
                 break
 
         cursor.close()
@@ -280,7 +283,13 @@ class EquipmentReceive(models.Model):
                 Q(manufacturer=tag_manufacturer) & Q(station_name=tag_station_name) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name))
             ).first()
 
-            # pk_equipment_receive = EquipmentReceive.get_equipment_receive()
+            pk_equipment_receive = EquipmentReceive.get_equipment_receive(
+                manufacturer_param=tag_manufacturer,
+                manufacturer_model_name_param=tag_manufacturer_model_name,
+                institution_name_param=tag_institution_name,
+                ip_address_param=tag_sender_ip,
+                station_name_param=tag_station_name,
+            )
             # equipment_model = Equipment.objects.filter(pk=pk_equipment_receive)
             if equipment_model:
                 eqr = EquipmentReceive(
