@@ -247,10 +247,9 @@ class EquipmentReceive(models.Model):
         connection = psycopg2.connect(database=database, user=user, password=password, host=address, port=port)
         cursor = connection.cursor()
         for query in SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT:
-            query.replace('manufacturer_param', manufacturer_param).\
-                replace('manufacturer_model_name_param', manufacturer_model_name_param).\
-                replace('institution_name_param', institution_name_param).\
-                replace('ip_address_param', ip_address_param).replace('station_name_param', station_name_param)
+            query.replace('manufacturer_param', manufacturer_param).replace('manufacturer_model_name_param', manufacturer_model_name_param).replace(
+                'institution_name_param', institution_name_param
+            ).replace('ip_address_param', ip_address_param).replace('station_name_param', station_name_param)
 
             cursor.execute(query)
             rows = namedtuplefetchall(cursor)
