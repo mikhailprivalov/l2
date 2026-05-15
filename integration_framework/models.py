@@ -288,7 +288,7 @@ class EquipmentReceive(models.Model):
                 manufacturer_model_name_param=tag_manufacturer_model_name,
                 institution_name_param=tag_institution_name,
                 ip_address_param=tag_sender_ip,
-                station_name_param=tag_station_name
+                station_name_param=tag_station_name,
             )
             # equipment_model = Equipment.objects.filter(pk=pk_equipment_receive)
             if equipment_model:
