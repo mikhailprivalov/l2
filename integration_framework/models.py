@@ -237,11 +237,7 @@ class EquipmentReceive(models.Model):
         return f"[{status}] {patient_name}{patient_id_info} - {naprav_info} - {uid_short} - {date_str}"
 
     @staticmethod
-    def get_equipment_receive(manufacturer_param='',
-                manufacturer_model_name_param='',
-                institution_name_param='',
-                ip_address_param='',
-                station_name_param=''):
+    def get_equipment_receive(manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param=''):
         id_equipment_receive = None
         database = DATABASES.get("default")["NAME"]
         user = DATABASES.get("default")["USER"]
