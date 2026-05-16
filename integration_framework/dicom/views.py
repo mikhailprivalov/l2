@@ -138,14 +138,23 @@ def dcm_order_create(request):
 
     fsidi_code = order_data.get("fsidiCode", "")
     nmu_code = order_data.get("nmuCode", "")
+    code_price = order_data.get("codePrice", "")
 
-    if not fsidi_code:
+    if not fsidi_code and not code_price:
         return Response({"ok": False, "message": "Не указа ФСИДИ КОД"})
-    researches = Researches.objects.filter(nsi_id=fsidi_code, code__icontains=nmu_code, hide=False)
+
+    if code_price:
+        researches = Researches.objects.filter(internal_code=code_price, hide=False)
+    else:
+        researches = Researches.objects.filter(nsi_id=fsidi_code, code__icontains=nmu_code, hide=False)
+
     if len(researches) > 1:
-        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД{fsidi_code} больше одного"})
+        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг найдено больше одного {fsidi_code}/{code_price}/{nmu_code}"})
     elif len(researches) < 1:
-        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД- {fsidi_code} отсутствует"})
+        return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД отсутствует {fsidi_code}/{code_price}/{nmu_code}"})
+
+    if code_price:
+        service_pk = Researches.objects.filter(internal_code=code_price, hide=False).first().pk
     else:
         service_pk = Researches.objects.filter(hide=False, nsi_id=fsidi_code, code__icontains=nmu_code).first().pk
     operator_created_id = order_data.get("operatorCreatedId")

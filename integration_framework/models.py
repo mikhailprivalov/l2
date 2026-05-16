@@ -1,4 +1,4 @@
-import psycopg2
+from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 
@@ -11,7 +11,7 @@ from django.db import models
 from directory.models import Researches
 from equipment.models import Equipment
 from hospitals.models import Hospitals
-from laboratory.settings import DATABASES, SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT
+from laboratory.settings import SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT
 from laboratory.utils import strdate
 from slog.models import Log
 from users.models import DoctorProfile
@@ -236,30 +236,42 @@ class EquipmentReceive(models.Model):
         patient_id_info = f" (ID:{self.tag_patient_id})" if self.tag_patient_id else ""
         return f"[{status}] {patient_name}{patient_id_info} - {naprav_info} - {uid_short} - {date_str}"
 
+    _DICOM_EQUIPMENT_PARAM_NAMES = (
+        'manufacturer_model_name_param',
+        'institution_name_param',
+        'manufacturer_param',
+        'ip_address_param',
+        'station_name_param',
+    )
+
+    @staticmethod
+    def _bind_dicom_equipment_query(sql_template):
+        query = sql_template
+        for name in EquipmentReceive._DICOM_EQUIPMENT_PARAM_NAMES:
+            query = query.replace(name, f'%({name})s')
+        return query
+
     @staticmethod
     def get_equipment_receive(manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param=''):
-        id_equipment_receive = None
-        database = DATABASES.get("default")["NAME"]
-        user = DATABASES.get("default")["USER"]
-        password = DATABASES.get("default")["PASSWORD"]
-        address = DATABASES.get("default")["HOST"]
-        port = DATABASES.get("default")["PORT"]
-        connection = psycopg2.connect(database=database, user=user, password=password, host=address, port=port)
-        cursor = connection.cursor()
-        for query in SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT:
-            query.replace('manufacturer_param', manufacturer_param).replace('manufacturer_model_name_param', manufacturer_model_name_param).replace(
-                'institution_name_param', institution_name_param
-            ).replace('ip_address_param', ip_address_param).replace('station_name_param', station_name_param)
-
-            cursor.execute(query)
-            rows = namedtuplefetchall(cursor)
-            if len(rows) > 0:
-                id_equipment_receive = rows[0].id
-                break
-
-        cursor.close()
-        connection.close()
-        return id_equipment_receive
+        params = {
+            'manufacturer_param': manufacturer_param,
+            'manufacturer_model_name_param': manufacturer_model_name_param,
+            'institution_name_param': institution_name_param,
+            'ip_address_param': ip_address_param,
+            'station_name_param': station_name_param,
+        }
+        with connection.cursor() as cursor:
+            for query_template in SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT:
+                if not query_template:
+                    continue
+                cursor.execute(
+                    EquipmentReceive._bind_dicom_equipment_query(query_template),
+                    params,
+                )
+                rows = namedtuplefetchall(cursor)
+                if rows:
+                    return rows[0].id
+        return None
 
     @staticmethod
     def save_meta_tag_from_dicom_server(request):
