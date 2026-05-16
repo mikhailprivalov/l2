@@ -142,6 +142,7 @@ def dcm_order_create(request):
 
     if not fsidi_code and not code_price:
         return Response({"ok": False, "message": "Не указа ФСИДИ КОД"})
+
     if code_price:
         researches = Researches.objects.filter(internal_code=code_price, hide=False)
     else:
@@ -151,6 +152,7 @@ def dcm_order_create(request):
         return Response({"ok": False, "message": f"У исполнителя в справочнике услуг найдено больше одного {fsidi_code}/{code_price}/{nmu_code}"})
     elif len(researches) < 1:
         return Response({"ok": False, "message": f"У исполнителя в справочнике услуг КОД отсутствует {fsidi_code}/{code_price}/{nmu_code}"})
+
     if code_price:
         service_pk = Researches.objects.filter(internal_code=code_price, hide=False).first().pk
     else:
