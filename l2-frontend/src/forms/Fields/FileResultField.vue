@@ -9,7 +9,7 @@
     tabindex="0"
     @click="focusField"
     @paste="handlePaste"
-    @draчgenter.prevent="handleDragEnter"
+    @dragenter.prevent="handleDragEnter"
     @dragover.prevent="handleDragOver"
     @dragleave.prevent="handleDragLeave"
     @drop.prevent="handleDrop"
