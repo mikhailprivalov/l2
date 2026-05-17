@@ -62,106 +62,82 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ParagraphResultField',
-  props: {
-    value: {
-      type: String,
-      default: '[]',
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  data() {
-    let parsed = [];
-    try {
-      const raw = JSON.parse(this.value || '[]');
-      if (Array.isArray(raw)) {
-        parsed = raw
-          .slice()
-          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-          .map((item, idx) => ({
-            id: idx,
-            text: item.text || '',
-            order: item.order ?? idx,
-          }));
-      }
-    } catch {
-      parsed = [];
-    }
-    return {
-      items: parsed,
-      nextId: parsed.length,
-    };
-  },
-  watch: {
-    value(newVal) {
-      try {
-        const raw = JSON.parse(newVal || '[]');
-        if (Array.isArray(raw)) {
-          const incoming = raw
-            .slice()
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-            .map((item, idx) => ({
-              id: idx,
-              text: item.text || '',
-              order: item.order ?? idx,
-            }));
-          const currentJson = JSON.stringify(this.items.map((it, i) => ({ text: it.text, order: i })));
-          const incomingJson = JSON.stringify(incoming.map((it, i) => ({ text: it.text, order: i })));
-          if (currentJson !== incomingJson) {
-            this.items = incoming;
-            this.nextId = incoming.length;
-          }
-        }
-      } catch {
-        // ignore malformed value
-      }
-    },
-  },
-  methods: {
-    addItem() {
-      this.items.push({ id: this.nextId++, text: '', order: this.items.length });
-      this.emitValue();
-    },
-    removeItem(index) {
-      this.items.splice(index, 1);
-      this.renumberOrders();
-      this.emitValue();
-    },
-    moveUp(index) {
-      if (index === 0) return;
-      const tmp = this.items[index];
-      this.$set(this.items, index, this.items[index - 1]);
-      this.$set(this.items, index - 1, tmp);
-      this.renumberOrders();
-      this.emitValue();
-    },
-    moveDown(index) {
-      if (index === this.items.length - 1) return;
-      const tmp = this.items[index];
-      this.$set(this.items, index, this.items[index + 1]);
-      this.$set(this.items, index + 1, tmp);
-      this.renumberOrders();
-      this.emitValue();
-    },
-    renumberOrders() {
-      this.items.forEach((item, idx) => {
-        // eslint-disable-next-line no-param-reassign
-        item.order = idx;
-      });
-    },
-    emitValue() {
-      const payload = this.items.map((item, idx) => ({
-        text: item.text,
-        order: idx,
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+
+interface ParagraphItem {
+  id: number;
+  text: string;
+}
+
+const props = defineProps<{
+  value: string;
+  disabled?: boolean;
+}>();
+
+const emit = defineEmits<{(e: 'input', value: string): void;
+}>();
+
+const parseValue = (raw: string): ParagraphItem[] => {
+  try {
+    const parsed = JSON.parse(raw || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .slice()
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      .map((item, idx) => ({
+        id: idx,
+        text: item.text || '',
       }));
-      this.$emit('input', JSON.stringify(payload));
-    },
+  } catch {
+    return [];
+  }
+};
+
+const items = ref<ParagraphItem[]>(parseValue(props.value));
+let nextId = items.value.length;
+
+watch(
+  () => props.value,
+  (newVal) => {
+    const incoming = parseValue(newVal);
+    const currentJson = JSON.stringify(items.value.map(it => it.text));
+    const incomingJson = JSON.stringify(incoming.map(it => it.text));
+    if (currentJson !== incomingJson) {
+      items.value = incoming;
+      nextId = incoming.length;
+    }
   },
+);
+
+const emitValue = () => {
+  emit('input', JSON.stringify(items.value.map((item, idx) => ({ text: item.text, order: idx }))));
+};
+
+const addItem = () => {
+  items.value = [...items.value, { id: nextId++, text: '' }];
+  emitValue();
+};
+
+const removeItem = (index: number) => {
+  items.value = items.value.filter((_, i) => i !== index);
+  emitValue();
+};
+
+const moveUp = (index: number) => {
+  if (index === 0) return;
+  const copy = [...items.value];
+  [copy[index - 1], copy[index]] = [copy[index], copy[index - 1]];
+  items.value = copy;
+  emitValue();
+};
+
+const moveDown = (index: number) => {
+  if (index === items.value.length - 1) return;
+  const copy = [...items.value];
+  [copy[index], copy[index + 1]] = [copy[index + 1], copy[index]];
+  items.value = copy;
+  emitValue();
 };
 </script>
 

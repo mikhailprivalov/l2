@@ -551,6 +551,29 @@ import FastTemplates from './FastTemplates.vue';
 import InputTemplates from './InputTemplates.vue';
 import { enterField, leaveField } from './utils';
 
+// Типы полей, чьё "пустое" значение — JSON-массив без содержательных элементов.
+// Добавление нового типа — одна строка здесь.
+const JSON_ARRAY_EMPTY_TYPES = new Set([44]);
+
+function isFieldValueEmpty(field: { value: string; field_type: number }): boolean {
+  if (!field.value || field.value === '- Не выбрано') return true;
+
+  if (field.field_type === 29) {
+    return field.value.includes('"address": ""') || field.value.includes('"address":""');
+  }
+
+  if (JSON_ARRAY_EMPTY_TYPES.has(field.field_type)) {
+    try {
+      const arr = JSON.parse(field.value);
+      return !Array.isArray(arr) || arr.length === 0 || arr.every(it => !String(it.text ?? '').trim());
+    } catch {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export default {
   name: 'DescriptiveForm',
   components: {
@@ -640,31 +663,14 @@ export default {
   },
   computed: {
     notFilled() {
-      const l = [];
       if (this.confirmed) {
         return [];
       }
 
+      const l = [];
       for (const g of this.research.groups) {
         for (const f of g.fields) {
-          const isParagraphEmpty = f.field_type === 44 && (() => {
-            try {
-              const arr = JSON.parse(f.value || '[]');
-              return !Array.isArray(arr) || arr.length === 0 || arr.every(it => !it.text?.trim());
-            } catch {
-              return true;
-            }
-          })();
-          if (
-            (f.required
-              && (isParagraphEmpty
-                || (f.field_type !== 44
-                  && (f.value === ''
-                    || f.value === '- Не выбрано'
-                    || !f.value
-                    || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))))
-            || this.tableFieldsErrors[f.pk]
-          ) {
+          if ((f.required && isFieldValueEmpty(f)) || this.tableFieldsErrors[f.pk]) {
             l.push(f.pk);
           }
         }
