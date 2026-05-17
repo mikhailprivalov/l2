@@ -1193,6 +1193,7 @@
                         <option value="41">Шаблон макет</option>
                         <option value="42">Файл</option>
                         <option value="43">Ссылка на документ(ы)</option>
+                        <option value="44">Параграф</option>
                       </select>
                     </label>
                   </div>

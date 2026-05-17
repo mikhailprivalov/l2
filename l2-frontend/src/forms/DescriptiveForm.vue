@@ -509,6 +509,16 @@
                   @edit-link-field-value="field.value = $event"
                 />
               </div>
+              <!--Тип поля (44, "Параграф")-->
+              <div
+                v-else-if="field.field_type === 44"
+                class="field-value"
+              >
+                <ParagraphResultField
+                  v-model="field.value"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
               <div
                 v-if="field.helper"
                 v-tippy="{
@@ -533,6 +543,7 @@
 <script lang="ts">
 import LPress from '@/ui-cards/LPress.vue';
 import FileResultField from '@/forms/Fields/FileResultField.vue';
+import ParagraphResultField from '@/forms/Fields/ParagraphResultField.vue';
 
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -544,6 +555,7 @@ export default {
   name: 'DescriptiveForm',
   components: {
     FileResultField,
+    ParagraphResultField,
     FastTemplates,
     InputTemplates,
     VisibilityGroupWrapper,
@@ -635,12 +647,22 @@ export default {
 
       for (const g of this.research.groups) {
         for (const f of g.fields) {
+          const isParagraphEmpty = f.field_type === 44 && (() => {
+            try {
+              const arr = JSON.parse(f.value || '[]');
+              return !Array.isArray(arr) || arr.length === 0 || arr.every(it => !it.text?.trim());
+            } catch {
+              return true;
+            }
+          })();
           if (
             (f.required
-              && (f.value === ''
-                || f.value === '- Не выбрано'
-                || !f.value
-                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
+              && (isParagraphEmpty
+                || (f.field_type !== 44
+                  && (f.value === ''
+                    || f.value === '- Не выбрано'
+                    || !f.value
+                    || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))))
             || this.tableFieldsErrors[f.pk]
           ) {
             l.push(f.pk);
@@ -692,6 +714,9 @@ export default {
       if (field.field_type === 29) {
         // eslint-disable-next-line no-param-reassign
         field.value = JSON.stringify({ address: '', fias: null });
+      } else if (field.field_type === 44) {
+        // eslint-disable-next-line no-param-reassign
+        field.value = '[]';
       } else {
         // eslint-disable-next-line no-param-reassign
         field.value = '';
