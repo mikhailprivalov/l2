@@ -24,6 +24,7 @@ from .sql_func import (
     get_closing_protocols,
     load_plan_operations_next_day,
 )
+from ..stationar.stationar_func import forbidden_edit_dir
 
 
 def _accompanying_child_from_request(request_data):
@@ -533,6 +534,9 @@ def get_hospitalization_calendar(request):
                     continue
                 if item_start <= d <= item_end:
                     date_comments[d_str] = txt
+            forbidden_edit = False
+            if item.direction_id:
+                forbidden_edit = forbidden_edit_dir(item.direction_id)
             records.append(
                 {
                     "pk": item.pk,
@@ -552,6 +556,7 @@ def get_hospitalization_calendar(request):
                     "accompanyng_child_sex": item.accompanyng_child_sex or "-",
                     "date_comments": date_comments,
                     "is_day_hosp": bool(item.is_day_hosp),
+                    "forbidden_edit": forbidden_edit,
                 }
             )
     return JsonResponse(

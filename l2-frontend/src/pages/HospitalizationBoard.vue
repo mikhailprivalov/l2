@@ -143,7 +143,10 @@
                   v-for="day in visibleDays"
                   :key="`${bed.pk}-${day.key}`"
                   class="day-cell"
-                  :class="{ 'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key) }"
+                  :class="{
+                    'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
+                    'day-cell--forbidden-edit': cellForbiddenEdit(bed.pk, day.key),
+                  }"
                   @click="openEditModal(bed.pk, day.key)"
                   @dragover.prevent="onCellDragOver(bed.pk, day.key)"
                   @dragleave="onCellDragLeave($event, bed.pk, day.key)"
@@ -683,6 +686,7 @@ interface CalendarRecord {
   date_comments?: Record<string, string>;
   /** Дневной стационар (в т.ч. запись в «черновике» доски) */
   is_day_hosp?: boolean;
+  forbidden_edit?: boolean;
 }
 
 interface StripRow {
@@ -952,6 +956,8 @@ const recordByBedAndDay = computed(() => {
 });
 
 const getRecordForDay = (bedPk: number, dayKey: string) => recordByBedAndDay.value.get(`${bedPk}-${dayKey}`);
+
+const cellForbiddenEdit = (bedPk: number, dayKey: string) => Boolean(getRecordForDay(bedPk, dayKey)?.forbidden_edit);
 
 const surnameFromFio = (fio: string | null | undefined) => {
   const s = (fio || '').trim();
@@ -2089,6 +2095,10 @@ onMounted(async () => {
   width: auto;
   min-width: 0;
   overflow: hidden;
+}
+
+.day-cell--forbidden-edit {
+  background: #f0f0f0;
 }
 
 .day-cell--drop-hover {
