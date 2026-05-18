@@ -90,7 +90,7 @@
             @dragstart="onDoctorDragStart($event, doctor.pk)"
             @dragend="onDoctorDragEnd"
           >
-            {{ doctor.fio }}
+            {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
           </button>
         </div>
         <table
@@ -950,7 +950,17 @@ const stripDirectionPkSet = computed(() => {
   return s;
 });
 
-const recordsForMainGrid = computed(() => records.value.filter((r) => !stripRecordPkSet.value.has(r.pk)));
+const recordsUnfilteredForMainGrid = computed(() => (
+  records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
+));
+
+const recordsForMainGrid = computed(() => {
+  const list = recordsUnfilteredForMainGrid.value;
+  if (doctorPk.value > 0) {
+    return list.filter((r) => r.doctor_pk === doctorPk.value);
+  }
+  return list;
+});
 
 const recordByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord>();
@@ -1122,7 +1132,7 @@ const dayColumnTotalsMap = computed(() => {
   for (const day of visibleDays.value) {
     map.set(day.key, emptyDayColumnTotals());
   }
-  for (const rec of recordsForMainGrid.value) {
+  for (const rec of recordsUnfilteredForMainGrid.value) {
     for (const day of visibleDays.value) {
       if (!isDayInRecordSpan(rec, day.key)) {
         continue;
@@ -1145,6 +1155,28 @@ const dayColumnTotalsMap = computed(() => {
 const dayColumnTotals = (dayKey: string): DayColumnTotals => (
   dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
 );
+
+/** День для счётчика на бейджах врачей: выбранный в режиме «День», иначе сегодня */
+const doctorBadgeCountDayKey = computed(() => {
+  if (viewMode.value === 'day') {
+    return anchorDate.value.format('YYYY-MM-DD');
+  }
+  return todayDayKey.value;
+});
+
+const doctorPatientCountMap = computed(() => {
+  const dayKey = doctorBadgeCountDayKey.value;
+  const map = new Map<number, number>();
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (rec.doctor_pk == null || !isDayInRecordSpan(rec, dayKey)) {
+      continue;
+    }
+    map.set(rec.doctor_pk, (map.get(rec.doctor_pk) || 0) + 1);
+  }
+  return map;
+});
+
+const doctorPatientCount = (docPk: number) => doctorPatientCountMap.value.get(docPk) || 0;
 
 const accompanyingLetterTitle = (record: CalendarRecord) => {
   const t = (record.accompanyng_child_type || '').trim();
@@ -1237,7 +1269,6 @@ const loadCalendar = async () => {
   const end = visibleDays.value[visibleDays.value.length - 1].key;
   const response = await api('chambers/get-hospitalization-calendar', {
     department_pk: departmentPk.value,
-    doctor_pk: doctorPk.value > 0 ? doctorPk.value : null,
     start_date: start,
     end_date: end,
   });
@@ -1924,7 +1955,7 @@ const clearBedFromModal = async () => {
   }
 };
 
-watch([departmentPk, viewMode, anchorDate, doctorPk], async () => {
+watch([departmentPk, viewMode, anchorDate], async () => {
   await loadCalendar();
   await loadUnallocatedPatients();
 });
