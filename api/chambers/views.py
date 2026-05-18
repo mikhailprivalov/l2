@@ -559,7 +559,7 @@ def save_hospitalization_by_fio(request):
     # if not direction_id:
     #     return status_response(False, "Не найдено направление для указанного ФИО")
 
-    if PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
+    if PatientToBed.objects.filter(bed_id=bed_id, plan_date_out=None).exists():
         return status_response(False, "Койка уже занята")
     direction_fk = None
     if "direction_id" in request_data and request_data.get("direction_id") not in (None, "", 0, "0"):

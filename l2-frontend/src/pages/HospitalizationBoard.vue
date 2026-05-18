@@ -2077,11 +2077,11 @@ onMounted(async () => {
 }
 
 .record-sex--male {
-  color: #0d47a1;
+  color: #00bfff;
 }
 
 .record-sex--female {
-  color: #c62828;
+  color: #ff73ea;
 }
 
 .record-sex--muted {
