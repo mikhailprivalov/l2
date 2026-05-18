@@ -24,6 +24,7 @@ from .sql_func import (
     get_closing_protocols,
     load_plan_operations_next_day,
 )
+from ..stationar.stationar_func import forbidden_edit_dir
 
 
 def _accompanying_child_from_request(request_data):
@@ -120,6 +121,35 @@ def _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk=None):
         if from_d <= oe_d and to_eff >= os_d:
             return True
     return False
+
+
+def _proposed_hosp_period(plan_date_in, plan_date_out, fallback_date_in=None, fallback_date_out=None):
+    from_d = plan_date_in or fallback_date_in or datetime.date.today()
+    if plan_date_in is not None or plan_date_out is not None:
+        to_d = plan_date_out
+    else:
+        to_d = fallback_date_out
+    return from_d, to_d
+
+
+def _default_hospitalization_period_days():
+    period_days = settings.PERIOD_DAYS_DEFAULT_HOSPITALIZATION
+    try:
+        period_days = int(period_days)
+    except (TypeError, ValueError):
+        period_days = 3
+    if period_days < 1:
+        period_days = 1
+    return period_days
+
+
+def _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out, exclude_pk=None, fallback_date_in=None, fallback_date_out=None):
+    if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
+        return "Дата начала не может быть позже даты окончания"
+    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out, fallback_date_in, fallback_date_out)
+    if _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk):
+        return "На этой койке период пересекается с другой госпитализацией"
+    return None
 
 
 def _parse_ymd_date(value):
@@ -504,6 +534,9 @@ def get_hospitalization_calendar(request):
                     continue
                 if item_start <= d <= item_end:
                     date_comments[d_str] = txt
+            forbidden_edit = False
+            if item.direction_id:
+                forbidden_edit = forbidden_edit_dir(item.direction_id)
             records.append(
                 {
                     "pk": item.pk,
@@ -523,9 +556,20 @@ def get_hospitalization_calendar(request):
                     "accompanyng_child_sex": item.accompanyng_child_sex or "-",
                     "date_comments": date_comments,
                     "is_day_hosp": bool(item.is_day_hosp),
+                    "forbidden_edit": forbidden_edit,
                 }
             )
-    return JsonResponse({"ok": True, "message": "", "data": {"chambers": list(chambers_map.values()), "records": records}})
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "",
+            "data": {
+                "chambers": list(chambers_map.values()),
+                "records": records,
+                "default_period_days": _default_hospitalization_period_days(),
+            },
+        }
+    )
 
 
 @login_required
@@ -559,8 +603,6 @@ def save_hospitalization_by_fio(request):
     # if not direction_id:
     #     return status_response(False, "Не найдено направление для указанного ФИО")
 
-    if PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
-        return status_response(False, "Койка уже занята")
     direction_fk = None
     if "direction_id" in request_data and request_data.get("direction_id") not in (None, "", 0, "0"):
         try:
@@ -572,14 +614,7 @@ def save_hospitalization_by_fio(request):
         direction_fk = did
     auto_default_period = bool(request_data.get("auto_default_period"))
     if auto_default_period and plan_date_in and plan_date_out is None:
-        period_days = getattr(settings, "PERIOD_DAYS_DEFAULT_HOSPITALIZATION", 3)
-        try:
-            period_days = int(period_days)
-        except (TypeError, ValueError):
-            period_days = 3
-        if period_days < 1:
-            period_days = 1
-        plan_date_out = plan_date_in + datetime.timedelta(days=period_days - 1)
+        plan_date_out = plan_date_in + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
     if bool(request_data.get("fill_patient_from_direction")) and direction_fk:
         filled = _patient_fields_from_direction_client(direction_fk)
         if not filled:
@@ -587,6 +622,9 @@ def save_hospitalization_by_fio(request):
         patient_fio_text, patient_sex, birthday, patient_age_text = filled
     if not patient_fio_text:
         return status_response(False, "Укажите ФИО пациента")
+    overlap_err = _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out)
+    if overlap_err:
+        return status_response(False, overlap_err)
     patient_to_bed = PatientToBed(
         direction_id=direction_fk,
         bed_id=bed_id,
@@ -638,8 +676,16 @@ def update_hospitalization_record(request):
     department_id = record.bed.chamber.podrazdelenie_id
     if not Chamber.check_user(user, department_id):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
-        return status_response(False, "Дата начала не может быть позже даты окончания")
+    overlap_err = _check_bed_period_overlap(
+        record.bed_id,
+        plan_date_in,
+        plan_date_out,
+        exclude_pk=record.pk,
+        fallback_date_in=record.date_in,
+        fallback_date_out=record.date_out,
+    )
+    if overlap_err:
+        return status_response(False, overlap_err)
     if "direction_id" in request_data:
         dir_raw = request_data.get("direction_id")
         if dir_raw in (None, "", 0, "0"):
