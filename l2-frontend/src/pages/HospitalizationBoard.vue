@@ -117,14 +117,17 @@
               <th
                 v-for="day in visibleDays"
                 :key="day.key"
-                class="day-col"
-                :class="{ 'day-col--today': isTodayDayColumn(day.key) }"
+                class="day-col day-col--header"
+                :class="{
+                  'day-col--today': isTodayDayColumn(day.key),
+                  'day-col--hover': isDayColumnHovered(day.key),
+                }"
+                @mouseenter="onDayHeaderMouseEnter(day.key)"
+                @mouseleave="onDayHeaderMouseLeave"
               >
                 <div class="day-col-head">
                   {{ day.label }}
-                  <div
-                    class="day-col-totals"
-                  >
+                  <div class="day-col-totals">
                     <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
                     <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
                     <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
@@ -156,6 +159,7 @@
                   :class="{
                     'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
                     'day-cell--forbidden-edit': cellForbiddenEdit(bed.pk, day.key),
+                    'day-cell--col-hover': isDayColumnHovered(day.key),
                   }"
                   @click="openEditModal(bed.pk, day.key)"
                   @dragover.prevent="onCellDragOver(bed.pk, day.key)"
@@ -275,8 +279,13 @@
                 <th
                   v-for="day in visibleDays"
                   :key="`strip-h-${day.key}`"
-                  class="day-col"
-                  :class="{ 'day-col--today': isTodayDayColumn(day.key) }"
+                  class="day-col day-col--header"
+                  :class="{
+                    'day-col--today': isTodayDayColumn(day.key),
+                    'day-col--hover': isDayColumnHovered(day.key),
+                  }"
+                  @mouseenter="onDayHeaderMouseEnter(day.key)"
+                  @mouseleave="onDayHeaderMouseLeave"
                 >
                   <div class="day-col-head">
                     {{ day.label }}
@@ -301,7 +310,10 @@
                   v-for="day in visibleDays"
                   :key="`${srow.rowId}-${day.key}`"
                   class="day-cell"
-                  :class="{ 'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key) }"
+                  :class="{
+                    'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key),
+                    'day-cell--col-hover': isDayColumnHovered(day.key),
+                  }"
                   @click="openStripCellModal(sidx, day.key)"
                   @dragover.prevent="onStripCellDragOver(sidx, day.key)"
                   @dragleave="onStripCellDragLeave($event, sidx, day.key)"
@@ -748,6 +760,7 @@ const editingForm = ref({
 
 const dragOverCellKey = ref('');
 const dragOverStripCellKey = ref('');
+const hoveredDayKey = ref<string | null>(null);
 const suppressCellClick = ref(false);
 
 const newStripRowId = () => (
@@ -1156,22 +1169,48 @@ const dayColumnTotals = (dayKey: string): DayColumnTotals => (
   dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
 );
 
-/** День для счётчика на бейджах врачей: выбранный в режиме «День», иначе сегодня */
+/** День для счётчика на бейджах врачей: наведённая колонка, иначе «День» / сегодня */
 const doctorBadgeCountDayKey = computed(() => {
+  if (hoveredDayKey.value) {
+    return hoveredDayKey.value;
+  }
   if (viewMode.value === 'day') {
     return anchorDate.value.format('YYYY-MM-DD');
   }
   return todayDayKey.value;
 });
 
+const isDayColumnHovered = (dayKey: string) => hoveredDayKey.value === dayKey;
+
+const onDayHeaderMouseEnter = (dayKey: string) => {
+  hoveredDayKey.value = dayKey;
+};
+
+const onDayHeaderMouseLeave = () => {
+  hoveredDayKey.value = null;
+};
+
+const addDoctorPatientCountForRecord = (
+  map: Map<number, number>,
+  rec: CalendarRecord,
+  dayKey: string,
+) => {
+  if (rec.doctor_pk == null || !isDayInRecordSpan(rec, dayKey)) {
+    return;
+  }
+  map.set(rec.doctor_pk, (map.get(rec.doctor_pk) || 0) + 1);
+};
+
 const doctorPatientCountMap = computed(() => {
   const dayKey = doctorBadgeCountDayKey.value;
   const map = new Map<number, number>();
   for (const rec of recordsUnfilteredForMainGrid.value) {
-    if (rec.doctor_pk == null || !isDayInRecordSpan(rec, dayKey)) {
-      continue;
+    addDoctorPatientCountForRecord(map, rec, dayKey);
+  }
+  for (const row of stripRows.value) {
+    for (const rec of row.records) {
+      addDoctorPatientCountForRecord(map, rec, dayKey);
     }
-    map.set(rec.doctor_pk, (map.get(rec.doctor_pk) || 0) + 1);
   }
   return map;
 });
@@ -2197,6 +2236,23 @@ onMounted(async () => {
 
 .day-col--today {
   background: #fafafa;
+}
+
+.day-col--header {
+  cursor: default;
+}
+
+.day-col--hover,
+.day-cell--col-hover {
+  background: rgba(4, 147, 114, 0.1);
+}
+
+.day-col--today.day-col--hover {
+  background: rgba(4, 147, 114, 0.14);
+}
+
+.day-cell--col-hover.day-cell--forbidden-edit {
+  background: #e4e4e4;
 }
 
 .day-col-head {
