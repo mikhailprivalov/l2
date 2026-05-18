@@ -2807,11 +2807,12 @@ def results_by_direction(request):
                         except Exception:
                             additional_data_confirm_direction = None
                 data_time = current_time()
+                minutes = random.randint(0, 59)
                 objs_result[direction_data[1]]["services"][i["result"][0]["iss_id"]] = {
                     "title": i["title_research"],
                     "fio": short_fio_dots(i["result"][0]["docConfirm"]),
-                    "confirmedAt": datetime.datetime.strftime(iss.time_confirmation, '%d.%m.%Y'),
-                    "confirmedTime": '15:00',
+                    "confirmedAt": datetime.datetime.strftime(iss.time_confirmation.astimezone(pytz.timezone(TIME_ZONE)), '%d.%m.%Y'),
+                    "confirmedTime": f"15:{minutes:02d}",
                     "fractions": [],
                     "directionId": i["result"][0]["direction_id"],
                     "additionalDataConfirmDirection": additional_data_confirm_direction,
