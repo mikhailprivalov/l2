@@ -458,7 +458,7 @@
             </p>
           </div>
           <div
-            v-if="editingRecordPk"
+            v-if="editingRecordPk || editingStripRowId"
             class="form-group modal-doctor-field"
           >
             <label>Лечащий врач</label>
@@ -1211,6 +1211,40 @@ const onDoctorDragEnd = () => {
   dragOverStripCellKey.value = '';
 };
 
+const doctorFioByPk = (docPk: number) => {
+  const d = doctors.value.find((x) => x.pk === docPk);
+  return (d?.fio || '').trim();
+};
+
+const onDoctorStripCellDrop = (rowIdx: number, dayKey: string, docPk: number) => {
+  const row = stripRows.value[rowIdx];
+  if (!row) {
+    root.$emit('msg', 'error', 'Строка черновика не найдена');
+    return;
+  }
+  const dayRecords = cellStripRecordList(row, dayKey);
+  if (dayRecords.length === 0) {
+    root.$emit('msg', 'error', 'В этой ячейке нет записи — назначить врача некуда');
+    return;
+  }
+  if (dayRecords.length > 1) {
+    root.$emit('msg', 'error', 'В ячейке несколько записей — откройте нужную для назначения врача');
+    return;
+  }
+  const recPk = dayRecords[0].pk;
+  const recIdx = row.records.findIndex((r) => r.pk === recPk);
+  if (recIdx < 0) {
+    return;
+  }
+  row.records[recIdx] = {
+    ...row.records[recIdx],
+    doctor_pk: docPk,
+    doctor_fio: doctorFioByPk(docPk),
+  };
+  persistStripToStorage();
+  root.$emit('msg', 'ok', 'Врач назначен');
+};
+
 const onPatientDragStart = (e: DragEvent, rec: CalendarRecord) => {
   e.stopPropagation();
   e.dataTransfer?.setData('application/x-l2-hospitalization-move', String(rec.pk));
@@ -1329,6 +1363,16 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
   if (panelDir) {
     onUnallocatedToStripDrop(rowIdx, dayKey, panelDir);
     return;
+  }
+  const docFromMime = e.dataTransfer?.getData('application/x-l2-doctor-pk') || '';
+  const plain = e.dataTransfer?.getData('text/plain') || '';
+  const docRaw = docFromMime || (plain.startsWith('hosp-move:') || plain.startsWith('strip-row:') ? '' : plain);
+  if (docRaw && !docRaw.startsWith('hosp-move:') && !docRaw.startsWith('strip-row:')) {
+    const docPk = Number.parseInt(docRaw, 10);
+    if (!Number.isNaN(docPk)) {
+      onDoctorStripCellDrop(rowIdx, dayKey, docPk);
+      return;
+    }
   }
   const hospMove = e.dataTransfer?.getData('application/x-l2-hospitalization-move');
   if (!hospMove) {
