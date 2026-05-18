@@ -118,8 +118,18 @@
                 v-for="day in visibleDays"
                 :key="day.key"
                 class="day-col"
+                :class="{ 'day-col--today': isTodayDayColumn(day.key) }"
               >
-                {{ day.label }}
+                <div class="day-col-head">
+                  {{ day.label }}
+                  <div
+                    class="day-col-totals"
+                  >
+                    <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
+                    <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
+                    <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
+                  </div>
+                </div>
               </th>
             </tr>
           </thead>
@@ -266,8 +276,16 @@
                   v-for="day in visibleDays"
                   :key="`strip-h-${day.key}`"
                   class="day-col"
+                  :class="{ 'day-col--today': isTodayDayColumn(day.key) }"
                 >
-                  {{ day.label }}
+                  <div class="day-col-head">
+                    {{ day.label }}
+                    <div class="day-col-totals">
+                      <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
+                      <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
+                      <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
+                    </div>
+                  </div>
                 </th>
               </tr>
             </thead>
@@ -1086,6 +1104,47 @@ const genderColorClass = (sexRaw: string | null | undefined) => {
   }
   return 'record-sex--muted';
 };
+
+const todayDayKey = computed(() => moment().format('YYYY-MM-DD'));
+
+const isPatientSexMale = (sexRaw: string | null | undefined) => genderColorClass(sexRaw) === 'record-sex--male';
+
+const isPatientSexFemale = (sexRaw: string | null | undefined) => genderColorClass(sexRaw) === 'record-sex--female';
+
+const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
+
+type DayColumnTotals = { male: number, female: number, accompanying: number };
+
+const emptyDayColumnTotals = (): DayColumnTotals => ({ male: 0, female: 0, accompanying: 0 });
+
+const dayColumnTotalsMap = computed(() => {
+  const map = new Map<string, DayColumnTotals>();
+  for (const day of visibleDays.value) {
+    map.set(day.key, emptyDayColumnTotals());
+  }
+  for (const rec of recordsForMainGrid.value) {
+    for (const day of visibleDays.value) {
+      if (!isDayInRecordSpan(rec, day.key)) {
+        continue;
+      }
+      const t = map.get(day.key) || emptyDayColumnTotals();
+      if (isPatientSexMale(rec.patient_sex)) {
+        t.male += 1;
+      } else if (isPatientSexFemale(rec.patient_sex)) {
+        t.female += 1;
+      }
+      if ((rec.accompanyng_child_type || '').trim()) {
+        t.accompanying += 1;
+      }
+      map.set(day.key, t);
+    }
+  }
+  return map;
+});
+
+const dayColumnTotals = (dayKey: string): DayColumnTotals => (
+  dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
+);
 
 const accompanyingLetterTitle = (record: CalendarRecord) => {
   const t = (record.accompanyng_child_type || '').trim();
@@ -2103,6 +2162,34 @@ onMounted(async () => {
   width: auto;
   min-width: 0;
   text-align: center;
+}
+
+.day-col--today {
+  background: #fafafa;
+}
+
+.day-col-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.day-col-totals {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #555;
+  white-space: nowrap;
+}
+
+.day-col-totals-item {
+  display: inline;
 }
 
 .sticky-col {
