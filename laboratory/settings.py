@@ -513,6 +513,8 @@ MAGAZINE_REPORT = {}
 COMMAND_DOCX_2_PDF = ""
 GROUP_USER_FOR_FILTER = []
 PERIOD_DAYS_SEND_RESULT_ECP = -1
+# Дней госпитализации по умолчанию (календарь коек: plan_date_in … plan_date_out включительно)
+PERIOD_DAYS_DEFAULT_HOSPITALIZATION = 3
 SHOW_RESTRICTIONS = False
 NOT_CONTROL_VISIT_RESEARCH_ID = []
 PERIOD_HAOURS_SEND_RESULT_ECP = -100
