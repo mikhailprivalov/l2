@@ -2282,15 +2282,15 @@ onMounted(async () => {
 
 .day-col--hover,
 .day-cell--col-hover {
-  background: rgba(4, 147, 114, 0.1);
+  background: rgba(91, 143, 175, 0.12);
 }
 
 .day-col--today.day-col--hover {
-  background: rgba(4, 147, 114, 0.14);
+  background: rgba(91, 143, 175, 0.16);
 }
 
 .day-cell--col-hover.day-cell--forbidden-edit {
-  background: #e4e4e4;
+  background: #e4ebf1;
 }
 
 .day-col-head {
@@ -2415,7 +2415,7 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .record-patient-age {
