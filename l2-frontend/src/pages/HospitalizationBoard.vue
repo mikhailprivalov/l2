@@ -7,36 +7,36 @@
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Подразделение</span>
               <Treeselect
-                v-model="departmentPk"
-                :options="departments"
-                :multiple="false"
-                :disable-branch-nodes="true"
-                :clearable="false"
-                :append-to-body="true"
-                class="treeselect-wide"
+                  v-model="departmentPk"
+                  :options="departments"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :clearable="false"
+                  :append-to-body="true"
+                  class="treeselect-wide"
               />
             </div>
           </div>
           <div class="col-xs-3">
             <div class="mode-switch">
               <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'day' }"
-                @click="viewMode = 'day'"
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'day' }"
+                  @click="viewMode = 'day'"
               >
                 День
               </button>
               <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'week' }"
-                @click="viewMode = 'week'"
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'week' }"
+                  @click="viewMode = 'week'"
               >
                 Неделя
               </button>
               <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'month' }"
-                @click="setViewMonth"
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'month' }"
+                  @click="setViewMonth"
               >
                 Месяц
               </button>
@@ -45,20 +45,20 @@
           <div class="col-xs-3 text-right">
             <div class="btn-group">
               <button
-                class="btn btn-default"
-                @click="navigate(-1)"
+                  class="btn btn-default"
+                  @click="navigate(-1)"
               >
                 ←
               </button>
               <button
-                class="btn btn-default"
-                @click="goToday"
+                  class="btn btn-default"
+                  @click="goToday"
               >
                 Сегодня
               </button>
               <button
-                class="btn btn-default"
-                @click="navigate(1)"
+                  class="btn btn-default"
+                  @click="navigate(1)"
               >
                 →
               </button>
@@ -72,23 +72,23 @@
       <div class="calendar-wrap">
         <div class="doctor-badges">
           <button
-            type="button"
-            class="badge badge-secondary doctor-badge-btn"
-            :class="{ active: doctorPk === -1 }"
-            @click="doctorPk = -1"
+              type="button"
+              class="badge badge-secondary doctor-badge-btn"
+              :class="{ active: doctorPk === -1 }"
+              @click="doctorPk = -1"
           >
             Все врачи
           </button>
           <button
-            v-for="doctor in doctors"
-            :key="doctor.pk"
-            type="button"
-            draggable="true"
-            class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
-            :class="{ active: doctorPk === doctor.pk }"
-            @click="doctorPk = doctor.pk"
-            @dragstart="onDoctorDragStart($event, doctor.pk)"
-            @dragend="onDoctorDragEnd"
+              v-for="doctor in doctors"
+              :key="doctor.pk"
+              type="button"
+              draggable="true"
+              class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
+              :class="{ active: doctorPk === doctor.pk }"
+              @click="doctorPk = doctor.pk"
+              @dragstart="onDoctorDragStart($event, doctor.pk)"
+              @dragend="onDoctorDragEnd"
           >
             {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
           </button>
@@ -96,200 +96,36 @@
         <div class="calendar-tables-stack">
           <div class="calendar-main-scroll">
             <table
-              class="table table-bordered table-condensed calendar-table"
-              :class="{ 'calendar-table--month': viewMode === 'month' }"
+                class="table table-bordered table-condensed calendar-table"
+                :class="{ 'calendar-table--month': viewMode === 'month' }"
             >
-          <colgroup>
-            <col class="calendar-col-chamber">
-            <col class="calendar-col-bed">
-            <col
-              v-for="day in visibleDays"
-              :key="`col-${day.key}`"
-              class="calendar-col-day"
-            >
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="sticky-col chamber-col">
-                Палата
-              </th>
-              <th class="sticky-col bed-col">
-                Койка
-              </th>
-              <th
-                v-for="day in visibleDays"
-                :key="day.key"
-                class="day-col day-col--header"
-                :class="{
+              <colgroup>
+                <col class="calendar-col-chamber">
+                <col class="calendar-col-bed">
+                <col
+                    v-for="day in visibleDays"
+                    :key="`col-${day.key}`"
+                    class="calendar-col-day"
+                >
+              </colgroup>
+              <thead>
+              <tr>
+                <th class="sticky-col chamber-col">
+                  Палата
+                </th>
+                <th class="sticky-col bed-col">
+                  Койка
+                </th>
+                <th
+                    v-for="day in visibleDays"
+                    :key="day.key"
+                    class="day-col day-col--header"
+                    :class="{
                   'day-col--today': isTodayDayColumn(day.key),
                   'day-col--hover': isDayColumnHovered(day.key),
                 }"
-                @mouseenter="onDayHeaderMouseEnter(day.key)"
-                @mouseleave="onDayHeaderMouseLeave"
-              >
-                <div class="day-col-head">
-                  {{ day.label }}
-                  <div class="day-col-totals">
-                    <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
-                    <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
-                    <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
-                  </div>
-                </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="row in chamberRows">
-              <tr
-                v-for="(bed, bedIdx) in row.beds"
-                :key="`${row.pk}-${bed.pk}`"
-              >
-                <td
-                  v-if="bedIdx === 0"
-                  :rowspan="row.beds.length || 1"
-                  class="sticky-col chamber-col chamber-cell"
-                >
-                  {{ row.label }}
-                </td>
-                <td class="sticky-col bed-col bed-cell">
-                  {{ bed.bed_number }}
-                </td>
-                <td
-                  v-for="day in visibleDays"
-                  :key="`${bed.pk}-${day.key}`"
-                  class="day-cell"
-                  :class="{
-                    'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
-                    'day-cell--forbidden-edit': cellForbiddenEdit(bed.pk, day.key),
-                    'day-cell--col-hover': isDayColumnHovered(day.key),
-                  }"
-                  @click="openEditModal(bed.pk, day.key)"
-                  @dragover.prevent="onCellDragOver(bed.pk, day.key)"
-                  @dragleave="onCellDragLeave($event, bed.pk, day.key)"
-                  @drop.prevent="onCellDrop($event, bed.pk, day.key)"
-                >
-                  <div
-                    v-for="rec in cellRecordList(bed.pk, day.key)"
-                    :key="`${bed.pk}-${day.key}-${rec.pk}`"
-                    class="record record--draggable"
-                    draggable="true"
-                    :title="recordHoverTitle(rec, day.key)"
-                    @dragstart.stop="onPatientDragStart($event, rec)"
-                    @dragend="onPatientDragEnd"
-                  >
-                    <div class="record-line record-line--patient">
-                      <span class="record-patient">
-                        <span class="record-patient-name-wrap">
-                          <template v-if="surnameFromFio(rec.patient_fio)">
-                            <span
-                              class="record-patient-surname"
-                              :class="genderColorClass(rec.patient_sex)"
-                            >
-                              <template v-if="viewMode === 'month'">
-                                {{ monthSurnameShort(rec) }}
-                              </template>
-                              <template v-else>
-                                {{ surnameFromFio(rec.patient_fio) }}
-                              </template>
-                            </span><span
-                              v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
-                              class="record-patient-age"
-                            > - {{ cellPatientAgePart(rec) }}</span>
-                          </template>
-                          <span
-                            v-else
-                            class="record-sex--muted"
-                          >—</span>
-                        </span>
-                      </span>
-                      <span class="record-line-actions">
-                        <a
-                          v-if="rec.direction_pk != null && rec.direction_pk > 0"
-                          :href="stationarHref(rec.direction_pk)"
-                          class="record-direction-link"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          :title="`Направление ${rec.direction_pk} (стационар)`"
-                          @click.stop
-                          @mousedown.stop
-                        >
-                          <template v-if="viewMode === 'month'">
-                            {{ monthDirectionIdShort(rec.direction_pk) }}
-                          </template>
-                          <template v-else>
-                            {{ rec.direction_pk }}
-                          </template>
-                        </a>
-                        <span
-                          v-if="accompanyingDisplayLetter(rec)"
-                          class="record-accompany-letter"
-                          :class="genderColorClass(rec.accompanyng_child_sex)"
-                          :title="accompanyingLetterTitle(rec)"
-                        >{{ accompanyingDisplayLetter(rec) }}</span>
-                        <span
-                          v-if="rec.is_day_hosp"
-                          class="record-day-hosp-badge"
-                          title="Дневной стационар"
-                        >ДС</span>
-                      </span>
-                    </div>
-                    <div class="record-line record-line--doctor">
-                      <span class="record-doctor-line-inner">
-                        <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
-                          v-if="commentForRecordDay(rec, day.key).trim()"
-                          class="record-comment-after-doctor"
-                          :title="commentForRecordDay(rec, day.key)"
-                        > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
-                      </span>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-            </template>
-            <tr v-if="chamberRows.length === 0">
-              <td
-                colspan="100"
-                class="text-center"
-              >
-                Нет палат или данных за выбранный период
-              </td>
-            </tr>
-          </tbody>
-            </table>
-          </div>
-
-          <div class="strip-board-block calendar-strip-block">
-            <p class="strip-board-hint text-muted small">
-              Дневной стационар
-            </p>
-            <div class="calendar-strip-scroll">
-              <table
-                class="table table-bordered table-condensed calendar-table calendar-table--strip"
-                :class="{ 'calendar-table--month': viewMode === 'month' }"
-              >
-            <colgroup>
-              <col class="calendar-col-strip-sidebar">
-              <col
-                v-for="day in visibleDays"
-                :key="`strip-col-${day.key}`"
-                class="calendar-col-day"
-              >
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="sticky-col strip-sidebar-col strip-sidebar-th">
-                  Днёвники
-                </th>
-                <th
-                  v-for="day in visibleDays"
-                  :key="`strip-h-${day.key}`"
-                  class="day-col day-col--header"
-                  :class="{
-                    'day-col--today': isTodayDayColumn(day.key),
-                    'day-col--hover': isDayColumnHovered(day.key),
-                  }"
-                  @mouseenter="onDayHeaderMouseEnter(day.key)"
-                  @mouseleave="onDayHeaderMouseLeave"
+                    @mouseenter="onDayHeaderMouseEnter(day.key)"
+                    @mouseleave="onDayHeaderMouseLeave"
                 >
                   <div class="day-col-head">
                     {{ day.label }}
@@ -301,45 +137,53 @@
                   </div>
                 </th>
               </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="(srow, sidx) in stripRows"
-                :key="srow.rowId"
-              >
-                <td class="sticky-col strip-sidebar-col strip-sidebar-cell">
-                  {{ srow.records.length ? srow.records.length : '—' }}
-                </td>
-                <td
-                  v-for="day in visibleDays"
-                  :key="`${srow.rowId}-${day.key}`"
-                  class="day-cell"
-                  :class="{
-                    'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key),
+              </thead>
+              <tbody>
+              <template v-for="row in chamberRows">
+                <tr
+                    v-for="(bed, bedIdx) in row.beds"
+                    :key="`${row.pk}-${bed.pk}`"
+                >
+                  <td
+                      v-if="bedIdx === 0"
+                      :rowspan="row.beds.length || 1"
+                      class="sticky-col chamber-col chamber-cell"
+                  >
+                    {{ row.label }}
+                  </td>
+                  <td class="sticky-col bed-col bed-cell">
+                    {{ bed.bed_number }}
+                  </td>
+                  <td
+                      v-for="day in visibleDays"
+                      :key="`${bed.pk}-${day.key}`"
+                      class="day-cell"
+                      :class="{
+                    'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
+                    'day-cell--forbidden-edit': cellForbiddenEdit(bed.pk, day.key),
                     'day-cell--col-hover': isDayColumnHovered(day.key),
                   }"
-                  @click="openStripCellModal(sidx, day.key)"
-                  @dragover.prevent="onStripCellDragOver(sidx, day.key)"
-                  @dragleave="onStripCellDragLeave($event, sidx, day.key)"
-                  @drop.prevent="onStripCellDrop($event, sidx, day.key)"
-                >
-                  <div
-                    v-for="rec in cellStripRecordList(srow, day.key)"
-                    :key="`strip-${srow.rowId}-${day.key}-${rec.pk}`"
-                    class="record record--draggable"
-                    draggable="true"
-                    :title="recordHoverTitle(rec, day.key)"
-                    @dragstart.stop="onStripPatientDragStart($event, srow, rec)"
-                    @dragend="onPatientDragEnd"
-                    @click.stop="openStripRecordModal(sidx, day.key, rec)"
+                      @click="openEditModal(bed.pk, day.key)"
+                      @dragover.prevent="onCellDragOver(bed.pk, day.key)"
+                      @dragleave="onCellDragLeave($event, bed.pk, day.key)"
+                      @drop.prevent="onCellDrop($event, bed.pk, day.key)"
                   >
-                    <div class="record-line record-line--patient">
+                    <div
+                        v-for="rec in cellRecordList(bed.pk, day.key)"
+                        :key="`${bed.pk}-${day.key}-${rec.pk}`"
+                        class="record record--draggable"
+                        draggable="true"
+                        :title="recordHoverTitle(rec, day.key)"
+                        @dragstart.stop="onPatientDragStart($event, rec)"
+                        @dragend="onPatientDragEnd"
+                    >
+                      <div class="record-line record-line--patient">
                       <span class="record-patient">
                         <span class="record-patient-name-wrap">
                           <template v-if="surnameFromFio(rec.patient_fio)">
                             <span
-                              class="record-patient-surname"
-                              :class="genderColorClass(rec.patient_sex)"
+                                class="record-patient-surname"
+                                :class="genderColorClass(rec.patient_sex)"
                             >
                               <template v-if="viewMode === 'month'">
                                 {{ monthSurnameShort(rec) }}
@@ -350,24 +194,24 @@
                             </span><span
                               v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
                               class="record-patient-age"
-                            > - {{ cellPatientAgePart(rec) }}</span>
+                          > - {{ cellPatientAgePart(rec) }}</span>
                           </template>
                           <span
-                            v-else
-                            class="record-sex--muted"
+                              v-else
+                              class="record-sex--muted"
                           >—</span>
                         </span>
                       </span>
-                      <span class="record-line-actions">
+                        <span class="record-line-actions">
                         <a
-                          v-if="rec.direction_pk != null && rec.direction_pk > 0"
-                          :href="stationarHref(rec.direction_pk)"
-                          class="record-direction-link"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          :title="`Направление ${rec.direction_pk} (стационар)`"
-                          @click.stop
-                          @mousedown.stop
+                            v-if="rec.direction_pk != null && rec.direction_pk > 0"
+                            :href="stationarHref(rec.direction_pk)"
+                            class="record-direction-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :title="`Направление ${rec.direction_pk} (стационар)`"
+                            @click.stop
+                            @mousedown.stop
                         >
                           <template v-if="viewMode === 'month'">
                             {{ monthDirectionIdShort(rec.direction_pk) }}
@@ -377,31 +221,187 @@
                           </template>
                         </a>
                         <span
-                          v-if="accompanyingDisplayLetter(rec)"
-                          class="record-accompany-letter"
-                          :class="genderColorClass(rec.accompanyng_child_sex)"
-                          :title="accompanyingLetterTitle(rec)"
+                            v-if="accompanyingDisplayLetter(rec)"
+                            class="record-accompany-letter"
+                            :class="genderColorClass(rec.accompanyng_child_sex)"
+                            :title="accompanyingLetterTitle(rec)"
                         >{{ accompanyingDisplayLetter(rec) }}</span>
                         <span
-                          v-if="rec.is_day_hosp"
-                          class="record-day-hosp-badge"
-                          title="Дневной стационар"
+                            v-if="rec.is_day_hosp"
+                            class="record-day-hosp-badge"
+                            title="Дневной стационар"
                         >ДС</span>
                       </span>
-                    </div>
-                    <div class="record-line record-line--doctor">
+                      </div>
+                      <div class="record-line record-line--doctor">
                       <span class="record-doctor-line-inner">
                         <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
                           v-if="commentForRecordDay(rec, day.key).trim()"
                           class="record-comment-after-doctor"
                           :title="commentForRecordDay(rec, day.key)"
-                        > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
+                      > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
                       </span>
+                      </div>
                     </div>
-                  </div>
+                  </td>
+                </tr>
+              </template>
+              <tr v-if="chamberRows.length === 0">
+                <td
+                    colspan="100"
+                    class="text-center"
+                >
+                  Нет палат или данных за выбранный период
                 </td>
               </tr>
-            </tbody>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="strip-board-block calendar-strip-block">
+            <p class="strip-board-hint text-muted small">
+              Дневной стационар
+            </p>
+            <div class="calendar-strip-scroll">
+              <table
+                  class="table table-bordered table-condensed calendar-table calendar-table--strip"
+                  :class="{ 'calendar-table--month': viewMode === 'month' }"
+              >
+                <colgroup>
+                  <col class="calendar-col-strip-sidebar">
+                  <col
+                      v-for="day in visibleDays"
+                      :key="`strip-col-${day.key}`"
+                      class="calendar-col-day"
+                  >
+                </colgroup>
+                <thead>
+                <tr>
+                  <th class="sticky-col strip-sidebar-col strip-sidebar-th">
+                    Днёвники
+                  </th>
+                  <th
+                      v-for="day in visibleDays"
+                      :key="`strip-h-${day.key}`"
+                      class="day-col day-col--header"
+                      :class="{
+                    'day-col--today': isTodayDayColumn(day.key),
+                    'day-col--hover': isDayColumnHovered(day.key),
+                  }"
+                      @mouseenter="onDayHeaderMouseEnter(day.key)"
+                      @mouseleave="onDayHeaderMouseLeave"
+                  >
+                    <div class="day-col-head">
+                      {{ day.label }}
+                      <div class="day-col-totals">
+                        <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
+                        <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
+                        <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
+                      </div>
+                    </div>
+                  </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr
+                    v-for="(srow, sidx) in stripRows"
+                    :key="srow.rowId"
+                >
+                  <td class="sticky-col strip-sidebar-col strip-sidebar-cell">
+                    {{ srow.records.length ? srow.records.length : '—' }}
+                  </td>
+                  <td
+                      v-for="day in visibleDays"
+                      :key="`${srow.rowId}-${day.key}`"
+                      class="day-cell"
+                      :class="{
+                    'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key),
+                    'day-cell--col-hover': isDayColumnHovered(day.key),
+                  }"
+                      @click="openStripCellModal(sidx, day.key)"
+                      @dragover.prevent="onStripCellDragOver(sidx, day.key)"
+                      @dragleave="onStripCellDragLeave($event, sidx, day.key)"
+                      @drop.prevent="onStripCellDrop($event, sidx, day.key)"
+                  >
+                    <div
+                        v-for="rec in cellStripRecordList(srow, day.key)"
+                        :key="`strip-${srow.rowId}-${day.key}-${rec.pk}`"
+                        class="record record--draggable"
+                        draggable="true"
+                        :title="recordHoverTitle(rec, day.key)"
+                        @dragstart.stop="onStripPatientDragStart($event, srow, rec)"
+                        @dragend="onPatientDragEnd"
+                        @click.stop="openStripRecordModal(sidx, day.key, rec)"
+                    >
+                      <div class="record-line record-line--patient">
+                      <span class="record-patient">
+                        <span class="record-patient-name-wrap">
+                          <template v-if="surnameFromFio(rec.patient_fio)">
+                            <span
+                                class="record-patient-surname"
+                                :class="genderColorClass(rec.patient_sex)"
+                            >
+                              <template v-if="viewMode === 'month'">
+                                {{ monthSurnameShort(rec) }}
+                              </template>
+                              <template v-else>
+                                {{ surnameFromFio(rec.patient_fio) }}
+                              </template>
+                            </span><span
+                              v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
+                              class="record-patient-age"
+                          > - {{ cellPatientAgePart(rec) }}</span>
+                          </template>
+                          <span
+                              v-else
+                              class="record-sex--muted"
+                          >—</span>
+                        </span>
+                      </span>
+                        <span class="record-line-actions">
+                        <a
+                            v-if="rec.direction_pk != null && rec.direction_pk > 0"
+                            :href="stationarHref(rec.direction_pk)"
+                            class="record-direction-link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :title="`Направление ${rec.direction_pk} (стационар)`"
+                            @click.stop
+                            @mousedown.stop
+                        >
+                          <template v-if="viewMode === 'month'">
+                            {{ monthDirectionIdShort(rec.direction_pk) }}
+                          </template>
+                          <template v-else>
+                            {{ rec.direction_pk }}
+                          </template>
+                        </a>
+                        <span
+                            v-if="accompanyingDisplayLetter(rec)"
+                            class="record-accompany-letter"
+                            :class="genderColorClass(rec.accompanyng_child_sex)"
+                            :title="accompanyingLetterTitle(rec)"
+                        >{{ accompanyingDisplayLetter(rec) }}</span>
+                        <span
+                            v-if="rec.is_day_hosp"
+                            class="record-day-hosp-badge"
+                            title="Дневной стационар"
+                        >ДС</span>
+                      </span>
+                      </div>
+                      <div class="record-line record-line--doctor">
+                      <span class="record-doctor-line-inner">
+                        <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span><span
+                          v-if="commentForRecordDay(rec, day.key).trim()"
+                          class="record-comment-after-doctor"
+                          :title="commentForRecordDay(rec, day.key)"
+                      > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
+                      </span>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                </tbody>
               </table>
             </div>
           </div>
@@ -413,39 +413,39 @@
           Пациенты
         </h5>
         <input
-          v-model.trim="unallocatedSearch"
-          class="form-control input-sm board-patients-search"
-          type="text"
-          placeholder="Поиск"
+            v-model.trim="unallocatedSearch"
+            class="form-control input-sm board-patients-search"
+            type="text"
+            placeholder="Поиск"
         >
         <div class="board-patients-scroll">
           <p
-            v-if="!departmentPk"
-            class="text-muted small board-patients-empty"
+              v-if="!departmentPk"
+              class="text-muted small board-patients-empty"
           >
             Выберите подразделение
           </p>
           <template v-else>
             <div
-              v-for="p in unallocatedPatientsFiltered"
-              :key="p.direction_pk"
-              class="board-patient-row"
-              draggable="true"
-              @dragstart="onUnallocatedPatientDragStart($event, p)"
-              @dragend="onUnallocatedPatientDragEnd"
+                v-for="p in unallocatedPatientsFiltered"
+                :key="p.direction_pk"
+                class="board-patient-row"
+                draggable="true"
+                @dragstart="onUnallocatedPatientDragStart($event, p)"
+                @dragend="onUnallocatedPatientDragEnd"
             >
               <a
-                class="board-patient-link"
-                target="_blank"
-                rel="noopener noreferrer"
-                :href="stationarHref(p.direction_pk)"
-                :class="unallocatedGenderClass(p)"
-                @click.stop
-                @mousedown.stop
+                  class="board-patient-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :href="stationarHref(p.direction_pk)"
+                  :class="unallocatedGenderClass(p)"
+                  @click.stop
+                  @mousedown.stop
               >{{ p.short_fio }}</a>
               <i
-                class="fa-solid fa-child-reaching board-patient-icon"
-                :class="unallocatedGenderClass(p)"
+                  class="fa-solid fa-child-reaching board-patient-icon"
+                  :class="unallocatedGenderClass(p)"
               />
               <span class="board-patient-age">{{ p.age }}л.</span>
             </div>
@@ -455,17 +455,17 @@
     </div>
 
     <div
-      v-if="isEditModalOpen"
-      class="edit-modal-overlay"
-      @click.self="closeEditModal"
+        v-if="isEditModalOpen"
+        class="edit-modal-overlay"
+        @click.self="closeEditModal"
     >
       <div class="edit-modal panel panel-default">
         <div class="panel-heading">
           Редактирование госпитализации
           <button
-            type="button"
-            class="close"
-            @click="closeEditModal"
+              type="button"
+              class="close"
+              @click="closeEditModal"
           >
             <span>&times;</span>
           </button>
@@ -474,44 +474,44 @@
           <div class="form-group">
             <label>ФИО пациента</label>
             <input
-              v-model.trim="editingForm.patientFioText"
-              class="form-control"
-              type="text"
-              placeholder="ФИО"
+                v-model.trim="editingForm.patientFioText"
+                class="form-control"
+                type="text"
+                placeholder="ФИО"
             >
           </div>
           <div class="form-group">
             <label>Номер направления (direction_id)</label>
             <input
-              v-model.trim="editingForm.directionIdText"
-              class="form-control"
-              type="text"
-              inputmode="numeric"
-              placeholder="необязательно"
+                v-model.trim="editingForm.directionIdText"
+                class="form-control"
+                type="text"
+                inputmode="numeric"
+                placeholder="необязательно"
             >
             <p class="help-block small text-muted">
               Вручную. Пустое поле — без привязки к направлению.
             </p>
           </div>
           <div
-            v-if="editingRecordPk || editingStripRowId"
-            class="form-group modal-doctor-field"
+              v-if="editingRecordPk || editingStripRowId"
+              class="form-group modal-doctor-field"
           >
             <label>Лечащий врач</label>
             <div class="modal-doctor-row">
               <span
-                v-if="editingForm.doctorFio"
-                class="modal-doctor-name"
+                  v-if="editingForm.doctorFio"
+                  class="modal-doctor-name"
               >{{ editingForm.doctorFio }}</span>
               <span
-                v-else
-                class="text-muted modal-doctor-empty"
+                  v-else
+                  class="text-muted modal-doctor-empty"
               >не назначен</span>
               <button
-                v-if="editingForm.doctorPk != null"
-                type="button"
-                class="btn btn-default btn-sm modal-doctor-clear"
-                @click="clearModalDoctor"
+                  v-if="editingForm.doctorPk != null"
+                  type="button"
+                  class="btn btn-default btn-sm modal-doctor-clear"
+                  @click="clearModalDoctor"
               >
                 Снять
               </button>
@@ -521,18 +521,18 @@
             <label>Пол</label>
             <div class="btn-group">
               <button
-                type="button"
-                class="btn btn-default gender-btn"
-                :class="{ active: editingForm.patientSex === 'м' }"
-                @click="editingForm.patientSex = 'м'"
+                  type="button"
+                  class="btn btn-default gender-btn"
+                  :class="{ active: editingForm.patientSex === 'м' }"
+                  @click="editingForm.patientSex = 'м'"
               >
                 М
               </button>
               <button
-                type="button"
-                class="btn btn-default gender-btn"
-                :class="{ active: editingForm.patientSex === 'ж' }"
-                @click="editingForm.patientSex = 'ж'"
+                  type="button"
+                  class="btn btn-default gender-btn"
+                  :class="{ active: editingForm.patientSex === 'ж' }"
+                  @click="editingForm.patientSex = 'ж'"
               >
                 Ж
               </button>
@@ -542,18 +542,18 @@
             <div class="col-xs-6 form-group">
               <label>Дата рождения</label>
               <input
-                v-model="editingForm.birthday"
-                class="form-control"
-                type="date"
+                  v-model="editingForm.birthday"
+                  class="form-control"
+                  type="date"
               >
             </div>
             <div class="col-xs-6 form-group">
               <label>Возраст</label>
               <input
-                v-model.trim="editingForm.patientAgeText"
-                class="form-control"
-                type="text"
-                maxlength="3"
+                  v-model.trim="editingForm.patientAgeText"
+                  class="form-control"
+                  type="text"
+                  maxlength="3"
               >
             </div>
           </div>
@@ -561,15 +561,15 @@
             <label>Сопровождающий ребёнка</label>
             <div class="treeselect-noborder-left edit-modal-treeselect">
               <Treeselect
-                :value="editingForm.accompanyngChildType"
-                :options="accompanyingChildOptions"
-                :multiple="false"
-                :clearable="true"
-                :append-to-body="true"
-                :z-index="10050"
-                class="treeselect-wide"
-                placeholder="Не указано"
-                @input="setAccompanyngChildType"
+                  :value="editingForm.accompanyngChildType"
+                  :options="accompanyingChildOptions"
+                  :multiple="false"
+                  :clearable="true"
+                  :append-to-body="true"
+                  :z-index="10050"
+                  class="treeselect-wide"
+                  placeholder="Не указано"
+                  @input="setAccompanyngChildType"
               />
             </div>
           </div>
@@ -577,34 +577,34 @@
             <div class="col-xs-6 form-group">
               <label>Дата начала</label>
               <input
-                v-model="editingForm.planDateIn"
-                class="form-control"
-                type="date"
+                  v-model="editingForm.planDateIn"
+                  class="form-control"
+                  type="date"
               >
             </div>
             <div class="col-xs-6 form-group">
               <label>Дата окончания</label>
               <input
-                v-model="editingForm.planDateOut"
-                class="form-control"
-                type="date"
+                  v-model="editingForm.planDateOut"
+                  class="form-control"
+                  type="date"
               >
             </div>
           </div>
           <div class="form-group">
             <label>Комментарий на выбранную дату</label>
             <textarea
-              v-model.trim="editingForm.commentText"
-              class="form-control"
-              rows="2"
-              maxlength="255"
-              placeholder="Только для дня, с которого открыто окно"
+                v-model.trim="editingForm.commentText"
+                class="form-control"
+                rows="2"
+                maxlength="255"
+                placeholder="Только для дня, с которого открыто окно"
             />
             <div class="checkbox edit-modal-comment-replicate">
               <label>
                 <input
-                  v-model="editingForm.commentReplicateFollowing"
-                  type="checkbox"
+                    v-model="editingForm.commentReplicateFollowing"
+                    type="checkbox"
                 >
                 Проставить на все следующие дни до даты окончания
               </label>
@@ -616,32 +616,32 @@
         </div>
         <div class="panel-footer modal-actions">
           <button
-            class="btn btn-primary"
-            @click="saveEditingCell"
+              class="btn btn-primary"
+              @click="saveEditingCell"
           >
             Сохранить
           </button>
           <button
-            v-if="editingStripRowId"
-            type="button"
-            class="btn btn-warning"
-            title="Удалить запись из черновика дневного стационара"
-            @click="clearStripFromModal"
+              v-if="editingStripRowId"
+              type="button"
+              class="btn btn-warning"
+              title="Удалить запись из черновика дневного стационара"
+              @click="clearStripFromModal"
           >
             Освободить
           </button>
           <button
-            v-else-if="editingRecordPk"
-            type="button"
-            class="btn btn-warning"
-            title="Полностью удаляет запись PatientToBed из базы для этой госпитализации"
-            @click="clearBedFromModal"
+              v-else-if="editingRecordPk"
+              type="button"
+              class="btn btn-warning"
+              title="Полностью удаляет запись PatientToBed из базы для этой госпитализации"
+              @click="clearBedFromModal"
           >
             Освободить койку
           </button>
           <button
-            class="btn btn-default"
-            @click="closeEditModal"
+              class="btn btn-default"
+              @click="closeEditModal"
           >
             Отмена
           </button>
@@ -664,7 +664,7 @@ import {
 
 import api from '@/api';
 import * as actions from '@/store/action-types';
-import { useStore } from '@/store';
+import {useStore} from '@/store';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 type ViewMode = 'day' | 'week' | 'month'
@@ -770,12 +770,12 @@ const hoveredDayKey = ref<string | null>(null);
 const suppressCellClick = ref(false);
 
 const newStripRowId = () => (
-  typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+    typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `r-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 );
 
-const stripRows = ref<StripRow[]>([{ rowId: newStripRowId(), records: [] }]);
+const stripRows = ref<StripRow[]>([{rowId: newStripRowId(), records: []}]);
 
 const stripRowIsEmpty = (row: StripRow) => row.records.length === 0;
 
@@ -814,19 +814,19 @@ const removeStripRecordFromRow = (row: StripRow, recordPk: number) => {
 
 const normalizeStripTrailingEmpty = () => {
   while (
-    stripRows.value.length > 1
-    && stripRowIsEmpty(stripRows.value[stripRows.value.length - 1])
-    && stripRowIsEmpty(stripRows.value[stripRows.value.length - 2])
-  ) {
+      stripRows.value.length > 1
+      && stripRowIsEmpty(stripRows.value[stripRows.value.length - 1])
+      && stripRowIsEmpty(stripRows.value[stripRows.value.length - 2])
+      ) {
     stripRows.value.pop();
   }
   if (stripRows.value.length === 0) {
-    stripRows.value.push({ rowId: newStripRowId(), records: [] });
+    stripRows.value.push({rowId: newStripRowId(), records: []});
     return;
   }
   const last = stripRows.value[stripRows.value.length - 1];
   if (!stripRowIsEmpty(last)) {
-    stripRows.value.push({ rowId: newStripRowId(), records: [] });
+    stripRows.value.push({rowId: newStripRowId(), records: []});
   }
 };
 
@@ -837,8 +837,8 @@ const persistStripToStorage = () => {
   }
   try {
     localStorage.setItem(
-      `${STRIP_LOCALSTORAGE_PREFIX}:${dept}`,
-      JSON.stringify({ rows: stripRows.value }),
+        `${STRIP_LOCALSTORAGE_PREFIX}:${dept}`,
+        JSON.stringify({rows: stripRows.value}),
     );
   } catch {
     /* quota / private mode */
@@ -847,7 +847,7 @@ const persistStripToStorage = () => {
 
 const initStripRowsForDepartment = (dept: number | null) => {
   if (dept == null) {
-    stripRows.value = [{ rowId: newStripRowId(), records: [] }];
+    stripRows.value = [{rowId: newStripRowId(), records: []}];
     return;
   }
   try {
@@ -868,7 +868,7 @@ const initStripRowsForDepartment = (dept: number | null) => {
   } catch {
     /* ignore */
   }
-  stripRows.value = [{ rowId: newStripRowId(), records: [] }];
+  stripRows.value = [{rowId: newStripRowId(), records: []}];
 };
 
 const isRecordPkOnStrip = (pk: number) => stripRows.value.some((r) => r.records.some((rec) => rec.pk === pk));
@@ -920,7 +920,7 @@ const chamberRows = computed(() => chambers.value.map((row) => {
     seenPk.add(b.pk);
     return true;
   });
-  return { ...row, beds };
+  return {...row, beds};
 }));
 
 const commentForRecordDay = (rec: CalendarRecord, dayKey: string) => {
@@ -970,7 +970,7 @@ const stripDirectionPkSet = computed(() => {
 });
 
 const recordsUnfilteredForMainGrid = computed(() => (
-  records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
+    records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
 
 const recordsForMainGrid = computed(() => {
@@ -992,7 +992,7 @@ const recordByBedAndDay = computed(() => {
     if (!start.isValid()) {
       continue;
     }
-    for (const { key: dayKey } of days) {
+    for (const {key: dayKey} of days) {
       if (!isDayInRecordSpan(record, dayKey)) {
         continue;
       }
@@ -1090,7 +1090,7 @@ const cellCommentAfterDoctor = (record: CalendarRecord, dayKey: string) => {
 
 /** Как в ManageChambers / DirectionsHistory: hash с JSON для экрана стационара */
 const stationarHref = (directionPk: number) => (
-  `/ui/stationar#{%22pk%22:${directionPk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`
+    `/ui/stationar#{%22pk%22:${directionPk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`
 );
 
 const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
@@ -1101,7 +1101,7 @@ const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
 const stripCellKey = (rowIdx: number, dayKey: string) => `strip-${rowIdx}-${dayKey}`;
 
 const cellStripRecordList = (row: StripRow, dayKey: string): CalendarRecord[] => row.records.filter(
-  (rec) => isDayInRecordSpan(rec, dayKey),
+    (rec) => isDayInRecordSpan(rec, dayKey),
 );
 
 const accompanyingDisplayLetter = (record: CalendarRecord) => {
@@ -1144,7 +1144,7 @@ const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
 
 type DayColumnTotals = { male: number, female: number, accompanying: number };
 
-const emptyDayColumnTotals = (): DayColumnTotals => ({ male: 0, female: 0, accompanying: 0 });
+const emptyDayColumnTotals = (): DayColumnTotals => ({male: 0, female: 0, accompanying: 0});
 
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
@@ -1172,7 +1172,7 @@ const dayColumnTotalsMap = computed(() => {
 });
 
 const dayColumnTotals = (dayKey: string): DayColumnTotals => (
-  dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
+    dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
 );
 
 /** День для счётчика на бейджах врачей: наведённая колонка, иначе «День» / сегодня */
@@ -1197,9 +1197,9 @@ const onDayHeaderMouseLeave = () => {
 };
 
 const addDoctorPatientCountForRecord = (
-  map: Map<number, number>,
-  rec: CalendarRecord,
-  dayKey: string,
+    map: Map<number, number>,
+    rec: CalendarRecord,
+    dayKey: string,
 ) => {
   if (rec.doctor_pk == null || !isDayInRecordSpan(rec, dayKey)) {
     return;
@@ -1253,7 +1253,7 @@ const navigate = (direction: number) => {
 };
 
 const loadDepartments = async () => {
-  const { data } = await api('procedural-list/suitable-departments');
+  const {data} = await api('procedural-list/suitable-departments');
   departments.value = data;
 };
 
@@ -1321,8 +1321,8 @@ const loadCalendar = async () => {
   records.value = response?.data?.records || [];
   const periodDays = Number(response?.data?.default_period_days);
   defaultHospitalizationPeriodDays.value = Number.isFinite(periodDays) && periodDays >= 1
-    ? periodDays
-    : 3;
+      ? periodDays
+      : 3;
   await store.dispatch(actions.DEC_LOADING);
 };
 
@@ -1531,7 +1531,7 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
     return;
   }
   await store.dispatch(actions.INC_LOADING);
-  const { ok: okClear, message: msgClear } = await api('chambers/clear-patient-from-bed', {
+  const {ok: okClear, message: msgClear} = await api('chambers/clear-patient-from-bed', {
     record_pk: recordPk,
   });
   await store.dispatch(actions.DEC_LOADING);
@@ -1539,7 +1539,7 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
     root.$emit('msg', 'error', msgClear || 'Не удалось освободить койку');
     return;
   }
-  if (!addRecordToStripRow(rowIdx, { ...rec })) {
+  if (!addRecordToStripRow(rowIdx, {...rec})) {
     root.$emit('msg', 'error', 'Не удалось добавить запись в эту строку черновика');
     return;
   }
@@ -1550,7 +1550,7 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
 
 const onUnallocatedPatientDragStart = (e: DragEvent, p: UnallocatedPatient) => {
   e.stopPropagation();
-  e.dataTransfer?.setData(DND_UNALLOCATED_DIRECTION, JSON.stringify({ direction_pk: p.direction_pk }));
+  e.dataTransfer?.setData(DND_UNALLOCATED_DIRECTION, JSON.stringify({direction_pk: p.direction_pk}));
   if (e.dataTransfer) {
     e.dataTransfer.effectAllowed = 'copy';
   }
@@ -1586,7 +1586,7 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
     return;
   }
   await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('chambers/move-hospitalization-to-bed', {
+  const {ok, message} = await api('chambers/move-hospitalization-to-bed', {
     department_pk: departmentPk.value,
     record_pk: recordPk,
     target_bed_id: targetBedPk,
@@ -1606,10 +1606,10 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
 };
 
 const onStripToBedDrop = async (
-  targetBedPk: number,
-  targetDayKey: string,
-  stripRowId: string,
-  stripRecordPkRaw?: string,
+    targetBedPk: number,
+    targetDayKey: string,
+    stripRowId: string,
+    stripRecordPkRaw?: string,
 ) => {
   if (!departmentPk.value) {
     return;
@@ -1763,7 +1763,7 @@ const onCellDrop = async (e: DragEvent, bedPk: number, dayKey: string) => {
     return;
   }
   await store.dispatch(actions.INC_LOADING);
-  const { ok, message } = await api('chambers/update-hospitalization-record', {
+  const {ok, message} = await api('chambers/update-hospitalization-record', {
     record_pk: record.pk,
     doctor_id: docPk,
     patient_fio_text: record.patient_fio || '',
@@ -1911,7 +1911,7 @@ const saveEditingCell = async () => {
     rec.doctor_fio = editingForm.value.doctorFio;
     rec.accompanyng_child_type = editingForm.value.accompanyngChildType || '';
     rec.direction_pk = directionIdPayload;
-    rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
+    rec.date_comments = {...(rec.date_comments || {}), [editingDayKey.value]: commentPayload};
     persistStripToStorage();
     root.$emit('msg', 'ok', 'Данные черновика сохранены');
     closeEditModal();
