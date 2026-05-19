@@ -143,6 +143,25 @@ def _default_hospitalization_period_days():
     return period_days
 
 
+def _calendar_plan_dates(item):
+    """Если есть только date_in без date_out и plan_date_out — заполнить plan_date_in/out и сохранить в БД."""
+    plan_date_in = item.plan_date_in
+    plan_date_out = item.plan_date_out
+    if item.date_in and item.date_out is None and item.plan_date_out is None:
+        plan_date_in = item.date_in
+        plan_date_out = item.date_in + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
+        update_fields = []
+        if item.plan_date_in != plan_date_in:
+            item.plan_date_in = plan_date_in
+            update_fields.append("plan_date_in")
+        if item.plan_date_out != plan_date_out:
+            item.plan_date_out = plan_date_out
+            update_fields.append("plan_date_out")
+        if update_fields:
+            item.save(update_fields=update_fields)
+    return plan_date_in, plan_date_out
+
+
 def _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out, exclude_pk=None, fallback_date_in=None, fallback_date_out=None):
     if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
         return "Дата начала не может быть позже даты окончания"
@@ -501,6 +520,8 @@ def get_hospitalization_calendar(request):
         if doctor_id:
             patients_qs = patients_qs.filter(doctor_id=doctor_id)
         items = list(patients_qs)
+        for item in items:
+            _calendar_plan_dates(item)
         visible_pks = []
         for item in items:
             item_start = item.plan_date_in or item.date_in
