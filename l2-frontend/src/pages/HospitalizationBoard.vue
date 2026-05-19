@@ -93,10 +93,12 @@
             {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
           </button>
         </div>
-        <table
-          class="table table-bordered table-condensed calendar-table"
-          :class="{ 'calendar-table--month': viewMode === 'month' }"
-        >
+        <div class="calendar-tables-stack">
+          <div class="calendar-main-scroll">
+            <table
+              class="table table-bordered table-condensed calendar-table"
+              :class="{ 'calendar-table--month': viewMode === 'month' }"
+            >
           <colgroup>
             <col class="calendar-col-chamber">
             <col class="calendar-col-bed">
@@ -253,16 +255,18 @@
               </td>
             </tr>
           </tbody>
-        </table>
+            </table>
+          </div>
 
-        <div class="strip-board-block">
-          <p class="strip-board-hint text-muted small">
-            Дневной стационар
-          </p>
-          <table
-            class="table table-bordered table-condensed calendar-table calendar-table--strip"
-            :class="{ 'calendar-table--month': viewMode === 'month' }"
-          >
+          <div class="strip-board-block calendar-strip-block">
+            <p class="strip-board-hint text-muted small">
+              Дневной стационар
+            </p>
+            <div class="calendar-strip-scroll">
+              <table
+                class="table table-bordered table-condensed calendar-table calendar-table--strip"
+                :class="{ 'calendar-table--month': viewMode === 'month' }"
+              >
             <colgroup>
               <col class="calendar-col-strip-sidebar">
               <col
@@ -398,7 +402,9 @@
                 </td>
               </tr>
             </tbody>
-          </table>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -2015,6 +2021,7 @@ onMounted(async () => {
   padding: 10px 16px;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 100px);
   min-height: 0;
   box-sizing: border-box;
 }
@@ -2056,7 +2063,6 @@ onMounted(async () => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  max-height: calc(100vh - 220px);
 }
 
 .board-patient-row {
@@ -2105,6 +2111,7 @@ onMounted(async () => {
 
 .toolbar {
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .mode-switch {
@@ -2118,13 +2125,44 @@ onMounted(async () => {
 }
 
 .calendar-wrap {
-  overflow: auto;
-  max-height: calc(100vh - 220px);
+  display: flex;
+  flex-direction: column;
   width: 100%;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   container-type: inline-size;
   container-name: calendar-wrap;
-  flex: 1 1 auto;
-  min-width: 0;
+}
+
+.calendar-tables-stack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.calendar-main-scroll {
+  flex: 3 1 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+.calendar-strip-block {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+  padding-top: 8px;
+  border-top: 1px solid #ddd;
+}
+
+.calendar-strip-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .doctor-badges {
@@ -2132,6 +2170,7 @@ onMounted(async () => {
   flex-wrap: wrap;
   gap: 6px;
   margin: 0 0 8px;
+  flex-shrink: 0;
 }
 
 .doctor-badge-btn {
@@ -2550,14 +2589,9 @@ onMounted(async () => {
   margin-bottom: 0;
 }
 
-.strip-board-block {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px solid #ddd;
-}
-
 .strip-board-hint {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
+  flex-shrink: 0;
 }
 
 .calendar-table--strip {
