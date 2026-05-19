@@ -17,7 +17,10 @@ class RoomAdmin(admin.ModelAdmin):
 
 class ChamberAdmin(admin.ModelAdmin):
     list_display = ('pk', 'podrazdelenie', 'title')
-    search_fields = ('podrazdelenie', 'title',)
+    search_fields = (
+        'podrazdelenie',
+        'title',
+    )
     ordering = ('podrazdelenie__title',)
 
 
