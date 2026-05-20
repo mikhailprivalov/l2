@@ -384,13 +384,13 @@
         </div>
         <div class="row">
           <div
-            :class="expertise ? 'col-xs-5' : 'col-xs-6'"
+            class="col-xs-4"
             style="padding-right: 0"
           >
             <div class="input-group">
               <span
                 class="input-group-addon nbr"
-                style="width: 232px"
+                style="width: 120px"
               >Метод</span>
               <Treeselect
                 v-model="currentMethod"
@@ -405,7 +405,28 @@
             </div>
           </div>
           <div
-            class="col-xs-7"
+            class="col-xs-3"
+            style="padding-right: 0;padding-left: 0"
+          >
+            <div class="input-group">
+              <span
+                class="input-group-addon nbr"
+                style="width: 100px"
+              >Категория</span>
+              <Treeselect
+                v-model="currentCategory"
+                class="treeselect-nbr treeselect-wide"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="collectCategories"
+                placeholder="Не выбрано"
+                :append-to-body="true"
+                :clearable="false"
+              />
+            </div>
+          </div>
+          <div
+            class="col-xs-5"
             style="padding-right: 0;padding-left: 0"
           >
             <div class="input-group">
@@ -1456,6 +1477,8 @@ export default {
       collectNsiResearchCode: [],
       collectMethods: [],
       currentMethod: -1,
+      collectCategories: [],
+      currentCategory: -1,
       assigned_to_params: [],
       type_period: null,
       cda_options: [],
@@ -1575,12 +1598,12 @@ export default {
   async created() {
     this.checkShowAllTemplates();
     this.checkEditPermissions();
+    await this.getRefBooks();
     await this.load();
     await this.loadDepartmentsForPermissions();
     await this.load_deparments();
     await this.loadDynamicDirectories();
     await this.loadLayoutTemplates();
-    await this.getRefBooks();
   },
   mounted() {
     window.$(window).on('beforeunload', () => {
@@ -1869,6 +1892,7 @@ export default {
       this.speciality = -1;
       this.currentMethod = -1;
       this.collectMethods = [];
+      this.currentCategory = -1;
       this.hospital_research_department_pk = -1;
       this.type_period = null;
       if (this.pk >= 0) {
@@ -1889,6 +1913,7 @@ export default {
         this.currentNsiResearchCode = data.currentNsiResearchCode;
         this.collectNsiResearchCode = data.collectNsiResearchCode;
         this.collectMethods = data.collectMethods;
+        this.currentCategory = data.currentCategory;
         this.speciality = data.speciality;
         this.hospital_research_department_pk = data.department;
         this.info = data.info.replace(/<br\/>/g, '\n').replace(/<br>/g, '\n');
@@ -1958,6 +1983,7 @@ export default {
         'operator_enter_param',
         'is_diag_table',
         'currentNsiResearchCode',
+        'currentCategory',
       ];
       const moreData = {
         info: this.info.replace(/\n/g, '<br/>').replace(/<br>/g, '<br/>'),
@@ -2064,6 +2090,7 @@ export default {
         fileFieldDefaultSettings: result.file_field_default_settings,
         fileFieldAllowedExtensions: result.file_field_allowed_extensions,
       };
+      this.collectCategories = result.categories;
     },
   },
 };
