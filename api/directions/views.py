@@ -94,6 +94,7 @@ from laboratory.settings import (
     RMQ_RESEARCH_SEND,
     NOT_CONTROL_VISIT_RESEARCH_ID,
     IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
+    NOT_CONTROL_PLANED_FACT_DOCTOR_RESEARCHES,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -1729,7 +1730,11 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
-        if SettingManager.get("control_planed_fact_doctor", default='false', default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
+        if (
+            SettingManager.get("control_planed_fact_doctor", default='false', default_type='b')
+            and d.planed_doctor_executor != request.user.doctorprofile
+            and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID
+        ):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
