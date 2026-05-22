@@ -17,8 +17,11 @@ class RoomAdmin(admin.ModelAdmin):
 
 class ChamberAdmin(admin.ModelAdmin):
     list_display = ('pk', 'podrazdelenie', 'title')
-    autocomplete_fields = ('podrazdelenie',)
-    search_fields = ('podrazdelenie', 'title')
+    search_fields = (
+        'podrazdelenie',
+        'title',
+    )
+    ordering = ('podrazdelenie__title',)
 
 
 class BedAdmin(admin.ModelAdmin):
