@@ -43,7 +43,7 @@ def reestr_hospital_base(ws1, d1, d2, title):
     return ws1
 
 
-def reestr_hospital_fill_data(ws1, result_query):
+def reestr_hospital_fill_data(ws1, result_query, by_department_title_sum):
     style_border1 = NamedStyle(name="style_border1")
     bd = Side(style='thin', color="000000")
     style_border1.border = Border(left=bd, top=bd, right=bd, bottom=bd)
@@ -83,4 +83,18 @@ def reestr_hospital_fill_data(ws1, result_query):
     megre_cell.style = style_border2
     ws1.cell(row=r, column=18).value = f'=SUM({get_column_letter(18)}{6}:{get_column_letter(18)}{r_sum})'
     ws1.cell(row=r, column=18).style = style_border2
+
+    r += 2
+    ws1.cell(row=r, column=1).value = 'Свод'
+    r += 1
+    ws1.cell(row=r, column=1).value = 'Вид'
+    ws1.cell(row=r, column=2).value = 'Кол-во'
+    ws1.cell(row=r, column=3).value = 'Сумма'
+    r += 1
+    for k, v in by_department_title_sum.items():
+        ws1.cell(row=r, column=1).value = k
+        ws1.cell(row=r, column=2).value = v.get("count", "0")
+        ws1.cell(row=r, column=3).value = v.get("coast", "0")
+        r += 1
+
     return ws1
