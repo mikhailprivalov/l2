@@ -2104,7 +2104,6 @@ def statistic_xls(request):
                 tmp_result["direction_number"] = i.direction_num
                 tmp_result["date_create"] = i.date_create
                 tmp_result["time_create"] = i.time_create
-
                 tmp_result["date_confirm"] = i.date_confirm
                 tmp_result["time_confirm"] = i.time_confirm
                 tmp_result["card_number"] = i.card_number
