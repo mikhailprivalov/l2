@@ -1730,8 +1730,11 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
-        if SettingManager.get("control_planed_fact_doctor", default='false',
-                              default_type='b') and d.planed_doctor_executor != request.user.doctorprofile and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID:
+        if (
+            SettingManager.get("control_planed_fact_doctor", default='false', default_type='b')
+            and d.planed_doctor_executor != request.user.doctorprofile
+            and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID
+        ):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)
