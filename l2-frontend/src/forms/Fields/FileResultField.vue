@@ -5,11 +5,12 @@
     :class="{
       'file-result-field--active': isActive,
       'file-result-field--disabled': disabled,
+      'file-result-field--invalid': persistentErrors.length > 0,
     }"
     tabindex="0"
     @click="focusField"
     @paste="handlePaste"
-    @draчgenter.prevent="handleDragEnter"
+    @dragenter.prevent="handleDragEnter"
     @dragover.prevent="handleDragOver"
     @dragleave.prevent="handleDragLeave"
     @drop.prevent="handleDrop"
@@ -31,12 +32,19 @@
         <div class="file-result-field__hint">
           Перетащите файлы сюда, вставьте через Ctrl/⌘ + V или выберите вручную
         </div>
+        <div
+          v-if="settingsHint"
+          class="file-result-field__settings-hint"
+        >
+          {{ settingsHint }}
+        </div>
       </div>
 
       <button
         type="button"
         class="file-result-field__button"
-        :disabled="disabled"
+        :disabled="disabled || isMaxReached"
+        :title="isMaxReached ? `Достигнут лимит файлов (${settings.maxFiles})` : undefined"
         @click.stop="openFileDialog"
       >
         Выбрать файлы
@@ -48,6 +56,32 @@
       class="file-result-field__drop-hint"
     >
       Отпустите файлы для добавления
+    </div>
+
+    <div
+      v-if="addErrors.length"
+      class="file-result-field__errors"
+    >
+      <div
+        v-for="(err, i) in addErrors"
+        :key="i"
+        class="file-result-field__error"
+      >
+        {{ err }}
+      </div>
+    </div>
+
+    <div
+      v-if="persistentErrors.length"
+      class="file-result-field__errors"
+    >
+      <div
+        v-for="(err, i) in persistentErrors"
+        :key="i"
+        class="file-result-field__error"
+      >
+        {{ err }}
+      </div>
     </div>
 
     <div
@@ -128,6 +162,7 @@ const emit = defineEmits<{(e: 'input', value: FileFieldValue): void
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const dropZoneRef = ref<HTMLElement | null>(null);
 const dragDepth = ref(0);
+const addErrors = ref<string[]>([]);
 
 const files = computed<FileFieldValue>({
   get() {
@@ -139,6 +174,73 @@ const files = computed<FileFieldValue>({
 });
 
 const isActive = computed(() => dragDepth.value > 0 && !props.disabled);
+
+const isMaxReached = computed(() => {
+  const max = props.settings?.maxFiles;
+  return max != null && files.value.length >= max;
+});
+
+function formatFileSize(size: number): string {
+  if (!size) {
+    return '0 Б';
+  }
+
+  const units = ['Б', 'КБ', 'МБ', 'ГБ'];
+  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
+  const value = size / (1024 ** index);
+
+  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+const settingsHint = computed(() => {
+  const s = props.settings;
+  if (!s) return '';
+
+  const parts: string[] = [];
+
+  if (s.minFiles != null && s.maxFiles != null && s.minFiles === s.maxFiles) {
+    parts.push(`ровно ${s.minFiles} файл(ов)`);
+  } else {
+    if (s.minFiles != null) parts.push(`не менее ${s.minFiles} файл(ов)`);
+    if (s.maxFiles != null) parts.push(`не более ${s.maxFiles} файл(ов)`);
+  }
+
+  if (s.allowedExtensions?.length) {
+    parts.push(`допустимые форматы: ${s.allowedExtensions.join(', ').toUpperCase()}`);
+  }
+
+  if (s.maxFileSizeMb != null) {
+    parts.push(`макс. размер файла: ${s.maxFileSizeMb} МБ`);
+  }
+
+  if (s.maxTotalSizeMb != null) {
+    parts.push(`макс. суммарный размер: ${s.maxTotalSizeMb} МБ`);
+  }
+
+  if (s.filenamePatternDescription) {
+    parts.push(`имя файла: ${s.filenamePatternDescription}`);
+  }
+
+  return parts.join(' • ');
+});
+
+const persistentErrors = computed(() => {
+  const s = props.settings;
+  if (!s) return [];
+
+  const errs: string[] = [];
+  const current = files.value;
+
+  if (s.maxTotalSizeMb != null) {
+    const totalBytes = current.reduce((sum, f) => sum + (f.size || 0), 0);
+    const limitBytes = s.maxTotalSizeMb * 1024 * 1024;
+    if (totalBytes > limitBytes) {
+      errs.push(`Суммарный размер файлов (${formatFileSize(totalBytes)}) превышает допустимый (${s.maxTotalSizeMb} МБ)`);
+    }
+  }
+
+  return errs;
+});
 
 function getFileExtension(filename: string): string {
   const parts = filename.split('.');
@@ -168,16 +270,40 @@ function getExtensionLabel(file: FileFieldValueFile): string {
   return extension ? extension.slice(0, 5).toUpperCase() : 'FILE';
 }
 
-function formatFileSize(size: number): string {
-  if (!size) {
-    return '0 Б';
+function validateFile(file: File): string | null {
+  const s = props.settings;
+  if (!s) return null;
+
+  const ext = getFileExtension(file.name);
+
+  if (s.allowedExtensions?.length) {
+    const allowed = s.allowedExtensions.map(e => e.toLowerCase());
+    if (!allowed.includes(ext)) {
+      const formatted = s.allowedExtensions.join(', ').toUpperCase();
+      return `«${file.name}» — недопустимый формат. Разрешены: ${formatted}`;
+    }
   }
 
-  const units = ['Б', 'КБ', 'МБ', 'ГБ'];
-  const index = Math.min(Math.floor(Math.log(size) / Math.log(1024)), units.length - 1);
-  const value = size / (1024 ** index);
+  if (s.maxFileSizeMb != null) {
+    const limitBytes = s.maxFileSizeMb * 1024 * 1024;
+    if (file.size > limitBytes) {
+      return `«${file.name}» — файл слишком большой (${formatFileSize(file.size)}, лимит ${s.maxFileSizeMb} МБ)`;
+    }
+  }
 
-  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
+  if (s.filenamePattern) {
+    try {
+      const re = new RegExp(s.filenamePattern);
+      if (!re.test(file.name)) {
+        const desc = s.filenamePatternDescription || s.filenamePattern;
+        return `«${file.name}» — имя файла не соответствует требованиям: ${desc}`;
+      }
+    } catch {
+      // Невалидный regex в настройках — пропускаем проверку
+    }
+  }
+
+  return null;
 }
 
 function addFiles(rawFiles: File[]) {
@@ -185,20 +311,42 @@ function addFiles(rawFiles: File[]) {
     return;
   }
 
-  const newFiles: NewFileFieldValueFile[] = rawFiles.map(file => ({
-    tempId: createTempId(),
-    originalName: file.name,
-    extension: getFileExtension(file.name),
-    mimeType: file.type || '',
-    size: file.size,
-    file,
-    isNew: true,
-  }));
+  addErrors.value = [];
 
-  files.value = [
-    ...files.value,
-    ...newFiles,
-  ];
+  const s = props.settings;
+  const errors: string[] = [];
+  const accepted: NewFileFieldValueFile[] = [];
+  const currentCount = files.value.length;
+  const maxFiles = s?.maxFiles ?? null;
+
+  for (const file of rawFiles) {
+    if (maxFiles != null && currentCount + accepted.length >= maxFiles) {
+      errors.push(`Достигнут лимит файлов (${maxFiles}). «${file.name}» не добавлен`);
+      continue;
+    }
+
+    const err = validateFile(file);
+    if (err) {
+      errors.push(err);
+      continue;
+    }
+
+    accepted.push({
+      tempId: createTempId(),
+      originalName: file.name,
+      extension: getFileExtension(file.name),
+      mimeType: file.type || '',
+      size: file.size,
+      file,
+      isNew: true,
+    });
+  }
+
+  if (accepted.length) {
+    files.value = [...files.value, ...accepted];
+  }
+
+  addErrors.value = errors;
 }
 
 function focusField() {
@@ -275,6 +423,7 @@ function handlePaste(event: ClipboardEvent) {
 }
 
 function removeFile(fileToRemove: FileFieldValueFile) {
+  addErrors.value = [];
   files.value = files.value.filter(file => getFileKey(file) !== getFileKey(fileToRemove));
 }
 </script>
@@ -307,6 +456,10 @@ function removeFile(fileToRemove: FileFieldValueFile) {
   cursor: not-allowed;
 }
 
+.file-result-field--invalid {
+  border-color: #d9534f;
+}
+
 .file-result-field__input {
   display: none;
 }
@@ -330,6 +483,12 @@ function removeFile(fileToRemove: FileFieldValueFile) {
   color: #777;
 }
 
+.file-result-field__settings-hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #5a7fa8;
+}
+
 .file-result-field__button {
   flex: 0 0 auto;
   padding: 6px 10px;
@@ -348,6 +507,23 @@ function removeFile(fileToRemove: FileFieldValueFile) {
     cursor: not-allowed;
     opacity: 0.6;
   }
+}
+
+.file-result-field__errors {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-result-field__error {
+  padding: 6px 10px;
+  border-radius: 5px;
+  background: #fff2f2;
+  border: 1px solid #f5c6cb;
+  color: #842029;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .file-result-field__drop-hint {
