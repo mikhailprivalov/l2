@@ -93,7 +93,8 @@ from laboratory.settings import (
     WEB_PLUGIN_LINK_STUDY,
     RMQ_RESEARCH_SEND,
     NOT_CONTROL_VISIT_RESEARCH_ID,
-    IS_WITHOUT_LIMIT_PARALINIC_ALWAYS, NOT_CONTROL_PLANED_FACT_DOCTOR_RESEARCHES,
+    IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
+    NOT_CONTROL_PLANED_FACT_DOCTOR_RESEARCHES,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
