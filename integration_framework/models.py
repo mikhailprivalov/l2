@@ -265,7 +265,8 @@ class EquipmentReceive(models.Model):
                 if not query_template:
                     continue
                 cursor.execute(
-                    EquipmentReceive._bind_dicom_equipment_query(query_template),
+                    # EquipmentReceive._bind_dicom_equipment_query(query_template),
+                    query_template,
                     params,
                 )
                 rows = namedtuplefetchall(cursor)
