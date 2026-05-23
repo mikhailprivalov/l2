@@ -13,20 +13,20 @@
           class="row"
           style="margin-top:5px;"
         >
-          <div class="col-xs-6">
-            <div class="input-group treeselect-noborder-left">
-              <span class="input-group-addon">Больница</span>
-              <treeselect
-                v-model="params.hospital"
-                :multiple="false"
-                :disable-branch-nodes="true"
-                :options="visibleHospitals"
-                placeholder="Больница не выбрана"
-                :clearable="false"
-                class="treeselect-wide"
-              />
-            </div>
-          </div>
+<!--          <div class="col-xs-6">-->
+<!--            <div class="input-group treeselect-noborder-left">-->
+<!--              <span class="input-group-addon">Больница</span>-->
+<!--              <treeselect-->
+<!--                v-model="params.hospital"-->
+<!--                :multiple="false"-->
+<!--                :disable-branch-nodes="true"-->
+<!--                :options="visibleHospitals"-->
+<!--                placeholder="Больница не выбрана"-->
+<!--                :clearable="false"-->
+<!--                class="treeselect-wide"-->
+<!--              />-->
+<!--            </div>-->
+<!--          </div>-->
           <div class="col-xs-6">
             <div class="input-group date-time treeselect-noborder-left">
               <span class="input-group-addon">Дата</span>
@@ -310,7 +310,7 @@ export default class ExtraNotification extends Vue {
 
   get canEdit() {
     for (const g of this.$store.getters.user_data.groups || []) {
-      if (g === 'Заполнение экстренных извещений') {
+      if (g === 'Заполнение экстренных извещений' || g === 'Показатели куратора') {
         return true;
       }
     }
