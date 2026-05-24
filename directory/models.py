@@ -188,6 +188,10 @@ class CategoryDirectory(models.Model):
     def __str__(self):
         return "%s" % self.title
 
+    @staticmethod
+    def get_categories():
+        return [{"id": category.pk, "label": category.title} for category in CategoryDirectory.objects.all().order_by("title")]
+
     class Meta:
         verbose_name = "Категория услуги"
         verbose_name_plural = "Категории услуг"

@@ -2005,6 +2005,7 @@ def statistic_xls(request):
         row_report = []
         title_hospital = "Больницы"
         last_hospital = "Больницы"
+        by_department_title_sum = {}
         for i in data:
             tarif_coast = None
             coast_price_research = None
@@ -2029,6 +2030,11 @@ def statistic_xls(request):
             tmp_result["patient_patronymic"] = i.patient_patronymic
             tmp_result["service"] = i.research_title
             tmp_result["service_code"] = i.research_code
+            if not by_department_title_sum.get(i.department_title):
+                by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
+            else:
+                by_department_title_sum[i.department_title]["count"] += 1
+                by_department_title_sum[i.department_title]["coast"] += tarif_coast
             tmp_result["department"] = i.department_title
             tmp_result["doctor_family"] = i.doc_family
             tmp_result["doctor_name"] = i.doc_name
@@ -2047,7 +2053,7 @@ def statistic_xls(request):
         file_title = iri_to_uri(f"Реестр_{title_hospital.replace(' ', '_')}")
         response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
         ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, 'Реестр по Клиникам')
-        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
+        ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum)
 
     elif tp == "reestr-doctor":
         wb = openpyxl.Workbook()
@@ -2064,6 +2070,8 @@ def statistic_xls(request):
         doctors_prices = {}
         price_doctors = []
         determined_prices = {}
+        by_department_title_sum = {}
+
         for doc_confirmation_id in list(doctors_confirmation_id):
             prices = get_price_doctor(doc_confirmation_id, start_date, end_date)
             doctors_prices[doc_confirmation_id] = {i.hospital_id: i.pk for i in prices}
@@ -2096,7 +2104,6 @@ def statistic_xls(request):
                 tmp_result["direction_number"] = i.direction_num
                 tmp_result["date_create"] = i.date_create
                 tmp_result["time_create"] = i.time_create
-
                 tmp_result["date_confirm"] = i.date_confirm
                 tmp_result["time_confirm"] = i.time_confirm
                 tmp_result["card_number"] = i.card_number
@@ -2105,6 +2112,12 @@ def statistic_xls(request):
                 tmp_result["patient_patronymic"] = i.patient_patronymic
                 tmp_result["service"] = i.research_title
                 tmp_result["service_code"] = i.research_code
+                if not by_department_title_sum.get(i.department_title):
+                    by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
+                else:
+                    by_department_title_sum[i.department_title]["count"] += 1
+                    by_department_title_sum[i.department_title]["coast"] += tarif_coast
+
                 tmp_result["department"] = i.department_title
                 tmp_result["doctor_family"] = i.doc_family
                 tmp_result["doctor_name"] = i.doc_name
@@ -2123,7 +2136,7 @@ def statistic_xls(request):
             file_title = iri_to_uri(f"Реестр_Врач_{title_fio.replace(' ', '_')}")
             response['Content-Disposition'] = f'attachment; filename="{file_title}_{date_start_o}_{date_end_o}.xls"'
             ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}_{date_start_o}_{date_end_o}')
-            ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
+            ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum)
 
     elif tp == "statistics-registry-profit":
         response['Content-Disposition'] = str.translate("attachment; filename=\"Реестр_{}-{}.xls\"".format(date_start_o, date_end_o), tr)
@@ -2404,6 +2417,7 @@ def statistic_xls(request):
             price_doctors.extend([i.pk for i in prices])
 
         price_doctors = set(price_doctors)
+        by_department_title_sum = {}
         if price_doctors:
             coast_research_price = get_research_coast_by_prce(tuple(price_doctors))
 
@@ -2441,6 +2455,11 @@ def statistic_xls(request):
                 tmp_result["patient_patronymic"] = i.patient_patronymic
                 tmp_result["service"] = i.research_title
                 tmp_result["service_code"] = i.research_code
+                if not by_department_title_sum.get(i.department_title):
+                    by_department_title_sum[i.department_title] = {"count": 1, "coast": tarif_coast}
+                else:
+                    by_department_title_sum[i.department_title]["count"] += 1
+                    by_department_title_sum[i.department_title]["coast"] += tarif_coast
                 tmp_result["department"] = i.department_title
                 tmp_result["doctor_family"] = i.doc_family
                 tmp_result["doctor_name"] = i.doc_name
@@ -2457,7 +2476,7 @@ def statistic_xls(request):
                 fio_doctor = DoctorProfile.objects.filter(pk=doctor).first()
                 title_fio = fio_doctor.get_fio()
             ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
-            ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report)
+            ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum)
 
     wb.save(response)
     return response

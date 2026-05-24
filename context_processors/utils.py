@@ -150,6 +150,7 @@ def menu(request):
                     "access": ["Управление анализаторами"],
                 },
                 {"url": "/ui/chambers", "title": "Палаты", "nt": False, "access": ["Оператор лечащего врача", "Лечащий врач"], "module": "l2_hosp"},
+                {"url": "/ui/hospitalization-board", "title": "Календарь госпитализаций", "nt": False, "access": ["Оператор лечащего врача", "Лечащий врач"], "module": "l2_hosp"},
                 {"url": '/ui/list-wait', "title": "Листы ожидания", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"], "module": "l2_list_wait"},
                 {"url": '/ui/doc-call', "title": "Вызовы врача и заявки", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача"], "module": "l2_doc_call"},
                 {
@@ -175,7 +176,7 @@ def menu(request):
                     "url": '/ui/indicator-curator',
                     "title": "Показатели куратора",
                     "nt": False,
-                    "access": ["Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
+                    "access": ["Куратора", "Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
                     "module": "l2_indicator_curator",
                 },
                 {"url": '/ui/plan-pharmacotherapy', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},

@@ -42,6 +42,7 @@ class PriceName(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, help_text="UUID, генерируется автоматически", db_index=True)
     contract_number = models.CharField(max_length=55, blank=True, null=True, default=None, verbose_name="Номер договора", help_text="№00-00/00/2024", db_index=True)
     doctor = models.ForeignKey(DoctorProfile, db_index=True, null=True, default=None, help_text='Врач (для тарифа на врача)', on_delete=models.CASCADE)
+    is_default_for_doctor = models.BooleanField(default=False, blank=True, help_text="По умолчанию для докторов", db_index=True)
 
     def __str__(self):
         return "{}".format(self.title)
@@ -71,6 +72,8 @@ class PriceName(models.Model):
     @staticmethod
     def get_doctors_many_prices_by_date(doctor_id, date_start, date_end, is_subcontract=False):
         prices = PriceName.objects.filter(doctor_id=doctor_id, date_start__lte=date_start, date_end__gte=date_end, active_status=True)
+        if not prices:
+            prices = PriceName.objects.filter(is_default_for_doctor=True, date_start__lte=date_start, date_end__gte=date_end, active_status=True)
         return prices
 
     @staticmethod

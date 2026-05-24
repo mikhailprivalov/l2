@@ -91,8 +91,8 @@ from laboratory.settings import (
     TUBE_MAX_RESEARCH_WITH_SHARE,
     CDA_ID_FOR_DATE_CLOSE_CASE,
     WEB_PLUGIN_LINK_STUDY,
-    RMQ_RESEARCH_SEND,
     NOT_CONTROL_VISIT_RESEARCH_ID,
+    IS_WITHOUT_LIMIT_PARALINIC_ALWAYS,
 )
 from laboratory.utils import current_year, strdateru, strdatetime, strdate, strdatetimeru, strtime, tsdatetime, start_end_year, strfdatetime, current_time, replace_tz
 from pharmacotherapy.models import ProcedureList, ProcedureListTimes, Drugs, FormRelease, MethodsReception
@@ -1669,8 +1669,10 @@ def directions_paraclinic_form(request):
     f = False
     doc_department_id = request.user.doctorprofile.podrazdeleniye_id
     user_groups = [str(x) for x in request.user.groups.all()]
-    is_without_limit_paraclinic = "Параклиника без ограничений" in user_groups
-    is_without_limit_paraclinic = True
+    if IS_WITHOUT_LIMIT_PARALINIC_ALWAYS:
+        is_without_limit_paraclinic = IS_WITHOUT_LIMIT_PARALINIC_ALWAYS
+    else:
+        is_without_limit_paraclinic = "Параклиника без ограничений" in user_groups
     if not request.user.is_superuser and not is_without_limit_paraclinic:
         add_fr = dict(research__podrazdeleniye=request.user.doctorprofile.podrazdeleniye)
 
@@ -1726,7 +1728,11 @@ def directions_paraclinic_form(request):
     d = None
     if dn.exists():
         d: Napravleniya = dn[0]
-        if SettingManager.get("control_planed_fact_doctor", default='false', default_type='b') and d.planed_doctor_executor != request.user.doctorprofile:
+        if (
+            SettingManager.get("control_planed_fact_doctor", default='false', default_type='b')
+            and d.planed_doctor_executor != request.user.doctorprofile
+            and d.research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID
+        ):
             if not request.user.is_superuser and not is_without_limit_paraclinic:
                 response["message"] = "Направление для другого Врача"
                 return JsonResponse(response)

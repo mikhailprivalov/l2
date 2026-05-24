@@ -12,4 +12,8 @@ export type GetRefBooksResponse = {
     allowed_extensions: string[]
   }
   file_field_allowed_extensions: string[]
+  categories: {
+    id: number
+    label: string
+  }[]
 }
