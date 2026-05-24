@@ -805,7 +805,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
                             }
                         )
                     else:
-                        result[work_time.employee_position_id].update(copy.deepcopy(template_days))
+                        result[work_time.employee_position_id].update({date: {**values} for date, values in template_days.items()})
                 if work_time.day:
                     tmp_work_time = {
                         "startWorkTime": work_time.start_work.astimezone(pytz.timezone(TIME_ZONE)).strftime('%H:%M') if work_time.start_work else None,
@@ -827,27 +827,60 @@ class EmployeeWorkingHoursSchedule(models.Model):
         result_check = TimeTrackingDocument.check_document(document)
         if not result_check.get("ok"):
             return result_check
+
+        desired = {}
         for employee_position_id, work_times in changed_time.items():
+            position_id = int(employee_position_id)
             for date, work_time in work_times.items():
                 if date == "lunchDuration":
                     continue
                 start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
-                end = f"{date} {work_time.get('endWorkTime')}" if work_time.get("endWorkTime") else None
-                if work_time.get("endWorkTime") == '00:00':
-                    tmp_end = datetime.datetime.strptime(end, "%Y-%m-%d %H:%M")
-                    end_date = tmp_end.date() + datetime.timedelta(days=1)
-                    end = end_date.strftime("%Y-%m-%d %H:%M")
-                work_day_status_id = work_time.get("typeId")
-                day = EmployeeWorkingHoursSchedule.objects.filter(time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date).first()
-                if day:
-                    day.start = start
-                    day.end = end
-                    day.work_day_status_id = work_day_status_id
-                else:
-                    day = EmployeeWorkingHoursSchedule(
-                        time_tracking_document_id=document.pk, employee_position_id=employee_position_id, day=date, start=start, end=end, work_day_status_id=work_day_status_id
+                end_time = work_time.get("endWorkTime")
+                end = f"{date} {end_time}" if end_time else None
+                if end_time == "00:00":
+                    end_dt = datetime.datetime.strptime(end, "%Y-%m-%d %H:%M") + datetime.timedelta(days=1)
+                    end = end_dt.strftime("%Y-%m-%d %H:%M")
+                desired[(position_id, date)] = {
+                    "start": start,
+                    "end": end,
+                    "work_day_status_id": work_time.get("typeId") or None,
+                }
+
+        if not desired:
+            return {"ok": True, "message": ""}
+
+        position_ids = {position_id for position_id, _ in desired}
+        days = {day for _, day in desired}
+        existing = {
+            (row.employee_position_id, row.day.strftime("%Y-%m-%d")): row
+            for row in EmployeeWorkingHoursSchedule.objects.filter(time_tracking_document_id=document.pk, employee_position_id__in=position_ids, day__in=days)
+        }
+
+        to_create = []
+        to_update = []
+        for (position_id, date), values in desired.items():
+            row = existing.get((position_id, date))
+            if row:
+                row.start = values["start"]
+                row.end = values["end"]
+                row.work_day_status_id = values["work_day_status_id"]
+                to_update.append(row)
+            else:
+                to_create.append(
+                    EmployeeWorkingHoursSchedule(
+                        time_tracking_document_id=document.pk,
+                        employee_position_id=position_id,
+                        day=date,
+                        start=values["start"],
+                        end=values["end"],
+                        work_day_status_id=values["work_day_status_id"],
                     )
-                day.save()
+                )
+
+        if to_create:
+            EmployeeWorkingHoursSchedule.objects.bulk_create(to_create)
+        if to_update:
+            EmployeeWorkingHoursSchedule.objects.bulk_update(to_update, ["start", "end", "work_day_status_id"])
         return {"ok": True, "message": ""}
 
     @staticmethod
@@ -1152,14 +1185,18 @@ class FactTimeWork(models.Model):
         length_month = calendar.monthrange(year, month)[1]
         last_date_month = datetime.date(year, month, length_month)
         tabel_document: TabelDocument = TabelDocument.get_or_create_tabel(first_date_month, last_date_month, department_id)
+
+        desired = {}
         for employee_position_id, work_times in changed_time.items():
-            lunch_duration = work_times.pop("lunchDuration", None)
+            position_id = int(employee_position_id)
+            lunch_duration = work_times.get("lunchDuration")
             for date, work_time in work_times.items():
+                if date == "lunchDuration":
+                    continue
                 day_hours = None
                 night_hours = None
                 start_time = work_time.get("startWorkTime")
                 end_time = work_time.get("endWorkTime")
-                work_day_status_id = work_time.get("typeId")
                 if start_time and end_time:
                     start = datetime.datetime.strptime(f'{date} {start_time}', "%Y-%m-%d %H:%M")
                     end = datetime.datetime.strptime(f'{date} {end_time}', "%Y-%m-%d %H:%M")
@@ -1170,21 +1207,47 @@ class FactTimeWork(models.Model):
                     if lunch_duration:
                         day_hours = max(day_hours - lunch_duration / 60, 0)
                     night_hours = hours.get("night_hours")
-                day = FactTimeWork.objects.filter(tabel_document_id=tabel_document.pk, employee_position_id=employee_position_id, date=date).first()
-                if day:
-                    day.common_hours = day_hours
-                    day.night_hours = night_hours
-                    day.work_day_status_id = work_day_status_id
-                else:
-                    day = FactTimeWork(
+                desired[(position_id, date)] = {
+                    "common_hours": day_hours,
+                    "night_hours": night_hours,
+                    "work_day_status_id": work_time.get("typeId") or None,
+                }
+
+        if not desired:
+            return
+
+        position_ids = {position_id for position_id, _ in desired}
+        days = {day for _, day in desired}
+        existing = {
+            (row.employee_position_id, row.date.strftime("%Y-%m-%d")): row
+            for row in FactTimeWork.objects.filter(tabel_document_id=tabel_document.pk, employee_position_id__in=position_ids, date__in=days)
+        }
+
+        to_create = []
+        to_update = []
+        for (position_id, date), values in desired.items():
+            row = existing.get((position_id, date))
+            if row:
+                row.common_hours = values["common_hours"]
+                row.night_hours = values["night_hours"]
+                row.work_day_status_id = values["work_day_status_id"]
+                to_update.append(row)
+            else:
+                to_create.append(
+                    FactTimeWork(
                         tabel_document_id=tabel_document.pk,
-                        employee_position_id=employee_position_id,
+                        employee_position_id=position_id,
                         date=date,
-                        common_hours=day_hours,
-                        night_hours=night_hours,
-                        work_day_status_id=work_day_status_id,
+                        common_hours=values["common_hours"],
+                        night_hours=values["night_hours"],
+                        work_day_status_id=values["work_day_status_id"],
                     )
-                day.save()
+                )
+
+        if to_create:
+            FactTimeWork.objects.bulk_create(to_create)
+        if to_update:
+            FactTimeWork.objects.bulk_update(to_update, ["common_hours", "night_hours", "work_day_status_id"])
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
