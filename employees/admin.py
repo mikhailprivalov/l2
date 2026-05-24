@@ -30,6 +30,7 @@ class EmployeeAdmin(admin.ModelAdmin):
     list_filter = ('hospital', 'is_active')
     search_fields = ('family', 'name', 'patronymic', 'snils', 'hospital__title')
     ordering = ('hospital', 'family', 'name', 'patronymic', 'is_active')
+    list_select_related = ('hospital',)
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
 
@@ -39,6 +40,7 @@ class PositionAdmin(admin.ModelAdmin):
     list_filter = ('hospital', 'is_active')
     search_fields = ('name', 'hospital__title')
     ordering = ('hospital', 'name', 'is_active')
+    list_select_related = ('hospital',)
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
 
@@ -48,6 +50,7 @@ class DepartmentAdmin(admin.ModelAdmin):
     list_filter = ('hospital', 'is_active')
     search_fields = ('name', 'hospital__title')
     ordering = ('hospital', 'name', 'is_active')
+    list_select_related = ('hospital',)
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
 
@@ -65,9 +68,10 @@ class TypeWorkTimeEmployeeAdmin(admin.ModelAdmin):
 @admin.register(EmployeePosition)
 class EmployeePositionAdmin(admin.ModelAdmin):
     list_display = ('employee', 'department', 'position', 'is_active')
-    list_filter = ('employee', 'department', 'position', 'is_active')
+    list_filter = ('department', 'position', 'is_active')
     search_fields = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'tabel_number')
     ordering = ('employee', 'department', 'position', 'is_active')
+    list_select_related = ('employee', 'employee__hospital', 'department', 'position')
     autocomplete_fields = ('employee', 'department', 'doctorprofile_created', 'doctorprofile_updated')
 
 
