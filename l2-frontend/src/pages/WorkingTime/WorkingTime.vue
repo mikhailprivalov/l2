@@ -118,7 +118,7 @@
 
 <script setup lang="ts">
 import {
-  computed, getCurrentInstance, onMounted, ref, watch,
+  computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, watch,
 } from 'vue';
 import { VeTable } from 'vue-easytable';
 import Treeselect from '@riophae/vue-treeselect';
@@ -229,6 +229,16 @@ const recalculateAllEmployeeTotals = () => {
 const changedEmployeesWorkTime = ref({});
 const hasChange = ref(false);
 
+const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+  if (hasChange.value) {
+    event.preventDefault();
+    // eslint-disable-next-line no-param-reassign
+    event.returnValue = '';
+  }
+};
+onMounted(() => window.addEventListener('beforeunload', warnBeforeUnload));
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeUnload));
+
 const getEmployeesWorkTime = async () => {
   employeesWorkTime.value = [];
   changedEmployeesWorkTime.value = {};
@@ -250,10 +260,33 @@ const getEmployeesWorkTime = async () => {
   documentBlocked.value = documentIsBlocked;
 };
 
-watch([selectedYear, selectedMonth, selectedDepartment], () => {
-  if (filtersFull.value) {
-    getEmployeesWorkTime();
+let revertingFilters = false;
+watch([selectedYear, selectedMonth, selectedDepartment], (newValues, oldValues) => {
+  if (revertingFilters) {
+    revertingFilters = false;
+    return;
   }
+  const loadIfFull = () => {
+    if (filtersFull.value) {
+      getEmployeesWorkTime();
+    }
+  };
+  if (!hasChange.value) {
+    loadIfFull();
+    return;
+  }
+  root.$dialog.confirm('Есть несохранённые изменения. Сменить период без сохранения?', {
+    okText: 'Сменить',
+    cancelText: 'Отмена',
+  }).then(() => {
+    loadIfFull();
+  }).catch(() => {
+    revertingFilters = true;
+    const [prevYear, prevMonth, prevDepartment] = oldValues;
+    selectedYear.value = prevYear;
+    selectedMonth.value = prevMonth;
+    selectedDepartment.value = prevDepartment;
+  });
 }, { immediate: true });
 
 const cellStyleOption = ref({
@@ -737,9 +770,10 @@ const downloadXlsx = async () => {
   }
 };
 
-const downloadTabelXlsx = async () => {
-  window.open(`/forms/xlsx?type=104.02&year=${selectedYear.value}&month=${selectedMonth.value + 1}&departmentId=
-  ${selectedDepartment.value}`, '_blank');
+const downloadTabelXlsx = () => {
+  const period = `year=${selectedYear.value}&month=${selectedMonth.value + 1}`;
+  const params = `type=104.02&${period}&departmentId=${selectedDepartment.value}`;
+  window.open(`/forms/xlsx?${params}`, '_blank');
 };
 
 </script>

@@ -3,17 +3,7 @@
     <div class="top-icons">
       <i
         ref="transfer"
-        v-tippy="{
-          html: `#tempTransferTo${props.employeePositionId}`,
-          arrow: true,
-          reactive: true,
-          interactive: true,
-          animation: 'fade',
-          duration: 0,
-          theme: 'light',
-          placement: 'bottom',
-          trigger: 'click',
-        }"
+        v-tippy="popover(`#tempTransferTo${props.employeePositionId}`)"
         class="fa-solid fa-arrow-right icon-color"
       />
     </div>
@@ -49,6 +39,7 @@
 import { ref } from 'vue';
 
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
+import popover from '@/pages/WorkingTime/utils/tippy';
 
 const emit = defineEmits(['employeeTransfer']);
 
