@@ -28,7 +28,7 @@ from .models import (
 class EmployeeAdmin(admin.ModelAdmin):
     list_display = ('hospital', 'family', 'name', 'patronymic', 'is_active')
     list_filter = ('hospital', 'is_active')
-    search_fields = ('hospital', 'family', 'name', 'patronymic')
+    search_fields = ('family', 'name', 'patronymic', 'snils', 'hospital__title')
     ordering = ('hospital', 'family', 'name', 'patronymic', 'is_active')
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
@@ -37,7 +37,7 @@ class EmployeeAdmin(admin.ModelAdmin):
 class PositionAdmin(admin.ModelAdmin):
     list_display = ('hospital', 'name', 'is_active')
     list_filter = ('hospital', 'is_active')
-    search_fields = ('hospital', 'name')
+    search_fields = ('name', 'hospital__title')
     ordering = ('hospital', 'name', 'is_active')
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
@@ -46,7 +46,7 @@ class PositionAdmin(admin.ModelAdmin):
 class DepartmentAdmin(admin.ModelAdmin):
     list_display = ('hospital', 'name', 'is_active')
     list_filter = ('hospital', 'is_active')
-    search_fields = ('hospital', 'name')
+    search_fields = ('name', 'hospital__title')
     ordering = ('hospital', 'name', 'is_active')
     autocomplete_fields = ('hospital', 'doctorprofile_created', 'doctorprofile_updated')
 
@@ -66,7 +66,7 @@ class TypeWorkTimeEmployeeAdmin(admin.ModelAdmin):
 class EmployeePositionAdmin(admin.ModelAdmin):
     list_display = ('employee', 'department', 'position', 'is_active')
     list_filter = ('employee', 'department', 'position', 'is_active')
-    search_fields = ('employee', 'department', 'position')
+    search_fields = ('employee__family', 'employee__name', 'employee__patronymic', 'position__name', 'department__name', 'tabel_number')
     ordering = ('employee', 'department', 'position', 'is_active')
     autocomplete_fields = ('employee', 'department', 'doctorprofile_created', 'doctorprofile_updated')
 
