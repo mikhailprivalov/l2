@@ -509,6 +509,17 @@
                   @edit-link-field-value="field.value = $event"
                 />
               </div>
+              <!--Тип поля (44, "Параграф")-->
+              <div
+                v-else-if="field.field_type === 44"
+                class="field-value"
+              >
+                <ParagraphResultField
+                  v-model="field.value"
+                  :lines="field.lines"
+                  :disabled="confirmed || userGroups.includes(field.deniedGroup)"
+                />
+              </div>
               <div
                 v-if="field.helper"
                 v-tippy="{
@@ -533,6 +544,7 @@
 <script lang="ts">
 import LPress from '@/ui-cards/LPress.vue';
 import FileResultField from '@/forms/Fields/FileResultField.vue';
+import ParagraphResultField from '@/forms/Fields/ParagraphResultField.vue';
 
 import VisibilityGroupWrapper from '../components/VisibilityGroupWrapper.vue';
 import VisibilityFieldWrapper from '../components/VisibilityFieldWrapper.vue';
@@ -540,10 +552,34 @@ import FastTemplates from './FastTemplates.vue';
 import InputTemplates from './InputTemplates.vue';
 import { enterField, leaveField } from './utils';
 
+// Типы полей, чьё "пустое" значение — JSON-массив без содержательных элементов.
+// Добавление нового типа — одна строка здесь.
+const JSON_ARRAY_EMPTY_TYPES = new Set([44]);
+
+function isFieldValueEmpty(field: { value: string; field_type: number }): boolean {
+  if (!field.value || field.value === '- Не выбрано') return true;
+
+  if (field.field_type === 29) {
+    return field.value.includes('"address": ""') || field.value.includes('"address":""');
+  }
+
+  if (JSON_ARRAY_EMPTY_TYPES.has(field.field_type)) {
+    try {
+      const arr = JSON.parse(field.value);
+      return !Array.isArray(arr) || arr.length === 0 || arr.every(it => !String(it.text ?? '').trim());
+    } catch {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export default {
   name: 'DescriptiveForm',
   components: {
     FileResultField,
+    ParagraphResultField,
     FastTemplates,
     InputTemplates,
     VisibilityGroupWrapper,
@@ -628,21 +664,14 @@ export default {
   },
   computed: {
     notFilled() {
-      const l = [];
       if (this.confirmed) {
         return [];
       }
 
+      const l = [];
       for (const g of this.research.groups) {
         for (const f of g.fields) {
-          if (
-            (f.required
-              && (f.value === ''
-                || f.value === '- Не выбрано'
-                || !f.value
-                || (f.field_type === 29 && (f.value.includes('"address": ""') || f.value.includes('"address":""')))))
-            || this.tableFieldsErrors[f.pk]
-          ) {
+          if ((f.required && isFieldValueEmpty(f)) || this.tableFieldsErrors[f.pk]) {
             l.push(f.pk);
           }
         }
@@ -692,6 +721,9 @@ export default {
       if (field.field_type === 29) {
         // eslint-disable-next-line no-param-reassign
         field.value = JSON.stringify({ address: '', fias: null });
+      } else if (field.field_type === 44) {
+        // eslint-disable-next-line no-param-reassign
+        field.value = '[]';
       } else {
         // eslint-disable-next-line no-param-reassign
         field.value = '';
