@@ -83,7 +83,7 @@
       <input
         v-model.trim="search"
         class="form-control"
-        placeholder="Введите значение"
+        placeholder="ФИО или табельный номер"
       >
     </div>
     <div class="employees">
@@ -252,9 +252,10 @@ watch(() => filters.value, () => {
 }, { deep: true });
 
 const filteredEmployees = computed(() => employees.value.filter(employee => {
-  const fio = employee.employeeFio.toLowerCase();
   const searchTerm = search.value.toLowerCase();
-  return fio.includes(searchTerm);
+  const fio = employee.employeeFio.toLowerCase();
+  const tabelNumber = (employee.tabelNumber || '').toLowerCase();
+  return fio.includes(searchTerm) || tabelNumber.includes(searchTerm);
 }));
 
 const employeesPagination = computed(() => filteredEmployees.value.slice((page.value - 1)
