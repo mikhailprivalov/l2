@@ -1,7 +1,19 @@
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import simplejson as json
-from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory, ComplexService, ReleationsFT, Fractions, CategoryDirectory
+from directory.models import (
+    Researches,
+    Unit,
+    LaboratoryMaterial,
+    ResultVariants,
+    MaterialVariants,
+    SubGroupPadrazdeleniye,
+    SubGroupDirectory,
+    ComplexService,
+    ReleationsFT,
+    Fractions,
+    CategoryDirectory,
+)
 from laboratory.decorators import group_required
 from laboratory.settings import PARACLINIC_FILE_HARD_LIMITS, PARACLINIC_FILE_DEFAULTS, PARACLINIC_FILE_ALLOWED_EXTENSIONS, PARAGRAPH_FIELD_ENABLED
 from podrazdeleniya.models import Podrazdeleniya
