@@ -717,57 +717,55 @@ const createDocument = async () => {
   }
 };
 
-const printDocument = async () => {
+const requestFormBlob = async (path: string) => {
   if (hasChange.value) {
     root.$emit('msg', 'error', 'Есть не сохраненные изменения');
-  } else {
-    const apiForBlob = axios.create({
-      baseURL: `${window.location.origin}/forms`,
-      responseType: 'blob',
-    });
-    await store.dispatch(actions.INC_LOADING);
-    const result = await apiForBlob.post('/pdf?type=300.01', {
-      employeesWorkTime: employeesWorkTime.value,
-      documentId: documentId.value,
-    });
-    await store.dispatch(actions.DEC_LOADING);
-    const urlFile = URL.createObjectURL(result.data);
-    window.open(urlFile);
+    return null;
   }
+  const apiForBlob = axios.create({
+    baseURL: `${window.location.origin}/forms`,
+    responseType: 'blob',
+  });
+  await store.dispatch(actions.INC_LOADING);
+  const result = await apiForBlob.post(path, {
+    employeesWorkTime: employeesWorkTime.value,
+    documentId: documentId.value,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  return result;
+};
+
+const printDocument = async () => {
+  const result = await requestFormBlob('/pdf?type=300.01');
+  if (!result) {
+    return;
+  }
+  const urlFile = URL.createObjectURL(result.data);
+  window.open(urlFile);
 };
 
 const downloadXlsx = async () => {
-  if (hasChange.value) {
-    root.$emit('msg', 'error', 'Есть не сохраненные изменения');
-  } else {
-    const apiForBlob = axios.create({
-      baseURL: `${window.location.origin}/forms`,
-      responseType: 'blob',
-    });
-    await store.dispatch(actions.INC_LOADING);
-    const result = await apiForBlob.post('/xlsx?type=104.01', {
-      employeesWorkTime: employeesWorkTime.value,
-      documentId: documentId.value,
-    });
-    await store.dispatch(actions.DEC_LOADING);
-    const blob = new Blob([result.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const urlFile = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = urlFile;
-    const contentDisposition = result.headers['content-disposition'];
-    let fileName = 'form.xlsx';
-    if (contentDisposition) {
-      const match = contentDisposition.match(/filename="?([^"]+?)(?:_)?"?$/);
-      if (match?.[1]) {
-        [, fileName] = match;
-      }
-    }
-    link.setAttribute('download', fileName);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(urlFile);
+  const result = await requestFormBlob('/xlsx?type=104.01');
+  if (!result) {
+    return;
   }
+  const blob = new Blob([result.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const urlFile = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = urlFile;
+  const contentDisposition = result.headers['content-disposition'];
+  let fileName = 'form.xlsx';
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename="?([^"]+?)(?:_)?"?$/);
+    if (match?.[1]) {
+      [, fileName] = match;
+    }
+  }
+  link.setAttribute('download', fileName);
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(urlFile);
 };
 
 const downloadTabelXlsx = () => {
