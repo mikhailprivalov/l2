@@ -1145,7 +1145,7 @@
                       > ЭЦП-МО
                     </label>
                     <label
-                      v-show="row.field_type === 0 || row.field_type === 13 || row.field_type === 14 || row.field_type === 23"
+                      v-show="[0, 13, 14, 23, 44].includes(Number(row.field_type))"
                       style="line-height: 1"
                     >
                       Число строк:<br>
@@ -1214,7 +1214,10 @@
                         <option value="41">Шаблон макет</option>
                         <option value="42">Файл</option>
                         <option value="43">Ссылка на документ(ы)</option>
-                        <option value="44">Параграф</option>
+                        <option
+                          v-if="paragraph_field_enabled || Number(row.field_type) === 44"
+                          value="44"
+                        >Параграф</option>
                       </select>
                     </label>
                   </div>
@@ -1503,6 +1506,7 @@ export default {
       currentLinkFieldId: null,
       currentLinkFieldValue: null,
       file_field_settings: null as FileFieldConstructorSettings | null,
+      paragraph_field_enabled: false,
     };
   },
   computed: {
@@ -2092,6 +2096,7 @@ export default {
         fileFieldAllowedExtensions: result.file_field_allowed_extensions,
       };
       this.collectCategories = result.categories;
+      this.paragraph_field_enabled = result.paragraph_field_enabled;
     },
   },
 };

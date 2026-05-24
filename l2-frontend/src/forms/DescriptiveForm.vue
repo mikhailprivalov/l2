@@ -516,6 +516,7 @@
               >
                 <ParagraphResultField
                   v-model="field.value"
+                  :lines="field.lines"
                   :disabled="confirmed || userGroups.includes(field.deniedGroup)"
                 />
               </div>

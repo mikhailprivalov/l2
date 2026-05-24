@@ -26,12 +26,14 @@
         </button>
       </div>
       <textarea
+        ref="textareaRefs"
         v-model="item.text"
         class="form-control paragraph-field__textarea"
         :disabled="disabled"
         :placeholder="`Параграф ${index + 1}`"
-        rows="3"
-        @input="emitValue"
+        :rows="initialRows"
+        :style="{ maxHeight: maxHeightPx }"
+        @input="onInput($event, index)"
       />
       <button
         v-if="!disabled"
@@ -47,10 +49,10 @@
     <button
       v-if="!disabled"
       type="button"
-      class="paragraph-field__add"
+      class="btn btn-blue-nb paragraph-field__add"
       @click="addItem"
     >
-      + Добавить параграф
+      Добавить параграф
     </button>
 
     <div
@@ -63,20 +65,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import {
+  computed, nextTick, onMounted, ref, watch,
+} from 'vue';
 
 interface ParagraphItem {
   id: number;
   text: string;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   value: string;
   disabled?: boolean;
-}>();
+  lines?: number;
+}>(), {
+  disabled: false,
+  lines: 3,
+});
 
 const emit = defineEmits<{(e: 'input', value: string): void;
 }>();
+
+const MAX_ROWS = 10;
+const APPROX_LINE_PX = 20;
+
+const initialRows = computed(() => Math.min(Math.max(props.lines || 3, 1), MAX_ROWS));
+const maxHeightPx = computed(() => `${MAX_ROWS * APPROX_LINE_PX + 12}px`);
 
 const parseValue = (raw: string): ParagraphItem[] => {
   try {
@@ -97,6 +111,77 @@ const parseValue = (raw: string): ParagraphItem[] => {
 const items = ref<ParagraphItem[]>(parseValue(props.value));
 let nextId = items.value.length;
 
+const textareaRefs = ref<HTMLTextAreaElement[]>([]);
+
+const emitValue = () => {
+  emit('input', JSON.stringify(items.value.map((item, idx) => ({ text: item.text, order: idx }))));
+};
+
+const autosize = (el: HTMLTextAreaElement | undefined) => {
+  if (!el) return;
+  const cs = window.getComputedStyle(el);
+  const lineH = parseFloat(cs.lineHeight) || APPROX_LINE_PX;
+  const padTop = parseFloat(cs.paddingTop) || 0;
+  const padBot = parseFloat(cs.paddingBottom) || 0;
+  const borderTop = parseFloat(cs.borderTopWidth) || 0;
+  const borderBot = parseFloat(cs.borderBottomWidth) || 0;
+  const maxPx = lineH * MAX_ROWS + padTop + padBot + borderTop + borderBot;
+
+  const { style } = el;
+  style.height = 'auto';
+  const contentH = el.scrollHeight + borderTop + borderBot;
+  const newH = Math.min(contentH, maxPx);
+  style.height = `${newH}px`;
+  style.overflowY = contentH > maxPx ? 'auto' : 'hidden';
+
+  if (contentH > maxPx && document.activeElement === el) {
+    // eslint-disable-next-line no-param-reassign
+    el.scrollTop = el.scrollHeight;
+  }
+};
+
+const autosizeAll = () => {
+  nextTick(() => {
+    textareaRefs.value.forEach(autosize);
+  });
+};
+
+const onInput = (e: Event, index: number) => {
+  autosize(e.target as HTMLTextAreaElement);
+  items.value[index].text = (e.target as HTMLTextAreaElement).value;
+  emitValue();
+};
+
+const addItem = () => {
+  items.value = [...items.value, { id: nextId++, text: '' }];
+  emitValue();
+  autosizeAll();
+};
+
+const removeItem = (index: number) => {
+  items.value = items.value.filter((_, i) => i !== index);
+  emitValue();
+  autosizeAll();
+};
+
+const moveUp = (index: number) => {
+  if (index === 0) return;
+  const copy = [...items.value];
+  [copy[index - 1], copy[index]] = [copy[index], copy[index - 1]];
+  items.value = copy;
+  emitValue();
+  autosizeAll();
+};
+
+const moveDown = (index: number) => {
+  if (index === items.value.length - 1) return;
+  const copy = [...items.value];
+  [copy[index], copy[index + 1]] = [copy[index + 1], copy[index]];
+  items.value = copy;
+  emitValue();
+  autosizeAll();
+};
+
 watch(
   () => props.value,
   (newVal) => {
@@ -106,39 +191,14 @@ watch(
     if (currentJson !== incomingJson) {
       items.value = incoming;
       nextId = incoming.length;
+      autosizeAll();
     }
   },
 );
 
-const emitValue = () => {
-  emit('input', JSON.stringify(items.value.map((item, idx) => ({ text: item.text, order: idx }))));
-};
+watch(() => props.lines, autosizeAll);
 
-const addItem = () => {
-  items.value = [...items.value, { id: nextId++, text: '' }];
-  emitValue();
-};
-
-const removeItem = (index: number) => {
-  items.value = items.value.filter((_, i) => i !== index);
-  emitValue();
-};
-
-const moveUp = (index: number) => {
-  if (index === 0) return;
-  const copy = [...items.value];
-  [copy[index - 1], copy[index]] = [copy[index], copy[index - 1]];
-  items.value = copy;
-  emitValue();
-};
-
-const moveDown = (index: number) => {
-  if (index === items.value.length - 1) return;
-  const copy = [...items.value];
-  [copy[index], copy[index + 1]] = [copy[index + 1], copy[index]];
-  items.value = copy;
-  emitValue();
-};
+onMounted(autosizeAll);
 </script>
 
 <style scoped>
@@ -188,7 +248,7 @@ const moveDown = (index: number) => {
 .paragraph-field__textarea {
   flex: 1 1 auto;
   resize: vertical;
-  min-height: 60px;
+  overflow-y: hidden;
 }
 
 .paragraph-field__remove {
@@ -216,18 +276,7 @@ const moveDown = (index: number) => {
 
 .paragraph-field__add {
   align-self: flex-start;
-  padding: 5px 12px;
-  font-size: 13px;
-  background: #f4f8ff;
-  border: 1px dashed #7aadde;
-  border-radius: 4px;
-  color: #3a76b0;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.paragraph-field__add:hover {
-  background: #e5f0ff;
+  color: #fff;
 }
 
 .paragraph-field__empty {

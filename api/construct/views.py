@@ -3,7 +3,7 @@ from django.http import JsonResponse
 import simplejson as json
 from directory.models import Researches, Unit, LaboratoryMaterial, ResultVariants, MaterialVariants, SubGroupPadrazdeleniye, SubGroupDirectory, ComplexService, ReleationsFT, Fractions, CategoryDirectory
 from laboratory.decorators import group_required
-from laboratory.settings import PARACLINIC_FILE_HARD_LIMITS, PARACLINIC_FILE_DEFAULTS, PARACLINIC_FILE_ALLOWED_EXTENSIONS
+from laboratory.settings import PARACLINIC_FILE_HARD_LIMITS, PARACLINIC_FILE_DEFAULTS, PARACLINIC_FILE_ALLOWED_EXTENSIONS, PARAGRAPH_FIELD_ENABLED
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from slog.models import Log
@@ -284,5 +284,6 @@ def get_descriptive_ref_books(request):
         "file_field_default_settings": file_field_default_settings,
         "file_field_allowed_extensions": file_field_allowed_extensions,
         "categories": [{"id": -1, "label": "Пусто"}, *CategoryDirectory.get_categories()],
+        "paragraph_field_enabled": PARAGRAPH_FIELD_ENABLED,
     }
     return JsonResponse(result)
