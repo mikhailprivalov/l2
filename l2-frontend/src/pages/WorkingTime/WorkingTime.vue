@@ -588,6 +588,7 @@ const getColumns = () => {
         {
           props: {
             text: row[column.field] ? row[column.field] : '',
+            tabelNumber: row.tabelNumber ? row.tabelNumber : '',
             tippyMaxWidth: '50%',
             employeePositionId: row.employeePositionId,
           },
