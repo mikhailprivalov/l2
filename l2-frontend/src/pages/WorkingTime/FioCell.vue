@@ -3,26 +3,17 @@
     <div class="top-icons">
       <i
         ref="transfer"
-        v-tippy="{
-          html: `#tempTransferTo${props.employeePositionId}`,
-          arrow: true,
-          reactive: true,
-          interactive: true,
-          animation: 'fade',
-          duration: 0,
-          theme: 'light',
-          placement: 'bottom',
-          trigger: 'click',
-        }"
+        v-tippy="popover(`#tempTransferTo${props.employeePositionId}`)"
         class="fa-solid fa-arrow-right icon-color"
       />
     </div>
-    <VueTippyDiv
-      :tag="props.tag"
-      :text="props.text"
-      :tippy-max-width="props.tippyMaxWidth"
+    <div
+      v-tippy="{ maxWidth: props.tippyMaxWidth }"
+      :title="fioTooltip"
       class="fio-text"
-    />
+    >
+      {{ props.text }}
+    </div>
     <div
       :id="`tempTransferTo${props.employeePositionId}`"
       class="tp"
@@ -46,9 +37,9 @@
 
 <script setup lang="ts">
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
-import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
+import popover from '@/pages/WorkingTime/utils/tippy';
 
 const emit = defineEmits(['employeeTransfer']);
 
@@ -57,19 +48,26 @@ const props = defineProps({
     type: [String, undefined, null],
     required: true,
   },
+  tabelNumber: {
+    type: [String, undefined, null],
+    required: false,
+    default: '',
+  },
   tippyMaxWidth: {
     type: String,
     required: false,
-  },
-  tag: {
-    type: String,
-    required: false,
-    default: 'div',
   },
   employeePositionId: {
     type: Number,
     required: true,
   },
+});
+
+const fioTooltip = computed(() => {
+  const tabel = props.tabelNumber
+    ? `Таб. №: ${props.tabelNumber}`
+    : 'Таб. № не указан';
+  return `${props.text}<br>${tabel}`;
 });
 
 const dateTransfer = ref(null);

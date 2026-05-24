@@ -22,7 +22,8 @@ import {
   EMPTY_WORK_TIME_DAY_CELL,
   HolidaysMap, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
 } from '@/pages/WorkingTime/types/types';
-import { formatDateKey, formatDateTitle, isWeekend } from '@/pages/WorkingTime/utils/date';
+import { formatDateKey } from '@/pages/WorkingTime/utils/date';
+import buildDateColumns from '@/pages/WorkingTime/utils/columns';
 import { createEmptyWorkTimeDayCell, createWorkTimeDayCell, hasWorkTimeDayCellValue } from '@/pages/WorkingTime/utils/workTime';
 
 const props = defineProps({
@@ -137,41 +138,25 @@ const getColumns = () => {
       ),
     },
   ];
-  const daysMonth = [...props.monthDays];
-  const data: TableColumn[] = daysMonth.map((col) => {
-    const dateString = formatDateKey(col);
-    const dateTitle = formatDateTitle(col);
-    const weekend = isWeekend(col);
-    const holiday = props.holidays[dateString]?.kind === 'HOLIDAY';
-    return {
-      key: dateString,
-      field: dateString,
-      title: dateTitle,
-      align: 'center',
-      width: 47,
-      isWeekend: weekend,
-      isHoliday: holiday,
-      renderBodyCell: ({ row, column }, h) => h(
-        DateCell,
-        {
-          props: {
-            workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
-            employeePositionId: row.employeePositionId,
-            date: column.key,
-            dateTitle,
-            workDayStatuses: props.workDayStatuses,
-            shiftsVariants: props.shiftsVariants,
-            timeOptions: props.timeOptions,
-            disabled: false,
-            lunchDuration: props.departmentLunchDuration,
-            showAdditionalButtons: true,
-          },
-          on: { changeWorkTime: changeTemplateTime, copyPrevFilled: copyPrevFilledCell, copyToColumn: fillColumnByTemplate },
-        },
-      ),
-    };
-  });
-  columnTemplate.push(...data);
+  const dateColumns = buildDateColumns(props.monthDays, props.holidays, ({ row, column }, h) => h(
+    DateCell,
+    {
+      props: {
+        workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
+        employeePositionId: row.employeePositionId,
+        date: column.key,
+        dateTitle: column.title,
+        workDayStatuses: props.workDayStatuses,
+        shiftsVariants: props.shiftsVariants,
+        timeOptions: props.timeOptions,
+        disabled: false,
+        lunchDuration: props.departmentLunchDuration,
+        showAdditionalButtons: true,
+      },
+      on: { changeWorkTime: changeTemplateTime, copyPrevFilled: copyPrevFilledCell, copyToColumn: fillColumnByTemplate },
+    },
+  ));
+  columnTemplate.push(...dateColumns);
   const endTable: TableColumn = {
     field: 'total', key: 'total', title: '', align: 'center', width: 72, fixed: 'right',
   };

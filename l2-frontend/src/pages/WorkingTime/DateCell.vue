@@ -24,17 +24,7 @@
       />
     </div>
     <button
-      v-tippy="{
-        html: '#temp',
-        arrow: true,
-        reactive: true,
-        interactive: true,
-        animation: 'fade',
-        duration: 0,
-        theme: 'light',
-        placement: 'bottom',
-        trigger: 'click',
-      }"
+      v-tippy="popover('#temp')"
       :disabled="props.documentBlocked || props.workTime.blocked"
       :class="cellSelect ? 'transparentButton current-time-btn cell-select' : 'transparentButton current-time-btn'"
       @hide="updateCellSelect(false)"
@@ -131,6 +121,7 @@ import {
   ShiftVariantItem, TimeOptionItem, WorkDayStatusItem, WorkTimeDayCell,
 } from '@/pages/WorkingTime/types/types';
 import { buildDateTime } from '@/pages/WorkingTime/utils/date';
+import popover from '@/pages/WorkingTime/utils/tippy';
 
 const emit = defineEmits(['changeWorkTime', 'copyPrevFilled', 'copyToColumn']);
 const props = defineProps({
@@ -209,15 +200,9 @@ const hasChanged = (oldStartTime, oldEndTime, oldTypeId, newStartTime, newEndTim
   return !oldValues.every((val, i) => val === newValues[i]);
 };
 
-const clear = () => {
-  startWork.value = null;
-  endWork.value = null;
-  selectedTimeOff.value = null;
-  selectedTimeOffLabel.value = '';
-  nextDayEndWork.value = null;
-  selectedTimeOption.value = null;
+const emitIfChanged = (): boolean => {
   const propsWorkTime = props.workTime;
-  if (hasChanged(
+  if (!hasChanged(
     propsWorkTime.startWorkTime,
     propsWorkTime.endWorkTime,
     propsWorkTime.typeId,
@@ -225,15 +210,27 @@ const clear = () => {
     endWork.value,
     selectedTimeOff.value,
   )) {
-    emit('changeWorkTime', {
-      employeePositionId: props.employeePositionId,
-      date: props.date,
-      startWorkTime: startWork.value,
-      endWorkTime: endWork.value,
-      typeId: selectedTimeOff.value,
-      nextDayEndWork: nextDayEndWork.value,
-    });
+    return false;
   }
+  emit('changeWorkTime', {
+    employeePositionId: props.employeePositionId,
+    date: props.date,
+    startWorkTime: startWork.value,
+    endWorkTime: endWork.value,
+    typeId: selectedTimeOff.value,
+    nextDayEndWork: nextDayEndWork.value,
+  });
+  return true;
+};
+
+const clear = () => {
+  startWork.value = null;
+  endWork.value = null;
+  selectedTimeOff.value = null;
+  selectedTimeOffLabel.value = '';
+  nextDayEndWork.value = null;
+  selectedTimeOption.value = null;
+  emitIfChanged();
 };
 const selectTime = (variantId: number | string, startTime: string, endTime: string) => {
   selectedTimeOption.value = variantId;
@@ -248,30 +245,14 @@ const timeOff = () => {
   selectedTimeOption.value = null;
 };
 
-const updateTime = async () => {
+const updateTime = () => {
   if ((startWork.value && endWork.value) && endWork.value <= startWork.value && endWork.value !== '00:00') {
     const start = buildDateTime(props.date, startWork.value);
     const endTime = endWork.value.split(':');
     nextDayEndWork.value = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 1, endTime[0], endTime[1]);
     endWork.value = '00:00';
   }
-  const propsWorkTime = props.workTime;
-  if (hasChanged(
-    propsWorkTime.startWorkTime,
-    propsWorkTime.endWorkTime,
-    propsWorkTime.typeId,
-    startWork.value,
-    endWork.value,
-    selectedTimeOff.value,
-  )) {
-    emit('changeWorkTime', {
-      employeePositionId: props.employeePositionId,
-      date: props.date,
-      startWorkTime: startWork.value,
-      endWorkTime: endWork.value,
-      typeId: selectedTimeOff.value,
-      nextDayEndWork: nextDayEndWork.value,
-    });
+  if (emitIfChanged()) {
     nextDayEndWork.value = null;
   }
 };

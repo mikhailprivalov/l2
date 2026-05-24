@@ -1,32 +1,12 @@
 <template>
   <div class="column-row">
     <i
-      v-tippy="{
-        html: `#tempPositionFilter`,
-        arrow: true,
-        reactive: true,
-        interactive: true,
-        animation: 'fade',
-        duration: 0,
-        theme: 'light',
-        placement: 'bottom',
-        trigger: 'click',
-      }"
+      v-tippy="popover('#tempPositionFilter')"
       class="fa column-icon"
       :class="selectedPositionIds.length > 0 ? 'fa-filter-circle-xmark': 'fa-filter'"
     />
     <i
-      v-tippy="{
-        html: `#tempPositionSorted`,
-        arrow: true,
-        reactive: true,
-        interactive: true,
-        animation: 'fade',
-        duration: 0,
-        theme: 'light',
-        placement: 'bottom',
-        trigger: 'click',
-      }"
+      v-tippy="popover('#tempPositionSorted')"
       class="fa fa-sort column-icon"
     />
     <div
@@ -73,6 +53,7 @@ import { ref, watch } from 'vue';
 import Treeselect from '@riophae/vue-treeselect';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import popover from '@/pages/WorkingTime/utils/tippy';
 
 const props = defineProps({
   employeePositions: {
