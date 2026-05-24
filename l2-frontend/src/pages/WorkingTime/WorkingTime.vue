@@ -141,15 +141,17 @@ import {
   GetEmployeesWorkTimeResult,
   HolidaysMap, RefBooksResponse,
   SelectOptionItem, ShiftVariantItem, TableColumn, TimeOptionItem, WorkDayStatusItem,
+  WorkTimeDayCell,
 } from '@/pages/WorkingTime/types/types';
 import {
-  formatDateKey, formatDateTitle,
-  getMonthDays, getYears, isISODateString, isWeekend, MONTHS,
+  formatDateKey,
+  getMonthDays, getYears, isISODateString, MONTHS,
 } from '@/pages/WorkingTime/utils/date';
 import {
   calculateEmployeeWorkTimeTotals, createDayOffWorkTimeDayCell,
   createEmptyWorkTimeDayCell, createWorkTimeDayCell,
 } from '@/pages/WorkingTime/utils/workTime';
+import buildDateColumns from '@/pages/WorkingTime/utils/columns';
 
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
@@ -162,8 +164,10 @@ const selectedYear = ref(currentDate.value.getFullYear());
 const years = ref<SelectOptionItem[]>(getYears(currentDate.value.getFullYear()));
 
 const selectedDepartment = ref(null);
-const lunchDurationSelectedDepartment = ref(0);
 const departments = ref<DepartmentItem[]>([]);
+const lunchDurationSelectedDepartment = computed(
+  () => departments.value.find(department => department.id === selectedDepartment.value)?.lunchDuration ?? 0,
+);
 const getDepartments = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { result }: { result: DepartmentItem[] } = await api('/working-time/get-departments');
@@ -191,15 +195,6 @@ const getHolidays = async () => {
   await store.dispatch(actions.DEC_LOADING);
   holidays.value = result;
 };
-
-const findDepartmentLunchDuration = () => {
-  const currentDepartment = departments.value.find(department => department.id === selectedDepartment.value);
-  lunchDurationSelectedDepartment.value = currentDepartment.lunchDuration ? currentDepartment.lunchDuration : 0;
-};
-
-watch(selectedDepartment, () => {
-  findDepartmentLunchDuration();
-});
 
 onMounted(() => {
   getDepartments();
@@ -373,51 +368,45 @@ const filteredAndSortedEmployees = computed(() => {
   });
 });
 
-const updateChangedEmployeesWorkTime = (
-  employeePositionId: number,
-  date: string,
-  startWorkTime: string = null,
-  endWorkTime: string = null,
-  typeId: number = null,
-  fullData: object = null,
-  lunchDuration: number = null,
-) => {
+const rowById = (employeePositionId: number) => employeesWorkTime.value.find(
+  employee => employee.employeePositionId === employeePositionId,
+);
+
+const recordChange = (employeePositionId: number, date: string, cell: WorkTimeDayCell, lunchDuration: number) => {
   if (!Object.hasOwn(changedEmployeesWorkTime.value, employeePositionId)) {
     changedEmployeesWorkTime.value[employeePositionId] = { lunchDuration };
   }
-  if (fullData) {
-    changedEmployeesWorkTime.value[employeePositionId][date] = fullData;
-  } else {
-    changedEmployeesWorkTime.value[employeePositionId][date] = {
-      startWorkTime,
-      endWorkTime,
-      typeId,
-    };
-  }
+  changedEmployeesWorkTime.value[employeePositionId][date] = cell;
   hasChange.value = true;
 };
 
-const changeWorkTime = async ({
+const applyDateCells = (employeePosition, getCell: (dateKey: string) => WorkTimeDayCell) => {
+  const { employeePositionId, lunchDuration } = employeePosition;
+  for (const key of Object.keys(employeePosition)) {
+    if (isISODateString(key)) {
+      const cell = { ...getCell(key) };
+      // eslint-disable-next-line no-param-reassign
+      employeePosition[key] = cell;
+      recordChange(employeePositionId, key, cell, lunchDuration);
+    }
+  }
+  recalculateEmployeeTotals(employeePosition);
+};
+
+const changeWorkTime = ({
   employeePositionId, date, startWorkTime, endWorkTime, typeId, nextDayEndWork,
 }) => {
-  const row = employeesWorkTime.value.find(employeePosition => employeePosition.employeePositionId === employeePositionId);
+  const row = rowById(employeePositionId);
   const { lunchDuration } = row;
-  row[date] = createWorkTimeDayCell(startWorkTime, endWorkTime, typeId);
-  updateChangedEmployeesWorkTime(employeePositionId, date, startWorkTime, endWorkTime, typeId, null, lunchDuration);
+  const cell = createWorkTimeDayCell(startWorkTime, endWorkTime, typeId);
+  row[date] = cell;
+  recordChange(employeePositionId, date, cell, lunchDuration);
   if (nextDayEndWork) {
-    const nextDay = nextDayEndWork;
-    const nextDayString = formatDateKey(nextDay);
-    const nextDayEnd = moment(nextDay).format('HH:mm');
-    row[nextDayString] = createWorkTimeDayCell('00:00', nextDayEnd, typeId);
-    updateChangedEmployeesWorkTime(
-      employeePositionId,
-      nextDayString,
-      '00:00',
-      nextDayEnd,
-      typeId,
-      null,
-      lunchDuration,
-    );
+    const nextDayString = formatDateKey(nextDayEndWork);
+    const nextDayEnd = moment(nextDayEndWork).format('HH:mm');
+    const nextCell = createWorkTimeDayCell('00:00', nextDayEnd, typeId);
+    row[nextDayString] = nextCell;
+    recordChange(employeePositionId, nextDayString, nextCell, lunchDuration);
   }
   recalculateEmployeeTotals(row);
 };
@@ -425,23 +414,7 @@ const changeWorkTime = async ({
 const fillInTemplateData = ({ templateData }) => {
   for (const employeePosition of employeesWorkTime.value) {
     if (checkboxOption.value.selectedRowKeys.includes(employeePosition.employeePositionId)) {
-      const keys = Object.keys(employeePosition);
-      const { lunchDuration } = employeePosition;
-      for (const key of keys) {
-        if (isISODateString(key)) {
-          employeePosition[key] = { ...templateData[key] };
-          updateChangedEmployeesWorkTime(
-            employeePosition.employeePositionId,
-            key,
-            null,
-            null,
-            null,
-            { ...templateData[key] },
-            lunchDuration,
-          );
-        }
-      }
-      recalculateEmployeeTotals(employeePosition);
+      applyDateCells(employeePosition, key => templateData[key]);
     }
   }
   checkboxOption.value.selectedRowKeys = [];
@@ -459,11 +432,10 @@ const fillByEmployeeTemplate = async ({ action }) => {
   employeesWorkTime.value = result;
   recalculateAllEmployeeTotals();
   for (const employeePosition of result) {
-    const { employeePositionId } = employeePosition;
-    const { lunchDuration } = employeePosition;
+    const { employeePositionId, lunchDuration } = employeePosition;
     for (const [key, value] of Object.entries(employeePosition)) {
       if (isISODateString(key)) {
-        updateChangedEmployeesWorkTime(employeePositionId, key, null, null, null, value, lunchDuration);
+        recordChange(employeePositionId, key, value as WorkTimeDayCell, lunchDuration);
       }
     }
   }
@@ -472,89 +444,30 @@ const fillByEmployeeTemplate = async ({ action }) => {
 const fillColumnByTemplate = ({
   date, startWork, endWork, typeId,
 }) => {
+  const { selectedRowKeys } = checkboxOption.value;
   for (const employeePosition of employeesWorkTime.value) {
-    const { lunchDuration } = employeePosition;
-    const { employeePositionId } = employeePosition;
-    if (checkboxOption.value.selectedRowKeys.length === 0) {
-      employeePosition[date] = createWorkTimeDayCell(startWork, endWork, typeId);
-      updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
-      recalculateEmployeeTotals(employeePosition);
-    } else if (checkboxOption.value.selectedRowKeys.includes(employeePositionId)) {
-      employeePosition[date] = createWorkTimeDayCell(startWork, endWork, typeId);
-      updateChangedEmployeesWorkTime(employeePositionId, date, startWork, endWork, typeId, null, lunchDuration);
+    const { employeePositionId, lunchDuration } = employeePosition;
+    if (selectedRowKeys.length === 0 || selectedRowKeys.includes(employeePositionId)) {
+      const cell = createWorkTimeDayCell(startWork, endWork, typeId);
+      employeePosition[date] = cell;
+      recordChange(employeePositionId, date, cell, lunchDuration);
       recalculateEmployeeTotals(employeePosition);
     }
   }
 };
 
 const copyTop = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
-  const prevFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex - 1];
-  const currentEmployeePosition = employeesWorkTime.value.find(employee => employee.employeePositionId
-    === currentFilteredEmployeePosition.employeePositionId);
-  const { lunchDuration } = currentEmployeePosition;
-  const keys = Object.keys(currentEmployeePosition);
-  for (const key of keys) {
-    if (isISODateString(key)) {
-      currentEmployeePosition[key] = { ...prevFilteredEmployeePosition[key] };
-      updateChangedEmployeesWorkTime(
-        currentEmployeePosition.employeePositionId,
-        key,
-        null,
-        null,
-        null,
-        { ...prevFilteredEmployeePosition[key] },
-        lunchDuration,
-      );
-    }
-  }
-  recalculateEmployeeTotals(currentEmployeePosition);
+  const current = rowById(filteredAndSortedEmployees.value[rowIndex].employeePositionId);
+  const source = filteredAndSortedEmployees.value[rowIndex - 1];
+  applyDateCells(current, key => source[key]);
 };
 const copyFrom = ({ employeePositionId, selectedEmployeePositionId }) => {
-  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-    === employeePositionId);
-  const { lunchDuration } = currentEmployeePosition;
-  const selectedEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-    === selectedEmployeePositionId);
-  const keys = Object.keys(currentEmployeePosition);
-  for (const key of keys) {
-    if (isISODateString(key)) {
-      currentEmployeePosition[key] = { ...selectedEmployeePosition[key] };
-      updateChangedEmployeesWorkTime(
-        currentEmployeePosition.employeePositionId,
-        key,
-        null,
-        null,
-        null,
-        { ...selectedEmployeePosition[key] },
-        lunchDuration,
-      );
-    }
-  }
-  recalculateEmployeeTotals(currentEmployeePosition);
+  const source = rowById(selectedEmployeePositionId);
+  applyDateCells(rowById(employeePositionId), key => source[key]);
 };
 const clear = ({ rowIndex }) => {
-  const currentFilteredEmployeePosition = filteredAndSortedEmployees.value[rowIndex];
-  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-    === currentFilteredEmployeePosition.employeePositionId);
-  const { lunchDuration } = currentEmployeePosition;
-  const keys = Object.keys(currentEmployeePosition);
-  const emptyData = createEmptyWorkTimeDayCell();
-  for (const key of keys) {
-    if (isISODateString(key)) {
-      currentEmployeePosition[key] = { ...emptyData };
-      updateChangedEmployeesWorkTime(
-        currentEmployeePosition.employeePositionId,
-        key,
-        null,
-        null,
-        null,
-        { ...emptyData },
-        lunchDuration,
-      );
-    }
-  }
-  recalculateEmployeeTotals(currentEmployeePosition);
+  const current = rowById(filteredAndSortedEmployees.value[rowIndex].employeePositionId);
+  applyDateCells(current, () => createEmptyWorkTimeDayCell());
 };
 
 const employeeTransfer = async ({ employeePositionId, date }) => {
@@ -590,26 +503,17 @@ const editLunch = async ({ employeePositionId, lunchDurationInMinutes }) => {
 const fillDayOff = ({
   employeePositionId, workDayStatusId, dayOffStart, dayOffEnd,
 }) => {
-  const dayOffStartDate = moment(dayOffStart);
+  const employeePosition = rowById(employeePositionId);
+  const { lunchDuration } = employeePosition;
+  const dayOffCell = createDayOffWorkTimeDayCell(workDayStatusId);
   const dayOffEndDate = moment(dayOffEnd);
-  const currentEmployeePosition = employeesWorkTime.value.find(employeeWorkTime => employeeWorkTime.employeePositionId
-      === employeePositionId);
-  const { lunchDuration } = currentEmployeePosition;
-  const fullData = createDayOffWorkTimeDayCell(workDayStatusId);
-  for (let day = moment(dayOffStartDate); day <= dayOffEndDate; day.add(1, 'day')) {
+  for (let day = moment(dayOffStart); day <= dayOffEndDate; day.add(1, 'day')) {
     const date = day.format('YYYY-MM-DD');
-    currentEmployeePosition[date] = { ...fullData };
-    updateChangedEmployeesWorkTime(
-      employeePositionId,
-      date,
-      null,
-      null,
-      null,
-      { ...fullData },
-      lunchDuration,
-    );
+    const cell = { ...dayOffCell };
+    employeePosition[date] = cell;
+    recordChange(employeePositionId, date, cell, lunchDuration);
   }
-  recalculateEmployeeTotals(currentEmployeePosition);
+  recalculateEmployeeTotals(employeePosition);
 };
 
 const columns = ref<TableColumn[]>([]);
@@ -706,39 +610,23 @@ const getColumns = () => {
       field: 'bidType', key: 'bidType', title: 'Тип', align: 'center', width: 30, fixed: 'left',
     },
   ];
-  const daysMonth = [...monthDays.value];
-  const data: TableColumn[] = daysMonth.map((col) => {
-    const dateString = formatDateKey(col);
-    const dateTitle = formatDateTitle(col);
-    const weekend = isWeekend(col);
-    const holiday = holidays.value[dateString]?.kind === 'HOLIDAY';
-    return {
-      key: dateString,
-      field: dateString,
-      title: dateTitle,
-      align: 'center',
-      width: 47,
-      isWeekend: weekend,
-      isHoliday: holiday,
-      renderBodyCell: ({ row, column }, h) => h(
-        DateCell,
-        {
-          props: {
-            workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
-            employeePositionId: row.employeePositionId,
-            date: column.key,
-            workDayStatuses: workDayStatuses.value,
-            shiftsVariants: shiftsVariants.value,
-            timeOptions: timeOptions.value,
-            documentBlocked: documentBlocked.value,
-            lunchDuration: row.lunchDuration,
-          },
-          on: { changeWorkTime },
-        },
-      ),
-    };
-  });
-  columnTemplate.push(...data);
+  const dateColumns = buildDateColumns(monthDays.value, holidays.value, ({ row, column }, h) => h(
+    DateCell,
+    {
+      props: {
+        workTime: row[column.field] ? row[column.field] : EMPTY_WORK_TIME_DAY_CELL,
+        employeePositionId: row.employeePositionId,
+        date: column.key,
+        workDayStatuses: workDayStatuses.value,
+        shiftsVariants: shiftsVariants.value,
+        timeOptions: timeOptions.value,
+        documentBlocked: documentBlocked.value,
+        lunchDuration: row.lunchDuration,
+      },
+      on: { changeWorkTime },
+    },
+  ));
+  columnTemplate.push(...dateColumns);
   const totalHoursCol: TableColumn = {
     field: 'totalHoursDecimal', key: 'totalHoursDecimal', title: 'Все', align: 'center', width: 30, fixed: 'right',
   };
