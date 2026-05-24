@@ -32,7 +32,7 @@
         :disabled="disabled"
         :placeholder="`Параграф ${index + 1}`"
         :rows="initialRows"
-        :style="{ maxHeight: maxHeightPx }"
+        :style="{ maxHeight: maxHeightPx, minHeight: minHeightPx }"
         @input="onInput($event, index)"
       />
       <button
@@ -91,6 +91,7 @@ const APPROX_LINE_PX = 20;
 
 const initialRows = computed(() => Math.min(Math.max(props.lines || 3, 1), MAX_ROWS));
 const maxHeightPx = computed(() => `${MAX_ROWS * APPROX_LINE_PX + 12}px`);
+const minHeightPx = `${APPROX_LINE_PX + 12}px`;
 
 const parseValue = (raw: string): ParagraphItem[] => {
   try {
