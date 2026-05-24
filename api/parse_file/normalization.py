@@ -23,7 +23,10 @@ def normalize_snils(value: str):
 
 
 def normalize_rate(value):
-    """Нормализует значение ставки, на входе str "1/2" "1/4", "3/4" """
+    """Нормализует значение ставки.
+    На входе обыкновенная дробь ("1/2", "1/4", "3/4") или десятичная дробь ("0.5", "0,25")"""
+    if isinstance(value, str):
+        value = value.strip().replace(",", ".")
     try:
         rate_in_fraciton = Fraction(value)
         float_rate = float(rate_in_fraciton)
