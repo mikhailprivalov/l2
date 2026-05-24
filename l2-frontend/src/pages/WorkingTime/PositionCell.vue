@@ -3,32 +3,12 @@
     <div class="top-icons">
       <i
         ref="dayOff"
-        v-tippy="{
-          html: `#tempDayOff${props.employeePositionId}`,
-          arrow: true,
-          reactive: true,
-          interactive: true,
-          animation: 'fade',
-          duration: 0,
-          theme: 'light',
-          placement: 'bottom',
-          trigger: 'click',
-        }"
+        v-tippy="popover(`#tempDayOff${props.employeePositionId}`)"
         class="fa-solid icon-color"
       >О</i>
       <i
         ref="lunch"
-        v-tippy="{
-          html: `#tempLunch${props.employeePositionId}`,
-          arrow: true,
-          reactive: true,
-          interactive: true,
-          animation: 'fade',
-          duration: 0,
-          theme: 'light',
-          placement: 'bottom',
-          trigger: 'click',
-        }"
+        v-tippy="popover(`#tempLunch${props.employeePositionId}`)"
         class="fa-solid fa-cutlery icon-color"
       />
       <i
@@ -39,17 +19,7 @@
       />
       <i
         ref="from"
-        v-tippy="{
-          html: `#tempCopyFrom${props.employeePositionId}`,
-          arrow: true,
-          reactive: true,
-          interactive: true,
-          animation: 'fade',
-          duration: 0,
-          theme: 'light',
-          placement: 'bottom',
-          trigger: 'click',
-        }"
+        v-tippy="popover(`#tempCopyFrom${props.employeePositionId}`)"
         class="fa-solid fa-paste icon-color"
       />
       <i
@@ -176,6 +146,7 @@ import moment from 'moment';
 import VueTippyDiv from '@/pages/ManageChambers/components/VueTippyDiv.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import RadioFieldById from '@/fields/RadioFieldById.vue';
+import popover from '@/pages/WorkingTime/utils/tippy';
 
 const props = defineProps({
   text: {
