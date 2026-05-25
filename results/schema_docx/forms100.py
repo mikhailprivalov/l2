@@ -8,7 +8,6 @@ import os
 import datetime
 from pdfrw import PdfReader, PdfWriter
 
-from forms.forms106 import join_diag_title_row, check_diagnos_row_is_dict
 from integration_framework.models import EquipmentReceive
 from laboratory.settings import COMMAND_DOCX_2_PDF
 from results.sql_func import get_paraclinic_result_by_iss
