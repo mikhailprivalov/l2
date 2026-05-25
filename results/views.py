@@ -57,7 +57,7 @@ from laboratory.settings import (
     RESEARCHES_NOT_PRINT_FOOTERS,
     RESULT_LABORATORY_FORM,
     SELF_WATERMARKS,
-    DISABLE_PATIENT_CANVAS_MARKER,
+    DISABLE_PATIENT_CANVAS_MARKER, NOT_CONTROL_VISIT_RESEARCH_ID,
 )
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
@@ -357,6 +357,8 @@ def result_print(request):
         )
     elif portion and len(pk) == 1:
         dirs = Napravleniya.objects.filter(pk=pk[0])
+        if dirs[0].research().pk in NOT_CONTROL_VISIT_RESEARCH_ID:
+            portion = False
 
     count_direction = 0
     previous_size_form = None
@@ -411,7 +413,7 @@ def result_print(request):
     need_qr = SettingManager.qr_check_result()
 
     direction: Napravleniya
-    if not portion and not sort:
+    if not portion and not sort and dirs[0].research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID:
         sorted_direction = sorted(dirs, key=lambda dir: dir.client.individual_id * 100000000 + dir.results_count * 10000000 + dir.pk)
     else:
         sorted_direction = dirs
@@ -428,7 +430,7 @@ def result_print(request):
     for direction in sorted_direction:
         dpk = direction.pk
 
-        if not direction.is_all_confirm() and not portion:
+        if not direction.is_all_confirm() and not portion and dirs[0].research().pk not in NOT_CONTROL_VISIT_RESEARCH_ID:
             continue
         dates = {}
         date_t = ""
