@@ -303,7 +303,7 @@ class EquipmentReceive(models.Model):
                 ip_address_param=tag_sender_ip,
                 station_name_param=tag_station_name,
             )
-            # equipment_model = Equipment.objects.filter(pk=pk_equipment_receive)
+            # equipment_model = Equipment.objects.filter(pk=pk_equipment_receive).first()
             if equipment_model:
                 eqr = EquipmentReceive(
                     tag_patient_name=data.get("tag_patient_name"),

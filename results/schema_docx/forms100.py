@@ -12,6 +12,23 @@ from integration_framework.models import EquipmentReceive
 from laboratory.settings import COMMAND_DOCX_2_PDF
 from results.sql_func import get_paraclinic_result_by_iss
 from slog.models import Log
+from utils.dates import normalize_date
+import simplejson as json
+
+
+def transform_value(field_value, type_field):
+    result = ""
+    if type_field == 1:
+        result = normalize_date(field_value)
+    if type_field == 34:
+        try:
+            field_json = json.loads(field_value)
+            code = field_json.get("code")
+            title = field_json.get("title")
+            result = f"{code} - {title}"
+        except:
+            result = ""
+    return result
 
 
 def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, user=None, **kwargs):
@@ -22,7 +39,7 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         current_template_file = iss.research.schema_pdf.path
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
-        result_data = {i.attached: i.field_value for i in fields_values}
+        result_data = {i.attached: transform_value(i.field_value, i.field_type) if i.field_type in [1, 34] else i.field_value for i in fields_values}
         name_pdf_file = ""
         for k, v in result_data.items():
             if "name_file" in k:
@@ -66,8 +83,8 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "born": individula.get('born'),
             "protocol_number": direction.pk,
             "research": iss.research.title,
-            "hosp_confirmation": iss.doc_confirmation.hospital.title,
-            "license_data": iss.doc_confirmation.hospital.license_data,
+            "hosp_confirmation": iss.doc_confirmation.hospital.title if iss.doc_confirmation else "",
+            "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
         }
         context = {**meta_info, **result_data}
