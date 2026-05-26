@@ -54,7 +54,7 @@
                 class="btn btn-default"
                 @click="goToday"
               >
-                Сегодня
+                Текущий
               </button>
               <button
                 class="btn btn-default"
