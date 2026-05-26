@@ -64,11 +64,7 @@ def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
     if not discharge_date:
         return False
 
-    ptb = (
-        PatientToBed.objects.filter(direction_id=direction_pk)
-        .order_by("-pk")
-        .first()
-    )
+    ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
     if not ptb:
         return False
 
