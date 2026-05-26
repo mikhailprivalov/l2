@@ -45,6 +45,7 @@ from api import sql_func
 from api.dicom import search_dicom_study, check_server_port, check_dicom_study_instance_uid
 from api.patients.views import save_dreg
 from api.sql_func import get_fraction_result, get_field_result, get_field_result_by_cda, get_field_lab_result_by_research_and_test
+from api.chambers.discharge_sync import sync_patient_to_bed_discharge_date_from_extract
 from api.stationar.stationar_func import forbidden_edit_dir, desc_to_data, hosp_get_curent_hosp_dir
 from api.views import get_reset_time_vars
 from appconf.manager import SettingManager
@@ -2661,6 +2662,8 @@ def directions_paraclinic_result(request):
         if iss.research.is_doc_refferal or iss.research.is_gistology:
             iss.medical_examination = request_data.get("examination_date") or timezone.now().date()
         if with_confirm:
+            if iss.research.is_extract:
+                sync_patient_to_bed_discharge_date_from_extract(iss)
             work_by = request_data.get("work_by")
             if work_by and isinstance(work_by, str) and work_by.isdigit():
                 iss.doc_confirmation_id = work_by
@@ -2893,7 +2896,7 @@ def directions_paraclinic_confirm(request):
         | Q(research__is_slave_hospital=True)
         | Q(research__is_stom=True)
     ).exists():
-        iss = Issledovaniya.objects.get(pk=pk)
+        iss = Issledovaniya.objects.select_related("research", "napravleniye").get(pk=pk)
         g = [str(x) for x in request.user.groups.all()]
         tadp = TADP in iss.research.title
         more_forbidden = "Врач параклиники" not in g and "Врач консультаций" not in g and "Врач стационара" not in g and "t, ad, p" in g

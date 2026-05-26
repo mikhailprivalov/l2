@@ -5,13 +5,14 @@ import simplejson as json
 from collections import defaultdict
 
 from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID
 from laboratory.utils import current_time
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds
-from directions.models import Napravleniya
+from directions.models import Issledovaniya, Napravleniya
 from slog.models import Log
 from utils.response import status_response
 import datetime
@@ -24,6 +25,7 @@ from .sql_func import (
     get_closing_protocols,
     load_plan_operations_next_day,
 )
+from .discharge_sync import _read_discharge_date_from_protocol
 from ..stationar.stationar_func import forbidden_edit_dir
 
 
@@ -183,6 +185,16 @@ def _parse_ymd_date(value):
         return None
 
 
+def _parse_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on", "да")
+    return False
+
+
 def _resolve_direction_id_by_fio(fio_text, department_id):
     fio = " ".join((fio_text or "").split()).strip()
     if not fio:
@@ -326,8 +338,20 @@ def extract_patient_bed(request):
     user_can_edit = Chamber.check_user(user, bed_department_id)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    patient.date_out = datetime.datetime.today()
-    patient.save()
+    discharge_date = None
+    for extract_iss in (
+        Issledovaniya.objects.filter(time_confirmation__isnull=False)
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .select_related("research")
+        .order_by("-time_confirmation")
+    ):
+        if extract_iss.research.is_extract:
+            discharge_date = _read_discharge_date_from_protocol(extract_iss)
+            if discharge_date:
+                break
+    patient.date_out = discharge_date or datetime.date.today()
+    patient.plan_date_out = patient.date_out
+    patient.save(update_fields=["date_out", "plan_date_out"])
     Log.log(
         direction_pk,
         230001,
@@ -577,6 +601,7 @@ def get_hospitalization_calendar(request):
                     "accompanyng_child_sex": item.accompanyng_child_sex or "-",
                     "date_comments": date_comments,
                     "is_day_hosp": bool(item.is_day_hosp),
+                    "is_need_sick": bool(item.is_need_sick),
                     "forbidden_edit": forbidden_edit,
                 }
             )
@@ -607,6 +632,7 @@ def save_hospitalization_by_fio(request):
     direction_id = request_data.get("direction_id")
     plan_date_in = _parse_ymd_date(request_data.get("plan_date_in"))
     plan_date_out = _parse_ymd_date(request_data.get("plan_date_out"))
+    is_need_sick = _parse_bool(request_data.get("is_need_sick"))
     comment = (request_data.get("comment") or "").strip()[:255]
     acc_type, acc_sex = _accompanying_child_from_request(request_data)
     user = request.user
@@ -658,6 +684,7 @@ def save_hospitalization_by_fio(request):
         patient_age_text=patient_age_text,
         accompanyng_child_type=acc_type,
         accompanyng_child_sex=acc_sex,
+        is_need_sick=is_need_sick,
     )
     patient_to_bed.save()
     comment_date = _parse_ymd_date(request_data.get("comment_date"))
@@ -728,6 +755,8 @@ def update_hospitalization_record(request):
     record.plan_date_out = plan_date_out
     record.accompanyng_child_type = acc_type
     record.accompanyng_child_sex = acc_sex
+    if "is_need_sick" in request_data:
+        record.is_need_sick = _parse_bool(request_data.get("is_need_sick"))
     record.save()
     comment_date = _parse_ymd_date(request_data.get("comment_date"))
     if comment_date is not None:
@@ -883,6 +912,7 @@ def move_hospitalization_to_bed(request):
             patient_age_text=old.patient_age_text or "",
             accompanyng_child_type=old.accompanyng_child_type or "",
             accompanyng_child_sex=old.accompanyng_child_sex or "-",
+            is_need_sick=bool(old.is_need_sick),
         )
         if not uses_plan:
             new.date_out = tail_date_out
