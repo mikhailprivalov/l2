@@ -794,7 +794,7 @@ const router = new Router({
       name: 'hospitalization-board',
       component: () => import('@/pages/HospitalizationBoard.vue'),
       meta: {
-        title: 'Календарь госпитализаций',
+        title: 'Движение пациентов',
         groups: [
           'Оператор лечащего врача',
           'Лечащий врач',
