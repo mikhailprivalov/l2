@@ -1005,8 +1005,10 @@ const recordsForMainGrid = computed(() => {
   return list;
 });
 
-const recordByBedAndDay = computed(() => {
-  const map = new Map<string, CalendarRecord>();
+const HOSP_OPEN_END_DAY = '2200-01-01';
+
+const recordsByBedAndDay = computed(() => {
+  const map = new Map<string, CalendarRecord[]>();
   const days = visibleDays.value;
   if (!days.length) {
     return map;
@@ -1020,15 +1022,96 @@ const recordByBedAndDay = computed(() => {
       if (!isDayInRecordSpan(record, dayKey)) {
         continue;
       }
-      map.set(`${record.bed_pk}-${dayKey}`, record);
+      const key = `${record.bed_pk}-${dayKey}`;
+      const list = map.get(key) || [];
+      list.push(record);
+      map.set(key, list);
     }
   }
   return map;
 });
 
-const getRecordForDay = (bedPk: number, dayKey: string) => recordByBedAndDay.value.get(`${bedPk}-${dayKey}`);
+const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => (
+  recordsByBedAndDay.value.get(`${bedPk}-${dayKey}`) || []
+);
 
-const cellForbiddenEdit = (bedPk: number, dayKey: string) => Boolean(getRecordForDay(bedPk, dayKey)?.forbidden_edit);
+const getRecordForDay = (bedPk: number, dayKey: string) => {
+  const list = cellRecordList(bedPk, dayKey);
+  return list.length ? list[0] : undefined;
+};
+
+const cellForbiddenEdit = (bedPk: number, dayKey: string) => (
+  cellRecordList(bedPk, dayKey).some((r) => r.forbidden_edit)
+);
+
+const hospVisualStart = (rec: CalendarRecord) => moment(rec.plan_date_in || rec.date_in, 'YYYY-MM-DD');
+
+const hospVisualEnd = (rec: CalendarRecord) => {
+  const endParts = [rec.plan_date_out, rec.date_out].filter(Boolean) as string[];
+  if (!endParts.length) {
+    return moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
+  }
+  const endMoments = endParts.map((x) => moment(x, 'YYYY-MM-DD')).filter((m) => m.isValid());
+  if (!endMoments.length) {
+    return moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
+  }
+  return moment.min(endMoments);
+};
+
+const bedPeriodHasOverlap = (
+  bedPk: number,
+  planDateIn: string | null | undefined,
+  planDateOut: string | null | undefined,
+  excludeRecordPk?: number | null,
+) => {
+  const from = moment(planDateIn, 'YYYY-MM-DD');
+  if (!from.isValid()) {
+    return false;
+  }
+  const to = planDateOut
+    ? moment(planDateOut, 'YYYY-MM-DD')
+    : moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
+  if (!to.isValid() || from.isAfter(to, 'day')) {
+    return false;
+  }
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (excludeRecordPk != null && rec.pk === excludeRecordPk) {
+      continue;
+    }
+    if (rec.bed_pk !== bedPk) {
+      continue;
+    }
+    const recStart = hospVisualStart(rec);
+    if (!recStart.isValid()) {
+      continue;
+    }
+    const recEnd = hospVisualEnd(rec);
+    if (from.isSameOrBefore(recEnd, 'day') && to.isSameOrAfter(recStart, 'day')) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const assertNoBedPeriodOverlap = (
+  bedPk: number,
+  planDateIn: string | null | undefined,
+  planDateOut: string | null | undefined,
+  excludeRecordPk?: number | null,
+) => {
+  if (!bedPeriodHasOverlap(bedPk, planDateIn, planDateOut, excludeRecordPk)) {
+    return true;
+  }
+  root.$emit('msg', 'error', 'На этой койке период пересекается с другой госпитализацией');
+  return false;
+};
+
+/** Записи на койке в этот день (без фильтра врача — для проверки занятости при drop). */
+const bedDayOccupyingRecords = (bedPk: number, dayKey: string) => (
+  recordsUnfilteredForMainGrid.value.filter(
+    (r) => r.bed_pk === bedPk && isDayInRecordSpan(r, dayKey),
+  )
+);
 
 const surnameFromFio = (fio: string | null | undefined) => {
   const s = (fio || '').trim();
@@ -1116,11 +1199,6 @@ const cellCommentAfterDoctor = (record: CalendarRecord, dayKey: string) => {
 const stationarHref = (directionPk: number) => (
   `/ui/stationar#{%22pk%22:${directionPk},%22opened_list_key%22:null,%22opened_form_pk%22:null,%22every%22:false}`
 );
-
-const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
-  const r = getRecordForDay(bedPk, dayKey);
-  return r ? [r] : [];
-};
 
 const stripCellKey = (rowIdx: number, dayKey: string) => `strip-${rowIdx}-${dayKey}`;
 
@@ -1713,6 +1791,11 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
     await loadCalendar();
     return;
   }
+  const movePlanIn = targetDayKey;
+  const movePlanOut = sourceRec.plan_date_out || sourceRec.date_out || null;
+  if (!assertNoBedPeriodOverlap(targetBedPk, movePlanIn, movePlanOut, sourceRec.pk)) {
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('chambers/move-hospitalization-to-bed', {
     department_pk: departmentPk.value,
@@ -1765,6 +1848,11 @@ const onStripToBedDrop = async (
     root.$emit('msg', 'error', 'Нельзя вернуть запись на дату вне периода госпитализации');
     return;
   }
+  const stripPlanIn = record.plan_date_in || record.date_in || targetDayKey;
+  const stripPlanOut = record.plan_date_out || record.date_out || defaultPlanDateOut(targetDayKey);
+  if (!assertNoBedPeriodOverlap(targetBedPk, stripPlanIn, stripPlanOut, null)) {
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   const result = await api('chambers/save-hospitalization-by-fio', {
     department_pk: departmentPk.value,
@@ -1775,8 +1863,8 @@ const onStripToBedDrop = async (
     patient_sex: record.patient_sex || 'м',
     birthday: record.birthday || null,
     patient_age_text: record.patient_age_text || '',
-    plan_date_in: record.plan_date_in || record.date_in || targetDayKey,
-    plan_date_out: record.plan_date_out || record.date_out || null,
+    plan_date_in: stripPlanIn,
+    plan_date_out: stripPlanOut,
     accompanyng_child_type: record.accompanyng_child_type || '',
     is_need_sick: Boolean(record.is_need_sick),
     comment_date: targetDayKey,
@@ -1816,24 +1904,36 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
     root.$emit('msg', 'error', 'Некорректное направление');
     return;
   }
-  const record = getRecordForDay(bedPk, dayKey);
+  const panelPlanIn = dayKey;
+  const panelPlanOut = defaultPlanDateOut(dayKey);
+  const occupying = bedDayOccupyingRecords(bedPk, dayKey);
+  const existingForDirection = occupying.find((r) => r.direction_pk === directionPk) || null;
+
+  if (occupying.length > 0 && !existingForDirection) {
+    root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
+    return;
+  }
+  if (!existingForDirection && !assertNoBedPeriodOverlap(bedPk, panelPlanIn, panelPlanOut, null)) {
+    return;
+  }
+
   await store.dispatch(actions.INC_LOADING);
   let result;
-  if (record?.pk) {
+  if (existingForDirection?.pk) {
     result = await api('chambers/update-hospitalization-record', {
-      record_pk: record.pk,
-      doctor_id: record.doctor_pk ?? null,
-      patient_fio_text: record.patient_fio || '',
-      patient_sex: record.patient_sex || 'м',
-      birthday: record.birthday || null,
-      patient_age_text: record.patient_age_text || '',
-      plan_date_in: record.plan_date_in || record.date_in || null,
-      plan_date_out: record.plan_date_out || record.date_out || null,
-      accompanyng_child_type: record.accompanyng_child_type || '',
-      is_need_sick: Boolean(record.is_need_sick),
+      record_pk: existingForDirection.pk,
+      doctor_id: existingForDirection.doctor_pk ?? null,
+      patient_fio_text: existingForDirection.patient_fio || '',
+      patient_sex: existingForDirection.patient_sex || 'м',
+      birthday: existingForDirection.birthday || null,
+      patient_age_text: existingForDirection.patient_age_text || '',
+      plan_date_in: existingForDirection.plan_date_in || existingForDirection.date_in || null,
+      plan_date_out: existingForDirection.plan_date_out || existingForDirection.date_out || null,
+      accompanyng_child_type: existingForDirection.accompanyng_child_type || '',
+      is_need_sick: Boolean(existingForDirection.is_need_sick),
       direction_id: directionPk,
       comment_date: dayKey,
-      comment: commentForRecordDay(record, dayKey),
+      comment: commentForRecordDay(existingForDirection, dayKey),
     });
   } else {
     result = await api('chambers/save-hospitalization-by-fio', {
@@ -1845,8 +1945,8 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
       patient_sex: 'м',
       birthday: null,
       patient_age_text: '',
-      plan_date_in: dayKey,
-      plan_date_out: null,
+      plan_date_in: panelPlanIn,
+      plan_date_out: panelPlanOut,
       auto_default_period: true,
       fill_patient_from_direction: true,
       accompanyng_child_type: '',
@@ -1856,7 +1956,7 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
   }
   await store.dispatch(actions.DEC_LOADING);
   if (result?.ok) {
-    root.$emit('msg', 'ok', record?.pk ? 'Направление привязано' : 'Госпитализация создана');
+    root.$emit('msg', 'ok', existingForDirection?.pk ? 'Направление привязано' : 'Госпитализация создана');
     await loadCalendar();
     await loadUnallocatedPatients();
   } else {
@@ -2062,6 +2162,14 @@ const saveEditingCell = async () => {
     }
     root.$emit('msg', 'ok', 'Данные черновика сохранены');
     closeEditModal();
+    return;
+  }
+  if (!assertNoBedPeriodOverlap(
+    editingBedPk.value,
+    editingForm.value.planDateIn,
+    editingForm.value.planDateOut,
+    editingRecordPk.value,
+  )) {
     return;
   }
   await store.dispatch(actions.INC_LOADING);
