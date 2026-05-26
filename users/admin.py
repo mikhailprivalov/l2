@@ -10,6 +10,7 @@ from .models import (
     AvailableResearchByGroup,
     DistrictResearchLimitAssign,
     PermissionHospitalProtocolDoctorProfile,
+    DoctorProfileEmployeePosition,
 )
 
 
@@ -64,6 +65,13 @@ class ResPermissionHospitalProtocolDoctorProfile(admin.ModelAdmin):
     list_display_links = ('doctor_profile', 'hospital')
 
 
+class ResDoctorProfileEmployeePosition(admin.ModelAdmin):
+    list_display = ('doctor_profile', 'employee_position')
+    list_display_links = ('doctor_profile', 'employee_position')
+
+    search_fields = ('doctor_profile',)
+
+
 admin.site.register(DoctorProfile, DocAdmin)
 admin.site.register(AssignmentTemplates, ResAssignmentTemplates)
 admin.site.register(AssignmentResearches)
@@ -74,3 +82,4 @@ admin.site.register(DistrictResearchLimitAssign, ResDistrictResearchLimitAssign)
 admin.site.register(Position, ResPosition)
 admin.site.register(DoctorProfileEquipment, ResDoctorProfileEquipment)
 admin.site.register(PermissionHospitalProtocolDoctorProfile, ResPermissionHospitalProtocolDoctorProfile)
+admin.site.register(DoctorProfileEmployeePosition, ResDoctorProfileEmployeePosition)

@@ -68,6 +68,38 @@ def form_save(request):
 
 
 @login_required
+def form_delete(request):
+    request_data = json.loads(request.body)
+    form_type = request_data.get('formType')
+    form_data = request_data.get('formData')
+
+    try:
+        if form_type not in FORMS:
+            raise FormNotFoundException(f'Form {form_type} not found')
+
+        form: BaseForm = FORMS[form_type]
+
+        if not getattr(form, 'supports_delete', False):
+            return status_response(False, "Удаление не поддерживается для этой формы")
+
+        delete_result = form.delete(request.user.doctorprofile, form_data)
+
+        return status_response(delete_result['ok'], message=delete_result.get('message'), data={"result": delete_result['result']})
+    except FormNotFoundException as e:
+        logger.exception(e)
+        return status_response(False, "Форма не найдена")
+    except FormForbiddenException as e:
+        logger.exception(e)
+        return status_response(False, "Нет доступа к форме")
+    except FormObjectNotFoundException as e:
+        logger.exception(e)
+        return status_response(False, str(e))
+    except Exception as e:
+        logger.exception(e)
+        return status_response(False, "Неизвестная ошибка")
+
+
+@login_required
 def object_by_id(request):
     request_data = json.loads(request.body)
     form_type = request_data.get('formType')

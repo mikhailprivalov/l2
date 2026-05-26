@@ -1037,6 +1037,20 @@ def companies_find(request):
 
 
 @login_required
+@group_required("Создание и редактирование пользователей")
+def employee_positions_search(request):
+    hospital_pk = request.GET.get("hospital_pk") or request.user.doctorprofile.get_hospital_id()
+    ids = (request.GET.get("ids", "") or "").strip()
+    if ids:
+        employee_position_ids = [int(x) for x in ids.split(",") if x.strip().isdigit()]
+        data = users.DoctorProfileEmployeePosition.get_employee_positions_options(hospital_pk, employee_position_ids)
+    else:
+        query = (request.GET.get("query", "") or "").strip()
+        data = users.DoctorProfileEmployeePosition.search_employee_positions(hospital_pk, query)
+    return JsonResponse({"data": data})
+
+
+@login_required
 def company_departments_find(request):
     request_data = json.loads(request.body)
     company_departments = CompanyDepartment.search_departments(request_data.get("company_db"))
@@ -1497,6 +1511,7 @@ def user_view(request):
             "additionalInfo": "{}",
             "dismissed": False,
             "allowed_employee_departments": [],
+            "schedule_employee_positions": [],
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1517,6 +1532,7 @@ def user_view(request):
         resource_researches = [{"pk": k, "researches": v, "title": doc_resource_pk_title[k]} for k, v in resource_researches_temp.items()]
         department_doctors = users.DoctorProfile.objects.filter(podrazdeleniye_id=doc.podrazdeleniye_id)
         allowed_employee_departments = employees_models.DoctorProfileDepartment.get_doctor_departments_ids(doc)
+        schedule_employee_positions = users.DoctorProfileEmployeePosition.get_doctor_employee_positions_ids(doc)
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1558,6 +1574,7 @@ def user_view(request):
             "additionalInfo": doc.additional_info,
             "dismissed": doc.dismissed,
             "allowed_employee_departments": allowed_employee_departments,
+            "schedule_employee_positions": schedule_employee_positions,
         }
 
     return JsonResponse({"user": data})
@@ -1594,6 +1611,7 @@ def user_save_view(request):
     additional_info = ud.get("additionalInfo", "{}")
     dismissed = ud.get("dismissed", False)
     allowed_employee_departments = ud.get("allowed_employee_departments", [])
+    schedule_employee_positions = ud.get("schedule_employee_positions", [])
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1724,6 +1742,7 @@ def user_save_view(request):
                 doc.reset_password()
 
     employees_models.DoctorProfileDepartment.save_doctor_departments(doc, allowed_employee_departments)
+    users.DoctorProfileEmployeePosition.save_doctor_employee_positions(doc, schedule_employee_positions)
 
     data_doc_profile = {key: value for key, value in doc.dict_data.items()}
     data_doc_profile["id"] = doc.pk

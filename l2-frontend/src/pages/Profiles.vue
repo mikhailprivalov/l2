@@ -951,6 +951,32 @@
               />
             </div>
           </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">Сотрудник из графика</span>
+              <Treeselect
+                v-model="user.schedule_employee_positions"
+                class="treeselect-nbr treeselect-wide treeselect-34px"
+                :multiple="true"
+                :disable-branch-nodes="true"
+                :async="true"
+                :load-options="loadScheduleEmployeePositionsAsyncSearch"
+                :default-options="scheduleEmployeePositionsDefaultOptions"
+                placeholder="Выберите сотрудников"
+                :append-to-body="true"
+                :clearable="true"
+                :cache-options="false"
+                loading-text="Загрузка"
+                no-results-text="Не найдено"
+                search-prompt-text="Начните писать для поиска"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
@@ -973,7 +999,7 @@
 </template>
 
 <script setup lang="ts">
-import Treeselect from '@riophae/vue-treeselect';
+import Treeselect, { ASYNC_SEARCH } from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import { debounce } from 'lodash';
 import {
@@ -1067,6 +1093,7 @@ const resourceTemplatesList = ref([]);
 const currentResourcePk = ref(-1);
 const currentResourceTitle = ref('');
 const employeeDepartments = ref([]);
+const scheduleEmployeePositionsDefaultOptions = ref(null);
 const user = ref({
   username: '',
   password: '',
@@ -1108,6 +1135,7 @@ const user = ref({
   position: null,
   speciality: null,
   allowed_employee_departments: [],
+  schedule_employee_positions: [],
 });
 const selectedHospital = ref(-1);
 const openPk = ref(-2);
@@ -1251,6 +1279,29 @@ const loadUsers = async (prevClr = false) => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
+const loadScheduleEmployeePositionsDefaultOptions = async (employeePositionIds) => {
+  if (!employeePositionIds?.length) {
+    scheduleEmployeePositionsDefaultOptions.value = null;
+    return;
+  }
+  const { data } = await api(
+    `/employee-positions-search?ids=${employeePositionIds.join(',')}&hospital_pk=${selectedHospital.value}`,
+  );
+  scheduleEmployeePositionsDefaultOptions.value = data.map((item) => ({ id: item.id, label: item.label }));
+};
+
+const loadScheduleEmployeePositionsAsyncSearch = async ({ action, searchQuery, callback }) => {
+  if (action === ASYNC_SEARCH) {
+    const { data } = await api(
+      `/employee-positions-search?query=${encodeURIComponent(searchQuery)}&hospital_pk=${selectedHospital.value}`,
+    );
+    callback(
+      null,
+      data.map((item) => ({ id: item.id, label: item.label })),
+    );
+  }
+};
+
 const reloadResources = async () => {
   if (!openPk.value) {
     return;
@@ -1340,7 +1391,9 @@ const close = async () => {
     additionalInfo: '{}',
     dismissed: false,
     allowed_employee_departments: [],
+    schedule_employee_positions: [],
   };
+  scheduleEmployeePositionsDefaultOptions.value = null;
   currentResourcePk.value = -1;
   currentResourceTitle.value = '';
   resourceResearches.value = [];
@@ -1362,6 +1415,7 @@ const open = async (pk, dep = null) => {
   currentResourceTitle.value = '';
   resourceResearches.value = [];
   resourceTemplatesList.value = user.value.resource_schedule;
+  await loadScheduleEmployeePositionsDefaultOptions(user.value.schedule_employee_positions);
   await store.dispatch(actions.DEC_LOADING);
   openPk.value = pk;
 };

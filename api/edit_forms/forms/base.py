@@ -64,6 +64,16 @@ class BaseForm(Static):
             "result": {},
         }
 
+    supports_delete: bool = False
+
+    @classmethod
+    def delete(cls, doctorprofile: DoctorProfile, form_data: Dict[str, Any]):
+        return {
+            "ok": False,
+            "message": "Удаление не поддерживается",
+            "result": {},
+        }
+
 
 ObjectType = TypeVar('ObjectType', bound=models.Model)
 
