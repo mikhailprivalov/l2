@@ -12,10 +12,7 @@ def _form_row(*fields):
     return {
         "component": "div",
         "class": "row formulate-form-row",
-        "children": [
-            {"component": "div", "class": col_class, "children": [field]}
-            for field in fields
-        ],
+        "children": [{"component": "div", "class": col_class, "children": [field]} for field in fields],
     }
 
 
