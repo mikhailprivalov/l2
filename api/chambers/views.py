@@ -5,13 +5,14 @@ import simplejson as json
 from collections import defaultdict
 
 from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
 from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID
 from laboratory.utils import current_time
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds
-from directions.models import Napravleniya
+from directions.models import Issledovaniya, Napravleniya
 from slog.models import Log
 from utils.response import status_response
 import datetime
@@ -24,6 +25,7 @@ from .sql_func import (
     get_closing_protocols,
     load_plan_operations_next_day,
 )
+from .discharge_sync import _read_discharge_date_from_protocol
 from ..stationar.stationar_func import forbidden_edit_dir
 
 
@@ -336,8 +338,20 @@ def extract_patient_bed(request):
     user_can_edit = Chamber.check_user(user, bed_department_id)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    patient.date_out = datetime.datetime.today()
-    patient.save()
+    discharge_date = None
+    for extract_iss in (
+        Issledovaniya.objects.filter(time_confirmation__isnull=False)
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .select_related("research")
+        .order_by("-time_confirmation")
+    ):
+        if extract_iss.research.is_extract:
+            discharge_date = _read_discharge_date_from_protocol(extract_iss)
+            if discharge_date:
+                break
+    patient.date_out = discharge_date or datetime.date.today()
+    patient.plan_date_out = patient.date_out
+    patient.save(update_fields=["date_out", "plan_date_out"])
     Log.log(
         direction_pk,
         230001,

@@ -2221,7 +2221,7 @@ const saveEditingCell = async () => {
   }
 };
 
-const clearStripFromModal = () => {
+const clearStripFromModal = async () => {
   if (!editingStripRowId.value || editingStripRecordPk.value == null) {
     return;
   }
@@ -2231,18 +2231,19 @@ const clearStripFromModal = () => {
     return;
   }
   const rec = row.records.find((r) => r.pk === editingStripRecordPk.value) || null;
-  removeStripRecordFromRow(row, editingStripRecordPk.value);
-  normalizeStripTrailingEmpty();
   if (departmentPk.value && rec?.direction_pk) {
-    api('chambers/delete-patient-without-bed', {
+    const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
       patient_obj: { direction_pk: rec.direction_pk },
-    }).then((res: any) => {
-      if (!res?.ok) {
-        root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
-      }
     });
+    if (!res?.ok) {
+      root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
+      return;
+    }
   }
+  removeStripRecordFromRow(row, editingStripRecordPk.value);
+  normalizeStripTrailingEmpty();
+  await loadUnallocatedPatients();
   root.$emit('msg', 'ok', 'Запись удалена из дневного стационара');
   closeEditModal();
 };
