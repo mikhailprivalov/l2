@@ -543,9 +543,7 @@ class DoctorProfileEmployeePosition(models.Model):
 
     @staticmethod
     def get_doctor_employee_positions_ids(doctor_profile: DoctorProfile):
-        return list(
-            DoctorProfileEmployeePosition.objects.filter(doctor_profile_id=doctor_profile.id).values_list("employee_position_id", flat=True)
-        )
+        return list(DoctorProfileEmployeePosition.objects.filter(doctor_profile_id=doctor_profile.id).values_list("employee_position_id", flat=True))
 
     @staticmethod
     def _employee_position_label(employee_position):
