@@ -183,6 +183,16 @@ def _parse_ymd_date(value):
         return None
 
 
+def _parse_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on", "да")
+    return False
+
+
 def _resolve_direction_id_by_fio(fio_text, department_id):
     fio = " ".join((fio_text or "").split()).strip()
     if not fio:
@@ -577,6 +587,7 @@ def get_hospitalization_calendar(request):
                     "accompanyng_child_sex": item.accompanyng_child_sex or "-",
                     "date_comments": date_comments,
                     "is_day_hosp": bool(item.is_day_hosp),
+                    "is_need_sick": bool(item.is_need_sick),
                     "forbidden_edit": forbidden_edit,
                 }
             )
@@ -607,6 +618,7 @@ def save_hospitalization_by_fio(request):
     direction_id = request_data.get("direction_id")
     plan_date_in = _parse_ymd_date(request_data.get("plan_date_in"))
     plan_date_out = _parse_ymd_date(request_data.get("plan_date_out"))
+    is_need_sick = _parse_bool(request_data.get("is_need_sick"))
     comment = (request_data.get("comment") or "").strip()[:255]
     acc_type, acc_sex = _accompanying_child_from_request(request_data)
     user = request.user
@@ -658,6 +670,7 @@ def save_hospitalization_by_fio(request):
         patient_age_text=patient_age_text,
         accompanyng_child_type=acc_type,
         accompanyng_child_sex=acc_sex,
+        is_need_sick=is_need_sick,
     )
     patient_to_bed.save()
     comment_date = _parse_ymd_date(request_data.get("comment_date"))
@@ -728,6 +741,8 @@ def update_hospitalization_record(request):
     record.plan_date_out = plan_date_out
     record.accompanyng_child_type = acc_type
     record.accompanyng_child_sex = acc_sex
+    if "is_need_sick" in request_data:
+        record.is_need_sick = _parse_bool(request_data.get("is_need_sick"))
     record.save()
     comment_date = _parse_ymd_date(request_data.get("comment_date"))
     if comment_date is not None:
@@ -883,6 +898,7 @@ def move_hospitalization_to_bed(request):
             patient_age_text=old.patient_age_text or "",
             accompanyng_child_type=old.accompanyng_child_type or "",
             accompanyng_child_sex=old.accompanyng_child_sex or "-",
+            is_need_sick=bool(old.is_need_sick),
         )
         if not uses_plan:
             new.date_out = tail_date_out

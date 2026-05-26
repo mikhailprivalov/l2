@@ -241,6 +241,11 @@
                               :title="commentForRecordDay(rec, day.key)"
                             > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
                           </span>
+                          <span
+                            v-if="rec.is_need_sick"
+                            class="record-sick-badge"
+                            title="Требуется больничный"
+                          >Б</span>
                         </div>
                       </div>
                     </td>
@@ -396,6 +401,11 @@
                               :title="commentForRecordDay(rec, day.key)"
                             > · {{ cellCommentAfterDoctor(rec, day.key) }}</span>
                           </span>
+                          <span
+                            v-if="rec.is_need_sick"
+                            class="record-sick-badge"
+                            title="Требуется больничный"
+                          >Б</span>
                         </div>
                       </div>
                     </td>
@@ -516,25 +526,38 @@
               </button>
             </div>
           </div>
-          <div class="form-group">
-            <label>Пол</label>
-            <div class="btn-group">
-              <button
-                type="button"
-                class="btn btn-default gender-btn"
-                :class="{ active: editingForm.patientSex === 'м' }"
-                @click="editingForm.patientSex = 'м'"
-              >
-                М
-              </button>
-              <button
-                type="button"
-                class="btn btn-default gender-btn"
-                :class="{ active: editingForm.patientSex === 'ж' }"
-                @click="editingForm.patientSex = 'ж'"
-              >
-                Ж
-              </button>
+          <div class="row modal-gender-sick-row">
+            <div class="col-xs-6 form-group">
+              <label>Пол</label>
+              <div class="btn-group">
+                <button
+                  type="button"
+                  class="btn btn-default gender-btn"
+                  :class="{ active: editingForm.patientSex === 'м' }"
+                  @click="editingForm.patientSex = 'м'"
+                >
+                  М
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default gender-btn"
+                  :class="{ active: editingForm.patientSex === 'ж' }"
+                  @click="editingForm.patientSex = 'ж'"
+                >
+                  Ж
+                </button>
+              </div>
+            </div>
+            <div class="col-xs-6 form-group modal-sick-col">
+              <div class="checkbox modal-sick-checkbox">
+                <label>
+                  <input
+                    v-model="editingForm.isNeedSick"
+                    type="checkbox"
+                  >
+                  Больничный
+                </label>
+              </div>
             </div>
           </div>
           <div class="row">
@@ -721,6 +744,7 @@ interface CalendarRecord {
   date_comments?: Record<string, string>;
   /** Дневной стационар (в т.ч. запись в «черновике» доски) */
   is_day_hosp?: boolean;
+  is_need_sick?: boolean;
   forbidden_edit?: boolean;
 }
 
@@ -759,6 +783,7 @@ const editingForm = ref({
   doctorPk: null as number | null,
   doctorFio: '',
   accompanyngChildType: null as string | null,
+  isNeedSick: false,
   commentText: '',
   commentReplicateFollowing: false,
 });
@@ -1349,6 +1374,7 @@ const newStripRecordFromServerPatient = (
     accompanyng_child_sex: '-',
     date_comments: {},
     is_day_hosp: true,
+    is_need_sick: false,
   };
 };
 
@@ -1752,6 +1778,7 @@ const onStripToBedDrop = async (
     plan_date_in: record.plan_date_in || record.date_in || targetDayKey,
     plan_date_out: record.plan_date_out || record.date_out || null,
     accompanyng_child_type: record.accompanyng_child_type || '',
+    is_need_sick: Boolean(record.is_need_sick),
     comment_date: targetDayKey,
     comment: commentForRecordDay(record, targetDayKey),
   });
@@ -1803,6 +1830,7 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
       plan_date_in: record.plan_date_in || record.date_in || null,
       plan_date_out: record.plan_date_out || record.date_out || null,
       accompanyng_child_type: record.accompanyng_child_type || '',
+      is_need_sick: Boolean(record.is_need_sick),
       direction_id: directionPk,
       comment_date: dayKey,
       comment: commentForRecordDay(record, dayKey),
@@ -1918,6 +1946,7 @@ const fillEditModalFromRecord = (record: CalendarRecord | null, bedPk: number, d
     doctorPk: record?.doctor_pk ?? null,
     doctorFio: (record?.doctor_fio || '').trim(),
     accompanyngChildType: (record?.accompanyng_child_type && String(record.accompanyng_child_type).trim()) || null,
+    isNeedSick: Boolean(record?.is_need_sick),
     commentText: record ? commentForRecordDay(record, dayKey) : '',
     commentReplicateFollowing: false,
   };
@@ -2017,6 +2046,7 @@ const saveEditingCell = async () => {
     rec.doctor_pk = editingForm.value.doctorPk;
     rec.doctor_fio = editingForm.value.doctorFio;
     rec.accompanyng_child_type = editingForm.value.accompanyngChildType || '';
+    rec.is_need_sick = Boolean(editingForm.value.isNeedSick);
     rec.direction_pk = directionIdPayload;
     rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
     if (departmentPk.value && rec.direction_pk) {
@@ -2048,6 +2078,7 @@ const saveEditingCell = async () => {
       plan_date_in: editingForm.value.planDateIn,
       plan_date_out: editingForm.value.planDateOut,
       accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      is_need_sick: Boolean(editingForm.value.isNeedSick),
       comment_date: editingDayKey.value,
       comment: commentPayload,
       comment_replicate_following: editingForm.value.commentReplicateFollowing,
@@ -2065,6 +2096,7 @@ const saveEditingCell = async () => {
       plan_date_in: editingForm.value.planDateIn,
       plan_date_out: editingForm.value.planDateOut,
       accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      is_need_sick: Boolean(editingForm.value.isNeedSick),
       comment_date: editingDayKey.value,
       comment: commentPayload,
       comment_replicate_following: editingForm.value.commentReplicateFollowing,
@@ -2563,6 +2595,7 @@ onMounted(async () => {
 
 .record-doctor-line-inner {
   display: block;
+  flex: 1;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2617,6 +2650,16 @@ onMounted(async () => {
   border-radius: 3px;
   background: #e8f5e9;
   color: #2e7d32;
+}
+
+.record-sick-badge {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+  flex-shrink: 0;
+  margin-left: auto;
+  color: #800020;
 }
 
 .record-sex--male {
@@ -2714,6 +2757,31 @@ onMounted(async () => {
 
 .edit-modal-comment-replicate .help-block {
   margin-bottom: 0;
+}
+
+.modal-gender-sick-row .modal-sick-col {
+  padding-top: 5px;
+}
+
+.modal-gender-sick-row .modal-sick-checkbox {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+}
+
+.modal-gender-sick-row .modal-sick-checkbox label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding-left: 0;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.modal-gender-sick-row .modal-sick-checkbox input[type="checkbox"] {
+  margin: 0;
+  position: static;
 }
 
 .strip-board-hint {
