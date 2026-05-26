@@ -31,6 +31,7 @@ urlpatterns = [
     path('load-room-locations', views.load_room_locations),
     path('search-dicom', views.search_dicom),
     path('doctorprofile-search', views.doctorprofile_search),
+    path('employee-positions-search', views.employee_positions_search),
     path('methods-of-taking', views.methods_of_taking),
     path('key-value', views.key_value),
     path('vich_code', views.vich_code),

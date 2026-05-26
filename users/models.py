@@ -6,6 +6,7 @@ import uuid
 import pyotp
 from django.contrib.auth.models import User, Group
 from django.db import models, transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.core.cache import cache
 
@@ -513,6 +514,82 @@ class DoctorProfileEquipment(models.Model):
     class Meta:
         verbose_name = 'Пользователь-оборудование'
         verbose_name_plural = 'Пользователи-оборудование'
+
+
+class DoctorProfileEmployeePosition(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
+    employee_position = models.ForeignKey("employees.EmployeePosition", null=True, blank=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.doctor_profile} {self.employee_position}"
+
+    class Meta:
+        verbose_name = 'Пользователь-сотрудник из графика'
+        verbose_name_plural = 'Пользователи-сотруднки из графика'
+
+    @staticmethod
+    def save_doctor_employee_positions(doctor_profile: DoctorProfile, employee_position_ids: list):
+        DoctorProfileEmployeePosition.objects.filter(doctor_profile=doctor_profile).delete()
+        if employee_position_ids:
+            DoctorProfileEmployeePosition.objects.bulk_create(
+                [
+                    DoctorProfileEmployeePosition(
+                        doctor_profile=doctor_profile,
+                        employee_position_id=employee_position_id,
+                    )
+                    for employee_position_id in employee_position_ids
+                ]
+            )
+
+    @staticmethod
+    def get_doctor_employee_positions_ids(doctor_profile: DoctorProfile):
+        return list(
+            DoctorProfileEmployeePosition.objects.filter(doctor_profile_id=doctor_profile.id).values_list("employee_position_id", flat=True)
+        )
+
+    @staticmethod
+    def _employee_position_label(employee_position):
+        return (
+            f"{employee_position.employee.family} {employee_position.employee.name} {employee_position.employee.patronymic or ''} — "
+            f"{employee_position.position.name} ({employee_position.department.name})"
+        ).strip()
+
+    @staticmethod
+    def search_employee_positions(hospital_id: int, query: str, limit: int = 15):
+        from employees.models import EmployeePosition
+
+        query = (query or "").strip()
+        if not query:
+            return []
+
+        employee_positions = (
+            EmployeePosition.objects.filter(is_active=True, employee__hospital_id=hospital_id)
+            .select_related("employee", "position", "department")
+            .filter(
+                Q(employee__family__icontains=query)
+                | Q(employee__name__icontains=query)
+                | Q(employee__patronymic__icontains=query)
+                | Q(position__name__icontains=query)
+                | Q(department__name__icontains=query)
+                | Q(tabel_number__icontains=query)
+            )
+            .order_by("employee__family", "employee__name", "employee__patronymic", "position__name", "department__name")[:limit]
+        )
+        return [{"id": employee_position.pk, "label": DoctorProfileEmployeePosition._employee_position_label(employee_position)} for employee_position in employee_positions]
+
+    @staticmethod
+    def get_employee_positions_options(hospital_id: int, employee_position_ids: list):
+        from employees.models import EmployeePosition
+
+        if not employee_position_ids:
+            return []
+
+        employee_positions = (
+            EmployeePosition.objects.filter(is_active=True, employee__hospital_id=hospital_id, pk__in=employee_position_ids)
+            .select_related("employee", "position", "department")
+            .order_by("employee__family", "employee__name", "employee__patronymic", "position__name", "department__name")
+        )
+        return [{"id": employee_position.pk, "label": DoctorProfileEmployeePosition._employee_position_label(employee_position)} for employee_position in employee_positions]
 
 
 class AssignmentTemplates(models.Model):

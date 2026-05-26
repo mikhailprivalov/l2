@@ -515,37 +515,120 @@ class EmployeePosition(models.Model):
         return [employee_position.json for employee_position in paginator.get_page(page)]
 
     @staticmethod
-    def add(hospital_id, employee_id, position_id, department_id, rate, who_created):
-        EmployeePosition.validate_values(employee_id, position_id, department_id, rate)
+    def _parse_form_date(value):
+        if not value:
+            return None
+        parsed = try_strptime(value, formats=("%Y-%m-%d", "%d.%m.%Y"))
+        return parsed.date() if parsed else None
+
+    @staticmethod
+    def _parse_form_time(value):
+        if not value:
+            return None
+        parts = str(value).split(":")
+        if len(parts) < 2:
+            return None
+        return datetime.time(int(parts[0]), int(parts[1]))
+
+    @staticmethod
+    def _parse_form_int(value):
+        if value is None or value == "":
+            return None
+        return int(value)
+
+    @staticmethod
+    def apply_form_extended_fields(employee_position, form_values: dict):
+        employee_position.tabel_number = (form_values.get("tabelNumber") or "").strip() or None
+
+        type_work_time_id = form_values.get("typeWorkTimeId")
+        if type_work_time_id in (None, "", -1, "-1"):
+            employee_position.type_work_time_id = None
+        else:
+            employee_position.type_work_time_id = int(type_work_time_id)
+
+        employee_position.date_employment = EmployeePosition._parse_form_date(form_values.get("dateEmployment"))
+        employee_position.date_dismissal = EmployeePosition._parse_form_date(form_values.get("dateDismissal"))
+        employee_position.date_transfer = EmployeePosition._parse_form_date(form_values.get("dateTransfer"))
+        employee_position.lunch_duration = EmployeePosition._parse_form_int(form_values.get("lunchDuration"))
+        employee_position.daily_hours_norm = EmployeePosition._parse_form_int(form_values.get("dailyHoursNorm"))
+        employee_position.weekly_hours_norm = EmployeePosition._parse_form_int(form_values.get("weeklyHoursNorm"))
+        employee_position.work_days_per_week = EmployeePosition._parse_form_int(form_values.get("workDaysPerWeek"))
+        employee_position.work_start = EmployeePosition._parse_form_time(form_values.get("workStart"))
+
+    @staticmethod
+    def _tabel_number_from_form(form_values):
+        if not form_values:
+            return None
+        return (form_values.get("tabelNumber") or "").strip() or None
+
+    @staticmethod
+    def add(hospital_id, employee_id, position_id, department_id, rate, who_created, form_values=None):
+        tabel_number = EmployeePosition._tabel_number_from_form(form_values)
+        EmployeePosition.validate_values(employee_id, position_id, department_id, rate, is_active=True, tabel_number=tabel_number)
         position = Position.objects.get(id=position_id, hospital_id=hospital_id)
         department = Department.objects.get(id=department_id, hospital_id=hospital_id)
         employee_position = EmployeePosition(employee_id=employee_id, position=position, department=department, rate=rate, doctorprofile_created=who_created)
+        if form_values:
+            EmployeePosition.apply_form_extended_fields(employee_position, form_values)
         employee_position.save()
         Log.log(employee_position.pk, 121106, who_created, employee_position.json)
         return employee_position.json
 
     @staticmethod
-    def edit(hospital_id, employee_position_id, position_id, department_id, rate, is_active, who_updated):
+    def edit(hospital_id, employee_position_id, position_id, department_id, rate, is_active, who_updated, form_values=None):
         employee_position = EmployeePosition.objects.get(id=employee_position_id, employee__hospital_id=hospital_id)
-        EmployeePosition.validate_values(employee_position.employee_id, position_id, department_id, rate, current_id=employee_position_id)
+        employee_id = int(form_values.get("employeeId") or employee_position.employee_id) if form_values else employee_position.employee_id
+        tabel_number = EmployeePosition._tabel_number_from_form(form_values) if form_values else employee_position.tabel_number
+
+        unique_fields_changed = (
+            employee_id != employee_position.employee_id
+            or position_id != employee_position.position_id
+            or department_id != employee_position.department_id
+            or is_active != employee_position.is_active
+            or tabel_number != employee_position.tabel_number
+        )
+        if unique_fields_changed:
+            EmployeePosition.validate_values(
+                employee_id,
+                position_id,
+                department_id,
+                rate,
+                current_id=employee_position_id,
+                is_active=is_active,
+                tabel_number=tabel_number,
+            )
+
         position = Position.objects.get(id=position_id, hospital_id=hospital_id)
         department = Department.objects.get(id=department_id, hospital_id=hospital_id)
+        employee_position.employee_id = employee_id
         employee_position.position = position
         employee_position.department = department
         employee_position.rate = rate
         employee_position.is_active = is_active
         employee_position.doctorprofile_updated = who_updated
+        if form_values:
+            EmployeePosition.apply_form_extended_fields(employee_position, form_values)
         employee_position.save()
         Log.log(employee_position.pk, 121107, who_updated, employee_position.json)
         return employee_position.json
 
     @staticmethod
-    def validate_values(employee_id, position_id, department_id, rate, current_id=None):
-        if current_id:
-            employee_position = EmployeePosition.objects.filter(employee_id=employee_id, position_id=position_id, department_id=department_id).exclude(id=current_id)
+    def validate_values(employee_id, position_id, department_id, rate, current_id=None, is_active=True, tabel_number=None):
+        employee_position_qs = EmployeePosition.objects.filter(
+            employee_id=employee_id,
+            position_id=position_id,
+            department_id=department_id,
+            is_active=is_active,
+        )
+        if tabel_number:
+            employee_position_qs = employee_position_qs.filter(tabel_number=tabel_number)
         else:
-            employee_position = EmployeePosition.objects.filter(employee_id=employee_id, position_id=position_id, department_id=department_id)
-        if employee_position.exists():
+            employee_position_qs = employee_position_qs.filter(models.Q(tabel_number__isnull=True) | models.Q(tabel_number=""))
+
+        if current_id:
+            employee_position_qs = employee_position_qs.exclude(id=current_id)
+
+        if employee_position_qs.exists():
             raise ValueError('Такая должность уже существует')
         if rate < 0:
             raise ValueError('Ставка не может быть отрицательной')
@@ -632,6 +715,29 @@ class EmployeePosition(models.Model):
     def find_by_tabel_number(organization_id: int, tabel_number: str, active=True):
         employee_position = EmployeePosition.objects.filter(employee__hospital_id=organization_id, is_active=active, tabel_number=tabel_number).select_related("employee").first()
         return employee_position
+
+    @staticmethod
+    def can_delete(employee_position_id: int):
+        if EmployeeWorkingHoursSchedule.objects.filter(employee_position_id=employee_position_id).exists():
+            return False, "Невозможно удалить: есть записи в графике рабочего времени"
+        if FactTimeWork.objects.filter(employee_position_id=employee_position_id).exists():
+            return False, "Невозможно удалить: есть записи в табеле рабочего времени"
+        return True, ""
+
+    @staticmethod
+    def remove(hospital_id: int, employee_position_id: int, who_deleted):
+        employee_position = EmployeePosition.objects.filter(id=employee_position_id, employee__hospital_id=hospital_id).first()
+        if not employee_position:
+            raise ValueError("Должность сотрудника не найдена")
+
+        can_delete, message = EmployeePosition.can_delete(employee_position_id)
+        if not can_delete:
+            raise ValueError(message)
+
+        position_json = employee_position.json
+        employee_position.delete()
+        Log.log(employee_position_id, 121107, who_deleted, position_json)
+        return position_json
 
 
 class WorkDayStatus(models.Model):
