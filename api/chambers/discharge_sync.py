@@ -40,12 +40,7 @@ def _read_discharge_date_from_protocol(iss: Issledovaniya):
             parsed = _parse_discharge_date_value(result.value)
             if parsed:
                 return parsed
-    result = (
-        ParaclinicResult.objects.filter(issledovaniye=iss, field__title=FALLBACK_DISCHARGE_FIELD_TITLE)
-        .exclude(value="")
-        .order_by("field__order")
-        .first()
-    )
+    result = ParaclinicResult.objects.filter(issledovaniye=iss, field__title=FALLBACK_DISCHARGE_FIELD_TITLE).exclude(value="").order_by("field__order").first()
     if result and result.value:
         return _parse_discharge_date_value(result.value)
     return None
