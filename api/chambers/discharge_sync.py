@@ -1,12 +1,14 @@
 """Синхронизация даты выписки из протокола в PatientToBed."""
 
 import datetime
+from typing import Optional
 
+from django.db.models import Q
 from django.utils.dateparse import parse_date
 
 from directions.models import Issledovaniya, ParaclinicResult
 from external_system.models import CdaFields
-from podrazdeleniya.models import PatientToBed
+from podrazdeleniya.models import PatientToBed, PatientStationarWithoutBeds
 from utils.dates import normalize_date
 
 from api.stationar.stationar_func import hosp_get_curent_hosp_dir
@@ -46,10 +48,68 @@ def _read_discharge_date_from_protocol(iss: Issledovaniya):
     return None
 
 
+def get_discharge_date_for_direction(direction_pk):
+    """Дата выписки из подтверждённого протокола выписки по направлению."""
+    if not direction_pk:
+        return None
+    for extract_iss in (
+        Issledovaniya.objects.filter(time_confirmation__isnull=False)
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .select_related("research")
+        .order_by("-time_confirmation")
+    ):
+        if extract_iss.research.is_extract:
+            discharge_date = _read_discharge_date_from_protocol(extract_iss)
+            if discharge_date:
+                return discharge_date
+    return None
+
+
+def _effective_plan_date_in(record) -> Optional[datetime.date]:
+    return record.plan_date_in or record.date_in
+
+
+def apply_discharge_dates_to_hosp_record(record, discharge_date) -> None:
+    """PatientToBed или PatientStationarWithoutBeds: конец = выписка; начало не позже выписки."""
+    if not discharge_date:
+        return
+    record.plan_date_out = discharge_date
+    record.date_out = discharge_date
+    update_fields = ["plan_date_out", "date_out"]
+
+    if not record.plan_date_in and record.date_in:
+        record.plan_date_in = record.date_in
+        update_fields.append("plan_date_in")
+
+    plan_in = _effective_plan_date_in(record)
+    if plan_in and discharge_date < plan_in:
+        record.plan_date_in = discharge_date
+        if "plan_date_in" not in update_fields:
+            update_fields.append("plan_date_in")
+
+    record.save(update_fields=update_fields)
+
+
+def _apply_discharge_date_to_without_bed(pswb: PatientStationarWithoutBeds, discharge_date) -> None:
+    apply_discharge_dates_to_hosp_record(pswb, discharge_date)
+
+
+def sync_patient_without_bed_discharge_date(direction_pk, discharge_date) -> bool:
+    """Записать дату выписки в черновики (PatientStationarWithoutBeds) по direction_id."""
+    if not direction_pk or not discharge_date:
+        return False
+    rows = list(PatientStationarWithoutBeds.objects.filter(direction_id=direction_pk))
+    if not rows:
+        return False
+    for pswb in rows:
+        _apply_discharge_date_to_without_bed(pswb, discharge_date)
+    return True
+
+
 def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
     """
     При подтверждении выписки записать plan_date_out и date_out в PatientToBed
-    по direction_id госпитализации из поля CDA «в.э.-Дата выписки».
+    и PatientStationarWithoutBeds по direction_id из поля CDA «в.э.-Дата выписки» / «Дата выписки».
     """
     if not iss or not iss.research.is_extract:
         return False
@@ -64,11 +124,11 @@ def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
     if not discharge_date:
         return False
 
+    updated = False
     ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
-    if not ptb:
-        return False
-
-    ptb.plan_date_out = discharge_date
-    ptb.date_out = discharge_date
-    ptb.save(update_fields=["plan_date_out", "date_out"])
-    return True
+    if ptb:
+        apply_discharge_dates_to_hosp_record(ptb, discharge_date)
+        updated = True
+    if sync_patient_without_bed_discharge_date(direction_pk, discharge_date):
+        updated = True
+    return updated

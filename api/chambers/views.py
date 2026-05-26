@@ -25,7 +25,12 @@ from .sql_func import (
     get_closing_protocols,
     load_plan_operations_next_day,
 )
-from .discharge_sync import _read_discharge_date_from_protocol
+from .discharge_sync import (
+    _read_discharge_date_from_protocol,
+    apply_discharge_dates_to_hosp_record,
+    get_discharge_date_for_direction,
+    sync_patient_without_bed_discharge_date,
+)
 from ..stationar.stationar_func import forbidden_edit_dir
 
 
@@ -75,10 +80,9 @@ def _replicate_ptb_comment_to_following_days(patient_to_bed, from_date, comment_
     """Тот же текст комментария на все дни после from_date до конца периода (plan/date_out), включительно."""
     if from_date is None:
         return
-    ends = [d for d in (patient_to_bed.plan_date_out, patient_to_bed.date_out) if d is not None]
-    if not ends:
+    period_end = _hosp_visual_end(patient_to_bed)
+    if period_end == _HOSP_OPEN_END:
         return
-    period_end = min(ends)
     text = (comment_raw or "").strip()[:255]
     d = from_date + datetime.timedelta(days=1)
     while d <= period_end:
@@ -93,20 +97,36 @@ def _hosp_visual_start(item):
     return item.plan_date_in or item.date_in
 
 
-def _hosp_visual_end(item):
-    ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
-    if ends:
-        return min(ends)
-    return _HOSP_OPEN_END
-
-
 def _hosp_uses_plan_calendar(item):
     return item.plan_date_in is not None or item.plan_date_out is not None
 
 
+def _hosp_visual_end(item):
+    """Конец периода на календаре. При плановых датах — plan_date_out, иначе date_out (не min обоих)."""
+    if _hosp_uses_plan_calendar(item):
+        if item.plan_date_out is not None:
+            return item.plan_date_out
+        if item.date_out is not None:
+            return item.date_out
+        return _HOSP_OPEN_END
+    if item.date_out is not None:
+        return item.date_out
+    return _HOSP_OPEN_END
+
+
 def _hosp_tail_end_date(item):
-    ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
-    return min(ends) if ends else None
+    end = _hosp_visual_end(item)
+    return end if end != _HOSP_OPEN_END else None
+
+
+def _align_ptb_date_out_with_plan(item):
+    """Подтянуть date_out к plan_date_out, чтобы продление плана отображалось на доске."""
+    if not _hosp_uses_plan_calendar(item) or item.plan_date_out is None:
+        return
+    if item.date_out is None or item.date_out < item.plan_date_out:
+        item.date_out = item.plan_date_out
+    elif item.date_out > item.plan_date_out:
+        item.date_out = item.plan_date_out
 
 
 def _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk=None):
@@ -143,6 +163,101 @@ def _default_hospitalization_period_days():
     if period_days < 1:
         period_days = 1
     return period_days
+
+
+def _strip_calendar_dates(
+    plan_date_in=None,
+    plan_date_out=None,
+    date_in=None,
+    date_out=None,
+    fallback_plan_date_in=None,
+):
+    """Период черновика: plan_* приоритетнее, выписка из протокола сокращает конец."""
+    plan_in = plan_date_in or date_in
+    plan_out = plan_date_out or date_out
+    if plan_in and not plan_out and fallback_plan_date_in is None:
+        plan_out = plan_in + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
+    if not plan_in and fallback_plan_date_in:
+        plan_in = fallback_plan_date_in
+        plan_out = fallback_plan_date_in + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
+    return plan_in, plan_out, date_in, date_out
+
+
+def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
+    """Период и признак выписки для черновика / календаря по direction_id."""
+    if not direction_pk:
+        return {"forbidden_edit": False}
+    forbidden_edit = bool(forbidden_edit_dir(direction_pk))
+    discharge_date = get_discharge_date_for_direction(direction_pk)
+    pswb = PatientStationarWithoutBeds.objects.filter(direction_id=direction_pk).order_by("-pk").first()
+    ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
+    plan_date_in = None
+    plan_date_out = None
+    date_in = None
+    date_out = None
+    if pswb:
+        plan_date_in = pswb.plan_date_in
+        plan_date_out = pswb.plan_date_out
+        date_in = pswb.date_in
+        date_out = pswb.date_out
+    elif ptb:
+        plan_date_in = ptb.plan_date_in
+        plan_date_out = ptb.plan_date_out
+        date_in = ptb.date_in
+        date_out = ptb.date_out
+    plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
+        plan_date_in,
+        plan_date_out,
+        date_in,
+        date_out,
+        fallback_plan_date_in=fallback_plan_date_in,
+    )
+    if discharge_date:
+        plan_date_out = discharge_date
+        date_out = discharge_date
+        plan_in_eff = plan_date_in or date_in
+        if plan_in_eff and discharge_date < plan_in_eff:
+            plan_date_in = discharge_date
+    meta = {"forbidden_edit": forbidden_edit}
+    if plan_date_in:
+        meta["plan_date_in"] = str(plan_date_in)
+    if plan_date_out:
+        meta["plan_date_out"] = str(plan_date_out)
+    if date_in:
+        meta["date_in"] = str(date_in)
+    if date_out:
+        meta["date_out"] = str(date_out)
+    return meta
+
+
+def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
+    """Строка API для черновика из SQL + выписка из протокола."""
+    direction_id = patient.direction_id
+    forbidden_edit = bool(forbidden_edit_dir(direction_id)) if direction_id else False
+    discharge_date = get_discharge_date_for_direction(direction_id) if direction_id else None
+    plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
+        getattr(patient, "plan_date_in", None),
+        getattr(patient, "plan_date_out", None),
+        getattr(patient, "date_in", None),
+        getattr(patient, "date_out", None),
+        fallback_plan_date_in=fallback_plan_date_in,
+    )
+    if discharge_date:
+        plan_date_out = discharge_date
+        date_out = discharge_date
+        plan_in_eff = plan_date_in or date_in
+        if plan_in_eff and discharge_date < plan_in_eff:
+            plan_date_in = discharge_date
+    row = {"forbidden_edit": forbidden_edit}
+    if plan_date_in:
+        row["plan_date_in"] = str(plan_date_in)
+    if plan_date_out:
+        row["plan_date_out"] = str(plan_date_out)
+    if date_in:
+        row["date_in"] = str(date_in)
+    if date_out:
+        row["date_out"] = str(date_out)
+    return row
 
 
 def _calendar_plan_dates(item):
@@ -349,9 +464,9 @@ def extract_patient_bed(request):
             discharge_date = _read_discharge_date_from_protocol(extract_iss)
             if discharge_date:
                 break
-    patient.date_out = discharge_date or datetime.date.today()
-    patient.plan_date_out = patient.date_out
-    patient.save(update_fields=["date_out", "plan_date_out"])
+    discharge_eff = discharge_date or datetime.date.today()
+    apply_discharge_dates_to_hosp_record(patient, discharge_eff)
+    sync_patient_without_bed_discharge_date(direction_pk, discharge_eff)
     Log.log(
         direction_pk,
         230001,
@@ -443,8 +558,9 @@ def get_patients_without_bed(request):
     department_pk = request_data.get('department_pk', -1)
     patient_to_bed = load_patient_without_bed_by_department(department_pk)
 
-    patients = [
-        {
+    patients = []
+    for patient in patient_to_bed:
+        row = {
             "fio": f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}",
             "short_fio": f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}.",
             "age": patient.patient_age,
@@ -452,9 +568,28 @@ def get_patients_without_bed(request):
             "direction_pk": patient.direction_id,
             "doctor_pk": patient.doctor_id,
         }
-        for patient in patient_to_bed
-    ]
+        row.update(_strip_patient_row_from_sql(patient, datetime.date.today()))
+        patients.append(row)
     return JsonResponse({"data": patients})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def get_directions_hosp_meta(request):
+    request_data = json.loads(request.body)
+    direction_pks = request_data.get("direction_pks") or []
+    items = []
+    for raw in direction_pks:
+        try:
+            pk = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if pk <= 0:
+            continue
+        meta = _direction_hosp_calendar_meta(pk, datetime.date.today())
+        meta["direction_pk"] = pk
+        items.append(meta)
+    return JsonResponse({"ok": True, "data": items})
 
 
 @login_required
@@ -462,14 +597,43 @@ def get_patients_without_bed(request):
 def save_patient_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk')
-    patient_obj = request_data.get('patient_obj')
+    patient_obj = request_data.get('patient_obj') or {}
     doctor_id = request_data.get('doctor_id')
+    direction_pk = patient_obj.get("direction_pk")
+    if not direction_pk:
+        return status_response(False, "Направление обязательно")
     user = request.user
     user_can_edit = Chamber.check_user(user, department_pk)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    patient_without_bed = PatientStationarWithoutBeds(direction_id=patient_obj["direction_pk"], department_id=department_pk, doctor_id=doctor_id)
-    patient_without_bed.save()
+    plan_date_in = _parse_ymd_date(request_data.get("plan_date_in") or patient_obj.get("plan_date_in"))
+    plan_date_out = _parse_ymd_date(request_data.get("plan_date_out") or patient_obj.get("plan_date_out"))
+    date_out = _parse_ymd_date(request_data.get("date_out") or patient_obj.get("date_out"))
+    today = datetime.date.today()
+    if not plan_date_in:
+        plan_date_in = today
+    if not plan_date_out:
+        plan_date_out = plan_date_in + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
+    defaults = {
+        "department_id": department_pk,
+        "doctor_id": doctor_id,
+        "plan_date_in": plan_date_in,
+        "plan_date_out": plan_date_out,
+        "date_out": date_out,
+    }
+    patient_without_bed, created = PatientStationarWithoutBeds.objects.get_or_create(
+        direction_id=direction_pk,
+        defaults=defaults,
+    )
+    if created and patient_without_bed.department_id != department_pk:
+        patient_without_bed.department_id = department_pk
+        patient_without_bed.save(update_fields=["department_id"])
+    if not created:
+        patient_without_bed.doctor_id = doctor_id
+        patient_without_bed.plan_date_in = plan_date_in
+        patient_without_bed.plan_date_out = plan_date_out
+        patient_without_bed.date_out = date_out
+        patient_without_bed.save(update_fields=["doctor_id", "plan_date_in", "plan_date_out", "date_out"])
     Log.log(
         patient_obj["direction_pk"],
         230004,
@@ -518,6 +682,7 @@ def get_accompanying_child_options(request):
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def get_hospitalization_calendar(request):
     request_data = json.loads(request.body)
+    print(request_data)
     department_id = request_data.get("department_pk", -1)
     doctor_id = request_data.get("doctor_pk")
     start_date = _parse_ymd_date(request_data.get("start_date"))
@@ -548,9 +713,8 @@ def get_hospitalization_calendar(request):
             _calendar_plan_dates(item)
         visible_pks = []
         for item in items:
-            item_start = item.plan_date_in or item.date_in
-            ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
-            item_end = min(ends) if ends else end_date
+            item_start = _hosp_visual_start(item)
+            item_end = _hosp_visual_end(item)
             if item_end < start_date or item_start > end_date:
                 continue
             visible_pks.append(item.pk)
@@ -564,9 +728,8 @@ def get_hospitalization_calendar(request):
             ):
                 comments_by_ptb[row.patient_to_bed_id][str(row.date_comment)] = row.comment or ""
         for item in items:
-            item_start = item.plan_date_in or item.date_in
-            ends = [d for d in (item.plan_date_out, item.date_out) if d is not None]
-            item_end = min(ends) if ends else end_date
+            item_start = _hosp_visual_start(item)
+            item_end = _hosp_visual_end(item)
             if item_end < start_date or item_start > end_date:
                 continue
             fio = item.patient_fio_text or ""
@@ -605,6 +768,15 @@ def get_hospitalization_calendar(request):
                     "forbidden_edit": forbidden_edit,
                 }
             )
+    view_mode = request_data.get("view_mode")
+    start_date = request_data.get("start_date")
+    department_pk = request_data.get("department_pk")
+    if view_mode == 'day':
+        pass
+    elif view_mode == 'week':
+        pass
+    elif view_mode == 'month':
+        pass
     return JsonResponse(
         {
             "ok": True,
@@ -686,6 +858,7 @@ def save_hospitalization_by_fio(request):
         accompanyng_child_sex=acc_sex,
         is_need_sick=is_need_sick,
     )
+    _align_ptb_date_out_with_plan(patient_to_bed)
     patient_to_bed.save()
     comment_date = _parse_ymd_date(request_data.get("comment_date"))
     if comment_date is None and comment and plan_date_in:
@@ -753,6 +926,7 @@ def update_hospitalization_record(request):
     record.patient_age_text = patient_age_text
     record.plan_date_in = plan_date_in
     record.plan_date_out = plan_date_out
+    _align_ptb_date_out_with_plan(record)
     record.accompanyng_child_type = acc_type
     record.accompanyng_child_sex = acc_sex
     if "is_need_sick" in request_data:
