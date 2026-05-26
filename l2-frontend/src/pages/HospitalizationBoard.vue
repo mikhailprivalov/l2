@@ -294,9 +294,9 @@
                       <div class="day-col-head">
                         {{ day.label }}
                         <div class="day-col-totals">
-                          <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
-                          <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
-                          <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
+                          <span class="day-col-totals-item">М-{{ stripDayColumnTotals(day.key).male }}</span>
+                          <span class="day-col-totals-item">Ж-{{ stripDayColumnTotals(day.key).female }}</span>
+                          <span class="day-col-totals-item">С-{{ stripDayColumnTotals(day.key).accompanying }}</span>
                         </div>
                       </div>
                     </th>
@@ -1174,6 +1174,37 @@ const dayColumnTotals = (dayKey: string): DayColumnTotals => (
   dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
 );
 
+const stripDayColumnTotalsMap = computed(() => {
+  const map = new Map<string, DayColumnTotals>();
+  for (const day of visibleDays.value) {
+    map.set(day.key, emptyDayColumnTotals());
+  }
+  for (const row of stripRows.value) {
+    for (const rec of row.records) {
+      for (const day of visibleDays.value) {
+        if (!isDayInRecordSpan(rec, day.key)) {
+          continue;
+        }
+        const t = map.get(day.key) || emptyDayColumnTotals();
+        if (isPatientSexMale(rec.patient_sex)) {
+          t.male += 1;
+        } else if (isPatientSexFemale(rec.patient_sex)) {
+          t.female += 1;
+        }
+        if ((rec.accompanyng_child_type || '').trim()) {
+          t.accompanying += 1;
+        }
+        map.set(day.key, t);
+      }
+    }
+  }
+  return map;
+});
+
+const stripDayColumnTotals = (dayKey: string): DayColumnTotals => (
+  stripDayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
+);
+
 /** День для счётчика на бейджах врачей: наведённая колонка, иначе «День» / сегодня */
 const doctorBadgeCountDayKey = computed(() => {
   if (hoveredDayKey.value) {
@@ -1285,6 +1316,67 @@ const loadUnallocatedPatients = async () => {
   unallocatedPatients.value = Array.isArray(row.data) ? row.data : [];
 };
 
+const defaultPlanDateOut = (dayKey: string) => {
+  const days = defaultHospitalizationPeriodDays.value;
+  return moment(dayKey, 'YYYY-MM-DD').add(days - 1, 'days').format('YYYY-MM-DD');
+};
+
+const doctorFioByPk = (docPk: number) => {
+  const d = doctors.value.find((x) => x.pk === docPk);
+  return (d?.fio || '').trim();
+};
+
+const newStripRecordFromServerPatient = (
+  p: { direction_pk: number, fio: string, sex: string, age: number, doctor_pk?: number | null },
+  dayKey: string,
+): CalendarRecord => {
+  const planOut = defaultPlanDateOut(dayKey);
+  return {
+    pk: -p.direction_pk,
+    bed_pk: 0,
+    doctor_pk: p.doctor_pk ?? null,
+    doctor_fio: p.doctor_pk ? doctorFioByPk(p.doctor_pk) : '',
+    patient_fio: p.fio,
+    patient_sex: p.sex || 'м',
+    birthday: null,
+    patient_age_text: String(p.age ?? ''),
+    direction_pk: p.direction_pk,
+    date_in: dayKey,
+    date_out: null,
+    plan_date_in: dayKey,
+    plan_date_out: planOut,
+    accompanyng_child_type: '',
+    accompanyng_child_sex: '-',
+    date_comments: {},
+    is_day_hosp: true,
+  };
+};
+
+const loadPatientsWithoutBed = async () => {
+  if (!departmentPk.value) {
+    stripRows.value = [{ rowId: newStripRowId(), records: [] }];
+    return;
+  }
+  const row = await api('chambers/get-patients-without-bed', {
+    department_pk: departmentPk.value,
+  });
+  const list = Array.isArray(row?.data) ? row.data : [];
+  const dayKey = todayDayKey.value;
+  stripRows.value = [{
+    rowId: newStripRowId(),
+    records: list
+      .filter((p: any) => Number.isFinite(Number(p?.direction_pk)) && Number(p.direction_pk) > 0)
+      .map((p: any) => newStripRecordFromServerPatient({
+        direction_pk: Number(p.direction_pk),
+        fio: String(p.fio || ''),
+        sex: String(p.sex || 'м'),
+        age: Number(p.age ?? ''),
+        doctor_pk: p.doctor_pk != null ? Number(p.doctor_pk) : null,
+      }, dayKey)),
+  }];
+  normalizeStripTrailingEmpty();
+};
+
 const unallocatedPatientsFiltered = computed(() => {
   const list = unallocatedPatients.value.filter((p) => !stripDirectionPkSet.value.has(p.direction_pk));
   const q = unallocatedSearch.value.trim().toLowerCase();
@@ -1325,11 +1417,6 @@ const loadCalendar = async () => {
   await store.dispatch(actions.DEC_LOADING);
 };
 
-const defaultPlanDateOut = (dayKey: string) => {
-  const days = defaultHospitalizationPeriodDays.value;
-  return moment(dayKey, 'YYYY-MM-DD').add(days - 1, 'days').format('YYYY-MM-DD');
-};
-
 const cellKey = (bedPk: number, dayKey: string) => `${bedPk}-${dayKey}`;
 
 const onDoctorDragStart = (e: DragEvent, doctorPkInner: number) => {
@@ -1343,11 +1430,6 @@ const onDoctorDragStart = (e: DragEvent, doctorPkInner: number) => {
 const onDoctorDragEnd = () => {
   dragOverCellKey.value = '';
   dragOverStripCellKey.value = '';
-};
-
-const doctorFioByPk = (docPk: number) => {
-  const d = doctors.value.find((x) => x.pk === docPk);
-  return (d?.fio || '').trim();
 };
 
 const onDoctorStripCellDrop = (rowIdx: number, dayKey: string, docPk: number) => {
@@ -1487,8 +1569,19 @@ const onUnallocatedToStripDrop = (rowIdx: number, dayKey: string, raw: string) =
     return;
   }
   normalizeStripTrailingEmpty();
-  persistStripToStorage();
-  root.$emit('msg', 'ok', 'Пациент добавлен в черновик');
+  if (departmentPk.value) {
+    api('chambers/save-patient-without-bed', {
+      department_pk: departmentPk.value,
+      patient_obj: { direction_pk: directionPk },
+      doctor_id: record.doctor_pk ?? null,
+    }).then((res: any) => {
+      if (res?.ok) {
+        root.$emit('msg', 'ok', 'Пациент добавлен в черновик');
+      } else {
+        root.$emit('msg', 'error', res?.message || 'Не удалось сохранить черновик на сервере');
+      }
+    });
+  }
 };
 
 const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => {
@@ -1543,7 +1636,17 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
     return;
   }
   normalizeStripTrailingEmpty();
-  persistStripToStorage();
+  if (departmentPk.value) {
+    api('chambers/save-patient-without-bed', {
+      department_pk: departmentPk.value,
+      patient_obj: { direction_pk: rec.direction_pk },
+      doctor_id: rec.doctor_pk ?? null,
+    }).then((res: any) => {
+      if (!res?.ok) {
+        root.$emit('msg', 'error', res?.message || 'Не удалось сохранить черновик на сервере');
+      }
+    });
+  }
   await loadCalendar();
 };
 
@@ -1654,9 +1757,14 @@ const onStripToBedDrop = async (
   });
   await store.dispatch(actions.DEC_LOADING);
   if (result?.ok) {
+    if (departmentPk.value && record.direction_pk) {
+      api('chambers/delete-patient-without-bed', {
+        department_pk: departmentPk.value,
+        patient_obj: { direction_pk: record.direction_pk },
+      });
+    }
     removeStripRecordFromRow(row, record.pk);
     normalizeStripTrailingEmpty();
-    persistStripToStorage();
     root.$emit('msg', 'ok', 'Запись возвращена на койку');
     await loadCalendar();
     await loadUnallocatedPatients();
@@ -1911,7 +2019,17 @@ const saveEditingCell = async () => {
     rec.accompanyng_child_type = editingForm.value.accompanyngChildType || '';
     rec.direction_pk = directionIdPayload;
     rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
-    persistStripToStorage();
+    if (departmentPk.value && rec.direction_pk) {
+      api('chambers/save-patient-without-bed', {
+        department_pk: departmentPk.value,
+        patient_obj: { direction_pk: rec.direction_pk },
+        doctor_id: rec.doctor_pk ?? null,
+      }).then((res: any) => {
+        if (!res?.ok) {
+          root.$emit('msg', 'error', res?.message || 'Не удалось сохранить черновик на сервере');
+        }
+      });
+    }
     root.$emit('msg', 'ok', 'Данные черновика сохранены');
     closeEditModal();
     return;
@@ -1972,9 +2090,19 @@ const clearStripFromModal = () => {
     root.$emit('msg', 'error', 'Запись черновика не найдена');
     return;
   }
+  const rec = row.records.find((r) => r.pk === editingStripRecordPk.value) || null;
   removeStripRecordFromRow(row, editingStripRecordPk.value);
   normalizeStripTrailingEmpty();
-  persistStripToStorage();
+  if (departmentPk.value && rec?.direction_pk) {
+    api('chambers/delete-patient-without-bed', {
+      department_pk: departmentPk.value,
+      patient_obj: { direction_pk: rec.direction_pk },
+    }).then((res: any) => {
+      if (!res?.ok) {
+        root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
+      }
+    });
+  }
   root.$emit('msg', 'ok', 'Запись удалена из дневного стационара');
   closeEditModal();
 };
@@ -2007,7 +2135,7 @@ watch([departmentPk, viewMode, anchorDate], async () => {
 watch(departmentPk, async (d) => {
   await loadDoctors();
   doctorPk.value = -1;
-  initStripRowsForDepartment(d);
+  await loadPatientsWithoutBed();
 });
 
 onMounted(async () => {
