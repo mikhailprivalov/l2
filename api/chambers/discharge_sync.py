@@ -35,12 +35,7 @@ def _parse_discharge_date_value(raw: str):
 def _read_discharge_date_from_protocol(iss: Issledovaniya):
     cda = CdaFields.objects.filter(title=CDA_DISCHARGE_DATE_TITLE).first()
     if cda:
-        result = (
-            ParaclinicResult.objects.filter(issledovaniye=iss, field__cda_option_id=cda.pk)
-            .exclude(value="")
-            .order_by("field__order")
-            .first()
-        )
+        result = ParaclinicResult.objects.filter(issledovaniye=iss, field__cda_option_id=cda.pk).exclude(value="").order_by("field__order").first()
         if result and result.value:
             parsed = _parse_discharge_date_value(result.value)
             if parsed:
