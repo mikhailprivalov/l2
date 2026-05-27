@@ -17,51 +17,67 @@
               />
             </div>
           </div>
-          <div class="col-xs-3">
-            <div class="mode-switch">
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'day' }"
-                @click="viewMode = 'day'"
-              >
-                День
-              </button>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'week' }"
-                @click="viewMode = 'week'"
-              >
-                Неделя
-              </button>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'month' }"
-                @click="setViewMonth"
-              >
-                Месяц
-              </button>
-            </div>
-          </div>
-          <div class="col-xs-3 text-right">
-            <div class="btn-group">
-              <button
-                class="btn btn-default"
-                @click="navigate(-1)"
-              >
-                ←
-              </button>
-              <button
-                class="btn btn-default"
-                @click="goToday"
-              >
-                Текущий
-              </button>
-              <button
-                class="btn btn-default"
-                @click="navigate(1)"
-              >
-                →
-              </button>
+          <div class="col-xs-9">
+            <div class="toolbar-controls">
+              <div class="mode-switch">
+                <button
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'day' }"
+                  @click="viewMode = 'day'"
+                >
+                  День
+                </button>
+                <button
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'week' }"
+                  @click="viewMode = 'week'"
+                >
+                  Неделя
+                </button>
+                <button
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'month' }"
+                  @click="setViewMonth"
+                >
+                  Месяц
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default"
+                  title="Обновить"
+                  @click="refreshBoard"
+                >
+                  <i class="fa-solid fa-rotate" />
+                </button>
+              </div>
+              <div class="btn-group">
+                <button
+                  class="btn btn-default"
+                  @click="navigate(-1)"
+                >
+                  ←
+                </button>
+                <button
+                  class="btn btn-default"
+                  @click="goToday"
+                >
+                  Текущий
+                </button>
+                <button
+                  class="btn btn-default"
+                  @click="navigate(1)"
+                >
+                  →
+                </button>
+              </div>
+              <span class="toolbar-extracts-count">
+                Выписано:
+                <a
+                  href="#"
+                  class="toolbar-extracts-count-link"
+                  @click.prevent="openExtractsDetailForm"
+                >{{ extractsCount }}</a>
+              </span>
             </div>
           </div>
         </div>
@@ -133,6 +149,7 @@
                         <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
                         <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
                         <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
+                        <span class="day-col-totals-item">В-{{ extractCountForDay(day.key) }}</span>
                       </div>
                     </div>
                   </th>
@@ -319,8 +336,10 @@
                       v-for="day in visibleDays"
                       :key="`${srow.rowId}-${day.key}`"
                       class="day-cell"
-                      :class="{'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key),
-                               'day-cell--col-hover': isDayColumnHovered(day.key),
+                      :class="{
+                        'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key),
+                        'day-cell--forbidden-edit': stripCellForbiddenEdit(srow, day.key),
+                        'day-cell--col-hover': isDayColumnHovered(day.key),
                       }"
                       @click="openStripCellModal(sidx, day.key)"
                       @dragover.prevent="onStripCellDragOver(sidx, day.key)"
@@ -763,6 +782,10 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
+type ExtractDayInfo = { count: number; directionsList?: number[] };
+const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
+const extractsCount = ref(0);
+const extractsDirectionList = ref<number[]>([]);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('week');
 const anchorDate = ref(moment());
@@ -952,21 +975,39 @@ const commentForRecordDay = (rec: CalendarRecord, dayKey: string) => {
   return (raw && String(raw)) || '';
 };
 
+const HOSP_OPEN_END_DAY = '2200-01-01';
+
+const hospUsesPlanCalendar = (rec: CalendarRecord) => Boolean(rec.plan_date_in || rec.plan_date_out);
+
+const hospVisualStart = (rec: CalendarRecord) => moment(rec.plan_date_in || rec.date_in, 'YYYY-MM-DD');
+
+/** При плановых датах конец — plan_date_out, иначе date_out (не min, иначе продление плана не видно). */
+const hospVisualEnd = (rec: CalendarRecord) => {
+  if (hospUsesPlanCalendar(rec)) {
+    if (rec.plan_date_out) {
+      return moment(rec.plan_date_out, 'YYYY-MM-DD');
+    }
+    if (rec.date_out) {
+      return moment(rec.date_out, 'YYYY-MM-DD');
+    }
+    return moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
+  }
+  if (rec.date_out) {
+    return moment(rec.date_out, 'YYYY-MM-DD');
+  }
+  return moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
+};
+
 const isDayInRecordSpan = (rec: CalendarRecord, dayKey: string) => {
-  const start = moment(rec.plan_date_in || rec.date_in);
+  const start = hospVisualStart(rec);
   const d = moment(dayKey, 'YYYY-MM-DD');
   if (!start.isValid() || !d.isValid() || d.isBefore(start, 'day')) {
     return false;
   }
-  const endParts = [rec.plan_date_out, rec.date_out].filter(Boolean) as string[];
-  if (!endParts.length) {
+  const end = hospVisualEnd(rec);
+  if (!end.isValid()) {
     return true;
   }
-  const endMoments = endParts.map((x) => moment(x)).filter((m) => m.isValid());
-  if (!endMoments.length) {
-    return true;
-  }
-  const end = moment.min(endMoments);
   return !d.isAfter(end, 'day');
 };
 
@@ -997,6 +1038,18 @@ const recordsUnfilteredForMainGrid = computed(() => (
   records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
 
+/** Направления, отображаемые в основной таблице в текущем периоде (не в дневниках). */
+const mainGridDirectionPkSet = computed(() => {
+  const s = new Set<number>();
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    const dirPk = rec.direction_pk;
+    if (dirPk != null && dirPk > 0) {
+      s.add(dirPk);
+    }
+  }
+  return s;
+});
+
 const recordsForMainGrid = computed(() => {
   const list = recordsUnfilteredForMainGrid.value;
   if (doctorPk.value > 0) {
@@ -1005,8 +1058,6 @@ const recordsForMainGrid = computed(() => {
   return list;
 });
 
-const HOSP_OPEN_END_DAY = '2200-01-01';
-
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
   const days = visibleDays.value;
@@ -1014,7 +1065,7 @@ const recordsByBedAndDay = computed(() => {
     return map;
   }
   for (const record of recordsForMainGrid.value) {
-    const start = moment(record.plan_date_in || record.date_in);
+    const start = hospVisualStart(record);
     if (!start.isValid()) {
       continue;
     }
@@ -1044,19 +1095,9 @@ const cellForbiddenEdit = (bedPk: number, dayKey: string) => (
   cellRecordList(bedPk, dayKey).some((r) => r.forbidden_edit)
 );
 
-const hospVisualStart = (rec: CalendarRecord) => moment(rec.plan_date_in || rec.date_in, 'YYYY-MM-DD');
-
-const hospVisualEnd = (rec: CalendarRecord) => {
-  const endParts = [rec.plan_date_out, rec.date_out].filter(Boolean) as string[];
-  if (!endParts.length) {
-    return moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
-  }
-  const endMoments = endParts.map((x) => moment(x, 'YYYY-MM-DD')).filter((m) => m.isValid());
-  if (!endMoments.length) {
-    return moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
-  }
-  return moment.min(endMoments);
-};
+const stripCellForbiddenEdit = (row: StripRow, dayKey: string) => (
+  row.records.some((r) => isDayInRecordSpan(r, dayKey) && r.forbidden_edit)
+);
 
 const bedPeriodHasOverlap = (
   bedPk: number,
@@ -1248,6 +1289,57 @@ type DayColumnTotals = { male: number, female: number, accompanying: number };
 
 const emptyDayColumnTotals = (): DayColumnTotals => ({ male: 0, female: 0, accompanying: 0 });
 
+const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | undefined) => {
+  const raw = extracts || {};
+  const total = Number(raw.count);
+  extractsCount.value = Number.isFinite(total) ? total : 0;
+  const dirList = raw.directionList;
+  extractsDirectionList.value = Array.isArray(dirList)
+    ? dirList.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+    : [];
+  const byDate: Record<string, ExtractDayInfo> = {};
+  Object.entries(raw).forEach(([key, value]) => {
+    if (key === 'count' || key === 'directionList' || !value || typeof value !== 'object') {
+      return;
+    }
+    const item = value as ExtractDayInfo;
+    if (Number.isFinite(Number(item.count))) {
+      byDate[key] = item;
+    }
+  });
+  extractsByDate.value = byDate;
+};
+
+const openExtractsDetailForm = () => {
+  if (!extractsDirectionList.value.length) {
+    root.$emit('msg', 'error', 'Нет выписок за выбранный период');
+    return;
+  }
+  if (!departmentPk.value) {
+    root.$emit('msg', 'error', 'Не выбрано подразделение');
+    return;
+  }
+  if (visibleDays.value.length === 0) {
+    root.$emit('msg', 'error', 'Не задан период');
+    return;
+  }
+  const startDate = visibleDays.value[0].key;
+  const endDate = visibleDays.value[visibleDays.value.length - 1].key;
+  const params = new URLSearchParams({
+    type: '105.01',
+    department_pk: String(departmentPk.value),
+    start_date: startDate,
+    end_date: endDate,
+    direction_list: JSON.stringify(extractsDirectionList.value),
+  });
+  window.open(`/forms/xlsx?${params.toString()}`, '_blank');
+};
+
+const extractCountForDay = (dayKey: string) => {
+  const extractKey = moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
+  return extractsByDate.value[extractKey]?.count || 0;
+};
+
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
   for (const day of visibleDays.value) {
@@ -1429,12 +1521,65 @@ const doctorFioByPk = (docPk: number) => {
   return (d?.fio || '').trim();
 };
 
+type StripServerPatient = {
+  direction_pk: number;
+  fio: string;
+  sex: string;
+  age: number;
+  doctor_pk?: number | null;
+  forbidden_edit?: boolean;
+  date_in?: string | null;
+  date_out?: string | null;
+  plan_date_in?: string | null;
+  plan_date_out?: string | null;
+};
+
+const applyStripHospMeta = (
+  rec: CalendarRecord,
+  meta: Partial<StripServerPatient> & { direction_pk?: number },
+): CalendarRecord => {
+  const next = { ...rec };
+  if (meta.forbidden_edit != null) {
+    next.forbidden_edit = Boolean(meta.forbidden_edit);
+  }
+  if (meta.date_in) {
+    next.date_in = meta.date_in;
+  }
+  if (meta.plan_date_in) {
+    next.plan_date_in = meta.plan_date_in;
+  }
+  if (meta.plan_date_out) {
+    next.plan_date_out = meta.plan_date_out;
+  }
+  if (meta.date_out != null) {
+    next.date_out = meta.date_out;
+  } else if (meta.plan_date_out) {
+    next.date_out = meta.plan_date_out;
+  }
+  return next;
+};
+
+const saveStripPatientToServer = (rec: CalendarRecord) => {
+  if (!departmentPk.value || !rec.direction_pk) {
+    return Promise.resolve(null);
+  }
+  return api('chambers/save-patient-without-bed', {
+    department_pk: departmentPk.value,
+    patient_obj: { direction_pk: rec.direction_pk },
+    doctor_id: rec.doctor_pk ?? null,
+    plan_date_in: rec.plan_date_in,
+    plan_date_out: rec.plan_date_out,
+    date_out: rec.date_out,
+  });
+};
+
 const newStripRecordFromServerPatient = (
-  p: { direction_pk: number, fio: string, sex: string, age: number, doctor_pk?: number | null },
+  p: StripServerPatient,
   dayKey: string,
 ): CalendarRecord => {
-  const planOut = defaultPlanDateOut(dayKey);
-  return {
+  const planIn = p.plan_date_in || p.date_in || dayKey;
+  const planOut = p.plan_date_out || p.date_out || defaultPlanDateOut(planIn);
+  const rec: CalendarRecord = {
     pk: -p.direction_pk,
     bed_pk: 0,
     doctor_pk: p.doctor_pk ?? null,
@@ -1444,16 +1589,54 @@ const newStripRecordFromServerPatient = (
     birthday: null,
     patient_age_text: String(p.age ?? ''),
     direction_pk: p.direction_pk,
-    date_in: dayKey,
-    date_out: null,
-    plan_date_in: dayKey,
+    date_in: p.date_in || planIn,
+    date_out: p.date_out || null,
+    plan_date_in: planIn,
     plan_date_out: planOut,
     accompanyng_child_type: '',
     accompanyng_child_sex: '-',
     date_comments: {},
     is_day_hosp: true,
     is_need_sick: false,
+    forbidden_edit: Boolean(p.forbidden_edit),
   };
+  return applyStripHospMeta(rec, p);
+};
+
+const syncStripRecordsDischargeMeta = async () => {
+  if (!departmentPk.value) {
+    return;
+  }
+  const directionPks = new Set<number>();
+  for (const row of stripRows.value) {
+    for (const rec of row.records) {
+      if (rec.direction_pk != null && rec.direction_pk > 0) {
+        directionPks.add(rec.direction_pk);
+      }
+    }
+  }
+  if (!directionPks.size) {
+    return;
+  }
+  const res = await api('chambers/get-directions-hosp-meta', {
+    direction_pks: [...directionPks],
+  });
+  const items = Array.isArray(res?.data) ? res.data : [];
+  const byDir = new Map<number, StripServerPatient>();
+  for (const item of items) {
+    const pk = Number(item?.direction_pk);
+    if (Number.isFinite(pk) && pk > 0) {
+      byDir.set(pk, item);
+    }
+  }
+  for (const row of stripRows.value) {
+    for (const rec of row.records) {
+      const dirPk = rec.direction_pk;
+      if (dirPk != null && dirPk > 0 && byDir.has(dirPk)) {
+        Object.assign(rec, applyStripHospMeta(rec, byDir.get(dirPk)!));
+      }
+    }
+  }
 };
 
 const loadPatientsWithoutBed = async () => {
@@ -1476,13 +1659,21 @@ const loadPatientsWithoutBed = async () => {
         sex: String(p.sex || 'м'),
         age: Number(p.age ?? ''),
         doctor_pk: p.doctor_pk != null ? Number(p.doctor_pk) : null,
+        forbidden_edit: Boolean(p.forbidden_edit),
+        date_in: p.date_in || null,
+        date_out: p.date_out || null,
+        plan_date_in: p.plan_date_in || null,
+        plan_date_out: p.plan_date_out || null,
       }, dayKey)),
   }];
   normalizeStripTrailingEmpty();
 };
 
 const unallocatedPatientsFiltered = computed(() => {
-  const list = unallocatedPatients.value.filter((p) => !stripDirectionPkSet.value.has(p.direction_pk));
+  const list = unallocatedPatients.value.filter(
+    (p) => !stripDirectionPkSet.value.has(p.direction_pk)
+      && !mainGridDirectionPkSet.value.has(p.direction_pk),
+  );
   const q = unallocatedSearch.value.trim().toLowerCase();
   if (!q) {
     return list;
@@ -1511,14 +1702,22 @@ const loadCalendar = async () => {
     department_pk: departmentPk.value,
     start_date: start,
     end_date: end,
+    view_mode: viewMode.value,
   });
   chambers.value = response?.data?.chambers || [];
   records.value = response?.data?.records || [];
+  applyExtractsFromResponse(response?.data?.extracts);
   const periodDays = Number(response?.data?.default_period_days);
   defaultHospitalizationPeriodDays.value = Number.isFinite(periodDays) && periodDays >= 1
     ? periodDays
     : 3;
   await store.dispatch(actions.DEC_LOADING);
+};
+
+const refreshBoard = async () => {
+  await loadCalendar();
+  await loadUnallocatedPatients();
+  await syncStripRecordsDischargeMeta();
 };
 
 const cellKey = (bedPk: number, dayKey: string) => `${bedPk}-${dayKey}`;
@@ -1642,10 +1841,12 @@ const newStripRecordFromUnallocated = (p: UnallocatedPatient, dayKey: string): C
     accompanyng_child_type: '',
     accompanyng_child_sex: '-',
     date_comments: {},
+    is_day_hosp: true,
+    is_need_sick: false,
   };
 };
 
-const onUnallocatedToStripDrop = (rowIdx: number, dayKey: string, raw: string) => {
+const onUnallocatedToStripDrop = async (rowIdx: number, dayKey: string, raw: string) => {
   let directionPk: number;
   try {
     const o = JSON.parse(raw) as { direction_pk?: number };
@@ -1673,12 +1874,9 @@ const onUnallocatedToStripDrop = (rowIdx: number, dayKey: string, raw: string) =
     return;
   }
   normalizeStripTrailingEmpty();
+  await syncStripRecordsDischargeMeta();
   if (departmentPk.value) {
-    api('chambers/save-patient-without-bed', {
-      department_pk: departmentPk.value,
-      patient_obj: { direction_pk: directionPk },
-      doctor_id: record.doctor_pk ?? null,
-    }).then((res: any) => {
+    saveStripPatientToServer(record).then((res: any) => {
       if (res?.ok) {
         root.$emit('msg', 'ok', 'Пациент добавлен в черновик');
       } else {
@@ -1692,7 +1890,7 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
   dragOverStripCellKey.value = '';
   const panelDir = e.dataTransfer?.getData(DND_UNALLOCATED_DIRECTION);
   if (panelDir) {
-    onUnallocatedToStripDrop(rowIdx, dayKey, panelDir);
+    await onUnallocatedToStripDrop(rowIdx, dayKey, panelDir);
     return;
   }
   const docFromMime = e.dataTransfer?.getData('application/x-l2-doctor-pk') || '';
@@ -1740,12 +1938,9 @@ const onStripCellDrop = async (e: DragEvent, rowIdx: number, dayKey: string) => 
     return;
   }
   normalizeStripTrailingEmpty();
+  await syncStripRecordsDischargeMeta();
   if (departmentPk.value) {
-    api('chambers/save-patient-without-bed', {
-      department_pk: departmentPk.value,
-      patient_obj: { direction_pk: rec.direction_pk },
-      doctor_id: rec.doctor_pk ?? null,
-    }).then((res: any) => {
+    saveStripPatientToServer(rec).then((res: any) => {
       if (!res?.ok) {
         root.$emit('msg', 'error', res?.message || 'Не удалось сохранить черновик на сервере');
       }
@@ -2150,11 +2345,7 @@ const saveEditingCell = async () => {
     rec.direction_pk = directionIdPayload;
     rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
     if (departmentPk.value && rec.direction_pk) {
-      api('chambers/save-patient-without-bed', {
-        department_pk: departmentPk.value,
-        patient_obj: { direction_pk: rec.direction_pk },
-        doctor_id: rec.doctor_pk ?? null,
-      }).then((res: any) => {
+      saveStripPatientToServer(rec).then((res: any) => {
         if (!res?.ok) {
           root.$emit('msg', 'error', res?.message || 'Не удалось сохранить черновик на сервере');
         }
@@ -2271,6 +2462,7 @@ const clearBedFromModal = async () => {
 watch([departmentPk, viewMode, anchorDate], async () => {
   await loadCalendar();
   await loadUnallocatedPatients();
+  await syncStripRecordsDischargeMeta();
 });
 
 watch(departmentPk, async (d) => {
@@ -2380,6 +2572,31 @@ onMounted(async () => {
 .toolbar {
   margin-bottom: 8px;
   flex-shrink: 0;
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-extracts-count {
+  margin-left: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 34px;
+  white-space: nowrap;
+}
+
+.toolbar-extracts-count-link {
+  color: #337ab7;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.toolbar-extracts-count-link:hover {
+  color: #23527c;
 }
 
 .mode-switch {

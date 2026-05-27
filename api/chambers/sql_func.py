@@ -26,8 +26,20 @@ def load_patients_stationar_unallocated_sql(department_id):
                 WHERE directions_napravleniya.cancel = false
                 AND hospital_department_override_id = %(department_id)s
                 AND data_sozdaniya > now() - INTERVAL '2 months'
-                AND NOT EXISTS (SELECT direction_id FROM podrazdeleniya_patienttobed WHERE date_out IS NULL AND napravleniye_id = direction_id)
-                AND NOT EXISTS (SELECT direction_id FROM podrazdeleniya_patientstationarwithoutbeds WHERE napravleniye_id = direction_id)
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM podrazdeleniya_patienttobed ptb
+                    INNER JOIN podrazdeleniya_bed bed ON ptb.bed_id = bed.id
+                    INNER JOIN podrazdeleniya_chamber ch ON bed.chamber_id = ch.id
+                    WHERE ptb.direction_id = directions_napravleniya.id
+                    AND ch.podrazdelenie_id = %(department_id)s
+                    AND ptb.date_out IS NULL
+                )
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM podrazdeleniya_patientstationarwithoutbeds pswb
+                    WHERE pswb.direction_id = directions_napravleniya.id
+                )
                 
                 ORDER BY family
                 """,
@@ -74,7 +86,10 @@ def load_patient_without_bed_by_department(department_id):
             date_part('year', age(clients_individual.birthday))::int AS patient_age,
             clients_individual.sex as patient_sex,
             direction_id,
-            
+            podrazdeleniya_patientstationarwithoutbeds.date_in,
+            podrazdeleniya_patientstationarwithoutbeds.date_out,
+            podrazdeleniya_patientstationarwithoutbeds.plan_date_in,
+            podrazdeleniya_patientstationarwithoutbeds.plan_date_out,
             users_doctorprofile.id as doctor_id
             
             FROM podrazdeleniya_patientstationarwithoutbeds

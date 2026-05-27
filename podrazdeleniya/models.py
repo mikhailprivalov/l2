@@ -224,6 +224,10 @@ class PatientStationarWithoutBeds(models.Model):
     direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
     department = models.ForeignKey(Podrazdeleniya, db_index=True, on_delete=models.CASCADE, null=True)
     doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
+    date_in = models.DateField(auto_now_add=True)
+    date_out = models.DateField(null=True)
+    plan_date_in = models.DateField(null=True, default=None, blank=True)
+    plan_date_out = models.DateField(null=True, default=None, blank=True)
 
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
