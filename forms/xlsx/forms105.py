@@ -61,7 +61,7 @@ def form_01(request_data) -> Workbook:
 
     step = 0
     for i in result_detail:
-        step +=1
+        step += 1
         row += 1
         ws.cell(row=row, column=1).value = step
         ws.cell(row=row, column=2).value = i.get("doctor")
