@@ -22,7 +22,8 @@ def form_01(request_data) -> Workbook:
     wb.remove(wb.get_sheet_by_name("Sheet"))
     ws = wb.create_sheet("Выписки")
     iss_objs = Issledovaniya.objects.filter(napravleniye_id__in=direction_list)
-    result_detail = [{
+    result_detail = [
+        {
             "doctor": i.doc_confirmation.get_fio(),
             "patient": i.napravleniye.client.get_fio_w_card(),
             "direction_main": i.napravleniye.parent.napravleniye_id,
