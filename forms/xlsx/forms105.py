@@ -27,8 +27,9 @@ def form_01(request_data) -> Workbook:
             "doctor": i.doc_confirmation.get_fio(),
             "patient": i.napravleniye.client.get_fio_w_card(),
             "direction_main": i.napravleniye.parent.napravleniye_id,
-            "date_extract": i.medical_examination
-    } for i in iss_objs
+            "date_extract": i.medical_examination,
+        }
+        for i in iss_objs
     ]
     style_border = NamedStyle(name="style_border_ca")
     bd = Side(style="thin", color="000000")
