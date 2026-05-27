@@ -684,7 +684,6 @@ def get_accompanying_child_options(request):
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def get_hospitalization_calendar(request):
     request_data = json.loads(request.body)
-    print(request_data)
     department_id = request_data.get("department_pk", -1)
     doctor_id = request_data.get("doctor_pk")
     start_date = _parse_ymd_date(request_data.get("start_date"))
