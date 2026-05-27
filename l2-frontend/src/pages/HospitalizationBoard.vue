@@ -17,59 +17,60 @@
               />
             </div>
           </div>
-          <div class="col-xs-3">
-            <div class="mode-switch">
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'day' }"
-                @click="viewMode = 'day'"
-              >
-                День
-              </button>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'week' }"
-                @click="viewMode = 'week'"
-              >
-                Неделя
-              </button>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'month' }"
-                @click="setViewMonth"
-              >
-                Месяц
-              </button>
-              <button
-                type="button"
-                class="btn btn-default"
-                title="Обновить"
-                @click="refreshBoard"
-              >
-                <i class="fa-solid fa-rotate" />
-              </button>
-            </div>
-          </div>
-          <div class="col-xs-3 text-right">
-            <div class="btn-group">
-              <button
-                class="btn btn-default"
-                @click="navigate(-1)"
-              >
-                ←
-              </button>
-              <button
-                class="btn btn-default"
-                @click="goToday"
-              >
-                Текущий
-              </button>
-              <button
-                class="btn btn-default"
-                @click="navigate(1)"
-              >
-                →
-              </button>
+          <div class="col-xs-9">
+            <div class="toolbar-controls">
+              <div class="mode-switch">
+                <button
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'day' }"
+                  @click="viewMode = 'day'"
+                >
+                  День
+                </button>
+                <button
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'week' }"
+                  @click="viewMode = 'week'"
+                >
+                  Неделя
+                </button>
+                <button
+                  class="btn btn-default"
+                  :class="{ active: viewMode === 'month' }"
+                  @click="setViewMonth"
+                >
+                  Месяц
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default"
+                  title="Обновить"
+                  @click="refreshBoard"
+                >
+                  <i class="fa-solid fa-rotate" />
+                </button>
+              </div>
+              <div class="btn-group">
+                <button
+                  class="btn btn-default"
+                  @click="navigate(-1)"
+                >
+                  ←
+                </button>
+                <button
+                  class="btn btn-default"
+                  @click="goToday"
+                >
+                  Текущий
+                </button>
+                <button
+                  class="btn btn-default"
+                  @click="navigate(1)"
+                >
+                  →
+                </button>
+              </div>
+              <span class="toolbar-extracts-count">Выписано: {{ extractsCount }}</span>
             </div>
           </div>
         </div>
@@ -141,6 +142,7 @@
                         <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
                         <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
                         <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
+                        <span class="day-col-totals-item">В-{{ extractCountForDay(day.key) }}</span>
                       </div>
                     </div>
                   </th>
@@ -773,6 +775,9 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
+type ExtractDayInfo = { count: number; directionsList?: number[] };
+const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
+const extractsCount = ref(0);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('week');
 const anchorDate = ref(moment());
@@ -1276,6 +1281,28 @@ type DayColumnTotals = { male: number, female: number, accompanying: number };
 
 const emptyDayColumnTotals = (): DayColumnTotals => ({ male: 0, female: 0, accompanying: 0 });
 
+const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | undefined) => {
+  const raw = extracts || {};
+  const total = Number(raw.count);
+  extractsCount.value = Number.isFinite(total) ? total : 0;
+  const byDate: Record<string, ExtractDayInfo> = {};
+  Object.entries(raw).forEach(([key, value]) => {
+    if (key === 'count' || !value || typeof value !== 'object') {
+      return;
+    }
+    const item = value as ExtractDayInfo;
+    if (Number.isFinite(Number(item.count))) {
+      byDate[key] = item;
+    }
+  });
+  extractsByDate.value = byDate;
+};
+
+const extractCountForDay = (dayKey: string) => {
+  const extractKey = moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
+  return extractsByDate.value[extractKey]?.count || 0;
+};
+
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
   for (const day of visibleDays.value) {
@@ -1642,6 +1669,7 @@ const loadCalendar = async () => {
   });
   chambers.value = response?.data?.chambers || [];
   records.value = response?.data?.records || [];
+  applyExtractsFromResponse(response?.data?.extracts);
   const periodDays = Number(response?.data?.default_period_days);
   defaultHospitalizationPeriodDays.value = Number.isFinite(periodDays) && periodDays >= 1
     ? periodDays
@@ -2507,6 +2535,20 @@ onMounted(async () => {
 .toolbar {
   margin-bottom: 8px;
   flex-shrink: 0;
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.toolbar-extracts-count {
+  margin-left: 4px;
+  font-size: 13px;
+  line-height: 34px;
+  white-space: nowrap;
 }
 
 .mode-switch {

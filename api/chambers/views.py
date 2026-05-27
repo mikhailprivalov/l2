@@ -797,6 +797,7 @@ def get_hospitalization_calendar(request):
         else:
             extracts_data[i.date_extract]["count"] += 1
             extracts_data[i.date_extract]["directionsList"].append(i.napravleniye_id)
+    extracts_count = sum(item["count"] for item in extracts_data.values())
     return JsonResponse(
         {
             "ok": True,
@@ -805,7 +806,7 @@ def get_hospitalization_calendar(request):
                 "chambers": list(chambers_map.values()),
                 "records": records,
                 "default_period_days": _default_hospitalization_period_days(),
-                "extracts": extracts_data
+                "extracts": {"count": extracts_count, **extracts_data},
             },
         }
     )
