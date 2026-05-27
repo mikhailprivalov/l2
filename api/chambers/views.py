@@ -791,12 +791,14 @@ def get_hospitalization_calendar(request):
         date_end = datetime.date(int(year), month_obj, num_days)
     extract_proto_for_period = get_extract_by_department_for_period(date_start, date_end, CDA_ID_FOR_DATE_IS_EXTRACT, (department_pk,))
     extracts_data = {}
+    total_direction_list = []
     for i in extract_proto_for_period:
         if not extracts_data.get(i.date_extract):
             extracts_data[i.date_extract] = {"count": 1, "directionsList": [i.napravleniye_id]}
         else:
             extracts_data[i.date_extract]["count"] += 1
-            extracts_data[i.date_extract]["directionsList"].append(i.napravleniye_id)
+        total_direction_list.append(i.napravleniye_id)
+
     extracts_count = sum(item["count"] for item in extracts_data.values())
     return JsonResponse(
         {
@@ -806,7 +808,7 @@ def get_hospitalization_calendar(request):
                 "chambers": list(chambers_map.values()),
                 "records": records,
                 "default_period_days": _default_hospitalization_period_days(),
-                "extracts": {"count": extracts_count, **extracts_data},
+                "extracts": {"count": extracts_count, "directionList": total_direction_list, **extracts_data},
             },
         }
     )

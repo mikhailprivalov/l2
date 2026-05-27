@@ -70,7 +70,14 @@
                   →
                 </button>
               </div>
-              <span class="toolbar-extracts-count">Выписано: {{ extractsCount }}</span>
+              <span class="toolbar-extracts-count">
+                Выписано:
+                <a
+                  href="#"
+                  class="toolbar-extracts-count-link"
+                  @click.prevent="openExtractsDetailForm"
+                >{{ extractsCount }}</a>
+              </span>
             </div>
           </div>
         </div>
@@ -778,6 +785,7 @@ const records = ref<CalendarRecord[]>([]);
 type ExtractDayInfo = { count: number; directionsList?: number[] };
 const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
+const extractsDirectionList = ref<number[]>([]);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('week');
 const anchorDate = ref(moment());
@@ -1285,9 +1293,13 @@ const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | un
   const raw = extracts || {};
   const total = Number(raw.count);
   extractsCount.value = Number.isFinite(total) ? total : 0;
+  const dirList = raw.directionList;
+  extractsDirectionList.value = Array.isArray(dirList)
+    ? dirList.map((id) => Number(id)).filter((id) => Number.isFinite(id))
+    : [];
   const byDate: Record<string, ExtractDayInfo> = {};
   Object.entries(raw).forEach(([key, value]) => {
-    if (key === 'count' || !value || typeof value !== 'object') {
+    if (key === 'count' || key === 'directionList' || !value || typeof value !== 'object') {
       return;
     }
     const item = value as ExtractDayInfo;
@@ -1296,6 +1308,31 @@ const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | un
     }
   });
   extractsByDate.value = byDate;
+};
+
+const openExtractsDetailForm = () => {
+  if (!extractsDirectionList.value.length) {
+    root.$emit('msg', 'error', 'Нет выписок за выбранный период');
+    return;
+  }
+  if (!departmentPk.value) {
+    root.$emit('msg', 'error', 'Не выбрано подразделение');
+    return;
+  }
+  if (visibleDays.value.length === 0) {
+    root.$emit('msg', 'error', 'Не задан период');
+    return;
+  }
+  const startDate = visibleDays.value[0].key;
+  const endDate = visibleDays.value[visibleDays.value.length - 1].key;
+  const params = new URLSearchParams({
+    type: '105.01',
+    department_pk: String(departmentPk.value),
+    start_date: startDate,
+    end_date: endDate,
+    direction_list: JSON.stringify(extractsDirectionList.value),
+  });
+  window.open(`/forms/xlsx?${params.toString()}`, '_blank');
 };
 
 const extractCountForDay = (dayKey: string) => {
@@ -2546,9 +2583,20 @@ onMounted(async () => {
 
 .toolbar-extracts-count {
   margin-left: 4px;
-  font-size: 13px;
+  font-size: 16px;
+  font-weight: 500;
   line-height: 34px;
   white-space: nowrap;
+}
+
+.toolbar-extracts-count-link {
+  color: #337ab7;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.toolbar-extracts-count-link:hover {
+  color: #23527c;
 }
 
 .mode-switch {
