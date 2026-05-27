@@ -126,6 +126,8 @@ def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
 
     updated = False
     ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
+    iss.medical_examination = discharge_date
+    iss.save()
     if ptb:
         apply_discharge_dates_to_hosp_record(ptb, discharge_date)
         updated = True

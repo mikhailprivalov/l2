@@ -9,7 +9,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
-from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID
+from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID, CDA_ID_FOR_DATE_IS_EXTRACT
 from laboratory.utils import current_time
 from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds
 from directions.models import Issledovaniya, Napravleniya
@@ -31,7 +31,9 @@ from .discharge_sync import (
     get_discharge_date_for_direction,
     sync_patient_without_bed_discharge_date,
 )
+from ..stationar.sql_func import get_extract_by_department_for_period
 from ..stationar.stationar_func import forbidden_edit_dir
+import calendar
 
 
 def _accompanying_child_from_request(request_data):
@@ -770,13 +772,31 @@ def get_hospitalization_calendar(request):
             )
     view_mode = request_data.get("view_mode")
     start_date = request_data.get("start_date")
+    end_date = request_data.get("end_date")
     department_pk = request_data.get("department_pk")
+    date_start = ''
+    date_end = ''
     if view_mode == 'day':
-        pass
+        date_start = f"{start_date} 00:00:00"
+        date_end = f"{end_date} 23:59:59"
     elif view_mode == 'week':
-        pass
+        date_start = f"{start_date} 00:00:00"
+        date_end = f"{end_date} 23:59:59"
     elif view_mode == 'month':
-        pass
+        month = start_date.split("-")[1]
+        year = start_date.split("-")[0]
+        month_obj = int(month)
+        _, num_days = calendar.monthrange(int(year), month_obj)
+        date_start = datetime.date(int(year), month_obj, 1)
+        date_end = datetime.date(int(year), month_obj, num_days)
+    extract_proto_for_period = get_extract_by_department_for_period(date_start, date_end, CDA_ID_FOR_DATE_IS_EXTRACT, (department_pk,))
+    extracts_data = {}
+    for i in extract_proto_for_period:
+        if not extracts_data.get(i.date_extract):
+            extracts_data[i.date_extract] = {"count": 1, "directionsList": [i.napravleniye_id]}
+        else:
+            extracts_data[i.date_extract]["count"] += 1
+            extracts_data[i.date_extract]["directionsList"].append(i.napravleniye_id)
     return JsonResponse(
         {
             "ok": True,
@@ -785,6 +805,7 @@ def get_hospitalization_calendar(request):
                 "chambers": list(chambers_map.values()),
                 "records": records,
                 "default_period_days": _default_hospitalization_period_days(),
+                "extracts": extracts_data
             },
         }
     )
