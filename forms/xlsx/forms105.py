@@ -24,7 +24,7 @@ def form_01(request_data) -> Workbook:
     iss_objs = Issledovaniya.objects.filter(napravleniye_id__in=direction_list)
     result_detail = [
         {
-            "doctor": i.doc_confirmation.get_fio(),
+            "doctor": i.doc_confirmation.get_fio() if i.doc_confirmation else "-",
             "patient": i.napravleniye.client.get_fio_w_card(),
             "direction_main": i.napravleniye.parent.napravleniye_id,
             "date_extract": i.medical_examination,
