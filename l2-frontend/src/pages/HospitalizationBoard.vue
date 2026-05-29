@@ -2,22 +2,24 @@
   <div class="board-page">
     <div class="toolbar panel panel-default panel-flt">
       <div class="panel-body">
-        <div class="toolbar-row">
-          <div class="toolbar-department">
-            <div class="input-group treeselect-noborder-left">
-              <span class="input-group-addon">Подразделение</span>
-              <Treeselect
-                v-model="departmentPk"
-                :options="departments"
-                :multiple="false"
-                :disable-branch-nodes="true"
-                :clearable="false"
-                :append-to-body="true"
-                class="treeselect-wide"
-              />
-            </div>
-          </div>
-          <div class="toolbar-controls">
+        <div class="toolbar-layout">
+          <div class="toolbar-calendar-col">
+            <div class="toolbar-row">
+              <div class="toolbar-department">
+                <div class="input-group treeselect-noborder-left">
+                  <span class="input-group-addon">Подразделение</span>
+                  <Treeselect
+                    v-model="departmentPk"
+                    :options="departments"
+                    :multiple="false"
+                    :disable-branch-nodes="true"
+                    :clearable="false"
+                    :append-to-body="true"
+                    class="treeselect-wide"
+                  />
+                </div>
+              </div>
+              <div class="toolbar-controls toolbar-controls--nav">
             <div class="mode-switch">
               <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
               <button
@@ -70,7 +72,13 @@
                 →
               </button>
             </div>
+              </div>
+            </div>
           </div>
+          <div
+            class="toolbar-aside-spacer"
+            aria-hidden="true"
+          />
         </div>
       </div>
     </div>
@@ -273,8 +281,8 @@
           </div>
 
           <div class="strip-board-block calendar-strip-block">
-            <p class="strip-board-hint text-muted small">
-              Черновики · без коек
+            <p class="strip-board-hint">
+              Дневные
             </p>
             <div
               class="strip-cards-board"
@@ -366,6 +374,65 @@
                     class="record-sick-badge"
                     title="Требуется больничный"
                   >Б</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="board-calendar-nav board-calendar-nav--footer panel panel-default panel-flt">
+            <div class="panel-body">
+              <div class="toolbar-controls toolbar-controls--nav board-calendar-nav-inner">
+                <div class="mode-switch">
+                  <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+                  <button
+                    class="btn btn-default"
+                    :class="{ active: viewMode === 'day' }"
+                    @click="viewMode = 'day'"
+                  >
+                    День
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    :class="{ active: viewMode === 'week' }"
+                    @click="viewMode = 'week'"
+                  >
+                    Неделя
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    :class="{ active: viewMode === 'month' }"
+                    @click="setViewMonth"
+                  >
+                    Месяц
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default"
+                    title="Обновить"
+                    @click="refreshBoard"
+                  >
+                    <i class="fa-solid fa-rotate" />
+                  </button>
+                </div>
+                <div class="btn-group">
+                  <button
+                    class="btn btn-default"
+                    @click="navigate(-1)"
+                  >
+                    ←
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    @click="goToday"
+                  >
+                    Текущий
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    @click="navigate(1)"
+                  >
+                    →
+                  </button>
                 </div>
               </div>
             </div>
@@ -2541,6 +2608,26 @@ $board-aside-section-min-height: 320px;
   flex-shrink: 0;
 }
 
+.toolbar-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.toolbar-calendar-col {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.toolbar-aside-spacer {
+  flex: 0 0 280px;
+  width: 280px;
+  max-width: 280px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
 .toolbar-row {
   display: flex;
   align-items: center;
@@ -2561,6 +2648,11 @@ $board-aside-section-min-height: 320px;
   gap: 8px;
   flex-wrap: wrap;
   margin-left: auto;
+}
+
+.toolbar-controls--nav {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .toolbar-today-date {
@@ -3100,6 +3192,24 @@ $board-aside-section-min-height: 320px;
 .strip-board-hint {
   margin: 0 0 8px;
   flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.board-calendar-nav {
+  flex-shrink: 0;
+}
+
+.board-calendar-nav--footer {
+  margin-top: 12px;
+}
+
+.board-calendar-nav-inner {
+  width: 100%;
+  justify-content: flex-end;
+  margin-left: 0;
+  flex: 1 1 auto;
 }
 
 .strip-cards-board {
