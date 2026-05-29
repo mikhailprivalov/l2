@@ -85,7 +85,7 @@
 
     <div class="board-body">
       <div class="calendar-wrap">
-        <div class="doctor-badges">
+        <div class="doctor-badges doctor-badges--top">
           <button
             type="button"
             class="badge badge-secondary doctor-badge-btn"
@@ -286,7 +286,10 @@
             </p>
             <div
               class="strip-cards-board"
-              :class="{ 'strip-cards-board--drop-hover': dragOverStripBoard }"
+              :class="{
+                'strip-cards-board--drop-hover': dragOverStripBoard,
+                'strip-cards-board--extra-drop-row': stripNeedsExtraDropRow,
+              }"
               @dragover.prevent="onStripBoardDragOver"
               @dragleave="onStripBoardDragLeave"
               @drop.prevent="onStripBoardDrop"
@@ -377,6 +380,30 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="doctor-badges doctor-badges--bottom">
+            <button
+              type="button"
+              class="badge badge-secondary doctor-badge-btn"
+              :class="{ active: doctorPk === -1 }"
+              @click="doctorPk = -1"
+            >
+              Все врачи
+            </button>
+            <button
+              v-for="doctor in doctors"
+              :key="`doctor-bottom-${doctor.pk}`"
+              type="button"
+              draggable="true"
+              class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
+              :class="{ active: doctorPk === doctor.pk }"
+              @click="doctorPk = doctor.pk"
+              @dragstart="onDoctorDragStart($event, doctor.pk)"
+              @dragend="onDoctorDragEnd"
+            >
+              {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
+            </button>
           </div>
 
           <div class="board-calendar-nav board-calendar-nav--footer panel panel-default panel-flt">
@@ -650,24 +677,23 @@
             class="form-group modal-doctor-field"
           >
             <label>Лечащий врач</label>
-            <div class="modal-doctor-row">
-              <span
-                v-if="editingForm.doctorFio"
-                class="modal-doctor-name"
-              >{{ editingForm.doctorFio }}</span>
-              <span
-                v-else
-                class="text-muted modal-doctor-empty"
-              >не назначен</span>
-              <button
-                v-if="editingForm.doctorPk != null"
-                type="button"
-                class="btn btn-default btn-sm modal-doctor-clear"
-                @click="clearModalDoctor"
-              >
-                Снять
-              </button>
+            <div class="treeselect-noborder-left edit-modal-treeselect">
+              <Treeselect
+                :value="editingForm.doctorPk"
+                :options="attendingDoctorTreeselectOptions"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :clearable="true"
+                :append-to-body="true"
+                :z-index="10050"
+                class="treeselect-wide"
+                placeholder="Не указано"
+                @input="setEditingDoctor"
+              />
             </div>
+            <p class="help-block small text-muted">
+              Назначается на всю госпитализацию — все дни выбранной записи.
+            </p>
           </div>
           <div class="row modal-gender-sick-row">
             <div class="col-xs-6 form-group">
@@ -893,6 +919,7 @@ interface CalendarRecord {
 }
 
 const STRIP_BOARD_ID = 'strip-board';
+const STRIP_BOARD_COLUMNS = 6;
 
 const ASIDE_SCROLL_STEP_PX = 56;
 const ASIDE_SCROLL_HOLD_MS = 45;
@@ -1147,7 +1174,21 @@ const recordOverlapsVisiblePeriod = (rec: CalendarRecord) => {
   return recStart <= bounds.end && recEnd >= bounds.start;
 };
 
-const stripRecordsInPeriod = computed(() => stripRecords.value.filter(recordOverlapsVisiblePeriod));
+const filterRecordsByDoctor = (list: CalendarRecord[]) => {
+  if (doctorPk.value <= 0) {
+    return list;
+  }
+  return list.filter((rec) => rec.doctor_pk === doctorPk.value);
+};
+
+const stripRecordsInPeriod = computed(() => (
+  filterRecordsByDoctor(stripRecords.value.filter(recordOverlapsVisiblePeriod))
+));
+
+const stripNeedsExtraDropRow = computed(() => {
+  const count = stripRecordsInPeriod.value.length;
+  return count === 0 || count % STRIP_BOARD_COLUMNS === 0;
+});
 
 const stripDefaultDayKey = computed(() => {
   const days = visibleDays.value;
@@ -1221,13 +1262,9 @@ const recordsUnfilteredForMainGrid = computed(() => (
   records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
 
-const recordsForMainGrid = computed(() => {
-  const list = recordsUnfilteredForMainGrid.value;
-  if (doctorPk.value > 0) {
-    return list.filter((r) => r.doctor_pk === doctorPk.value);
-  }
-  return list;
-});
+const recordsForMainGrid = computed(() => (
+  filterRecordsByDoctor(recordsUnfilteredForMainGrid.value)
+));
 
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
@@ -1684,6 +1721,13 @@ const doctorFioByPk = (docPk: number) => {
   const d = doctors.value.find((x) => x.pk === docPk);
   return (d?.fio || '').trim();
 };
+
+const attendingDoctorTreeselectOptions = computed(() => (
+  doctors.value.map((doctor) => ({
+    id: doctor.pk,
+    label: doctor.fio || doctor.short_fio || String(doctor.pk),
+  }))
+));
 
 type StripServerPatient = {
   direction_pk: number;
@@ -2443,9 +2487,13 @@ const openStripRecordModal = (record: CalendarRecord) => {
   isEditModalOpen.value = true;
 };
 
-const clearModalDoctor = () => {
-  editingForm.value.doctorPk = null;
-  editingForm.value.doctorFio = '';
+const setEditingDoctor = (value: number | null | undefined) => {
+  const pk = value != null && Number.isFinite(Number(value)) ? Number(value) : null;
+  editingForm.value = {
+    ...editingForm.value,
+    doctorPk: pk,
+    doctorFio: pk != null ? doctorFioByPk(pk) : '',
+  };
 };
 
 const setAccompanyngChildType = (value: string | null | undefined) => {
@@ -3002,8 +3050,15 @@ onBeforeUnmount(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 0 0 8px;
   flex-shrink: 0;
+}
+
+.doctor-badges--top {
+  margin: 0 0 8px;
+}
+
+.doctor-badges--bottom {
+  margin: 8px 0;
 }
 
 .doctor-badge-btn {
@@ -3361,41 +3416,41 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .edit-modal {
   width: 560px;
   max-width: calc(100vw - 32px);
-  margin: 0;
+  max-height: calc(100vh - 32px);
+  margin: auto;
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.edit-modal .panel-heading {
+  flex-shrink: 0;
 }
 
 .edit-modal .panel-body {
-  overflow: visible;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.edit-modal .panel-footer {
+  flex-shrink: 0;
 }
 
 .edit-modal-treeselect {
   position: relative;
   z-index: 2;
-}
-
-.modal-doctor-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 30px;
-}
-
-.modal-doctor-name {
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-}
-
-.modal-doctor-clear {
-  flex-shrink: 0;
 }
 
 .edit-modal-comment-replicate {
@@ -3461,8 +3516,16 @@ onBeforeUnmount(() => {
   align-content: start;
   width: 100%;
   padding: 12px 10px 16px;
-  min-height: 220px;
   box-sizing: border-box;
+}
+
+/* Дополнительная строка под DnD, когда ряд заполнен (6 карточек) или зона пуста */
+.strip-cards-board--extra-drop-row::after {
+  content: '';
+  display: block;
+  grid-column: 1 / -1;
+  min-height: 88px;
+  pointer-events: none;
 }
 
 .strip-cards-board--drop-hover {
