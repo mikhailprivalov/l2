@@ -2,8 +2,8 @@
   <div class="board-page">
     <div class="toolbar panel panel-default panel-flt">
       <div class="panel-body">
-        <div class="row">
-          <div class="col-xs-3">
+        <div class="toolbar-row">
+          <div class="toolbar-department">
             <div class="input-group treeselect-noborder-left">
               <span class="input-group-addon">Подразделение</span>
               <Treeselect
@@ -17,8 +17,7 @@
               />
             </div>
           </div>
-          <div class="col-xs-9">
-            <div class="toolbar-controls">
+          <div class="toolbar-controls">
               <div class="mode-switch">
                 <button
                   class="btn btn-default"
@@ -70,15 +69,6 @@
                   →
                 </button>
               </div>
-              <span class="toolbar-extracts-count">
-                Выписано:
-                <a
-                  href="#"
-                  class="toolbar-extracts-count-link"
-                  @click.prevent="openExtractsDetailForm"
-                >{{ extractsCount }}</a>
-              </span>
-            </div>
           </div>
         </div>
       </div>
@@ -483,8 +473,12 @@
         </section>
 
         <section class="board-aside-section board-aside-section--discharged">
-          <h5 class="board-patients-heading">
-            Выписаны
+          <h5 class="board-patients-heading board-discharged-heading">
+            <a
+              href="#"
+              class="board-discharged-heading-link"
+              @click.prevent="openExtractsDetailForm"
+            >Выписаны {{ extractsCount }}</a>
           </h5>
           <div class="board-aside-section-body">
             <p
@@ -501,20 +495,12 @@
             </p>
             <template v-else>
               <div
-                v-for="group in dischargedGroupsInPeriod"
-                :key="group.dayKey"
-                class="board-discharged-day-group"
+                v-for="row in dischargedPatientsInPeriod"
+                :key="row.key"
+                class="board-discharged-row"
               >
-                <div class="board-discharged-day-label">
-                  {{ group.dateLabel }}
-                </div>
-                <div
-                  v-for="(name, idx) in group.patients"
-                  :key="`${group.dayKey}-${idx}`"
-                  class="board-discharged-row"
-                >
-                  {{ name }}
-                </div>
+                <span class="board-discharged-name">{{ row.name }}</span>
+                <span class="board-discharged-date">{{ row.dateLabel }}</span>
               </div>
             </template>
           </div>
@@ -826,7 +812,7 @@ const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
 const defaultHospitalizationPeriodDays = ref(3);
-const viewMode = ref<ViewMode>('week');
+const viewMode = ref<ViewMode>('day');
 const anchorDate = ref(moment());
 const isEditModalOpen = ref(false);
 const editingBedPk = ref<number | null>(null);
@@ -1330,24 +1316,26 @@ const extractCountForDay = (dayKey: string) => {
   return extractsByDate.value[extractKey]?.count || 0;
 };
 
-const dischargedGroupsInPeriod = computed(() => {
-  const groups: Array<{ dayKey: string, dateLabel: string, patients: string[] }> = [];
+const dischargedPatientsInPeriod = computed(() => {
+  const rows: Array<{ key: string, name: string, dateLabel: string }> = [];
   for (const day of visibleDays.value) {
     const extractKey = extractDateKeyFromDayKey(day.key);
     const patients = extractsByDate.value[extractKey]?.patientExtracts;
     if (!patients?.length) {
       continue;
     }
-    groups.push({
-      dayKey: day.key,
-      dateLabel: day.label,
-      patients: [...patients],
+    patients.forEach((name, idx) => {
+      rows.push({
+        key: `${day.key}-${idx}`,
+        name,
+        dateLabel: day.label,
+      });
     });
   }
-  return groups;
+  return rows;
 });
 
-const hasDischargedInPeriod = computed(() => dischargedGroupsInPeriod.value.length > 0);
+const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriod.value.length > 0);
 
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
@@ -1486,9 +1474,24 @@ const navigate = (direction: number) => {
   }
 };
 
+const applyDefaultDepartmentFromProfile = () => {
+  if (departmentPk.value != null) {
+    return;
+  }
+  const userDepartmentPk = Number(store.getters.user_data?.department?.pk);
+  if (!Number.isFinite(userDepartmentPk) || userDepartmentPk <= 0) {
+    return;
+  }
+  const userDepartment = departments.value.find((d) => d.id === userDepartmentPk);
+  if (userDepartment) {
+    departmentPk.value = userDepartment.id;
+  }
+};
+
 const loadDepartments = async () => {
   const { data } = await api('procedural-list/suitable-departments');
   departments.value = data;
+  applyDefaultDepartmentFromProfile();
 };
 
 const loadAccompanyingChildOptions = async () => {
@@ -2606,19 +2609,11 @@ $board-aside-section-min-height: 320px;
   color: #333;
 }
 
-.board-discharged-day-group {
-  margin-bottom: 10px;
-}
-
-.board-discharged-day-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #666;
-  margin-bottom: 4px;
-  padding-left: 2px;
-}
-
 .board-discharged-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   margin: 4px 0;
   padding: 5px 8px;
   background: #fff;
@@ -2626,7 +2621,18 @@ $board-aside-section-min-height: 320px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   font-size: 13px;
   line-height: 1.3;
+}
+
+.board-discharged-name {
+  flex: 1;
+  min-width: 0;
   word-break: break-word;
+}
+
+.board-discharged-date {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #666;
 }
 
 .board-patient--women {
@@ -2642,29 +2648,47 @@ $board-aside-section-min-height: 320px;
   flex-shrink: 0;
 }
 
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toolbar-department {
+  flex: 0 0 auto;
+  width: 560px;
+  max-width: 56%;
+  min-width: 440px;
+}
+
 .toolbar-controls {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
+  margin-left: auto;
 }
 
-.toolbar-extracts-count {
-  margin-left: 4px;
-  font-size: 16px;
-  font-weight: 500;
-  line-height: 34px;
-  white-space: nowrap;
+.board-discharged-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
-.toolbar-extracts-count-link {
+.board-discharged-heading-link {
   color: #337ab7;
+  font-size: 14px;
+  font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
 }
 
-.toolbar-extracts-count-link:hover {
+.board-discharged-heading-link:hover,
+.board-discharged-heading-link:focus {
   color: #23527c;
+  text-decoration: underline;
 }
 
 .mode-switch {
@@ -2683,8 +2707,6 @@ $board-aside-section-min-height: 320px;
   width: 100%;
   flex: 1;
   min-width: 0;
-  min-height: 0;
-  overflow: hidden;
   container-type: inline-size;
   container-name: calendar-wrap;
 }
@@ -2692,30 +2714,29 @@ $board-aside-section-min-height: 320px;
 .calendar-tables-stack {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
 }
 
 .calendar-main-scroll {
-  flex: 3 1 0;
-  min-height: 0;
-  overflow: auto;
+  flex: 0 0 auto;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .calendar-strip-block {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 0 0 auto;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
   margin-top: 0;
-  padding-top: 8px;
-  border-top: 1px solid #ddd;
+  padding-top: 10px;
 }
 
 .calendar-strip-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .doctor-badges {
