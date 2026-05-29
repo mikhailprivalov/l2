@@ -177,7 +177,6 @@
                       class="day-cell"
                       :class="{
                         'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
-                        'day-cell--forbidden-edit': cellIsExtract(bed.pk, day.key),
                         'day-cell--col-hover': isDayColumnHovered(day.key),
                       }"
                       @click="openEditModal(bed.pk, day.key)"
@@ -189,8 +188,10 @@
                         v-for="rec in cellRecordList(bed.pk, day.key)"
                         :key="`${bed.pk}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
+                        :class="{ 'record--extract': rec.is_extract }"
                         draggable="true"
                         :title="recordHoverTitle(rec, day.key)"
+                        @click.stop="openEditModalForRecord(bed.pk, day.key, rec)"
                         @dragstart.stop="onPatientDragStart($event, rec)"
                         @dragend="onPatientDragEnd"
                       >
@@ -920,6 +921,7 @@ interface CalendarRecord {
 
 const STRIP_BOARD_ID = 'strip-board';
 const STRIP_BOARD_COLUMNS = 6;
+const MAX_CELL_PATIENTS = 2;
 
 const ASIDE_SCROLL_STEP_PX = 56;
 const ASIDE_SCROLL_HOLD_MS = 45;
@@ -1290,18 +1292,29 @@ const recordsByBedAndDay = computed(() => {
   return map;
 });
 
-const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => (
-  recordsByBedAndDay.value.get(`${bedPk}-${dayKey}`) || []
-);
+const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
+  const list = recordsByBedAndDay.value.get(`${bedPk}-${dayKey}`) || [];
+  return [...list].sort((a, b) => {
+    if (Boolean(a.is_extract) === Boolean(b.is_extract)) {
+      return 0;
+    }
+    return a.is_extract ? -1 : 1;
+  });
+};
+
+const isRecordDischargeDay = (rec: CalendarRecord, dayKey: string) => {
+  if (!rec.is_extract) {
+    return false;
+  }
+  const end = hospVisualEnd(rec);
+  const d = moment(dayKey, 'YYYY-MM-DD');
+  return end.isValid() && d.isValid() && end.isSame(d, 'day');
+};
 
 const getRecordForDay = (bedPk: number, dayKey: string) => {
   const list = cellRecordList(bedPk, dayKey);
-  return list.length ? list[0] : undefined;
+  return list.find((r) => !r.is_extract) || list[0];
 };
-
-const cellIsExtract = (bedPk: number, dayKey: string) => (
-  cellRecordList(bedPk, dayKey).some((r) => r.is_extract)
-);
 
 const bedPeriodHasOverlap = (
   bedPk: number,
@@ -1332,6 +1345,9 @@ const bedPeriodHasOverlap = (
     }
     const recEnd = hospVisualEnd(rec);
     if (from.isSameOrBefore(recEnd, 'day') && to.isSameOrAfter(recStart, 'day')) {
+      if (rec.is_extract && from.isSame(recEnd, 'day')) {
+        continue;
+      }
       return true;
     }
   }
@@ -1357,6 +1373,44 @@ const bedDayOccupyingRecords = (bedPk: number, dayKey: string) => (
     (r) => r.bed_pk === bedPk && isDayInRecordSpan(r, dayKey),
   )
 );
+
+const canAcceptPatientInCell = (
+  bedPk: number,
+  dayKey: string,
+  excludeDirectionPk?: number | null,
+) => {
+  let occupying = bedDayOccupyingRecords(bedPk, dayKey);
+  if (excludeDirectionPk != null) {
+    occupying = occupying.filter((r) => r.direction_pk !== excludeDirectionPk);
+  }
+  if (occupying.length >= MAX_CELL_PATIENTS) {
+    return false;
+  }
+  if (occupying.length === 0) {
+    return true;
+  }
+  const only = occupying[0];
+  return Boolean(only.is_extract && isRecordDischargeDay(only, dayKey));
+};
+
+const assertCanAcceptPatientInCell = (
+  bedPk: number,
+  dayKey: string,
+  excludeDirectionPk?: number | null,
+) => {
+  if (canAcceptPatientInCell(bedPk, dayKey, excludeDirectionPk)) {
+    return true;
+  }
+  const occupying = bedDayOccupyingRecords(bedPk, dayKey).filter(
+    (r) => excludeDirectionPk == null || r.direction_pk !== excludeDirectionPk,
+  );
+  if (occupying.length >= MAX_CELL_PATIENTS) {
+    root.$emit('msg', 'error', 'В ячейке уже два пациента — допустимы только выписанный и новый');
+    return false;
+  }
+  root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
+  return false;
+};
 
 const surnameFromFio = (fio: string | null | undefined) => {
   const s = (fio || '').trim();
@@ -1534,8 +1588,13 @@ const openExtractsDetailForm = () => {
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
 const extractCountForDay = (dayKey: string) => {
-  const extractKey = extractDateKeyFromDayKey(dayKey);
-  return extractsByDate.value[extractKey]?.count || 0;
+  let count = 0;
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (isRecordDischargeDay(rec, dayKey)) {
+      count += 1;
+    }
+  }
+  return count;
 };
 
 const dischargedPatientsInPeriod = computed(() => {
@@ -1567,6 +1626,9 @@ const dayColumnTotalsMap = computed(() => {
   for (const rec of recordsUnfilteredForMainGrid.value) {
     for (const day of visibleDays.value) {
       if (!isDayInRecordSpan(rec, day.key)) {
+        continue;
+      }
+      if (isRecordDischargeDay(rec, day.key)) {
         continue;
       }
       const t = map.get(day.key) || emptyDayColumnTotals();
@@ -2211,6 +2273,9 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
   }
   const movePlanIn = targetDayKey;
   const movePlanOut = sourceRec.plan_date_out || sourceRec.date_out || null;
+  if (!assertCanAcceptPatientInCell(targetBedPk, targetDayKey, sourceRec.direction_pk)) {
+    return;
+  }
   if (!assertNoBedPeriodOverlap(targetBedPk, movePlanIn, movePlanOut, sourceRec.pk)) {
     return;
   }
@@ -2259,6 +2324,9 @@ const onStripToBedDrop = async (
   }
   const stripPlanIn = record.plan_date_in || record.date_in || targetDayKey;
   const stripPlanOut = record.plan_date_out || record.date_out || defaultPlanDateOut(targetDayKey);
+  if (!assertCanAcceptPatientInCell(targetBedPk, stripPlanIn, record.direction_pk)) {
+    return;
+  }
   if (!assertNoBedPeriodOverlap(targetBedPk, stripPlanIn, stripPlanOut, null)) {
     return;
   }
@@ -2322,8 +2390,7 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
   const occupying = bedDayOccupyingRecords(bedPk, dayKey);
   const existingForDirection = occupying.find((r) => r.direction_pk === directionPk) || null;
 
-  if (occupying.length > 0 && !existingForDirection) {
-    root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
+  if (!existingForDirection && !assertCanAcceptPatientInCell(bedPk, dayKey)) {
     return;
   }
   if (!existingForDirection && !assertNoBedPeriodOverlap(bedPk, panelPlanIn, panelPlanOut, null)) {
@@ -2475,6 +2542,15 @@ const openEditModal = (bedPk: number, dayKey: string) => {
   isEditModalOpen.value = true;
 };
 
+const openEditModalForRecord = (bedPk: number, dayKey: string, record: CalendarRecord) => {
+  if (suppressCellClick.value) {
+    return;
+  }
+  editingStripRowId.value = null;
+  fillEditModalFromRecord(record, bedPk, dayKey);
+  isEditModalOpen.value = true;
+};
+
 const openStripRecordModal = (record: CalendarRecord) => {
   if (suppressCellClick.value) {
     return;
@@ -2568,6 +2644,13 @@ const saveEditingCell = async () => {
     await loadUnallocatedPatients();
     root.$emit('msg', 'ok', 'Данные черновика сохранены');
     closeEditModal();
+    return;
+  }
+  if (!editingRecordPk.value && !assertCanAcceptPatientInCell(
+    editingBedPk.value,
+    editingForm.value.planDateIn || editingDayKey.value,
+    directionIdPayload,
+  )) {
     return;
   }
   if (!assertNoBedPeriodOverlap(
@@ -3151,10 +3234,6 @@ onBeforeUnmount(() => {
   background: rgba(91, 143, 175, 0.16);
 }
 
-.day-cell--col-hover.day-cell--forbidden-edit {
-  background: #d8e2ea;
-}
-
 .day-col-head {
   display: flex;
   flex-direction: column;
@@ -3215,21 +3294,27 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
-.day-cell--forbidden-edit {
-  background: #e6e6e6;
-}
-
 .day-cell--drop-hover {
   box-shadow: inset 0 0 0 2px #049372;
   background: rgba(4, 147, 114, 0.12);
 }
 
 .record {
-  background: transparent;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin-bottom: 2px;
   color: inherit;
   font-size: 12px;
   line-height: 1.25;
   text-align: left;
+  box-sizing: border-box;
+}
+
+.record--extract {
+  background: #e6e6e6;
+  border-color: #ccc;
 }
 
 .record--draggable {
