@@ -11,7 +11,7 @@ from django.utils.dateparse import parse_date
 
 from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID, CDA_ID_FOR_DATE_IS_EXTRACT
 from laboratory.utils import current_time
-from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds
+from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds, PatientBedActionLog
 from directions.models import Issledovaniya, Napravleniya
 from slog.models import Log
 from utils.response import status_response
@@ -31,6 +31,7 @@ from .discharge_sync import (
     get_discharge_date_for_direction,
     sync_patient_without_bed_discharge_date,
 )
+from .bed_action_log import log_bed_action
 from ..stationar.sql_func import get_extract_by_department_for_period
 import calendar
 
@@ -451,6 +452,13 @@ def entrance_patient_to_bed(request):
         patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id, doctor_id=doctor_id)
         patient_to_bed.save()
         Log.log(direction_id, 230000, user.doctorprofile, {"direction_id": direction_id, "bed_id": bed_id, "department_id": bed_department_id, "patient_to_bed": patient_to_bed.pk})
+        log_bed_action(
+            PatientBedActionLog.ACTION_ASSIGN,
+            author=user.doctorprofile,
+            department_id=bed_department_id,
+            patient_to_bed=patient_to_bed,
+            payload={"source": "entrance_patient_to_bed"},
+        )
     return status_response(True)
 
 
@@ -668,6 +676,22 @@ def save_patient_without_bed(request):
             "department_id": department_pk,
             "doctor_id": doctor_id,
         },
+    )
+    patient_fio_text = ""
+    filled = _patient_fields_from_direction_client(direction_pk)
+    if filled:
+        patient_fio_text = filled[0]
+    log_bed_action(
+        PatientBedActionLog.ACTION_TO_DRAFT,
+        author=user.doctorprofile,
+        department_id=department_pk,
+        direction_id=direction_pk,
+        doctor_id=doctor_id,
+        plan_date_in=plan_date_in,
+        plan_date_out=plan_date_out,
+        patient_fio_text=patient_fio_text,
+        is_extract=is_extract,
+        payload={"source": "save_patient_without_bed"},
     )
     return status_response(True)
 
@@ -929,6 +953,13 @@ def save_hospitalization_by_fio(request):
         user.doctorprofile,
         {"direction_id": direction_id, "bed_id": bed_id, "department_id": department_id, "patient_to_bed": patient_to_bed.pk},
     )
+    log_bed_action(
+        PatientBedActionLog.ACTION_ASSIGN,
+        author=user.doctorprofile,
+        department_id=department_id,
+        patient_to_bed=patient_to_bed,
+        payload={"source": "save_hospitalization_by_fio"},
+    )
     return JsonResponse({"ok": True, "message": "", "result": {"pk": patient_to_bed.pk}})
 
 
@@ -1053,6 +1084,14 @@ def clear_patient_from_bed(request):
     bed_id_log = record.bed_id
     direction_id_log = record.direction_id
     rec_pk = record.pk
+    log_bed_action(
+        PatientBedActionLog.ACTION_CLEAR,
+        author=user.doctorprofile,
+        department_id=department_id,
+        patient_to_bed=record,
+        patient_to_bed_pk=rec_pk,
+        payload={"source": "clear_patient_from_bed"},
+    )
     record.delete()
     Log.log(
         bed_id_log,

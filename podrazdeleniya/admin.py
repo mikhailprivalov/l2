@@ -1,5 +1,5 @@
 from django.contrib import admin
-from podrazdeleniya.models import Podrazdeleniya, Room, Chamber, Bed, PatientToBed, PatientStationarWithoutBeds
+from podrazdeleniya.models import Podrazdeleniya, Room, Chamber, Bed, PatientToBed, PatientStationarWithoutBeds, PatientBedActionLog
 
 
 class PodrazdeleniyaAdmin(admin.ModelAdmin):
@@ -40,6 +40,24 @@ class PatientStationarWithoutBedsAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'direction', 'department')
 
 
+class PatientBedActionLogAdmin(admin.ModelAdmin):
+    list_display = (
+        'pk',
+        'created_at',
+        'action',
+        'department',
+        'direction',
+        'bed',
+        'author',
+        'patient_fio_text',
+    )
+    list_filter = ('action', 'department', 'created_at')
+    search_fields = ('patient_fio_text', 'direction_id', 'patient_to_bed_pk')
+    readonly_fields = ('created_at',)
+    ordering = ('-created_at', '-pk')
+
+
+admin.site.register(PatientBedActionLog, PatientBedActionLogAdmin)
 admin.site.register(PatientStationarWithoutBeds, PatientStationarWithoutBedsAdmin)
 admin.site.register(PatientToBed, PatientToBedAdmin)
 admin.site.register(Bed, BedAdmin)

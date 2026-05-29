@@ -1020,6 +1020,26 @@ const stripDirectionPkSet = computed(() => {
   return s;
 });
 
+const placedDirectionPkSet = computed(() => {
+  const s = new Set<number>(stripDirectionPkSet.value);
+  for (const rec of records.value) {
+    const dirPk = rec.direction_pk;
+    if (dirPk != null && dirPk > 0) {
+      s.add(dirPk);
+    }
+  }
+  return s;
+});
+
+const removeUnallocatedPatientByDirection = (directionPk: number) => {
+  if (!Number.isFinite(directionPk) || directionPk <= 0) {
+    return;
+  }
+  unallocatedPatients.value = unallocatedPatients.value.filter(
+    (p) => p.direction_pk !== directionPk,
+  );
+};
+
 const recordsUnfilteredForMainGrid = computed(() => (
   records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
@@ -1708,7 +1728,9 @@ const removeStripRecordPk = async (pk: number) => {
 };
 
 const unallocatedPatientsFiltered = computed(() => {
-  const list = unallocatedPatients.value;
+  const list = unallocatedPatients.value.filter(
+    (p) => !placedDirectionPkSet.value.has(p.direction_pk),
+  );
   const q = unallocatedSearch.value.trim().toLowerCase();
   if (!q) {
     return list;
@@ -1914,7 +1936,9 @@ const onUnallocatedToStripDrop = async (rowIdx: number, dayKey: string, raw: str
     root.$emit('msg', 'error', res?.message || 'Не удалось сохранить черновик на сервере');
     return;
   }
+  removeUnallocatedPatientByDirection(directionPk);
   await reloadStripFromServer();
+  await loadUnallocatedPatients();
   root.$emit('msg', 'ok', 'Пациент добавлен в черновик');
 };
 
@@ -2188,6 +2212,7 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
   await store.dispatch(actions.DEC_LOADING);
   if (result?.ok) {
     root.$emit('msg', 'ok', existingForDirection?.pk ? 'Направление привязано' : 'Госпитализация создана');
+    removeUnallocatedPatientByDirection(directionPk);
     await loadCalendar();
     await loadUnallocatedPatients();
   } else {
@@ -2389,7 +2414,11 @@ const saveEditingCell = async () => {
       root.$emit('msg', 'error', stripSaveRes?.message || 'Не удалось сохранить черновик на сервере');
       return;
     }
+    if (rec.direction_pk) {
+      removeUnallocatedPatientByDirection(rec.direction_pk);
+    }
     await reloadStripFromServer();
+    await loadUnallocatedPatients();
     root.$emit('msg', 'ok', 'Данные черновика сохранены');
     closeEditModal();
     return;
@@ -2444,6 +2473,9 @@ const saveEditingCell = async () => {
   if (result?.ok) {
     root.$emit('msg', 'ok', 'Данные сохранены');
     closeEditModal();
+    if (directionIdPayload) {
+      removeUnallocatedPatientByDirection(directionIdPayload);
+    }
     await loadCalendar();
     await loadUnallocatedPatients();
   } else {
