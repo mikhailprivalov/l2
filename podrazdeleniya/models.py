@@ -184,6 +184,7 @@ class PatientToBed(models.Model):
     accompanyng_child_sex = models.CharField(max_length=2, default="-", help_text="Пол опровождающего", db_index=True)
     is_day_hosp = models.BooleanField(default=False, blank=True, help_text="Дневной стационар")
     is_need_sick = models.BooleanField(default=False, blank=True, help_text="Требуется больничный")
+    is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
 
     def __str__(self):
         if self.direction_id:
@@ -228,6 +229,7 @@ class PatientStationarWithoutBeds(models.Model):
     date_out = models.DateField(null=True)
     plan_date_in = models.DateField(null=True, default=None, blank=True)
     plan_date_out = models.DateField(null=True, default=None, blank=True)
+    is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
 
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
