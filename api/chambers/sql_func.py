@@ -33,12 +33,12 @@ def load_patients_stationar_unallocated_sql(department_id):
                     INNER JOIN podrazdeleniya_chamber ch ON bed.chamber_id = ch.id
                     WHERE ptb.direction_id = directions_napravleniya.id
                     AND ch.podrazdelenie_id = %(department_id)s
-                    AND ptb.date_out IS NULL
                 )
                 AND NOT EXISTS (
                     SELECT 1
                     FROM podrazdeleniya_patientstationarwithoutbeds pswb
                     WHERE pswb.direction_id = directions_napravleniya.id
+                    AND pswb.department_id = %(department_id)s
                 )
                 
                 ORDER BY family
@@ -90,7 +90,8 @@ def load_patient_without_bed_by_department(department_id):
             podrazdeleniya_patientstationarwithoutbeds.date_out,
             podrazdeleniya_patientstationarwithoutbeds.plan_date_in,
             podrazdeleniya_patientstationarwithoutbeds.plan_date_out,
-            users_doctorprofile.id as doctor_id
+            users_doctorprofile.id as doctor_id,
+            is_extract
             
             FROM podrazdeleniya_patientstationarwithoutbeds
             LEFT JOIN directions_napravleniya ON podrazdeleniya_patientstationarwithoutbeds.direction_id = directions_napravleniya.id

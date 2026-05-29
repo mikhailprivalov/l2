@@ -2977,7 +2977,7 @@ def directions_paraclinic_confirm_reset(request):
 
         if allow_reset:
             predoc = {"fio": iss.doc_confirmation_fio, "pk": iss.doc_confirmation_id, "direction": iss.napravleniye_id}
-            iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = None
+            iss.doc_confirmation = iss.executor_confirmation = iss.time_confirmation = iss.medical_examination = None
             iss.n3_odii_uploaded_task_id = None
             iss.save()
             if iss.napravleniye:
@@ -2991,6 +2991,7 @@ def directions_paraclinic_confirm_reset(request):
                 i.doc_confirmation = None
                 i.executor_confirmation = None
                 i.time_confirmation = None
+                i.medical_examination = None
                 i.save()
                 if i.napravleniye:
                     i.napravleniye.sync_confirmed_fields()

@@ -75,7 +75,8 @@ def apply_discharge_dates_to_hosp_record(record, discharge_date) -> None:
         return
     record.plan_date_out = discharge_date
     record.date_out = discharge_date
-    update_fields = ["plan_date_out", "date_out"]
+    record.is_extract = True
+    update_fields = ["plan_date_out", "date_out", "is_extract"]
 
     if not record.plan_date_in and record.date_in:
         record.plan_date_in = record.date_in
@@ -126,11 +127,11 @@ def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
 
     updated = False
     ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
-    iss.medical_examination = discharge_date
-    iss.save()
     if ptb:
         apply_discharge_dates_to_hosp_record(ptb, discharge_date)
         updated = True
     if sync_patient_without_bed_discharge_date(direction_pk, discharge_date):
         updated = True
+    iss.medical_examination = discharge_date
+    iss.save()
     return updated

@@ -289,12 +289,17 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
             d_iss.napravleniye_id,
             d_iss.medical_examination,
             to_char(d_iss.medical_examination AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_extract,
-            dpr.value as field_value
+            dpr.value as field_value,
+            ci.family as patient_family,
+            ci.name as patient_name,
+            ci.patronymic as patient_patronymic
             from directions_issledovaniya as d_iss
             left join directions_napravleniya dn on d_iss.napravleniye_id = dn.id
             left join directory_researches dr on d_iss.research_id = dr.id
             left join directions_paraclinicresult dpr on d_iss.id = dpr.issledovaniye_id
             left join directory_paraclinicinputfield dpif on dpr.field_id = dpif.id
+            left join clients_card cc on cc.id = dn.client_id
+            left join clients_individual ci on ci.id = cc.individual_id
             where dn.parent_id in 
                 (select diss.id 
                 from directions_issledovaniya as diss

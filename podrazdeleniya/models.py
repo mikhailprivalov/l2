@@ -184,6 +184,7 @@ class PatientToBed(models.Model):
     accompanyng_child_sex = models.CharField(max_length=2, default="-", help_text="Пол опровождающего", db_index=True)
     is_day_hosp = models.BooleanField(default=False, blank=True, help_text="Дневной стационар")
     is_need_sick = models.BooleanField(default=False, blank=True, help_text="Требуется больничный")
+    is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
 
     def __str__(self):
         if self.direction_id:
@@ -228,6 +229,7 @@ class PatientStationarWithoutBeds(models.Model):
     date_out = models.DateField(null=True)
     plan_date_in = models.DateField(null=True, default=None, blank=True)
     plan_date_out = models.DateField(null=True, default=None, blank=True)
+    is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
 
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
@@ -235,3 +237,75 @@ class PatientStationarWithoutBeds(models.Model):
     class Meta:
         verbose_name = 'Пациент без койки'
         verbose_name_plural = 'Пациенты без коек'
+
+
+class PatientBedActionLog(models.Model):
+    ACTION_ASSIGN = "assign_bed"
+    ACTION_TO_DRAFT = "to_draft"
+    ACTION_CLEAR = "clear_bed"
+
+    ACTIONS = (
+        (ACTION_ASSIGN, "Добавление на койку"),
+        (ACTION_TO_DRAFT, "Перенос в черновики"),
+        (ACTION_CLEAR, "Освобождение койки"),
+    )
+
+    action = models.CharField(max_length=32, choices=ACTIONS, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    author = models.ForeignKey(
+        "users.DoctorProfile",
+        null=True,
+        blank=True,
+        related_name="bed_action_logs_authored",
+        on_delete=models.SET_NULL,
+    )
+    department = models.ForeignKey(
+        Podrazdeleniya,
+        null=True,
+        blank=True,
+        db_index=True,
+        on_delete=models.SET_NULL,
+    )
+    direction = models.ForeignKey(
+        "directions.Napravleniya",
+        null=True,
+        blank=True,
+        db_index=True,
+        on_delete=models.SET_NULL,
+    )
+    bed = models.ForeignKey(
+        Bed,
+        null=True,
+        blank=True,
+        db_index=True,
+        related_name="action_logs",
+        on_delete=models.SET_NULL,
+    )
+    doctor = models.ForeignKey(
+        "users.DoctorProfile",
+        null=True,
+        blank=True,
+        related_name="bed_action_logs_as_doctor",
+        on_delete=models.SET_NULL,
+    )
+    patient_to_bed = models.ForeignKey(
+        PatientToBed,
+        null=True,
+        blank=True,
+        related_name="action_logs",
+        on_delete=models.SET_NULL,
+    )
+    patient_to_bed_pk = models.PositiveIntegerField(null=True, blank=True, db_index=True)
+    plan_date_in = models.DateField(null=True, blank=True)
+    plan_date_out = models.DateField(null=True, blank=True)
+    patient_fio_text = models.CharField(max_length=128, blank=True, default="")
+    is_extract = models.BooleanField(default=False, blank=True)
+    payload = models.JSONField(default=dict, blank=True)
+
+    def __str__(self):
+        return f"{self.get_action_display()} #{self.pk}"
+
+    class Meta:
+        verbose_name = "Лог действия по койке"
+        verbose_name_plural = "Логи действий по койкам"
+        ordering = ("-created_at", "-pk")
