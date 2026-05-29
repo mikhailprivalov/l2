@@ -440,85 +440,169 @@
         </div>
       </div>
 
-      <aside class="board-patients-aside">
-        <section class="board-aside-section board-aside-section--patients">
+      <aside
+        ref="boardPatientsAside"
+        class="board-patients-aside"
+      >
+        <div class="board-patients-heading-row">
           <h5 class="board-patients-heading">
             Пациенты
           </h5>
-          <input
-            v-model.trim="unallocatedSearch"
-            class="form-control input-sm board-patients-search"
-            type="text"
-            placeholder="Поиск"
+          <div class="board-aside-scroll-controls">
+            <button
+              type="button"
+              class="btn btn-default btn-xs board-aside-scroll-btn"
+              title="Сдвинуть списки выше"
+              :disabled="!canAsideScrollUp"
+              @mousedown.prevent="startAsideScrollHold(-1)"
+              @mouseup="stopAsideScrollHold"
+              @mouseleave="stopAsideScrollHold"
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              class="btn btn-default btn-xs board-aside-scroll-btn"
+              title="Сдвинуть списки ниже"
+              :disabled="!canAsideScrollDown"
+              @mousedown.prevent="startAsideScrollHold(1)"
+              @mouseup="stopAsideScrollHold"
+              @mouseleave="stopAsideScrollHold"
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              class="btn btn-default btn-xs board-aside-scroll-btn"
+              title="В начало списков"
+              :disabled="asideScrollOffset <= 0"
+              @click="resetAsideScroll"
+            >
+              ⌂
+            </button>
+          </div>
+        </div>
+        <input
+          v-model.trim="unallocatedSearch"
+          class="form-control input-sm board-patients-search"
+          type="text"
+          placeholder="Поиск"
+        >
+        <div
+          ref="boardAsideViewport"
+          class="board-aside-viewport"
+        >
+          <div
+            ref="boardAsideContent"
+            class="board-aside-content"
+            :style="{ transform: `translateY(${asideScrollOffset}px)` }"
           >
-          <div class="board-aside-section-body">
-            <p
-              v-if="!departmentPk"
-              class="text-muted small board-patients-empty"
-            >
-              Выберите подразделение
-            </p>
-            <template v-else>
-              <div
-                v-for="p in unallocatedPatientsFiltered"
-                :key="p.direction_pk"
-                class="board-patient-row"
-                draggable="true"
-                @dragstart="onUnallocatedPatientDragStart($event, p)"
-                @dragend="onUnallocatedPatientDragEnd"
-              >
-                <a
-                  class="board-patient-link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  :href="stationarHref(p.direction_pk)"
-                  :class="unallocatedGenderClass(p)"
-                  @click.stop
-                  @mousedown.stop
-                >{{ p.short_fio }}</a>
-                <i
-                  class="fa-solid fa-child-reaching board-patient-icon"
-                  :class="unallocatedGenderClass(p)"
-                />
-                <span class="board-patient-age">{{ p.age }}л.</span>
+            <section class="board-aside-section board-aside-section--patients">
+              <div class="board-aside-section-body">
+                <p
+                  v-if="!departmentPk"
+                  class="text-muted small board-patients-empty"
+                >
+                  Выберите подразделение
+                </p>
+                <template v-else>
+                  <div
+                    v-for="p in unallocatedPatientsFiltered"
+                    :key="p.direction_pk"
+                    class="board-patient-row"
+                    draggable="true"
+                    @dragstart="onUnallocatedPatientDragStart($event, p)"
+                    @dragend="onUnallocatedPatientDragEnd"
+                  >
+                    <a
+                      class="board-patient-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :href="stationarHref(p.direction_pk)"
+                      :class="unallocatedGenderClass(p)"
+                      @click.stop
+                      @mousedown.stop
+                    >{{ p.short_fio }}</a>
+                    <i
+                      class="fa-solid fa-child-reaching board-patient-icon"
+                      :class="unallocatedGenderClass(p)"
+                    />
+                    <span class="board-patient-age">{{ p.age }}л.</span>
+                  </div>
+                </template>
               </div>
-            </template>
-          </div>
-        </section>
+            </section>
 
-        <section class="board-aside-section board-aside-section--discharged">
-          <h5 class="board-patients-heading board-discharged-heading">
-            <a
-              href="#"
-              class="board-discharged-heading-link"
-              @click.prevent="openExtractsDetailForm"
-            >Выписаны {{ extractsCount }}</a>
-          </h5>
-          <div class="board-aside-section-body">
-            <p
-              v-if="!departmentPk"
-              class="text-muted small board-patients-empty"
-            >
-              Выберите подразделение
-            </p>
-            <p
-              v-else-if="!hasDischargedInPeriod"
-              class="text-muted small board-patients-empty"
-            >
-              Нет выписок за выбранный период
-            </p>
-            <template v-else>
-              <div
-                v-for="row in dischargedPatientsInPeriod"
-                :key="row.key"
-                class="board-discharged-row"
-              >
-                <span class="board-discharged-name">{{ row.name }}</span>
-                <span class="board-discharged-date">{{ row.dateLabel }}</span>
+            <section class="board-aside-section board-aside-section--discharged">
+              <div class="board-patients-heading-row board-discharged-heading-row">
+                <h5 class="board-patients-heading board-discharged-heading">
+                  <a
+                    href="#"
+                    class="board-discharged-heading-link"
+                    @click.prevent="openExtractsDetailForm"
+                  >Выписаны {{ extractsCount }}</a>
+                </h5>
+                <div class="board-aside-scroll-controls">
+                  <button
+                    type="button"
+                    class="btn btn-default btn-xs board-aside-scroll-btn"
+                    title="Сдвинуть списки выше"
+                    :disabled="!canAsideScrollUp"
+                    @mousedown.prevent="startAsideScrollHold(-1)"
+                    @mouseup="stopAsideScrollHold"
+                    @mouseleave="stopAsideScrollHold"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default btn-xs board-aside-scroll-btn"
+                    title="Сдвинуть списки ниже"
+                    :disabled="!canAsideScrollDown"
+                    @mousedown.prevent="startAsideScrollHold(1)"
+                    @mouseup="stopAsideScrollHold"
+                    @mouseleave="stopAsideScrollHold"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default btn-xs board-aside-scroll-btn"
+                    title="В начало списков"
+                    :disabled="asideScrollOffset <= 0"
+                    @click="resetAsideScroll"
+                  >
+                    ⌂
+                  </button>
+                </div>
               </div>
-            </template>
+              <div class="board-aside-section-body">
+                <p
+                  v-if="!departmentPk"
+                  class="text-muted small board-patients-empty"
+                >
+                  Выберите подразделение
+                </p>
+                <p
+                  v-else-if="!hasDischargedInPeriod"
+                  class="text-muted small board-patients-empty"
+                >
+                  Нет выписок за выбранный период
+                </p>
+                <template v-else>
+                  <div
+                    v-for="row in dischargedPatientsInPeriod"
+                    :key="row.key"
+                    class="board-discharged-row"
+                  >
+                    <span class="board-discharged-name">{{ row.name }}</span>
+                    <span class="board-discharged-date">{{ row.dateLabel }}</span>
+                  </div>
+                </template>
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
       </aside>
     </div>
 
@@ -738,6 +822,8 @@ import Treeselect from '@riophae/vue-treeselect';
 import {
   computed,
   getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
   onMounted,
   ref,
   watch,
@@ -807,6 +893,86 @@ interface CalendarRecord {
 }
 
 const STRIP_BOARD_ID = 'strip-board';
+
+const ASIDE_SCROLL_STEP_PX = 56;
+const ASIDE_SCROLL_HOLD_MS = 45;
+const ASIDE_SCROLL_HOLD_DELAY_MS = 280;
+
+const boardPatientsAside = ref<HTMLElement | null>(null);
+const boardAsideViewport = ref<HTMLElement | null>(null);
+const boardAsideContent = ref<HTMLElement | null>(null);
+const asideScrollOffset = ref(0);
+const maxAsideScrollOffset = ref(0);
+
+let asideScrollTimer: ReturnType<typeof setInterval> | null = null;
+let asideScrollHoldTimer: ReturnType<typeof setTimeout> | null = null;
+let asideScrollResizeObserver: ResizeObserver | null = null;
+
+const canAsideScrollUp = computed(() => asideScrollOffset.value > 0);
+const canAsideScrollDown = computed(() => asideScrollOffset.value < maxAsideScrollOffset.value);
+
+const clampAsideScrollOffset = (value: number) => (
+  Math.min(maxAsideScrollOffset.value, Math.max(0, value))
+);
+
+const updateAsideScrollBounds = () => {
+  const viewport = boardAsideViewport.value;
+  const content = boardAsideContent.value;
+  if (!viewport || !content) {
+    maxAsideScrollOffset.value = 0;
+    asideScrollOffset.value = 0;
+    return;
+  }
+  const viewportHeight = viewport.clientHeight;
+  const contentHeight = content.offsetHeight;
+  const overflow = contentHeight - viewportHeight;
+  maxAsideScrollOffset.value = overflow > 0
+    ? overflow
+    : Math.max(0, viewportHeight - contentHeight);
+  asideScrollOffset.value = clampAsideScrollOffset(asideScrollOffset.value);
+};
+
+const shiftAsideScroll = (delta: number) => {
+  updateAsideScrollBounds();
+  asideScrollOffset.value = clampAsideScrollOffset(asideScrollOffset.value + delta);
+};
+
+const resetAsideScroll = () => {
+  asideScrollOffset.value = 0;
+};
+
+const stopAsideScrollHold = () => {
+  if (asideScrollHoldTimer != null) {
+    clearTimeout(asideScrollHoldTimer);
+    asideScrollHoldTimer = null;
+  }
+  if (asideScrollTimer != null) {
+    clearInterval(asideScrollTimer);
+    asideScrollTimer = null;
+  }
+};
+
+const startAsideScrollHold = (direction: -1 | 1) => {
+  if (direction < 0 && !canAsideScrollUp.value) {
+    return;
+  }
+  if (direction > 0 && !canAsideScrollDown.value) {
+    return;
+  }
+  shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
+  stopAsideScrollHold();
+  asideScrollHoldTimer = setTimeout(() => {
+    asideScrollTimer = setInterval(() => {
+      shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
+    }, ASIDE_SCROLL_HOLD_MS);
+  }, ASIDE_SCROLL_HOLD_DELAY_MS);
+};
+
+const scheduleAsideScrollBoundsUpdate = () => {
+  nextTick(() => {
+    updateAsideScrollBounds();
+  });
+};
 
 const stripRecords = ref<CalendarRecord[]>([]);
 
@@ -2461,24 +2627,63 @@ watch([departmentPk, viewMode, anchorDate], async () => {
   await loadCalendar();
   await loadUnallocatedPatients();
   await reloadStripFromServer();
+  scheduleAsideScrollBoundsUpdate();
 });
 
 watch(departmentPk, async (d) => {
   await loadDoctors();
   doctorPk.value = -1;
   await loadPatientsWithoutBed();
+  resetAsideScroll();
+  scheduleAsideScrollBoundsUpdate();
 });
 
+watch(
+  [unallocatedPatientsFiltered, dischargedPatientsInPeriod, unallocatedSearch],
+  () => {
+    scheduleAsideScrollBoundsUpdate();
+  },
+);
+
 onMounted(async () => {
+  window.addEventListener('mouseup', stopAsideScrollHold);
   await Promise.all([loadDepartments(), loadAccompanyingChildOptions()]);
+  await nextTick();
+  if (typeof ResizeObserver !== 'undefined') {
+    asideScrollResizeObserver = new ResizeObserver(() => {
+      updateAsideScrollBounds();
+    });
+    if (boardAsideViewport.value) {
+      asideScrollResizeObserver.observe(boardAsideViewport.value);
+    }
+    if (boardAsideContent.value) {
+      asideScrollResizeObserver.observe(boardAsideContent.value);
+    }
+    if (boardPatientsAside.value) {
+      asideScrollResizeObserver.observe(boardPatientsAside.value);
+    }
+  }
+  scheduleAsideScrollBoundsUpdate();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mouseup', stopAsideScrollHold);
+  stopAsideScrollHold();
+  if (asideScrollResizeObserver != null) {
+    asideScrollResizeObserver.disconnect();
+    asideScrollResizeObserver = null;
+  }
 });
 </script>
 
 <style scoped lang="scss">
 .board-page {
-  padding: 10px 16px;
   box-sizing: border-box;
-  min-height: calc(100vh - 100px);
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px 16px;
 }
 
 .board-body {
@@ -2486,6 +2691,7 @@ onMounted(async () => {
   flex-direction: row;
   align-items: stretch;
   min-width: 0;
+  min-height: 0;
 }
 
 .board-patients-aside {
@@ -2495,30 +2701,41 @@ onMounted(async () => {
   border-left: 1px solid #ddd;
   padding: 0 0 8px 12px;
   margin-left: 8px;
-  display: grid;
-  grid-template-rows: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 0;
   background: hsla(30, 3%, 94%, 1);
   align-self: stretch;
-  min-height: 640px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-$board-aside-section-min-height: 320px;
-
-.board-aside-section {
+.board-aside-scroll-controls {
   display: flex;
-  flex-direction: column;
-  min-height: $board-aside-section-min-height;
-  overflow: visible;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
-.board-aside-section--discharged {
-  border-top: 1px solid #ddd;
+.board-aside-scroll-btn {
+  min-width: 28px;
+  padding: 2px 6px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.board-patients-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 6px;
+  flex-shrink: 0;
 }
 
 .board-patients-heading {
-  text-align: center;
-  margin: 8px 0 6px;
+  text-align: left;
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
   flex-shrink: 0;
@@ -2529,8 +2746,31 @@ $board-aside-section-min-height: 320px;
   flex-shrink: 0;
 }
 
-.board-aside-section-body {
+.board-aside-viewport {
   flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.board-aside-content {
+  will-change: transform;
+}
+
+.board-aside-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.board-aside-section--discharged {
+  border-top: 1px solid #ddd;
+}
+
+.board-aside-section-body {
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .board-patient-row {
@@ -2674,11 +2914,12 @@ $board-aside-section-min-height: 320px;
   color: #fff;
 }
 
+.board-discharged-heading-row {
+  margin-top: 4px;
+}
+
 .board-discharged-heading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  margin: 0;
 }
 
 .board-discharged-heading-link {
@@ -2699,8 +2940,9 @@ $board-aside-section-min-height: 320px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   container-type: inline-size;
   container-name: calendar-wrap;
 }
