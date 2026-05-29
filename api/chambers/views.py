@@ -32,7 +32,6 @@ from .discharge_sync import (
     sync_patient_without_bed_discharge_date,
 )
 from ..stationar.sql_func import get_extract_by_department_for_period
-from ..stationar.stationar_func import forbidden_edit_dir
 import calendar
 
 
@@ -188,8 +187,7 @@ def _strip_calendar_dates(
 def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
     """Период и признак выписки для черновика / календаря по direction_id."""
     if not direction_pk:
-        return {"forbidden_edit": False}
-    forbidden_edit = bool(forbidden_edit_dir(direction_pk))
+        return {"is_extract": False}
     discharge_date = get_discharge_date_for_direction(direction_pk)
     pswb = PatientStationarWithoutBeds.objects.filter(direction_id=direction_pk).order_by("-pk").first()
     ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
@@ -197,16 +195,19 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
     plan_date_out = None
     date_in = None
     date_out = None
+    is_extract = False
     if pswb:
         plan_date_in = pswb.plan_date_in
         plan_date_out = pswb.plan_date_out
         date_in = pswb.date_in
         date_out = pswb.date_out
+        is_extract = bool(pswb.is_extract)
     elif ptb:
         plan_date_in = ptb.plan_date_in
         plan_date_out = ptb.plan_date_out
         date_in = ptb.date_in
         date_out = ptb.date_out
+        is_extract = bool(ptb.is_extract)
     plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
         plan_date_in,
         plan_date_out,
@@ -220,7 +221,7 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
         plan_in_eff = plan_date_in or date_in
         if plan_in_eff and discharge_date < plan_in_eff:
             plan_date_in = discharge_date
-    meta = {"forbidden_edit": forbidden_edit}
+    meta = {"is_extract": is_extract}
     if plan_date_in:
         meta["plan_date_in"] = str(plan_date_in)
     if plan_date_out:
@@ -235,7 +236,6 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
 def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
     """Строка API для черновика из SQL + выписка из протокола."""
     direction_id = patient.direction_id
-    forbidden_edit = bool(forbidden_edit_dir(direction_id)) if direction_id else False
     discharge_date = get_discharge_date_for_direction(direction_id) if direction_id else None
     plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
         getattr(patient, "plan_date_in", None),
@@ -250,7 +250,7 @@ def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
         plan_in_eff = plan_date_in or date_in
         if plan_in_eff and discharge_date < plan_in_eff:
             plan_date_in = discharge_date
-    row = {"forbidden_edit": forbidden_edit}
+    row = {"is_extract": bool(getattr(patient, "is_extract", False))}
     if plan_date_in:
         row["plan_date_in"] = str(plan_date_in)
     if plan_date_out:
@@ -347,6 +347,17 @@ def get_unallocated_patients(request):
         closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
         closed_issledovaniya_ids = set(closed_issledovaniya_ids)
 
+    occupied_direction_ids = set(
+        PatientToBed.objects.filter(
+            bed__chamber__podrazdelenie_id=department_pk,
+            direction_id__isnull=False,
+        ).values_list("direction_id", flat=True)
+    ) | set(
+        PatientStationarWithoutBeds.objects.filter(
+            department_id=department_pk,
+        ).values_list("direction_id", flat=True)
+    )
+
     patients = [
         {
             "fio": f'{patient.family} {patient.name} {patient.patronymic if patient.patronymic else ""}',
@@ -358,6 +369,7 @@ def get_unallocated_patients(request):
         }
         for patient in load_patients_stationar_unallocated_sql(department_pk)
         if patient.issledovanie_id not in closed_issledovaniya_ids
+        and patient.napravleniye_id not in occupied_direction_ids
     ]
 
     return JsonResponse({"data": patients})
@@ -462,7 +474,7 @@ def extract_patient_bed(request):
         .select_related("research")
         .order_by("-time_confirmation")
     ):
-        if extract_iss.research.is_extract:
+        if extract_iss.research.is_extract_service:
             discharge_date = _read_discharge_date_from_protocol(extract_iss)
             if discharge_date:
                 break
@@ -611,6 +623,15 @@ def save_patient_without_bed(request):
     plan_date_in = _parse_ymd_date(request_data.get("plan_date_in") or patient_obj.get("plan_date_in"))
     plan_date_out = _parse_ymd_date(request_data.get("plan_date_out") or patient_obj.get("plan_date_out"))
     date_out = _parse_ymd_date(request_data.get("date_out") or patient_obj.get("date_out"))
+    is_extract = _parse_bool(request_data.get("is_extract"))
+    if patient_obj.get("is_extract") is not None:
+        is_extract = _parse_bool(patient_obj.get("is_extract"))
+    existing_pswb = PatientStationarWithoutBeds.objects.filter(
+        direction_id=direction_pk,
+        department_id=department_pk,
+    ).first()
+    if existing_pswb:
+        is_extract = is_extract or bool(existing_pswb.is_extract)
     today = datetime.date.today()
     if not plan_date_in:
         plan_date_in = today
@@ -622,6 +643,7 @@ def save_patient_without_bed(request):
         "plan_date_in": plan_date_in,
         "plan_date_out": plan_date_out,
         "date_out": date_out,
+        "is_extract": is_extract,
     }
     patient_without_bed, created = PatientStationarWithoutBeds.objects.get_or_create(
         direction_id=direction_pk,
@@ -635,7 +657,8 @@ def save_patient_without_bed(request):
         patient_without_bed.plan_date_in = plan_date_in
         patient_without_bed.plan_date_out = plan_date_out
         patient_without_bed.date_out = date_out
-        patient_without_bed.save(update_fields=["doctor_id", "plan_date_in", "plan_date_out", "date_out"])
+        patient_without_bed.is_extract = is_extract or bool(patient_without_bed.is_extract)
+        patient_without_bed.save(update_fields=["doctor_id", "plan_date_in", "plan_date_out", "date_out", "is_extract"])
     Log.log(
         patient_obj["direction_pk"],
         230004,
@@ -743,9 +766,6 @@ def get_hospitalization_calendar(request):
                     continue
                 if item_start <= d <= item_end:
                     date_comments[d_str] = txt
-            forbidden_edit = False
-            if item.direction_id:
-                forbidden_edit = forbidden_edit_dir(item.direction_id)
             records.append(
                 {
                     "pk": item.pk,
@@ -766,7 +786,7 @@ def get_hospitalization_calendar(request):
                     "date_comments": date_comments,
                     "is_day_hosp": bool(item.is_day_hosp),
                     "is_need_sick": bool(item.is_need_sick),
-                    "forbidden_edit": forbidden_edit,
+                    "is_extract": bool(item.is_extract),
                 }
             )
     view_mode = request_data.get("view_mode")
@@ -793,9 +813,10 @@ def get_hospitalization_calendar(request):
     total_direction_list = []
     for i in extract_proto_for_period:
         if not extracts_data.get(i.date_extract):
-            extracts_data[i.date_extract] = {"count": 1, "directionsList": [i.napravleniye_id]}
+            extracts_data[i.date_extract] = {"count": 1, "directionsList": [i.napravleniye_id], "patientExtracts": [f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"]}
         else:
             extracts_data[i.date_extract]["count"] += 1
+            extracts_data[i.date_extract]["patientExtracts"].append(f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}")
         total_direction_list.append(i.napravleniye_id)
 
     extracts_count = sum(item["count"] for item in extracts_data.values())
@@ -867,6 +888,17 @@ def save_hospitalization_by_fio(request):
     overlap_err = _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out)
     if overlap_err:
         return status_response(False, overlap_err)
+    is_extract = _parse_bool(request_data.get("is_extract"))
+    if direction_fk:
+        pswb = PatientStationarWithoutBeds.objects.filter(
+            direction_id=direction_fk,
+            department_id=department_id,
+        ).first()
+        if pswb:
+            is_extract = is_extract or bool(pswb.is_extract)
+        ptb = PatientToBed.objects.filter(direction_id=direction_fk).order_by("-pk").first()
+        if ptb:
+            is_extract = is_extract or bool(ptb.is_extract)
     patient_to_bed = PatientToBed(
         direction_id=direction_fk,
         bed_id=bed_id,
@@ -880,6 +912,7 @@ def save_hospitalization_by_fio(request):
         accompanyng_child_type=acc_type,
         accompanyng_child_sex=acc_sex,
         is_need_sick=is_need_sick,
+        is_extract=is_extract,
     )
     _align_ptb_date_out_with_plan(patient_to_bed)
     patient_to_bed.save()
@@ -1110,6 +1143,7 @@ def move_hospitalization_to_bed(request):
             accompanyng_child_type=old.accompanyng_child_type or "",
             accompanyng_child_sex=old.accompanyng_child_sex or "-",
             is_need_sick=bool(old.is_need_sick),
+            is_extract=bool(old.is_extract),
         )
         if not uses_plan:
             new.date_out = tail_date_out
