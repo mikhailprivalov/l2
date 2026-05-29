@@ -104,6 +104,7 @@
             <table
               class="table table-bordered table-condensed calendar-table"
               :class="{ 'calendar-table--month': viewMode === 'month' }"
+              :style="{ minWidth: `${mainCalendarTableMinWidthPx}px` }"
             >
               <colgroup>
                 <col class="calendar-col-chamber">
@@ -278,6 +279,7 @@
               <table
                 class="table table-bordered table-condensed calendar-table calendar-table--strip"
                 :class="{ 'calendar-table--month': viewMode === 'month' }"
+                :style="{ minWidth: `${stripCalendarTableMinWidthPx}px` }"
               >
                 <colgroup>
                   <col class="calendar-col-strip-sidebar">
@@ -942,6 +944,28 @@ const visibleDays = computed(() => {
     cursor.add(1, 'day');
   }
   return days;
+});
+
+const CALENDAR_CHAMBER_COL_WIDTH = 112;
+const CALENDAR_BED_COL_WIDTH = 64;
+const CALENDAR_STRIP_SIDEBAR_COL_WIDTH = 176;
+const CALENDAR_DAY_COL_MIN_WIDTH = 108;
+const CALENDAR_DAY_COL_MIN_WIDTH_MONTH = 56;
+
+const mainCalendarTableMinWidthPx = computed(() => {
+  const dayColWidth = viewMode.value === 'month'
+    ? CALENDAR_DAY_COL_MIN_WIDTH_MONTH
+    : CALENDAR_DAY_COL_MIN_WIDTH;
+  return CALENDAR_CHAMBER_COL_WIDTH
+    + CALENDAR_BED_COL_WIDTH
+    + visibleDays.value.length * dayColWidth;
+});
+
+const stripCalendarTableMinWidthPx = computed(() => {
+  const dayColWidth = viewMode.value === 'month'
+    ? CALENDAR_DAY_COL_MIN_WIDTH_MONTH
+    : CALENDAR_DAY_COL_MIN_WIDTH;
+  return CALENDAR_STRIP_SIDEBAR_COL_WIDTH + visibleDays.value.length * dayColWidth;
 });
 
 const chamberRows = computed(() => chambers.value.map((row) => {
@@ -2751,8 +2775,46 @@ $board-aside-section-min-height: 320px;
 
 .calendar-main-scroll {
   flex: 0 0 auto;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
+}
+
+.calendar-strip-scroll {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
+.calendar-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Месяц: столбец даты в 2 раза уже, чем столбец даты недели */
+.calendar-table--month {
+  width: auto;
+  min-width: 100%;
+}
+
+.calendar-table--month .calendar-col-day {
+  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  min-width: 56px;
+}
+
+.calendar-table--month .day-col,
+.calendar-table--month .day-cell {
+  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  min-width: 56px;
+  max-width: none;
+}
+
+.calendar-table--month .day-cell {
+  overflow: hidden;
 }
 
 .calendar-strip-block {
@@ -2762,13 +2824,6 @@ $board-aside-section-min-height: 320px;
   flex-direction: column;
   margin-top: 0;
   padding-top: 10px;
-}
-
-.calendar-strip-scroll {
-  flex: 0 0 auto;
-  flex-shrink: 0;
-  overflow-x: auto;
-  overflow-y: visible;
 }
 
 .doctor-badges {
@@ -2795,34 +2850,6 @@ $board-aside-section-min-height: 320px;
 
 .doctor-badge-draggable:active {
   cursor: grabbing;
-}
-
-.calendar-table {
-  table-layout: fixed;
-  width: 100%;
-  min-width: 0;
-}
-
-/* Месяц: столбец даты в 2 раза уже, чем столбец даты недели (доля (100%−фикс)/7 пополам) */
-.calendar-table--month {
-  width: auto;
-  min-width: 100%;
-}
-
-.calendar-table--month .calendar-col-day {
-  width: calc((100cqi - 112px - 64px) / 7 / 2);
-  min-width: 0;
-}
-
-.calendar-table--month .day-col,
-.calendar-table--month .day-cell {
-  width: calc((100cqi - 112px - 64px) / 7 / 2);
-  min-width: 0;
-  max-width: calc((100cqi - 112px - 64px) / 7 / 2);
-}
-
-.calendar-table--month .day-cell {
-  overflow: hidden;
 }
 
 .calendar-table--month .record-line--patient {
@@ -2859,6 +2886,7 @@ $board-aside-section-min-height: 320px;
 
 .calendar-col-day {
   width: auto;
+  min-width: 108px;
 }
 
 .chamber-col {
@@ -2875,7 +2903,7 @@ $board-aside-section-min-height: 320px;
 
 .day-col {
   width: auto;
-  min-width: 0;
+  min-width: 108px;
   text-align: center;
 }
 
@@ -2956,7 +2984,7 @@ $board-aside-section-min-height: 320px;
   padding: 3px 4px;
   cursor: pointer;
   width: auto;
-  min-width: 0;
+  min-width: 108px;
   overflow: hidden;
 }
 
@@ -3275,14 +3303,14 @@ $board-aside-section-min-height: 320px;
 
 .calendar-table--strip.calendar-table--month .calendar-col-day {
   width: calc((100cqi - 176px) / 7 / 2);
-  min-width: 0;
+  min-width: 56px;
 }
 
 .calendar-table--strip.calendar-table--month .day-col,
 .calendar-table--strip.calendar-table--month .day-cell {
   width: calc((100cqi - 176px) / 7 / 2);
-  min-width: 0;
-  max-width: calc((100cqi - 176px) / 7 / 2);
+  min-width: 56px;
+  max-width: none;
 }
 
 .calendar-table--strip.calendar-table--month .day-cell {
