@@ -444,50 +444,6 @@
         ref="boardPatientsAside"
         class="board-patients-aside"
       >
-        <div class="board-patients-heading-row">
-          <h5 class="board-patients-heading">
-            Пациенты
-          </h5>
-          <div class="board-aside-scroll-controls">
-            <button
-              type="button"
-              class="btn btn-default btn-xs board-aside-scroll-btn"
-              title="Сдвинуть списки выше"
-              :disabled="!canAsideScrollUp"
-              @mousedown.prevent="startAsideScrollHold(-1)"
-              @mouseup="stopAsideScrollHold"
-              @mouseleave="stopAsideScrollHold"
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              class="btn btn-default btn-xs board-aside-scroll-btn"
-              title="Сдвинуть списки ниже"
-              :disabled="!canAsideScrollDown"
-              @mousedown.prevent="startAsideScrollHold(1)"
-              @mouseup="stopAsideScrollHold"
-              @mouseleave="stopAsideScrollHold"
-            >
-              ↓
-            </button>
-            <button
-              type="button"
-              class="btn btn-default btn-xs board-aside-scroll-btn"
-              title="В начало списков"
-              :disabled="asideScrollOffset <= 0"
-              @click="resetAsideScroll"
-            >
-              ⌂
-            </button>
-          </div>
-        </div>
-        <input
-          v-model.trim="unallocatedSearch"
-          class="form-control input-sm board-patients-search"
-          type="text"
-          placeholder="Поиск"
-        >
         <div
           ref="boardAsideViewport"
           class="board-aside-viewport"
@@ -497,6 +453,50 @@
             class="board-aside-content"
             :style="{ transform: `translateY(${asideScrollOffset}px)` }"
           >
+            <div class="board-patients-heading-row">
+              <h5 class="board-patients-heading">
+                Пациенты
+              </h5>
+              <div class="board-aside-scroll-controls">
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs board-aside-scroll-btn"
+                  title="Сдвинуть списки выше"
+                  :disabled="!canAsideScrollUp"
+                  @mousedown.prevent="startAsideScrollHold(-1)"
+                  @mouseup="stopAsideScrollHold"
+                  @mouseleave="stopAsideScrollHold"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs board-aside-scroll-btn"
+                  title="Сдвинуть списки ниже"
+                  :disabled="!canAsideScrollDown"
+                  @mousedown.prevent="startAsideScrollHold(1)"
+                  @mouseup="stopAsideScrollHold"
+                  @mouseleave="stopAsideScrollHold"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs board-aside-scroll-btn"
+                  title="В начало списков"
+                  :disabled="asideScrollOffset <= 0"
+                  @click="resetAsideScroll"
+                >
+                  ⌂
+                </button>
+              </div>
+            </div>
+            <input
+              v-model.trim="unallocatedSearch"
+              class="form-control input-sm board-patients-search"
+              type="text"
+              placeholder="Поиск"
+            >
             <section class="board-aside-section board-aside-section--patients">
               <div class="board-aside-section-body">
                 <p
@@ -2742,7 +2742,7 @@ onBeforeUnmount(() => {
 }
 
 .board-patients-search {
-  margin-bottom: 8px;
+  margin: 0 0 8px;
   flex-shrink: 0;
 }
 
