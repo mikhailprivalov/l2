@@ -229,6 +229,7 @@ class PatientStationarWithoutBeds(models.Model):
     plan_date_in = models.DateField(null=True, default=None, blank=True)
     plan_date_out = models.DateField(null=True, default=None, blank=True)
 
+
     def __str__(self):
         return f'{self.direction.client.individual.fio()}'
 

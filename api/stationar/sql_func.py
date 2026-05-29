@@ -289,7 +289,6 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
             d_iss.napravleniye_id,
             d_iss.medical_examination,
             to_char(d_iss.medical_examination AT TIME ZONE %(tz)s, 'DD.MM.YY') as date_extract,
-            dpr.value as field_value
             from directions_issledovaniya as d_iss
             left join directions_napravleniya dn on d_iss.napravleniye_id = dn.id
             left join directory_researches dr on d_iss.research_id = dr.id
@@ -301,7 +300,7 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
                 where diss.hospital_department_override_id in %(hospital_department_override_id)s
                 )
             and dr.title ~* '^(Выписной|Посмертны)'
-            and (dpif.cda_option_id = %(cda_option_id)s or dpif.title = 'Дата выписки')
+            and dpif.cda_option_id = %(cda_option_id)s
             and (d_iss.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s)
             and d_iss.time_confirmation is Not null 
             ORDER BY d_iss.medical_examination

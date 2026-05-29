@@ -32,7 +32,6 @@ from .discharge_sync import (
     sync_patient_without_bed_discharge_date,
 )
 from ..stationar.sql_func import get_extract_by_department_for_period
-from ..stationar.stationar_func import forbidden_edit_dir
 import calendar
 
 
@@ -188,8 +187,7 @@ def _strip_calendar_dates(
 def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
     """Период и признак выписки для черновика / календаря по direction_id."""
     if not direction_pk:
-        return {"forbidden_edit": False}
-    forbidden_edit = bool(forbidden_edit_dir(direction_pk))
+        return {}
     discharge_date = get_discharge_date_for_direction(direction_pk)
     pswb = PatientStationarWithoutBeds.objects.filter(direction_id=direction_pk).order_by("-pk").first()
     ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
@@ -220,7 +218,7 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
         plan_in_eff = plan_date_in or date_in
         if plan_in_eff and discharge_date < plan_in_eff:
             plan_date_in = discharge_date
-    meta = {"forbidden_edit": forbidden_edit}
+    meta = {}
     if plan_date_in:
         meta["plan_date_in"] = str(plan_date_in)
     if plan_date_out:
@@ -235,7 +233,6 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
 def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
     """Строка API для черновика из SQL + выписка из протокола."""
     direction_id = patient.direction_id
-    forbidden_edit = bool(forbidden_edit_dir(direction_id)) if direction_id else False
     discharge_date = get_discharge_date_for_direction(direction_id) if direction_id else None
     plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
         getattr(patient, "plan_date_in", None),
@@ -250,7 +247,7 @@ def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
         plan_in_eff = plan_date_in or date_in
         if plan_in_eff and discharge_date < plan_in_eff:
             plan_date_in = discharge_date
-    row = {"forbidden_edit": forbidden_edit}
+    row = {}
     if plan_date_in:
         row["plan_date_in"] = str(plan_date_in)
     if plan_date_out:
@@ -575,6 +572,46 @@ def get_patients_without_bed(request):
     return JsonResponse({"data": patients})
 
 
+def _build_extracts_payload(view_mode, start_date_raw, end_date_raw, department_pk):
+    date_start = ""
+    date_end = ""
+    if view_mode in ("day", "week"):
+        date_start = f"{start_date_raw} 00:00:00"
+        date_end = f"{end_date_raw} 23:59:59"
+    elif view_mode == "month":
+        month = start_date_raw.split("-")[1]
+        year = start_date_raw.split("-")[0]
+        month_obj = int(month)
+        _, num_days = calendar.monthrange(int(year), month_obj)
+        date_start = datetime.date(int(year), month_obj, 1)
+        date_end = datetime.date(int(year), month_obj, num_days)
+    extract_proto_for_period = get_extract_by_department_for_period(date_start, date_end, CDA_ID_FOR_DATE_IS_EXTRACT, (department_pk,))
+    extracts_data = {}
+    total_direction_list = []
+    for item in extract_proto_for_period:
+        if not extracts_data.get(item.date_extract):
+            extracts_data[item.date_extract] = {"count": 1, "directionsList": [item.napravleniye_id]}
+        else:
+            extracts_data[item.date_extract]["count"] += 1
+        total_direction_list.append(item.napravleniye_id)
+    extracts_count = sum(item["count"] for item in extracts_data.values())
+    return {"count": extracts_count, "directionList": total_direction_list, **extracts_data}
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def get_hospitalization_extracts(request):
+    request_data = json.loads(request.body)
+    view_mode = request_data.get("view_mode")
+    start_date = request_data.get("start_date")
+    end_date = request_data.get("end_date")
+    department_pk = request_data.get("department_pk")
+    if not view_mode or not start_date or not end_date or not department_pk:
+        return JsonResponse({"ok": False, "message": "Не хватает параметров периода", "data": {}})
+    extracts = _build_extracts_payload(view_mode, start_date, end_date, department_pk)
+    return JsonResponse({"ok": True, "message": "", "data": {"extracts": extracts}})
+
+
 @login_required
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def get_directions_hosp_meta(request):
@@ -686,10 +723,12 @@ def get_hospitalization_calendar(request):
     request_data = json.loads(request.body)
     department_id = request_data.get("department_pk", -1)
     doctor_id = request_data.get("doctor_pk")
-    start_date = _parse_ymd_date(request_data.get("start_date"))
-    end_date = _parse_ymd_date(request_data.get("end_date"))
-    if not start_date or not end_date:
-        return JsonResponse({"ok": False, "message": "Период обязателен", "data": {"chambers": [], "records": []}})
+
+    start_date = request_data.get("start_date")
+    end_date = request_data.get("end_date")
+    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+
     chambers_rows = load_chambers_and_beds_by_department(department_id)
     chambers_map = {}
     bed_ids = []
@@ -743,9 +782,6 @@ def get_hospitalization_calendar(request):
                     continue
                 if item_start <= d <= item_end:
                     date_comments[d_str] = txt
-            forbidden_edit = False
-            if item.direction_id:
-                forbidden_edit = forbidden_edit_dir(item.direction_id)
             records.append(
                 {
                     "pk": item.pk,
@@ -766,39 +802,9 @@ def get_hospitalization_calendar(request):
                     "date_comments": date_comments,
                     "is_day_hosp": bool(item.is_day_hosp),
                     "is_need_sick": bool(item.is_need_sick),
-                    "forbidden_edit": forbidden_edit,
                 }
             )
-    view_mode = request_data.get("view_mode")
-    start_date = request_data.get("start_date")
-    end_date = request_data.get("end_date")
-    department_pk = request_data.get("department_pk")
-    date_start = ''
-    date_end = ''
-    if view_mode == 'day':
-        date_start = f"{start_date} 00:00:00"
-        date_end = f"{end_date} 23:59:59"
-    elif view_mode == 'week':
-        date_start = f"{start_date} 00:00:00"
-        date_end = f"{end_date} 23:59:59"
-    elif view_mode == 'month':
-        month = start_date.split("-")[1]
-        year = start_date.split("-")[0]
-        month_obj = int(month)
-        _, num_days = calendar.monthrange(int(year), month_obj)
-        date_start = datetime.date(int(year), month_obj, 1)
-        date_end = datetime.date(int(year), month_obj, num_days)
-    extract_proto_for_period = get_extract_by_department_for_period(date_start, date_end, CDA_ID_FOR_DATE_IS_EXTRACT, (department_pk,))
-    extracts_data = {}
-    total_direction_list = []
-    for i in extract_proto_for_period:
-        if not extracts_data.get(i.date_extract):
-            extracts_data[i.date_extract] = {"count": 1, "directionsList": [i.napravleniye_id]}
-        else:
-            extracts_data[i.date_extract]["count"] += 1
-        total_direction_list.append(i.napravleniye_id)
 
-    extracts_count = sum(item["count"] for item in extracts_data.values())
     return JsonResponse(
         {
             "ok": True,
@@ -807,7 +813,6 @@ def get_hospitalization_calendar(request):
                 "chambers": list(chambers_map.values()),
                 "records": records,
                 "default_period_days": _default_hospitalization_period_days(),
-                "extracts": {"count": extracts_count, "directionList": total_direction_list, **extracts_data},
             },
         }
     )

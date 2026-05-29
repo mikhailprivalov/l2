@@ -70,6 +70,14 @@
                   →
                 </button>
               </div>
+              <button
+                type="button"
+                class="btn btn-default toolbar-extracts-btn"
+                :disabled="extractsLoading"
+                @click="onExtractsButtonClick"
+              >
+                Загрузить выписанных
+              </button>
               <span class="toolbar-extracts-count">
                 Выписано:
                 <a
@@ -78,6 +86,14 @@
                   @click.prevent="openExtractsDetailForm"
                 >{{ extractsCount }}</a>
               </span>
+              <label class="toolbar-extracts-filter-toggle">
+                <input
+                  v-model="showOnlyExtracted"
+                  type="checkbox"
+                  :disabled="extractsLoading || !extractsMasterDirectionList.length"
+                >
+                {{ showOnlyExtracted ? 'Выписаны' : 'Все' }}
+              </label>
             </div>
           </div>
         </div>
@@ -149,7 +165,6 @@
                         <span class="day-col-totals-item">М-{{ dayColumnTotals(day.key).male }}</span>
                         <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
                         <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
-                        <span class="day-col-totals-item">В-{{ extractCountForDay(day.key) }}</span>
                       </div>
                     </div>
                   </th>
@@ -177,7 +192,6 @@
                       class="day-cell"
                       :class="{
                         'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
-                        'day-cell--forbidden-edit': cellForbiddenEdit(bed.pk, day.key),
                         'day-cell--col-hover': isDayColumnHovered(day.key),
                       }"
                       @click="openEditModal(bed.pk, day.key)"
@@ -326,35 +340,34 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="(srow, sidx) in stripRows"
-                    :key="srow.rowId"
+                    v-for="displayRow in stripRowsForDisplay"
+                    :key="`${displayRow.rowId}-${displayRow.sourceIdx}`"
                   >
                     <td class="sticky-col strip-sidebar-col strip-sidebar-cell">
-                      {{ srow.records.length ? srow.records.length : '—' }}
+                      {{ displayRow.records.length ? displayRow.records.length : '—' }}
                     </td>
                     <td
                       v-for="day in visibleDays"
-                      :key="`${srow.rowId}-${day.key}`"
+                      :key="`${displayRow.rowId}-${day.key}`"
                       class="day-cell"
                       :class="{
-                        'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(sidx, day.key),
-                        'day-cell--forbidden-edit': stripCellForbiddenEdit(srow, day.key),
+                        'day-cell--drop-hover': dragOverStripCellKey === stripCellKey(displayRow.sourceIdx, day.key),
                         'day-cell--col-hover': isDayColumnHovered(day.key),
                       }"
-                      @click="openStripCellModal(sidx, day.key)"
-                      @dragover.prevent="onStripCellDragOver(sidx, day.key)"
-                      @dragleave="onStripCellDragLeave($event, sidx, day.key)"
-                      @drop.prevent="onStripCellDrop($event, sidx, day.key)"
+                      @click="openStripCellModal(displayRow.sourceIdx, day.key)"
+                      @dragover.prevent="onStripCellDragOver(displayRow.sourceIdx, day.key)"
+                      @dragleave="onStripCellDragLeave($event, displayRow.sourceIdx, day.key)"
+                      @drop.prevent="onStripCellDrop($event, displayRow.sourceIdx, day.key)"
                     >
                       <div
-                        v-for="rec in cellStripRecordList(srow, day.key)"
-                        :key="`strip-${srow.rowId}-${day.key}-${rec.pk}`"
+                        v-for="rec in cellStripRecordList(displayRow, day.key)"
+                        :key="`strip-${displayRow.rowId}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
                         draggable="true"
                         :title="recordHoverTitle(rec, day.key)"
-                        @dragstart.stop="onStripPatientDragStart($event, srow, rec)"
+                        @dragstart.stop="onStripPatientDragStart($event, displayRow, rec)"
                         @dragend="onPatientDragEnd"
-                        @click.stop="openStripRecordModal(sidx, day.key, rec)"
+                        @click.stop="openStripRecordModal(displayRow.sourceIdx, day.key, rec)"
                       >
                         <div class="record-line record-line--patient">
                           <span class="record-patient">
@@ -698,6 +711,7 @@ import Treeselect from '@riophae/vue-treeselect';
 import {
   computed,
   getCurrentInstance,
+  onBeforeUnmount,
   onMounted,
   ref,
   watch,
@@ -764,7 +778,6 @@ interface CalendarRecord {
   /** Дневной стационар (в т.ч. запись в «черновике» доски) */
   is_day_hosp?: boolean;
   is_need_sick?: boolean;
-  forbidden_edit?: boolean;
 }
 
 interface StripRow {
@@ -782,10 +795,13 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
-type ExtractDayInfo = { count: number; directionsList?: number[] };
-const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
+const extractsMasterDirectionList = ref<number[]>([]);
+const extractsLoading = ref(false);
+const showOnlyExtracted = ref(false);
+const extractsDebounceTimer = ref<number | null>(null);
+const EXTRACTS_DEBOUNCE_MS = 400;
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('week');
 const anchorDate = ref(moment());
@@ -1034,8 +1050,19 @@ const stripDirectionPkSet = computed(() => {
   return s;
 });
 
+const extractsMasterDirectionPkSet = computed(() => new Set<number>(extractsMasterDirectionList.value));
+
 const recordsUnfilteredForMainGrid = computed(() => (
-  records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
+  records.value.filter((r) => {
+    if (stripRecordPkSet.value.has(r.pk)) {
+      return false;
+    }
+    if (!showOnlyExtracted.value) {
+      return true;
+    }
+    const directionPk = r.direction_pk;
+    return directionPk != null && extractsMasterDirectionPkSet.value.has(directionPk);
+  })
 ));
 
 /** Направления, отображаемые в основной таблице в текущем периоде (не в дневниках). */
@@ -1056,6 +1083,22 @@ const recordsForMainGrid = computed(() => {
     return list.filter((r) => r.doctor_pk === doctorPk.value);
   }
   return list;
+});
+
+const stripRowsForDisplay = computed(() => {
+  if (!showOnlyExtracted.value) {
+    return stripRows.value.map((row, idx) => ({ ...row, sourceIdx: idx }));
+  }
+  return stripRows.value
+    .map((row, idx) => ({
+      rowId: row.rowId,
+      sourceIdx: idx,
+      records: row.records.filter((rec) => {
+        const directionPk = rec.direction_pk;
+        return directionPk != null && extractsMasterDirectionPkSet.value.has(directionPk);
+      }),
+    }))
+    .filter((row) => row.records.length > 0);
 });
 
 const recordsByBedAndDay = computed(() => {
@@ -1090,14 +1133,6 @@ const getRecordForDay = (bedPk: number, dayKey: string) => {
   const list = cellRecordList(bedPk, dayKey);
   return list.length ? list[0] : undefined;
 };
-
-const cellForbiddenEdit = (bedPk: number, dayKey: string) => (
-  cellRecordList(bedPk, dayKey).some((r) => r.forbidden_edit)
-);
-
-const stripCellForbiddenEdit = (row: StripRow, dayKey: string) => (
-  row.records.some((r) => isDayInRecordSpan(r, dayKey) && r.forbidden_edit)
-);
 
 const bedPeriodHasOverlap = (
   bedPk: number,
@@ -1297,17 +1332,34 @@ const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | un
   extractsDirectionList.value = Array.isArray(dirList)
     ? dirList.map((id) => Number(id)).filter((id) => Number.isFinite(id))
     : [];
-  const byDate: Record<string, ExtractDayInfo> = {};
-  Object.entries(raw).forEach(([key, value]) => {
-    if (key === 'count' || key === 'directionList' || !value || typeof value !== 'object') {
+  const masterListRaw = raw.total_master_direction_list;
+  if (Array.isArray(masterListRaw) && masterListRaw.length) {
+    extractsMasterDirectionList.value = masterListRaw
+      .map((id) => Number(id))
+      .filter((id) => Number.isFinite(id));
+    return;
+  }
+  const masterByDate = new Set<number>();
+  Object.values(raw).forEach((value) => {
+    if (!value || typeof value !== 'object') {
       return;
     }
-    const item = value as ExtractDayInfo;
-    if (Number.isFinite(Number(item.count))) {
-      byDate[key] = item;
+    const item = value as { masterdirectionsList?: unknown[] };
+    if (!Array.isArray(item.masterdirectionsList)) {
+      return;
     }
+    item.masterdirectionsList.forEach((id) => {
+      const num = Number(id);
+      if (Number.isFinite(num)) {
+        masterByDate.add(num);
+      }
+    });
   });
-  extractsByDate.value = byDate;
+  if (masterByDate.size) {
+    extractsMasterDirectionList.value = [...masterByDate];
+    return;
+  }
+  extractsMasterDirectionList.value = [...extractsDirectionList.value];
 };
 
 const openExtractsDetailForm = () => {
@@ -1335,9 +1387,48 @@ const openExtractsDetailForm = () => {
   window.open(`/forms/xlsx?${params.toString()}`, '_blank');
 };
 
-const extractCountForDay = (dayKey: string) => {
-  const extractKey = moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
-  return extractsByDate.value[extractKey]?.count || 0;
+const loadExtractsAndOpenDetailForm = async () => {
+  if (extractsLoading.value) {
+    return;
+  }
+  if (!departmentPk.value) {
+    root.$emit('msg', 'error', 'Не выбрано подразделение');
+    return;
+  }
+  if (visibleDays.value.length === 0) {
+    root.$emit('msg', 'error', 'Не задан период');
+    return;
+  }
+  extractsLoading.value = true;
+  try {
+    const startDate = visibleDays.value[0].key;
+    const endDate = visibleDays.value[visibleDays.value.length - 1].key;
+    const response = await api('chambers/get-hospitalization-extracts', {
+      department_pk: departmentPk.value,
+      start_date: startDate,
+      end_date: endDate,
+      view_mode: viewMode.value,
+    });
+    if (!response?.ok) {
+      root.$emit('msg', 'error', response?.message || 'Не удалось загрузить список выписанных');
+      return;
+    }
+    applyExtractsFromResponse(response?.data?.extracts);
+  } finally {
+    extractsLoading.value = false;
+  }
+};
+
+const onExtractsButtonClick = () => {
+  if (extractsDebounceTimer.value != null) {
+    window.clearTimeout(extractsDebounceTimer.value);
+  }
+  extractsDebounceTimer.value = window.setTimeout(() => {
+    extractsDebounceTimer.value = null;
+    loadExtractsAndOpenDetailForm().catch(() => {
+      root.$emit('msg', 'error', 'Не удалось загрузить список выписанных');
+    });
+  }, EXTRACTS_DEBOUNCE_MS);
 };
 
 const dayColumnTotalsMap = computed(() => {
@@ -1527,7 +1618,6 @@ type StripServerPatient = {
   sex: string;
   age: number;
   doctor_pk?: number | null;
-  forbidden_edit?: boolean;
   date_in?: string | null;
   date_out?: string | null;
   plan_date_in?: string | null;
@@ -1539,9 +1629,6 @@ const applyStripHospMeta = (
   meta: Partial<StripServerPatient> & { direction_pk?: number },
 ): CalendarRecord => {
   const next = { ...rec };
-  if (meta.forbidden_edit != null) {
-    next.forbidden_edit = Boolean(meta.forbidden_edit);
-  }
   if (meta.date_in) {
     next.date_in = meta.date_in;
   }
@@ -1598,7 +1685,6 @@ const newStripRecordFromServerPatient = (
     date_comments: {},
     is_day_hosp: true,
     is_need_sick: false,
-    forbidden_edit: Boolean(p.forbidden_edit),
   };
   return applyStripHospMeta(rec, p);
 };
@@ -1659,7 +1745,6 @@ const loadPatientsWithoutBed = async () => {
         sex: String(p.sex || 'м'),
         age: Number(p.age ?? ''),
         doctor_pk: p.doctor_pk != null ? Number(p.doctor_pk) : null,
-        forbidden_edit: Boolean(p.forbidden_edit),
         date_in: p.date_in || null,
         date_out: p.date_out || null,
         plan_date_in: p.plan_date_in || null,
@@ -1706,7 +1791,6 @@ const loadCalendar = async () => {
   });
   chambers.value = response?.data?.chambers || [];
   records.value = response?.data?.records || [];
-  applyExtractsFromResponse(response?.data?.extracts);
   const periodDays = Number(response?.data?.default_period_days);
   defaultHospitalizationPeriodDays.value = Number.isFinite(periodDays) && periodDays >= 1
     ? periodDays
@@ -2460,6 +2544,10 @@ const clearBedFromModal = async () => {
 };
 
 watch([departmentPk, viewMode, anchorDate], async () => {
+  showOnlyExtracted.value = false;
+  extractsCount.value = 0;
+  extractsDirectionList.value = [];
+  extractsMasterDirectionList.value = [];
   await loadCalendar();
   await loadUnallocatedPatients();
   await syncStripRecordsDischargeMeta();
@@ -2474,6 +2562,13 @@ watch(departmentPk, async (d) => {
 onMounted(async () => {
   await Promise.all([loadDepartments(), loadAccompanyingChildOptions()]);
 });
+
+onBeforeUnmount(() => {
+  if (extractsDebounceTimer.value != null) {
+    window.clearTimeout(extractsDebounceTimer.value);
+    extractsDebounceTimer.value = null;
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -2481,8 +2576,7 @@ onMounted(async () => {
   padding: 10px 16px;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 100px);
-  min-height: 0;
+  min-height: calc(100vh - 100px);
   box-sizing: border-box;
 }
 
@@ -2581,6 +2675,10 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 
+.toolbar-extracts-btn {
+  margin-left: 4px;
+}
+
 .toolbar-extracts-count {
   margin-left: 4px;
   font-size: 16px;
@@ -2599,6 +2697,15 @@ onMounted(async () => {
   color: #23527c;
 }
 
+.toolbar-extracts-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 2px;
+  font-weight: 500;
+  line-height: 34px;
+}
+
 .mode-switch {
   display: flex;
   gap: 4px;
@@ -2613,10 +2720,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  min-height: 0;
-  overflow: hidden;
+  min-height: auto;
+  overflow: visible;
   container-type: inline-size;
   container-name: calendar-wrap;
 }
@@ -2624,19 +2731,19 @@ onMounted(async () => {
 .calendar-tables-stack {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: auto;
 }
 
 .calendar-main-scroll {
-  flex: 3 1 0;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: 520px;
   overflow: auto;
 }
 
 .calendar-strip-block {
-  flex: 1 1 0;
-  min-height: 0;
+  flex: 0 0 auto;
+  min-height: 460px;
   display: flex;
   flex-direction: column;
   margin-top: 0;
@@ -2645,8 +2752,8 @@ onMounted(async () => {
 }
 
 .calendar-strip-scroll {
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 420px;
   overflow: auto;
 }
 
@@ -2775,10 +2882,6 @@ onMounted(async () => {
   background: rgba(91, 143, 175, 0.16);
 }
 
-.day-cell--col-hover.day-cell--forbidden-edit {
-  background: #e4ebf1;
-}
-
 .day-col-head {
   display: flex;
   flex-direction: column;
@@ -2837,10 +2940,6 @@ onMounted(async () => {
   width: auto;
   min-width: 0;
   overflow: hidden;
-}
-
-.day-cell--forbidden-edit {
-  background: #f0f0f0;
 }
 
 .day-cell--drop-hover {

@@ -6,6 +6,7 @@ urlpatterns = [
     path('get-unallocated-patients', views.get_unallocated_patients),
     path('get-chambers-and-beds', views.get_chambers_and_beds),
     path('get-hospitalization-calendar', views.get_hospitalization_calendar),
+    path('get-hospitalization-extracts', views.get_hospitalization_extracts),
     path('get-accompanying-child-options', views.get_accompanying_child_options),
     path('entrance-patient-to-bed', views.entrance_patient_to_bed),
     path('save-hospitalization-by-fio', views.save_hospitalization_by_fio),
