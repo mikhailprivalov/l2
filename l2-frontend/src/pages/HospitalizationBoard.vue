@@ -77,12 +77,24 @@
             </div>
           </div>
           <div class="toolbar-aside-panel">
-            <input
-              v-model.trim="unallocatedSearch"
-              class="form-control toolbar-aside-search"
-              type="text"
-              placeholder="Поиск"
-            >
+            <div class="toolbar-aside-search-wrap">
+              <input
+                v-model.trim="unallocatedSearch"
+                class="form-control toolbar-aside-search"
+                type="text"
+                placeholder="Поиск"
+              >
+              <button
+                v-if="unallocatedSearch"
+                type="button"
+                class="toolbar-aside-search-clear"
+                title="Очистить поиск"
+                tabindex="-1"
+                @click="unallocatedSearch = ''"
+              >
+                <i class="fa-solid fa-xmark" />
+              </button>
+            </div>
             <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
               <button
                 type="button"
@@ -3128,16 +3140,45 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-.toolbar-aside-search {
+.toolbar-aside-search-wrap {
   flex: 1 1 auto;
   min-width: 0;
-  width: auto;
+  position: relative;
+}
+
+.toolbar-aside-search {
+  width: 100%;
   margin: 0;
   height: 34px;
-  padding: 6px 10px;
+  padding: 6px 28px 6px 10px;
   font-size: 14px;
   line-height: 20px;
   box-sizing: border-box;
+}
+
+.toolbar-aside-search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toolbar-aside-search-clear:hover,
+.toolbar-aside-search-clear:focus {
+  color: #333;
+  outline: none;
 }
 
 .toolbar-row {
