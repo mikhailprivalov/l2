@@ -304,8 +304,8 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
                 (select diss.id 
                 from directions_issledovaniya as diss
                 where diss.hospital_department_override_id in %(hospital_department_override_id)s
-                )
-            and dr.title ~* '^(Выписной|Посмертны)'
+                )            
+            and dr.is_extract_service = true
             and (dpif.cda_option_id = %(cda_option_id)s or dpif.title = 'Дата выписки')
             and (d_iss.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s)
             and d_iss.time_confirmation is Not null 

@@ -21,7 +21,10 @@
               </div>
               <div class="toolbar-controls toolbar-controls--nav">
             <div class="mode-switch">
-              <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+              <div class="toolbar-today-block">
+                <span class="toolbar-today-label">Сегодня</span>
+                <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+              </div>
               <button
                 class="btn btn-default"
                 :class="{ active: viewMode === 'day' }"
@@ -227,7 +230,6 @@
                               class="record-direction-link"
                               target="_blank"
                               rel="noopener noreferrer"
-                              :title="`Направление ${rec.direction_pk} (стационар)`"
                               @click.stop
                               @mousedown.stop
                             >
@@ -283,7 +285,7 @@
 
           <div class="strip-board-block calendar-strip-block">
             <p class="strip-board-hint">
-              Дневные
+              Дневные — {{ stripRecordsInPeriod.length }}
             </p>
             <div
               class="strip-cards-board"
@@ -352,7 +354,6 @@
                       class="record-direction-link"
                       target="_blank"
                       rel="noopener noreferrer"
-                      :title="`Направление ${rec.direction_pk} (стационар)`"
                       @click.stop
                       @mousedown.stop
                     >{{ rec.direction_pk }}</a>
@@ -411,7 +412,10 @@
             <div class="panel-body">
               <div class="toolbar-controls toolbar-controls--nav board-calendar-nav-inner">
                 <div class="mode-switch">
-                  <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+                  <div class="toolbar-today-block">
+                    <span class="toolbar-today-label">Сегодня</span>
+                    <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+                  </div>
                   <button
                     class="btn btn-default"
                     :class="{ active: viewMode === 'day' }"
@@ -1057,6 +1061,8 @@ const findStripRecordByPk = (pk: number) => stripRecords.value.find((r) => r.pk 
 const unallocatedPatients = ref<UnallocatedPatient[]>([]);
 const unallocatedSearch = ref('');
 
+const WEEKDAY_SHORT_RU = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+
 const visibleDays = computed(() => {
   let start = anchorDate.value.clone();
   let end = anchorDate.value.clone();
@@ -1077,7 +1083,7 @@ const visibleDays = computed(() => {
   while (cursor.isSameOrBefore(end, 'day')) {
     days.push({
       key: cursor.format('YYYY-MM-DD'),
-      label: cursor.format('DD.MM'),
+      label: `${cursor.format('DD.MM')} - ${WEEKDAY_SHORT_RU[cursor.day()]}`,
     });
     cursor.add(1, 'day');
   }
@@ -1459,22 +1465,26 @@ const cellPatientAgePart = (record: CalendarRecord) => {
 };
 
 const recordHoverTitle = (rec: CalendarRecord, dayKey: string) => {
-  const parts: string[] = [];
-  if ((rec.patient_fio || '').trim()) {
-    parts.push(rec.patient_fio.trim());
+  const fio = (rec.patient_fio || '').trim();
+  const dateLabel = formatDayShort(dayKey);
+  let title = '';
+  if (fio && dateLabel) {
+    title = `${fio} (${dateLabel})`;
+  } else {
+    title = fio || (dateLabel ? `(${dateLabel})` : '');
   }
-  const age = cellPatientAgePart(rec);
-  if (age) {
-    parts.push(`Возраст: ${age}`);
+  if (rec.is_extract) {
+    const dischargeEnd = hospVisualEnd(rec);
+    const dischargeLabel = dischargeEnd.isValid()
+      ? formatDayShort(dischargeEnd.format('YYYY-MM-DD'))
+      : '';
+    if (dischargeLabel) {
+      title = title ? `${title}, выписан ${dischargeLabel}` : `выписан ${dischargeLabel}`;
+    } else {
+      title = title ? `${title}, выписан` : 'выписан';
+    }
   }
-  if (rec.direction_pk != null && rec.direction_pk > 0) {
-    parts.push(`Направление: ${rec.direction_pk}`);
-  }
-  const c = commentForRecordDay(rec, dayKey).trim();
-  if (c) {
-    parts.push(`Комментарий: ${c}`);
-  }
-  return parts.join(' · ');
+  return title;
 };
 
 const formatCellDoctorSurname = (record: CalendarRecord) => surnameFromFio(record.doctor_fio);
@@ -1590,6 +1600,11 @@ const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD'
 const extractCountForDay = (dayKey: string) => {
   let count = 0;
   for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (isRecordDischargeDay(rec, dayKey)) {
+      count += 1;
+    }
+  }
+  for (const rec of stripRecords.value) {
     if (isRecordDischargeDay(rec, dayKey)) {
       count += 1;
     }
@@ -1740,13 +1755,17 @@ const applyDefaultDepartmentFromProfile = () => {
 };
 
 const loadDepartments = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const { data } = await api('procedural-list/suitable-departments');
+  await store.dispatch(actions.DEC_LOADING);
   departments.value = data;
   applyDefaultDepartmentFromProfile();
 };
 
 const loadAccompanyingChildOptions = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const res = await api('chambers/get-accompanying-child-options');
+  await store.dispatch(actions.DEC_LOADING);
   const list = res?.data;
   accompanyingChildOptions.value = Array.isArray(list) ? list : [];
 };
@@ -1756,10 +1775,12 @@ const loadDoctors = async () => {
     doctors.value = [];
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const response = await api('chambers/get-attending-doctors', {
     department_pk: departmentPk.value,
     only_stationar_role: true,
   });
+  await store.dispatch(actions.DEC_LOADING);
   doctors.value = response.data || [];
 };
 
@@ -1768,9 +1789,11 @@ const loadUnallocatedPatients = async () => {
     unallocatedPatients.value = [];
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-unallocated-patients', {
     department_pk: departmentPk.value,
   });
+  await store.dispatch(actions.DEC_LOADING);
   unallocatedPatients.value = Array.isArray(row.data) ? row.data : [];
 };
 
@@ -1833,7 +1856,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
   if (!departmentPk.value || !rec.direction_pk) {
     return null;
   }
-  return api('chambers/save-patient-without-bed', {
+  await store.dispatch(actions.INC_LOADING);
+  const result = await api('chambers/save-patient-without-bed', {
     department_pk: departmentPk.value,
     patient_obj: { direction_pk: rec.direction_pk },
     doctor_id: rec.doctor_pk ?? null,
@@ -1842,6 +1866,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
     date_out: rec.date_out,
     is_extract: Boolean(rec.is_extract),
   });
+  await store.dispatch(actions.DEC_LOADING);
+  return result;
 };
 
 const newStripRecordFromServerPatient = (
@@ -1887,9 +1913,11 @@ const syncStripRecordsDischargeMeta = async () => {
   if (!directionPks.size) {
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const res = await api('chambers/get-directions-hosp-meta', {
     direction_pks: [...directionPks],
   });
+  await store.dispatch(actions.DEC_LOADING);
   const items = Array.isArray(res?.data) ? res.data : [];
   const byDir = new Map<number, StripServerPatient>();
   for (const item of items) {
@@ -1911,9 +1939,11 @@ const loadPatientsWithoutBed = async () => {
     stripRecords.value = [];
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-patients-without-bed', {
     department_pk: departmentPk.value,
   });
+  await store.dispatch(actions.DEC_LOADING);
   const list = Array.isArray(row?.data) ? row.data : [];
   const dayKey = stripDefaultDayKey.value;
   stripRecords.value = list
@@ -1940,10 +1970,12 @@ const reloadStripFromServer = async () => {
 const removeStripRecordPk = async (pk: number) => {
   const rec = findStripRecordByPk(pk);
   if (departmentPk.value && rec?.direction_pk) {
+    await store.dispatch(actions.INC_LOADING);
     const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
       patient_obj: { direction_pk: rec.direction_pk },
     });
+    await store.dispatch(actions.DEC_LOADING);
     if (!res?.ok) {
       root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
       return false;
@@ -2212,8 +2244,8 @@ const onStripBoardDrop = async (e: DragEvent) => {
   const { ok: okClear, message: msgClear } = await api('chambers/clear-patient-from-bed', {
     record_pk: recordPk,
   });
-  await store.dispatch(actions.DEC_LOADING);
   if (!okClear) {
+    await store.dispatch(actions.DEC_LOADING);
     root.$emit('msg', 'error', msgClear || 'Не удалось освободить койку');
     return;
   }
@@ -2223,11 +2255,13 @@ const onStripBoardDrop = async (e: DragEvent) => {
   };
   const saveRes = await saveStripPatientToServer(stripRec);
   if (!saveRes?.ok) {
+    await store.dispatch(actions.DEC_LOADING);
     root.$emit('msg', 'error', saveRes?.message || 'Не удалось сохранить черновик на сервере');
     return;
   }
   await loadCalendar();
   await reloadStripFromServer();
+  await store.dispatch(actions.DEC_LOADING);
   root.$emit('msg', 'ok', 'Пациент перенесён в черновик');
 };
 
@@ -2348,7 +2382,6 @@ const onStripToBedDrop = async (
     comment_date: targetDayKey,
     comment: commentForRecordDay(record, targetDayKey),
   });
-  await store.dispatch(actions.DEC_LOADING);
   if (result?.ok) {
     if (departmentPk.value && record.direction_pk) {
       const delRes = await api('chambers/delete-patient-without-bed', {
@@ -2356,6 +2389,7 @@ const onStripToBedDrop = async (
         patient_obj: { direction_pk: record.direction_pk },
       });
       if (!delRes?.ok) {
+        await store.dispatch(actions.DEC_LOADING);
         root.$emit('msg', 'error', delRes?.message || 'Не удалось удалить черновик на сервере');
         return;
       }
@@ -2367,6 +2401,7 @@ const onStripToBedDrop = async (
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось вернуть запись на койку');
   }
+  await store.dispatch(actions.DEC_LOADING);
 };
 
 const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: string) => {
@@ -2718,18 +2753,21 @@ const clearStripFromModal = async () => {
     return;
   }
   const rec = findStripRecordByPk(editingStripRecordPk.value);
+  await store.dispatch(actions.INC_LOADING);
   if (departmentPk.value && rec?.direction_pk) {
     const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
       patient_obj: { direction_pk: rec.direction_pk },
     });
     if (!res?.ok) {
+      await store.dispatch(actions.DEC_LOADING);
       root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
       return;
     }
   }
   await reloadStripFromServer();
   await loadUnallocatedPatients();
+  await store.dispatch(actions.DEC_LOADING);
   root.$emit('msg', 'ok', 'Запись удалена из дневного стационара');
   closeEditModal();
 };
@@ -3026,12 +3064,27 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.toolbar-today-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-today-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
+}
+
 .toolbar-today-date {
   font-size: 15px;
   font-weight: 600;
   color: #333;
   white-space: nowrap;
-  margin-right: 6px;
 }
 
 .mode-switch {
@@ -3287,7 +3340,7 @@ onBeforeUnmount(() => {
   min-height: 44px;
   height: auto;
   vertical-align: top;
-  padding: 3px 4px;
+  padding: 0;
   cursor: pointer;
   width: auto;
   min-width: 108px;
@@ -3301,10 +3354,9 @@ onBeforeUnmount(() => {
 
 .record {
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 2px 4px;
-  margin-bottom: 2px;
+  border: none;
+  padding: 0;
+  margin: 0;
   color: inherit;
   font-size: 12px;
   line-height: 1.25;
@@ -3312,9 +3364,12 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
+.record:not(:last-child) {
+  margin-bottom: 2px;
+}
+
 .record--extract {
   background: #e6e6e6;
-  border-color: #ccc;
 }
 
 .record--draggable {
@@ -3350,9 +3405,6 @@ onBeforeUnmount(() => {
   flex-wrap: nowrap;
   width: fit-content;
   max-width: 100%;
-  border-bottom: 1px solid #bbb;
-  padding-bottom: 1px;
-  margin-bottom: 2px;
   vertical-align: baseline;
   min-width: 0;
 }
@@ -3376,7 +3428,7 @@ onBeforeUnmount(() => {
   color: #555;
   font-size: 10px;
   min-height: 1.1em;
-  margin-top: 2px;
+  margin-top: 0;
   min-width: 0;
 }
 
@@ -3609,7 +3661,7 @@ onBeforeUnmount(() => {
   content: '';
   display: block;
   grid-column: 1 / -1;
-  min-height: 88px;
+  min-height: 52px;
   pointer-events: none;
 }
 
@@ -3627,9 +3679,9 @@ onBeforeUnmount(() => {
 .strip-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-height: 88px;
-  padding: 8px 10px;
+  gap: 2px;
+  min-height: 0;
+  padding: 4px 8px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -3650,7 +3702,7 @@ onBeforeUnmount(() => {
   font-size: 11px;
   font-weight: 600;
   color: #666;
-  line-height: 1.2;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3658,6 +3710,13 @@ onBeforeUnmount(() => {
 
 .strip-card .record-line {
   font-size: 12px;
+  line-height: 1.2;
+}
+
+.strip-card .record-line--doctor {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 @media (max-width: 1400px) {
