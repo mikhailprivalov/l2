@@ -85,7 +85,7 @@
 
     <div class="board-body">
       <div class="calendar-wrap">
-        <div class="doctor-badges">
+        <div class="doctor-badges doctor-badges--top">
           <button
             type="button"
             class="badge badge-secondary doctor-badge-btn"
@@ -177,7 +177,6 @@
                       class="day-cell"
                       :class="{
                         'day-cell--drop-hover': dragOverCellKey === cellKey(bed.pk, day.key),
-                        'day-cell--forbidden-edit': cellIsExtract(bed.pk, day.key),
                         'day-cell--col-hover': isDayColumnHovered(day.key),
                       }"
                       @click="openEditModal(bed.pk, day.key)"
@@ -189,8 +188,10 @@
                         v-for="rec in cellRecordList(bed.pk, day.key)"
                         :key="`${bed.pk}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
+                        :class="{ 'record--extract': rec.is_extract }"
                         draggable="true"
                         :title="recordHoverTitle(rec, day.key)"
+                        @click.stop="openEditModalForRecord(bed.pk, day.key, rec)"
                         @dragstart.stop="onPatientDragStart($event, rec)"
                         @dragend="onPatientDragEnd"
                       >
@@ -286,7 +287,10 @@
             </p>
             <div
               class="strip-cards-board"
-              :class="{ 'strip-cards-board--drop-hover': dragOverStripBoard }"
+              :class="{
+                'strip-cards-board--drop-hover': dragOverStripBoard,
+                'strip-cards-board--extra-drop-row': stripNeedsExtraDropRow,
+              }"
               @dragover.prevent="onStripBoardDragOver"
               @dragleave="onStripBoardDragLeave"
               @drop.prevent="onStripBoardDrop"
@@ -379,6 +383,30 @@
             </div>
           </div>
 
+          <div class="doctor-badges doctor-badges--bottom">
+            <button
+              type="button"
+              class="badge badge-secondary doctor-badge-btn"
+              :class="{ active: doctorPk === -1 }"
+              @click="doctorPk = -1"
+            >
+              Все врачи
+            </button>
+            <button
+              v-for="doctor in doctors"
+              :key="`doctor-bottom-${doctor.pk}`"
+              type="button"
+              draggable="true"
+              class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
+              :class="{ active: doctorPk === doctor.pk }"
+              @click="doctorPk = doctor.pk"
+              @dragstart="onDoctorDragStart($event, doctor.pk)"
+              @dragend="onDoctorDragEnd"
+            >
+              {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
+            </button>
+          </div>
+
           <div class="board-calendar-nav board-calendar-nav--footer panel panel-default panel-flt">
             <div class="panel-body">
               <div class="toolbar-controls toolbar-controls--nav board-calendar-nav-inner">
@@ -440,85 +468,169 @@
         </div>
       </div>
 
-      <aside class="board-patients-aside">
-        <section class="board-aside-section board-aside-section--patients">
-          <h5 class="board-patients-heading">
-            Пациенты
-          </h5>
-          <input
-            v-model.trim="unallocatedSearch"
-            class="form-control input-sm board-patients-search"
-            type="text"
-            placeholder="Поиск"
+      <aside
+        ref="boardPatientsAside"
+        class="board-patients-aside"
+      >
+        <div
+          ref="boardAsideViewport"
+          class="board-aside-viewport"
+        >
+          <div
+            ref="boardAsideContent"
+            class="board-aside-content"
+            :style="{ transform: `translateY(${asideScrollOffset}px)` }"
           >
-          <div class="board-aside-section-body">
-            <p
-              v-if="!departmentPk"
-              class="text-muted small board-patients-empty"
-            >
-              Выберите подразделение
-            </p>
-            <template v-else>
-              <div
-                v-for="p in unallocatedPatientsFiltered"
-                :key="p.direction_pk"
-                class="board-patient-row"
-                draggable="true"
-                @dragstart="onUnallocatedPatientDragStart($event, p)"
-                @dragend="onUnallocatedPatientDragEnd"
-              >
-                <a
-                  class="board-patient-link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  :href="stationarHref(p.direction_pk)"
-                  :class="unallocatedGenderClass(p)"
-                  @click.stop
-                  @mousedown.stop
-                >{{ p.short_fio }}</a>
-                <i
-                  class="fa-solid fa-child-reaching board-patient-icon"
-                  :class="unallocatedGenderClass(p)"
-                />
-                <span class="board-patient-age">{{ p.age }}л.</span>
+            <div class="board-patients-heading-row">
+              <h5 class="board-patients-heading">
+                Пациенты
+              </h5>
+              <div class="board-aside-scroll-controls">
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs board-aside-scroll-btn"
+                  title="Сдвинуть списки выше"
+                  :disabled="!canAsideScrollUp"
+                  @mousedown.prevent="startAsideScrollHold(-1)"
+                  @mouseup="stopAsideScrollHold"
+                  @mouseleave="stopAsideScrollHold"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs board-aside-scroll-btn"
+                  title="Сдвинуть списки ниже"
+                  :disabled="!canAsideScrollDown"
+                  @mousedown.prevent="startAsideScrollHold(1)"
+                  @mouseup="stopAsideScrollHold"
+                  @mouseleave="stopAsideScrollHold"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-xs board-aside-scroll-btn"
+                  title="В начало списков"
+                  :disabled="asideScrollOffset <= 0"
+                  @click="resetAsideScroll"
+                >
+                  ⌂
+                </button>
               </div>
-            </template>
-          </div>
-        </section>
+            </div>
+            <input
+              v-model.trim="unallocatedSearch"
+              class="form-control input-sm board-patients-search"
+              type="text"
+              placeholder="Поиск"
+            >
+            <section class="board-aside-section board-aside-section--patients">
+              <div class="board-aside-section-body">
+                <p
+                  v-if="!departmentPk"
+                  class="text-muted small board-patients-empty"
+                >
+                  Выберите подразделение
+                </p>
+                <template v-else>
+                  <div
+                    v-for="p in unallocatedPatientsFiltered"
+                    :key="p.direction_pk"
+                    class="board-patient-row"
+                    draggable="true"
+                    @dragstart="onUnallocatedPatientDragStart($event, p)"
+                    @dragend="onUnallocatedPatientDragEnd"
+                  >
+                    <a
+                      class="board-patient-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :href="stationarHref(p.direction_pk)"
+                      :class="unallocatedGenderClass(p)"
+                      @click.stop
+                      @mousedown.stop
+                    >{{ p.short_fio }}</a>
+                    <i
+                      class="fa-solid fa-child-reaching board-patient-icon"
+                      :class="unallocatedGenderClass(p)"
+                    />
+                    <span class="board-patient-age">{{ p.age }}л.</span>
+                  </div>
+                </template>
+              </div>
+            </section>
 
-        <section class="board-aside-section board-aside-section--discharged">
-          <h5 class="board-patients-heading board-discharged-heading">
-            <a
-              href="#"
-              class="board-discharged-heading-link"
-              @click.prevent="openExtractsDetailForm"
-            >Выписаны {{ extractsCount }}</a>
-          </h5>
-          <div class="board-aside-section-body">
-            <p
-              v-if="!departmentPk"
-              class="text-muted small board-patients-empty"
-            >
-              Выберите подразделение
-            </p>
-            <p
-              v-else-if="!hasDischargedInPeriod"
-              class="text-muted small board-patients-empty"
-            >
-              Нет выписок за выбранный период
-            </p>
-            <template v-else>
-              <div
-                v-for="row in dischargedPatientsInPeriod"
-                :key="row.key"
-                class="board-discharged-row"
-              >
-                <span class="board-discharged-name">{{ row.name }}</span>
-                <span class="board-discharged-date">{{ row.dateLabel }}</span>
+            <section class="board-aside-section board-aside-section--discharged">
+              <div class="board-patients-heading-row board-discharged-heading-row">
+                <h5 class="board-patients-heading board-discharged-heading">
+                  <a
+                    href="#"
+                    class="board-discharged-heading-link"
+                    @click.prevent="openExtractsDetailForm"
+                  >Выписаны {{ extractsCount }}</a>
+                </h5>
+                <div class="board-aside-scroll-controls">
+                  <button
+                    type="button"
+                    class="btn btn-default btn-xs board-aside-scroll-btn"
+                    title="Сдвинуть списки выше"
+                    :disabled="!canAsideScrollUp"
+                    @mousedown.prevent="startAsideScrollHold(-1)"
+                    @mouseup="stopAsideScrollHold"
+                    @mouseleave="stopAsideScrollHold"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default btn-xs board-aside-scroll-btn"
+                    title="Сдвинуть списки ниже"
+                    :disabled="!canAsideScrollDown"
+                    @mousedown.prevent="startAsideScrollHold(1)"
+                    @mouseup="stopAsideScrollHold"
+                    @mouseleave="stopAsideScrollHold"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default btn-xs board-aside-scroll-btn"
+                    title="В начало списков"
+                    :disabled="asideScrollOffset <= 0"
+                    @click="resetAsideScroll"
+                  >
+                    ⌂
+                  </button>
+                </div>
               </div>
-            </template>
+              <div class="board-aside-section-body">
+                <p
+                  v-if="!departmentPk"
+                  class="text-muted small board-patients-empty"
+                >
+                  Выберите подразделение
+                </p>
+                <p
+                  v-else-if="!hasDischargedInPeriod"
+                  class="text-muted small board-patients-empty"
+                >
+                  Нет выписок за выбранный период
+                </p>
+                <template v-else>
+                  <div
+                    v-for="row in dischargedPatientsInPeriod"
+                    :key="row.key"
+                    class="board-discharged-row"
+                  >
+                    <span class="board-discharged-name">{{ row.name }}</span>
+                    <span class="board-discharged-date">{{ row.dateLabel }}</span>
+                  </div>
+                </template>
+              </div>
+            </section>
           </div>
-        </section>
+        </div>
       </aside>
     </div>
 
@@ -566,24 +678,23 @@
             class="form-group modal-doctor-field"
           >
             <label>Лечащий врач</label>
-            <div class="modal-doctor-row">
-              <span
-                v-if="editingForm.doctorFio"
-                class="modal-doctor-name"
-              >{{ editingForm.doctorFio }}</span>
-              <span
-                v-else
-                class="text-muted modal-doctor-empty"
-              >не назначен</span>
-              <button
-                v-if="editingForm.doctorPk != null"
-                type="button"
-                class="btn btn-default btn-sm modal-doctor-clear"
-                @click="clearModalDoctor"
-              >
-                Снять
-              </button>
+            <div class="treeselect-noborder-left edit-modal-treeselect">
+              <Treeselect
+                :value="editingForm.doctorPk"
+                :options="attendingDoctorTreeselectOptions"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :clearable="true"
+                :append-to-body="true"
+                :z-index="10050"
+                class="treeselect-wide"
+                placeholder="Не указано"
+                @input="setEditingDoctor"
+              />
             </div>
+            <p class="help-block small text-muted">
+              Назначается на всю госпитализацию — все дни выбранной записи.
+            </p>
           </div>
           <div class="row modal-gender-sick-row">
             <div class="col-xs-6 form-group">
@@ -738,6 +849,8 @@ import Treeselect from '@riophae/vue-treeselect';
 import {
   computed,
   getCurrentInstance,
+  nextTick,
+  onBeforeUnmount,
   onMounted,
   ref,
   watch,
@@ -807,6 +920,88 @@ interface CalendarRecord {
 }
 
 const STRIP_BOARD_ID = 'strip-board';
+const STRIP_BOARD_COLUMNS = 6;
+const MAX_CELL_PATIENTS = 2;
+
+const ASIDE_SCROLL_STEP_PX = 56;
+const ASIDE_SCROLL_HOLD_MS = 45;
+const ASIDE_SCROLL_HOLD_DELAY_MS = 280;
+
+const boardPatientsAside = ref<HTMLElement | null>(null);
+const boardAsideViewport = ref<HTMLElement | null>(null);
+const boardAsideContent = ref<HTMLElement | null>(null);
+const asideScrollOffset = ref(0);
+const maxAsideScrollOffset = ref(0);
+
+let asideScrollTimer: ReturnType<typeof setInterval> | null = null;
+let asideScrollHoldTimer: ReturnType<typeof setTimeout> | null = null;
+let asideScrollResizeObserver: ResizeObserver | null = null;
+
+const canAsideScrollUp = computed(() => asideScrollOffset.value > 0);
+const canAsideScrollDown = computed(() => asideScrollOffset.value < maxAsideScrollOffset.value);
+
+const clampAsideScrollOffset = (value: number) => (
+  Math.min(maxAsideScrollOffset.value, Math.max(0, value))
+);
+
+const updateAsideScrollBounds = () => {
+  const viewport = boardAsideViewport.value;
+  const content = boardAsideContent.value;
+  if (!viewport || !content) {
+    maxAsideScrollOffset.value = 0;
+    asideScrollOffset.value = 0;
+    return;
+  }
+  const viewportHeight = viewport.clientHeight;
+  const contentHeight = content.offsetHeight;
+  const overflow = contentHeight - viewportHeight;
+  maxAsideScrollOffset.value = overflow > 0
+    ? overflow
+    : Math.max(0, viewportHeight - contentHeight);
+  asideScrollOffset.value = clampAsideScrollOffset(asideScrollOffset.value);
+};
+
+const shiftAsideScroll = (delta: number) => {
+  updateAsideScrollBounds();
+  asideScrollOffset.value = clampAsideScrollOffset(asideScrollOffset.value + delta);
+};
+
+const resetAsideScroll = () => {
+  asideScrollOffset.value = 0;
+};
+
+const stopAsideScrollHold = () => {
+  if (asideScrollHoldTimer != null) {
+    clearTimeout(asideScrollHoldTimer);
+    asideScrollHoldTimer = null;
+  }
+  if (asideScrollTimer != null) {
+    clearInterval(asideScrollTimer);
+    asideScrollTimer = null;
+  }
+};
+
+const startAsideScrollHold = (direction: -1 | 1) => {
+  if (direction < 0 && !canAsideScrollUp.value) {
+    return;
+  }
+  if (direction > 0 && !canAsideScrollDown.value) {
+    return;
+  }
+  shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
+  stopAsideScrollHold();
+  asideScrollHoldTimer = setTimeout(() => {
+    asideScrollTimer = setInterval(() => {
+      shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
+    }, ASIDE_SCROLL_HOLD_MS);
+  }, ASIDE_SCROLL_HOLD_DELAY_MS);
+};
+
+const scheduleAsideScrollBoundsUpdate = () => {
+  nextTick(() => {
+    updateAsideScrollBounds();
+  });
+};
 
 const stripRecords = ref<CalendarRecord[]>([]);
 
@@ -981,7 +1176,21 @@ const recordOverlapsVisiblePeriod = (rec: CalendarRecord) => {
   return recStart <= bounds.end && recEnd >= bounds.start;
 };
 
-const stripRecordsInPeriod = computed(() => stripRecords.value.filter(recordOverlapsVisiblePeriod));
+const filterRecordsByDoctor = (list: CalendarRecord[]) => {
+  if (doctorPk.value <= 0) {
+    return list;
+  }
+  return list.filter((rec) => rec.doctor_pk === doctorPk.value);
+};
+
+const stripRecordsInPeriod = computed(() => (
+  filterRecordsByDoctor(stripRecords.value.filter(recordOverlapsVisiblePeriod))
+));
+
+const stripNeedsExtraDropRow = computed(() => {
+  const count = stripRecordsInPeriod.value.length;
+  return count === 0 || count % STRIP_BOARD_COLUMNS === 0;
+});
 
 const stripDefaultDayKey = computed(() => {
   const days = visibleDays.value;
@@ -1055,13 +1264,9 @@ const recordsUnfilteredForMainGrid = computed(() => (
   records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
 
-const recordsForMainGrid = computed(() => {
-  const list = recordsUnfilteredForMainGrid.value;
-  if (doctorPk.value > 0) {
-    return list.filter((r) => r.doctor_pk === doctorPk.value);
-  }
-  return list;
-});
+const recordsForMainGrid = computed(() => (
+  filterRecordsByDoctor(recordsUnfilteredForMainGrid.value)
+));
 
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
@@ -1087,18 +1292,29 @@ const recordsByBedAndDay = computed(() => {
   return map;
 });
 
-const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => (
-  recordsByBedAndDay.value.get(`${bedPk}-${dayKey}`) || []
-);
+const cellRecordList = (bedPk: number, dayKey: string): CalendarRecord[] => {
+  const list = recordsByBedAndDay.value.get(`${bedPk}-${dayKey}`) || [];
+  return [...list].sort((a, b) => {
+    if (Boolean(a.is_extract) === Boolean(b.is_extract)) {
+      return 0;
+    }
+    return a.is_extract ? -1 : 1;
+  });
+};
+
+const isRecordDischargeDay = (rec: CalendarRecord, dayKey: string) => {
+  if (!rec.is_extract) {
+    return false;
+  }
+  const end = hospVisualEnd(rec);
+  const d = moment(dayKey, 'YYYY-MM-DD');
+  return end.isValid() && d.isValid() && end.isSame(d, 'day');
+};
 
 const getRecordForDay = (bedPk: number, dayKey: string) => {
   const list = cellRecordList(bedPk, dayKey);
-  return list.length ? list[0] : undefined;
+  return list.find((r) => !r.is_extract) || list[0];
 };
-
-const cellIsExtract = (bedPk: number, dayKey: string) => (
-  cellRecordList(bedPk, dayKey).some((r) => r.is_extract)
-);
 
 const bedPeriodHasOverlap = (
   bedPk: number,
@@ -1129,6 +1345,9 @@ const bedPeriodHasOverlap = (
     }
     const recEnd = hospVisualEnd(rec);
     if (from.isSameOrBefore(recEnd, 'day') && to.isSameOrAfter(recStart, 'day')) {
+      if (rec.is_extract && from.isSame(recEnd, 'day')) {
+        continue;
+      }
       return true;
     }
   }
@@ -1154,6 +1373,44 @@ const bedDayOccupyingRecords = (bedPk: number, dayKey: string) => (
     (r) => r.bed_pk === bedPk && isDayInRecordSpan(r, dayKey),
   )
 );
+
+const canAcceptPatientInCell = (
+  bedPk: number,
+  dayKey: string,
+  excludeDirectionPk?: number | null,
+) => {
+  let occupying = bedDayOccupyingRecords(bedPk, dayKey);
+  if (excludeDirectionPk != null) {
+    occupying = occupying.filter((r) => r.direction_pk !== excludeDirectionPk);
+  }
+  if (occupying.length >= MAX_CELL_PATIENTS) {
+    return false;
+  }
+  if (occupying.length === 0) {
+    return true;
+  }
+  const only = occupying[0];
+  return Boolean(only.is_extract && isRecordDischargeDay(only, dayKey));
+};
+
+const assertCanAcceptPatientInCell = (
+  bedPk: number,
+  dayKey: string,
+  excludeDirectionPk?: number | null,
+) => {
+  if (canAcceptPatientInCell(bedPk, dayKey, excludeDirectionPk)) {
+    return true;
+  }
+  const occupying = bedDayOccupyingRecords(bedPk, dayKey).filter(
+    (r) => excludeDirectionPk == null || r.direction_pk !== excludeDirectionPk,
+  );
+  if (occupying.length >= MAX_CELL_PATIENTS) {
+    root.$emit('msg', 'error', 'В ячейке уже два пациента — допустимы только выписанный и новый');
+    return false;
+  }
+  root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
+  return false;
+};
 
 const surnameFromFio = (fio: string | null | undefined) => {
   const s = (fio || '').trim();
@@ -1331,8 +1588,13 @@ const openExtractsDetailForm = () => {
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
 const extractCountForDay = (dayKey: string) => {
-  const extractKey = extractDateKeyFromDayKey(dayKey);
-  return extractsByDate.value[extractKey]?.count || 0;
+  let count = 0;
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (isRecordDischargeDay(rec, dayKey)) {
+      count += 1;
+    }
+  }
+  return count;
 };
 
 const dischargedPatientsInPeriod = computed(() => {
@@ -1364,6 +1626,9 @@ const dayColumnTotalsMap = computed(() => {
   for (const rec of recordsUnfilteredForMainGrid.value) {
     for (const day of visibleDays.value) {
       if (!isDayInRecordSpan(rec, day.key)) {
+        continue;
+      }
+      if (isRecordDischargeDay(rec, day.key)) {
         continue;
       }
       const t = map.get(day.key) || emptyDayColumnTotals();
@@ -1518,6 +1783,13 @@ const doctorFioByPk = (docPk: number) => {
   const d = doctors.value.find((x) => x.pk === docPk);
   return (d?.fio || '').trim();
 };
+
+const attendingDoctorTreeselectOptions = computed(() => (
+  doctors.value.map((doctor) => ({
+    id: doctor.pk,
+    label: doctor.fio || doctor.short_fio || String(doctor.pk),
+  }))
+));
 
 type StripServerPatient = {
   direction_pk: number;
@@ -2001,6 +2273,9 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
   }
   const movePlanIn = targetDayKey;
   const movePlanOut = sourceRec.plan_date_out || sourceRec.date_out || null;
+  if (!assertCanAcceptPatientInCell(targetBedPk, targetDayKey, sourceRec.direction_pk)) {
+    return;
+  }
   if (!assertNoBedPeriodOverlap(targetBedPk, movePlanIn, movePlanOut, sourceRec.pk)) {
     return;
   }
@@ -2049,6 +2324,9 @@ const onStripToBedDrop = async (
   }
   const stripPlanIn = record.plan_date_in || record.date_in || targetDayKey;
   const stripPlanOut = record.plan_date_out || record.date_out || defaultPlanDateOut(targetDayKey);
+  if (!assertCanAcceptPatientInCell(targetBedPk, stripPlanIn, record.direction_pk)) {
+    return;
+  }
   if (!assertNoBedPeriodOverlap(targetBedPk, stripPlanIn, stripPlanOut, null)) {
     return;
   }
@@ -2112,8 +2390,7 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
   const occupying = bedDayOccupyingRecords(bedPk, dayKey);
   const existingForDirection = occupying.find((r) => r.direction_pk === directionPk) || null;
 
-  if (occupying.length > 0 && !existingForDirection) {
-    root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
+  if (!existingForDirection && !assertCanAcceptPatientInCell(bedPk, dayKey)) {
     return;
   }
   if (!existingForDirection && !assertNoBedPeriodOverlap(bedPk, panelPlanIn, panelPlanOut, null)) {
@@ -2265,6 +2542,15 @@ const openEditModal = (bedPk: number, dayKey: string) => {
   isEditModalOpen.value = true;
 };
 
+const openEditModalForRecord = (bedPk: number, dayKey: string, record: CalendarRecord) => {
+  if (suppressCellClick.value) {
+    return;
+  }
+  editingStripRowId.value = null;
+  fillEditModalFromRecord(record, bedPk, dayKey);
+  isEditModalOpen.value = true;
+};
+
 const openStripRecordModal = (record: CalendarRecord) => {
   if (suppressCellClick.value) {
     return;
@@ -2277,9 +2563,13 @@ const openStripRecordModal = (record: CalendarRecord) => {
   isEditModalOpen.value = true;
 };
 
-const clearModalDoctor = () => {
-  editingForm.value.doctorPk = null;
-  editingForm.value.doctorFio = '';
+const setEditingDoctor = (value: number | null | undefined) => {
+  const pk = value != null && Number.isFinite(Number(value)) ? Number(value) : null;
+  editingForm.value = {
+    ...editingForm.value,
+    doctorPk: pk,
+    doctorFio: pk != null ? doctorFioByPk(pk) : '',
+  };
 };
 
 const setAccompanyngChildType = (value: string | null | undefined) => {
@@ -2354,6 +2644,13 @@ const saveEditingCell = async () => {
     await loadUnallocatedPatients();
     root.$emit('msg', 'ok', 'Данные черновика сохранены');
     closeEditModal();
+    return;
+  }
+  if (!editingRecordPk.value && !assertCanAcceptPatientInCell(
+    editingBedPk.value,
+    editingForm.value.planDateIn || editingDayKey.value,
+    directionIdPayload,
+  )) {
     return;
   }
   if (!assertNoBedPeriodOverlap(
@@ -2461,24 +2758,63 @@ watch([departmentPk, viewMode, anchorDate], async () => {
   await loadCalendar();
   await loadUnallocatedPatients();
   await reloadStripFromServer();
+  scheduleAsideScrollBoundsUpdate();
 });
 
 watch(departmentPk, async (d) => {
   await loadDoctors();
   doctorPk.value = -1;
   await loadPatientsWithoutBed();
+  resetAsideScroll();
+  scheduleAsideScrollBoundsUpdate();
 });
 
+watch(
+  [unallocatedPatientsFiltered, dischargedPatientsInPeriod, unallocatedSearch],
+  () => {
+    scheduleAsideScrollBoundsUpdate();
+  },
+);
+
 onMounted(async () => {
+  window.addEventListener('mouseup', stopAsideScrollHold);
   await Promise.all([loadDepartments(), loadAccompanyingChildOptions()]);
+  await nextTick();
+  if (typeof ResizeObserver !== 'undefined') {
+    asideScrollResizeObserver = new ResizeObserver(() => {
+      updateAsideScrollBounds();
+    });
+    if (boardAsideViewport.value) {
+      asideScrollResizeObserver.observe(boardAsideViewport.value);
+    }
+    if (boardAsideContent.value) {
+      asideScrollResizeObserver.observe(boardAsideContent.value);
+    }
+    if (boardPatientsAside.value) {
+      asideScrollResizeObserver.observe(boardPatientsAside.value);
+    }
+  }
+  scheduleAsideScrollBoundsUpdate();
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('mouseup', stopAsideScrollHold);
+  stopAsideScrollHold();
+  if (asideScrollResizeObserver != null) {
+    asideScrollResizeObserver.disconnect();
+    asideScrollResizeObserver = null;
+  }
 });
 </script>
 
 <style scoped lang="scss">
 .board-page {
-  padding: 10px 16px;
   box-sizing: border-box;
-  min-height: calc(100vh - 100px);
+  height: 100%;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 10px 16px;
 }
 
 .board-body {
@@ -2486,6 +2822,7 @@ onMounted(async () => {
   flex-direction: row;
   align-items: stretch;
   min-width: 0;
+  min-height: 0;
 }
 
 .board-patients-aside {
@@ -2495,20 +2832,66 @@ onMounted(async () => {
   border-left: 1px solid #ddd;
   padding: 0 0 8px 12px;
   margin-left: 8px;
-  display: grid;
-  grid-template-rows: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 0;
   background: hsla(30, 3%, 94%, 1);
   align-self: stretch;
-  min-height: 640px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-$board-aside-section-min-height: 320px;
+.board-aside-scroll-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.board-aside-scroll-btn {
+  min-width: 28px;
+  padding: 2px 6px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.board-patients-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 6px;
+  flex-shrink: 0;
+}
+
+.board-patients-heading {
+  text-align: left;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.board-patients-search {
+  margin: 0 0 8px;
+  flex-shrink: 0;
+}
+
+.board-aside-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.board-aside-content {
+  will-change: transform;
+}
 
 .board-aside-section {
   display: flex;
   flex-direction: column;
-  min-height: $board-aside-section-min-height;
+  flex: 0 0 auto;
+  min-height: 0;
   overflow: visible;
 }
 
@@ -2516,21 +2899,9 @@ $board-aside-section-min-height: 320px;
   border-top: 1px solid #ddd;
 }
 
-.board-patients-heading {
-  text-align: center;
-  margin: 8px 0 6px;
-  font-size: 14px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.board-patients-search {
-  margin-bottom: 8px;
-  flex-shrink: 0;
-}
-
 .board-aside-section-body {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  overflow: visible;
 }
 
 .board-patient-row {
@@ -2674,11 +3045,12 @@ $board-aside-section-min-height: 320px;
   color: #fff;
 }
 
+.board-discharged-heading-row {
+  margin-top: 4px;
+}
+
 .board-discharged-heading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  margin: 0;
 }
 
 .board-discharged-heading-link {
@@ -2699,8 +3071,9 @@ $board-aside-section-min-height: 320px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   container-type: inline-size;
   container-name: calendar-wrap;
 }
@@ -2760,8 +3133,15 @@ $board-aside-section-min-height: 320px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin: 0 0 8px;
   flex-shrink: 0;
+}
+
+.doctor-badges--top {
+  margin: 0 0 8px;
+}
+
+.doctor-badges--bottom {
+  margin: 8px 0;
 }
 
 .doctor-badge-btn {
@@ -2854,10 +3234,6 @@ $board-aside-section-min-height: 320px;
   background: rgba(91, 143, 175, 0.16);
 }
 
-.day-cell--col-hover.day-cell--forbidden-edit {
-  background: #d8e2ea;
-}
-
 .day-col-head {
   display: flex;
   flex-direction: column;
@@ -2918,21 +3294,27 @@ $board-aside-section-min-height: 320px;
   overflow: hidden;
 }
 
-.day-cell--forbidden-edit {
-  background: #e6e6e6;
-}
-
 .day-cell--drop-hover {
   box-shadow: inset 0 0 0 2px #049372;
   background: rgba(4, 147, 114, 0.12);
 }
 
 .record {
-  background: transparent;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin-bottom: 2px;
   color: inherit;
   font-size: 12px;
   line-height: 1.25;
   text-align: left;
+  box-sizing: border-box;
+}
+
+.record--extract {
+  background: #e6e6e6;
+  border-color: #ccc;
 }
 
 .record--draggable {
@@ -3119,41 +3501,41 @@ $board-aside-section-min-height: 320px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
 }
 
 .edit-modal {
   width: 560px;
   max-width: calc(100vw - 32px);
-  margin: 0;
+  max-height: calc(100vh - 32px);
+  margin: auto;
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.edit-modal .panel-heading {
+  flex-shrink: 0;
 }
 
 .edit-modal .panel-body {
-  overflow: visible;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.edit-modal .panel-footer {
+  flex-shrink: 0;
 }
 
 .edit-modal-treeselect {
   position: relative;
   z-index: 2;
-}
-
-.modal-doctor-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 30px;
-}
-
-.modal-doctor-name {
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-}
-
-.modal-doctor-clear {
-  flex-shrink: 0;
 }
 
 .edit-modal-comment-replicate {
@@ -3219,8 +3601,16 @@ $board-aside-section-min-height: 320px;
   align-content: start;
   width: 100%;
   padding: 12px 10px 16px;
-  min-height: 220px;
   box-sizing: border-box;
+}
+
+/* Дополнительная строка под DnD, когда ряд заполнен (6 карточек) или зона пуста */
+.strip-cards-board--extra-drop-row::after {
+  content: '';
+  display: block;
+  grid-column: 1 / -1;
+  min-height: 88px;
+  pointer-events: none;
 }
 
 .strip-cards-board--drop-hover {

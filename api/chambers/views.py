@@ -143,8 +143,38 @@ def _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk=None):
         os_d = _hosp_visual_start(o)
         oe_d = _hosp_visual_end(o)
         if from_d <= oe_d and to_eff >= os_d:
+            if o.is_extract and from_d == oe_d:
+                continue
             return True
     return False
+
+
+def _occupying_on_bed_day(bed_id, day_d, exclude_pk=None):
+    qs = PatientToBed.objects.filter(bed_id=bed_id)
+    if exclude_pk:
+        qs = qs.exclude(pk=exclude_pk)
+    result = []
+    for o in qs:
+        os_d = _hosp_visual_start(o)
+        oe_d = _hosp_visual_end(o)
+        if os_d <= day_d <= oe_d:
+            result.append(o)
+    return result
+
+
+def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None):
+    """Не более двух пациентов в день на койке; второй — только при turnover с выписанным в его последний день."""
+    occupying = _occupying_on_bed_day(bed_id, day_d, exclude_pk=exclude_pk)
+    if not occupying:
+        return None
+    if len(occupying) >= 2:
+        return "В ячейке уже два пациента — допустимы только выписанный и новый"
+    existing = occupying[0]
+    if not existing.is_extract:
+        return "На этой койке уже есть госпитализация на выбранную дату"
+    if day_d != _hosp_visual_end(existing):
+        return "На этой койке уже есть госпитализация на выбранную дату"
+    return None
 
 
 def _proposed_hosp_period(plan_date_in, plan_date_out, fallback_date_in=None, fallback_date_out=None):
@@ -908,6 +938,10 @@ def save_hospitalization_by_fio(request):
         patient_fio_text, patient_sex, birthday, patient_age_text = filled
     if not patient_fio_text:
         return status_response(False, "Укажите ФИО пациента")
+    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out)
+    turnover_err = _check_bed_day_turnover_allowed(bed_id, from_d)
+    if turnover_err:
+        return status_response(False, turnover_err)
     overlap_err = _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out)
     if overlap_err:
         return status_response(False, overlap_err)
@@ -983,6 +1017,15 @@ def update_hospitalization_record(request):
     department_id = record.bed.chamber.podrazdelenie_id
     if not Chamber.check_user(user, department_id):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    from_d, _ = _proposed_hosp_period(
+        plan_date_in,
+        plan_date_out,
+        fallback_date_in=record.date_in,
+        fallback_date_out=record.date_out,
+    )
+    turnover_err = _check_bed_day_turnover_allowed(record.bed_id, from_d, exclude_pk=record.pk)
+    if turnover_err:
+        return status_response(False, turnover_err)
     overlap_err = _check_bed_period_overlap(
         record.bed_id,
         plan_date_in,
@@ -1140,6 +1183,9 @@ def move_hospitalization_to_bed(request):
         tail_plan_out = old.plan_date_out
         tail_date_out = old.date_out
         tail_end = _hosp_tail_end_date(old)
+        turnover_err = _check_bed_day_turnover_allowed(target_bed_id, move_from_date, exclude_pk=old.pk)
+        if turnover_err:
+            return status_response(False, turnover_err)
         if _bed_range_has_overlap(target_bed_id, move_from_date, tail_end, None):
             return status_response(False, "На целевой койке уже есть пациент в этот период")
         if move_from_date <= vstart:
