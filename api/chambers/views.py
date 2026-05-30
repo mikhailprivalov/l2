@@ -866,13 +866,20 @@ def get_hospitalization_calendar(request):
     total_direction_list = []
     for i in extract_proto_for_period:
         if not extracts_data.get(i.date_extract):
-            extracts_data[i.date_extract] = {"count": 1, "directionsList": [i.napravleniye_id], "patientExtracts": [f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"]}
+            extracts_data[i.date_extract] = {
+                "count": 1,
+                "directionsList": [i.napravleniye_id],
+                "patientExtracts": [f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"],
+                "patientExtractsAdds": [{i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"}],
+            }
         else:
             extracts_data[i.date_extract]["count"] += 1
             extracts_data[i.date_extract]["patientExtracts"].append(f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}")
+            extracts_data[i.date_extract]["patientExtractsAdds"].append({i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"})
         total_direction_list.append(i.napravleniye_id)
 
     extracts_count = sum(item["count"] for item in extracts_data.values())
+    print(extracts_data)
     return JsonResponse(
         {
             "ok": True,

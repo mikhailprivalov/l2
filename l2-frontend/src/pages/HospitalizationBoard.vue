@@ -600,9 +600,16 @@
                   <div
                     v-for="row in dischargedPatientsInPeriod"
                     :key="row.key"
-                    class="board-discharged-row"
+                    class="board-patient-row board-patient-row--discharged"
                   >
-                    <span class="board-discharged-name">{{ row.name }}</span>
+                    <a
+                      class="board-patient-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :href="stationarHref(row.directionPk)"
+                      @click.stop
+                      @mousedown.stop
+                    >{{ row.name }}</a>
                     <span class="board-discharged-date">{{ row.dateLabel }}</span>
                   </div>
                 </template>
@@ -1008,7 +1015,12 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
-type ExtractDayInfo = { count: number; directionsList?: number[]; patientExtracts?: string[] };
+type ExtractDayInfo = {
+  count: number;
+  directionsList?: number[];
+  patientExtracts?: string[];
+  patientExtractsAdds?: Array<Record<string, string>>;
+};
 const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
@@ -1586,6 +1598,50 @@ const openExtractsDetailForm = () => {
 
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
+type DischargedPatientRow = {
+  key: string;
+  directionPk: number;
+  name: string;
+  dateLabel: string;
+};
+
+const parseExtractAddsEntry = (entry: Record<string, string>) => {
+  const keys = Object.keys(entry);
+  if (!keys.length) {
+    return null;
+  }
+  const directionPk = Number(keys[0]);
+  const name = (entry[keys[0]] || '').trim();
+  if (!Number.isFinite(directionPk) || directionPk <= 0 || !name) {
+    return null;
+  }
+  return { directionPk, name };
+};
+
+const dischargedPatientsInPeriodAll = computed(() => {
+  const rows: DischargedPatientRow[] = [];
+  for (const day of visibleDays.value) {
+    const extractKey = extractDateKeyFromDayKey(day.key);
+    const adds = extractsByDate.value[extractKey]?.patientExtractsAdds;
+    if (!adds?.length) {
+      continue;
+    }
+    adds.forEach((entry, idx) => {
+      const parsed = parseExtractAddsEntry(entry);
+      if (!parsed) {
+        return;
+      }
+      rows.push({
+        key: `${day.key}-${parsed.directionPk}-${idx}`,
+        directionPk: parsed.directionPk,
+        name: parsed.name,
+        dateLabel: day.label,
+      });
+    });
+  }
+  return rows;
+});
+
 const extractCountForDay = (dayKey: string) => {
   let count = 0;
   for (const rec of recordsUnfilteredForMainGrid.value) {
@@ -1600,25 +1656,6 @@ const extractCountForDay = (dayKey: string) => {
   }
   return count;
 };
-
-const dischargedPatientsInPeriodAll = computed(() => {
-  const rows: Array<{ key: string, name: string, dateLabel: string }> = [];
-  for (const day of visibleDays.value) {
-    const extractKey = extractDateKeyFromDayKey(day.key);
-    const patients = extractsByDate.value[extractKey]?.patientExtracts;
-    if (!patients?.length) {
-      continue;
-    }
-    patients.forEach((name, idx) => {
-      rows.push({
-        key: `${day.key}-${idx}`,
-        name,
-        dateLabel: day.label,
-      });
-    });
-  }
-  return rows;
-});
 
 const dischargedPatientsInPeriod = computed(() => {
   const q = unallocatedSearch.value.trim().toLowerCase();
@@ -2967,6 +3004,26 @@ onBeforeUnmount(() => {
 
 .board-patient-row:active {
   cursor: grabbing;
+}
+
+.board-patient-row--discharged {
+  cursor: default;
+}
+
+.board-patient-row--discharged:active {
+  cursor: default;
+}
+
+.board-patient-row--discharged .board-patient-link {
+  color: #333;
+  text-decoration: none;
+}
+
+.board-patient-row--discharged .board-patient-link:hover,
+.board-patient-row--discharged .board-patient-link:focus,
+.board-patient-row--discharged .board-patient-link:visited {
+  color: #333;
+  text-decoration: none;
 }
 
 .board-patient-link {
