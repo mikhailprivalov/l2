@@ -78,16 +78,55 @@
               </div>
             </div>
           </div>
-          <div
-            class="toolbar-aside-spacer"
-            aria-hidden="true"
-          />
+          <div class="toolbar-aside-scroll">
+            <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
+              <button
+                type="button"
+                class="btn btn-default btn-xs board-aside-scroll-btn"
+                title="Сдвинуть списки выше"
+                :disabled="!canAsideScrollUp"
+                @mousedown.prevent="startAsideScrollHold(-1)"
+                @mouseup="stopAsideScrollHold"
+                @mouseleave="stopAsideScrollHold"
+                @touchstart.prevent="startAsideScrollHold(-1)"
+                @touchend="stopAsideScrollHold"
+                @touchcancel="stopAsideScrollHold"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                class="btn btn-default btn-xs board-aside-scroll-btn"
+                title="Сдвинуть списки ниже"
+                @mousedown.prevent="startAsideScrollHold(1)"
+                @mouseup="stopAsideScrollHold"
+                @mouseleave="stopAsideScrollHold"
+                @touchstart.prevent="startAsideScrollHold(1)"
+                @touchend="stopAsideScrollHold"
+                @touchcancel="stopAsideScrollHold"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                class="btn btn-default btn-xs board-aside-scroll-btn"
+                title="В начало списков"
+                :disabled="asideScrollOffset <= 0"
+                @click="resetAsideScroll"
+              >
+                ⌂
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="board-body">
-      <div class="calendar-wrap">
+      <div
+        ref="calendarWrapRef"
+        class="calendar-wrap"
+      >
         <div class="doctor-badges doctor-badges--top">
           <button
             type="button"
@@ -475,10 +514,12 @@
       <aside
         ref="boardPatientsAside"
         class="board-patients-aside"
+        :style="asideColumnStyle"
       >
         <div
           ref="boardAsideViewport"
           class="board-aside-viewport"
+          :style="asideColumnStyle"
         >
           <div
             ref="boardAsideContent"
@@ -489,39 +530,6 @@
               <h5 class="board-patients-heading">
                 Пациенты
               </h5>
-              <div class="board-aside-scroll-controls">
-                <button
-                  type="button"
-                  class="btn btn-default btn-xs board-aside-scroll-btn"
-                  title="Сдвинуть списки выше"
-                  :disabled="!canAsideScrollUp"
-                  @mousedown.prevent="startAsideScrollHold(-1)"
-                  @mouseup="stopAsideScrollHold"
-                  @mouseleave="stopAsideScrollHold"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-default btn-xs board-aside-scroll-btn"
-                  title="Сдвинуть списки ниже"
-                  :disabled="!canAsideScrollDown"
-                  @mousedown.prevent="startAsideScrollHold(1)"
-                  @mouseup="stopAsideScrollHold"
-                  @mouseleave="stopAsideScrollHold"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-default btn-xs board-aside-scroll-btn"
-                  title="В начало списков"
-                  :disabled="asideScrollOffset <= 0"
-                  @click="resetAsideScroll"
-                >
-                  ⌂
-                </button>
-              </div>
             </div>
             <input
               v-model.trim="unallocatedSearch"
@@ -574,39 +582,6 @@
                     @click.prevent="openExtractsDetailForm"
                   >Выписаны {{ extractsCount }}</a>
                 </h5>
-                <div class="board-aside-scroll-controls">
-                  <button
-                    type="button"
-                    class="btn btn-default btn-xs board-aside-scroll-btn"
-                    title="Сдвинуть списки выше"
-                    :disabled="!canAsideScrollUp"
-                    @mousedown.prevent="startAsideScrollHold(-1)"
-                    @mouseup="stopAsideScrollHold"
-                    @mouseleave="stopAsideScrollHold"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-default btn-xs board-aside-scroll-btn"
-                    title="Сдвинуть списки ниже"
-                    :disabled="!canAsideScrollDown"
-                    @mousedown.prevent="startAsideScrollHold(1)"
-                    @mouseup="stopAsideScrollHold"
-                    @mouseleave="stopAsideScrollHold"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-default btn-xs board-aside-scroll-btn"
-                    title="В начало списков"
-                    :disabled="asideScrollOffset <= 0"
-                    @click="resetAsideScroll"
-                  >
-                    ⌂
-                  </button>
-                </div>
               </div>
               <div class="board-aside-section-body">
                 <p
@@ -934,35 +909,48 @@ const ASIDE_SCROLL_HOLD_DELAY_MS = 280;
 const boardPatientsAside = ref<HTMLElement | null>(null);
 const boardAsideViewport = ref<HTMLElement | null>(null);
 const boardAsideContent = ref<HTMLElement | null>(null);
+const calendarWrapRef = ref<HTMLElement | null>(null);
 const asideScrollOffset = ref(0);
 const maxAsideScrollOffset = ref(0);
+const calendarBaseHeight = ref(0);
 
 let asideScrollTimer: ReturnType<typeof setInterval> | null = null;
 let asideScrollHoldTimer: ReturnType<typeof setTimeout> | null = null;
 let asideScrollResizeObserver: ResizeObserver | null = null;
 
 const canAsideScrollUp = computed(() => asideScrollOffset.value > 0);
-const canAsideScrollDown = computed(() => asideScrollOffset.value < maxAsideScrollOffset.value);
 
-const clampAsideScrollOffset = (value: number) => (
-  Math.min(maxAsideScrollOffset.value, Math.max(0, value))
-);
+const asideColumnMinHeightPx = computed(() => {
+  const calH = calendarBaseHeight.value;
+  if (!calH) {
+    return 0;
+  }
+  const extra = Math.max(0, asideScrollOffset.value - maxAsideScrollOffset.value);
+  return calH + extra;
+});
+
+const asideColumnStyle = computed(() => {
+  const minH = asideColumnMinHeightPx.value;
+  if (!minH) {
+    return undefined;
+  }
+  return { minHeight: `${minH}px` };
+});
+
+const clampAsideScrollOffset = (value: number) => Math.max(0, value);
 
 const updateAsideScrollBounds = () => {
-  const viewport = boardAsideViewport.value;
+  const calendar = calendarWrapRef.value;
   const content = boardAsideContent.value;
-  if (!viewport || !content) {
+  if (calendar) {
+    calendarBaseHeight.value = calendar.offsetHeight;
+  }
+  const base = calendarBaseHeight.value;
+  if (!content || !base) {
     maxAsideScrollOffset.value = 0;
-    asideScrollOffset.value = 0;
     return;
   }
-  const viewportHeight = viewport.clientHeight;
-  const contentHeight = content.offsetHeight;
-  const overflow = contentHeight - viewportHeight;
-  maxAsideScrollOffset.value = overflow > 0
-    ? overflow
-    : Math.max(0, viewportHeight - contentHeight);
-  asideScrollOffset.value = clampAsideScrollOffset(asideScrollOffset.value);
+  maxAsideScrollOffset.value = Math.max(0, content.offsetHeight - base);
 };
 
 const shiftAsideScroll = (delta: number) => {
@@ -989,13 +977,14 @@ const startAsideScrollHold = (direction: -1 | 1) => {
   if (direction < 0 && !canAsideScrollUp.value) {
     return;
   }
-  if (direction > 0 && !canAsideScrollDown.value) {
-    return;
-  }
   shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
   stopAsideScrollHold();
   asideScrollHoldTimer = setTimeout(() => {
     asideScrollTimer = setInterval(() => {
+      if (direction < 0 && !canAsideScrollUp.value) {
+        stopAsideScrollHold();
+        return;
+      }
       shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
     }, ASIDE_SCROLL_HOLD_MS);
   }, ASIDE_SCROLL_HOLD_DELAY_MS);
@@ -2816,12 +2805,17 @@ watch(
 
 onMounted(async () => {
   window.addEventListener('mouseup', stopAsideScrollHold);
+  window.addEventListener('touchend', stopAsideScrollHold);
+  window.addEventListener('touchcancel', stopAsideScrollHold);
   await Promise.all([loadDepartments(), loadAccompanyingChildOptions()]);
   await nextTick();
   if (typeof ResizeObserver !== 'undefined') {
     asideScrollResizeObserver = new ResizeObserver(() => {
       updateAsideScrollBounds();
     });
+    if (calendarWrapRef.value) {
+      asideScrollResizeObserver.observe(calendarWrapRef.value);
+    }
     if (boardAsideViewport.value) {
       asideScrollResizeObserver.observe(boardAsideViewport.value);
     }
@@ -2837,6 +2831,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('mouseup', stopAsideScrollHold);
+  window.removeEventListener('touchend', stopAsideScrollHold);
+  window.removeEventListener('touchcancel', stopAsideScrollHold);
   stopAsideScrollHold();
   if (asideScrollResizeObserver != null) {
     asideScrollResizeObserver.disconnect();
@@ -2848,19 +2844,23 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .board-page {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 10px 16px;
 }
 
 .board-body {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .board-patients-aside {
@@ -2874,9 +2874,9 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 0;
   background: hsla(30, 3%, 94%, 1);
-  align-self: stretch;
-  min-height: 0;
-  overflow: hidden;
+  align-self: flex-start;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 .board-aside-scroll-controls {
@@ -2884,6 +2884,10 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+}
+
+.board-aside-scroll-controls--toolbar {
+  gap: 6px;
 }
 
 .board-aside-scroll-btn {
@@ -2916,9 +2920,9 @@ onBeforeUnmount(() => {
 }
 
 .board-aside-viewport {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
+  flex: 0 0 auto;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 .board-aside-content {
@@ -3013,8 +3017,12 @@ onBeforeUnmount(() => {
 }
 
 .toolbar {
-  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
   flex-shrink: 0;
+  margin-bottom: 8px;
+  background: #fff;
 }
 
 .toolbar-layout {
@@ -3029,12 +3037,17 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.toolbar-aside-spacer {
+.toolbar-aside-scroll {
   flex: 0 0 280px;
   width: 280px;
   max-width: 280px;
   margin-left: 8px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+  box-sizing: border-box;
 }
 
 .toolbar-row {
