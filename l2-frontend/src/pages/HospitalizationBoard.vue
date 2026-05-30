@@ -6,18 +6,16 @@
           <div class="toolbar-calendar-col">
             <div class="toolbar-row">
               <div class="toolbar-department">
-                <div class="input-group treeselect-noborder-left">
-                  <span class="input-group-addon">Подразделение</span>
-                  <Treeselect
-                    v-model="departmentPk"
-                    :options="departments"
-                    :multiple="false"
-                    :disable-branch-nodes="true"
-                    :clearable="false"
-                    :append-to-body="true"
-                    class="treeselect-wide"
-                  />
-                </div>
+                <Treeselect
+                  v-model="departmentPk"
+                  :options="departments"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :clearable="false"
+                  :append-to-body="true"
+                  placeholder="Подразделение"
+                  class="treeselect-wide treeselect-34px toolbar-department-treeselect"
+                />
               </div>
               <div class="toolbar-controls toolbar-controls--nav">
             <div class="mode-switch">
@@ -81,7 +79,7 @@
           <div class="toolbar-aside-panel">
             <input
               v-model.trim="unallocatedSearch"
-              class="form-control input-sm toolbar-aside-search"
+              class="form-control toolbar-aside-search"
               type="text"
               placeholder="Поиск"
             >
@@ -2938,7 +2936,7 @@ onBeforeUnmount(() => {
 .board-aside-scroll-btn--toolbar {
   min-width: 28px;
   width: 28px;
-  height: 29px;
+  height: 28px;
   padding: 0;
   line-height: 1;
   font-size: 15px;
@@ -3124,7 +3122,7 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
   display: flex;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-end;
   gap: 6px;
   padding: 0 4px 0 12px;
   box-sizing: border-box;
@@ -3135,6 +3133,11 @@ onBeforeUnmount(() => {
   min-width: 0;
   width: auto;
   margin: 0;
+  height: 34px;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 20px;
+  box-sizing: border-box;
 }
 
 .toolbar-row {
@@ -3144,10 +3147,31 @@ onBeforeUnmount(() => {
 }
 
 .toolbar-department {
-  flex: 0 0 auto;
-  width: 560px;
-  max-width: 56%;
-  min-width: 440px;
+  flex: 0 1 auto;
+  width: 320px;
+  max-width: 32%;
+  min-width: 200px;
+}
+
+.toolbar-department-treeselect {
+  width: 100%;
+}
+
+.toolbar-department ::v-deep .vue-treeselect {
+  width: 100%;
+  min-width: 0;
+}
+
+.toolbar-department ::v-deep .vue-treeselect__control {
+  overflow: hidden;
+  border-radius: 4px !important;
+}
+
+.toolbar-department ::v-deep .vue-treeselect__single-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .toolbar-controls {
