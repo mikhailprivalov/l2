@@ -2892,7 +2892,7 @@ onBeforeUnmount(() => {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  padding: 10px 16px;
+  padding: 10px 8px;
 }
 
 .board-body {
@@ -2911,8 +2911,8 @@ onBeforeUnmount(() => {
   width: 304px;
   max-width: 304px;
   border-left: 1px solid #ddd;
-  padding: 0 0 8px 12px;
-  margin-left: 8px;
+  padding: 0 0 8px 8px;
+  margin-left: 6px;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -3118,13 +3118,13 @@ onBeforeUnmount(() => {
   flex: 0 0 304px;
   width: 304px;
   max-width: 304px;
-  margin-left: 8px;
+  margin-left: 6px;
   flex-shrink: 0;
   display: flex;
   flex-direction: row;
   align-items: flex-end;
   gap: 6px;
-  padding: 0 4px 0 12px;
+  padding: 0 2px 0 8px;
   box-sizing: border-box;
 }
 
