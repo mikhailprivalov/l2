@@ -879,7 +879,7 @@ def get_hospitalization_calendar(request):
         total_direction_list.append(i.napravleniye_id)
 
     extracts_count = sum(item["count"] for item in extracts_data.values())
-    print(extracts_data)
+
     return JsonResponse(
         {
             "ok": True,
