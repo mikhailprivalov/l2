@@ -869,12 +869,10 @@ def get_hospitalization_calendar(request):
             extracts_data[i.date_extract] = {
                 "count": 1,
                 "directionsList": [i.napravleniye_id],
-                "patientExtracts": [f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"],
                 "patientExtractsAdds": [{i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"}],
             }
         else:
             extracts_data[i.date_extract]["count"] += 1
-            extracts_data[i.date_extract]["patientExtracts"].append(f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}")
             extracts_data[i.date_extract]["patientExtractsAdds"].append({i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"})
         total_direction_list.append(i.napravleniye_id)
 

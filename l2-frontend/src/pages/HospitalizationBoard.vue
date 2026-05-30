@@ -236,7 +236,7 @@
                         v-for="rec in cellRecordList(bed.pk, day.key)"
                         :key="`${bed.pk}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
-                        :class="{ 'record--extract': rec.is_extract }"
+                        :class="{ 'record--extract': isRecordDischargeDay(rec, day.key) }"
                         draggable="true"
                         :title="recordHoverTitle(rec, day.key)"
                         @click.stop="openEditModalForRecord(bed.pk, day.key, rec)"
@@ -330,7 +330,7 @@
 
           <div class="strip-board-block calendar-strip-block">
             <p class="strip-board-hint">
-              Дневные — {{ stripRecordsInPeriod.length }}
+              Дневные — {{ stripRecordsInPeriodNotExtractCount }}
             </p>
             <div
               class="strip-cards-board"
@@ -371,9 +371,6 @@
                 @dragleave.stop="onStripCardDragLeave($event, rec)"
                 @drop.prevent.stop="onStripCardDrop($event, rec)"
               >
-                <div class="strip-card-dates">
-                  {{ formatStripPeriodLabel(rec) }}
-                </div>
                 <div class="record-line record-line--patient">
                   <span class="record-patient">
                     <span class="record-patient-name-wrap">
@@ -408,22 +405,20 @@
                       :class="genderColorClass(rec.accompanyng_child_sex)"
                       :title="accompanyingLetterTitle(rec)"
                     >{{ accompanyingDisplayLetter(rec) }}</span>
-                    <span
-                      v-if="rec.is_day_hosp"
-                      class="record-day-hosp-badge"
-                      title="Дневной стационар"
-                    >ДС</span>
                   </span>
                 </div>
                 <div class="record-line record-line--doctor">
                   <span class="record-doctor-line-inner">
                     <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span>
                   </span>
-                  <span
-                    v-if="rec.is_need_sick"
-                    class="record-sick-badge"
-                    title="Требуется больничный"
-                  >Б</span>
+                  <span class="strip-card-doctor-aside">
+                    <span
+                      v-if="rec.is_need_sick"
+                      class="record-sick-badge"
+                      title="Требуется больничный"
+                    >Б</span>
+                    <span class="strip-card-period">{{ formatStripPeriodLabel(rec) }}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -1018,7 +1013,6 @@ const records = ref<CalendarRecord[]>([]);
 type ExtractDayInfo = {
   count: number;
   directionsList?: number[];
-  patientExtracts?: string[];
   patientExtractsAdds?: Array<Record<string, string>>;
 };
 const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
@@ -1192,6 +1186,10 @@ const filterRecordsByDoctor = (list: CalendarRecord[]) => {
 
 const stripRecordsInPeriod = computed(() => (
   filterRecordsByDoctor(stripRecords.value.filter(recordOverlapsVisiblePeriod))
+));
+
+const stripRecordsInPeriodNotExtractCount = computed(() => (
+  stripRecordsInPeriod.value.filter((rec) => !rec.is_extract).length
 ));
 
 const stripNeedsExtraDropRow = computed(() => {
@@ -3195,7 +3193,7 @@ onBeforeUnmount(() => {
 }
 
 .board-discharged-heading-link {
-  color: #337ab7;
+  color: #0d47a1;
   font-size: 14px;
   font-weight: 600;
   text-decoration: underline;
@@ -3204,7 +3202,7 @@ onBeforeUnmount(() => {
 
 .board-discharged-heading-link:hover,
 .board-discharged-heading-link:focus {
-  color: #23527c;
+  color: #1565c0;
   text-decoration: underline;
 }
 
@@ -3786,14 +3784,20 @@ onBeforeUnmount(() => {
   background: #e6e6e6;
 }
 
-.strip-card-dates {
+.strip-card-doctor-aside {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.strip-card-period {
   font-size: 11px;
   font-weight: 600;
   color: #666;
   line-height: 1.1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .strip-card .record-line {
