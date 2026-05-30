@@ -292,7 +292,8 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
             dpr.value as field_value,
             ci.family as patient_family,
             ci.name as patient_name,
-            ci.patronymic as patient_patronymic
+            ci.patronymic as patient_patronymic,
+            par_iss.napravleniye_id as hosp_direction
             from directions_issledovaniya as d_iss
             left join directions_napravleniya dn on d_iss.napravleniye_id = dn.id
             left join directory_researches dr on d_iss.research_id = dr.id
@@ -300,12 +301,13 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
             left join directory_paraclinicinputfield dpif on dpr.field_id = dpif.id
             left join clients_card cc on cc.id = dn.client_id
             left join clients_individual ci on ci.id = cc.individual_id
+            left join directions_issledovaniya as par_iss on par_iss.id = dn.parent_id
             where dn.parent_id in 
                 (select diss.id 
                 from directions_issledovaniya as diss
                 where diss.hospital_department_override_id in %(hospital_department_override_id)s
-                )
-            and dr.title ~* '^(Выписной|Посмертны)'
+                )            
+            and dr.is_extract_service = true
             and (dpif.cda_option_id = %(cda_option_id)s or dpif.title = 'Дата выписки')
             and (d_iss.medical_examination AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s)
             and d_iss.time_confirmation is Not null 

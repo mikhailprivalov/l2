@@ -6,22 +6,23 @@
           <div class="toolbar-calendar-col">
             <div class="toolbar-row">
               <div class="toolbar-department">
-                <div class="input-group treeselect-noborder-left">
-                  <span class="input-group-addon">Подразделение</span>
-                  <Treeselect
-                    v-model="departmentPk"
-                    :options="departments"
-                    :multiple="false"
-                    :disable-branch-nodes="true"
-                    :clearable="false"
-                    :append-to-body="true"
-                    class="treeselect-wide"
-                  />
-                </div>
+                <Treeselect
+                  v-model="departmentPk"
+                  :options="departments"
+                  :multiple="false"
+                  :disable-branch-nodes="true"
+                  :clearable="false"
+                  :append-to-body="true"
+                  placeholder="Подразделение"
+                  class="treeselect-wide treeselect-34px toolbar-department-treeselect"
+                />
               </div>
               <div class="toolbar-controls toolbar-controls--nav">
             <div class="mode-switch">
-              <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+              <div class="toolbar-today-block">
+                <span class="toolbar-today-label">Сегодня</span>
+                <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+              </div>
               <button
                 class="btn btn-default"
                 :class="{ active: viewMode === 'day' }"
@@ -75,16 +76,73 @@
               </div>
             </div>
           </div>
-          <div
-            class="toolbar-aside-spacer"
-            aria-hidden="true"
-          />
+          <div class="toolbar-aside-panel">
+            <div class="toolbar-aside-search-wrap">
+              <input
+                v-model.trim="unallocatedSearch"
+                class="form-control toolbar-aside-search"
+                type="text"
+                placeholder="Поиск"
+              >
+              <button
+                v-if="unallocatedSearch"
+                type="button"
+                class="toolbar-aside-search-clear"
+                title="Очистить поиск"
+                tabindex="-1"
+                @click="unallocatedSearch = ''"
+              >
+                <i class="fa-solid fa-xmark" />
+              </button>
+            </div>
+            <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
+              <button
+                type="button"
+                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
+                title="Сдвинуть списки выше"
+                :disabled="!canAsideScrollUp"
+                @mousedown.prevent="startAsideScrollHold(-1)"
+                @mouseup="stopAsideScrollHold"
+                @mouseleave="stopAsideScrollHold"
+                @touchstart.prevent="startAsideScrollHold(-1)"
+                @touchend="stopAsideScrollHold"
+                @touchcancel="stopAsideScrollHold"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
+                title="Сдвинуть списки ниже"
+                @mousedown.prevent="startAsideScrollHold(1)"
+                @mouseup="stopAsideScrollHold"
+                @mouseleave="stopAsideScrollHold"
+                @touchstart.prevent="startAsideScrollHold(1)"
+                @touchend="stopAsideScrollHold"
+                @touchcancel="stopAsideScrollHold"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
+                title="В начало списков"
+                :disabled="asideScrollOffset <= 0"
+                @click="resetAsideScroll"
+              >
+                ⌂
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="board-body">
-      <div class="calendar-wrap">
+      <div
+        ref="calendarWrapRef"
+        class="calendar-wrap"
+      >
         <div class="doctor-badges doctor-badges--top">
           <button
             type="button"
@@ -150,6 +208,7 @@
                         <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
                         <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
                         <span class="day-col-totals-item">В-{{ extractCountForDay(day.key) }}</span>
+                        <span class="day-col-totals-item">Н-{{ dayColumnTotals(day.key).free }}</span>
                       </div>
                     </div>
                   </th>
@@ -188,7 +247,7 @@
                         v-for="rec in cellRecordList(bed.pk, day.key)"
                         :key="`${bed.pk}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
-                        :class="{ 'record--extract': rec.is_extract }"
+                        :class="{ 'record--extract': isRecordDischargeDay(rec, day.key) }"
                         draggable="true"
                         :title="recordHoverTitle(rec, day.key)"
                         @click.stop="openEditModalForRecord(bed.pk, day.key, rec)"
@@ -227,7 +286,6 @@
                               class="record-direction-link"
                               target="_blank"
                               rel="noopener noreferrer"
-                              :title="`Направление ${rec.direction_pk} (стационар)`"
                               @click.stop
                               @mousedown.stop
                             >
@@ -283,7 +341,7 @@
 
           <div class="strip-board-block calendar-strip-block">
             <p class="strip-board-hint">
-              Дневные
+              Дневные — {{ stripRecordsInPeriodNotExtractCount }}
             </p>
             <div
               class="strip-cards-board"
@@ -324,9 +382,6 @@
                 @dragleave.stop="onStripCardDragLeave($event, rec)"
                 @drop.prevent.stop="onStripCardDrop($event, rec)"
               >
-                <div class="strip-card-dates">
-                  {{ formatStripPeriodLabel(rec) }}
-                </div>
                 <div class="record-line record-line--patient">
                   <span class="record-patient">
                     <span class="record-patient-name-wrap">
@@ -352,7 +407,6 @@
                       class="record-direction-link"
                       target="_blank"
                       rel="noopener noreferrer"
-                      :title="`Направление ${rec.direction_pk} (стационар)`"
                       @click.stop
                       @mousedown.stop
                     >{{ rec.direction_pk }}</a>
@@ -362,22 +416,20 @@
                       :class="genderColorClass(rec.accompanyng_child_sex)"
                       :title="accompanyingLetterTitle(rec)"
                     >{{ accompanyingDisplayLetter(rec) }}</span>
-                    <span
-                      v-if="rec.is_day_hosp"
-                      class="record-day-hosp-badge"
-                      title="Дневной стационар"
-                    >ДС</span>
                   </span>
                 </div>
                 <div class="record-line record-line--doctor">
                   <span class="record-doctor-line-inner">
                     <span class="record-doctor-name">{{ formatCellDoctorSurname(rec) || '\u00a0' }}</span>
                   </span>
-                  <span
-                    v-if="rec.is_need_sick"
-                    class="record-sick-badge"
-                    title="Требуется больничный"
-                  >Б</span>
+                  <span class="strip-card-doctor-aside">
+                    <span
+                      v-if="rec.is_need_sick"
+                      class="record-sick-badge"
+                      title="Требуется больничный"
+                    >Б</span>
+                    <span class="strip-card-period">{{ formatStripPeriodLabel(rec) }}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -411,7 +463,10 @@
             <div class="panel-body">
               <div class="toolbar-controls toolbar-controls--nav board-calendar-nav-inner">
                 <div class="mode-switch">
-                  <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+                  <div class="toolbar-today-block">
+                    <span class="toolbar-today-label">Сегодня</span>
+                    <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+                  </div>
                   <button
                     class="btn btn-default"
                     :class="{ active: viewMode === 'day' }"
@@ -471,61 +526,24 @@
       <aside
         ref="boardPatientsAside"
         class="board-patients-aside"
+        :style="asideColumnStyle"
       >
         <div
           ref="boardAsideViewport"
           class="board-aside-viewport"
+          :style="asideColumnStyle"
         >
           <div
             ref="boardAsideContent"
             class="board-aside-content"
             :style="{ transform: `translateY(${asideScrollOffset}px)` }"
           >
-            <div class="board-patients-heading-row">
-              <h5 class="board-patients-heading">
-                Пациенты
-              </h5>
-              <div class="board-aside-scroll-controls">
-                <button
-                  type="button"
-                  class="btn btn-default btn-xs board-aside-scroll-btn"
-                  title="Сдвинуть списки выше"
-                  :disabled="!canAsideScrollUp"
-                  @mousedown.prevent="startAsideScrollHold(-1)"
-                  @mouseup="stopAsideScrollHold"
-                  @mouseleave="stopAsideScrollHold"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-default btn-xs board-aside-scroll-btn"
-                  title="Сдвинуть списки ниже"
-                  :disabled="!canAsideScrollDown"
-                  @mousedown.prevent="startAsideScrollHold(1)"
-                  @mouseup="stopAsideScrollHold"
-                  @mouseleave="stopAsideScrollHold"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-default btn-xs board-aside-scroll-btn"
-                  title="В начало списков"
-                  :disabled="asideScrollOffset <= 0"
-                  @click="resetAsideScroll"
-                >
-                  ⌂
-                </button>
-              </div>
-            </div>
-            <input
-              v-model.trim="unallocatedSearch"
-              class="form-control input-sm board-patients-search"
-              type="text"
-              placeholder="Поиск"
-            >
             <section class="board-aside-section board-aside-section--patients">
+              <div class="board-patients-heading-row">
+                <h5 class="board-patients-heading">
+                  Без коек — {{ unallocatedPatientsFiltered.length }}
+                </h5>
+              </div>
               <div class="board-aside-section-body">
                 <p
                   v-if="!departmentPk"
@@ -568,41 +586,8 @@
                     href="#"
                     class="board-discharged-heading-link"
                     @click.prevent="openExtractsDetailForm"
-                  >Выписаны {{ extractsCount }}</a>
+                  >Выписаны - {{ extractsCount }}</a>
                 </h5>
-                <div class="board-aside-scroll-controls">
-                  <button
-                    type="button"
-                    class="btn btn-default btn-xs board-aside-scroll-btn"
-                    title="Сдвинуть списки выше"
-                    :disabled="!canAsideScrollUp"
-                    @mousedown.prevent="startAsideScrollHold(-1)"
-                    @mouseup="stopAsideScrollHold"
-                    @mouseleave="stopAsideScrollHold"
-                  >
-                    ↑
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-default btn-xs board-aside-scroll-btn"
-                    title="Сдвинуть списки ниже"
-                    :disabled="!canAsideScrollDown"
-                    @mousedown.prevent="startAsideScrollHold(1)"
-                    @mouseup="stopAsideScrollHold"
-                    @mouseleave="stopAsideScrollHold"
-                  >
-                    ↓
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-default btn-xs board-aside-scroll-btn"
-                    title="В начало списков"
-                    :disabled="asideScrollOffset <= 0"
-                    @click="resetAsideScroll"
-                  >
-                    ⌂
-                  </button>
-                </div>
               </div>
               <div class="board-aside-section-body">
                 <p
@@ -621,9 +606,16 @@
                   <div
                     v-for="row in dischargedPatientsInPeriod"
                     :key="row.key"
-                    class="board-discharged-row"
+                    class="board-patient-row board-patient-row--discharged"
                   >
-                    <span class="board-discharged-name">{{ row.name }}</span>
+                    <a
+                      class="board-patient-link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :href="stationarHref(row.directionPk)"
+                      @click.stop
+                      @mousedown.stop
+                    >{{ row.name }}</a>
                     <span class="board-discharged-date">{{ row.dateLabel }}</span>
                   </div>
                 </template>
@@ -930,35 +922,48 @@ const ASIDE_SCROLL_HOLD_DELAY_MS = 280;
 const boardPatientsAside = ref<HTMLElement | null>(null);
 const boardAsideViewport = ref<HTMLElement | null>(null);
 const boardAsideContent = ref<HTMLElement | null>(null);
+const calendarWrapRef = ref<HTMLElement | null>(null);
 const asideScrollOffset = ref(0);
 const maxAsideScrollOffset = ref(0);
+const calendarBaseHeight = ref(0);
 
 let asideScrollTimer: ReturnType<typeof setInterval> | null = null;
 let asideScrollHoldTimer: ReturnType<typeof setTimeout> | null = null;
 let asideScrollResizeObserver: ResizeObserver | null = null;
 
 const canAsideScrollUp = computed(() => asideScrollOffset.value > 0);
-const canAsideScrollDown = computed(() => asideScrollOffset.value < maxAsideScrollOffset.value);
 
-const clampAsideScrollOffset = (value: number) => (
-  Math.min(maxAsideScrollOffset.value, Math.max(0, value))
-);
+const asideColumnMinHeightPx = computed(() => {
+  const calH = calendarBaseHeight.value;
+  if (!calH) {
+    return 0;
+  }
+  const extra = Math.max(0, asideScrollOffset.value - maxAsideScrollOffset.value);
+  return calH + extra;
+});
+
+const asideColumnStyle = computed(() => {
+  const minH = asideColumnMinHeightPx.value;
+  if (!minH) {
+    return undefined;
+  }
+  return { minHeight: `${minH}px` };
+});
+
+const clampAsideScrollOffset = (value: number) => Math.max(0, value);
 
 const updateAsideScrollBounds = () => {
-  const viewport = boardAsideViewport.value;
+  const calendar = calendarWrapRef.value;
   const content = boardAsideContent.value;
-  if (!viewport || !content) {
+  if (calendar) {
+    calendarBaseHeight.value = calendar.offsetHeight;
+  }
+  const base = calendarBaseHeight.value;
+  if (!content || !base) {
     maxAsideScrollOffset.value = 0;
-    asideScrollOffset.value = 0;
     return;
   }
-  const viewportHeight = viewport.clientHeight;
-  const contentHeight = content.offsetHeight;
-  const overflow = contentHeight - viewportHeight;
-  maxAsideScrollOffset.value = overflow > 0
-    ? overflow
-    : Math.max(0, viewportHeight - contentHeight);
-  asideScrollOffset.value = clampAsideScrollOffset(asideScrollOffset.value);
+  maxAsideScrollOffset.value = Math.max(0, content.offsetHeight - base);
 };
 
 const shiftAsideScroll = (delta: number) => {
@@ -985,13 +990,14 @@ const startAsideScrollHold = (direction: -1 | 1) => {
   if (direction < 0 && !canAsideScrollUp.value) {
     return;
   }
-  if (direction > 0 && !canAsideScrollDown.value) {
-    return;
-  }
   shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
   stopAsideScrollHold();
   asideScrollHoldTimer = setTimeout(() => {
     asideScrollTimer = setInterval(() => {
+      if (direction < 0 && !canAsideScrollUp.value) {
+        stopAsideScrollHold();
+        return;
+      }
       shiftAsideScroll(direction * ASIDE_SCROLL_STEP_PX);
     }, ASIDE_SCROLL_HOLD_MS);
   }, ASIDE_SCROLL_HOLD_DELAY_MS);
@@ -1015,7 +1021,11 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
-type ExtractDayInfo = { count: number; directionsList?: number[]; patientExtracts?: string[] };
+type ExtractDayInfo = {
+  count: number;
+  directionsList?: number[];
+  patientExtractsAdds?: Array<Record<string, string>>;
+};
 const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
@@ -1057,6 +1067,8 @@ const findStripRecordByPk = (pk: number) => stripRecords.value.find((r) => r.pk 
 const unallocatedPatients = ref<UnallocatedPatient[]>([]);
 const unallocatedSearch = ref('');
 
+const WEEKDAY_SHORT_RU = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+
 const visibleDays = computed(() => {
   let start = anchorDate.value.clone();
   let end = anchorDate.value.clone();
@@ -1077,7 +1089,7 @@ const visibleDays = computed(() => {
   while (cursor.isSameOrBefore(end, 'day')) {
     days.push({
       key: cursor.format('YYYY-MM-DD'),
-      label: cursor.format('DD.MM'),
+      label: `${cursor.format('DD.MM')} - ${WEEKDAY_SHORT_RU[cursor.day()]}`,
     });
     cursor.add(1, 'day');
   }
@@ -1088,7 +1100,7 @@ const todayDayKey = computed(() => moment().format('YYYY-MM-DD'));
 
 const todayDateDisplay = computed(() => moment().format('DD.MM.YYYY'));
 
-const CALENDAR_CHAMBER_COL_WIDTH = 112;
+const CALENDAR_CHAMBER_COL_WIDTH = 88;
 const CALENDAR_BED_COL_WIDTH = 64;
 const CALENDAR_DAY_COL_MIN_WIDTH = 108;
 const CALENDAR_DAY_COL_MIN_WIDTH_MONTH = 56;
@@ -1185,6 +1197,10 @@ const filterRecordsByDoctor = (list: CalendarRecord[]) => {
 
 const stripRecordsInPeriod = computed(() => (
   filterRecordsByDoctor(stripRecords.value.filter(recordOverlapsVisiblePeriod))
+));
+
+const stripRecordsInPeriodNotExtractCount = computed(() => (
+  stripRecordsInPeriod.value.filter((rec) => !rec.is_extract).length
 ));
 
 const stripNeedsExtraDropRow = computed(() => {
@@ -1459,22 +1475,26 @@ const cellPatientAgePart = (record: CalendarRecord) => {
 };
 
 const recordHoverTitle = (rec: CalendarRecord, dayKey: string) => {
-  const parts: string[] = [];
-  if ((rec.patient_fio || '').trim()) {
-    parts.push(rec.patient_fio.trim());
+  const fio = (rec.patient_fio || '').trim();
+  const dateLabel = formatDayShort(dayKey);
+  let title = '';
+  if (fio && dateLabel) {
+    title = `${fio} (${dateLabel})`;
+  } else {
+    title = fio || (dateLabel ? `(${dateLabel})` : '');
   }
-  const age = cellPatientAgePart(rec);
-  if (age) {
-    parts.push(`Возраст: ${age}`);
+  if (rec.is_extract) {
+    const dischargeEnd = hospVisualEnd(rec);
+    const dischargeLabel = dischargeEnd.isValid()
+      ? formatDayShort(dischargeEnd.format('YYYY-MM-DD'))
+      : '';
+    if (dischargeLabel) {
+      title = title ? `${title}, выписан ${dischargeLabel}` : `выписан ${dischargeLabel}`;
+    } else {
+      title = title ? `${title}, выписан` : 'выписан';
+    }
   }
-  if (rec.direction_pk != null && rec.direction_pk > 0) {
-    parts.push(`Направление: ${rec.direction_pk}`);
-  }
-  const c = commentForRecordDay(rec, dayKey).trim();
-  if (c) {
-    parts.push(`Комментарий: ${c}`);
-  }
-  return parts.join(' · ');
+  return title;
 };
 
 const formatCellDoctorSurname = (record: CalendarRecord) => surnameFromFio(record.doctor_fio);
@@ -1535,9 +1555,24 @@ const isPatientSexFemale = (sexRaw: string | null | undefined) => genderColorCla
 
 const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
 
-type DayColumnTotals = { male: number, female: number, accompanying: number };
+type DayColumnTotals = { male: number, female: number, accompanying: number, free: number };
 
-const emptyDayColumnTotals = (): DayColumnTotals => ({ male: 0, female: 0, accompanying: 0 });
+const emptyDayColumnTotals = (): DayColumnTotals => ({
+  male: 0,
+  female: 0,
+  accompanying: 0,
+  free: 0,
+});
+
+const calendarBedPks = computed(() => {
+  const pks: number[] = [];
+  for (const row of chamberRows.value) {
+    for (const bed of row.beds) {
+      pks.push(bed.pk);
+    }
+  }
+  return pks;
+});
 
 const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | undefined) => {
   const raw = extracts || {};
@@ -1587,9 +1622,58 @@ const openExtractsDetailForm = () => {
 
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
+type DischargedPatientRow = {
+  key: string;
+  directionPk: number;
+  name: string;
+  dateLabel: string;
+};
+
+const parseExtractAddsEntry = (entry: Record<string, string>) => {
+  const keys = Object.keys(entry);
+  if (!keys.length) {
+    return null;
+  }
+  const directionPk = Number(keys[0]);
+  const name = (entry[keys[0]] || '').trim();
+  if (!Number.isFinite(directionPk) || directionPk <= 0 || !name) {
+    return null;
+  }
+  return { directionPk, name };
+};
+
+const dischargedPatientsInPeriodAll = computed(() => {
+  const rows: DischargedPatientRow[] = [];
+  for (const day of visibleDays.value) {
+    const extractKey = extractDateKeyFromDayKey(day.key);
+    const adds = extractsByDate.value[extractKey]?.patientExtractsAdds;
+    if (!adds?.length) {
+      continue;
+    }
+    adds.forEach((entry, idx) => {
+      const parsed = parseExtractAddsEntry(entry);
+      if (!parsed) {
+        return;
+      }
+      rows.push({
+        key: `${day.key}-${parsed.directionPk}-${idx}`,
+        directionPk: parsed.directionPk,
+        name: parsed.name,
+        dateLabel: day.label,
+      });
+    });
+  }
+  return rows;
+});
+
 const extractCountForDay = (dayKey: string) => {
   let count = 0;
   for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (isRecordDischargeDay(rec, dayKey)) {
+      count += 1;
+    }
+  }
+  for (const rec of stripRecords.value) {
     if (isRecordDischargeDay(rec, dayKey)) {
       count += 1;
     }
@@ -1598,25 +1682,16 @@ const extractCountForDay = (dayKey: string) => {
 };
 
 const dischargedPatientsInPeriod = computed(() => {
-  const rows: Array<{ key: string, name: string, dateLabel: string }> = [];
-  for (const day of visibleDays.value) {
-    const extractKey = extractDateKeyFromDayKey(day.key);
-    const patients = extractsByDate.value[extractKey]?.patientExtracts;
-    if (!patients?.length) {
-      continue;
-    }
-    patients.forEach((name, idx) => {
-      rows.push({
-        key: `${day.key}-${idx}`,
-        name,
-        dateLabel: day.label,
-      });
-    });
+  const q = unallocatedSearch.value.trim().toLowerCase();
+  if (!q) {
+    return dischargedPatientsInPeriodAll.value;
   }
-  return rows;
+  return dischargedPatientsInPeriodAll.value.filter(
+    (row) => (row.name || '').toLowerCase().includes(q),
+  );
 });
 
-const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriod.value.length > 0);
+const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
 
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
@@ -1642,6 +1717,17 @@ const dayColumnTotalsMap = computed(() => {
       }
       map.set(day.key, t);
     }
+  }
+  for (const day of visibleDays.value) {
+    const t = map.get(day.key) || emptyDayColumnTotals();
+    let free = 0;
+    for (const bedPk of calendarBedPks.value) {
+      if (bedDayOccupyingRecords(bedPk, day.key).length === 0) {
+        free += 1;
+      }
+    }
+    t.free = free;
+    map.set(day.key, t);
   }
   return map;
 });
@@ -1740,13 +1826,17 @@ const applyDefaultDepartmentFromProfile = () => {
 };
 
 const loadDepartments = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const { data } = await api('procedural-list/suitable-departments');
+  await store.dispatch(actions.DEC_LOADING);
   departments.value = data;
   applyDefaultDepartmentFromProfile();
 };
 
 const loadAccompanyingChildOptions = async () => {
+  await store.dispatch(actions.INC_LOADING);
   const res = await api('chambers/get-accompanying-child-options');
+  await store.dispatch(actions.DEC_LOADING);
   const list = res?.data;
   accompanyingChildOptions.value = Array.isArray(list) ? list : [];
 };
@@ -1756,10 +1846,12 @@ const loadDoctors = async () => {
     doctors.value = [];
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const response = await api('chambers/get-attending-doctors', {
     department_pk: departmentPk.value,
     only_stationar_role: true,
   });
+  await store.dispatch(actions.DEC_LOADING);
   doctors.value = response.data || [];
 };
 
@@ -1768,9 +1860,11 @@ const loadUnallocatedPatients = async () => {
     unallocatedPatients.value = [];
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-unallocated-patients', {
     department_pk: departmentPk.value,
   });
+  await store.dispatch(actions.DEC_LOADING);
   unallocatedPatients.value = Array.isArray(row.data) ? row.data : [];
 };
 
@@ -1833,7 +1927,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
   if (!departmentPk.value || !rec.direction_pk) {
     return null;
   }
-  return api('chambers/save-patient-without-bed', {
+  await store.dispatch(actions.INC_LOADING);
+  const result = await api('chambers/save-patient-without-bed', {
     department_pk: departmentPk.value,
     patient_obj: { direction_pk: rec.direction_pk },
     doctor_id: rec.doctor_pk ?? null,
@@ -1842,6 +1937,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
     date_out: rec.date_out,
     is_extract: Boolean(rec.is_extract),
   });
+  await store.dispatch(actions.DEC_LOADING);
+  return result;
 };
 
 const newStripRecordFromServerPatient = (
@@ -1887,9 +1984,11 @@ const syncStripRecordsDischargeMeta = async () => {
   if (!directionPks.size) {
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const res = await api('chambers/get-directions-hosp-meta', {
     direction_pks: [...directionPks],
   });
+  await store.dispatch(actions.DEC_LOADING);
   const items = Array.isArray(res?.data) ? res.data : [];
   const byDir = new Map<number, StripServerPatient>();
   for (const item of items) {
@@ -1911,9 +2010,11 @@ const loadPatientsWithoutBed = async () => {
     stripRecords.value = [];
     return;
   }
+  await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-patients-without-bed', {
     department_pk: departmentPk.value,
   });
+  await store.dispatch(actions.DEC_LOADING);
   const list = Array.isArray(row?.data) ? row.data : [];
   const dayKey = stripDefaultDayKey.value;
   stripRecords.value = list
@@ -1940,10 +2041,12 @@ const reloadStripFromServer = async () => {
 const removeStripRecordPk = async (pk: number) => {
   const rec = findStripRecordByPk(pk);
   if (departmentPk.value && rec?.direction_pk) {
+    await store.dispatch(actions.INC_LOADING);
     const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
       patient_obj: { direction_pk: rec.direction_pk },
     });
+    await store.dispatch(actions.DEC_LOADING);
     if (!res?.ok) {
       root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
       return false;
@@ -2212,8 +2315,8 @@ const onStripBoardDrop = async (e: DragEvent) => {
   const { ok: okClear, message: msgClear } = await api('chambers/clear-patient-from-bed', {
     record_pk: recordPk,
   });
-  await store.dispatch(actions.DEC_LOADING);
   if (!okClear) {
+    await store.dispatch(actions.DEC_LOADING);
     root.$emit('msg', 'error', msgClear || 'Не удалось освободить койку');
     return;
   }
@@ -2223,11 +2326,13 @@ const onStripBoardDrop = async (e: DragEvent) => {
   };
   const saveRes = await saveStripPatientToServer(stripRec);
   if (!saveRes?.ok) {
+    await store.dispatch(actions.DEC_LOADING);
     root.$emit('msg', 'error', saveRes?.message || 'Не удалось сохранить черновик на сервере');
     return;
   }
   await loadCalendar();
   await reloadStripFromServer();
+  await store.dispatch(actions.DEC_LOADING);
   root.$emit('msg', 'ok', 'Пациент перенесён в черновик');
 };
 
@@ -2348,7 +2453,6 @@ const onStripToBedDrop = async (
     comment_date: targetDayKey,
     comment: commentForRecordDay(record, targetDayKey),
   });
-  await store.dispatch(actions.DEC_LOADING);
   if (result?.ok) {
     if (departmentPk.value && record.direction_pk) {
       const delRes = await api('chambers/delete-patient-without-bed', {
@@ -2356,6 +2460,7 @@ const onStripToBedDrop = async (
         patient_obj: { direction_pk: record.direction_pk },
       });
       if (!delRes?.ok) {
+        await store.dispatch(actions.DEC_LOADING);
         root.$emit('msg', 'error', delRes?.message || 'Не удалось удалить черновик на сервере');
         return;
       }
@@ -2367,6 +2472,7 @@ const onStripToBedDrop = async (
   } else {
     root.$emit('msg', 'error', result?.message || 'Не удалось вернуть запись на койку');
   }
+  await store.dispatch(actions.DEC_LOADING);
 };
 
 const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: string) => {
@@ -2718,18 +2824,21 @@ const clearStripFromModal = async () => {
     return;
   }
   const rec = findStripRecordByPk(editingStripRecordPk.value);
+  await store.dispatch(actions.INC_LOADING);
   if (departmentPk.value && rec?.direction_pk) {
     const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
       patient_obj: { direction_pk: rec.direction_pk },
     });
     if (!res?.ok) {
+      await store.dispatch(actions.DEC_LOADING);
       root.$emit('msg', 'error', res?.message || 'Не удалось удалить черновик на сервере');
       return;
     }
   }
   await reloadStripFromServer();
   await loadUnallocatedPatients();
+  await store.dispatch(actions.DEC_LOADING);
   root.$emit('msg', 'ok', 'Запись удалена из дневного стационара');
   closeEditModal();
 };
@@ -2778,12 +2887,17 @@ watch(
 
 onMounted(async () => {
   window.addEventListener('mouseup', stopAsideScrollHold);
+  window.addEventListener('touchend', stopAsideScrollHold);
+  window.addEventListener('touchcancel', stopAsideScrollHold);
   await Promise.all([loadDepartments(), loadAccompanyingChildOptions()]);
   await nextTick();
   if (typeof ResizeObserver !== 'undefined') {
     asideScrollResizeObserver = new ResizeObserver(() => {
       updateAsideScrollBounds();
     });
+    if (calendarWrapRef.value) {
+      asideScrollResizeObserver.observe(calendarWrapRef.value);
+    }
     if (boardAsideViewport.value) {
       asideScrollResizeObserver.observe(boardAsideViewport.value);
     }
@@ -2799,6 +2913,8 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('mouseup', stopAsideScrollHold);
+  window.removeEventListener('touchend', stopAsideScrollHold);
+  window.removeEventListener('touchcancel', stopAsideScrollHold);
   stopAsideScrollHold();
   if (asideScrollResizeObserver != null) {
     asideScrollResizeObserver.disconnect();
@@ -2810,35 +2926,39 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .board-page {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   height: 100%;
   min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 10px 16px;
+  overflow: hidden;
+  padding: 10px 8px;
 }
 
 .board-body {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .board-patients-aside {
-  flex: 0 0 280px;
-  width: 280px;
-  max-width: 280px;
+  flex: 0 0 304px;
+  width: 304px;
+  max-width: 304px;
   border-left: 1px solid #ddd;
-  padding: 0 0 8px 12px;
-  margin-left: 8px;
+  padding: 0 0 8px 8px;
+  margin-left: 6px;
   display: flex;
   flex-direction: column;
   gap: 0;
   background: hsla(30, 3%, 94%, 1);
-  align-self: stretch;
-  min-height: 0;
-  overflow: hidden;
+  align-self: flex-start;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 .board-aside-scroll-controls {
@@ -2848,10 +2968,28 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.board-aside-scroll-btn {
+.board-aside-scroll-controls--toolbar {
+  gap: 3px;
+}
+
+.board-aside-scroll-btn--toolbar {
   min-width: 28px;
-  padding: 2px 6px;
-  line-height: 1.4;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.board-aside-scroll-btn {
+  min-width: 24px;
+  padding: 1px 4px;
+  line-height: 1.3;
   font-weight: 600;
 }
 
@@ -2872,15 +3010,10 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.board-patients-search {
-  margin: 0 0 8px;
-  flex-shrink: 0;
-}
-
 .board-aside-viewport {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
+  flex: 0 0 auto;
+  overflow: visible;
+  box-sizing: border-box;
 }
 
 .board-aside-content {
@@ -2920,6 +3053,26 @@ onBeforeUnmount(() => {
 
 .board-patient-row:active {
   cursor: grabbing;
+}
+
+.board-patient-row--discharged {
+  cursor: default;
+}
+
+.board-patient-row--discharged:active {
+  cursor: default;
+}
+
+.board-patient-row--discharged .board-patient-link {
+  color: #333;
+  text-decoration: none;
+}
+
+.board-patient-row--discharged .board-patient-link:hover,
+.board-patient-row--discharged .board-patient-link:focus,
+.board-patient-row--discharged .board-patient-link:visited {
+  color: #333;
+  text-decoration: none;
 }
 
 .board-patient-link {
@@ -2975,8 +3128,17 @@ onBeforeUnmount(() => {
 }
 
 .toolbar {
-  margin-bottom: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
   flex-shrink: 0;
+  margin-bottom: 8px;
+  background: #fff;
+}
+
+.toolbar.panel-flt > .panel-body {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .toolbar-layout {
@@ -2991,12 +3153,59 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.toolbar-aside-spacer {
-  flex: 0 0 280px;
-  width: 280px;
-  max-width: 280px;
-  margin-left: 8px;
+.toolbar-aside-panel {
+  flex: 0 0 304px;
+  width: 304px;
+  max-width: 304px;
+  margin-left: 6px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 0 2px 0 8px;
+  box-sizing: border-box;
+}
+
+.toolbar-aside-search-wrap {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+}
+
+.toolbar-aside-search {
+  width: 100%;
+  margin: 0;
+  height: 34px;
+  padding: 6px 28px 6px 10px;
+  font-size: 14px;
+  line-height: 20px;
+  box-sizing: border-box;
+}
+
+.toolbar-aside-search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toolbar-aside-search-clear:hover,
+.toolbar-aside-search-clear:focus {
+  color: #333;
+  outline: none;
 }
 
 .toolbar-row {
@@ -3006,10 +3215,31 @@ onBeforeUnmount(() => {
 }
 
 .toolbar-department {
-  flex: 0 0 auto;
-  width: 560px;
-  max-width: 56%;
-  min-width: 440px;
+  flex: 0 1 auto;
+  width: 320px;
+  max-width: 32%;
+  min-width: 200px;
+}
+
+.toolbar-department-treeselect {
+  width: 100%;
+}
+
+.toolbar-department ::v-deep .vue-treeselect {
+  width: 100%;
+  min-width: 0;
+}
+
+.toolbar-department ::v-deep .vue-treeselect__control {
+  overflow: hidden;
+  border-radius: 4px !important;
+}
+
+.toolbar-department ::v-deep .vue-treeselect__single-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .toolbar-controls {
@@ -3026,12 +3256,27 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
+.toolbar-today-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.toolbar-today-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  white-space: nowrap;
+}
+
 .toolbar-today-date {
   font-size: 15px;
   font-weight: 600;
   color: #333;
   white-space: nowrap;
-  margin-right: 6px;
 }
 
 .mode-switch {
@@ -3054,7 +3299,7 @@ onBeforeUnmount(() => {
 }
 
 .board-discharged-heading-link {
-  color: #337ab7;
+  color: #0d47a1;
   font-size: 14px;
   font-weight: 600;
   text-decoration: underline;
@@ -3063,7 +3308,7 @@ onBeforeUnmount(() => {
 
 .board-discharged-heading-link:hover,
 .board-discharged-heading-link:focus {
-  color: #23527c;
+  color: #1565c0;
   text-decoration: underline;
 }
 
@@ -3114,13 +3359,13 @@ onBeforeUnmount(() => {
 }
 
 .calendar-table--month .calendar-col-day {
-  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  width: calc((100cqi - 88px - 64px) / 7 / 2);
   min-width: 56px;
 }
 
 .calendar-table--month .day-col,
 .calendar-table--month .day-cell {
-  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  width: calc((100cqi - 88px - 64px) / 7 / 2);
   min-width: 56px;
   max-width: none;
 }
@@ -3187,7 +3432,7 @@ onBeforeUnmount(() => {
 }
 
 .calendar-col-chamber {
-  width: 112px;
+  width: 88px;
 }
 
 .calendar-col-bed {
@@ -3200,9 +3445,9 @@ onBeforeUnmount(() => {
 }
 
 .chamber-col {
-  width: 112px;
-  min-width: 112px;
-  max-width: 112px;
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
 }
 
 .bed-col {
@@ -3269,7 +3514,7 @@ onBeforeUnmount(() => {
 }
 
 .bed-col.sticky-col {
-  left: 112px;
+  left: 88px;
 }
 
 .chamber-cell {
@@ -3287,7 +3532,7 @@ onBeforeUnmount(() => {
   min-height: 44px;
   height: auto;
   vertical-align: top;
-  padding: 3px 4px;
+  padding: 0;
   cursor: pointer;
   width: auto;
   min-width: 108px;
@@ -3301,10 +3546,9 @@ onBeforeUnmount(() => {
 
 .record {
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 3px;
-  padding: 2px 4px;
-  margin-bottom: 2px;
+  border: none;
+  padding: 0;
+  margin: 0;
   color: inherit;
   font-size: 12px;
   line-height: 1.25;
@@ -3312,9 +3556,12 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
+.record:not(:last-child) {
+  margin-bottom: 2px;
+}
+
 .record--extract {
   background: #e6e6e6;
-  border-color: #ccc;
 }
 
 .record--draggable {
@@ -3350,9 +3597,6 @@ onBeforeUnmount(() => {
   flex-wrap: nowrap;
   width: fit-content;
   max-width: 100%;
-  border-bottom: 1px solid #bbb;
-  padding-bottom: 1px;
-  margin-bottom: 2px;
   vertical-align: baseline;
   min-width: 0;
 }
@@ -3376,7 +3620,7 @@ onBeforeUnmount(() => {
   color: #555;
   font-size: 10px;
   min-height: 1.1em;
-  margin-top: 2px;
+  margin-top: 0;
   min-width: 0;
 }
 
@@ -3609,7 +3853,7 @@ onBeforeUnmount(() => {
   content: '';
   display: block;
   grid-column: 1 / -1;
-  min-height: 88px;
+  min-height: 52px;
   pointer-events: none;
 }
 
@@ -3627,9 +3871,9 @@ onBeforeUnmount(() => {
 .strip-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  min-height: 88px;
-  padding: 8px 10px;
+  gap: 2px;
+  min-height: 0;
+  padding: 4px 8px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -3646,18 +3890,31 @@ onBeforeUnmount(() => {
   background: #e6e6e6;
 }
 
-.strip-card-dates {
+.strip-card-doctor-aside {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.strip-card-period {
   font-size: 11px;
   font-weight: 600;
   color: #666;
-  line-height: 1.2;
+  line-height: 1.1;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .strip-card .record-line {
   font-size: 12px;
+  line-height: 1.2;
+}
+
+.strip-card .record-line--doctor {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 @media (max-width: 1400px) {
