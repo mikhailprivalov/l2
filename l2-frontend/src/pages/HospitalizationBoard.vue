@@ -208,6 +208,7 @@
                         <span class="day-col-totals-item">Ж-{{ dayColumnTotals(day.key).female }}</span>
                         <span class="day-col-totals-item">С-{{ dayColumnTotals(day.key).accompanying }}</span>
                         <span class="day-col-totals-item">В-{{ extractCountForDay(day.key) }}</span>
+                        <span class="day-col-totals-item">Н-{{ dayColumnTotals(day.key).free }}</span>
                       </div>
                     </div>
                   </th>
@@ -1554,9 +1555,24 @@ const isPatientSexFemale = (sexRaw: string | null | undefined) => genderColorCla
 
 const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
 
-type DayColumnTotals = { male: number, female: number, accompanying: number };
+type DayColumnTotals = { male: number, female: number, accompanying: number, free: number };
 
-const emptyDayColumnTotals = (): DayColumnTotals => ({ male: 0, female: 0, accompanying: 0 });
+const emptyDayColumnTotals = (): DayColumnTotals => ({
+  male: 0,
+  female: 0,
+  accompanying: 0,
+  free: 0,
+});
+
+const calendarBedPks = computed(() => {
+  const pks: number[] = [];
+  for (const row of chamberRows.value) {
+    for (const bed of row.beds) {
+      pks.push(bed.pk);
+    }
+  }
+  return pks;
+});
 
 const applyExtractsFromResponse = (extracts: Record<string, unknown> | null | undefined) => {
   const raw = extracts || {};
@@ -1701,6 +1717,17 @@ const dayColumnTotalsMap = computed(() => {
       }
       map.set(day.key, t);
     }
+  }
+  for (const day of visibleDays.value) {
+    const t = map.get(day.key) || emptyDayColumnTotals();
+    let free = 0;
+    for (const bedPk of calendarBedPks.value) {
+      if (bedDayOccupyingRecords(bedPk, day.key).length === 0) {
+        free += 1;
+      }
+    }
+    t.free = free;
+    map.set(day.key, t);
   }
   return map;
 });
