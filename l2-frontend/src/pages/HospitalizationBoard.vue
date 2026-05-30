@@ -78,7 +78,13 @@
               </div>
             </div>
           </div>
-          <div class="toolbar-aside-scroll">
+          <div class="toolbar-aside-panel">
+            <input
+              v-model.trim="unallocatedSearch"
+              class="form-control input-sm toolbar-aside-search"
+              type="text"
+              placeholder="Поиск"
+            >
             <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
               <button
                 type="button"
@@ -526,18 +532,12 @@
             class="board-aside-content"
             :style="{ transform: `translateY(${asideScrollOffset}px)` }"
           >
-            <div class="board-patients-heading-row">
-              <h5 class="board-patients-heading">
-                Пациенты
-              </h5>
-            </div>
-            <input
-              v-model.trim="unallocatedSearch"
-              class="form-control input-sm board-patients-search"
-              type="text"
-              placeholder="Поиск"
-            >
             <section class="board-aside-section board-aside-section--patients">
+              <div class="board-patients-heading-row">
+                <h5 class="board-patients-heading">
+                  Без коек — {{ unallocatedPatientsFiltered.length }}
+                </h5>
+              </div>
               <div class="board-aside-section-body">
                 <p
                   v-if="!departmentPk"
@@ -580,7 +580,7 @@
                     href="#"
                     class="board-discharged-heading-link"
                     @click.prevent="openExtractsDetailForm"
-                  >Выписаны {{ extractsCount }}</a>
+                  >Выписаны - {{ extractsCount }}</a>
                 </h5>
               </div>
               <div class="board-aside-section-body">
@@ -1083,7 +1083,7 @@ const todayDayKey = computed(() => moment().format('YYYY-MM-DD'));
 
 const todayDateDisplay = computed(() => moment().format('DD.MM.YYYY'));
 
-const CALENDAR_CHAMBER_COL_WIDTH = 112;
+const CALENDAR_CHAMBER_COL_WIDTH = 88;
 const CALENDAR_BED_COL_WIDTH = 64;
 const CALENDAR_DAY_COL_MIN_WIDTH = 108;
 const CALENDAR_DAY_COL_MIN_WIDTH_MONTH = 56;
@@ -1601,7 +1601,7 @@ const extractCountForDay = (dayKey: string) => {
   return count;
 };
 
-const dischargedPatientsInPeriod = computed(() => {
+const dischargedPatientsInPeriodAll = computed(() => {
   const rows: Array<{ key: string, name: string, dateLabel: string }> = [];
   for (const day of visibleDays.value) {
     const extractKey = extractDateKeyFromDayKey(day.key);
@@ -1620,7 +1620,17 @@ const dischargedPatientsInPeriod = computed(() => {
   return rows;
 });
 
-const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriod.value.length > 0);
+const dischargedPatientsInPeriod = computed(() => {
+  const q = unallocatedSearch.value.trim().toLowerCase();
+  if (!q) {
+    return dischargedPatientsInPeriodAll.value;
+  }
+  return dischargedPatientsInPeriodAll.value.filter(
+    (row) => (row.name || '').toLowerCase().includes(q),
+  );
+});
+
+const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
 
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
@@ -2864,9 +2874,9 @@ onBeforeUnmount(() => {
 }
 
 .board-patients-aside {
-  flex: 0 0 280px;
-  width: 280px;
-  max-width: 280px;
+  flex: 0 0 304px;
+  width: 304px;
+  max-width: 304px;
   border-left: 1px solid #ddd;
   padding: 0 0 8px 12px;
   margin-left: 8px;
@@ -2887,13 +2897,13 @@ onBeforeUnmount(() => {
 }
 
 .board-aside-scroll-controls--toolbar {
-  gap: 6px;
+  gap: 2px;
 }
 
 .board-aside-scroll-btn {
-  min-width: 28px;
-  padding: 2px 6px;
-  line-height: 1.4;
+  min-width: 24px;
+  padding: 1px 4px;
+  line-height: 1.3;
   font-weight: 600;
 }
 
@@ -2911,11 +2921,6 @@ onBeforeUnmount(() => {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  flex-shrink: 0;
-}
-
-.board-patients-search {
-  margin: 0 0 8px;
   flex-shrink: 0;
 }
 
@@ -3025,6 +3030,11 @@ onBeforeUnmount(() => {
   background: #fff;
 }
 
+.toolbar.panel-flt > .panel-body {
+  padding-left: 0;
+  padding-right: 0;
+}
+
 .toolbar-layout {
   display: flex;
   flex-direction: row;
@@ -3037,17 +3047,25 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.toolbar-aside-scroll {
-  flex: 0 0 280px;
-  width: 280px;
-  max-width: 280px;
+.toolbar-aside-panel {
+  flex: 0 0 304px;
+  width: 304px;
+  max-width: 304px;
   margin-left: 8px;
   flex-shrink: 0;
   display: flex;
+  flex-direction: row;
   align-items: center;
-  justify-content: flex-end;
-  padding-right: 4px;
+  gap: 6px;
+  padding: 0 4px 0 12px;
   box-sizing: border-box;
+}
+
+.toolbar-aside-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  margin: 0;
 }
 
 .toolbar-row {
@@ -3180,13 +3198,13 @@ onBeforeUnmount(() => {
 }
 
 .calendar-table--month .calendar-col-day {
-  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  width: calc((100cqi - 88px - 64px) / 7 / 2);
   min-width: 56px;
 }
 
 .calendar-table--month .day-col,
 .calendar-table--month .day-cell {
-  width: calc((100cqi - 112px - 64px) / 7 / 2);
+  width: calc((100cqi - 88px - 64px) / 7 / 2);
   min-width: 56px;
   max-width: none;
 }
@@ -3253,7 +3271,7 @@ onBeforeUnmount(() => {
 }
 
 .calendar-col-chamber {
-  width: 112px;
+  width: 88px;
 }
 
 .calendar-col-bed {
@@ -3266,9 +3284,9 @@ onBeforeUnmount(() => {
 }
 
 .chamber-col {
-  width: 112px;
-  min-width: 112px;
-  max-width: 112px;
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
 }
 
 .bed-col {
@@ -3335,7 +3353,7 @@ onBeforeUnmount(() => {
 }
 
 .bed-col.sticky-col {
-  left: 112px;
+  left: 88px;
 }
 
 .chamber-cell {
