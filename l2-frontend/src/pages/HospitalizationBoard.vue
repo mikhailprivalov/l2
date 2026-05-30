@@ -88,7 +88,7 @@
             <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
               <button
                 type="button"
-                class="btn btn-default btn-xs board-aside-scroll-btn"
+                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
                 title="Сдвинуть списки выше"
                 :disabled="!canAsideScrollUp"
                 @mousedown.prevent="startAsideScrollHold(-1)"
@@ -102,7 +102,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-default btn-xs board-aside-scroll-btn"
+                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
                 title="Сдвинуть списки ниже"
                 @mousedown.prevent="startAsideScrollHold(1)"
                 @mouseup="stopAsideScrollHold"
@@ -115,7 +115,7 @@
               </button>
               <button
                 type="button"
-                class="btn btn-default btn-xs board-aside-scroll-btn"
+                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
                 title="В начало списков"
                 :disabled="asideScrollOffset <= 0"
                 @click="resetAsideScroll"
@@ -2932,7 +2932,21 @@ onBeforeUnmount(() => {
 }
 
 .board-aside-scroll-controls--toolbar {
-  gap: 2px;
+  gap: 3px;
+}
+
+.board-aside-scroll-btn--toolbar {
+  min-width: 28px;
+  width: 28px;
+  height: 29px;
+  padding: 0;
+  line-height: 1;
+  font-size: 15px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .board-aside-scroll-btn {

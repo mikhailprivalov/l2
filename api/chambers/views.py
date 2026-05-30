@@ -846,21 +846,9 @@ def get_hospitalization_calendar(request):
     start_date = request_data.get("start_date")
     end_date = request_data.get("end_date")
     department_pk = request_data.get("department_pk")
-    date_start = ''
-    date_end = ''
-    if view_mode == 'day':
-        date_start = f"{start_date} 00:00:00"
-        date_end = f"{end_date} 23:59:59"
-    elif view_mode == 'week':
-        date_start = f"{start_date} 00:00:00"
-        date_end = f"{end_date} 23:59:59"
-    elif view_mode == 'month':
-        month = start_date.split("-")[1]
-        year = start_date.split("-")[0]
-        month_obj = int(month)
-        _, num_days = calendar.monthrange(int(year), month_obj)
-        date_start = datetime.date(int(year), month_obj, 1)
-        date_end = datetime.date(int(year), month_obj, num_days)
+    date_start = f"{start_date} 00:00:00"
+    date_end = f"{end_date} 23:59:59"
+
     extract_proto_for_period = get_extract_by_department_for_period(date_start, date_end, CDA_ID_FOR_DATE_IS_EXTRACT, (department_pk,))
     extracts_data = {}
     total_direction_list = []
