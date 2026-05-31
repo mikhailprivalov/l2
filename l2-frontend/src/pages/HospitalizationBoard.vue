@@ -3488,8 +3488,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   margin-top: 0;
-  padding-top: 10px;
-  padding-bottom: 8px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .calendar-table {
@@ -3531,7 +3531,7 @@ onBeforeUnmount(() => {
 }
 
 .doctor-badges--bottom {
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .doctor-badge-btn {
@@ -3961,20 +3961,21 @@ onBeforeUnmount(() => {
 }
 
 .strip-board-hint {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   flex-shrink: 0;
   font-size: 14px;
   font-weight: 600;
   color: #333;
+  line-height: 1.2;
 }
 
 .strip-cards-board {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  gap: 6px;
   align-content: start;
   width: 100%;
-  padding: 12px 10px 16px;
+  padding: 4px 10px 8px;
   box-sizing: border-box;
 }
 
@@ -4001,9 +4002,9 @@ onBeforeUnmount(() => {
 .strip-card {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   min-height: 0;
-  padding: 4px 8px;
+  padding: 3px 8px;
   background: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
