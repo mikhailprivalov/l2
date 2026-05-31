@@ -24,8 +24,12 @@ from .sql_func import (
     load_chambers_and_beds_by_department,
     get_closing_protocols,
     load_plan_operations_next_day,
+    load_directions_hosp_meta_bulk,
 )
 from .discharge_sync import (
+    CDA_DISCHARGE_DATE_TITLE,
+    FALLBACK_DISCHARGE_FIELD_TITLE,
+    _parse_discharge_date_value,
     _read_discharge_date_from_protocol,
     apply_discharge_dates_to_hosp_record,
     get_discharge_date_for_direction,
@@ -215,30 +219,25 @@ def _strip_calendar_dates(
     return plan_in, plan_out, date_in, date_out
 
 
-def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
-    """Период и признак выписки для черновика / календаря по direction_id."""
-    if not direction_pk:
-        return {"is_extract": False}
-    discharge_date = get_discharge_date_for_direction(direction_pk)
-    pswb = PatientStationarWithoutBeds.objects.filter(direction_id=direction_pk).order_by("-pk").first()
-    ptb = PatientToBed.objects.filter(direction_id=direction_pk).order_by("-pk").first()
+def _direction_hosp_calendar_meta_from_row(row, fallback_plan_date_in=None):
+    """Период и признак выписки из строки bulk SQL."""
     plan_date_in = None
     plan_date_out = None
     date_in = None
     date_out = None
     is_extract = False
-    if pswb:
-        plan_date_in = pswb.plan_date_in
-        plan_date_out = pswb.plan_date_out
-        date_in = pswb.date_in
-        date_out = pswb.date_out
-        is_extract = bool(pswb.is_extract)
-    elif ptb:
-        plan_date_in = ptb.plan_date_in
-        plan_date_out = ptb.plan_date_out
-        date_in = ptb.date_in
-        date_out = ptb.date_out
-        is_extract = bool(ptb.is_extract)
+    if row.has_pswb:
+        plan_date_in = row.pswb_plan_date_in
+        plan_date_out = row.pswb_plan_date_out
+        date_in = row.pswb_date_in
+        date_out = row.pswb_date_out
+        is_extract = bool(row.pswb_is_extract)
+    elif row.has_ptb:
+        plan_date_in = row.ptb_plan_date_in
+        plan_date_out = row.ptb_plan_date_out
+        date_in = row.ptb_date_in
+        date_out = row.ptb_date_out
+        is_extract = bool(row.ptb_is_extract)
     plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
         plan_date_in,
         plan_date_out,
@@ -246,6 +245,7 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
         date_out,
         fallback_plan_date_in=fallback_plan_date_in,
     )
+    discharge_date = _parse_discharge_date_value(row.discharge_value_raw) if row.discharge_value_raw else None
     if discharge_date:
         plan_date_out = discharge_date
         date_out = discharge_date
@@ -264,9 +264,9 @@ def _direction_hosp_calendar_meta(direction_pk, fallback_plan_date_in=None):
     return meta
 
 
-def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
-    """Строка API для черновика из SQL + выписка из протокола."""
-    direction_id = patient.direction_id
+def _pswb_resolved_calendar_dates(patient, fallback_plan_date_in=None):
+    """Период черновика с учётом _strip_calendar_dates и выписки из протокола."""
+    direction_id = getattr(patient, "direction_id", None)
     discharge_date = get_discharge_date_for_direction(direction_id) if direction_id else None
     plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
         getattr(patient, "plan_date_in", None),
@@ -281,6 +281,37 @@ def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
         plan_in_eff = plan_date_in or date_in
         if plan_in_eff and discharge_date < plan_in_eff:
             plan_date_in = discharge_date
+    return plan_date_in, plan_date_out, date_in, date_out
+
+
+def _pswb_overlaps_period(patient, start_date, end_date, fallback_plan_date_in=None):
+    """Пересечение периода черновика с [start_date, end_date] (как на доске госпитализации)."""
+    plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
+        patient,
+        fallback_plan_date_in=fallback_plan_date_in,
+    )
+
+    class _Item:
+        pass
+
+    item = _Item()
+    item.plan_date_in = plan_date_in
+    item.plan_date_out = plan_date_out
+    item.date_in = date_in
+    item.date_out = date_out
+    item_start = _hosp_visual_start(item)
+    item_end = _hosp_visual_end(item)
+    if item_start is None:
+        return True
+    return item_end >= start_date and item_start <= end_date
+
+
+def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
+    """Строка API для черновика из SQL + выписка из протокола."""
+    plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
+        patient,
+        fallback_plan_date_in=fallback_plan_date_in,
+    )
     row = {"is_extract": bool(getattr(patient, "is_extract", False))}
     if plan_date_in:
         row["plan_date_in"] = str(plan_date_in)
@@ -607,10 +638,25 @@ def update_doctor_to_bed(request):
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
-    patient_to_bed = load_patient_without_bed_by_department(department_pk)
+    start_date = _parse_ymd_date(request_data.get("start_date"))
+    end_date = _parse_ymd_date(request_data.get("end_date"))
+    filter_by_period = bool(start_date and end_date)
+    patient_rows = load_patient_without_bed_by_department(
+        department_pk,
+        start_date=start_date if filter_by_period else None,
+        end_date=end_date if filter_by_period else None,
+    )
+    fallback_plan_date_in = start_date or datetime.date.today()
 
     patients = []
-    for patient in patient_to_bed:
+    for patient in patient_rows:
+        if filter_by_period and not _pswb_overlaps_period(
+            patient,
+            start_date,
+            end_date,
+            fallback_plan_date_in=fallback_plan_date_in,
+        ):
+            continue
         row = {
             "fio": f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}",
             "short_fio": f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}.",
@@ -619,7 +665,7 @@ def get_patients_without_bed(request):
             "direction_pk": patient.direction_id,
             "doctor_pk": patient.doctor_id,
         }
-        row.update(_strip_patient_row_from_sql(patient, datetime.date.today()))
+        row.update(_strip_patient_row_from_sql(patient, fallback_plan_date_in))
         patients.append(row)
     return JsonResponse({"data": patients})
 
@@ -628,17 +674,30 @@ def get_patients_without_bed(request):
 @group_required("Оператор лечащего врача", "Лечащий врач")
 def get_directions_hosp_meta(request):
     request_data = json.loads(request.body)
-    direction_pks = request_data.get("direction_pks") or []
-    items = []
-    for raw in direction_pks:
+    direction_pks = []
+    seen = set()
+    for raw in request_data.get("direction_pks") or []:
         try:
             pk = int(raw)
         except (TypeError, ValueError):
             continue
-        if pk <= 0:
+        if pk <= 0 or pk in seen:
             continue
-        meta = _direction_hosp_calendar_meta(pk, datetime.date.today())
-        meta["direction_pk"] = pk
+        seen.add(pk)
+        direction_pks.append(pk)
+    if not direction_pks:
+        return JsonResponse({"ok": True, "data": []})
+
+    fallback_plan_date_in = datetime.date.today()
+    rows = load_directions_hosp_meta_bulk(
+        direction_pks,
+        CDA_DISCHARGE_DATE_TITLE,
+        FALLBACK_DISCHARGE_FIELD_TITLE,
+    )
+    items = []
+    for row in rows:
+        meta = _direction_hosp_calendar_meta_from_row(row, fallback_plan_date_in)
+        meta["direction_pk"] = row.direction_pk
         items.append(meta)
     return JsonResponse({"ok": True, "data": items})
 

@@ -2057,9 +2057,16 @@ const loadPatientsWithoutBed = async () => {
     stripRecords.value = [];
     return;
   }
+  const bounds = visiblePeriodBounds.value;
+  if (!bounds) {
+    stripRecords.value = [];
+    return;
+  }
   await store.dispatch(actions.INC_LOADING);
   const row = await api('chambers/get-patients-without-bed', {
     department_pk: departmentPk.value,
+    start_date: bounds.start,
+    end_date: bounds.end,
   });
   await store.dispatch(actions.DEC_LOADING);
   const list = Array.isArray(row?.data) ? row.data : [];
