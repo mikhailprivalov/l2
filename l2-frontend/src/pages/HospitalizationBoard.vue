@@ -18,28 +18,59 @@
                 />
               </div>
               <div class="toolbar-controls toolbar-controls--nav">
-            <div class="mode-switch">
-              <div class="toolbar-today-block">
-                <span class="toolbar-today-label">Сегодня</span>
-                <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
+            <div
+              class="mode-switch"
+              :class="{ 'mode-switch--period-frozen': isCustomPeriodActive }"
+            >
+              <label
+                v-if="canUseCustomPeriod"
+                class="toolbar-period-toggle"
+              >
+                <input
+                  v-model="isCustomPeriodMode"
+                  type="checkbox"
+                >
+                Период
+              </label>
+              <div
+                v-if="isCustomPeriodActive"
+                class="toolbar-custom-period"
+              >
+                <input
+                  v-model="customPeriodStart"
+                  class="form-control toolbar-custom-period-input"
+                  type="date"
+                  :max="customPeriodEnd || customPeriodEndMax"
+                >
+                <span class="toolbar-custom-period-sep">-</span>
+                <input
+                  v-model="customPeriodEnd"
+                  class="form-control toolbar-custom-period-input"
+                  type="date"
+                  :min="customPeriodStart"
+                  :max="customPeriodEndMax"
+                >
               </div>
               <button
                 class="btn btn-default"
-                :class="{ active: viewMode === 'day' }"
+                :class="{ active: viewMode === 'day' && !isCustomPeriodActive }"
+                :disabled="isCustomPeriodActive"
                 @click="viewMode = 'day'"
               >
                 День
               </button>
               <button
                 class="btn btn-default"
-                :class="{ active: viewMode === 'week' }"
+                :class="{ active: viewMode === 'week' && !isCustomPeriodActive }"
+                :disabled="isCustomPeriodActive"
                 @click="viewMode = 'week'"
               >
                 Неделя
               </button>
               <button
                 class="btn btn-default"
-                :class="{ active: viewMode === 'month' }"
+                :class="{ active: viewMode === 'month' && !isCustomPeriodActive }"
+                :disabled="isCustomPeriodActive"
                 @click="setViewMonth"
               >
                 Месяц
@@ -53,21 +84,27 @@
                 <i class="fa-solid fa-rotate" />
               </button>
             </div>
-            <div class="btn-group">
+            <div
+              class="btn-group"
+              :class="{ 'btn-group--period-frozen': isCustomPeriodActive }"
+            >
               <button
                 class="btn btn-default"
+                :disabled="isCustomPeriodActive"
                 @click="navigate(-1)"
               >
                 ←
               </button>
               <button
                 class="btn btn-default"
+                :disabled="isCustomPeriodActive"
                 @click="goToday"
               >
                 Текущий
               </button>
               <button
                 class="btn btn-default"
+                :disabled="isCustomPeriodActive"
                 @click="navigate(1)"
               >
                 →
@@ -170,7 +207,7 @@
           <div class="calendar-main-scroll">
             <table
               class="table table-bordered table-condensed calendar-table"
-              :class="{ 'calendar-table--month': viewMode === 'month' }"
+              :class="{ 'calendar-table--month': viewMode === 'month' && !isCustomPeriodActive }"
               :style="{ minWidth: `${mainCalendarTableMinWidthPx}px` }"
             >
               <colgroup>
@@ -262,14 +299,14 @@
                                   class="record-patient-surname"
                                   :class="genderColorClass(rec.patient_sex)"
                                 >
-                                  <template v-if="viewMode === 'month'">
+                                  <template v-if="viewMode === 'month' && !isCustomPeriodActive">
                                     {{ monthSurnameShort(rec) }}
                                   </template>
                                   <template v-else>
                                     {{ surnameFromFio(rec.patient_fio) }}
                                   </template>
                                 </span><span
-                                  v-if="viewMode !== 'month' && cellPatientAgePart(rec)"
+                                  v-if="(viewMode !== 'month' || isCustomPeriodActive) && cellPatientAgePart(rec)"
                                   class="record-patient-age"
                                 > - {{ cellPatientAgePart(rec) }}</span>
                               </template>
@@ -289,7 +326,7 @@
                               @click.stop
                               @mousedown.stop
                             >
-                              <template v-if="viewMode === 'month'">
+                              <template v-if="viewMode === 'month' && !isCustomPeriodActive">
                                 {{ monthDirectionIdShort(rec.direction_pk) }}
                               </template>
                               <template v-else>
@@ -457,68 +494,6 @@
             >
               {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
             </button>
-          </div>
-
-          <div class="board-calendar-nav board-calendar-nav--footer panel panel-default panel-flt">
-            <div class="panel-body">
-              <div class="toolbar-controls toolbar-controls--nav board-calendar-nav-inner">
-                <div class="mode-switch">
-                  <div class="toolbar-today-block">
-                    <span class="toolbar-today-label">Сегодня</span>
-                    <span class="toolbar-today-date">{{ todayDateDisplay }}</span>
-                  </div>
-                  <button
-                    class="btn btn-default"
-                    :class="{ active: viewMode === 'day' }"
-                    @click="viewMode = 'day'"
-                  >
-                    День
-                  </button>
-                  <button
-                    class="btn btn-default"
-                    :class="{ active: viewMode === 'week' }"
-                    @click="viewMode = 'week'"
-                  >
-                    Неделя
-                  </button>
-                  <button
-                    class="btn btn-default"
-                    :class="{ active: viewMode === 'month' }"
-                    @click="setViewMonth"
-                  >
-                    Месяц
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-default"
-                    title="Обновить"
-                    @click="refreshBoard"
-                  >
-                    <i class="fa-solid fa-rotate" />
-                  </button>
-                </div>
-                <div class="btn-group">
-                  <button
-                    class="btn btn-default"
-                    @click="navigate(-1)"
-                  >
-                    ←
-                  </button>
-                  <button
-                    class="btn btn-default"
-                    @click="goToday"
-                  >
-                    Текущий
-                  </button>
-                  <button
-                    class="btn btn-default"
-                    @click="navigate(1)"
-                  >
-                    →
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1014,6 +989,13 @@ const stripRecords = ref<CalendarRecord[]>([]);
 const store = useStore();
 const root = getCurrentInstance().proxy.$root;
 
+const CUSTOM_PERIOD_ACCESS_GROUP = 'Заведующий';
+const CUSTOM_PERIOD_MAX_DAYS = 64;
+
+const canUseCustomPeriod = computed(() => (
+  (store.getters.user_data?.groups || []).includes(CUSTOM_PERIOD_ACCESS_GROUP)
+));
+
 const departments = ref<DepartmentOption[]>([]);
 const departmentPk = ref<number | null>(null);
 const doctorPk = ref<number>(-1);
@@ -1032,6 +1014,16 @@ const extractsDirectionList = ref<number[]>([]);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('day');
 const anchorDate = ref(moment());
+const isCustomPeriodMode = ref(false);
+const customPeriodStart = ref('');
+const customPeriodEnd = ref('');
+const appliedCustomPeriodStart = ref('');
+const appliedCustomPeriodEnd = ref('');
+
+const isCustomPeriodActive = computed(() => (
+  canUseCustomPeriod.value && isCustomPeriodMode.value
+));
+
 const isEditModalOpen = ref(false);
 const editingBedPk = ref<number | null>(null);
 const editingDayKey = ref('');
@@ -1069,21 +1061,23 @@ const unallocatedSearch = ref('');
 
 const WEEKDAY_SHORT_RU = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
-const visibleDays = computed(() => {
+const computeStandardPeriodRange = () => {
   let start = anchorDate.value.clone();
   let end = anchorDate.value.clone();
   if (viewMode.value === 'day') {
     start = anchorDate.value.clone().startOf('day');
     end = anchorDate.value.clone().endOf('day');
-  }
-  if (viewMode.value === 'week') {
+  } else if (viewMode.value === 'week') {
     start = anchorDate.value.clone().startOf('isoWeek');
     end = anchorDate.value.clone().endOf('isoWeek');
-  }
-  if (viewMode.value === 'month') {
+  } else if (viewMode.value === 'month') {
     start = anchorDate.value.clone().startOf('day');
     end = anchorDate.value.clone().add(31, 'days').endOf('day');
   }
+  return { start, end };
+};
+
+const buildDayListFromRange = (start: moment.Moment, end: moment.Moment) => {
   const days: Array<{ key: string, label: string }> = [];
   const cursor = start.clone();
   while (cursor.isSameOrBefore(end, 'day')) {
@@ -1094,11 +1088,82 @@ const visibleDays = computed(() => {
     cursor.add(1, 'day');
   }
   return days;
+};
+
+const customPeriodEndMax = computed(() => {
+  if (!customPeriodStart.value) {
+    return '';
+  }
+  const startM = moment(customPeriodStart.value, 'YYYY-MM-DD');
+  if (!startM.isValid()) {
+    return '';
+  }
+  return startM.clone().add(CUSTOM_PERIOD_MAX_DAYS - 1, 'days').format('YYYY-MM-DD');
+});
+
+const syncCustomPeriodEndConstraints = () => {
+  if (!customPeriodStart.value || !customPeriodEnd.value) {
+    return;
+  }
+  const startM = moment(customPeriodStart.value, 'YYYY-MM-DD');
+  const endM = moment(customPeriodEnd.value, 'YYYY-MM-DD');
+  if (!startM.isValid() || !endM.isValid()) {
+    return;
+  }
+  if (endM.isBefore(startM, 'day')) {
+    customPeriodEnd.value = customPeriodStart.value;
+    return;
+  }
+  const maxEnd = startM.clone().add(CUSTOM_PERIOD_MAX_DAYS - 1, 'days');
+  if (endM.isAfter(maxEnd, 'day')) {
+    customPeriodEnd.value = maxEnd.format('YYYY-MM-DD');
+  }
+};
+
+const applyCustomPeriodFromDraft = (): boolean => {
+  const start = customPeriodStart.value;
+  const end = customPeriodEnd.value;
+  if (!start || !end) {
+    root.$emit('msg', 'error', 'Укажите дату начала и окончания периода');
+    return false;
+  }
+  const startM = moment(start, 'YYYY-MM-DD');
+  const endM = moment(end, 'YYYY-MM-DD');
+  if (!startM.isValid() || !endM.isValid()) {
+    root.$emit('msg', 'error', 'Некорректная дата периода');
+    return false;
+  }
+  if (endM.isBefore(startM, 'day')) {
+    root.$emit('msg', 'error', 'Дата окончания не может быть меньше даты начала');
+    return false;
+  }
+  const daysCount = endM.diff(startM, 'days') + 1;
+  if (daysCount > CUSTOM_PERIOD_MAX_DAYS) {
+    root.$emit('msg', 'error', `Период не может превышать ${CUSTOM_PERIOD_MAX_DAYS} дней`);
+    return false;
+  }
+  appliedCustomPeriodStart.value = start;
+  appliedCustomPeriodEnd.value = end;
+  return true;
+};
+
+const visibleDays = computed(() => {
+  if (isCustomPeriodActive.value) {
+    if (!appliedCustomPeriodStart.value || !appliedCustomPeriodEnd.value) {
+      return [];
+    }
+    const start = moment(appliedCustomPeriodStart.value, 'YYYY-MM-DD');
+    const end = moment(appliedCustomPeriodEnd.value, 'YYYY-MM-DD');
+    if (!start.isValid() || !end.isValid() || end.isBefore(start, 'day')) {
+      return [];
+    }
+    return buildDayListFromRange(start, end);
+  }
+  const { start, end } = computeStandardPeriodRange();
+  return buildDayListFromRange(start, end);
 });
 
 const todayDayKey = computed(() => moment().format('YYYY-MM-DD'));
-
-const todayDateDisplay = computed(() => moment().format('DD.MM.YYYY'));
 
 const CALENDAR_CHAMBER_COL_WIDTH = 88;
 const CALENDAR_BED_COL_WIDTH = 64;
@@ -1106,7 +1171,7 @@ const CALENDAR_DAY_COL_MIN_WIDTH = 108;
 const CALENDAR_DAY_COL_MIN_WIDTH_MONTH = 56;
 
 const mainCalendarTableMinWidthPx = computed(() => {
-  const dayColWidth = viewMode.value === 'month'
+  const dayColWidth = viewMode.value === 'month' && !isCustomPeriodActive.value
     ? CALENDAR_DAY_COL_MIN_WIDTH_MONTH
     : CALENDAR_DAY_COL_MIN_WIDTH;
   return CALENDAR_CHAMBER_COL_WIDTH
@@ -1507,7 +1572,9 @@ const cellCommentAfterDoctor = (record: CalendarRecord, dayKey: string) => {
   if (!raw) {
     return '';
   }
-  const max = viewMode.value === 'month' ? CELL_COMMENT_DISPLAY_MAX_MONTH : CELL_COMMENT_DISPLAY_MAX;
+  const max = viewMode.value === 'month' && !isCustomPeriodActive.value
+    ? CELL_COMMENT_DISPLAY_MAX_MONTH
+    : CELL_COMMENT_DISPLAY_MAX;
   if (raw.length <= max) {
     return raw;
   }
@@ -1740,6 +1807,10 @@ const dayColumnTotals = (dayKey: string): DayColumnTotals => (
 const doctorBadgeCountDayKey = computed(() => {
   if (hoveredDayKey.value) {
     return hoveredDayKey.value;
+  }
+  if (isCustomPeriodActive.value) {
+    const days = visibleDays.value;
+    return days[0]?.key || todayDayKey.value;
   }
   if (viewMode.value === 'day') {
     return anchorDate.value.format('YYYY-MM-DD');
@@ -2089,7 +2160,7 @@ const loadCalendar = async () => {
     department_pk: departmentPk.value,
     start_date: start,
     end_date: end,
-    view_mode: viewMode.value,
+    view_mode: isCustomPeriodActive.value ? 'custom' : viewMode.value,
   });
   chambers.value = response?.data?.chambers || [];
   records.value = response?.data?.records || [];
@@ -2102,6 +2173,9 @@ const loadCalendar = async () => {
 };
 
 const refreshBoard = async () => {
+  if (isCustomPeriodActive.value && !applyCustomPeriodFromDraft()) {
+    return;
+  }
   await loadCalendar();
   await loadUnallocatedPatients();
   await reloadStripFromServer();
@@ -2863,19 +2937,62 @@ const clearBedFromModal = async () => {
   }
 };
 
-watch([departmentPk, viewMode, anchorDate], async () => {
+watch(customPeriodStart, syncCustomPeriodEndConstraints);
+watch(customPeriodEnd, syncCustomPeriodEndConstraints);
+
+watch(isCustomPeriodMode, async (enabled, prev) => {
+  if (enabled && !canUseCustomPeriod.value) {
+    isCustomPeriodMode.value = false;
+    return;
+  }
+  if (enabled) {
+    const { start, end } = computeStandardPeriodRange();
+    const startKey = start.format('YYYY-MM-DD');
+    const endKey = end.format('YYYY-MM-DD');
+    customPeriodStart.value = startKey;
+    customPeriodEnd.value = endKey;
+    appliedCustomPeriodStart.value = startKey;
+    appliedCustomPeriodEnd.value = endKey;
+    return;
+  }
+  if (prev) {
+    appliedCustomPeriodStart.value = '';
+    appliedCustomPeriodEnd.value = '';
+    customPeriodStart.value = '';
+    customPeriodEnd.value = '';
+    await refreshBoard();
+  }
+});
+
+watch(canUseCustomPeriod, (allowed) => {
+  if (!allowed && isCustomPeriodMode.value) {
+    isCustomPeriodMode.value = false;
+  }
+});
+
+watch([viewMode, anchorDate], async () => {
+  if (isCustomPeriodActive.value) {
+    scheduleAsideScrollBoundsUpdate();
+    return;
+  }
   await loadCalendar();
   await loadUnallocatedPatients();
   await reloadStripFromServer();
   scheduleAsideScrollBoundsUpdate();
 });
 
-watch(departmentPk, async (d) => {
+watch(departmentPk, async () => {
   await loadDoctors();
   doctorPk.value = -1;
   await loadPatientsWithoutBed();
   resetAsideScroll();
   scheduleAsideScrollBoundsUpdate();
+  if (isCustomPeriodActive.value) {
+    return;
+  }
+  await loadCalendar();
+  await loadUnallocatedPatients();
+  await reloadStripFromServer();
 });
 
 watch(
@@ -3216,9 +3333,9 @@ onBeforeUnmount(() => {
 
 .toolbar-department {
   flex: 0 1 auto;
-  width: 320px;
-  max-width: 32%;
-  min-width: 200px;
+  width: 427px;
+  max-width: 43%;
+  min-width: 267px;
 }
 
 .toolbar-department-treeselect {
@@ -3256,29 +3373,6 @@ onBeforeUnmount(() => {
   min-width: 0;
 }
 
-.toolbar-today-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.15;
-  margin-right: 6px;
-  flex-shrink: 0;
-}
-
-.toolbar-today-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #666;
-  white-space: nowrap;
-}
-
-.toolbar-today-date {
-  font-size: 15px;
-  font-weight: 600;
-  color: #333;
-  white-space: nowrap;
-}
-
 .mode-switch {
   display: flex;
   align-items: center;
@@ -3288,6 +3382,57 @@ onBeforeUnmount(() => {
 .mode-switch .active {
   background: #049372;
   color: #fff;
+}
+
+.mode-switch--period-frozen .btn:disabled,
+.btn-group--period-frozen .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.toolbar-period-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toolbar-period-toggle input {
+  margin: 0;
+}
+
+.toolbar-custom-period {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.toolbar-custom-period-sep {
+  flex-shrink: 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: #555;
+  line-height: 1;
+  padding: 0 1px;
+}
+
+.toolbar-custom-period-input {
+  width: 108px;
+  min-width: 108px;
+  height: 34px;
+  padding: 6px 4px;
+  font-size: 12px;
+  line-height: 20px;
+  box-sizing: border-box;
 }
 
 .board-discharged-heading-row {
@@ -3821,21 +3966,6 @@ onBeforeUnmount(() => {
   font-size: 14px;
   font-weight: 600;
   color: #333;
-}
-
-.board-calendar-nav {
-  flex-shrink: 0;
-}
-
-.board-calendar-nav--footer {
-  margin-top: 12px;
-}
-
-.board-calendar-nav-inner {
-  width: 100%;
-  justify-content: flex-end;
-  margin-left: 0;
-  flex: 1 1 auto;
 }
 
 .strip-cards-board {
