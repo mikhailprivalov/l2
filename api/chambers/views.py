@@ -695,13 +695,15 @@ def get_patients_without_bed(request):
             "direction_pk": patient.direction_id,
             "doctor_pk": patient.doctor_id,
         }
-        row.update(_strip_patient_row_from_resolved_dates(
-            plan_date_in,
-            plan_date_out,
-            date_in,
-            date_out,
-            is_extract=getattr(patient, "is_extract", False),
-        ))
+        row.update(
+            _strip_patient_row_from_resolved_dates(
+                plan_date_in,
+                plan_date_out,
+                date_in,
+                date_out,
+                is_extract=getattr(patient, "is_extract", False),
+            )
+        )
         patients.append(row)
     return JsonResponse({"data": patients})
 
