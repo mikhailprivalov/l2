@@ -112,6 +112,29 @@
             </div>
               </div>
             </div>
+            <div class="doctor-badges doctor-badges--toolbar">
+              <button
+                type="button"
+                class="badge badge-secondary doctor-badge-btn"
+                :class="{ active: doctorPk === -1 }"
+                @click="doctorPk = -1"
+              >
+                Все врачи
+              </button>
+              <button
+                v-for="doctor in doctors"
+                :key="`doctor-${doctor.pk}`"
+                type="button"
+                draggable="true"
+                class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
+                :class="{ active: doctorPk === doctor.pk }"
+                @click="doctorPk = doctor.pk"
+                @dragstart="onDoctorDragStart($event, doctor.pk)"
+                @dragend="onDoctorDragEnd"
+              >
+                {{ doctor.short_fio || doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
+              </button>
+            </div>
           </div>
           <div class="toolbar-aside-panel">
             <div class="toolbar-aside-search-wrap">
@@ -180,29 +203,6 @@
         ref="calendarWrapRef"
         class="calendar-wrap"
       >
-        <div class="doctor-badges doctor-badges--top">
-          <button
-            type="button"
-            class="badge badge-secondary doctor-badge-btn"
-            :class="{ active: doctorPk === -1 }"
-            @click="doctorPk = -1"
-          >
-            Все врачи
-          </button>
-          <button
-            v-for="doctor in doctors"
-            :key="doctor.pk"
-            type="button"
-            draggable="true"
-            class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
-            :class="{ active: doctorPk === doctor.pk }"
-            @click="doctorPk = doctor.pk"
-            @dragstart="onDoctorDragStart($event, doctor.pk)"
-            @dragend="onDoctorDragEnd"
-          >
-            {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
-          </button>
-        </div>
         <div class="calendar-tables-stack">
           <div class="calendar-main-scroll">
             <table
@@ -470,30 +470,6 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="doctor-badges doctor-badges--bottom">
-            <button
-              type="button"
-              class="badge badge-secondary doctor-badge-btn"
-              :class="{ active: doctorPk === -1 }"
-              @click="doctorPk = -1"
-            >
-              Все врачи
-            </button>
-            <button
-              v-for="doctor in doctors"
-              :key="`doctor-bottom-${doctor.pk}`"
-              type="button"
-              draggable="true"
-              class="badge badge-secondary doctor-badge-btn doctor-badge-draggable"
-              :class="{ active: doctorPk === doctor.pk }"
-              @click="doctorPk = doctor.pk"
-              @dragstart="onDoctorDragStart($event, doctor.pk)"
-              @dragend="onDoctorDragEnd"
-            >
-              {{ doctor.fio }} - {{ doctorPatientCount(doctor.pk) }}
-            </button>
           </div>
         </div>
       </div>
@@ -1946,13 +1922,13 @@ const defaultPlanDateOut = (dayKey: string) => {
 
 const doctorFioByPk = (docPk: number) => {
   const d = doctors.value.find((x) => x.pk === docPk);
-  return (d?.fio || '').trim();
+  return (d?.short_fio || d?.fio || '').trim();
 };
 
 const attendingDoctorTreeselectOptions = computed(() => (
   doctors.value.map((doctor) => ({
     id: doctor.pk,
-    label: doctor.fio || doctor.short_fio || String(doctor.pk),
+    label: doctor.short_fio || doctor.fio || String(doctor.pk),
   }))
 ));
 
@@ -3261,13 +3237,16 @@ onBeforeUnmount(() => {
 .toolbar-layout {
   display: flex;
   flex-direction: row;
-  align-items: stretch;
+  align-items: flex-start;
   min-width: 0;
 }
 
 .toolbar-calendar-col {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .toolbar-aside-panel {
@@ -3526,16 +3505,16 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.doctor-badges--top {
-  margin: 0 0 8px;
-}
-
-.doctor-badges--bottom {
-  margin: 4px 0;
+.doctor-badges--toolbar {
+  margin: 0;
+  padding: 0 0 2px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .doctor-badge-btn {
   border: none;
+  border-radius: 4px;
   line-height: 1.2;
   cursor: pointer;
 }
