@@ -264,10 +264,22 @@ def _direction_hosp_calendar_meta_from_row(row, fallback_plan_date_in=None):
     return meta
 
 
-def _pswb_resolved_calendar_dates(patient, fallback_plan_date_in=None):
+def _apply_discharge_to_calendar_dates(plan_date_in, plan_date_out, date_in, date_out, discharge_date):
+    if not discharge_date:
+        return plan_date_in, plan_date_out, date_in, date_out
+    plan_date_out = discharge_date
+    date_out = discharge_date
+    plan_in_eff = plan_date_in or date_in
+    if plan_in_eff and discharge_date < plan_in_eff:
+        plan_date_in = discharge_date
+    return plan_date_in, plan_date_out, date_in, date_out
+
+
+def _pswb_resolved_calendar_dates(patient, fallback_plan_date_in=None, discharge_date=None):
     """Период черновика с учётом _strip_calendar_dates и выписки из протокола."""
-    direction_id = getattr(patient, "direction_id", None)
-    discharge_date = get_discharge_date_for_direction(direction_id) if direction_id else None
+    if discharge_date is None:
+        direction_id = getattr(patient, "direction_id", None)
+        discharge_date = get_discharge_date_for_direction(direction_id) if direction_id else None
     plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
         getattr(patient, "plan_date_in", None),
         getattr(patient, "plan_date_out", None),
@@ -275,22 +287,10 @@ def _pswb_resolved_calendar_dates(patient, fallback_plan_date_in=None):
         getattr(patient, "date_out", None),
         fallback_plan_date_in=fallback_plan_date_in,
     )
-    if discharge_date:
-        plan_date_out = discharge_date
-        date_out = discharge_date
-        plan_in_eff = plan_date_in or date_in
-        if plan_in_eff and discharge_date < plan_in_eff:
-            plan_date_in = discharge_date
-    return plan_date_in, plan_date_out, date_in, date_out
+    return _apply_discharge_to_calendar_dates(plan_date_in, plan_date_out, date_in, date_out, discharge_date)
 
 
-def _pswb_overlaps_period(patient, start_date, end_date, fallback_plan_date_in=None):
-    """Пересечение периода черновика с [start_date, end_date] (как на доске госпитализации)."""
-    plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
-        patient,
-        fallback_plan_date_in=fallback_plan_date_in,
-    )
-
+def _hosp_resolved_dates_overlap_period(plan_date_in, plan_date_out, date_in, date_out, start_date, end_date):
     class _Item:
         pass
 
@@ -306,13 +306,18 @@ def _pswb_overlaps_period(patient, start_date, end_date, fallback_plan_date_in=N
     return item_end >= start_date and item_start <= end_date
 
 
-def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
-    """Строка API для черновика из SQL + выписка из протокола."""
+def _pswb_overlaps_period(patient, start_date, end_date, fallback_plan_date_in=None, discharge_date=None):
+    """Пересечение периода черновика с [start_date, end_date] (как на доске госпитализации)."""
     plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
         patient,
         fallback_plan_date_in=fallback_plan_date_in,
+        discharge_date=discharge_date,
     )
-    row = {"is_extract": bool(getattr(patient, "is_extract", False))}
+    return _hosp_resolved_dates_overlap_period(plan_date_in, plan_date_out, date_in, date_out, start_date, end_date)
+
+
+def _strip_patient_row_from_resolved_dates(plan_date_in, plan_date_out, date_in, date_out, is_extract=False):
+    row = {"is_extract": bool(is_extract)}
     if plan_date_in:
         row["plan_date_in"] = str(plan_date_in)
     if plan_date_out:
@@ -322,6 +327,22 @@ def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None):
     if date_out:
         row["date_out"] = str(date_out)
     return row
+
+
+def _strip_patient_row_from_sql(patient, fallback_plan_date_in=None, discharge_date=None):
+    """Строка API для черновика из SQL + выписка из протокола."""
+    plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
+        patient,
+        fallback_plan_date_in=fallback_plan_date_in,
+        discharge_date=discharge_date,
+    )
+    return _strip_patient_row_from_resolved_dates(
+        plan_date_in,
+        plan_date_out,
+        date_in,
+        date_out,
+        is_extract=getattr(patient, "is_extract", False),
+    )
 
 
 def _calendar_plan_dates(item):
@@ -645,16 +666,25 @@ def get_patients_without_bed(request):
         department_pk,
         start_date=start_date if filter_by_period else None,
         end_date=end_date if filter_by_period else None,
+        cda_discharge_title=CDA_DISCHARGE_DATE_TITLE,
+        fallback_discharge_title=FALLBACK_DISCHARGE_FIELD_TITLE,
     )
     fallback_plan_date_in = start_date or datetime.date.today()
-
     patients = []
     for patient in patient_rows:
-        if filter_by_period and not _pswb_overlaps_period(
+        discharge_date = _parse_discharge_date_value(patient.discharge_value_raw) if patient.discharge_value_raw else None
+        plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
             patient,
+            fallback_plan_date_in=fallback_plan_date_in,
+            discharge_date=discharge_date,
+        )
+        if filter_by_period and not _hosp_resolved_dates_overlap_period(
+            plan_date_in,
+            plan_date_out,
+            date_in,
+            date_out,
             start_date,
             end_date,
-            fallback_plan_date_in=fallback_plan_date_in,
         ):
             continue
         row = {
@@ -665,7 +695,13 @@ def get_patients_without_bed(request):
             "direction_pk": patient.direction_id,
             "doctor_pk": patient.doctor_id,
         }
-        row.update(_strip_patient_row_from_sql(patient, fallback_plan_date_in))
+        row.update(_strip_patient_row_from_resolved_dates(
+            plan_date_in,
+            plan_date_out,
+            date_in,
+            date_out,
+            is_extract=getattr(patient, "is_extract", False),
+        ))
         patients.append(row)
     return JsonResponse({"data": patients})
 
