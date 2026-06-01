@@ -142,7 +142,7 @@
                 v-model.trim="unallocatedSearch"
                 class="form-control toolbar-aside-search"
                 type="text"
-                placeholder="Поиск"
+                placeholder="Поиск по ФИО"
               >
               <button
                 v-if="unallocatedSearch"
@@ -400,7 +400,7 @@
                 v-else-if="!stripRecordsInPeriod.length"
                 class="text-muted small strip-cards-empty"
               >
-                Нет пациентов за выбранный период
+                {{ boardSearchQuery ? 'Нет пациентов по запросу' : 'Нет пациентов за выбранный период' }}
               </p>
               <div
                 v-for="rec in stripRecordsInPeriod"
@@ -1269,9 +1269,24 @@ const filterRecordsByDoctor = (list: CalendarRecord[]) => {
   return list.filter((rec) => rec.doctor_pk === doctorPk.value);
 };
 
-const stripRecordsInPeriod = computed(() => (
-  filterRecordsByDoctor(stripRecords.value.filter(recordOverlapsVisiblePeriod))
-));
+const boardSearchQuery = computed(() => unallocatedSearch.value.trim().toLowerCase());
+
+const textMatchesBoardSearch = (text: string | null | undefined, q: string) => (
+  !q || (text || '').toLowerCase().includes(q)
+);
+
+const filterRecordsByBoardSearch = (list: CalendarRecord[]) => {
+  const q = boardSearchQuery.value;
+  if (!q) {
+    return list;
+  }
+  return list.filter((rec) => textMatchesBoardSearch(rec.patient_fio, q));
+};
+
+const stripRecordsInPeriod = computed(() => {
+  const byPeriod = stripRecords.value.filter(recordOverlapsVisiblePeriod);
+  return filterRecordsByBoardSearch(filterRecordsByDoctor(byPeriod));
+});
 
 const stripRecordsInPeriodNotExtractCount = computed(() => (
   stripRecordsInPeriod.value.filter((rec) => !rec.is_extract).length
@@ -1354,9 +1369,10 @@ const recordsUnfilteredForMainGrid = computed(() => (
   records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
 
-const recordsForMainGrid = computed(() => (
-  filterRecordsByDoctor(recordsUnfilteredForMainGrid.value)
-));
+const recordsForMainGrid = computed(() => {
+  const byDoctor = filterRecordsByDoctor(recordsUnfilteredForMainGrid.value);
+  return filterRecordsByBoardSearch(byDoctor);
+});
 
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
@@ -1758,13 +1774,11 @@ const extractCountForDay = (dayKey: string) => {
 };
 
 const dischargedPatientsInPeriod = computed(() => {
-  const q = unallocatedSearch.value.trim().toLowerCase();
+  const q = boardSearchQuery.value;
   if (!q) {
     return dischargedPatientsInPeriodAll.value;
   }
-  return dischargedPatientsInPeriodAll.value.filter(
-    (row) => (row.name || '').toLowerCase().includes(q),
-  );
+  return dischargedPatientsInPeriodAll.value.filter((row) => textMatchesBoardSearch(row.name, q));
 });
 
 const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
@@ -2148,11 +2162,11 @@ const unallocatedPatientsFiltered = computed(() => {
   const list = unallocatedPatients.value.filter(
     (p) => !placedDirectionPkSet.value.has(p.direction_pk),
   );
-  const q = unallocatedSearch.value.trim().toLowerCase();
+  const q = boardSearchQuery.value;
   if (!q) {
     return list;
   }
-  return list.filter((p) => (p.fio || '').toLowerCase().includes(q));
+  return list.filter((p) => textMatchesBoardSearch(p.fio, q));
 });
 
 const unallocatedGenderClass = (p: UnallocatedPatient) => {
@@ -3081,7 +3095,13 @@ watch(departmentPk, async () => {
 });
 
 watch(
-  [unallocatedPatientsFiltered, dischargedPatientsInPeriod, unallocatedSearch],
+  [
+    unallocatedPatientsFiltered,
+    dischargedPatientsInPeriod,
+    unallocatedSearch,
+    stripRecordsInPeriod,
+    recordsForMainGrid,
+  ],
   () => {
     scheduleAsideScrollBoundsUpdate();
   },
