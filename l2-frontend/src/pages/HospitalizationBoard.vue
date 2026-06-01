@@ -1596,65 +1596,6 @@ const recordsForMainGrid = computed(() => {
   return filterRecordsByPatientBoardFilters(byDoctor);
 });
 
-const bedHasFreeDayInPeriod = (bedPk: number) => {
-  for (const day of visibleDays.value) {
-    const occupying = recordsUnfilteredForMainGrid.value.filter(
-      (r) => r.bed_pk === bedPk && isDayInRecordSpan(r, day.key),
-    );
-    if (!occupying.length) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/** При поиске/фильтрах — только подходящие койки (сжатие таблицы). */
-const chamberRowsForDisplay = computed(() => {
-  if (!hasBoardPatientFilters.value) {
-    return chamberRows.value;
-  }
-  const matchBedPks = new Set<number>();
-  const filterByPatientRecords = boardSearchQuery.value || hasPatientQuickFiltersActive.value;
-  if (filterByPatientRecords) {
-    for (const rec of recordsForMainGrid.value) {
-      if (rec.bed_pk > 0 && recordOverlapsVisiblePeriod(rec)) {
-        matchBedPks.add(rec.bed_pk);
-      }
-    }
-  }
-  if (quickFilterFree.value) {
-    for (const row of chamberRows.value) {
-      for (const bed of row.beds) {
-        if (bedHasFreeDayInPeriod(bed.pk)) {
-          matchBedPks.add(bed.pk);
-        }
-      }
-    }
-  }
-  if (!matchBedPks.size) {
-    return [];
-  }
-  const requirePatientBeds = filterByPatientRecords;
-  const requireFreeBeds = quickFilterFree.value;
-  return chamberRows.value
-    .map((row) => ({
-      ...row,
-      beds: row.beds.filter((b) => {
-        if (!matchBedPks.has(b.pk)) {
-          return false;
-        }
-        if (requirePatientBeds && requireFreeBeds) {
-          const hasPatient = recordsForMainGrid.value.some(
-            (rec) => rec.bed_pk === b.pk && recordOverlapsVisiblePeriod(rec),
-          );
-          return hasPatient && bedHasFreeDayInPeriod(b.pk);
-        }
-        return true;
-      }),
-    }))
-    .filter((row) => row.beds.length > 0);
-});
-
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
   const days = visibleDays.value;
@@ -1761,6 +1702,78 @@ const bedDayOccupyingRecords = (bedPk: number, dayKey: string) => (
   )
 );
 
+/** Койка свободна: пустая или только выписанный в день выписки (без второго пациента). */
+const isBedFreeForOccupying = (occupying: CalendarRecord[], dayKey: string) => {
+  if (occupying.length === 0) {
+    return true;
+  }
+  if (occupying.length > 1) {
+    return false;
+  }
+  const only = occupying[0];
+  return Boolean(only.is_extract && isRecordDischargeDay(only, dayKey));
+};
+
+const isBedFreeForDay = (bedPk: number, dayKey: string) => (
+  isBedFreeForOccupying(bedDayOccupyingRecords(bedPk, dayKey), dayKey)
+);
+
+const bedHasFreeDayInPeriod = (bedPk: number) => {
+  for (const day of visibleDays.value) {
+    if (isBedFreeForDay(bedPk, day.key)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** При поиске/фильтрах — только подходящие койки (сжатие таблицы). */
+const chamberRowsForDisplay = computed(() => {
+  if (!hasBoardPatientFilters.value) {
+    return chamberRows.value;
+  }
+  const matchBedPks = new Set<number>();
+  const filterByPatientRecords = boardSearchQuery.value || hasPatientQuickFiltersActive.value;
+  if (filterByPatientRecords) {
+    for (const rec of recordsForMainGrid.value) {
+      if (rec.bed_pk > 0 && recordOverlapsVisiblePeriod(rec)) {
+        matchBedPks.add(rec.bed_pk);
+      }
+    }
+  }
+  if (quickFilterFree.value) {
+    for (const row of chamberRows.value) {
+      for (const bed of row.beds) {
+        if (bedHasFreeDayInPeriod(bed.pk)) {
+          matchBedPks.add(bed.pk);
+        }
+      }
+    }
+  }
+  if (!matchBedPks.size) {
+    return [];
+  }
+  const requirePatientBeds = filterByPatientRecords;
+  const requireFreeBeds = quickFilterFree.value;
+  return chamberRows.value
+    .map((row) => ({
+      ...row,
+      beds: row.beds.filter((b) => {
+        if (!matchBedPks.has(b.pk)) {
+          return false;
+        }
+        if (requirePatientBeds && requireFreeBeds) {
+          const hasPatient = recordsForMainGrid.value.some(
+            (rec) => rec.bed_pk === b.pk && recordOverlapsVisiblePeriod(rec),
+          );
+          return hasPatient && bedHasFreeDayInPeriod(b.pk);
+        }
+        return true;
+      }),
+    }))
+    .filter((row) => row.beds.length > 0);
+});
+
 const canAcceptPatientInCell = (
   bedPk: number,
   dayKey: string,
@@ -1773,11 +1786,7 @@ const canAcceptPatientInCell = (
   if (occupying.length >= MAX_CELL_PATIENTS) {
     return false;
   }
-  if (occupying.length === 0) {
-    return true;
-  }
-  const only = occupying[0];
-  return Boolean(only.is_extract && isRecordDischargeDay(only, dayKey));
+  return isBedFreeForOccupying(occupying, dayKey);
 };
 
 const assertCanAcceptPatientInCell = (
@@ -2064,7 +2073,7 @@ const dayColumnTotalsMap = computed(() => {
     const t = map.get(day.key) || emptyDayColumnTotals();
     let free = 0;
     for (const bedPk of calendarBedPks.value) {
-      if (bedDayOccupyingRecords(bedPk, day.key).length === 0) {
+      if (isBedFreeForDay(bedPk, day.key)) {
         free += 1;
       }
     }
