@@ -2967,15 +2967,17 @@ watch([viewMode, anchorDate], async () => {
 watch(departmentPk, async () => {
   await loadDoctors();
   doctorPk.value = -1;
-  await loadPatientsWithoutBed();
   resetAsideScroll();
   scheduleAsideScrollBoundsUpdate();
   if (isCustomPeriodActive.value) {
+    await reloadStripFromServer();
     return;
   }
-  await loadCalendar();
-  await loadUnallocatedPatients();
-  await reloadStripFromServer();
+  await Promise.all([
+    loadCalendar(),
+    loadUnallocatedPatients(),
+    reloadStripFromServer(),
+  ]);
 });
 
 watch(

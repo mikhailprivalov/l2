@@ -4,10 +4,30 @@ from laboratory.settings import TIME_ZONE
 from utils.db import namedtuplefetchall
 
 
-def load_patients_stationar_unallocated_sql(department_id):
+def load_patients_stationar_unallocated_sql(department_id, transferable_epicrisis_titles=None):
+    closing_filter = ""
+    params = {"department_id": department_id}
+    if transferable_epicrisis_titles:
+        closing_filter = """
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM directions_napravleniya child_n
+                    LEFT JOIN directions_issledovaniya child_iss ON child_n.id = child_iss.napravleniye_id
+                    LEFT JOIN directory_researches child_dr ON child_iss.research_id = child_dr.id
+                    LEFT JOIN directory_hospitalservice child_hs ON child_dr.id = child_hs.slave_research_id
+                    WHERE child_n.parent_id = directions_issledovaniya.id
+                    AND (
+                        child_hs.site_type = 7
+                        OR (child_hs.site_type = 6 AND child_dr.title IN %(titles)s)
+                    )
+                    AND child_n.total_confirmed = true
+                )
+        """
+        params["titles"] = tuple(transferable_epicrisis_titles)
+
     with connection.cursor() as cursor:
         cursor.execute(
-            """
+            f"""
             SELECT 
                 family,
                 name,
@@ -40,10 +60,10 @@ def load_patients_stationar_unallocated_sql(department_id):
                     WHERE pswb.direction_id = directions_napravleniya.id
                     AND pswb.department_id = %(department_id)s
                 )
-                
+                {closing_filter}
                 ORDER BY family
                 """,
-            params={"department_id": department_id},
+            params=params,
         )
 
         rows = namedtuplefetchall(cursor)
@@ -75,137 +95,49 @@ def get_closing_protocols(issledovaniye_ids, titles):
     return rows
 
 
-def load_patient_without_bed_by_department(
-    department_id,
-    start_date=None,
-    end_date=None,
-    cda_discharge_title=None,
-    fallback_discharge_title=None,
-):
+def load_patient_without_bed_by_department(department_id, start_date=None, end_date=None):
+    """Черновики без коек: только podrazdeleniya_patientstationarwithoutbeds, без протоколов выписки."""
     period_filter = ""
     params = {"department_id": department_id}
     if start_date is not None and end_date is not None:
         period_filter = """
-            AND COALESCE(
-                pswb.plan_date_in,
-                pswb.date_in,
-                %(start_date)s
-            ) <= %(end_date)s
+            AND COALESCE(pswb.plan_date_in, pswb.date_in) <= %(end_date)s
             AND (
                 CASE
                     WHEN pswb.plan_date_in IS NOT NULL
                       OR pswb.plan_date_out IS NOT NULL
-                    THEN COALESCE(
-                        pswb.plan_date_out,
-                        pswb.date_out,
-                        DATE '2200-01-01'
-                    )
-                    ELSE COALESCE(
-                        pswb.date_out,
-                        DATE '2200-01-01'
-                    )
+                    THEN COALESCE(pswb.plan_date_out, pswb.date_out, DATE '2200-01-01')
+                    ELSE COALESCE(pswb.date_out, DATE '2200-01-01')
                 END
             ) >= %(start_date)s
         """
         params["start_date"] = start_date
         params["end_date"] = end_date
 
-    discharge_cte = ""
-    discharge_join = ""
-    discharge_select = "NULL::text AS discharge_value_raw"
-    if cda_discharge_title and fallback_discharge_title:
-        discharge_cte = """
-            , discharge_by_direction AS (
-                SELECT DISTINCT ON (fp.direction_id)
-                    fp.direction_id AS direction_pk,
-                    COALESCE(cda_val.value, fb_val.value) AS discharge_value_raw
-                FROM filtered_pswb fp
-                INNER JOIN directions_issledovaniya d_iss ON d_iss.time_confirmation IS NOT NULL
-                INNER JOIN directions_napravleniya dn ON d_iss.napravleniye_id = dn.id
-                INNER JOIN directory_researches dr ON d_iss.research_id = dr.id
-                LEFT JOIN LATERAL (
-                    SELECT pr.value
-                    FROM directions_paraclinicresult pr
-                    INNER JOIN directory_paraclinicinputfield pf ON pr.field_id = pf.id
-                    INNER JOIN external_system_cdafields cda ON pf.cda_option_id = cda.id
-                    WHERE pr.issledovaniye_id = d_iss.id
-                      AND cda.title = %(cda_discharge_title)s
-                      AND pr.value IS NOT NULL
-                      AND pr.value <> ''
-                    ORDER BY pf."order"
-                    LIMIT 1
-                ) cda_val ON TRUE
-                LEFT JOIN LATERAL (
-                    SELECT pr.value
-                    FROM directions_paraclinicresult pr
-                    INNER JOIN directory_paraclinicinputfield pf ON pr.field_id = pf.id
-                    WHERE pr.issledovaniye_id = d_iss.id
-                      AND pf.title = %(fallback_discharge_title)s
-                      AND pr.value IS NOT NULL
-                      AND pr.value <> ''
-                    ORDER BY pf."order"
-                    LIMIT 1
-                ) fb_val ON TRUE
-                WHERE (d_iss.napravleniye_id = fp.direction_id OR dn.parent_id = fp.direction_id)
-                  AND (dr.desc IS NULL OR dr.desc = '')
-                  AND (
-                    dr.title ILIKE '%%выписка%%'
-                    OR dr.title ILIKE '%%выписной%%'
-                    OR dr.title ILIKE '%%посмертный%%'
-                  )
-                  AND COALESCE(cda_val.value, fb_val.value) IS NOT NULL
-                  AND COALESCE(cda_val.value, fb_val.value) <> ''
-                ORDER BY fp.direction_id, d_iss.time_confirmation DESC NULLS LAST
-            )
-        """
-        discharge_join = "LEFT JOIN discharge_by_direction dd ON dd.direction_pk = fp.direction_id"
-        discharge_select = "dd.discharge_value_raw"
-        params["cda_discharge_title"] = cda_discharge_title
-        params["fallback_discharge_title"] = fallback_discharge_title
-
     with connection.cursor() as cursor:
         cursor.execute(
             f"""
-            WITH filtered_pswb AS (
-                SELECT
-                    ci.family AS patient_family,
-                    ci.name AS patient_name,
-                    ci.patronymic AS patient_patronymic,
-                    date_part('year', age(ci.birthday))::int AS patient_age,
-                    ci.sex AS patient_sex,
-                    pswb.direction_id,
-                    pswb.date_in,
-                    pswb.date_out,
-                    pswb.plan_date_in,
-                    pswb.plan_date_out,
-                    dp.id AS doctor_id,
-                    pswb.is_extract
-                FROM podrazdeleniya_patientstationarwithoutbeds pswb
-                INNER JOIN directions_napravleniya dn ON pswb.direction_id = dn.id
-                INNER JOIN clients_card cc ON dn.client_id = cc.id
-                INNER JOIN clients_individual ci ON cc.individual_id = ci.id
-                LEFT JOIN users_doctorprofile dp ON pswb.doctor_id = dp.id
-                WHERE pswb.department_id = %(department_id)s
-                {period_filter}
-            )
-            {discharge_cte}
             SELECT
-                fp.patient_family,
-                fp.patient_name,
-                fp.patient_patronymic,
-                fp.patient_age,
-                fp.patient_sex,
-                fp.direction_id,
-                fp.date_in,
-                fp.date_out,
-                fp.plan_date_in,
-                fp.plan_date_out,
-                fp.doctor_id,
-                fp.is_extract,
-                {discharge_select}
-            FROM filtered_pswb fp
-            {discharge_join}
-            ORDER BY fp.patient_family
+                ci.family AS patient_family,
+                ci.name AS patient_name,
+                ci.patronymic AS patient_patronymic,
+                date_part('year', age(ci.birthday))::int AS patient_age,
+                ci.sex AS patient_sex,
+                pswb.direction_id,
+                pswb.date_in,
+                pswb.date_out,
+                pswb.plan_date_in,
+                pswb.plan_date_out,
+                dp.id AS doctor_id,
+                pswb.is_extract
+            FROM podrazdeleniya_patientstationarwithoutbeds pswb
+            INNER JOIN directions_napravleniya dn ON pswb.direction_id = dn.id
+            INNER JOIN clients_card cc ON dn.client_id = cc.id
+            INNER JOIN clients_individual ci ON cc.individual_id = ci.id
+            LEFT JOIN users_doctorprofile dp ON pswb.doctor_id = dp.id
+            WHERE pswb.department_id = %(department_id)s
+            {period_filter}
+            ORDER BY ci.family, ci.name
             """,
             params=params,
         )
@@ -214,7 +146,7 @@ def load_patient_without_bed_by_department(
     return rows
 
 
-def load_directions_hosp_meta_bulk(direction_pks, cda_discharge_title, fallback_discharge_title):
+def load_directions_hosp_meta_bulk(direction_pks):
     if not direction_pks:
         return []
     with connection.cursor() as cursor:
@@ -246,48 +178,6 @@ def load_directions_hosp_meta_bulk(direction_pks, cda_discharge_title, fallback_
                 FROM podrazdeleniya_patienttobed ptb
                 WHERE ptb.direction_id = ANY(%(direction_pks)s)
                 ORDER BY ptb.direction_id, ptb.id DESC
-            ),
-            discharge_by_direction AS (
-                SELECT DISTINCT ON (d.direction_pk)
-                    d.direction_pk,
-                    COALESCE(cda_val.value, fb_val.value) AS discharge_value_raw
-                FROM direction_ids d
-                INNER JOIN directions_issledovaniya d_iss ON d_iss.time_confirmation IS NOT NULL
-                INNER JOIN directions_napravleniya dn ON d_iss.napravleniye_id = dn.id
-                INNER JOIN directory_researches dr ON d_iss.research_id = dr.id
-                LEFT JOIN LATERAL (
-                    SELECT pr.value
-                    FROM directions_paraclinicresult pr
-                    INNER JOIN directory_paraclinicinputfield pf ON pr.field_id = pf.id
-                    INNER JOIN external_system_cdafields cda ON pf.cda_option_id = cda.id
-                    WHERE pr.issledovaniye_id = d_iss.id
-                      AND cda.title = %(cda_discharge_title)s
-                      AND pr.value IS NOT NULL
-                      AND pr.value <> ''
-                    ORDER BY pf."order"
-                    LIMIT 1
-                ) cda_val ON TRUE
-                LEFT JOIN LATERAL (
-                    SELECT pr.value
-                    FROM directions_paraclinicresult pr
-                    INNER JOIN directory_paraclinicinputfield pf ON pr.field_id = pf.id
-                    WHERE pr.issledovaniye_id = d_iss.id
-                      AND pf.title = %(fallback_discharge_title)s
-                      AND pr.value IS NOT NULL
-                      AND pr.value <> ''
-                    ORDER BY pf."order"
-                    LIMIT 1
-                ) fb_val ON TRUE
-                WHERE (d_iss.napravleniye_id = d.direction_pk OR dn.parent_id = d.direction_pk)
-                  AND (dr.desc IS NULL OR dr.desc = '')
-                  AND (
-                    dr.title ILIKE '%%выписка%%'
-                    OR dr.title ILIKE '%%выписной%%'
-                    OR dr.title ILIKE '%%посмертный%%'
-                  )
-                  AND COALESCE(cda_val.value, fb_val.value) IS NOT NULL
-                  AND COALESCE(cda_val.value, fb_val.value) <> ''
-                ORDER BY d.direction_pk, d_iss.time_confirmation DESC NULLS LAST
             )
             SELECT
                 d.direction_pk,
@@ -303,17 +193,41 @@ def load_directions_hosp_meta_bulk(direction_pks, cda_discharge_title, fallback_
                 ptb.date_in AS ptb_date_in,
                 ptb.date_out AS ptb_date_out,
                 ptb.is_extract AS ptb_is_extract,
-                dd.discharge_value_raw
+                discharge_lat.discharge_value_raw
             FROM direction_ids d
             LEFT JOIN pswb_latest pswb ON pswb.direction_id = d.direction_pk
             LEFT JOIN ptb_latest ptb ON ptb.direction_id = d.direction_pk
-            LEFT JOIN discharge_by_direction dd ON dd.direction_pk = d.direction_pk
+            LEFT JOIN LATERAL (
+                SELECT to_char(
+                    extract_iss.medical_examination AT TIME ZONE %(tz)s,
+                    'YYYY-MM-DD'
+                ) AS discharge_value_raw
+                FROM (
+                    SELECT d_iss.medical_examination, d_iss.time_confirmation
+                    FROM directions_issledovaniya d_iss
+                    INNER JOIN directory_researches dr ON d_iss.research_id = dr.id
+                    WHERE d_iss.napravleniye_id = d.direction_pk
+                      AND d_iss.time_confirmation IS NOT NULL
+                      AND d_iss.medical_examination IS NOT NULL
+                      AND dr.is_extract_service = TRUE
+                    UNION ALL
+                    SELECT d_iss.medical_examination, d_iss.time_confirmation
+                    FROM directions_napravleniya dn
+                    INNER JOIN directions_issledovaniya d_iss ON d_iss.napravleniye_id = dn.id
+                    INNER JOIN directory_researches dr ON d_iss.research_id = dr.id
+                    WHERE dn.parent_id = d.direction_pk
+                      AND d_iss.time_confirmation IS NOT NULL
+                      AND d_iss.medical_examination IS NOT NULL
+                      AND dr.is_extract_service = TRUE
+                ) extract_iss
+                ORDER BY extract_iss.time_confirmation DESC NULLS LAST
+                LIMIT 1
+            ) discharge_lat ON TRUE
             ORDER BY d.direction_pk
             """,
             params={
                 "direction_pks": direction_pks,
-                "cda_discharge_title": cda_discharge_title,
-                "fallback_discharge_title": fallback_discharge_title,
+                "tz": TIME_ZONE,
             },
         )
         rows = namedtuplefetchall(cursor)
