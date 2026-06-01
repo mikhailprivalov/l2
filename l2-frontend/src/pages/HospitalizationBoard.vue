@@ -137,25 +137,26 @@
             </div>
           </div>
           <div class="toolbar-aside-panel">
-            <div class="toolbar-aside-search-wrap">
-              <input
-                v-model.trim="unallocatedSearch"
-                class="form-control toolbar-aside-search"
-                type="text"
-                placeholder="Поиск"
-              >
-              <button
-                v-if="unallocatedSearch"
-                type="button"
-                class="toolbar-aside-search-clear"
-                title="Очистить поиск"
-                tabindex="-1"
-                @click="unallocatedSearch = ''"
-              >
-                <i class="fa-solid fa-xmark" />
-              </button>
-            </div>
-            <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
+            <div class="toolbar-aside-search-row">
+              <div class="toolbar-aside-search-wrap">
+                <input
+                  v-model.trim="unallocatedSearch"
+                  class="form-control toolbar-aside-search"
+                  type="text"
+                  placeholder="Поиск по ФИО"
+                >
+                <button
+                  v-if="unallocatedSearch"
+                  type="button"
+                  class="toolbar-aside-search-clear"
+                  title="Очистить поиск"
+                  tabindex="-1"
+                  @click="unallocatedSearch = ''"
+                >
+                  <i class="fa-solid fa-xmark" />
+                </button>
+              </div>
+              <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
               <button
                 type="button"
                 class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
@@ -192,19 +193,88 @@
               >
                 ⌂
               </button>
+              </div>
+            </div>
+            <div class="toolbar-quick-filters">
+              <label
+                class="toolbar-quick-filter"
+                title="Мужчины"
+              >
+                <input
+                  v-model="quickFilterMale"
+                  type="checkbox"
+                >
+                М
+              </label>
+              <label
+                class="toolbar-quick-filter"
+                title="Женщины"
+              >
+                <input
+                  v-model="quickFilterFemale"
+                  type="checkbox"
+                >
+                Ж
+              </label>
+              <label
+                class="toolbar-quick-filter"
+                title="Сопровождающий ребёнка"
+              >
+                <input
+                  v-model="quickFilterAccompanying"
+                  type="checkbox"
+                >
+                С
+              </label>
+              <label
+                class="toolbar-quick-filter"
+                title="Выписаны"
+              >
+                <input
+                  v-model="quickFilterExtract"
+                  type="checkbox"
+                >
+                В
+              </label>
+              <label
+                class="toolbar-quick-filter"
+                title="Свободные койки"
+              >
+                <input
+                  v-model="quickFilterFree"
+                  type="checkbox"
+                >
+                Н
+              </label>
+              <label
+                class="toolbar-quick-filter"
+                title="Требуется больничный"
+              >
+                <input
+                  v-model="quickFilterSick"
+                  type="checkbox"
+                >
+                Б
+              </label>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="board-body">
+    <div
+      ref="boardBodyRef"
+      class="board-body"
+    >
       <div
         ref="calendarWrapRef"
         class="calendar-wrap"
       >
         <div class="calendar-tables-stack">
-          <div class="calendar-main-scroll">
+          <div
+            class="calendar-main-scroll"
+            :class="{ 'calendar-main-scroll--search-compact': hasBoardPatientFilters }"
+          >
             <table
               class="table table-bordered table-condensed calendar-table"
               :class="{ 'calendar-table--month': viewMode === 'month' && !isCustomPeriodActive }"
@@ -252,7 +322,7 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="row in chamberRows">
+                <template v-for="row in chamberRowsForDisplay">
                   <tr
                     v-for="(bed, bedIdx) in row.beds"
                     :key="`${row.pk}-${bed.pk}`"
@@ -364,12 +434,16 @@
                     </td>
                   </tr>
                 </template>
-                <tr v-if="chamberRows.length === 0">
+                <tr v-if="chamberRowsForDisplay.length === 0">
                   <td
                     colspan="100"
                     class="text-center"
                   >
-                    Нет палат или данных за выбранный период
+                    {{
+                      hasBoardPatientFilters
+                        ? 'Нет пациентов по фильтрам в таблице коек'
+                        : 'Нет палат или данных за выбранный период'
+                    }}
                   </td>
                 </tr>
               </tbody>
@@ -400,7 +474,7 @@
                 v-else-if="!stripRecordsInPeriod.length"
                 class="text-muted small strip-cards-empty"
               >
-                Нет пациентов за выбранный период
+                {{ hasBoardPatientFilters ? 'Нет пациентов по фильтрам' : 'Нет пациентов за выбранный период' }}
               </p>
               <div
                 v-for="rec in stripRecordsInPeriod"
@@ -878,6 +952,13 @@ interface CalendarRecord {
   is_extract?: boolean;
 }
 
+type DischargedPatientRow = {
+  key: string;
+  directionPk: number;
+  name: string;
+  dateLabel: string;
+};
+
 const STRIP_BOARD_ID = 'strip-board';
 const STRIP_BOARD_COLUMNS = 6;
 const MAX_CELL_PATIENTS = 2;
@@ -890,6 +971,7 @@ const boardPatientsAside = ref<HTMLElement | null>(null);
 const boardAsideViewport = ref<HTMLElement | null>(null);
 const boardAsideContent = ref<HTMLElement | null>(null);
 const calendarWrapRef = ref<HTMLElement | null>(null);
+const boardBodyRef = ref<HTMLElement | null>(null);
 const asideScrollOffset = ref(0);
 const maxAsideScrollOffset = ref(0);
 const calendarBaseHeight = ref(0);
@@ -1067,6 +1149,12 @@ const findStripRecordByPk = (pk: number) => stripRecords.value.find((r) => r.pk 
 
 const unallocatedPatients = ref<UnallocatedPatient[]>([]);
 const unallocatedSearch = ref('');
+const quickFilterMale = ref(false);
+const quickFilterFemale = ref(false);
+const quickFilterAccompanying = ref(false);
+const quickFilterExtract = ref(false);
+const quickFilterSick = ref(false);
+const quickFilterFree = ref(false);
 
 const WEEKDAY_SHORT_RU = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
@@ -1269,9 +1357,158 @@ const filterRecordsByDoctor = (list: CalendarRecord[]) => {
   return list.filter((rec) => rec.doctor_pk === doctorPk.value);
 };
 
-const stripRecordsInPeriod = computed(() => (
-  filterRecordsByDoctor(stripRecords.value.filter(recordOverlapsVisiblePeriod))
+const boardSearchQuery = computed(() => unallocatedSearch.value.trim().toLowerCase());
+
+const hasPatientQuickFiltersActive = computed(() => (
+  quickFilterMale.value
+  || quickFilterFemale.value
+  || quickFilterAccompanying.value
+  || quickFilterExtract.value
+  || quickFilterSick.value
 ));
+
+const hasActiveBoardQuickFilters = computed(() => (
+  hasPatientQuickFiltersActive.value || quickFilterFree.value
+));
+
+const hasBoardPatientFilters = computed(() => (
+  Boolean(boardSearchQuery.value) || hasActiveBoardQuickFilters.value
+));
+
+const textMatchesBoardSearch = (text: string | null | undefined, q: string) => (
+  !q || (text || '').toLowerCase().includes(q)
+);
+
+const unallocatedMatchesBoardSearch = (p: UnallocatedPatient, q: string) => (
+  textMatchesBoardSearch(p.fio, q) || textMatchesBoardSearch(p.short_fio, q)
+);
+
+const filterRecordsByBoardSearch = (list: CalendarRecord[]) => {
+  const q = boardSearchQuery.value;
+  if (!q) {
+    return list;
+  }
+  return list.filter((rec) => textMatchesBoardSearch(rec.patient_fio, q));
+};
+
+const genderColorClass = (sexRaw: string | null | undefined) => {
+  const sex = (sexRaw || '').trim();
+  if (!sex || sex === '-') {
+    return 'record-sex--muted';
+  }
+  const c = sex.charAt(0);
+  const cp = c.codePointAt(0) ?? 0;
+  if (cp === 0x0416 || cp === 0x0436) {
+    return 'record-sex--female';
+  }
+  if (cp === 0x041c || cp === 0x043c) {
+    return 'record-sex--male';
+  }
+  if (c === 'M' || c === 'm') {
+    return 'record-sex--male';
+  }
+  if (c === 'F' || c === 'f') {
+    return 'record-sex--female';
+  }
+  return 'record-sex--muted';
+};
+
+const isPatientSexMale = (sexRaw: string | null | undefined) => genderColorClass(sexRaw) === 'record-sex--male';
+
+const isPatientSexFemale = (sexRaw: string | null | undefined) => genderColorClass(sexRaw) === 'record-sex--female';
+
+const directionRecordByPk = computed(() => {
+  const map = new Map<number, CalendarRecord>();
+  for (const rec of records.value) {
+    const dirPk = rec.direction_pk;
+    if (dirPk != null && dirPk > 0) {
+      map.set(dirPk, rec);
+    }
+  }
+  for (const rec of stripRecords.value) {
+    const dirPk = rec.direction_pk;
+    if (dirPk != null && dirPk > 0 && !map.has(dirPk)) {
+      map.set(dirPk, rec);
+    }
+  }
+  return map;
+});
+
+function calendarRecordMatchesQuickFilters(
+  rec: CalendarRecord,
+  options?: { treatAsExtract?: boolean },
+): boolean {
+  if (!hasPatientQuickFiltersActive.value) {
+    return true;
+  }
+  const isExtract = options?.treatAsExtract ?? Boolean(rec.is_extract);
+
+  if (quickFilterMale.value || quickFilterFemale.value) {
+    const matchesSex = (quickFilterMale.value && isPatientSexMale(rec.patient_sex))
+      || (quickFilterFemale.value && isPatientSexFemale(rec.patient_sex));
+    if (!matchesSex) {
+      return false;
+    }
+  }
+  if (quickFilterAccompanying.value && !(rec.accompanyng_child_type || '').trim()) {
+    return false;
+  }
+  if (quickFilterExtract.value && !isExtract) {
+    return false;
+  }
+  if (quickFilterSick.value && !rec.is_need_sick) {
+    return false;
+  }
+  return true;
+}
+
+const filterRecordsByPatientBoardFilters = (list: CalendarRecord[]) => {
+  const filtered = filterRecordsByBoardSearch(list);
+  if (!hasPatientQuickFiltersActive.value) {
+    return filtered;
+  }
+  return filtered.filter((rec) => calendarRecordMatchesQuickFilters(rec));
+};
+
+function unallocatedMatchesQuickFilters(p: UnallocatedPatient): boolean {
+  if (!hasPatientQuickFiltersActive.value) {
+    return true;
+  }
+  if (quickFilterMale.value || quickFilterFemale.value) {
+    const matchesSex = (quickFilterMale.value && isPatientSexMale(p.sex))
+      || (quickFilterFemale.value && isPatientSexFemale(p.sex));
+    if (!matchesSex) {
+      return false;
+    }
+  }
+  if (quickFilterAccompanying.value || quickFilterExtract.value || quickFilterSick.value) {
+    return false;
+  }
+  return true;
+}
+
+function dischargedRowMatchesQuickFilters(row: DischargedPatientRow): boolean {
+  if (!hasActiveBoardQuickFilters.value) {
+    return true;
+  }
+  if (quickFilterFree.value) {
+    return false;
+  }
+  const rec = directionRecordByPk.value.get(row.directionPk);
+  if (!rec) {
+    return quickFilterExtract.value
+      && !quickFilterMale.value
+      && !quickFilterFemale.value
+      && !quickFilterAccompanying.value
+      && !quickFilterSick.value;
+  }
+  return calendarRecordMatchesQuickFilters(rec, { treatAsExtract: true });
+}
+
+const stripRecordsInPeriod = computed(() => {
+  const byPeriod = stripRecords.value.filter(recordOverlapsVisiblePeriod);
+  return filterRecordsByPatientBoardFilters(filterRecordsByDoctor(byPeriod));
+});
 
 const stripRecordsInPeriodNotExtractCount = computed(() => (
   stripRecordsInPeriod.value.filter((rec) => !rec.is_extract).length
@@ -1354,9 +1591,69 @@ const recordsUnfilteredForMainGrid = computed(() => (
   records.value.filter((r) => !stripRecordPkSet.value.has(r.pk))
 ));
 
-const recordsForMainGrid = computed(() => (
-  filterRecordsByDoctor(recordsUnfilteredForMainGrid.value)
-));
+const recordsForMainGrid = computed(() => {
+  const byDoctor = filterRecordsByDoctor(recordsUnfilteredForMainGrid.value);
+  return filterRecordsByPatientBoardFilters(byDoctor);
+});
+
+const bedHasFreeDayInPeriod = (bedPk: number) => {
+  for (const day of visibleDays.value) {
+    const occupying = recordsUnfilteredForMainGrid.value.filter(
+      (r) => r.bed_pk === bedPk && isDayInRecordSpan(r, day.key),
+    );
+    if (!occupying.length) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** При поиске/фильтрах — только подходящие койки (сжатие таблицы). */
+const chamberRowsForDisplay = computed(() => {
+  if (!hasBoardPatientFilters.value) {
+    return chamberRows.value;
+  }
+  const matchBedPks = new Set<number>();
+  const filterByPatientRecords = boardSearchQuery.value || hasPatientQuickFiltersActive.value;
+  if (filterByPatientRecords) {
+    for (const rec of recordsForMainGrid.value) {
+      if (rec.bed_pk > 0 && recordOverlapsVisiblePeriod(rec)) {
+        matchBedPks.add(rec.bed_pk);
+      }
+    }
+  }
+  if (quickFilterFree.value) {
+    for (const row of chamberRows.value) {
+      for (const bed of row.beds) {
+        if (bedHasFreeDayInPeriod(bed.pk)) {
+          matchBedPks.add(bed.pk);
+        }
+      }
+    }
+  }
+  if (!matchBedPks.size) {
+    return [];
+  }
+  const requirePatientBeds = filterByPatientRecords;
+  const requireFreeBeds = quickFilterFree.value;
+  return chamberRows.value
+    .map((row) => ({
+      ...row,
+      beds: row.beds.filter((b) => {
+        if (!matchBedPks.has(b.pk)) {
+          return false;
+        }
+        if (requirePatientBeds && requireFreeBeds) {
+          const hasPatient = recordsForMainGrid.value.some(
+            (rec) => rec.bed_pk === b.pk && recordOverlapsVisiblePeriod(rec),
+          );
+          return hasPatient && bedHasFreeDayInPeriod(b.pk);
+        }
+        return true;
+      }),
+    }))
+    .filter((row) => row.beds.length > 0);
+});
 
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
@@ -1603,32 +1900,6 @@ const accompanyingDisplayLetter = (record: CalendarRecord) => {
   return t.charAt(0).toLocaleUpperCase('ru-RU');
 };
 
-const genderColorClass = (sexRaw: string | null | undefined) => {
-  const sex = (sexRaw || '').trim();
-  if (!sex || sex === '-') {
-    return 'record-sex--muted';
-  }
-  const c = sex.charAt(0);
-  const cp = c.codePointAt(0) ?? 0;
-  if (cp === 0x0416 || cp === 0x0436) {
-    return 'record-sex--female';
-  }
-  if (cp === 0x041c || cp === 0x043c) {
-    return 'record-sex--male';
-  }
-  if (c === 'M' || c === 'm') {
-    return 'record-sex--male';
-  }
-  if (c === 'F' || c === 'f') {
-    return 'record-sex--female';
-  }
-  return 'record-sex--muted';
-};
-
-const isPatientSexMale = (sexRaw: string | null | undefined) => genderColorClass(sexRaw) === 'record-sex--male';
-
-const isPatientSexFemale = (sexRaw: string | null | undefined) => genderColorClass(sexRaw) === 'record-sex--female';
-
 const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
 
 type DayColumnTotals = { male: number, female: number, accompanying: number, free: number };
@@ -1698,13 +1969,6 @@ const openExtractsDetailForm = () => {
 
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
-type DischargedPatientRow = {
-  key: string;
-  directionPk: number;
-  name: string;
-  dateLabel: string;
-};
-
 const parseExtractAddsEntry = (entry: Record<string, string>) => {
   const keys = Object.keys(entry);
   if (!keys.length) {
@@ -1758,13 +2022,15 @@ const extractCountForDay = (dayKey: string) => {
 };
 
 const dischargedPatientsInPeriod = computed(() => {
-  const q = unallocatedSearch.value.trim().toLowerCase();
-  if (!q) {
-    return dischargedPatientsInPeriodAll.value;
+  let list = dischargedPatientsInPeriodAll.value;
+  const q = boardSearchQuery.value;
+  if (q) {
+    list = list.filter((row) => textMatchesBoardSearch(row.name, q));
   }
-  return dischargedPatientsInPeriodAll.value.filter(
-    (row) => (row.name || '').toLowerCase().includes(q),
-  );
+  if (!hasActiveBoardQuickFilters.value) {
+    return list;
+  }
+  return list.filter((row) => dischargedRowMatchesQuickFilters(row));
 });
 
 const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
@@ -2145,14 +2411,17 @@ const removeStripRecordPk = async (pk: number) => {
 };
 
 const unallocatedPatientsFiltered = computed(() => {
-  const list = unallocatedPatients.value.filter(
+  let list = unallocatedPatients.value.filter(
     (p) => !placedDirectionPkSet.value.has(p.direction_pk),
   );
-  const q = unallocatedSearch.value.trim().toLowerCase();
-  if (!q) {
+  const q = boardSearchQuery.value;
+  if (q) {
+    list = list.filter((p) => unallocatedMatchesBoardSearch(p, q));
+  }
+  if (!hasPatientQuickFiltersActive.value) {
     return list;
   }
-  return list.filter((p) => (p.fio || '').toLowerCase().includes(q));
+  return list.filter((p) => unallocatedMatchesQuickFilters(p));
 });
 
 const unallocatedGenderClass = (p: UnallocatedPatient) => {
@@ -3081,11 +3350,26 @@ watch(departmentPk, async () => {
 });
 
 watch(
-  [unallocatedPatientsFiltered, dischargedPatientsInPeriod, unallocatedSearch],
+  [
+    unallocatedPatientsFiltered,
+    dischargedPatientsInPeriod,
+    unallocatedSearch,
+    stripRecordsInPeriod,
+    recordsForMainGrid,
+    chamberRowsForDisplay,
+  ],
   () => {
     scheduleAsideScrollBoundsUpdate();
   },
 );
+
+watch(hasBoardPatientFilters, async (active) => {
+  if (!active) {
+    return;
+  }
+  await nextTick();
+  boardBodyRef.value?.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 onMounted(async () => {
   window.addEventListener('mouseup', stopAsideScrollHold);
@@ -3365,11 +3649,55 @@ onBeforeUnmount(() => {
   margin-left: 6px;
   flex-shrink: 0;
   display: flex;
-  flex-direction: row;
-  align-items: flex-end;
-  gap: 6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
   padding: 0 2px 0 8px;
   box-sizing: border-box;
+}
+
+.toolbar-aside-search-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.toolbar-aside-search-row .board-aside-scroll-controls--toolbar {
+  flex-shrink: 0;
+}
+
+.toolbar-quick-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px 8px;
+  padding: 0 2px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.toolbar-quick-filter {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  color: #444;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.toolbar-quick-filter input[type="checkbox"] {
+  margin: 0;
+  position: static;
 }
 
 .toolbar-aside-search-wrap {
@@ -3568,6 +3896,12 @@ onBeforeUnmount(() => {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
+}
+
+.calendar-main-scroll--search-compact {
+  flex: 0 1 auto;
+  max-height: min(55vh, 520px);
+  overflow-y: auto;
 }
 
 .calendar-strip-block {
