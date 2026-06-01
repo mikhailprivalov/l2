@@ -22,13 +22,10 @@ from .sql_func import (
     load_attending_doctor_by_department_and_group_title,
     load_patients_stationar_unallocated_sql,
     load_chambers_and_beds_by_department,
-    get_closing_protocols,
     load_plan_operations_next_day,
     load_directions_hosp_meta_bulk,
 )
 from .discharge_sync import (
-    CDA_DISCHARGE_DATE_TITLE,
-    FALLBACK_DISCHARGE_FIELD_TITLE,
     _parse_discharge_date_value,
     _read_discharge_date_from_protocol,
     apply_discharge_dates_to_hosp_record,
@@ -421,25 +418,7 @@ def get_unallocated_patients(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
     transferable_epicrisis_titles = ('переводной эпикриз', 'Переводной эпикриз', 'ПЕРЕВОДНОЙ ЭПИКРИЗ', 'переводной', 'Переводной', 'ПЕРЕВОДНОЙ')
-    all_histories = load_patients_stationar_unallocated_sql(department_pk)
-    all_issledovaniya_ids = [history.issledovanie_id for history in all_histories]
-    all_issledovaniya_ids = tuple(all_issledovaniya_ids)
-    closed_issledovaniya_ids = []
-    if all_issledovaniya_ids:
-        closed_histories = get_closing_protocols(all_issledovaniya_ids, transferable_epicrisis_titles)
-        closed_issledovaniya_ids = [extract.parent_id for extract in closed_histories]
-        closed_issledovaniya_ids = set(closed_issledovaniya_ids)
-
-    occupied_direction_ids = set(
-        PatientToBed.objects.filter(
-            bed__chamber__podrazdelenie_id=department_pk,
-            direction_id__isnull=False,
-        ).values_list("direction_id", flat=True)
-    ) | set(
-        PatientStationarWithoutBeds.objects.filter(
-            department_id=department_pk,
-        ).values_list("direction_id", flat=True)
-    )
+    all_histories = load_patients_stationar_unallocated_sql(department_pk, transferable_epicrisis_titles)
 
     patients = [
         {
@@ -450,8 +429,7 @@ def get_unallocated_patients(request):
             "direction_pk": patient.napravleniye_id,
             "service_title": patient.service_title,
         }
-        for patient in load_patients_stationar_unallocated_sql(department_pk)
-        if patient.issledovanie_id not in closed_issledovaniya_ids and patient.napravleniye_id not in occupied_direction_ids
+        for patient in all_histories
     ]
 
     return JsonResponse({"data": patients})
@@ -666,27 +644,18 @@ def get_patients_without_bed(request):
         department_pk,
         start_date=start_date if filter_by_period else None,
         end_date=end_date if filter_by_period else None,
-        cda_discharge_title=CDA_DISCHARGE_DATE_TITLE,
-        fallback_discharge_title=FALLBACK_DISCHARGE_FIELD_TITLE,
     )
     fallback_plan_date_in = start_date or datetime.date.today()
+
     patients = []
     for patient in patient_rows:
-        discharge_date = _parse_discharge_date_value(patient.discharge_value_raw) if patient.discharge_value_raw else None
-        plan_date_in, plan_date_out, date_in, date_out = _pswb_resolved_calendar_dates(
-            patient,
+        plan_date_in, plan_date_out, date_in, date_out = _strip_calendar_dates(
+            patient.plan_date_in,
+            patient.plan_date_out,
+            patient.date_in,
+            patient.date_out,
             fallback_plan_date_in=fallback_plan_date_in,
-            discharge_date=discharge_date,
         )
-        if filter_by_period and not _hosp_resolved_dates_overlap_period(
-            plan_date_in,
-            plan_date_out,
-            date_in,
-            date_out,
-            start_date,
-            end_date,
-        ):
-            continue
         row = {
             "fio": f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}",
             "short_fio": f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}.",
@@ -727,11 +696,7 @@ def get_directions_hosp_meta(request):
         return JsonResponse({"ok": True, "data": []})
 
     fallback_plan_date_in = datetime.date.today()
-    rows = load_directions_hosp_meta_bulk(
-        direction_pks,
-        CDA_DISCHARGE_DATE_TITLE,
-        FALLBACK_DISCHARGE_FIELD_TITLE,
-    )
+    rows = load_directions_hosp_meta_bulk(direction_pks)
     items = []
     for row in rows:
         meta = _direction_hosp_calendar_meta_from_row(row, fallback_plan_date_in)
