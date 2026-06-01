@@ -662,14 +662,30 @@
               </div>
             </div>
             <div class="col-xs-6 form-group modal-sick-col">
-              <div class="checkbox modal-sick-checkbox">
-                <label>
-                  <input
-                    v-model="editingForm.isNeedSick"
-                    type="checkbox"
-                  >
-                  Больничный
-                </label>
+              <div class="modal-sick-checkbox-list">
+                <div class="checkbox modal-sick-checkbox">
+                  <label>
+                    <input
+                      v-model="editingForm.isNeedSick"
+                      type="checkbox"
+                    >
+                    Больничный
+                  </label>
+                </div>
+                <div
+                  v-if="editingRecordPk && !editingStripRowId"
+                  class="checkbox modal-sick-checkbox"
+                >
+                  <label>
+                    <input
+                      v-model="editingForm.moveToDayDraft"
+                      :disabled="!canMoveToDayDraft"
+                      :title="moveToDayDraftHint"
+                      type="checkbox"
+                    >
+                    Дневные
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -1018,9 +1034,26 @@ const editingForm = ref({
   doctorFio: '',
   accompanyngChildType: null as string | null,
   isNeedSick: false,
+  moveToDayDraft: false,
   commentText: '',
   commentReplicateFollowing: false,
 });
+
+const canMoveToDayDraft = computed(() => {
+  if (!editingRecordPk.value || editingStripRowId.value) {
+    return false;
+  }
+  const dirTrim = editingForm.value.directionIdText.trim();
+  if (!dirTrim) {
+    return false;
+  }
+  const directionPk = Number.parseInt(dirTrim, 10);
+  return Number.isFinite(directionPk) && directionPk > 0;
+});
+
+const moveToDayDraftHint = computed(() => (
+  canMoveToDayDraft.value ? '' : 'Укажите корректный номер направления для переноса в Дневные'
+));
 
 const dragOverCellKey = ref('');
 const dragOverStripBoard = ref(false);
@@ -2690,6 +2723,7 @@ const fillEditModalFromRecord = (record: CalendarRecord | null, bedPk: number, d
     doctorFio: (record?.doctor_fio || '').trim(),
     accompanyngChildType: (record?.accompanyng_child_type && String(record.accompanyng_child_type).trim()) || null,
     isNeedSick: Boolean(record?.is_need_sick),
+    moveToDayDraft: false,
     commentText: record ? commentForRecordDay(record, dayKey) : '',
     commentReplicateFollowing: false,
   };
@@ -2809,6 +2843,67 @@ const saveEditingCell = async () => {
     closeEditModal();
     return;
   }
+  if (editingForm.value.moveToDayDraft && editingRecordPk.value) {
+    if (!directionIdPayload) {
+      root.$emit('msg', 'error', 'Для переноса в Дневные укажите номер направления');
+      return;
+    }
+    const existingRec = records.value.find((r) => r.pk === editingRecordPk.value);
+    if (!existingRec) {
+      root.$emit('msg', 'error', 'Запись госпитализации не найдена');
+      return;
+    }
+    const planIn = editingForm.value.planDateIn
+      || existingRec.plan_date_in
+      || existingRec.date_in
+      || editingDayKey.value;
+    const planOut = editingForm.value.planDateOut
+      || existingRec.plan_date_out
+      || existingRec.date_out
+      || defaultPlanDateOut(planIn);
+    const stripRec: CalendarRecord = {
+      ...existingRec,
+      bed_pk: 0,
+      doctor_pk: editingForm.value.doctorPk,
+      doctor_fio: editingForm.value.doctorFio,
+      patient_fio: editingForm.value.patientFioText,
+      patient_sex: editingForm.value.patientSex || 'м',
+      birthday: editingForm.value.birthday || null,
+      patient_age_text: editingForm.value.patientAgeText,
+      direction_pk: directionIdPayload,
+      plan_date_in: planIn,
+      plan_date_out: planOut,
+      date_in: planIn,
+      date_out: editingForm.value.planDateOut || existingRec.date_out || null,
+      accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      is_day_hosp: true,
+      is_need_sick: Boolean(editingForm.value.isNeedSick),
+      date_comments: { ...(existingRec.date_comments || {}), [editingDayKey.value]: commentPayload },
+    };
+
+    await store.dispatch(actions.INC_LOADING);
+    const clearRes = await api('chambers/clear-patient-from-bed', {
+      record_pk: editingRecordPk.value,
+    });
+    if (!clearRes?.ok) {
+      await store.dispatch(actions.DEC_LOADING);
+      root.$emit('msg', 'error', clearRes?.message || 'Не удалось освободить койку');
+      return;
+    }
+    const stripSaveRes = await saveStripPatientToServer(stripRec);
+    if (!stripSaveRes?.ok) {
+      await store.dispatch(actions.DEC_LOADING);
+      root.$emit('msg', 'error', stripSaveRes?.message || 'Не удалось сохранить черновик на сервере');
+      return;
+    }
+    await loadCalendar();
+    await reloadStripFromServer();
+    await loadUnallocatedPatients();
+    await store.dispatch(actions.DEC_LOADING);
+    root.$emit('msg', 'ok', 'Пациент перенесён в Дневные (черновики)');
+    closeEditModal();
+    return;
+  }
   if (!editingRecordPk.value && !assertCanAcceptPatientInCell(
     editingBedPk.value,
     editingForm.value.planDateIn || editingDayKey.value,
@@ -2922,6 +3017,11 @@ const clearBedFromModal = async () => {
 
 watch(customPeriodStart, syncCustomPeriodEndConstraints);
 watch(customPeriodEnd, syncCustomPeriodEndConstraints);
+watch(canMoveToDayDraft, (canMove) => {
+  if (!canMove && editingForm.value.moveToDayDraft) {
+    editingForm.value.moveToDayDraft = false;
+  }
+});
 
 watch(isCustomPeriodMode, async (enabled, prev) => {
   if (enabled && !canUseCustomPeriod.value) {
@@ -3925,6 +4025,13 @@ onBeforeUnmount(() => {
 
 .modal-gender-sick-row .modal-sick-col {
   padding-top: 5px;
+}
+
+.modal-gender-sick-row .modal-sick-checkbox-list {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .modal-gender-sick-row .modal-sick-checkbox {
