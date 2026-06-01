@@ -198,13 +198,19 @@
       </div>
     </div>
 
-    <div class="board-body">
+    <div
+      ref="boardBodyRef"
+      class="board-body"
+    >
       <div
         ref="calendarWrapRef"
         class="calendar-wrap"
       >
         <div class="calendar-tables-stack">
-          <div class="calendar-main-scroll">
+          <div
+            class="calendar-main-scroll"
+            :class="{ 'calendar-main-scroll--search-compact': boardSearchQuery }"
+          >
             <table
               class="table table-bordered table-condensed calendar-table"
               :class="{ 'calendar-table--month': viewMode === 'month' && !isCustomPeriodActive }"
@@ -252,7 +258,7 @@
                 </tr>
               </thead>
               <tbody>
-                <template v-for="row in chamberRows">
+                <template v-for="row in chamberRowsForDisplay">
                   <tr
                     v-for="(bed, bedIdx) in row.beds"
                     :key="`${row.pk}-${bed.pk}`"
@@ -364,12 +370,16 @@
                     </td>
                   </tr>
                 </template>
-                <tr v-if="chamberRows.length === 0">
+                <tr v-if="chamberRowsForDisplay.length === 0">
                   <td
                     colspan="100"
                     class="text-center"
                   >
-                    Нет палат или данных за выбранный период
+                    {{
+                      boardSearchQuery
+                        ? 'Нет пациентов по запросу в таблице коек'
+                        : 'Нет палат или данных за выбранный период'
+                    }}
                   </td>
                 </tr>
               </tbody>
@@ -890,6 +900,7 @@ const boardPatientsAside = ref<HTMLElement | null>(null);
 const boardAsideViewport = ref<HTMLElement | null>(null);
 const boardAsideContent = ref<HTMLElement | null>(null);
 const calendarWrapRef = ref<HTMLElement | null>(null);
+const boardBodyRef = ref<HTMLElement | null>(null);
 const asideScrollOffset = ref(0);
 const maxAsideScrollOffset = ref(0);
 const calendarBaseHeight = ref(0);
@@ -1372,6 +1383,29 @@ const recordsUnfilteredForMainGrid = computed(() => (
 const recordsForMainGrid = computed(() => {
   const byDoctor = filterRecordsByDoctor(recordsUnfilteredForMainGrid.value);
   return filterRecordsByBoardSearch(byDoctor);
+});
+
+/** При поиске — только койки с найденными пациентами (сжатие таблицы). */
+const chamberRowsForDisplay = computed(() => {
+  const q = boardSearchQuery.value;
+  if (!q) {
+    return chamberRows.value;
+  }
+  const matchBedPks = new Set<number>();
+  for (const rec of recordsForMainGrid.value) {
+    if (rec.bed_pk > 0 && recordOverlapsVisiblePeriod(rec)) {
+      matchBedPks.add(rec.bed_pk);
+    }
+  }
+  if (!matchBedPks.size) {
+    return [];
+  }
+  return chamberRows.value
+    .map((row) => ({
+      ...row,
+      beds: row.beds.filter((b) => matchBedPks.has(b.pk)),
+    }))
+    .filter((row) => row.beds.length > 0);
 });
 
 const recordsByBedAndDay = computed(() => {
@@ -3101,11 +3135,20 @@ watch(
     unallocatedSearch,
     stripRecordsInPeriod,
     recordsForMainGrid,
+    chamberRowsForDisplay,
   ],
   () => {
     scheduleAsideScrollBoundsUpdate();
   },
 );
+
+watch(boardSearchQuery, async (q) => {
+  if (!q) {
+    return;
+  }
+  await nextTick();
+  boardBodyRef.value?.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 onMounted(async () => {
   window.addEventListener('mouseup', stopAsideScrollHold);
@@ -3588,6 +3631,12 @@ onBeforeUnmount(() => {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: visible;
+}
+
+.calendar-main-scroll--search-compact {
+  flex: 0 1 auto;
+  max-height: min(55vh, 520px);
+  overflow-y: auto;
 }
 
 .calendar-strip-block {
