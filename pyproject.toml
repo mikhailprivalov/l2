@@ -9,7 +9,7 @@ skip-string-normalization = true
 
 [tool.poetry]
 name = "l2"
-version = "2026.6.10454+fb5e2b"
+version = "2026.6.10557+685196"
 description = ""
 authors = ["Mikhail Privalov <n5250@ya.ru>"]
 license = "MIT"
