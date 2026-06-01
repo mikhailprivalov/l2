@@ -256,6 +256,13 @@
                 >
                 Б
               </label>
+              <span
+                v-if="quickFilterPeriodCountSummary"
+                class="toolbar-quick-filter-counts"
+                title="Уникальные записи за выбранный период"
+              >
+                {{ quickFilterPeriodCountSummary }}
+              </span>
             </div>
           </div>
         </div>
@@ -1596,65 +1603,6 @@ const recordsForMainGrid = computed(() => {
   return filterRecordsByPatientBoardFilters(byDoctor);
 });
 
-const bedHasFreeDayInPeriod = (bedPk: number) => {
-  for (const day of visibleDays.value) {
-    const occupying = recordsUnfilteredForMainGrid.value.filter(
-      (r) => r.bed_pk === bedPk && isDayInRecordSpan(r, day.key),
-    );
-    if (!occupying.length) {
-      return true;
-    }
-  }
-  return false;
-};
-
-/** При поиске/фильтрах — только подходящие койки (сжатие таблицы). */
-const chamberRowsForDisplay = computed(() => {
-  if (!hasBoardPatientFilters.value) {
-    return chamberRows.value;
-  }
-  const matchBedPks = new Set<number>();
-  const filterByPatientRecords = boardSearchQuery.value || hasPatientQuickFiltersActive.value;
-  if (filterByPatientRecords) {
-    for (const rec of recordsForMainGrid.value) {
-      if (rec.bed_pk > 0 && recordOverlapsVisiblePeriod(rec)) {
-        matchBedPks.add(rec.bed_pk);
-      }
-    }
-  }
-  if (quickFilterFree.value) {
-    for (const row of chamberRows.value) {
-      for (const bed of row.beds) {
-        if (bedHasFreeDayInPeriod(bed.pk)) {
-          matchBedPks.add(bed.pk);
-        }
-      }
-    }
-  }
-  if (!matchBedPks.size) {
-    return [];
-  }
-  const requirePatientBeds = filterByPatientRecords;
-  const requireFreeBeds = quickFilterFree.value;
-  return chamberRows.value
-    .map((row) => ({
-      ...row,
-      beds: row.beds.filter((b) => {
-        if (!matchBedPks.has(b.pk)) {
-          return false;
-        }
-        if (requirePatientBeds && requireFreeBeds) {
-          const hasPatient = recordsForMainGrid.value.some(
-            (rec) => rec.bed_pk === b.pk && recordOverlapsVisiblePeriod(rec),
-          );
-          return hasPatient && bedHasFreeDayInPeriod(b.pk);
-        }
-        return true;
-      }),
-    }))
-    .filter((row) => row.beds.length > 0);
-});
-
 const recordsByBedAndDay = computed(() => {
   const map = new Map<string, CalendarRecord[]>();
   const days = visibleDays.value;
@@ -1761,6 +1709,78 @@ const bedDayOccupyingRecords = (bedPk: number, dayKey: string) => (
   )
 );
 
+/** Койка свободна: пустая или только выписанный в день выписки (без второго пациента). */
+const isBedFreeForOccupying = (occupying: CalendarRecord[], dayKey: string) => {
+  if (occupying.length === 0) {
+    return true;
+  }
+  if (occupying.length > 1) {
+    return false;
+  }
+  const only = occupying[0];
+  return Boolean(only.is_extract && isRecordDischargeDay(only, dayKey));
+};
+
+const isBedFreeForDay = (bedPk: number, dayKey: string) => (
+  isBedFreeForOccupying(bedDayOccupyingRecords(bedPk, dayKey), dayKey)
+);
+
+const bedHasFreeDayInPeriod = (bedPk: number) => {
+  for (const day of visibleDays.value) {
+    if (isBedFreeForDay(bedPk, day.key)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/** При поиске/фильтрах — только подходящие койки (сжатие таблицы). */
+const chamberRowsForDisplay = computed(() => {
+  if (!hasBoardPatientFilters.value) {
+    return chamberRows.value;
+  }
+  const matchBedPks = new Set<number>();
+  const filterByPatientRecords = boardSearchQuery.value || hasPatientQuickFiltersActive.value;
+  if (filterByPatientRecords) {
+    for (const rec of recordsForMainGrid.value) {
+      if (rec.bed_pk > 0 && recordOverlapsVisiblePeriod(rec)) {
+        matchBedPks.add(rec.bed_pk);
+      }
+    }
+  }
+  if (quickFilterFree.value) {
+    for (const row of chamberRows.value) {
+      for (const bed of row.beds) {
+        if (bedHasFreeDayInPeriod(bed.pk)) {
+          matchBedPks.add(bed.pk);
+        }
+      }
+    }
+  }
+  if (!matchBedPks.size) {
+    return [];
+  }
+  const requirePatientBeds = filterByPatientRecords;
+  const requireFreeBeds = quickFilterFree.value;
+  return chamberRows.value
+    .map((row) => ({
+      ...row,
+      beds: row.beds.filter((b) => {
+        if (!matchBedPks.has(b.pk)) {
+          return false;
+        }
+        if (requirePatientBeds && requireFreeBeds) {
+          const hasPatient = recordsForMainGrid.value.some(
+            (rec) => rec.bed_pk === b.pk && recordOverlapsVisiblePeriod(rec),
+          );
+          return hasPatient && bedHasFreeDayInPeriod(b.pk);
+        }
+        return true;
+      }),
+    }))
+    .filter((row) => row.beds.length > 0);
+});
+
 const canAcceptPatientInCell = (
   bedPk: number,
   dayKey: string,
@@ -1773,11 +1793,7 @@ const canAcceptPatientInCell = (
   if (occupying.length >= MAX_CELL_PATIENTS) {
     return false;
   }
-  if (occupying.length === 0) {
-    return true;
-  }
-  const only = occupying[0];
-  return Boolean(only.is_extract && isRecordDischargeDay(only, dayKey));
+  return isBedFreeForOccupying(occupying, dayKey);
 };
 
 const assertCanAcceptPatientInCell = (
@@ -2064,7 +2080,7 @@ const dayColumnTotalsMap = computed(() => {
     const t = map.get(day.key) || emptyDayColumnTotals();
     let free = 0;
     for (const bedPk of calendarBedPks.value) {
-      if (bedDayOccupyingRecords(bedPk, day.key).length === 0) {
+      if (isBedFreeForDay(bedPk, day.key)) {
         free += 1;
       }
     }
@@ -2077,6 +2093,120 @@ const dayColumnTotalsMap = computed(() => {
 const dayColumnTotals = (dayKey: string): DayColumnTotals => (
   dayColumnTotalsMap.value.get(dayKey) || emptyDayColumnTotals()
 );
+
+const uniqueRecordKey = (rec: CalendarRecord) => (
+  rec.direction_pk != null && rec.direction_pk > 0
+    ? `d:${rec.direction_pk}`
+    : `r:${rec.pk}`
+);
+
+/** Есть хотя бы один день в периоде, когда запись занимает койку (не только день выписки). */
+const recordHasOccupiedDayInPeriod = (rec: CalendarRecord) => {
+  for (const day of visibleDays.value) {
+    if (!isDayInRecordSpan(rec, day.key)) {
+      continue;
+    }
+    if (isRecordDischargeDay(rec, day.key)) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+};
+
+const periodMainGridRecordsForCounts = computed(() => (
+  filterRecordsByDoctor(recordsUnfilteredForMainGrid.value).filter(recordOverlapsVisiblePeriod)
+));
+
+type QuickFilterCountPart = { key: string, label: string };
+
+/** Уникальные записи/койки за период по включённым быстрым фильтрам (как счётчики в шапке даты). */
+const quickFilterPeriodCountParts = computed((): QuickFilterCountPart[] => {
+  if (!hasActiveBoardQuickFilters.value) {
+    return [];
+  }
+  const parts: QuickFilterCountPart[] = [];
+  const main = periodMainGridRecordsForCounts.value;
+
+  const countUniqueRecords = (
+    list: CalendarRecord[],
+    predicate: (rec: CalendarRecord) => boolean,
+  ) => {
+    const keys = new Set<string>();
+    for (const rec of list) {
+      if (!predicate(rec)) {
+        continue;
+      }
+      keys.add(uniqueRecordKey(rec));
+    }
+    return keys.size;
+  };
+
+  if (quickFilterMale.value) {
+    parts.push({
+      key: 'male',
+      label: `М ${countUniqueRecords(main, (rec) => (
+        isPatientSexMale(rec.patient_sex) && recordHasOccupiedDayInPeriod(rec)
+      ))}`,
+    });
+  }
+  if (quickFilterFemale.value) {
+    parts.push({
+      key: 'female',
+      label: `Ж ${countUniqueRecords(main, (rec) => (
+        isPatientSexFemale(rec.patient_sex) && recordHasOccupiedDayInPeriod(rec)
+      ))}`,
+    });
+  }
+  if (quickFilterAccompanying.value) {
+    parts.push({
+      key: 'accompanying',
+      label: `С ${countUniqueRecords(main, (rec) => (
+        Boolean((rec.accompanyng_child_type || '').trim()) && recordHasOccupiedDayInPeriod(rec)
+      ))}`,
+    });
+  }
+  if (quickFilterExtract.value) {
+    const extractKeys = new Set<string>();
+    const extractLists = [
+      filterRecordsByDoctor(recordsUnfilteredForMainGrid.value),
+      filterRecordsByDoctor(stripRecords.value),
+    ];
+    for (const list of extractLists) {
+      for (const rec of list) {
+        for (const day of visibleDays.value) {
+          if (isRecordDischargeDay(rec, day.key)) {
+            extractKeys.add(uniqueRecordKey(rec));
+            break;
+          }
+        }
+      }
+    }
+    parts.push({ key: 'extract', label: `В ${extractKeys.size}` });
+  }
+  if (quickFilterFree.value) {
+    let freeBeds = 0;
+    for (const bedPk of calendarBedPks.value) {
+      if (bedHasFreeDayInPeriod(bedPk)) {
+        freeBeds += 1;
+      }
+    }
+    parts.push({ key: 'free', label: `Н ${freeBeds}` });
+  }
+  if (quickFilterSick.value) {
+    parts.push({
+      key: 'sick',
+      label: `Б ${countUniqueRecords(main, (rec) => (
+        Boolean(rec.is_need_sick) && recordOverlapsVisiblePeriod(rec)
+      ))}`,
+    });
+  }
+  return parts;
+});
+
+const quickFilterPeriodCountSummary = computed(() => (
+  quickFilterPeriodCountParts.value.map((part) => part.label).join(' · ')
+));
 
 /** День для счётчика на бейджах врачей: наведённая колонка, иначе «День» / сегодня */
 const doctorBadgeCountDayKey = computed(() => {
@@ -3698,6 +3828,17 @@ onBeforeUnmount(() => {
 .toolbar-quick-filter input[type="checkbox"] {
   margin: 0;
   position: static;
+}
+
+.toolbar-quick-filter-counts {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #337ab7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .toolbar-aside-search-wrap {
