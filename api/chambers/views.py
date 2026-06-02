@@ -682,6 +682,7 @@ def update_doctor_to_bed(request):
 def get_patients_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk', -1)
+    _extend_non_extracted_hosp_dates(department_pk, [])
     start_date = _parse_ymd_date(request_data.get("start_date"))
     end_date = _parse_ymd_date(request_data.get("end_date"))
     filter_by_period = bool(start_date and end_date)
