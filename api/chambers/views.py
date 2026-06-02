@@ -961,6 +961,7 @@ def get_hospitalization_calendar(request):
     extract_proto_for_period = get_extract_by_department_for_period(date_start, date_end, CDA_ID_FOR_DATE_IS_EXTRACT, (department_pk,))
     extracts_data = {}
     total_direction_list = []
+
     for i in extract_proto_for_period:
         if not extracts_data.get(i.date_extract):
             extracts_data[i.date_extract] = {
