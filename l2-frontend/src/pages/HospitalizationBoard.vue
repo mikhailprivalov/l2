@@ -256,6 +256,16 @@
                 >
                 Б
               </label>
+              <label
+                class="toolbar-quick-filter"
+                title="Дубли: фамилия и номер направления"
+              >
+                <input
+                  v-model="quickFilterClone"
+                  type="checkbox"
+                >
+                <i class="fa-regular fa-clone" />
+              </label>
               <span
                 v-if="quickFilterPeriodCountSummary"
                 class="toolbar-quick-filter-counts"
@@ -1162,6 +1172,7 @@ const quickFilterAccompanying = ref(false);
 const quickFilterExtract = ref(false);
 const quickFilterSick = ref(false);
 const quickFilterFree = ref(false);
+const quickFilterClone = ref(false);
 
 const WEEKDAY_SHORT_RU = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
 
@@ -1372,6 +1383,7 @@ const hasPatientQuickFiltersActive = computed(() => (
   || quickFilterAccompanying.value
   || quickFilterExtract.value
   || quickFilterSick.value
+  || quickFilterClone.value
 ));
 
 const hasActiveBoardQuickFilters = computed(() => (
@@ -1441,6 +1453,80 @@ const directionRecordByPk = computed(() => {
   return map;
 });
 
+const surnameFromFio = (fio: string | null | undefined) => {
+  const s = (fio || '').trim();
+  if (!s) {
+    return '';
+  }
+  return s.split(/\s+/)[0] || '';
+};
+
+const normalizedSurname = (fio: string | null | undefined) => surnameFromFio(fio).toLowerCase().trim();
+
+const duplicateSurnames = computed(() => {
+  const counts = new Map<string, number>();
+  const appendSurname = (fio: string | null | undefined) => {
+    const surname = normalizedSurname(fio);
+    if (!surname) {
+      return;
+    }
+    counts.set(surname, (counts.get(surname) || 0) + 1);
+  };
+
+  for (const rec of records.value) {
+    appendSurname(rec.patient_fio);
+  }
+  for (const rec of stripRecords.value) {
+    appendSurname(rec.patient_fio);
+  }
+  for (const p of unallocatedPatients.value) {
+    appendSurname(p.fio);
+  }
+
+  const duplicates = new Set<string>();
+  counts.forEach((count, surname) => {
+    if (count > 1) {
+      duplicates.add(surname);
+    }
+  });
+  return duplicates;
+});
+
+const duplicateDirectionPks = computed(() => {
+  const counts = new Map<number, number>();
+  const appendDirectionPk = (directionPk: number | null | undefined) => {
+    if (directionPk == null || directionPk <= 0) {
+      return;
+    }
+    counts.set(directionPk, (counts.get(directionPk) || 0) + 1);
+  };
+
+  for (const rec of records.value) {
+    appendDirectionPk(rec.direction_pk);
+  }
+  for (const rec of stripRecords.value) {
+    appendDirectionPk(rec.direction_pk);
+  }
+  for (const p of unallocatedPatients.value) {
+    appendDirectionPk(p.direction_pk);
+  }
+
+  const duplicates = new Set<number>();
+  counts.forEach((count, directionPk) => {
+    if (count > 1) {
+      duplicates.add(directionPk);
+    }
+  });
+  return duplicates;
+});
+
+const isDuplicateBySurnameOrDirection = (fio: string | null | undefined, directionPk: number | null | undefined) => {
+  const surname = normalizedSurname(fio);
+  const bySurname = Boolean(surname) && duplicateSurnames.value.has(surname);
+  const byDirection = directionPk != null && directionPk > 0 && duplicateDirectionPks.value.has(directionPk);
+  return bySurname || byDirection;
+};
+
 function calendarRecordMatchesQuickFilters(
   rec: CalendarRecord,
   options?: { treatAsExtract?: boolean },
@@ -1465,6 +1551,11 @@ function calendarRecordMatchesQuickFilters(
   }
   if (quickFilterSick.value && !rec.is_need_sick) {
     return false;
+  }
+  if (quickFilterClone.value) {
+    if (!isDuplicateBySurnameOrDirection(rec.patient_fio, rec.direction_pk)) {
+      return false;
+    }
   }
   return true;
 }
@@ -1491,6 +1582,11 @@ function unallocatedMatchesQuickFilters(p: UnallocatedPatient): boolean {
   if (quickFilterAccompanying.value || quickFilterExtract.value || quickFilterSick.value) {
     return false;
   }
+  if (quickFilterClone.value) {
+    if (!isDuplicateBySurnameOrDirection(p.fio, p.direction_pk)) {
+      return false;
+    }
+  }
   return true;
 }
 
@@ -1507,7 +1603,8 @@ function dischargedRowMatchesQuickFilters(row: DischargedPatientRow): boolean {
       && !quickFilterMale.value
       && !quickFilterFemale.value
       && !quickFilterAccompanying.value
-      && !quickFilterSick.value;
+      && !quickFilterSick.value
+      && !quickFilterClone.value;
   }
   return calendarRecordMatchesQuickFilters(rec, { treatAsExtract: true });
 }
@@ -1813,14 +1910,6 @@ const assertCanAcceptPatientInCell = (
   }
   root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
   return false;
-};
-
-const surnameFromFio = (fio: string | null | undefined) => {
-  const s = (fio || '').trim();
-  if (!s) {
-    return '';
-  }
-  return s.split(/\s+/)[0] || '';
 };
 
 const MONTH_CELL_SURNAME_CHARS = 10;
