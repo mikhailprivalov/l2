@@ -5,7 +5,7 @@ import simplejson as json
 from collections import defaultdict
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Case, F, Q, When
 from django.http import JsonResponse
 from django.utils.dateparse import parse_date
 
@@ -359,6 +359,51 @@ def _calendar_plan_dates(item):
         if update_fields:
             item.save(update_fields=update_fields)
     return plan_date_in, plan_date_out
+
+
+_HOSP_DATE_EXTEND_DELTA = datetime.timedelta(days=1)
+
+
+def _extend_non_extracted_hosp_dates(department_id, bed_ids):
+    """+1 день к plan_date_out и date_out для не выписанных, если плановый конец раньше сегодня."""
+    today = datetime.date.today()
+    day = _HOSP_DATE_EXTEND_DELTA
+    extend_end = dict(
+        plan_date_out=F("plan_date_out") + day,
+        date_out=Case(
+            When(date_out__isnull=False, then=F("date_out") + day),
+            default=F("plan_date_out") + day,
+        ),
+    )
+    with transaction.atomic():
+        if bed_ids:
+            PatientToBed.objects.filter(
+                bed_id__in=bed_ids,
+                is_extract=False,
+                plan_date_out__isnull=False,
+                plan_date_out__lt=today,
+            ).update(**extend_end)
+            PatientToBed.objects.filter(
+                bed_id__in=bed_ids,
+                is_extract=False,
+                plan_date_out__isnull=True,
+                date_out__isnull=False,
+                date_out__lt=today,
+            ).update(date_out=F("date_out") + day)
+        if department_id and int(department_id) > 0:
+            PatientStationarWithoutBeds.objects.filter(
+                department_id=department_id,
+                is_extract=False,
+                plan_date_out__isnull=False,
+                plan_date_out__lt=today,
+            ).update(**extend_end)
+            PatientStationarWithoutBeds.objects.filter(
+                department_id=department_id,
+                is_extract=False,
+                plan_date_out__isnull=True,
+                date_out__isnull=False,
+                date_out__lt=today,
+            ).update(date_out=F("date_out") + day)
 
 
 def _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out, exclude_pk=None, fallback_date_in=None, fallback_date_out=None):
@@ -842,6 +887,7 @@ def get_hospitalization_calendar(request):
             beds_included.add(key)
             chambers_map[row.chamber_id]["beds"].append({"pk": row.bed_id, "bed_number": row.bed_number})
             bed_ids.append(row.bed_id)
+    _extend_non_extracted_hosp_dates(department_id, bed_ids)
     records = []
     if bed_ids:
         patients_qs = PatientToBed.objects.filter(bed_id__in=bed_ids).select_related("doctor", "direction__client__individual")
