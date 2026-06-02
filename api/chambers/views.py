@@ -951,7 +951,6 @@ def get_hospitalization_calendar(request):
                     "is_extract": bool(item.is_extract),
                 }
             )
-    view_mode = request_data.get("view_mode")
     start_date = request_data.get("start_date")
     end_date = request_data.get("end_date")
     department_pk = request_data.get("department_pk")

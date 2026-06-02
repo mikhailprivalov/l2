@@ -372,6 +372,7 @@
                         :key="`${bed.pk}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
                         :class="{ 'record--extract': isRecordDischargeDay(rec, day.key) }"
+                      :style="duplicateHighlightStyleForRecord(rec)"
                         draggable="true"
                         :title="recordHoverTitle(rec, day.key)"
                         @click.stop="openEditModalForRecord(bed.pk, day.key, rec)"
@@ -501,6 +502,7 @@
                   'strip-card--forbidden-edit': rec.is_extract,
                   'strip-card--drop-hover': dragOverStripRecordPk === rec.pk,
                 }"
+                :style="duplicateHighlightStyleForRecord(rec)"
                 draggable="true"
                 :title="recordHoverTitle(rec, stripDefaultDayKey)"
                 @dragstart.stop="onStripPatientDragStart($event, rec)"
@@ -598,6 +600,7 @@
                     v-for="p in unallocatedPatientsFiltered"
                     :key="p.direction_pk"
                     class="board-patient-row"
+                    :style="duplicateHighlightStyleForUnallocated(p)"
                     draggable="true"
                     @dragstart="onUnallocatedPatientDragStart($event, p)"
                     @dragend="onUnallocatedPatientDragEnd"
@@ -1526,6 +1529,66 @@ const isDuplicateBySurnameOrDirection = (fio: string | null | undefined, directi
   const byDirection = directionPk != null && directionPk > 0 && duplicateDirectionPks.value.has(directionPk);
   return bySurname || byDirection;
 };
+
+const duplicateColorByGroup = ref(new Map<string, string>());
+
+const randomDuplicateColor = () => {
+  const channel = () => 35 + Math.floor(Math.random() * 160);
+  const r = channel();
+  const g = channel();
+  const b = channel();
+  return `rgba(${r}, ${g}, ${b}, 0.36)`;
+};
+
+const duplicateGroupKey = (fio: string | null | undefined, directionPk: number | null | undefined) => {
+  const surname = normalizedSurname(fio);
+  const bySurname = Boolean(surname) && duplicateSurnames.value.has(surname);
+  const byDirection = directionPk != null && directionPk > 0 && duplicateDirectionPks.value.has(directionPk);
+  if (!bySurname && !byDirection) {
+    return '';
+  }
+  if (byDirection) {
+    return `d:${directionPk}`;
+  }
+  return `s:${surname}`;
+};
+
+const duplicateColorForGroup = (groupKey: string) => {
+  if (!groupKey) {
+    return '';
+  }
+  const existing = duplicateColorByGroup.value.get(groupKey);
+  if (existing) {
+    return existing;
+  }
+  const color = randomDuplicateColor();
+  duplicateColorByGroup.value.set(groupKey, color);
+  return color;
+};
+
+const duplicateHighlightStyle = (fio: string | null | undefined, directionPk: number | null | undefined) => {
+  if (!quickFilterClone.value) {
+    return {};
+  }
+  const groupKey = duplicateGroupKey(fio, directionPk);
+  if (!groupKey) {
+    return {};
+  }
+  const color = duplicateColorForGroup(groupKey);
+  return {
+    backgroundColor: color,
+    borderLeft: `4px solid ${color.replace(', 0.36)', ', 0.95)')}`,
+    boxShadow: `inset 0 0 0 1px ${color.replace(', 0.36)', ', 0.6)')}`,
+  };
+};
+
+const duplicateHighlightStyleForRecord = (rec: CalendarRecord) => (
+  duplicateHighlightStyle(rec.patient_fio, rec.direction_pk)
+);
+
+const duplicateHighlightStyleForUnallocated = (p: UnallocatedPatient) => (
+  duplicateHighlightStyle(p.fio, p.direction_pk)
+);
 
 function calendarRecordMatchesQuickFilters(
   rec: CalendarRecord,
