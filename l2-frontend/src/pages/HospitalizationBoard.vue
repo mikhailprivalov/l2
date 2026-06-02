@@ -1531,13 +1531,15 @@ const isDuplicateBySurnameOrDirection = (fio: string | null | undefined, directi
 };
 
 const duplicateColorByGroup = ref(new Map<string, string>());
+const duplicateColorIndex = ref(0);
 
-const randomDuplicateColor = () => {
-  const channel = () => 35 + Math.floor(Math.random() * 160);
-  const r = channel();
-  const g = channel();
-  const b = channel();
-  return `rgba(${r}, ${g}, ${b}, 0.36)`;
+const nextDistinctDuplicateColor = () => {
+  const idx = duplicateColorIndex.value;
+  duplicateColorIndex.value += 1;
+  const hue = (idx * 137.50776405003785) % 360;
+  const saturation = 85 - ((idx % 3) * 6);
+  const lightness = 48 + ((idx % 2) * 6);
+  return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.98)`;
 };
 
 const duplicateGroupKey = (fio: string | null | undefined, directionPk: number | null | undefined) => {
@@ -1561,7 +1563,7 @@ const duplicateColorForGroup = (groupKey: string) => {
   if (existing) {
     return existing;
   }
-  const color = randomDuplicateColor();
+  const color = nextDistinctDuplicateColor();
   duplicateColorByGroup.value.set(groupKey, color);
   return color;
 };
@@ -1576,9 +1578,7 @@ const duplicateHighlightStyle = (fio: string | null | undefined, directionPk: nu
   }
   const color = duplicateColorForGroup(groupKey);
   return {
-    backgroundColor: color,
-    borderLeft: `4px solid ${color.replace(', 0.36)', ', 0.95)')}`,
-    boxShadow: `inset 0 0 0 1px ${color.replace(', 0.36)', ', 0.6)')}`,
+    borderLeft: `8px solid ${color}`,
   };
 };
 
