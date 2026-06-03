@@ -364,11 +364,7 @@ def sync_discharge_out_dates_recent_period(
 
         for pswb in PatientStationarWithoutBeds.objects.filter(direction_id=dir_pk):
             if dry_run:
-                if (
-                    pswb.plan_date_out != discharge_date
-                    or pswb.date_out != discharge_date
-                    or not pswb.is_extract
-                ):
+                if pswb.plan_date_out != discharge_date or pswb.date_out != discharge_date or not pswb.is_extract:
                     stats["updated_pswb"] += 1
             elif apply_extract_service_out_dates_recent(pswb, discharge_date):
                 stats["updated_pswb"] += 1
