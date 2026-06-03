@@ -98,7 +98,7 @@ def has_confirmed_extract_service_for_direction(direction_pk) -> bool:
 
 
 HISTORICAL_HOSP_START_CUTOFF = datetime.date(2026, 5, 1)
-HISTORICAL_HOSP_FIXED_DISCHARGE = datetime.date(2026, 5, 10)
+HISTORICAL_HOSP_PERIOD_START = datetime.date(2010, 1, 1)
 
 
 def hosp_record_starts_before_cutoff(record) -> bool:
@@ -110,14 +110,30 @@ def hosp_record_starts_before_cutoff(record) -> bool:
     return False
 
 
+def apply_historical_hosp_period_dates(record, period_date: datetime.date) -> bool:
+    """
+    Для исторической записи: все четыре даты = period_date (распределение по дням с 01.01.2010).
+    """
+    if period_date >= HISTORICAL_HOSP_START_CUTOFF:
+        return False
+    if record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date:
+        return False
+    record.date_in = period_date
+    record.plan_date_in = period_date
+    record.plan_date_out = period_date
+    record.date_out = period_date
+    record.save(update_fields=["date_in", "plan_date_in", "plan_date_out", "date_out"])
+    return True
+
+
 def resolve_discharge_out_date_for_hosp_record(record):
     """
-    Дата окончания для записи койки/черновика:
-    — до 01.05.2026 → фиксированно 10.05.2026;
+    Дата окончания для записи койки/черновика (только plan/date_out):
+    — до 01.05.2026 обрабатывается apply_historical_hosp_period_dates;
     — иначе из подтверждённой выписки is_extract_service по direction_id.
     """
     if hosp_record_starts_before_cutoff(record):
-        return HISTORICAL_HOSP_FIXED_DISCHARGE
+        return None
     direction_pk = getattr(record, "direction_id", None)
     if direction_pk:
         return get_discharge_date_for_direction_by_extract_service(direction_pk)
