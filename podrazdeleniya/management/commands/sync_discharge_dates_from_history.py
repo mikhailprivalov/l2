@@ -137,8 +137,7 @@ class Command(BaseCommand):
         historical_pswb_pks = {r.pk for label, r in historical_items if label == "PatientStationarWithoutBeds"}
 
         has_extract = (
-            ptb_qs.filter(direction_id__isnull=False).exclude(pk__in=historical_ptb_pks).exists()
-            or pswb_qs.filter(direction_id__isnull=False).exclude(pk__in=historical_pswb_pks).exists()
+            ptb_qs.filter(direction_id__isnull=False).exclude(pk__in=historical_ptb_pks).exists() or pswb_qs.filter(direction_id__isnull=False).exclude(pk__in=historical_pswb_pks).exists()
         )
         if not historical_items and not has_extract:
             self.stdout.write("Нет записей для обработки.")
