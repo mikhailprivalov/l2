@@ -236,15 +236,58 @@ def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
 RECENT_EXTRACT_SYNC_DAYS_DEFAULT = 30
 
 
-def get_discharge_date_from_extract_service_by_protocol_date_in_period(
-    direction_pk,
+def _hosp_direction_pk_from_extract_iss(iss: Issledovaniya):
+    nap = iss.napravleniye
+    if not nap:
+        return None
+    if nap.parent_id:
+        return nap.parent_id
+    return nap.pk
+
+
+def collect_direction_pks_for_recent_extract_sync(
     date_from: datetime.date,
     date_to: datetime.date,
+    direction_pk=None,
 ):
     """
-    Дата выписки из подтверждённой дочерней is_extract_service, если «Дата выписки»
-    в протоколе попадает в [date_from, date_to]. Берётся самая поздняя дата выписки в окне.
+    Направления для синхронизации: записи койки/черновики и выписки is_extract_service,
+    у которых «Дата выписки» в протоколе попадает в [date_from, date_to].
     """
+    direction_pks = set()
+    if direction_pk:
+        direction_pks.add(direction_pk)
+
+    ptb_qs = PatientToBed.objects.filter(direction_id__isnull=False)
+    pswb_qs = PatientStationarWithoutBeds.objects.filter(direction_id__isnull=False)
+    if direction_pk:
+        ptb_qs = ptb_qs.filter(direction_id=direction_pk)
+        pswb_qs = pswb_qs.filter(direction_id=direction_pk)
+    direction_pks.update(ptb_qs.values_list("direction_id", flat=True))
+    direction_pks.update(pswb_qs.values_list("direction_id", flat=True))
+
+    extract_qs = (
+        Issledovaniya.objects.filter(time_confirmation__isnull=False)
+        .filter(research__is_extract_service=True)
+        .select_related("napravleniye")
+    )
+    if direction_pk:
+        extract_qs = extract_qs.filter(
+            Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
+        )
+
+    for extract_iss in extract_qs.iterator():
+        discharge_date = _read_discharge_date_from_protocol(extract_iss)
+        if not discharge_date or discharge_date < date_from or discharge_date > date_to:
+            continue
+        dir_pk = _hosp_direction_pk_from_extract_iss(extract_iss)
+        if dir_pk:
+            direction_pks.add(dir_pk)
+
+    return direction_pks
+
+
+def get_discharge_date_from_extract_service_by_protocol_date_in_period(direction_pk, date_from: datetime.date, date_to: datetime.date):
     if not direction_pk or date_from > date_to:
         return None
     best_date = None
@@ -269,14 +312,19 @@ def get_discharge_date_from_extract_service_by_protocol_date_in_period(
 
 
 def apply_extract_service_out_dates_recent(record, discharge_date) -> bool:
-    """Только plan_date_out и date_out (без is_extract и без изменения дат заезда)."""
+    """plan_date_out, date_out и is_extract=True (без изменения дат заезда)."""
     if not discharge_date:
         return False
-    if record.plan_date_out == discharge_date and record.date_out == discharge_date:
+    if (
+        record.plan_date_out == discharge_date
+        and record.date_out == discharge_date
+        and record.is_extract
+    ):
         return False
     record.plan_date_out = discharge_date
     record.date_out = discharge_date
-    record.save(update_fields=["plan_date_out", "date_out"])
+    record.is_extract = True
+    record.save(update_fields=["plan_date_out", "date_out", "is_extract"])
     return True
 
 
@@ -287,7 +335,7 @@ def sync_discharge_out_dates_recent_period(
 ):
     """
     За период [сегодня − days, сегодня]: по direction_id ищет is_extract_service,
-    дату «Дата выписки» в протоколе и пишет plan_date_out/date_out в PTB и PSWB.
+    дату «Дата выписки» в протоколе и пишет plan_date_out, date_out, is_extract в PTB и PSWB.
     """
     from django.utils import timezone
 
@@ -302,16 +350,11 @@ def sync_discharge_out_dates_recent_period(
         "skipped_no_discharge": 0,
     }
 
-    direction_pks = set()
-    if direction_pk:
-        direction_pks.add(direction_pk)
-    else:
-        direction_pks.update(
-            PatientToBed.objects.filter(direction_id__isnull=False).values_list("direction_id", flat=True),
-        )
-        direction_pks.update(
-            PatientStationarWithoutBeds.objects.filter(direction_id__isnull=False).values_list("direction_id", flat=True),
-        )
+    direction_pks = collect_direction_pks_for_recent_extract_sync(
+        date_from,
+        date_to,
+        direction_pk=direction_pk,
+    )
 
     for dir_pk in sorted(direction_pks):
         discharge_date = get_discharge_date_from_extract_service_by_protocol_date_in_period(
@@ -326,14 +369,22 @@ def sync_discharge_out_dates_recent_period(
 
         for ptb in PatientToBed.objects.filter(direction_id=dir_pk):
             if dry_run:
-                if ptb.plan_date_out != discharge_date or ptb.date_out != discharge_date:
+                if (
+                    ptb.plan_date_out != discharge_date
+                    or ptb.date_out != discharge_date
+                    or not ptb.is_extract
+                ):
                     stats["updated_ptb"] += 1
             elif apply_extract_service_out_dates_recent(ptb, discharge_date):
                 stats["updated_ptb"] += 1
 
         for pswb in PatientStationarWithoutBeds.objects.filter(direction_id=dir_pk):
             if dry_run:
-                if pswb.plan_date_out != discharge_date or pswb.date_out != discharge_date:
+                if (
+                    pswb.plan_date_out != discharge_date
+                    or pswb.date_out != discharge_date
+                    or not pswb.is_extract
+                ):
                     stats["updated_pswb"] += 1
             elif apply_extract_service_out_dates_recent(pswb, discharge_date):
                 stats["updated_pswb"] += 1

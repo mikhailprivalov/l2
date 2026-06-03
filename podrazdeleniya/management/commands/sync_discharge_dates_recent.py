@@ -1,4 +1,4 @@
-"""Синхронизация plan_date_out/date_out по «Дата выписки» из is_extract_service за последние N дней."""
+"""Синхронизация plan_date_out/date_out/is_extract по «Дата выписки» из is_extract_service за последние N дней."""
 
 from django.core.management.base import BaseCommand
 
@@ -12,7 +12,8 @@ class Command(BaseCommand):
     help = (
         "За период [сегодня − N дней, сегодня] по direction_id ищет подтверждённые дочерние "
         "услуги is_extract_service, читает «Дата выписки» из протокола и записывает "
-        "plan_date_out и date_out в PatientToBed и PatientStationarWithoutBeds."
+        "plan_date_out, date_out и is_extract=True в PatientToBed и PatientStationarWithoutBeds. "
+        "Проверяются все записи койки/черновики и выписки за период (в т.ч. исторические)."
     )
 
     def add_arguments(self, parser):
