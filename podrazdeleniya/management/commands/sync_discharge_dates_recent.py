@@ -1,60 +1,39 @@
-"""Синхронизация plan_date_out/date_out/is_extract по «Дата выписки» из is_extract_service за последние N дней."""
-
+from dateutil.relativedelta import relativedelta
 from django.core.management.base import BaseCommand
+from django.db.models import Q
+from datetime import datetime, time as dtime
 
-from api.chambers.discharge_sync import (
-    RECENT_EXTRACT_SYNC_DAYS_DEFAULT,
-    sync_discharge_out_dates_recent_period,
-)
+from api.stationar.sql_func import get_extract_by_main_directions
+from appconf.manager import SettingManager
+from laboratory import utils
+from laboratory.settings import CDA_ID_FOR_DATE_IS_EXTRACT
+from podrazdeleniya.models import PatientToBed
 
 
 class Command(BaseCommand):
-    help = (
-        "За период [сегодня − N дней, сегодня] по direction_id ищет подтверждённые дочерние "
-        "услуги is_extract_service, читает «Дата выписки» из протокола и записывает "
-        "plan_date_out, date_out и is_extract=True в PatientToBed и PatientStationarWithoutBeds. "
-        "Проверяются все записи койки/черновики и выписки за период (в т.ч. исторические)."
-    )
-
     def add_arguments(self, parser):
-        parser.add_argument(
-            "--days",
-            type=int,
-            default=RECENT_EXTRACT_SYNC_DAYS_DEFAULT,
-            help=f"Глубина периода в днях (по умолчанию {RECENT_EXTRACT_SYNC_DAYS_DEFAULT})",
-        )
-        parser.add_argument(
-            "--direction-pk",
-            type=int,
-            default=None,
-            help="Обработать только указанное направление",
-        )
-        parser.add_argument(
-            "--dry-run",
-            action="store_true",
-            help="Только показать статистику, без сохранения",
-        )
+        parser.add_argument('dirs', type=str)
 
-    def handle(self, *args, **options):
-        days = options["days"]
-        direction_pk = options.get("direction_pk")
-        dry_run = bool(options.get("dry_run"))
-
-        stats = sync_discharge_out_dates_recent_period(
-            days=days,
-            dry_run=dry_run,
-            direction_pk=direction_pk,
-        )
-
-        prefix = "[dry-run] " if dry_run else ""
-        self.stdout.write(
-            f"{prefix}Период по дате выписки в протоколе: " f"{stats['date_from']:%d.%m.%Y} — {stats['date_to']:%d.%m.%Y}",
-        )
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"{prefix}Направлений с выпиской в периоде: {stats['directions_with_discharge']}; "
-                f"обновлено PatientToBed: {stats['updated_ptb']}, "
-                f"PatientStationarWithoutBeds: {stats['updated_pswb']}; "
-                f"без даты в периоде: {stats['skipped_no_discharge']}",
-            ),
-        )
+    def handle(self, *args, **kwargs):
+        dirs = []
+        if kwargs["dirs"]:
+            dirs = kwargs["dirs"]
+        date_end = utils.current_time()
+        days_ago = SettingManager.get("days_before_hosp", default='30', default_type='i')
+        date_start = date_end + relativedelta(days=-days_ago)
+        date_start = datetime.combine(date_start, dtime.min)
+        dirs_data = dirs.split(",")
+        if len(dirs_data) > 0:
+            patient_bed = PatientToBed.objects.filter(direction_id__in=[dirs_data])
+        else:
+            patient_bed = PatientToBed.objects.filter((Q(date_in__gte=date_start) | Q(plan_date_in__gte=date_start) & Q(is_extract=False)))
+        direction_pk = [i.direction_id for i in patient_bed if i.direction]
+        result = get_extract_by_main_directions(tuple(direction_pk), CDA_ID_FOR_DATE_IS_EXTRACT)
+        for i in result:
+            self.stdout.write(f"{i.main_direction_id}, {i.field_value}, {i.title}")
+            ptb = PatientToBed.objects.filter(direction_id=i.main_direction_id).first()
+            ptb.date_out = i.field_value
+            ptb.plan_date_out = i.field_value
+            ptb.is_extract = True
+            ptb.save()
+            self.stdout.write(f"{ptb}")

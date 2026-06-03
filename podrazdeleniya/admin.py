@@ -33,7 +33,7 @@ class BedAdmin(admin.ModelAdmin):
 class PatientToBedAdmin(admin.ModelAdmin):
     list_display = ('pk', '__str__', 'bed', 'doctor', 'date_in', 'date_out', 'record_source')
     autocomplete_fields = ('direction',)
-    search_fields = ('direction', 'bed')
+    search_fields = ('direction__pk',)
     list_filter = ('record_source',)
 
 
