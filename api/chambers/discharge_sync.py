@@ -254,9 +254,7 @@ def get_discharge_date_from_extract_service_by_protocol_date_in_period(
         .filter(research__is_extract_service=True)
         .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
         .select_related("research")
-        .order_by("-time_confirmation")
-    ):
-        discharge_date = _read_discharge_date_from_protocol(extract_iss)
+        if best_date is None or discharge_date > best_date or (discharge_date == best_date and confirmed_at and (best_confirmed is None or confirmed_at > best_confirmed)):
         if not discharge_date or discharge_date < date_from or discharge_date > date_to:
             continue
         confirmed_at = extract_iss.time_confirmation
