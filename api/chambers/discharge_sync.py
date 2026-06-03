@@ -260,11 +260,7 @@ def collect_direction_pks_for_recent_extract_sync(
     direction_pks.update(ptb_qs.values_list("direction_id", flat=True))
     direction_pks.update(pswb_qs.values_list("direction_id", flat=True))
 
-    extract_qs = (
-        Issledovaniya.objects.filter(time_confirmation__isnull=False)
-        .filter(research__is_extract_service=True)
-        .select_related("napravleniye")
-    )
+    extract_qs = Issledovaniya.objects.filter(time_confirmation__isnull=False).filter(research__is_extract_service=True).select_related("napravleniye")
     if direction_pk:
         extract_qs = extract_qs.filter(
             Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
