@@ -126,9 +126,7 @@ class Command(BaseCommand):
         if apply_discharge_out_dates_only(record, discharge_date):
             counters["updated"] += 1
             self.stdout.write(
-                f"{model_label} pk={record.pk} "
-                f"direction={getattr(record, 'direction_id', None)} "
-                f"(extract-service) → plan_date_out/date_out={discharge_date}, is_extract=True",
+                f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(extract-service) → plan_date_out/date_out={discharge_date}, is_extract=True",
             )
 
     def handle(self, *args, **options):
