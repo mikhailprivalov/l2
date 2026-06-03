@@ -76,12 +76,7 @@ class Command(BaseCommand):
                 )
                 break
             if dry_run:
-                if not (
-                    record.date_in == period_date
-                    and record.plan_date_in == period_date
-                    and record.plan_date_out == period_date
-                    and record.date_out == period_date
-                ):
+                if not (record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date):
                     updated += 1
                     self.stdout.write(
                         f"[dry-run] {model_label} pk={record.pk} "
