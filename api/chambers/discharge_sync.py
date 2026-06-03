@@ -85,12 +85,16 @@ def get_discharge_date_for_direction_by_extract_service(direction_pk):
 def has_confirmed_extract_service_for_direction(direction_pk) -> bool:
     if not direction_pk:
         return False
-    return Issledovaniya.objects.filter(
-        time_confirmation__isnull=False,
-        research__is_extract_service=True,
-    ).filter(
-        Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
-    ).exists()
+    return (
+        Issledovaniya.objects.filter(
+            time_confirmation__isnull=False,
+            research__is_extract_service=True,
+        )
+        .filter(
+            Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
+        )
+        .exists()
+    )
 
 
 def apply_discharge_out_dates_only(record, discharge_date) -> bool:
