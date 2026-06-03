@@ -260,11 +260,7 @@ def collect_direction_pks_for_recent_extract_sync(
     direction_pks.update(ptb_qs.values_list("direction_id", flat=True))
     direction_pks.update(pswb_qs.values_list("direction_id", flat=True))
 
-    extract_qs = (
-        Issledovaniya.objects.filter(time_confirmation__isnull=False)
-        .filter(research__is_extract_service=True)
-        .select_related("napravleniye")
-    )
+    extract_qs = Issledovaniya.objects.filter(time_confirmation__isnull=False).filter(research__is_extract_service=True).select_related("napravleniye")
     if direction_pk:
         extract_qs = extract_qs.filter(
             Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
@@ -301,9 +297,7 @@ def get_discharge_date_from_extract_service_by_protocol_date_in_period(direction
         if not discharge_date or discharge_date < date_from or discharge_date > date_to:
             continue
         confirmed_at = extract_iss.time_confirmation
-        if best_date is None or discharge_date > best_date or (
-            discharge_date == best_date and confirmed_at and (best_confirmed is None or confirmed_at > best_confirmed)
-        ):
+        if best_date is None or discharge_date > best_date or (discharge_date == best_date and confirmed_at and (best_confirmed is None or confirmed_at > best_confirmed)):
             best_date = discharge_date
             best_confirmed = confirmed_at
     return best_date
@@ -313,11 +307,7 @@ def apply_extract_service_out_dates_recent(record, discharge_date) -> bool:
     """plan_date_out, date_out и is_extract=True (без изменения дат заезда)."""
     if not discharge_date:
         return False
-    if (
-        record.plan_date_out == discharge_date
-        and record.date_out == discharge_date
-        and record.is_extract
-    ):
+    if record.plan_date_out == discharge_date and record.date_out == discharge_date and record.is_extract:
         return False
     record.plan_date_out = discharge_date
     record.date_out = discharge_date
@@ -367,22 +357,14 @@ def sync_discharge_out_dates_recent_period(
 
         for ptb in PatientToBed.objects.filter(direction_id=dir_pk):
             if dry_run:
-                if (
-                    ptb.plan_date_out != discharge_date
-                    or ptb.date_out != discharge_date
-                    or not ptb.is_extract
-                ):
+                if ptb.plan_date_out != discharge_date or ptb.date_out != discharge_date or not ptb.is_extract:
                     stats["updated_ptb"] += 1
             elif apply_extract_service_out_dates_recent(ptb, discharge_date):
                 stats["updated_ptb"] += 1
 
         for pswb in PatientStationarWithoutBeds.objects.filter(direction_id=dir_pk):
             if dry_run:
-                if (
-                    pswb.plan_date_out != discharge_date
-                    or pswb.date_out != discharge_date
-                    or not pswb.is_extract
-                ):
+                if pswb.plan_date_out != discharge_date or pswb.date_out != discharge_date or not pswb.is_extract:
                     stats["updated_pswb"] += 1
             elif apply_extract_service_out_dates_recent(pswb, discharge_date):
                 stats["updated_pswb"] += 1
