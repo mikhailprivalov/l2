@@ -67,11 +67,7 @@ class Command(BaseCommand):
         if record.plan_date_out == discharge_date and record.date_out == discharge_date:
             return
 
-        source = (
-            "historical-fixed"
-            if hosp_record_starts_before_cutoff(record)
-            else "extract-service"
-        )
+        source = "historical-fixed" if hosp_record_starts_before_cutoff(record) else "extract-service"
         if dry_run:
             counters["updated"] += 1
             self.stdout.write(
