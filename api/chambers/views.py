@@ -1011,11 +1011,13 @@ def save_patient_without_bed(request):
         record_source=patient_without_bed.record_source,
         payload={"source": "save_patient_without_bed", "pswb_pk": patient_without_bed.pk},
     )
-    return JsonResponse({
-        "ok": True,
-        "message": "",
-        "result": {"pswb_pk": patient_without_bed.pk, "direction_pk": direction_pk},
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "",
+            "result": {"pswb_pk": patient_without_bed.pk, "direction_pk": direction_pk},
+        }
+    )
 
 
 @login_required
