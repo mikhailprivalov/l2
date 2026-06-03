@@ -98,7 +98,7 @@ def has_confirmed_extract_service_for_direction(direction_pk) -> bool:
 
 
 HISTORICAL_HOSP_START_CUTOFF = datetime.date(2026, 5, 1)
-HISTORICAL_HOSP_FIXED_PERIOD_DATE = datetime.date(2025, 12, 31)
+HISTORICAL_HOSP_PERIOD_START = datetime.date(2010, 1, 1)
 
 
 def hosp_record_starts_before_cutoff(record) -> bool:
@@ -110,24 +110,23 @@ def hosp_record_starts_before_cutoff(record) -> bool:
     return False
 
 
-def apply_historical_hosp_period_dates(record) -> bool:
+def apply_historical_hosp_period_dates(record, period_date: datetime.date) -> bool:
     """
-    Для записей до 01.05.2026: date_in, plan_date_in, plan_date_out, date_out → 31.12.2025.
+    Для исторической записи: все четыре даты = period_date (распределение по дням с 01.01.2010).
     """
-    if not hosp_record_starts_before_cutoff(record):
+    if period_date >= HISTORICAL_HOSP_START_CUTOFF:
         return False
-    fixed = HISTORICAL_HOSP_FIXED_PERIOD_DATE
     if (
-        record.date_in == fixed
-        and record.plan_date_in == fixed
-        and record.plan_date_out == fixed
-        and record.date_out == fixed
+        record.date_in == period_date
+        and record.plan_date_in == period_date
+        and record.plan_date_out == period_date
+        and record.date_out == period_date
     ):
         return False
-    record.date_in = fixed
-    record.plan_date_in = fixed
-    record.plan_date_out = fixed
-    record.date_out = fixed
+    record.date_in = period_date
+    record.plan_date_in = period_date
+    record.plan_date_out = period_date
+    record.date_out = period_date
     record.save(update_fields=["date_in", "plan_date_in", "plan_date_out", "date_out"])
     return True
 
