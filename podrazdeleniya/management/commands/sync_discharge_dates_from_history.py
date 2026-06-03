@@ -148,8 +148,7 @@ class Command(BaseCommand):
         historical_updated = self._process_historical_sequential(historical_items, dry_run)
         self.stdout.write(
             self.style.SUCCESS(
-                f"{prefix}Исторических записей обновлено: {historical_updated} "
-                f"(дни с {HISTORICAL_HOSP_PERIOD_START:%d.%m.%Y})",
+                f"{prefix}Исторических записей обновлено: {historical_updated} " f"(дни с {HISTORICAL_HOSP_PERIOD_START:%d.%m.%Y})",
             ),
         )
 
