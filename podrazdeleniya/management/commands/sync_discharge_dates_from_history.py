@@ -84,9 +84,7 @@ class Command(BaseCommand):
             elif apply_historical_hosp_period_dates(record, period_date):
                 updated += 1
                 self.stdout.write(
-                    f"{model_label} pk={record.pk} "
-                    f"direction={getattr(record, 'direction_id', None)} "
-                    f"(historical-seq) → все даты={period_date}",
+                    f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(historical-seq) → все даты={period_date}",
                 )
             period_date += datetime.timedelta(days=1)
         return updated
