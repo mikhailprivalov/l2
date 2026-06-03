@@ -55,8 +55,7 @@ class Command(BaseCommand):
                     counters["skipped_no_date"] += 1
                     self.stdout.write(
                         self.style.WARNING(
-                            f"{model_label} pk={record.pk} direction={record.direction_id}: "
-                            "выписка подтверждена, дата в протоколе не найдена",
+                            f"{model_label} pk={record.pk} direction={record.direction_id}: " "выписка подтверждена, дата в протоколе не найдена",
                         ),
                     )
                 else:
