@@ -31,13 +31,15 @@ class BedAdmin(admin.ModelAdmin):
 
 
 class PatientToBedAdmin(admin.ModelAdmin):
-    list_display = ('pk', '__str__', 'bed', 'doctor', 'date_in', 'date_out')
+    list_display = ('pk', '__str__', 'bed', 'doctor', 'date_in', 'date_out', 'record_source')
     autocomplete_fields = ('direction',)
     search_fields = ('direction', 'bed')
+    list_filter = ('record_source',)
 
 
 class PatientStationarWithoutBedsAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'direction', 'department')
+    list_display = ('__str__', 'direction', 'department', 'record_source')
+    list_filter = ('record_source',)
 
 
 class PatientBedActionLogAdmin(admin.ModelAdmin):
@@ -45,13 +47,14 @@ class PatientBedActionLogAdmin(admin.ModelAdmin):
         'pk',
         'created_at',
         'action',
+        'record_source',
         'department',
         'direction',
         'bed',
         'author',
         'patient_fio_text',
     )
-    list_filter = ('action', 'department', 'created_at')
+    list_filter = ('action', 'department', 'created_at', 'record_source')
     search_fields = ('patient_fio_text', 'direction_id', 'patient_to_bed_pk')
     readonly_fields = ('created_at',)
     ordering = ('-created_at', '-pk')

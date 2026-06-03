@@ -118,22 +118,25 @@ def load_patient_without_bed_by_department(department_id, start_date=None, end_d
         cursor.execute(
             f"""
             SELECT
+                pswb.id AS pswb_pk,
                 ci.family AS patient_family,
                 ci.name AS patient_name,
                 ci.patronymic AS patient_patronymic,
                 date_part('year', age(ci.birthday))::int AS patient_age,
-                ci.sex AS patient_sex,
+                COALESCE(ci.sex, pswb.patient_sex) AS patient_sex,
                 pswb.direction_id,
+                pswb.patient_fio_text,
                 pswb.date_in,
                 pswb.date_out,
                 pswb.plan_date_in,
                 pswb.plan_date_out,
                 dp.id AS doctor_id,
-                pswb.is_extract
+                pswb.is_extract,
+                pswb.record_source
             FROM podrazdeleniya_patientstationarwithoutbeds pswb
-            INNER JOIN directions_napravleniya dn ON pswb.direction_id = dn.id
-            INNER JOIN clients_card cc ON dn.client_id = cc.id
-            INNER JOIN clients_individual ci ON cc.individual_id = ci.id
+            LEFT JOIN directions_napravleniya dn ON pswb.direction_id = dn.id
+            LEFT JOIN clients_card cc ON dn.client_id = cc.id
+            LEFT JOIN clients_individual ci ON cc.individual_id = ci.id
             LEFT JOIN users_doctorprofile dp ON pswb.doctor_id = dp.id
             WHERE pswb.department_id = %(department_id)s
             {period_filter}

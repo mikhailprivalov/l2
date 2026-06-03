@@ -15,6 +15,7 @@ def log_bed_action(
     plan_date_out=None,
     patient_fio_text="",
     is_extract=False,
+    record_source=None,
     payload=None,
 ):
     if patient_to_bed is not None and isinstance(patient_to_bed, PatientToBed):
@@ -34,9 +35,15 @@ def log_bed_action(
             patient_fio_text = patient_to_bed.patient_fio_text or ""
         if not is_extract:
             is_extract = bool(patient_to_bed.is_extract)
+        if record_source is None:
+            record_source = patient_to_bed.record_source
 
     if bed_id is not None and not Bed.objects.filter(pk=bed_id).exists():
         bed_id = None
+
+    payload_data = dict(payload or {})
+    if record_source and "record_source" not in payload_data:
+        payload_data["record_source"] = record_source
 
     PatientBedActionLog.objects.create(
         action=action,
@@ -51,5 +58,6 @@ def log_bed_action(
         plan_date_out=plan_date_out,
         patient_fio_text=(patient_fio_text or "")[:128],
         is_extract=bool(is_extract),
-        payload=payload or {},
+        record_source=record_source,
+        payload=payload_data,
     )

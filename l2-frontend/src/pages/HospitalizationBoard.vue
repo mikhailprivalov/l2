@@ -498,10 +498,7 @@
                 v-for="rec in stripRecordsInPeriod"
                 :key="`strip-card-${rec.pk}-${rec.direction_pk}`"
                 class="strip-card record record--draggable"
-                :class="{
-                  'strip-card--forbidden-edit': rec.is_extract,
-                  'strip-card--drop-hover': dragOverStripRecordPk === rec.pk,
-                }"
+                :class="{ 'strip-card--drop-hover': dragOverStripRecordPk === rec.pk }"
                 :style="duplicateHighlightStyleForRecord(rec)"
                 draggable="true"
                 :title="recordHoverTitle(rec, stripDefaultDayKey)"
@@ -688,6 +685,15 @@
           </button>
         </div>
         <div class="panel-body">
+          <div
+            v-if="editingRecordPk || editingStripRecordPk"
+            class="form-group edit-modal-record-source-row"
+          >
+            <span class="edit-modal-record-source-label">Создана запись</span>
+            <span class="edit-modal-record-source-value">
+              {{ recordSourceDisplayLabel(editingForm.recordSource) }}
+            </span>
+          </div>
           <div class="form-group">
             <label>ФИО пациента</label>
             <input
@@ -773,8 +779,6 @@
                   <label>
                     <input
                       v-model="editingForm.moveToDayDraft"
-                      :disabled="!canMoveToDayDraft"
-                      :title="moveToDayDraftHint"
                       type="checkbox"
                     >
                     Дневные
@@ -958,6 +962,7 @@ interface CalendarRecord {
   birthday: string | null;
   patient_age_text: string;
   direction_pk: number | null;
+  pswb_pk?: number | null;
   date_in: string | null;
   date_out: string | null;
   plan_date_in: string | null;
@@ -970,6 +975,7 @@ interface CalendarRecord {
   is_day_hosp?: boolean;
   is_need_sick?: boolean;
   is_extract?: boolean;
+  record_source?: 'manual' | 'from_history';
 }
 
 type DischargedPatientRow = {
@@ -1127,6 +1133,7 @@ const editingStripRecordPk = ref<number | null>(null);
 const editingForm = ref({
   patientFioText: '',
   directionIdText: '',
+  recordSource: null as 'manual' | 'from_history' | null,
   patientSex: 'м',
   birthday: '',
   patientAgeText: '',
@@ -1141,21 +1148,25 @@ const editingForm = ref({
   commentReplicateFollowing: false,
 });
 
-const canMoveToDayDraft = computed(() => {
-  if (!editingRecordPk.value || editingStripRowId.value) {
-    return false;
+const recordSourceDisplayLabel = (source: 'manual' | 'from_history' | null | undefined) => {
+  if (source === 'from_history') {
+    return 'из истории';
   }
-  const dirTrim = editingForm.value.directionIdText.trim();
-  if (!dirTrim) {
-    return false;
+  if (source === 'manual') {
+    return 'вручную';
   }
-  const directionPk = Number.parseInt(dirTrim, 10);
-  return Number.isFinite(directionPk) && directionPk > 0;
-});
+  return '—';
+};
 
-const moveToDayDraftHint = computed(() => (
-  canMoveToDayDraft.value ? '' : 'Укажите корректный номер направления для переноса в Дневные'
-));
+const recordSourceFromCalendarRecord = (record: CalendarRecord | null): 'manual' | 'from_history' | null => {
+  if (!record) {
+    return null;
+  }
+  if (record.record_source === 'from_history') {
+    return 'from_history';
+  }
+  return 'manual';
+};
 
 const dragOverCellKey = ref('');
 const dragOverStripBoard = ref(false);
@@ -1544,6 +1555,10 @@ const duplicateGroupKey = (fio: string | null | undefined, directionPk: number |
 };
 
 const DUPLICATE_GOLDEN_ANGLE = 137.508;
+/** Ширина цветной полосы слева для групп дубликатов (в 2 раза шире прежних 4px). */
+const DUPLICATE_BORDER_WIDTH_PX = 8;
+/** Чередование яркости — соседние группы сильнее отличаются. */
+const DUPLICATE_LIGHTNESS_CYCLE = [34, 54, 40, 58, 32, 50];
 
 const activeDuplicateGroupKeys = computed(() => {
   const keys = new Set<string>();
@@ -1569,7 +1584,9 @@ const duplicateGroupBorderColorMap = computed(() => {
   const map = new Map<string, string>();
   activeDuplicateGroupKeys.value.forEach((key, index) => {
     const hue = Math.round((index * DUPLICATE_GOLDEN_ANGLE) % 360);
-    map.set(key, `hsl(${hue}, 92%, 44%)`);
+    const lightness = DUPLICATE_LIGHTNESS_CYCLE[index % DUPLICATE_LIGHTNESS_CYCLE.length];
+    const saturation = index % 2 === 0 ? 98 : 88;
+    map.set(key, `hsl(${hue}, ${saturation}%, ${lightness}%)`);
   });
   return map;
 });
@@ -1591,7 +1608,7 @@ const duplicateHighlightStyle = (fio: string | null | undefined, directionPk: nu
     return {};
   }
   return {
-    borderLeft: `4px solid ${color}`,
+    borderLeft: `${DUPLICATE_BORDER_WIDTH_PX}px solid ${color}`,
   };
 };
 
@@ -1824,57 +1841,6 @@ const getRecordForDay = (bedPk: number, dayKey: string) => {
   return list.find((r) => !r.is_extract) || list[0];
 };
 
-const bedPeriodHasOverlap = (
-  bedPk: number,
-  planDateIn: string | null | undefined,
-  planDateOut: string | null | undefined,
-  excludeRecordPk?: number | null,
-) => {
-  const from = moment(planDateIn, 'YYYY-MM-DD');
-  if (!from.isValid()) {
-    return false;
-  }
-  const to = planDateOut
-    ? moment(planDateOut, 'YYYY-MM-DD')
-    : moment(HOSP_OPEN_END_DAY, 'YYYY-MM-DD');
-  if (!to.isValid() || from.isAfter(to, 'day')) {
-    return false;
-  }
-  for (const rec of recordsUnfilteredForMainGrid.value) {
-    if (excludeRecordPk != null && rec.pk === excludeRecordPk) {
-      continue;
-    }
-    if (rec.bed_pk !== bedPk) {
-      continue;
-    }
-    const recStart = hospVisualStart(rec);
-    if (!recStart.isValid()) {
-      continue;
-    }
-    const recEnd = hospVisualEnd(rec);
-    if (from.isSameOrBefore(recEnd, 'day') && to.isSameOrAfter(recStart, 'day')) {
-      if (rec.is_extract && from.isSame(recEnd, 'day')) {
-        continue;
-      }
-      return true;
-    }
-  }
-  return false;
-};
-
-const assertNoBedPeriodOverlap = (
-  bedPk: number,
-  planDateIn: string | null | undefined,
-  planDateOut: string | null | undefined,
-  excludeRecordPk?: number | null,
-) => {
-  if (!bedPeriodHasOverlap(bedPk, planDateIn, planDateOut, excludeRecordPk)) {
-    return true;
-  }
-  root.$emit('msg', 'error', 'На этой койке период пересекается с другой госпитализацией');
-  return false;
-};
-
 /** Записи на койке в этот день (без фильтра врача — для проверки занятости при drop). */
 const bedDayOccupyingRecords = (bedPk: number, dayKey: string) => (
   recordsUnfilteredForMainGrid.value.filter(
@@ -2013,40 +1979,6 @@ const chamberRowsForDisplay = computed(() => {
     }))
     .filter((row) => row.beds.length > 0);
 });
-
-const canAcceptPatientInCell = (
-  bedPk: number,
-  dayKey: string,
-  excludeDirectionPk?: number | null,
-) => {
-  let occupying = bedDayOccupyingRecords(bedPk, dayKey);
-  if (excludeDirectionPk != null) {
-    occupying = occupying.filter((r) => r.direction_pk !== excludeDirectionPk);
-  }
-  if (occupying.length >= MAX_CELL_PATIENTS) {
-    return false;
-  }
-  return isBedFreeForOccupying(occupying, dayKey);
-};
-
-const assertCanAcceptPatientInCell = (
-  bedPk: number,
-  dayKey: string,
-  excludeDirectionPk?: number | null,
-) => {
-  if (canAcceptPatientInCell(bedPk, dayKey, excludeDirectionPk)) {
-    return true;
-  }
-  const occupying = bedDayOccupyingRecords(bedPk, dayKey).filter(
-    (r) => excludeDirectionPk == null || r.direction_pk !== excludeDirectionPk,
-  );
-  if (occupying.length >= MAX_CELL_PATIENTS) {
-    root.$emit('msg', 'error', 'В ячейке уже два пациента — допустимы только выписанный и новый');
-    return false;
-  }
-  root.$emit('msg', 'error', 'На этой койке уже есть госпитализация на выбранную дату');
-  return false;
-};
 
 const MONTH_CELL_SURNAME_CHARS = 10;
 const MONTH_CELL_DIRECTION_CHARS = 7;
@@ -2597,7 +2529,8 @@ const attendingDoctorTreeselectOptions = computed(() => (
 ));
 
 type StripServerPatient = {
-  direction_pk: number;
+  direction_pk: number | null;
+  pswb_pk?: number | null;
   fio: string;
   sex: string;
   age: number;
@@ -2607,6 +2540,7 @@ type StripServerPatient = {
   date_out?: string | null;
   plan_date_in?: string | null;
   plan_date_out?: string | null;
+  record_source?: 'manual' | 'from_history';
 };
 
 const applyStripHospMeta = (
@@ -2635,18 +2569,29 @@ const applyStripHospMeta = (
 };
 
 const saveStripPatientToServer = async (rec: CalendarRecord) => {
-  if (!departmentPk.value || !rec.direction_pk) {
+  if (!departmentPk.value) {
+    return null;
+  }
+  if (!rec.direction_pk && !rec.patient_fio?.trim() && !rec.pswb_pk) {
     return null;
   }
   await store.dispatch(actions.INC_LOADING);
   const result = await api('chambers/save-patient-without-bed', {
     department_pk: departmentPk.value,
-    patient_obj: { direction_pk: rec.direction_pk },
+    patient_obj: {
+      direction_pk: rec.direction_pk ?? null,
+      pswb_pk: rec.pswb_pk ?? null,
+      patient_fio_text: rec.patient_fio,
+      patient_sex: rec.patient_sex,
+    },
+    patient_fio_text: rec.patient_fio,
+    patient_sex: rec.patient_sex,
     doctor_id: rec.doctor_pk ?? null,
     plan_date_in: rec.plan_date_in,
     plan_date_out: rec.plan_date_out,
     date_out: rec.date_out,
     is_extract: Boolean(rec.is_extract),
+    record_source: rec.record_source || 'from_history',
   });
   await store.dispatch(actions.DEC_LOADING);
   return result;
@@ -2658,8 +2603,10 @@ const newStripRecordFromServerPatient = (
 ): CalendarRecord => {
   const planIn = p.plan_date_in || p.date_in || dayKey;
   const planOut = p.plan_date_out || p.date_out || defaultPlanDateOut(planIn);
+  const dirPk = p.direction_pk != null && p.direction_pk > 0 ? Number(p.direction_pk) : null;
+  const pswbPk = p.pswb_pk != null && p.pswb_pk > 0 ? Number(p.pswb_pk) : null;
   const rec: CalendarRecord = {
-    pk: -p.direction_pk,
+    pk: dirPk ? -dirPk : -(pswbPk || 0),
     bed_pk: 0,
     doctor_pk: p.doctor_pk ?? null,
     doctor_fio: p.doctor_pk ? doctorFioByPk(p.doctor_pk) : '',
@@ -2667,7 +2614,8 @@ const newStripRecordFromServerPatient = (
     patient_sex: p.sex || 'м',
     birthday: null,
     patient_age_text: String(p.age ?? ''),
-    direction_pk: p.direction_pk,
+    direction_pk: dirPk,
+    pswb_pk: pswbPk,
     date_in: p.date_in || planIn,
     date_out: p.date_out || null,
     plan_date_in: planIn,
@@ -2678,6 +2626,7 @@ const newStripRecordFromServerPatient = (
     is_day_hosp: true,
     is_need_sick: false,
     is_extract: Boolean(p.is_extract),
+    record_source: p.record_source || 'from_history',
   };
   return applyStripHospMeta(rec, p);
 };
@@ -2736,9 +2685,14 @@ const loadPatientsWithoutBed = async () => {
   const list = Array.isArray(row?.data) ? row.data : [];
   const dayKey = stripDefaultDayKey.value;
   stripRecords.value = list
-    .filter((p: any) => Number.isFinite(Number(p?.direction_pk)) && Number(p.direction_pk) > 0)
+    .filter((p: any) => {
+      const dirPk = Number(p?.direction_pk);
+      const pswbPk = Number(p?.pswb_pk);
+      return (Number.isFinite(dirPk) && dirPk > 0) || (Number.isFinite(pswbPk) && pswbPk > 0);
+    })
     .map((p: any) => newStripRecordFromServerPatient({
-      direction_pk: Number(p.direction_pk),
+      direction_pk: p.direction_pk != null ? Number(p.direction_pk) : null,
+      pswb_pk: p.pswb_pk != null ? Number(p.pswb_pk) : null,
       fio: String(p.fio || ''),
       sex: String(p.sex || 'м'),
       age: Number(p.age ?? ''),
@@ -2748,6 +2702,7 @@ const loadPatientsWithoutBed = async () => {
       date_out: p.date_out || null,
       plan_date_in: p.plan_date_in || null,
       plan_date_out: p.plan_date_out || null,
+      record_source: p.record_source === 'manual' ? 'manual' : 'from_history',
     }, dayKey));
 };
 
@@ -2758,11 +2713,13 @@ const reloadStripFromServer = async () => {
 
 const removeStripRecordPk = async (pk: number) => {
   const rec = findStripRecordByPk(pk);
-  if (departmentPk.value && rec?.direction_pk) {
+  if (departmentPk.value && rec && (rec.direction_pk || rec.pswb_pk || rec.pk < 0)) {
     await store.dispatch(actions.INC_LOADING);
     const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
-      patient_obj: { direction_pk: rec.direction_pk },
+      patient_obj: rec.direction_pk
+        ? { direction_pk: rec.direction_pk }
+        : { pswb_pk: rec.pswb_pk || -rec.pk },
     });
     await store.dispatch(actions.DEC_LOADING);
     if (!res?.ok) {
@@ -2969,6 +2926,7 @@ const newStripRecordFromUnallocated = (p: UnallocatedPatient, dayKey: string): C
     date_comments: {},
     is_day_hosp: true,
     is_need_sick: false,
+    record_source: 'from_history',
   };
 };
 
@@ -3102,12 +3060,6 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
   }
   const movePlanIn = targetDayKey;
   const movePlanOut = sourceRec.plan_date_out || sourceRec.date_out || null;
-  if (!assertCanAcceptPatientInCell(targetBedPk, targetDayKey, sourceRec.direction_pk)) {
-    return;
-  }
-  if (!assertNoBedPeriodOverlap(targetBedPk, movePlanIn, movePlanOut, sourceRec.pk)) {
-    return;
-  }
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('chambers/move-hospitalization-to-bed', {
     department_pk: departmentPk.value,
@@ -3153,12 +3105,6 @@ const onStripToBedDrop = async (
   }
   const stripPlanIn = record.plan_date_in || record.date_in || targetDayKey;
   const stripPlanOut = record.plan_date_out || record.date_out || defaultPlanDateOut(targetDayKey);
-  if (!assertCanAcceptPatientInCell(targetBedPk, stripPlanIn, record.direction_pk)) {
-    return;
-  }
-  if (!assertNoBedPeriodOverlap(targetBedPk, stripPlanIn, stripPlanOut, null)) {
-    return;
-  }
   await store.dispatch(actions.INC_LOADING);
   const result = await api('chambers/save-hospitalization-by-fio', {
     department_pk: departmentPk.value,
@@ -3174,14 +3120,17 @@ const onStripToBedDrop = async (
     accompanyng_child_type: record.accompanyng_child_type || '',
     is_need_sick: Boolean(record.is_need_sick),
     is_extract: Boolean(record.is_extract),
+    record_source: record.record_source || 'from_history',
     comment_date: targetDayKey,
     comment: commentForRecordDay(record, targetDayKey),
   });
   if (result?.ok) {
-    if (departmentPk.value && record.direction_pk) {
+    if (departmentPk.value && (record.direction_pk || record.pswb_pk)) {
       const delRes = await api('chambers/delete-patient-without-bed', {
         department_pk: departmentPk.value,
-        patient_obj: { direction_pk: record.direction_pk },
+        patient_obj: record.direction_pk
+          ? { direction_pk: record.direction_pk }
+          : { pswb_pk: record.pswb_pk || -record.pk },
       });
       if (!delRes?.ok) {
         await store.dispatch(actions.DEC_LOADING);
@@ -3220,13 +3169,6 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
   const occupying = bedDayOccupyingRecords(bedPk, dayKey);
   const existingForDirection = occupying.find((r) => r.direction_pk === directionPk) || null;
 
-  if (!existingForDirection && !assertCanAcceptPatientInCell(bedPk, dayKey)) {
-    return;
-  }
-  if (!existingForDirection && !assertNoBedPeriodOverlap(bedPk, panelPlanIn, panelPlanOut, null)) {
-    return;
-  }
-
   await store.dispatch(actions.INC_LOADING);
   let result;
   if (existingForDirection?.pk) {
@@ -3259,6 +3201,7 @@ const onDirectionFromPanelDrop = async (bedPk: number, dayKey: string, raw: stri
       plan_date_out: panelPlanOut,
       auto_default_period: true,
       fill_patient_from_direction: true,
+      record_source: 'from_history',
       accompanyng_child_type: '',
       comment_date: dayKey,
       comment: '',
@@ -3348,6 +3291,7 @@ const fillEditModalFromRecord = (record: CalendarRecord | null, bedPk: number, d
   editingForm.value = {
     patientFioText: record?.patient_fio || '',
     directionIdText: record?.direction_pk != null && record.direction_pk > 0 ? String(record.direction_pk) : '',
+    recordSource: recordSourceFromCalendarRecord(record),
     patientSex: record?.patient_sex || 'м',
     birthday: record?.birthday || '',
     patientAgeText: record?.patient_age_text || '',
@@ -3459,10 +3403,6 @@ const saveEditingCell = async () => {
     rec.is_need_sick = Boolean(editingForm.value.isNeedSick);
     rec.direction_pk = directionIdPayload;
     rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
-    if (!rec.direction_pk) {
-      root.$emit('msg', 'error', 'Укажите номер направления для черновика');
-      return;
-    }
     const stripSaveRes = await saveStripPatientToServer(rec);
     if (!stripSaveRes?.ok) {
       root.$emit('msg', 'error', stripSaveRes?.message || 'Не удалось сохранить черновик на сервере');
@@ -3478,10 +3418,6 @@ const saveEditingCell = async () => {
     return;
   }
   if (editingForm.value.moveToDayDraft && editingRecordPk.value) {
-    if (!directionIdPayload) {
-      root.$emit('msg', 'error', 'Для переноса в Дневные укажите номер направления');
-      return;
-    }
     const existingRec = records.value.find((r) => r.pk === editingRecordPk.value);
     if (!existingRec) {
       root.$emit('msg', 'error', 'Запись госпитализации не найдена');
@@ -3498,6 +3434,7 @@ const saveEditingCell = async () => {
     const stripRec: CalendarRecord = {
       ...existingRec,
       bed_pk: 0,
+      pswb_pk: null,
       doctor_pk: editingForm.value.doctorPk,
       doctor_fio: editingForm.value.doctorFio,
       patient_fio: editingForm.value.patientFioText,
@@ -3508,7 +3445,7 @@ const saveEditingCell = async () => {
       plan_date_in: planIn,
       plan_date_out: planOut,
       date_in: planIn,
-      date_out: editingForm.value.planDateOut || existingRec.date_out || null,
+      date_out: planOut || existingRec.date_out || null,
       accompanyng_child_type: editingForm.value.accompanyngChildType || '',
       is_day_hosp: true,
       is_need_sick: Boolean(editingForm.value.isNeedSick),
@@ -3536,21 +3473,6 @@ const saveEditingCell = async () => {
     await store.dispatch(actions.DEC_LOADING);
     root.$emit('msg', 'ok', 'Пациент перенесён в Дневные (черновики)');
     closeEditModal();
-    return;
-  }
-  if (!editingRecordPk.value && !assertCanAcceptPatientInCell(
-    editingBedPk.value,
-    editingForm.value.planDateIn || editingDayKey.value,
-    directionIdPayload,
-  )) {
-    return;
-  }
-  if (!assertNoBedPeriodOverlap(
-    editingBedPk.value,
-    editingForm.value.planDateIn,
-    editingForm.value.planDateOut,
-    editingRecordPk.value,
-  )) {
     return;
   }
   await store.dispatch(actions.INC_LOADING);
@@ -3589,6 +3511,7 @@ const saveEditingCell = async () => {
       comment_date: editingDayKey.value,
       comment: commentPayload,
       comment_replicate_following: editingForm.value.commentReplicateFollowing,
+      record_source: 'manual',
     });
   }
   await store.dispatch(actions.DEC_LOADING);
@@ -3611,10 +3534,12 @@ const clearStripFromModal = async () => {
   }
   const rec = findStripRecordByPk(editingStripRecordPk.value);
   await store.dispatch(actions.INC_LOADING);
-  if (departmentPk.value && rec?.direction_pk) {
+  if (departmentPk.value && (rec?.direction_pk || rec?.pswb_pk || rec?.pk)) {
     const res = await api('chambers/delete-patient-without-bed', {
       department_pk: departmentPk.value,
-      patient_obj: { direction_pk: rec.direction_pk },
+      patient_obj: rec?.direction_pk
+        ? { direction_pk: rec.direction_pk }
+        : { pswb_pk: rec?.pswb_pk || (rec?.pk != null && rec.pk < 0 ? -rec.pk : null) },
     });
     if (!res?.ok) {
       await store.dispatch(actions.DEC_LOADING);
@@ -3651,12 +3576,6 @@ const clearBedFromModal = async () => {
 
 watch(customPeriodStart, syncCustomPeriodEndConstraints);
 watch(customPeriodEnd, syncCustomPeriodEndConstraints);
-watch(canMoveToDayDraft, (canMove) => {
-  if (!canMove && editingForm.value.moveToDayDraft) {
-    editingForm.value.moveToDayDraft = false;
-  }
-});
-
 watch(isCustomPeriodMode, async (enabled, prev) => {
   if (enabled && !canUseCustomPeriod.value) {
     isCustomPeriodMode.value = false;
@@ -4507,6 +4426,14 @@ onBeforeUnmount(() => {
   background: #e6e6e6;
 }
 
+.record--forbidden-edit {
+  cursor: not-allowed;
+}
+
+.record--forbidden-edit.record--draggable {
+  cursor: not-allowed;
+}
+
 .record--draggable {
   cursor: grab;
 }
@@ -4731,6 +4658,22 @@ onBeforeUnmount(() => {
 
 .edit-modal-comment-replicate .help-block {
   margin-bottom: 0;
+}
+
+.edit-modal-record-source-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.edit-modal-record-source-label {
+  font-weight: 700;
+  margin: 0;
+}
+
+.edit-modal-record-source-value {
+  color: #333;
 }
 
 .modal-gender-sick-row .modal-sick-col {
