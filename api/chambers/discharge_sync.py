@@ -357,11 +357,7 @@ def sync_discharge_out_dates_recent_period(
 
         for ptb in PatientToBed.objects.filter(direction_id=dir_pk):
             if dry_run:
-                if (
-                    ptb.plan_date_out != discharge_date
-                    or ptb.date_out != discharge_date
-                    or not ptb.is_extract
-                ):
+                if ptb.plan_date_out != discharge_date or ptb.date_out != discharge_date or not ptb.is_extract:
                     stats["updated_ptb"] += 1
             elif apply_extract_service_out_dates_recent(ptb, discharge_date):
                 stats["updated_ptb"] += 1
