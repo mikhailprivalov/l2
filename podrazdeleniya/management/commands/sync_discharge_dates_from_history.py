@@ -71,9 +71,7 @@ class Command(BaseCommand):
         if dry_run:
             counters["updated"] += 1
             self.stdout.write(
-                f"[dry-run] {model_label} pk={record.pk} "
-                f"direction={getattr(record, 'direction_id', None)} "
-                f"({source}) → plan_date_out/date_out={discharge_date}",
+                f"[dry-run] {model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"({source}) → plan_date_out/date_out={discharge_date}",
             )
             return
 
