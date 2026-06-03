@@ -22,8 +22,8 @@ class Command(BaseCommand):
         "Обновляет даты в PatientToBed и PatientStationarWithoutBeds. "
         f"Исторические (plan_date_in или date_in < {HISTORICAL_HOSP_START_CUTOFF:%d.%m.%Y}): "
         f"date_in, plan_date_in, plan_date_out, date_out по одному дню с "
-        f"{HISTORICAL_HOSP_PERIOD_START:%d.%m.%Y} (+1 день на запись). "
-        "Остальные — plan_date_out/date_out из выписки is_extract_service."
+        f"{HISTORICAL_HOSP_PERIOD_START:%d.%m.%Y} (+1 день на запись), is_extract=True. "
+        "Остальные — plan_date_out/date_out из выписки is_extract_service, is_extract=True."
     )
 
     def add_arguments(self, parser):
@@ -76,15 +76,25 @@ class Command(BaseCommand):
                 )
                 break
             if dry_run:
-                if not (record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date):
+                if not (
+                    record.date_in == period_date
+                    and record.plan_date_in == period_date
+                    and record.plan_date_out == period_date
+                    and record.date_out == period_date
+                    and record.is_extract
+                ):
                     updated += 1
                     self.stdout.write(
-                        f"[dry-run] {model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(historical-seq) → все даты={period_date}",
+                        f"[dry-run] {model_label} pk={record.pk} "
+                        f"direction={getattr(record, 'direction_id', None)} "
+                        f"(historical-seq) → все даты={period_date}, is_extract=True",
                     )
             elif apply_historical_hosp_period_dates(record, period_date):
                 updated += 1
                 self.stdout.write(
-                    f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(historical-seq) → все даты={period_date}",
+                    f"{model_label} pk={record.pk} "
+                    f"direction={getattr(record, 'direction_id', None)} "
+                    f"(historical-seq) → все даты={period_date}, is_extract=True",
                 )
             period_date += datetime.timedelta(days=1)
         return updated
@@ -109,20 +119,24 @@ class Command(BaseCommand):
                 counters["skipped_no_direction"] += 1
             return
 
-        if record.plan_date_out == discharge_date and record.date_out == discharge_date:
+        if record.plan_date_out == discharge_date and record.date_out == discharge_date and record.is_extract:
             return
 
         if dry_run:
             counters["updated"] += 1
             self.stdout.write(
-                f"[dry-run] {model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(extract-service) → plan_date_out/date_out={discharge_date}",
+                f"[dry-run] {model_label} pk={record.pk} "
+                f"direction={getattr(record, 'direction_id', None)} "
+                f"(extract-service) → plan_date_out/date_out={discharge_date}, is_extract=True",
             )
             return
 
         if apply_discharge_out_dates_only(record, discharge_date):
             counters["updated"] += 1
             self.stdout.write(
-                f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(extract-service) → plan_date_out/date_out={discharge_date}",
+                f"{model_label} pk={record.pk} "
+                f"direction={getattr(record, 'direction_id', None)} "
+                f"(extract-service) → plan_date_out/date_out={discharge_date}, is_extract=True",
             )
 
     def handle(self, *args, **options):
