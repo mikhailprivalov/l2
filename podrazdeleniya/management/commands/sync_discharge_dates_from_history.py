@@ -76,8 +76,7 @@ class Command(BaseCommand):
                 elif apply_discharge_out_dates_only(ptb, discharge_date):
                     updated_ptb += 1
                     self.stdout.write(
-                        f"PatientToBed pk={ptb.pk} direction={direction_pk} "
-                        f"→ plan_date_out/date_out={discharge_date}",
+                        f"PatientToBed pk={ptb.pk} direction={direction_pk} " f"→ plan_date_out/date_out={discharge_date}",
                     )
 
             for pswb in pswb_qs.filter(direction_id=direction_pk):
