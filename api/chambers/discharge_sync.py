@@ -97,6 +97,33 @@ def has_confirmed_extract_service_for_direction(direction_pk) -> bool:
     )
 
 
+HISTORICAL_HOSP_START_CUTOFF = datetime.date(2026, 5, 1)
+HISTORICAL_HOSP_FIXED_DISCHARGE = datetime.date(2026, 5, 10)
+
+
+def hosp_record_starts_before_cutoff(record) -> bool:
+    """date_in или plan_date_in строго раньше 01.05.2026."""
+    if record.plan_date_in and record.plan_date_in < HISTORICAL_HOSP_START_CUTOFF:
+        return True
+    if record.date_in and record.date_in < HISTORICAL_HOSP_START_CUTOFF:
+        return True
+    return False
+
+
+def resolve_discharge_out_date_for_hosp_record(record):
+    """
+    Дата окончания для записи койки/черновика:
+    — до 01.05.2026 → фиксированно 10.05.2026;
+    — иначе из подтверждённой выписки is_extract_service по direction_id.
+    """
+    if hosp_record_starts_before_cutoff(record):
+        return HISTORICAL_HOSP_FIXED_DISCHARGE
+    direction_pk = getattr(record, "direction_id", None)
+    if direction_pk:
+        return get_discharge_date_for_direction_by_extract_service(direction_pk)
+    return None
+
+
 def apply_discharge_out_dates_only(record, discharge_date) -> bool:
     """Записать только plan_date_out и date_out (без is_extract)."""
     if not discharge_date:
