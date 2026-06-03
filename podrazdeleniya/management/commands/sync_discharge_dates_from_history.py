@@ -53,12 +53,7 @@ class Command(BaseCommand):
         if hosp_record_starts_before_cutoff(record):
             fixed = HISTORICAL_HOSP_FIXED_PERIOD_DATE
             if dry_run:
-                if not (
-                    record.date_in == fixed
-                    and record.plan_date_in == fixed
-                    and record.plan_date_out == fixed
-                    and record.date_out == fixed
-                ):
+                if not (record.date_in == fixed and record.plan_date_in == fixed and record.plan_date_out == fixed and record.date_out == fixed):
                     counters["updated"] += 1
                     self.stdout.write(
                         f"[dry-run] {model_label} pk={record.pk} "
