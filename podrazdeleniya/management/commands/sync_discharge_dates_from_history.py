@@ -83,8 +83,7 @@ class Command(BaseCommand):
                 if dry_run:
                     if pswb.plan_date_out != discharge_date or pswb.date_out != discharge_date:
                         self.stdout.write(
-                            f"[dry-run] PatientStationarWithoutBeds pk={pswb.pk} direction={direction_pk} "
-                            f"→ plan_date_out/date_out={discharge_date}",
+                            f"[dry-run] PatientStationarWithoutBeds pk={pswb.pk} direction={direction_pk} " f"→ plan_date_out/date_out={discharge_date}",
                         )
                         updated_pswb += 1
                 elif apply_discharge_out_dates_only(pswb, discharge_date):
