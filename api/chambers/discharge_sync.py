@@ -65,6 +65,46 @@ def get_discharge_date_for_direction(direction_pk):
     return None
 
 
+def get_discharge_date_for_direction_by_extract_service(direction_pk):
+    """Дата выписки из подтверждённой дочерней услуги с is_extract_service."""
+    if not direction_pk:
+        return None
+    for extract_iss in (
+        Issledovaniya.objects.filter(time_confirmation__isnull=False)
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .select_related("research")
+        .order_by("-time_confirmation")
+    ):
+        if extract_iss.research.is_extract_service:
+            discharge_date = _read_discharge_date_from_protocol(extract_iss)
+            if discharge_date:
+                return discharge_date
+    return None
+
+
+def has_confirmed_extract_service_for_direction(direction_pk) -> bool:
+    if not direction_pk:
+        return False
+    return Issledovaniya.objects.filter(
+        time_confirmation__isnull=False,
+        research__is_extract_service=True,
+    ).filter(
+        Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
+    ).exists()
+
+
+def apply_discharge_out_dates_only(record, discharge_date) -> bool:
+    """Записать только plan_date_out и date_out (без is_extract)."""
+    if not discharge_date:
+        return False
+    if record.plan_date_out == discharge_date and record.date_out == discharge_date:
+        return False
+    record.plan_date_out = discharge_date
+    record.date_out = discharge_date
+    record.save(update_fields=["plan_date_out", "date_out"])
+    return True
+
+
 def _effective_plan_date_in(record) -> Optional[datetime.date]:
     return record.plan_date_in or record.date_in
 
