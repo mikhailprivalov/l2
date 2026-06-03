@@ -372,8 +372,9 @@
                         :key="`${bed.pk}-${day.key}-${rec.pk}`"
                         class="record record--draggable"
                         :class="{ 'record--extract': isRecordDischargeDay(rec, day.key) }"
+                        :style="recordCellHighlightStyle(bed.pk, day.key, rec)"
                         draggable="true"
-                        :title="recordHoverTitle(rec, day.key)"
+                        :title="recordCellHoverTitle(bed.pk, day.key, rec)"
                         @click.stop="openEditModalForRecord(bed.pk, day.key, rec)"
                         @dragstart.stop="onPatientDragStart($event, rec)"
                         @dragend="onPatientDragEnd"
@@ -501,6 +502,7 @@
                   'strip-card--forbidden-edit': rec.is_extract,
                   'strip-card--drop-hover': dragOverStripRecordPk === rec.pk,
                 }"
+                :style="duplicateHighlightStyleForRecord(rec)"
                 draggable="true"
                 :title="recordHoverTitle(rec, stripDefaultDayKey)"
                 @dragstart.stop="onStripPatientDragStart($event, rec)"
@@ -598,6 +600,7 @@
                     v-for="p in unallocatedPatientsFiltered"
                     :key="p.direction_pk"
                     class="board-patient-row"
+                    :style="duplicateHighlightStyleForUnallocated(p)"
                     draggable="true"
                     @dragstart="onUnallocatedPatientDragStart($event, p)"
                     @dragend="onUnallocatedPatientDragEnd"
@@ -1527,6 +1530,79 @@ const isDuplicateBySurnameOrDirection = (fio: string | null | undefined, directi
   return bySurname || byDirection;
 };
 
+const duplicateGroupKey = (fio: string | null | undefined, directionPk: number | null | undefined) => {
+  const surname = normalizedSurname(fio);
+  const bySurname = Boolean(surname) && duplicateSurnames.value.has(surname);
+  const byDirection = directionPk != null && directionPk > 0 && duplicateDirectionPks.value.has(directionPk);
+  if (!bySurname && !byDirection) {
+    return '';
+  }
+  if (byDirection) {
+    return `d:${directionPk}`;
+  }
+  return `s:${surname}`;
+};
+
+const DUPLICATE_GOLDEN_ANGLE = 137.508;
+
+const activeDuplicateGroupKeys = computed(() => {
+  const keys = new Set<string>();
+  const append = (fio: string | null | undefined, directionPk: number | null | undefined) => {
+    const key = duplicateGroupKey(fio, directionPk);
+    if (key) {
+      keys.add(key);
+    }
+  };
+  for (const rec of records.value) {
+    append(rec.patient_fio, rec.direction_pk);
+  }
+  for (const rec of stripRecords.value) {
+    append(rec.patient_fio, rec.direction_pk);
+  }
+  for (const p of unallocatedPatients.value) {
+    append(p.fio, p.direction_pk);
+  }
+  return [...keys].sort();
+});
+
+const duplicateGroupBorderColorMap = computed(() => {
+  const map = new Map<string, string>();
+  activeDuplicateGroupKeys.value.forEach((key, index) => {
+    const hue = Math.round((index * DUPLICATE_GOLDEN_ANGLE) % 360);
+    map.set(key, `hsl(${hue}, 92%, 44%)`);
+  });
+  return map;
+});
+
+const duplicateBorderColorForGroup = (groupKey: string) => (
+  duplicateGroupBorderColorMap.value.get(groupKey) || ''
+);
+
+const duplicateHighlightStyle = (fio: string | null | undefined, directionPk: number | null | undefined) => {
+  if (!quickFilterClone.value) {
+    return {};
+  }
+  const groupKey = duplicateGroupKey(fio, directionPk);
+  if (!groupKey) {
+    return {};
+  }
+  const color = duplicateBorderColorForGroup(groupKey);
+  if (!color) {
+    return {};
+  }
+  return {
+    borderLeft: `4px solid ${color}`,
+  };
+};
+
+const duplicateHighlightStyleForRecord = (rec: CalendarRecord) => (
+  duplicateHighlightStyle(rec.patient_fio, rec.direction_pk)
+);
+
+const duplicateHighlightStyleForUnallocated = (p: UnallocatedPatient) => (
+  duplicateHighlightStyle(p.fio, p.direction_pk)
+);
+
 function calendarRecordMatchesQuickFilters(
   rec: CalendarRecord,
   options?: { treatAsExtract?: boolean },
@@ -1822,6 +1898,66 @@ const isBedFreeForDay = (bedPk: number, dayKey: string) => (
   isBedFreeForOccupying(bedDayOccupyingRecords(bedPk, dayKey), dayKey)
 );
 
+/** Недопустимое размещение: >2 пациентов, два невыписанных или не turnover «выписанный + новый». */
+const isInvalidBedDayOccupying = (occupying: CalendarRecord[], dayKey: string) => {
+  if (occupying.length <= 1) {
+    return false;
+  }
+  if (occupying.length > 2) {
+    return true;
+  }
+  const nonExtract = occupying.filter((r) => !r.is_extract);
+  const extractOnDischargeDay = occupying.filter((r) => isRecordDischargeDay(r, dayKey));
+  if (nonExtract.length >= 2) {
+    return true;
+  }
+  if (nonExtract.length === 0) {
+    return true;
+  }
+  return extractOnDischargeDay.length !== 1;
+};
+
+const invalidBedDayKeys = computed(() => {
+  const invalid = new Set<string>();
+  const days = visibleDays.value;
+  if (!days.length) {
+    return invalid;
+  }
+  const bedPks = new Set<number>();
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    if (rec.bed_pk > 0) {
+      bedPks.add(rec.bed_pk);
+    }
+  }
+  for (const bedPk of bedPks) {
+    for (const { key: dayKey } of days) {
+      const occupying = bedDayOccupyingRecords(bedPk, dayKey);
+      if (isInvalidBedDayOccupying(occupying, dayKey)) {
+        invalid.add(`${bedPk}-${dayKey}`);
+      }
+    }
+  }
+  return invalid;
+});
+
+const isInvalidBedDay = (bedPk: number, dayKey: string) => (
+  invalidBedDayKeys.value.has(`${bedPk}-${dayKey}`)
+);
+
+const bedConflictHighlightStyle = (bedPk: number, dayKey: string) => {
+  if (quickFilterClone.value || !isInvalidBedDay(bedPk, dayKey)) {
+    return {};
+  }
+  return {
+    borderLeft: '4px solid #dc2626',
+  };
+};
+
+const recordCellHighlightStyle = (bedPk: number, dayKey: string, rec: CalendarRecord) => ({
+  ...duplicateHighlightStyle(rec.patient_fio, rec.direction_pk),
+  ...bedConflictHighlightStyle(bedPk, dayKey),
+});
+
 const bedHasFreeDayInPeriod = (bedPk: number) => {
   for (const day of visibleDays.value) {
     if (isBedFreeForDay(bedPk, day.key)) {
@@ -1971,6 +2107,16 @@ const recordHoverTitle = (rec: CalendarRecord, dayKey: string) => {
     }
   }
   return title;
+};
+
+const recordCellHoverTitle = (bedPk: number, dayKey: string, rec: CalendarRecord) => {
+  const base = recordHoverTitle(rec, dayKey);
+  if (!isInvalidBedDay(bedPk, dayKey)) {
+    return base;
+  }
+  return base
+    ? `${base}. Недопустимое размещение на койке`
+    : 'Недопустимое размещение на койке';
 };
 
 const formatCellDoctorSurname = (record: CalendarRecord) => surnameFromFio(record.doctor_fio);

@@ -163,8 +163,8 @@ def _occupying_on_bed_day(bed_id, day_d, exclude_pk=None):
     return result
 
 
-def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None):
-    """Не более двух пациентов в день на койке; второй — только при turnover с выписанным в его последний день."""
+def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None, proposed_is_extract=False):
+    """Не более двух пациентов в день на койке; второй — только новый при turnover с выписанным в его последний день."""
     occupying = _occupying_on_bed_day(bed_id, day_d, exclude_pk=exclude_pk)
     if not occupying:
         return None
@@ -175,6 +175,44 @@ def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None):
         return "На этой койке уже есть госпитализация на выбранную дату"
     if day_d != _hosp_visual_end(existing):
         return "На этой койке уже есть госпитализация на выбранную дату"
+    if proposed_is_extract:
+        return "В ячейке с выписанным можно разместить только нового пациента"
+    return None
+
+
+def _check_bed_hosp_placement_allowed(
+    bed_id,
+    plan_date_in,
+    plan_date_out,
+    exclude_pk=None,
+    proposed_is_extract=False,
+    fallback_date_in=None,
+    fallback_date_out=None,
+):
+    """На койке: максимум выписанный + новый; два невыписанных одновременно недопустимы."""
+    if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
+        return "Дата начала не может быть позже даты окончания"
+    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out, fallback_date_in, fallback_date_out)
+    to_eff = to_d if to_d is not None else _HOSP_OPEN_END
+    turnover_err = _check_bed_day_turnover_allowed(
+        bed_id,
+        from_d,
+        exclude_pk=exclude_pk,
+        proposed_is_extract=proposed_is_extract,
+    )
+    if turnover_err:
+        return turnover_err
+    if _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk):
+        return "На этой койке период пересекается с другой госпитализацией"
+    if not proposed_is_extract:
+        qs = PatientToBed.objects.filter(bed_id=bed_id, is_extract=False)
+        if exclude_pk:
+            qs = qs.exclude(pk=exclude_pk)
+        for o in qs:
+            os_d = _hosp_visual_start(o)
+            oe_d = _hosp_visual_end(o)
+            if from_d <= oe_d and to_eff >= os_d:
+                return "На этой койке уже есть госпитализация на выбранную дату"
     return None
 
 
@@ -552,6 +590,15 @@ def entrance_patient_to_bed(request):
     user_can_edit = Chamber.check_user(user, bed_department_id)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
+    today = datetime.date.today()
+    placement_err = _check_bed_hosp_placement_allowed(
+        bed_id,
+        plan_date_in=today,
+        plan_date_out=None,
+        proposed_is_extract=False,
+    )
+    if placement_err:
+        return status_response(False, placement_err)
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id, doctor_id=doctor_id)
         patient_to_bed.save()
@@ -1041,13 +1088,6 @@ def save_hospitalization_by_fio(request):
         patient_fio_text, patient_sex, birthday, patient_age_text = filled
     if not patient_fio_text:
         return status_response(False, "Укажите ФИО пациента")
-    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out)
-    turnover_err = _check_bed_day_turnover_allowed(bed_id, from_d)
-    if turnover_err:
-        return status_response(False, turnover_err)
-    overlap_err = _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out)
-    if overlap_err:
-        return status_response(False, overlap_err)
     is_extract = _parse_bool(request_data.get("is_extract"))
     if direction_fk:
         pswb = PatientStationarWithoutBeds.objects.filter(
@@ -1059,6 +1099,14 @@ def save_hospitalization_by_fio(request):
         ptb = PatientToBed.objects.filter(direction_id=direction_fk).order_by("-pk").first()
         if ptb:
             is_extract = is_extract or bool(ptb.is_extract)
+    placement_err = _check_bed_hosp_placement_allowed(
+        bed_id,
+        plan_date_in,
+        plan_date_out,
+        proposed_is_extract=is_extract,
+    )
+    if placement_err:
+        return status_response(False, placement_err)
     patient_to_bed = PatientToBed(
         direction_id=direction_fk,
         bed_id=bed_id,
@@ -1120,25 +1168,17 @@ def update_hospitalization_record(request):
     department_id = record.bed.chamber.podrazdelenie_id
     if not Chamber.check_user(user, department_id):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    from_d, _ = _proposed_hosp_period(
-        plan_date_in,
-        plan_date_out,
-        fallback_date_in=record.date_in,
-        fallback_date_out=record.date_out,
-    )
-    turnover_err = _check_bed_day_turnover_allowed(record.bed_id, from_d, exclude_pk=record.pk)
-    if turnover_err:
-        return status_response(False, turnover_err)
-    overlap_err = _check_bed_period_overlap(
+    placement_err = _check_bed_hosp_placement_allowed(
         record.bed_id,
         plan_date_in,
         plan_date_out,
         exclude_pk=record.pk,
+        proposed_is_extract=bool(record.is_extract),
         fallback_date_in=record.date_in,
         fallback_date_out=record.date_out,
     )
-    if overlap_err:
-        return status_response(False, overlap_err)
+    if placement_err:
+        return status_response(False, placement_err)
     if "direction_id" in request_data:
         dir_raw = request_data.get("direction_id")
         if dir_raw in (None, "", 0, "0"):
@@ -1285,12 +1325,17 @@ def move_hospitalization_to_bed(request):
         uses_plan = _hosp_uses_plan_calendar(old)
         tail_plan_out = old.plan_date_out
         tail_date_out = old.date_out
-        tail_end = _hosp_tail_end_date(old)
-        turnover_err = _check_bed_day_turnover_allowed(target_bed_id, move_from_date, exclude_pk=old.pk)
-        if turnover_err:
-            return status_response(False, turnover_err)
-        if _bed_range_has_overlap(target_bed_id, move_from_date, tail_end, None):
-            return status_response(False, "На целевой койке уже есть пациент в этот период")
+        placement_err = _check_bed_hosp_placement_allowed(
+            target_bed_id,
+            move_from_date if uses_plan else None,
+            tail_plan_out if uses_plan else None,
+            exclude_pk=old.pk,
+            proposed_is_extract=bool(old.is_extract),
+            fallback_date_in=move_from_date,
+            fallback_date_out=tail_date_out,
+        )
+        if placement_err:
+            return status_response(False, placement_err)
         if move_from_date <= vstart:
             old.bed_id = target_bed_id
             old.save(update_fields=["bed_id"])
