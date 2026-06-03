@@ -19,7 +19,7 @@ class Command(BaseCommand):
         if kwargs["dirs"]:
             dirs = kwargs["dirs"]
         date_end = utils.current_time()
-        days_ago = SettingManager.get("days_before_hosp", default='30', default_type='i')
+        days_ago = SettingManager.get("days_before_hosp", default='35', default_type='i')
         date_start = date_end + relativedelta(days=-days_ago)
         date_start = datetime.combine(date_start, dtime.min)
         dirs_data = dirs.split(",")
