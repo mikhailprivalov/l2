@@ -307,11 +307,7 @@ def apply_extract_service_out_dates_recent(record, discharge_date) -> bool:
     """plan_date_out, date_out и is_extract=True (без изменения дат заезда)."""
     if not discharge_date:
         return False
-    if (
-        record.plan_date_out == discharge_date
-        and record.date_out == discharge_date
-        and record.is_extract
-    ):
+    if record.plan_date_out == discharge_date and record.date_out == discharge_date and record.is_extract:
         return False
     record.plan_date_out = discharge_date
     record.date_out = discharge_date
