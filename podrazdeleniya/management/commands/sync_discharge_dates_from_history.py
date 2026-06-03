@@ -71,8 +71,7 @@ class Command(BaseCommand):
             if period_date >= HISTORICAL_HOSP_START_CUTOFF:
                 self.stdout.write(
                     self.style.ERROR(
-                        f"Достигнут предел {HISTORICAL_HOSP_START_CUTOFF:%d.%m.%Y}: "
-                        f"не хватило дней для {model_label} pk={record.pk}",
+                        f"Достигнут предел {HISTORICAL_HOSP_START_CUTOFF:%d.%m.%Y}: " f"не хватило дней для {model_label} pk={record.pk}",
                     ),
                 )
                 break
