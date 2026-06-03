@@ -4,9 +4,10 @@ from django.core.management.base import BaseCommand
 from django.db.models import Q
 
 from api.chambers.discharge_sync import (
-    HISTORICAL_HOSP_FIXED_DISCHARGE,
+    HISTORICAL_HOSP_FIXED_PERIOD_DATE,
     HISTORICAL_HOSP_START_CUTOFF,
     apply_discharge_out_dates_only,
+    apply_historical_hosp_period_dates,
     has_confirmed_extract_service_for_direction,
     hosp_record_starts_before_cutoff,
     resolve_discharge_out_date_for_hosp_record,
@@ -16,10 +17,11 @@ from podrazdeleniya.models import PatientStationarWithoutBeds, PatientToBed
 
 class Command(BaseCommand):
     help = (
-        "Обновляет plan_date_out и date_out в PatientToBed и PatientStationarWithoutBeds. "
+        "Обновляет даты в PatientToBed и PatientStationarWithoutBeds. "
         f"Если plan_date_in или date_in раньше {HISTORICAL_HOSP_START_CUTOFF:%d.%m.%Y}, "
-        f"проставляет {HISTORICAL_HOSP_FIXED_DISCHARGE:%d.%m.%Y}. "
-        "Иначе — дата из подтверждённой дочерней услуги is_extract_service (поле «Дата выписки»)."
+        f"проставляет date_in, plan_date_in, plan_date_out, date_out = "
+        f"{HISTORICAL_HOSP_FIXED_PERIOD_DATE:%d.%m.%Y}. "
+        "Иначе — plan_date_out/date_out из подтверждённой выписки is_extract_service."
     )
 
     def add_arguments(self, parser):
@@ -48,6 +50,30 @@ class Command(BaseCommand):
         return qs
 
     def _process_record(self, record, model_label, dry_run, counters):
+        if hosp_record_starts_before_cutoff(record):
+            fixed = HISTORICAL_HOSP_FIXED_PERIOD_DATE
+            if dry_run:
+                if not (
+                    record.date_in == fixed
+                    and record.plan_date_in == fixed
+                    and record.plan_date_out == fixed
+                    and record.date_out == fixed
+                ):
+                    counters["updated"] += 1
+                    self.stdout.write(
+                        f"[dry-run] {model_label} pk={record.pk} "
+                        f"direction={getattr(record, 'direction_id', None)} "
+                        f"(historical-fixed) → date_in/plan_date_in/plan_date_out/date_out={fixed}",
+                    )
+            elif apply_historical_hosp_period_dates(record):
+                counters["updated"] += 1
+                self.stdout.write(
+                    f"{model_label} pk={record.pk} "
+                    f"direction={getattr(record, 'direction_id', None)} "
+                    f"(historical-fixed) → date_in/plan_date_in/plan_date_out/date_out={fixed}",
+                )
+            return
+
         discharge_date = resolve_discharge_out_date_for_hosp_record(record)
         if discharge_date is None:
             if getattr(record, "direction_id", None):
@@ -67,7 +93,7 @@ class Command(BaseCommand):
         if record.plan_date_out == discharge_date and record.date_out == discharge_date:
             return
 
-        source = "historical-fixed" if hosp_record_starts_before_cutoff(record) else "extract-service"
+        source = "extract-service"
         if dry_run:
             counters["updated"] += 1
             self.stdout.write(
