@@ -117,12 +117,7 @@ def apply_historical_hosp_period_dates(record) -> bool:
     if not hosp_record_starts_before_cutoff(record):
         return False
     fixed = HISTORICAL_HOSP_FIXED_PERIOD_DATE
-    if (
-        record.date_in == fixed
-        and record.plan_date_in == fixed
-        and record.plan_date_out == fixed
-        and record.date_out == fixed
-    ):
+    if record.date_in == fixed and record.plan_date_in == fixed and record.plan_date_out == fixed and record.date_out == fixed:
         return False
     record.date_in = fixed
     record.plan_date_in = fixed
