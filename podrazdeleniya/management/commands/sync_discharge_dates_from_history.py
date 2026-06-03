@@ -77,11 +77,7 @@ class Command(BaseCommand):
                 break
             if dry_run:
                 if not (
-                    record.date_in == period_date
-                    and record.plan_date_in == period_date
-                    and record.plan_date_out == period_date
-                    and record.date_out == period_date
-                    and record.is_extract
+                    record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date and record.is_extract
                 ):
                     updated += 1
                     self.stdout.write(
