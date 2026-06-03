@@ -63,9 +63,7 @@ class Command(BaseCommand):
             elif apply_historical_hosp_period_dates(record):
                 counters["updated"] += 1
                 self.stdout.write(
-                    f"{model_label} pk={record.pk} "
-                    f"direction={getattr(record, 'direction_id', None)} "
-                    f"(historical-fixed) → date_in/plan_date_in/plan_date_out/date_out={fixed}",
+                    f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(historical-fixed) → date_in/plan_date_in/plan_date_out/date_out={fixed}",
                 )
             return
 
