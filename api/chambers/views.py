@@ -920,7 +920,6 @@ def save_patient_without_bed(request):
     if patient_obj.get("is_extract") is not None:
         is_extract = _parse_bool(patient_obj.get("is_extract"))
     patient_without_bed = None
-    created = False
     if pswb_pk:
         patient_without_bed = PatientStationarWithoutBeds.objects.filter(
             pk=pswb_pk,
