@@ -112,17 +112,19 @@ def hosp_record_starts_before_cutoff(record) -> bool:
 
 def apply_historical_hosp_period_dates(record, period_date: datetime.date) -> bool:
     """
-    Для исторической записи: все четыре даты = period_date (распределение по дням с 01.01.2010).
+    Для исторической записи: все четыре даты = period_date (распределение по дням с 01.01.2010),
+    is_extract=True.
     """
     if period_date >= HISTORICAL_HOSP_START_CUTOFF:
         return False
-    if record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date:
+    if record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date and record.is_extract:
         return False
     record.date_in = period_date
     record.plan_date_in = period_date
     record.plan_date_out = period_date
     record.date_out = period_date
-    record.save(update_fields=["date_in", "plan_date_in", "plan_date_out", "date_out"])
+    record.is_extract = True
+    record.save(update_fields=["date_in", "plan_date_in", "plan_date_out", "date_out", "is_extract"])
     return True
 
 
@@ -141,14 +143,15 @@ def resolve_discharge_out_date_for_hosp_record(record):
 
 
 def apply_discharge_out_dates_only(record, discharge_date) -> bool:
-    """Записать только plan_date_out и date_out (без is_extract)."""
+    """Записать plan_date_out, date_out и is_extract=True из протокола выписки."""
     if not discharge_date:
         return False
-    if record.plan_date_out == discharge_date and record.date_out == discharge_date:
+    if record.plan_date_out == discharge_date and record.date_out == discharge_date and record.is_extract:
         return False
     record.plan_date_out = discharge_date
     record.date_out = discharge_date
-    record.save(update_fields=["plan_date_out", "date_out"])
+    record.is_extract = True
+    record.save(update_fields=["plan_date_out", "date_out", "is_extract"])
     return True
 
 
