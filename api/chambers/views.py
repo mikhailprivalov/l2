@@ -655,7 +655,7 @@ def entrance_patient_to_bed(request):
     user_can_edit = Chamber.check_user(user, bed_department_id)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    today = datetime.date.today()
+
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
         patient_to_bed = PatientToBed(
             direction_id=direction_id,
@@ -970,7 +970,6 @@ def save_patient_without_bed(request):
                 is_extract=is_extract,
                 record_source=record_source,
             )
-        created = True
     else:
         patient_without_bed.doctor_id = doctor_id
         patient_without_bed.plan_date_in = plan_date_in
