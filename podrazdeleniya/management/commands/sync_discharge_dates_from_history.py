@@ -77,24 +77,16 @@ class Command(BaseCommand):
                 break
             if dry_run:
                 if not (
-                    record.date_in == period_date
-                    and record.plan_date_in == period_date
-                    and record.plan_date_out == period_date
-                    and record.date_out == period_date
-                    and record.is_extract
+                    record.date_in == period_date and record.plan_date_in == period_date and record.plan_date_out == period_date and record.date_out == period_date and record.is_extract
                 ):
                     updated += 1
                     self.stdout.write(
-                        f"[dry-run] {model_label} pk={record.pk} "
-                        f"direction={getattr(record, 'direction_id', None)} "
-                        f"(historical-seq) → все даты={period_date}, is_extract=True",
+                        f"[dry-run] {model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(historical-seq) → все даты={period_date}, is_extract=True",
                     )
             elif apply_historical_hosp_period_dates(record, period_date):
                 updated += 1
                 self.stdout.write(
-                    f"{model_label} pk={record.pk} "
-                    f"direction={getattr(record, 'direction_id', None)} "
-                    f"(historical-seq) → все даты={period_date}, is_extract=True",
+                    f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(historical-seq) → все даты={period_date}, is_extract=True",
                 )
             period_date += datetime.timedelta(days=1)
         return updated
@@ -134,9 +126,7 @@ class Command(BaseCommand):
         if apply_discharge_out_dates_only(record, discharge_date):
             counters["updated"] += 1
             self.stdout.write(
-                f"{model_label} pk={record.pk} "
-                f"direction={getattr(record, 'direction_id', None)} "
-                f"(extract-service) → plan_date_out/date_out={discharge_date}, is_extract=True",
+                f"{model_label} pk={record.pk} " f"direction={getattr(record, 'direction_id', None)} " f"(extract-service) → plan_date_out/date_out={discharge_date}, is_extract=True",
             )
 
     def handle(self, *args, **options):

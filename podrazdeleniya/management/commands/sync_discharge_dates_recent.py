@@ -48,8 +48,7 @@ class Command(BaseCommand):
 
         prefix = "[dry-run] " if dry_run else ""
         self.stdout.write(
-            f"{prefix}Период по дате выписки в протоколе: "
-            f"{stats['date_from']:%d.%m.%Y} — {stats['date_to']:%d.%m.%Y}",
+            f"{prefix}Период по дате выписки в протоколе: " f"{stats['date_from']:%d.%m.%Y} — {stats['date_to']:%d.%m.%Y}",
         )
         self.stdout.write(
             self.style.SUCCESS(
