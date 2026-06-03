@@ -11,7 +11,16 @@ from django.utils.dateparse import parse_date
 
 from laboratory.settings import ACCOMPANYING_CHILD, CHAMBER_DOCTOR_GROUP_ID, CDA_ID_FOR_DATE_IS_EXTRACT
 from laboratory.utils import current_time
-from podrazdeleniya.models import Chamber, Bed, PatientToBed, PatientToBedDateComment, PatientStationarWithoutBeds, PatientBedActionLog
+from podrazdeleniya.models import (
+    Chamber,
+    Bed,
+    PatientToBed,
+    PatientToBedDateComment,
+    PatientStationarWithoutBeds,
+    PatientBedActionLog,
+    RECORD_SOURCE_MANUAL,
+    RECORD_SOURCE_FROM_HISTORY,
+)
 from directions.models import Issledovaniya, Napravleniya
 from slog.models import Log
 from utils.response import status_response
@@ -138,7 +147,7 @@ def _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk=None):
     if from_d > to_eff:
         return False
     qs = PatientToBed.objects.filter(bed_id=bed_id)
-    if exclude_pk:
+    if exclude_pk is not None:
         qs = qs.exclude(pk=exclude_pk)
     for o in qs:
         os_d = _hosp_visual_start(o)
@@ -152,7 +161,7 @@ def _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk=None):
 
 def _occupying_on_bed_day(bed_id, day_d, exclude_pk=None):
     qs = PatientToBed.objects.filter(bed_id=bed_id)
-    if exclude_pk:
+    if exclude_pk is not None:
         qs = qs.exclude(pk=exclude_pk)
     result = []
     for o in qs:
@@ -163,8 +172,8 @@ def _occupying_on_bed_day(bed_id, day_d, exclude_pk=None):
     return result
 
 
-def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None):
-    """Не более двух пациентов в день на койке; второй — только при turnover с выписанным в его последний день."""
+def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None, proposed_is_extract=False):
+    """Не более двух пациентов в день на койке; второй — только новый при turnover с выписанным в его последний день."""
     occupying = _occupying_on_bed_day(bed_id, day_d, exclude_pk=exclude_pk)
     if not occupying:
         return None
@@ -175,6 +184,89 @@ def _check_bed_day_turnover_allowed(bed_id, day_d, exclude_pk=None):
         return "На этой койке уже есть госпитализация на выбранную дату"
     if day_d != _hosp_visual_end(existing):
         return "На этой койке уже есть госпитализация на выбранную дату"
+    if proposed_is_extract:
+        return "В ячейке с выписанным можно разместить только нового пациента"
+    return None
+
+
+def _check_bed_hosp_placement_allowed(
+    bed_id,
+    plan_date_in,
+    plan_date_out,
+    exclude_pk=None,
+    proposed_is_extract=False,
+    fallback_date_in=None,
+    fallback_date_out=None,
+):
+    """На койке: максимум выписанный + новый; два невыписанных одновременно недопустимы."""
+    if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
+        return "Дата начала не может быть позже даты окончания"
+    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out, fallback_date_in, fallback_date_out)
+    to_eff = to_d if to_d is not None else _HOSP_OPEN_END
+    turnover_err = _check_bed_day_turnover_allowed(
+        bed_id,
+        from_d,
+        exclude_pk=exclude_pk,
+        proposed_is_extract=proposed_is_extract,
+    )
+    if turnover_err:
+        return turnover_err
+    if _bed_range_has_overlap(bed_id, from_d, to_d, exclude_pk):
+        return "На этой койке период пересекается с другой госпитализацией"
+    if not proposed_is_extract:
+        qs = PatientToBed.objects.filter(bed_id=bed_id, is_extract=False)
+        if exclude_pk is not None:
+            qs = qs.exclude(pk=exclude_pk)
+        for o in qs:
+            os_d = _hosp_visual_start(o)
+            oe_d = _hosp_visual_end(o)
+            if from_d <= oe_d and to_eff >= os_d:
+                return "На этой койке уже есть госпитализация на выбранную дату"
+    return None
+
+
+def _resolve_update_hosp_period(record, plan_date_in, plan_date_out):
+    """Период для проверки при редактировании: без «бессрочного» конца, если дата окончания не передана."""
+    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out, record.date_in, record.date_out)
+    if to_d is not None:
+        return from_d, to_d
+    visual_end = _hosp_visual_end(record)
+    if visual_end != _HOSP_OPEN_END:
+        return from_d, visual_end
+    if record.plan_date_out is not None:
+        return from_d, record.plan_date_out
+    if record.date_out is not None:
+        return from_d, record.date_out
+    return from_d, from_d + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
+
+
+def _check_bed_hosp_update_allowed(record, plan_date_in, plan_date_out):
+    """Правила койки при редактировании существующей записи (сама запись исключается)."""
+    if plan_date_in and plan_date_out and plan_date_in > plan_date_out:
+        return "Дата начала не может быть позже даты окончания"
+    from_d, to_d = _resolve_update_hosp_period(record, plan_date_in, plan_date_out)
+    exclude_pk = record.pk
+    if _bed_range_has_overlap(record.bed_id, from_d, to_d, exclude_pk):
+        return "На этой койке период пересекается с другой госпитализацией"
+    if not record.is_extract:
+        qs = PatientToBed.objects.filter(bed_id=record.bed_id, is_extract=False).exclude(pk=exclude_pk)
+        for o in qs:
+            os_d = _hosp_visual_start(o)
+            oe_d = _hosp_visual_end(o)
+            if from_d <= oe_d and to_d >= os_d:
+                return "На этой койке уже есть госпитализация на выбранную дату"
+    day = from_d
+    while day <= to_d:
+        occupying = _occupying_on_bed_day(record.bed_id, day, exclude_pk=exclude_pk)
+        if len(occupying) >= 2:
+            return "В ячейке уже два пациента — допустимы только выписанный и новый"
+        if len(occupying) == 1 and not record.is_extract:
+            existing = occupying[0]
+            if not existing.is_extract:
+                return "На этой койке уже есть госпитализация на выбранную дату"
+            if day != _hosp_visual_end(existing):
+                return "На этой койке уже есть госпитализация на выбранную дату"
+        day += datetime.timedelta(days=1)
     return None
 
 
@@ -437,6 +529,17 @@ def _parse_bool(value):
     return False
 
 
+def _resolve_record_source(request_data):
+    raw = (request_data.get("record_source") or "").strip()
+    if raw == RECORD_SOURCE_FROM_HISTORY:
+        return RECORD_SOURCE_FROM_HISTORY
+    if raw == RECORD_SOURCE_MANUAL:
+        return RECORD_SOURCE_MANUAL
+    if _parse_bool(request_data.get("fill_patient_from_direction")):
+        return RECORD_SOURCE_FROM_HISTORY
+    return RECORD_SOURCE_MANUAL
+
+
 def _resolve_direction_id_by_fio(fio_text, department_id):
     fio = " ".join((fio_text or "").split()).strip()
     if not fio:
@@ -552,15 +655,33 @@ def entrance_patient_to_bed(request):
     user_can_edit = Chamber.check_user(user, bed_department_id)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
+
     if not PatientToBed.objects.filter(bed_id=bed_id, date_out=None).exists():
-        patient_to_bed = PatientToBed(direction_id=direction_id, bed_id=bed_id, doctor_id=doctor_id)
+        patient_to_bed = PatientToBed(
+            direction_id=direction_id,
+            bed_id=bed_id,
+            doctor_id=doctor_id,
+            record_source=RECORD_SOURCE_FROM_HISTORY,
+        )
         patient_to_bed.save()
-        Log.log(direction_id, 230000, user.doctorprofile, {"direction_id": direction_id, "bed_id": bed_id, "department_id": bed_department_id, "patient_to_bed": patient_to_bed.pk})
+        Log.log(
+            direction_id,
+            230000,
+            user.doctorprofile,
+            {
+                "direction_id": direction_id,
+                "bed_id": bed_id,
+                "department_id": bed_department_id,
+                "patient_to_bed": patient_to_bed.pk,
+                "record_source": RECORD_SOURCE_FROM_HISTORY,
+            },
+        )
         log_bed_action(
             PatientBedActionLog.ACTION_ASSIGN,
             author=user.doctorprofile,
             department_id=bed_department_id,
             patient_to_bed=patient_to_bed,
+            record_source=RECORD_SOURCE_FROM_HISTORY,
             payload={"source": "entrance_patient_to_bed"},
         )
     return status_response(True)
@@ -702,13 +823,21 @@ def get_patients_without_bed(request):
             patient.date_out,
             fallback_plan_date_in=fallback_plan_date_in,
         )
+        if patient.direction_id:
+            fio = f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}"
+            short_fio = f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}."
+        else:
+            fio = (getattr(patient, "patient_fio_text", None) or "").strip()
+            short_fio = fio
         row = {
-            "fio": f"{patient.patient_family} {patient.patient_name} {patient.patient_patronymic if patient.patient_patronymic else ''}",
-            "short_fio": f"{patient.patient_family} {patient.patient_name[0]}. {patient.patient_patronymic[0] if patient.patient_patronymic else ''}.",
+            "fio": fio,
+            "short_fio": short_fio,
             "age": patient.patient_age,
             "sex": patient.patient_sex,
             "direction_pk": patient.direction_id,
+            "pswb_pk": patient.pswb_pk,
             "doctor_pk": patient.doctor_id,
+            "record_source": getattr(patient, "record_source", None) or RECORD_SOURCE_FROM_HISTORY,
         }
         row.update(
             _strip_patient_row_from_resolved_dates(
@@ -759,8 +888,27 @@ def save_patient_without_bed(request):
     patient_obj = request_data.get('patient_obj') or {}
     doctor_id = request_data.get('doctor_id')
     direction_pk = patient_obj.get("direction_pk")
-    if not direction_pk:
-        return status_response(False, "Направление обязательно")
+    pswb_pk = patient_obj.get("pswb_pk")
+    patient_fio_text = (request_data.get("patient_fio_text") or patient_obj.get("patient_fio_text") or "").strip()[:128]
+    patient_sex = (request_data.get("patient_sex") or patient_obj.get("patient_sex") or "м").strip()[:2]
+    if direction_pk in (None, "", 0, "0"):
+        direction_pk = None
+    else:
+        try:
+            direction_pk = int(direction_pk)
+        except (TypeError, ValueError):
+            return status_response(False, "Некорректный номер направления")
+        if direction_pk <= 0:
+            direction_pk = None
+    if pswb_pk in (None, "", 0, "0"):
+        pswb_pk = None
+    else:
+        try:
+            pswb_pk = int(pswb_pk)
+        except (TypeError, ValueError):
+            return status_response(False, "Некорректный идентификатор черновика")
+    if not direction_pk and not pswb_pk and not patient_fio_text:
+        return status_response(False, "Укажите ФИО пациента или номер направления")
     user = request.user
     user_can_edit = Chamber.check_user(user, department_pk)
     if not user_can_edit:
@@ -771,53 +919,83 @@ def save_patient_without_bed(request):
     is_extract = _parse_bool(request_data.get("is_extract"))
     if patient_obj.get("is_extract") is not None:
         is_extract = _parse_bool(patient_obj.get("is_extract"))
-    existing_pswb = PatientStationarWithoutBeds.objects.filter(
-        direction_id=direction_pk,
-        department_id=department_pk,
-    ).first()
-    if existing_pswb:
-        is_extract = is_extract or bool(existing_pswb.is_extract)
+    patient_without_bed = None
+    if pswb_pk:
+        patient_without_bed = PatientStationarWithoutBeds.objects.filter(
+            pk=pswb_pk,
+            department_id=department_pk,
+        ).first()
+        if not patient_without_bed:
+            return status_response(False, "Черновик не найден")
+    elif direction_pk:
+        patient_without_bed = PatientStationarWithoutBeds.objects.filter(
+            direction_id=direction_pk,
+            department_id=department_pk,
+        ).first()
+    if patient_without_bed:
+        is_extract = is_extract or bool(patient_without_bed.is_extract)
     today = datetime.date.today()
     if not plan_date_in:
         plan_date_in = today
     if not plan_date_out:
         plan_date_out = plan_date_in + datetime.timedelta(days=_default_hospitalization_period_days() - 1)
-    defaults = {
-        "department_id": department_pk,
-        "doctor_id": doctor_id,
-        "plan_date_in": plan_date_in,
-        "plan_date_out": plan_date_out,
-        "date_out": date_out,
-        "is_extract": is_extract,
-    }
-    patient_without_bed, created = PatientStationarWithoutBeds.objects.get_or_create(
-        direction_id=direction_pk,
-        defaults=defaults,
-    )
-    if created and patient_without_bed.department_id != department_pk:
-        patient_without_bed.department_id = department_pk
-        patient_without_bed.save(update_fields=["department_id"])
-    if not created:
+    record_source_raw = (request_data.get("record_source") or "").strip()
+    if record_source_raw in (RECORD_SOURCE_MANUAL, RECORD_SOURCE_FROM_HISTORY):
+        record_source = record_source_raw
+    else:
+        record_source = RECORD_SOURCE_FROM_HISTORY
+    if not patient_without_bed:
+        if direction_pk:
+            patient_without_bed = PatientStationarWithoutBeds.objects.create(
+                direction_id=direction_pk,
+                department_id=department_pk,
+                doctor_id=doctor_id,
+                plan_date_in=plan_date_in,
+                plan_date_out=plan_date_out,
+                date_out=date_out,
+                is_extract=is_extract,
+                record_source=record_source,
+            )
+        else:
+            patient_without_bed = PatientStationarWithoutBeds.objects.create(
+                direction_id=None,
+                department_id=department_pk,
+                doctor_id=doctor_id,
+                patient_fio_text=patient_fio_text,
+                patient_sex=patient_sex or "м",
+                plan_date_in=plan_date_in,
+                plan_date_out=plan_date_out,
+                date_out=date_out,
+                is_extract=is_extract,
+                record_source=record_source,
+            )
+    else:
         patient_without_bed.doctor_id = doctor_id
         patient_without_bed.plan_date_in = plan_date_in
         patient_without_bed.plan_date_out = plan_date_out
         patient_without_bed.date_out = date_out
         patient_without_bed.is_extract = is_extract or bool(patient_without_bed.is_extract)
-        patient_without_bed.save(update_fields=["doctor_id", "plan_date_in", "plan_date_out", "date_out", "is_extract"])
+        if not patient_without_bed.direction_id and patient_fio_text:
+            patient_without_bed.patient_fio_text = patient_fio_text
+            patient_without_bed.patient_sex = patient_sex or "м"
+        patient_without_bed.save()
+    log_fio = patient_fio_text
+    if direction_pk and not log_fio:
+        filled = _patient_fields_from_direction_client(direction_pk)
+        if filled:
+            log_fio = filled[0]
     Log.log(
-        patient_obj["direction_pk"],
+        direction_pk or patient_without_bed.pk,
         230004,
         user.doctorprofile,
         {
-            "direction_id": patient_obj["direction_pk"],
+            "direction_id": direction_pk,
+            "pswb_pk": patient_without_bed.pk,
             "department_id": department_pk,
             "doctor_id": doctor_id,
+            "record_source": patient_without_bed.record_source,
         },
     )
-    patient_fio_text = ""
-    filled = _patient_fields_from_direction_client(direction_pk)
-    if filled:
-        patient_fio_text = filled[0]
     log_bed_action(
         PatientBedActionLog.ACTION_TO_DRAFT,
         author=user.doctorprofile,
@@ -826,11 +1004,18 @@ def save_patient_without_bed(request):
         doctor_id=doctor_id,
         plan_date_in=plan_date_in,
         plan_date_out=plan_date_out,
-        patient_fio_text=patient_fio_text,
+        patient_fio_text=log_fio,
         is_extract=is_extract,
-        payload={"source": "save_patient_without_bed"},
+        record_source=patient_without_bed.record_source,
+        payload={"source": "save_patient_without_bed", "pswb_pk": patient_without_bed.pk},
     )
-    return status_response(True)
+    return JsonResponse(
+        {
+            "ok": True,
+            "message": "",
+            "result": {"pswb_pk": patient_without_bed.pk, "direction_pk": direction_pk},
+        }
+    )
 
 
 @login_required
@@ -843,14 +1028,32 @@ def delete_patient_without_bed(request):
     user_can_edit = Chamber.check_user(user, department_pk)
     if not user_can_edit:
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    patient_without_bed = PatientStationarWithoutBeds.objects.get(direction_id=patient_obj["direction_pk"])
+    pswb_pk = patient_obj.get("pswb_pk")
+    direction_pk = patient_obj.get("direction_pk")
+    if pswb_pk:
+        patient_without_bed = PatientStationarWithoutBeds.objects.filter(
+            pk=pswb_pk,
+            department_id=department_pk,
+        ).first()
+    elif direction_pk:
+        patient_without_bed = PatientStationarWithoutBeds.objects.filter(
+            direction_id=direction_pk,
+            department_id=department_pk,
+        ).first()
+    else:
+        return status_response(False, "Недостаточно данных")
+    if not patient_without_bed:
+        return status_response(False, "Черновик не найден")
+    log_pk = patient_without_bed.direction_id or patient_without_bed.pk
+    direction_id_log = patient_without_bed.direction_id
     patient_without_bed.delete()
     Log.log(
-        patient_obj["direction_pk"],
+        log_pk,
         230005,
         user.doctorprofile,
         {
-            "direction_id": patient_obj["direction_pk"],
+            "direction_id": direction_id_log,
+            "pswb_pk": pswb_pk,
             "department_id": department_pk,
         },
     )
@@ -949,6 +1152,7 @@ def get_hospitalization_calendar(request):
                     "is_day_hosp": bool(item.is_day_hosp),
                     "is_need_sick": bool(item.is_need_sick),
                     "is_extract": bool(item.is_extract),
+                    "record_source": item.record_source or RECORD_SOURCE_MANUAL,
                 }
             )
     view_mode = request_data.get("view_mode")
@@ -1041,13 +1245,6 @@ def save_hospitalization_by_fio(request):
         patient_fio_text, patient_sex, birthday, patient_age_text = filled
     if not patient_fio_text:
         return status_response(False, "Укажите ФИО пациента")
-    from_d, to_d = _proposed_hosp_period(plan_date_in, plan_date_out)
-    turnover_err = _check_bed_day_turnover_allowed(bed_id, from_d)
-    if turnover_err:
-        return status_response(False, turnover_err)
-    overlap_err = _check_bed_period_overlap(bed_id, plan_date_in, plan_date_out)
-    if overlap_err:
-        return status_response(False, overlap_err)
     is_extract = _parse_bool(request_data.get("is_extract"))
     if direction_fk:
         pswb = PatientStationarWithoutBeds.objects.filter(
@@ -1059,6 +1256,7 @@ def save_hospitalization_by_fio(request):
         ptb = PatientToBed.objects.filter(direction_id=direction_fk).order_by("-pk").first()
         if ptb:
             is_extract = is_extract or bool(ptb.is_extract)
+    record_source = _resolve_record_source(request_data)
     patient_to_bed = PatientToBed(
         direction_id=direction_fk,
         bed_id=bed_id,
@@ -1073,6 +1271,7 @@ def save_hospitalization_by_fio(request):
         accompanyng_child_sex=acc_sex,
         is_need_sick=is_need_sick,
         is_extract=is_extract,
+        record_source=record_source,
     )
     _align_ptb_date_out_with_plan(patient_to_bed)
     patient_to_bed.save()
@@ -1087,13 +1286,20 @@ def save_hospitalization_by_fio(request):
         bed_id,
         230000,
         user.doctorprofile,
-        {"direction_id": direction_id, "bed_id": bed_id, "department_id": department_id, "patient_to_bed": patient_to_bed.pk},
+        {
+            "direction_id": direction_id,
+            "bed_id": bed_id,
+            "department_id": department_id,
+            "patient_to_bed": patient_to_bed.pk,
+            "record_source": record_source,
+        },
     )
     log_bed_action(
         PatientBedActionLog.ACTION_ASSIGN,
         author=user.doctorprofile,
         department_id=department_id,
         patient_to_bed=patient_to_bed,
+        record_source=record_source,
         payload={"source": "save_hospitalization_by_fio"},
     )
     return JsonResponse({"ok": True, "message": "", "result": {"pk": patient_to_bed.pk}})
@@ -1114,31 +1320,18 @@ def update_hospitalization_record(request):
     comment = (request_data.get("comment") or "").strip()[:255]
     acc_type, acc_sex = _accompanying_child_from_request(request_data)
     user = request.user
+    if record_pk is None:
+        return status_response(False, "Запись не найдена")
+    try:
+        record_pk = int(record_pk)
+    except (TypeError, ValueError):
+        return status_response(False, "Некорректный идентификатор записи")
     record = PatientToBed.objects.filter(pk=record_pk).select_related("bed__chamber").first()
     if not record:
         return status_response(False, "Запись не найдена")
     department_id = record.bed.chamber.podrazdelenie_id
     if not Chamber.check_user(user, department_id):
         return status_response(False, "Пользователь не принадлежит к данному подразделению")
-    from_d, _ = _proposed_hosp_period(
-        plan_date_in,
-        plan_date_out,
-        fallback_date_in=record.date_in,
-        fallback_date_out=record.date_out,
-    )
-    turnover_err = _check_bed_day_turnover_allowed(record.bed_id, from_d, exclude_pk=record.pk)
-    if turnover_err:
-        return status_response(False, turnover_err)
-    overlap_err = _check_bed_period_overlap(
-        record.bed_id,
-        plan_date_in,
-        plan_date_out,
-        exclude_pk=record.pk,
-        fallback_date_in=record.date_in,
-        fallback_date_out=record.date_out,
-    )
-    if overlap_err:
-        return status_response(False, overlap_err)
     if "direction_id" in request_data:
         dir_raw = request_data.get("direction_id")
         if dir_raw in (None, "", 0, "0"):
@@ -1163,6 +1356,8 @@ def update_hospitalization_record(request):
     record.accompanyng_child_sex = acc_sex
     if "is_need_sick" in request_data:
         record.is_need_sick = _parse_bool(request_data.get("is_need_sick"))
+    if "is_day_hosp" in request_data:
+        record.is_day_hosp = _parse_bool(request_data.get("is_day_hosp"))
     record.save()
     comment_date = _parse_ymd_date(request_data.get("comment_date"))
     if comment_date is not None:
@@ -1242,7 +1437,13 @@ def clear_patient_from_bed(request):
         bed_id_log,
         230008,
         user.doctorprofile,
-        {"record_pk": rec_pk, "direction_id": direction_id_log, "bed_id": bed_id_log, "department_id": department_id},
+        {
+            "record_pk": rec_pk,
+            "direction_id": direction_id_log,
+            "bed_id": bed_id_log,
+            "department_id": department_id,
+            "record_source": record.record_source,
+        },
     )
     return JsonResponse({"ok": True, "message": "", "result": {"pk": rec_pk}})
 
@@ -1285,12 +1486,6 @@ def move_hospitalization_to_bed(request):
         uses_plan = _hosp_uses_plan_calendar(old)
         tail_plan_out = old.plan_date_out
         tail_date_out = old.date_out
-        tail_end = _hosp_tail_end_date(old)
-        turnover_err = _check_bed_day_turnover_allowed(target_bed_id, move_from_date, exclude_pk=old.pk)
-        if turnover_err:
-            return status_response(False, turnover_err)
-        if _bed_range_has_overlap(target_bed_id, move_from_date, tail_end, None):
-            return status_response(False, "На целевой койке уже есть пациент в этот период")
         if move_from_date <= vstart:
             old.bed_id = target_bed_id
             old.save(update_fields=["bed_id"])
@@ -1331,6 +1526,7 @@ def move_hospitalization_to_bed(request):
             accompanyng_child_sex=old.accompanyng_child_sex or "-",
             is_need_sick=bool(old.is_need_sick),
             is_extract=bool(old.is_extract),
+            record_source=old.record_source or RECORD_SOURCE_MANUAL,
         )
         if not uses_plan:
             new.date_out = tail_date_out

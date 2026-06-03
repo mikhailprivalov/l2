@@ -168,6 +168,14 @@ class Bed(models.Model):
         verbose_name_plural = 'Койки'
 
 
+RECORD_SOURCE_MANUAL = "manual"
+RECORD_SOURCE_FROM_HISTORY = "from_history"
+RECORD_SOURCE_CHOICES = (
+    (RECORD_SOURCE_MANUAL, "Вручную"),
+    (RECORD_SOURCE_FROM_HISTORY, "Из истории"),
+)
+
+
 class PatientToBed(models.Model):
     direction = models.ForeignKey("directions.Napravleniya", null=True, default=None, blank=True, db_index=True, on_delete=models.CASCADE)
     doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
@@ -185,6 +193,13 @@ class PatientToBed(models.Model):
     is_day_hosp = models.BooleanField(default=False, blank=True, help_text="Дневной стационар")
     is_need_sick = models.BooleanField(default=False, blank=True, help_text="Требуется больничный")
     is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
+    record_source = models.CharField(
+        max_length=16,
+        choices=RECORD_SOURCE_CHOICES,
+        default=RECORD_SOURCE_MANUAL,
+        blank=True,
+        help_text="Источник создания записи",
+    )
 
     def __str__(self):
         if self.direction_id:
@@ -222,17 +237,34 @@ class PatientToBedDateComment(models.Model):
 
 
 class PatientStationarWithoutBeds(models.Model):
-    direction = models.ForeignKey("directions.Napravleniya", db_index=True, on_delete=models.CASCADE)
+    direction = models.ForeignKey(
+        "directions.Napravleniya",
+        db_index=True,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
     department = models.ForeignKey(Podrazdeleniya, db_index=True, on_delete=models.CASCADE, null=True)
     doctor = models.ForeignKey("users.DoctorProfile", db_index=True, on_delete=models.CASCADE, null=True)
+    patient_fio_text = models.CharField(null=True, blank=True, default='', max_length=128, help_text='ФИО пациента текстом')
+    patient_sex = models.CharField(max_length=2, default="м", help_text="Пол", blank=True)
     date_in = models.DateField(auto_now_add=True)
     date_out = models.DateField(null=True)
     plan_date_in = models.DateField(null=True, default=None, blank=True)
     plan_date_out = models.DateField(null=True, default=None, blank=True)
     is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
+    record_source = models.CharField(
+        max_length=16,
+        choices=RECORD_SOURCE_CHOICES,
+        default=RECORD_SOURCE_FROM_HISTORY,
+        blank=True,
+        help_text="Источник создания записи",
+    )
 
     def __str__(self):
-        return f'{self.direction.client.individual.fio()}'
+        if self.direction_id:
+            return f'{self.direction.client.individual.fio()}'
+        return self.patient_fio_text or f'PatientStationarWithoutBeds#{self.pk}'
 
     class Meta:
         verbose_name = 'Пациент без койки'
@@ -300,6 +332,14 @@ class PatientBedActionLog(models.Model):
     plan_date_out = models.DateField(null=True, blank=True)
     patient_fio_text = models.CharField(max_length=128, blank=True, default="")
     is_extract = models.BooleanField(default=False, blank=True)
+    record_source = models.CharField(
+        max_length=16,
+        choices=RECORD_SOURCE_CHOICES,
+        null=True,
+        blank=True,
+        default=None,
+        help_text="Источник создания записи",
+    )
     payload = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
