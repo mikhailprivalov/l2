@@ -297,9 +297,7 @@ def get_discharge_date_from_extract_service_by_protocol_date_in_period(direction
         if not discharge_date or discharge_date < date_from or discharge_date > date_to:
             continue
         confirmed_at = extract_iss.time_confirmation
-        if best_date is None or discharge_date > best_date or (
-            discharge_date == best_date and confirmed_at and (best_confirmed is None or confirmed_at > best_confirmed)
-        ):
+        if best_date is None or discharge_date > best_date or (discharge_date == best_date and confirmed_at and (best_confirmed is None or confirmed_at > best_confirmed)):
             best_date = discharge_date
             best_confirmed = confirmed_at
     return best_date
