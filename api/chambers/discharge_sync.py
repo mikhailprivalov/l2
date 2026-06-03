@@ -231,3 +231,111 @@ def sync_patient_to_bed_discharge_date_from_extract(iss: Issledovaniya) -> bool:
     iss.medical_examination = discharge_date
     iss.save()
     return updated
+
+
+RECENT_EXTRACT_SYNC_DAYS_DEFAULT = 30
+
+
+def get_discharge_date_from_extract_service_by_protocol_date_in_period(
+    direction_pk,
+    date_from: datetime.date,
+    date_to: datetime.date,
+):
+    """
+    Дата выписки из подтверждённой дочерней is_extract_service, если «Дата выписки»
+    в протоколе попадает в [date_from, date_to]. Берётся самая поздняя дата выписки в окне.
+    """
+    if not direction_pk or date_from > date_to:
+        return None
+    best_date = None
+    best_confirmed = None
+    for extract_iss in (
+        Issledovaniya.objects.filter(time_confirmation__isnull=False)
+        .filter(research__is_extract_service=True)
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .select_related("research")
+        .order_by("-time_confirmation")
+    ):
+        discharge_date = _read_discharge_date_from_protocol(extract_iss)
+        if not discharge_date or discharge_date < date_from or discharge_date > date_to:
+            continue
+        confirmed_at = extract_iss.time_confirmation
+        if best_date is None or discharge_date > best_date or (
+            discharge_date == best_date and confirmed_at and (best_confirmed is None or confirmed_at > best_confirmed)
+        ):
+            best_date = discharge_date
+            best_confirmed = confirmed_at
+    return best_date
+
+
+def apply_extract_service_out_dates_recent(record, discharge_date) -> bool:
+    """Только plan_date_out и date_out (без is_extract и без изменения дат заезда)."""
+    if not discharge_date:
+        return False
+    if record.plan_date_out == discharge_date and record.date_out == discharge_date:
+        return False
+    record.plan_date_out = discharge_date
+    record.date_out = discharge_date
+    record.save(update_fields=["plan_date_out", "date_out"])
+    return True
+
+
+def sync_discharge_out_dates_recent_period(
+    days: int = RECENT_EXTRACT_SYNC_DAYS_DEFAULT,
+    dry_run: bool = False,
+    direction_pk=None,
+):
+    """
+    За период [сегодня − days, сегодня]: по direction_id ищет is_extract_service,
+    дату «Дата выписки» в протоколе и пишет plan_date_out/date_out в PTB и PSWB.
+    """
+    from django.utils import timezone
+
+    date_to = timezone.localdate()
+    date_from = date_to - datetime.timedelta(days=days)
+    stats = {
+        "date_from": date_from,
+        "date_to": date_to,
+        "directions_with_discharge": 0,
+        "updated_ptb": 0,
+        "updated_pswb": 0,
+        "skipped_no_discharge": 0,
+    }
+
+    direction_pks = set()
+    if direction_pk:
+        direction_pks.add(direction_pk)
+    else:
+        direction_pks.update(
+            PatientToBed.objects.filter(direction_id__isnull=False).values_list("direction_id", flat=True),
+        )
+        direction_pks.update(
+            PatientStationarWithoutBeds.objects.filter(direction_id__isnull=False).values_list("direction_id", flat=True),
+        )
+
+    for dir_pk in sorted(direction_pks):
+        discharge_date = get_discharge_date_from_extract_service_by_protocol_date_in_period(
+            dir_pk,
+            date_from,
+            date_to,
+        )
+        if not discharge_date:
+            stats["skipped_no_discharge"] += 1
+            continue
+        stats["directions_with_discharge"] += 1
+
+        for ptb in PatientToBed.objects.filter(direction_id=dir_pk):
+            if dry_run:
+                if ptb.plan_date_out != discharge_date or ptb.date_out != discharge_date:
+                    stats["updated_ptb"] += 1
+            elif apply_extract_service_out_dates_recent(ptb, discharge_date):
+                stats["updated_ptb"] += 1
+
+        for pswb in PatientStationarWithoutBeds.objects.filter(direction_id=dir_pk):
+            if dry_run:
+                if pswb.plan_date_out != discharge_date or pswb.date_out != discharge_date:
+                    stats["updated_pswb"] += 1
+            elif apply_extract_service_out_dates_recent(pswb, discharge_date):
+                stats["updated_pswb"] += 1
+
+    return stats
