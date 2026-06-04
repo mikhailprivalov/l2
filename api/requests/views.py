@@ -496,7 +496,7 @@ def get_request_details(request):
 
 
 @login_required
-@group_required('Создание и исполнение заявок', 'Лаборант-диагностики', 'Врач диагностики')
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики', 'Врач-диагностики')
 def get_request_params(request):
     request_data = json.loads(request.body)
     request_id = request_data.get('requestId')
