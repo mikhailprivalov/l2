@@ -317,3 +317,32 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
         )
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_extract_by_main_directions(main_directions, cda_option_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+                d_iss.napravleniye_id AS direction_id,
+                d_iss.id AS issledovaniye_id,
+                main_iss.napravleniye_id AS main_direction_id,
+                main_iss.id AS main_issledovaniye_id,
+                dpr.value AS field_value,
+                dpif.title AS title
+            FROM directions_issledovaniya d_iss
+            INNER JOIN directions_napravleniya dn ON d_iss.napravleniye_id = dn.id
+            INNER JOIN directions_issledovaniya main_iss
+                ON main_iss.id = dn.parent_id
+               AND main_iss.napravleniye_id IN %(main_directions)s
+            INNER JOIN directory_researches dr
+                ON d_iss.research_id = dr.id AND dr.is_extract_service = TRUE
+            INNER JOIN directions_paraclinicresult dpr ON d_iss.id = dpr.issledovaniye_id
+            INNER JOIN directory_paraclinicinputfield dpif ON dpr.field_id = dpif.id
+            WHERE d_iss.time_confirmation IS NOT NULL
+              AND (dpif.cda_option_id = %(cda_option_id)s OR dpif.title = 'Дата выписки')
+        """,
+            params={"main_directions": main_directions, "cda_option_id": cda_option_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
