@@ -67,7 +67,7 @@ def form_01(request_data):
             category = CategoryDirectory.objects.filter(title=category_title).first()
             if category:
                 service.category = category
-            if (short_service_title == 'None' or not short_service_title):
+            if short_service_title == 'None' or not short_service_title:
                 short_service_title = ""
             if service.short_title != short_service_title:
                 service.short_title = short_service_title
