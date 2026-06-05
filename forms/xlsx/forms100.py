@@ -31,6 +31,7 @@ def form_01(request_data) -> Workbook:
                 "research_code": research.code,
                 "fsidi": research.nsi_id,
                 "category": research.categoty_title,
+                "short_title": research.short_title,
                 **price_template,
             }
 
@@ -39,7 +40,7 @@ def form_01(request_data) -> Workbook:
         if research_dict.get(coast.research_id):
             research_dict[coast.research_id][coast.price_name_id] = str(coast.coast)
 
-    headers = ["Код по прайсу", "Услуга", "Код ОКМУ", "ФСИДИ", "Категория"]
+    headers = ["Код по прайсу", "Услуга", "Код ОКМУ", "ФСИДИ", "Категория", "Короткое название"]
     headers.extend(price_titles)
     work_sheet.append(headers)
 

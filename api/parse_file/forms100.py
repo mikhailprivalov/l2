@@ -4,7 +4,7 @@ import json
 import requests
 from openpyxl.reader.excel import load_workbook
 from contracts.models import PriceName, PriceCoast
-from directory.models import Researches
+from directory.models import Researches, CategoryDirectory
 from laboratory.settings import RMIS_MIDDLE_SERVER_ADDRESS, RMIS_MIDDLE_SERVER_TOKEN
 
 
@@ -24,7 +24,9 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, coast_idx = (
+    internal_code_idx, coast_idx, category_idx, short_title_research_idx = (
+        '',
+        '',
         '',
         '',
     )
@@ -34,6 +36,8 @@ def form_01(request_data):
         if not starts:
             if "Код по прайсу" in cells:
                 internal_code_idx = cells.index("Код по прайсу")
+                category_idx = cells.index("Категория")
+                short_title_research_idx = cells.index("Короткое название")
                 try:
                     coast_idx = cells.index(price.title)
                 except ValueError:
@@ -41,6 +45,8 @@ def form_01(request_data):
                 starts = True
         else:
             internal_code = cells[internal_code_idx].strip()
+            category_title = cells[category_idx].strip()
+            short_service_title = cells[short_title_research_idx].strip()
             try:
                 coast = float(cells[coast_idx].strip())
             except Exception:
@@ -58,6 +64,15 @@ def form_01(request_data):
             else:
                 new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
                 new_coast.save()
+            category = CategoryDirectory.objects.filter(title=category_title).first()
+            if category:
+                service.category = category
+            if short_service_title == 'None' or not short_service_title:
+                short_service_title = ""
+
+            service.short_title = short_service_title
+            service.save()
+
     if not starts:
         return {"ok": False, "result": [], "message": "Не найдены колонка 'Код по прайсу' "}
     return {"ok": True, "result": [], "message": ""}
