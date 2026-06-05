@@ -254,8 +254,8 @@ def get_researches():
             is_case, 
             is_complex,
             nsi_id,
-            dc.title as categoty_title
-             
+            dc.title as categoty_title,
+            directory_researches.short_title
             FROM directory_researches
             LEFT JOIN podrazdeleniya_podrazdeleniya ON directory_researches.podrazdeleniye_id = podrazdeleniya_podrazdeleniya.id
             LEFT JOIN directory_categorydirectory dc on directory_researches.category_id = dc.id
