@@ -17,7 +17,6 @@ def form_01(request_data):
     Cтруктура:
     Код по прайсу (internal_code Researches), Услуга (title_researches), следующее поле - любое текстовое название прайса (priceCoasts.coast)
     """
-    print("загрузка цен")
     price_id = request_data.get("entity_id")
     file = request_data.get("file")
     price = PriceName.objects.filter(pk=price_id).first()
@@ -65,8 +64,6 @@ def form_01(request_data):
             else:
                 new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
                 new_coast.save()
-            print(category_title)
-            print(short_service_title, type(short_service_title))
             category = CategoryDirectory.objects.filter(title=category_title).first()
             if category:
                 service.category = category
