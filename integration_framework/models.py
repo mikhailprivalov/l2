@@ -292,9 +292,9 @@ class EquipmentReceive(models.Model):
             tag_institution_name = data.get("tag_institution_name")
             tag_station_name = data.get("tag_station_name")
             tag_sender_ip = data.get("tag_sender_ip")
-            equipment_model = Equipment.objects.filter(
-                Q(manufacturer=tag_manufacturer) & Q(station_name=tag_station_name) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name))
-            ).first()
+            # equipment_model = Equipment.objects.filter(
+            #     Q(manufacturer=tag_manufacturer) & Q(station_name=tag_station_name) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name))
+            # ).first()
 
             pk_equipment_receive = EquipmentReceive.get_equipment_receive(
                 manufacturer_param=tag_manufacturer,
@@ -303,7 +303,7 @@ class EquipmentReceive(models.Model):
                 ip_address_param=tag_sender_ip,
                 station_name_param=tag_station_name,
             )
-            # equipment_model = Equipment.objects.filter(pk=pk_equipment_receive).first()
+            equipment_model = Equipment.objects.filter(pk=pk_equipment_receive).first()
             if equipment_model:
                 eqr = EquipmentReceive(
                     tag_patient_name=data.get("tag_patient_name"),
