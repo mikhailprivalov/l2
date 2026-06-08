@@ -7681,7 +7681,6 @@ def form_33(request_data):
             styleCenter,
         )
     )
-    space_bottom = ' &nbsp;'
 
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
