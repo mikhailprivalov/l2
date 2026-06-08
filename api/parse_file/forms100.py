@@ -54,6 +54,7 @@ def form_01(request_data):
             if internal_code == "None" or not coast:
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
+
             if not service:
                 continue
             current_coast = PriceCoast.objects.filter(price_name_id=price.pk, research_id=service.pk).first()
