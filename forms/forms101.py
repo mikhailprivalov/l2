@@ -7686,7 +7686,12 @@ def form_33(request_data):
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
     objs.append(Spacer(1, 7 * mm))
-    objs.append(Paragraph('Дата оформления отказа', styleFL, ))
+    objs.append(
+        Paragraph(
+            'Дата оформления отказа',
+            styleFL,
+        )
+    )
     objs.append(Spacer(1, 2 * mm))
     objs.append(Paragraph('\"___\"________  ______________', styleSign))
 
