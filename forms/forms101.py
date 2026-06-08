@@ -7627,8 +7627,18 @@ def form_33(request_data):
     objs.append(Spacer(1, 5 * mm))
     objs.append(Paragraph('Медицинский работник', styleFL))
     objs.append(Spacer(1, 5 * mm))
-    objs.append(Paragraph('________________________________________________________________________________________________', styleFL,))
-    objs.append(Paragraph('(должность, Ф.И.О. медицинского работника)',styleCenter,))
+    objs.append(
+        Paragraph(
+            '________________________________________________________________________________________________',
+            styleFL,
+        )
+    )
+    objs.append(
+        Paragraph(
+            '(должность, Ф.И.О. медицинского работника)',
+            styleCenter,
+        )
+    )
     styleSign = deepcopy(style)
     styleSign.firstLineIndent = 0
     objs.append(Spacer(1, 2 * mm))
