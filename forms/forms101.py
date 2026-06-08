@@ -7669,8 +7669,18 @@ def form_33(request_data):
         )
     )
     objs.append(Spacer(1, 5 * mm))
-    objs.append(Paragraph('________________________________________________________________________________________________', styleFL,))
-    objs.append(Paragraph('Ф.И.О. медицинского работника)', styleCenter, ))
+    objs.append(
+        Paragraph(
+            '________________________________________________________________________________________________',
+            styleFL,
+        )
+    )
+    objs.append(
+        Paragraph(
+            'Ф.И.О. медицинского работника)',
+            styleCenter,
+        )
+    )
     space_bottom = ' &nbsp;'
 
     styleSign = deepcopy(style)
