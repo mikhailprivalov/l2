@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     path('auth', views.auth),
     path('change-password', views.change_password),
+    path('set-password', views.set_password),
+    path('set-rmis', views.set_rmis),
     path('set-new-email', views.set_new_email),
     path('loose-password', views.loose_password),
     path('generate-totp-code', views.generate_totp_code),

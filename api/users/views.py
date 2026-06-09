@@ -113,6 +113,43 @@ def change_password(request):
 
 
 @login_required
+def set_password(request):
+    data = json.loads(request.body)
+    old_password = data.get('oldPassword', '')
+    new_password = data.get('newPassword', '')
+    confirm_password = data.get('confirmPassword', '')
+
+    if len(new_password) < 6:
+        return status_response(False, message='Пароль должен содержать минимум 6 символов')
+    if new_password != confirm_password:
+        return status_response(False, message='Пароли не совпадают')
+    if not request.user.check_password(old_password):
+        return status_response(False, message='Неверный текущий пароль')
+
+    request.user.set_password(new_password)
+    request.user.save()
+    slog.Log(key='', type=120000, body="IP: {0}".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
+    return status_response(True)
+
+
+@login_required
+def set_rmis(request):
+    data = json.loads(request.body)
+    rmis_login = (data.get('rmis_login') or '').strip() or None
+    rmis_password = (data.get('rmis_password') or '').strip() or None
+
+    doc: DoctorProfile = request.user.doctorprofile
+    doc.rmis_login = rmis_login
+    if rmis_password:
+        doc.rmis_password = rmis_password
+    elif not rmis_login:
+        doc.rmis_password = None
+    doc.save(update_fields=['rmis_login', 'rmis_password'])
+    slog.Log(key='', type=120000, body="IP: {0}, RMIS".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
+    return status_response(True, data={'rmis_login': doc.rmis_login or ''})
+
+
+@login_required
 def set_new_email(request):
     data = json.loads(request.body)
     step = data.get('step')
