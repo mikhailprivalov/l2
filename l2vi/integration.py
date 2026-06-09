@@ -105,4 +105,3 @@ def check_to_ecp_stationar(data) -> dict:
     if path:
         endpoint = path
     return make_request(f"{url}/{endpoint}", data=json.dumps({"doctorCheck": data}), gen_url=False, auth_token="a-super-secret-key")
-
