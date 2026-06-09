@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlencode
 import requests
 
 from appconf.manager import SettingManager
-from laboratory.settings import API_SERVER_SEND_PARACLINIC_DIRECTION, API_SERVER_SEND_GISTOLOGY_RESULT
+from laboratory.settings import API_SERVER_SEND_PARACLINIC_DIRECTION, API_SERVER_SEND_GISTOLOGY_RESULT, API_SERVER_SEND_STATIONAR_RESULT
 
 logger = logging.getLogger(__name__)
 
@@ -93,3 +93,16 @@ def send_direction_external_service(directions) -> dict:
     if path:
         endpoint = path
     return make_request(f"{url}/{endpoint}", data=json.dumps({"dirsToUpload": directions}), gen_url=False, auth_token="a-super-secret-key")
+
+
+def check_to_ecp_stationar(data) -> dict:
+    if API_SERVER_SEND_STATIONAR_RESULT:
+        url = API_SERVER_SEND_STATIONAR_RESULT
+    else:
+        url = SettingManager.get_api_ecp_base_url()
+    path = SettingManager.get("endpoint_ecp_send_stationar", default='', default_type='s')
+    endpoint = 'send-stationar-result'
+    if path:
+        endpoint = path
+    return make_request(f"{url}/{endpoint}", data=json.dumps({"doctorCheck": data}), gen_url=False, auth_token="a-super-secret-key")
+

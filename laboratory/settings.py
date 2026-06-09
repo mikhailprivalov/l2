@@ -490,6 +490,7 @@ CHAMBER_DOCTOR_GROUP_ID = None
 DEFECT_VARIANTS = []
 API_SERVER_SEND_PARACLINIC_DIRECTION = None
 API_SERVER_SEND_GISTOLOGY_RESULT = None
+API_SERVER_SEND_STATIONAR_RESULT = None
 
 # Продолжительность обеда по должностям {"position_name": duration in minutes}
 LUNCH_DURATION_BY_POSITIONS = {}

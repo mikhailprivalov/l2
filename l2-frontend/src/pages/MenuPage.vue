@@ -41,6 +41,20 @@
                     class="a-under-reversed"
                     @click="modalTwoFactor = true"
                   >{{ hasTOTP ? 'активирована' : 'не активна' }} <i class="fa fa-pencil" /></a>
+                  <br>
+                  Изменить пароль:
+                  <span class="change-password-links">
+                    <a
+                      href="#"
+                      class="a-under"
+                      @click="modalL2Password = true"
+                    >L2</a>
+                    <a
+                      href="#"
+                      class="a-under"
+                      @click="modalRmis = true"
+                    >РМИС</a>
+                  </span>
                 </div>
                 <div class="col-xs-12 col-md-6 col-lg-6 text-right text-left-xs">
                   {{ fio_dep }}
@@ -327,6 +341,134 @@
     </MountingPortal>
     <MountingPortal
       mount-to="#portal-place-modal"
+      name="SetL2Password"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="modalL2Password"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          margin-left-right="auto"
+          :no-close="!!loading"
+          @close="modalL2Password = false"
+        >
+          <span slot="header">L2</span>
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <input
+              v-model="oldPassword"
+              type="password"
+              class="form-control mb10"
+              placeholder="Текущий пароль"
+              autocomplete="current-password"
+            >
+            <input
+              v-model="newPassword"
+              type="password"
+              class="form-control mb10"
+              placeholder="Новый пароль (минимум 6 символов)"
+              autocomplete="new-password"
+            >
+            <input
+              v-model="confirmPassword"
+              type="password"
+              class="form-control mb10"
+              placeholder="Подтверждение пароля"
+              autocomplete="new-password"
+            >
+            <button
+              class="btn btn-blue-nb"
+              :disabled="loading"
+              type="button"
+              @click="doSetPassword"
+            >
+              Сохранить
+            </button>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-12 text-right">
+                <button
+                  class="btn btn-blue-nb"
+                  :disabled="loading"
+                  type="button"
+                  @click="modalL2Password = false"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
+    <MountingPortal
+      mount-to="#portal-place-modal"
+      name="SetRmis"
+      append
+    >
+      <transition name="fade">
+        <Modal
+          v-if="modalRmis"
+          show-footer="true"
+          white-bg="true"
+          max-width="710px"
+          width="100%"
+          margin-left-right="auto"
+          :no-close="!!loading"
+          @close="modalRmis = false"
+        >
+          <span slot="header">РМИС</span>
+          <div
+            slot="body"
+            class="popup-body"
+          >
+            <input
+              v-model.trim="rmis_login"
+              type="text"
+              class="form-control mb10"
+              placeholder="РМИС логин"
+            >
+            <input
+              v-model="rmis_password"
+              type="password"
+              class="form-control mb10"
+              placeholder="РМИС пароль (для замены введите значение)"
+              autocomplete="new-password"
+            >
+            <button
+              class="btn btn-blue-nb"
+              :disabled="loading"
+              type="button"
+              @click="doSetRmis"
+            >
+              Сохранить
+            </button>
+          </div>
+          <div slot="footer">
+            <div class="row">
+              <div class="col-xs-12 text-right">
+                <button
+                  class="btn btn-blue-nb"
+                  :disabled="loading"
+                  type="button"
+                  @click="modalRmis = false"
+                >
+                  Закрыть
+                </button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      </transition>
+    </MountingPortal>
+    <MountingPortal
+      mount-to="#portal-place-modal"
       name="Email"
       append
     >
@@ -486,12 +628,37 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
       confirmationCode: '',
       newConfirmationCode: '',
       modalTwoFactor: false,
+      modalL2Password: false,
+      modalRmis: false,
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+      rmis_login: '',
+      rmis_password: '',
       secretQRBase64: null,
       secretCode: null,
       checkCode: '',
     };
   },
   watch: {
+    modalL2Password(open) {
+      if (!open) {
+        this.oldPassword = '';
+        this.newPassword = '';
+        this.confirmPassword = '';
+        this.loading = false;
+      }
+    },
+    modalRmis(open) {
+      if (open) {
+        this.rmis_login = this.user_data?.rmis_login || '';
+        this.rmis_password = '';
+      } else {
+        this.rmis_login = '';
+        this.rmis_password = '';
+        this.loading = false;
+      }
+    },
     modalEmail() {
       this.hasCodeRequest = false;
       this.hasNewCodeRequest = false;
@@ -584,6 +751,20 @@ export default class MenuPage extends Vue {
 
   modalTwoFactor: boolean;
 
+  modalL2Password: boolean;
+
+  modalRmis: boolean;
+
+  oldPassword: string;
+
+  newPassword: string;
+
+  confirmPassword: string;
+
+  rmis_login: string;
+
+  rmis_password: string;
+
   secretQRBase64: string | null;
 
   secretCode: string | null;
@@ -612,6 +793,68 @@ export default class MenuPage extends Vue {
 
   get needCodeRequest() {
     return !this.hasCodeRequest && !!this.email;
+  }
+
+  async doSetPassword() {
+    if (!this.oldPassword) {
+      this.$root.$emit('msg', 'error', 'Введите текущий пароль');
+      return;
+    }
+    if (this.newPassword.length < 6) {
+      this.$root.$emit('msg', 'error', 'Пароль должен содержать минимум 6 символов');
+      return;
+    }
+    if (this.newPassword !== this.confirmPassword) {
+      this.$root.$emit('msg', 'error', 'Пароли не совпадают');
+      return;
+    }
+
+    this.loading = true;
+
+    try {
+      const { ok, message } = await this.$api(
+        '/users/set-password',
+        this,
+        ['oldPassword', 'newPassword', 'confirmPassword'],
+      );
+      if (ok) {
+        this.$root.$emit('msg', 'ok', 'Пароль изменён. Войдите в систему заново.', 15000);
+        this.$router.push('login');
+        return;
+      }
+
+      this.$root.$emit('msg', 'error', message || 'Что-то пошло не так');
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+    this.loading = false;
+  }
+
+  async doSetRmis() {
+    this.loading = true;
+    const rmisLogin = (this.rmis_login || '').trim();
+
+    try {
+      const { ok, message, rmis_login: savedLogin } = await this.$api('/users/set-rmis', null, null, {
+        rmis_login: rmisLogin,
+        rmis_password: this.rmis_password,
+      });
+      if (ok) {
+        this.$store.commit('SET_USER_DATA', {
+          data: { rmis_login: savedLogin ?? rmisLogin },
+        });
+        this.$root.$emit('msg', 'ok', 'Данные РМИС сохранены');
+        this.modalRmis = false;
+        return;
+      }
+
+      this.$root.$emit('msg', 'error', message || 'Что-то пошло не так');
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+    this.loading = false;
   }
 
   async doChangePassword() {
@@ -752,6 +995,12 @@ export default class MenuPage extends Vue {
 .menu.row.dash-buttons {
   margin-right: -2px;
   margin-left: -2px;
+}
+
+.change-password-links {
+  a + a {
+    margin-left: 8px;
+  }
 }
 
 .alert-modal {
