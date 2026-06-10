@@ -443,6 +443,14 @@
               autocomplete="new-password"
             >
             <button
+              class="btn btn-blue-nb mr10"
+              :disabled="loading"
+              type="button"
+              @click="doCheckRmis"
+            >
+              Проверить
+            </button>
+            <button
               class="btn btn-blue-nb"
               :disabled="loading"
               type="button"
@@ -837,6 +845,28 @@ export default class MenuPage extends Vue {
     this.loading = false;
   }
 
+  async doCheckRmis() {
+    const rmisLogin = (this.rmis_login || '').trim();
+    if (!rmisLogin) {
+      this.$root.$emit('msg', 'error', 'Укажите логин РМИС');
+      return;
+    }
+
+    this.loading = true;
+
+    try {
+      const { ok, message } = await this.$api('/users/check-rmis', null, null, {
+        rmis_login: rmisLogin,
+        rmis_password: this.rmis_password,
+      });
+      this.$root.$emit('msg', ok ? 'ok' : 'error', message || (ok ? 'Авторизация успешна' : 'Ошибка авторизации'));
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+    this.loading = false;
+  }
+
   async doSetRmis() {
     this.loading = true;
     const rmisLogin = (this.rmis_login || '').trim();
@@ -850,8 +880,9 @@ export default class MenuPage extends Vue {
         this.$store.commit('SET_USER_DATA', {
           data: { rmis_login: savedLogin ?? rmisLogin },
         });
+        this.rmis_login = savedLogin ?? rmisLogin;
+        this.rmis_password = '';
         this.$root.$emit('msg', 'ok', 'Данные РМИС сохранены');
-        this.modalRmis = false;
         return;
       }
 
@@ -859,8 +890,9 @@ export default class MenuPage extends Vue {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
+    } finally {
+      this.loading = false;
     }
-    this.loading = false;
   }
 
   async doChangePassword() {
@@ -1007,6 +1039,10 @@ export default class MenuPage extends Vue {
   a + a {
     margin-left: 8px;
   }
+}
+
+.mr10 {
+  margin-right: 10px;
 }
 
 .alert-modal {
