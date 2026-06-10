@@ -4,6 +4,8 @@ from io import BytesIO
 import pyotp
 import qrcode
 from django.contrib.auth.decorators import login_required
+
+from l2vi.integration import check_doctor_data
 from laboratory.decorators import group_required
 from laboratory.settings import SHOW_RMIS_CHANGE_PASSWORD
 import simplejson as json
@@ -151,6 +153,24 @@ def set_rmis(request):
     doc.save(update_fields=['rmis_login', 'rmis_password'])
     slog.Log(key='', type=120000, body="IP: {0}, RMIS".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
     return status_response(True, data={'rmis_login': doc.rmis_login or ''})
+
+
+@login_required
+def check_rmis(request):
+    if not SHOW_RMIS_CHANGE_PASSWORD:
+        return status_response(False, message='Функция недоступна')
+
+    rmis_login = request.user.doctorprofile.rmis_login
+    rmis_password = request.user.doctorprofile.rmis_password
+
+    message = "Успех"
+    result = check_doctor_data({"docLogin": rmis_login, "docPassword": rmis_password})
+    if result.get("success"):
+        ok = True
+    else:
+        ok = False
+        message = "Не успех"
+    return status_response(ok, message=message)
 
 
 @login_required

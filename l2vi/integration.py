@@ -105,3 +105,15 @@ def check_to_ecp_stationar(data) -> dict:
     if path:
         endpoint = path
     return make_request(f"{url}/{endpoint}", data=json.dumps({"doctorCheck": data}), gen_url=False, auth_token="a-super-secret-key")
+
+
+def check_doctor_data(data) -> dict:
+    if API_SERVER_SEND_STATIONAR_RESULT:
+        url = API_SERVER_SEND_STATIONAR_RESULT
+    else:
+        url = SettingManager.get_api_ecp_base_url()
+    path = SettingManager.get("endpoint_doctor_data", default='', default_type='s')
+    endpoint = 'doctor-ecp-self-data'
+    if path:
+        endpoint = path
+    return make_request(f"{url}/{endpoint}", data=json.dumps({"doctorSelfData": data}), gen_url=False, auth_token="a-super-secret-key")
