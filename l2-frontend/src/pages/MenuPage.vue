@@ -50,6 +50,7 @@
                       @click="modalL2Password = true"
                     >L2</a>
                     <a
+                      v-if="showRmisChangePassword"
                       href="#"
                       class="a-under"
                       @click="modalRmis = true"
@@ -716,6 +717,9 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
     changePassword() {
       return this.$store.getters.modules.change_password;
     },
+    showRmisChangePassword() {
+      return !!this.$store.getters.modules.show_rmis_change_password;
+    },
   },
 })
 export default class MenuPage extends Vue {
@@ -728,6 +732,8 @@ export default class MenuPage extends Vue {
   forms_url: string;
 
   changePassword: boolean;
+
+  showRmisChangePassword: boolean;
 
   modalPassword: boolean;
 

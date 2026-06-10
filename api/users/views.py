@@ -5,6 +5,7 @@ import pyotp
 import qrcode
 from django.contrib.auth.decorators import login_required
 from laboratory.decorators import group_required
+from laboratory.settings import SHOW_RMIS_CHANGE_PASSWORD
 import simplejson as json
 import re
 from random import randint
@@ -134,6 +135,9 @@ def set_password(request):
 
 @login_required
 def set_rmis(request):
+    if not SHOW_RMIS_CHANGE_PASSWORD:
+        return status_response(False, message='Функция недоступна')
+
     data = json.loads(request.body)
     rmis_login = (data.get('rmis_login') or '').strip() or None
     rmis_password = (data.get('rmis_password') or '').strip() or None

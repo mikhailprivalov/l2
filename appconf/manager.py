@@ -7,10 +7,11 @@ from django.db.models.signals import post_save
 
 import laboratory
 import appconf.models as appconf
+from laboratory.settings import SHOW_RMIS_CHANGE_PASSWORD
 
 
 class SettingManager:
-    VERSION = f"{laboratory.VERSION}-14"
+    VERSION = f"{laboratory.VERSION}-15"
     WARMUP_TEST_KEY = f'SettingManager:test-warmup:v{VERSION}'
     FULL_CACHE_L2_KEY = f'SettingManager:l2:v{VERSION}'
     FULL_CACHE_EN_KEY = f'SettingManager:en:v{VERSION}'
@@ -223,6 +224,7 @@ class SettingManager:
             "auto_clinical_examination_direct": SettingManager.get("auto_clinical_examination_direct", default='false', default_type='b'),
             "legal_authenticator": SettingManager.get("legal_authenticator", default='false', default_type='b'),
             "change_password": SettingManager.get("change_password", default='false', default_type='b'),
+            "show_rmis_change_password": SHOW_RMIS_CHANGE_PASSWORD,
             "limit_age_patient_registration": SettingManager.get("limit_age_patient_registration", default='false', default_type='b'),
             "days_subtract": SettingManager.get("days_subtract", default='90', default_type='i'),
             "show_cancel_button": SettingManager.get("show_cancel_button", default='true', default_type='b'),
