@@ -162,8 +162,6 @@ def check_rmis(request):
 
     rmis_login = request.user.doctorprofile.rmis_login
     rmis_password = request.user.doctorprofile.rmis_password
-    print(rmis_login)
-    print(rmis_password)
 
     message = "Успех"
     result = check_doctor_data({"docLogin": rmis_login, "docPassword": rmis_password})
