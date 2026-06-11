@@ -619,11 +619,13 @@ def get_unlinked_requests(request):
 
 def direction_to_request(direction, doctor_profile):
     research_titles = []
+    podrzdeleniye_titles = []
     for iss in direction.issledovaniya_set.all():
         if iss.research and iss.research.short_title:
             research_titles.append(iss.research.short_title)
         elif iss.research and iss.research.title:
             research_titles.append(iss.research.title)
+        podrzdeleniye_titles.append(iss.research.podrazdeleniye.title if iss.research.podrazdeleniye else "-")
 
     return {
         "id": direction.pk,
@@ -631,6 +633,7 @@ def direction_to_request(direction, doctor_profile):
         "clinic": direction.doc.get_hospital_title() if direction.doc else "Не указан",
         "datetime": strfdatetime(direction.data_sozdaniya, "%H:%M"),
         "research": research_titles[0] if research_titles else "",
+        "podrzdeleniye": podrzdeleniye_titles[0] if podrzdeleniye_titles else "-",
         "cardId": direction.client.pk,
         "waitFill": not direction.total_confirmed,
         "cito": direction.is_cito,

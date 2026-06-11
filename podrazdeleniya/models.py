@@ -159,6 +159,7 @@ class Chamber(models.Model):
 class Bed(models.Model):
     chamber = models.ForeignKey(Chamber, on_delete=models.CASCADE)
     bed_number = models.PositiveSmallIntegerField(help_text="Номер койки")
+    comment = models.CharField(max_length=255, help_text='comment', blank=True, default=None, null=True)
 
     def __str__(self):
         return f'{self.chamber} - {self.bed_number}'

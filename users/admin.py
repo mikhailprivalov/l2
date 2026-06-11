@@ -11,6 +11,7 @@ from .models import (
     DistrictResearchLimitAssign,
     PermissionHospitalProtocolDoctorProfile,
     DoctorProfileEmployeePosition,
+    DoctorProfileEcpPosition
 )
 
 
@@ -68,8 +69,12 @@ class ResPermissionHospitalProtocolDoctorProfile(admin.ModelAdmin):
 class ResDoctorProfileEmployeePosition(admin.ModelAdmin):
     list_display = ('doctor_profile', 'employee_position')
     list_display_links = ('doctor_profile', 'employee_position')
-
     search_fields = ('doctor_profile',)
+
+
+class ResDoctorProfileEcpPosition(admin.ModelAdmin):
+    list_display = ('doctor_profile', 'arm_type',)
+    list_display_links = ('doctor_profile', 'lpu_section_name',)
 
 
 admin.site.register(DoctorProfile, DocAdmin)
