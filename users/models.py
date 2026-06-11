@@ -591,6 +591,27 @@ class DoctorProfileEmployeePosition(models.Model):
         return [{"id": employee_position.pk, "label": DoctorProfileEmployeePosition._employee_position_label(employee_position)} for employee_position in employee_positions]
 
 
+class DoctorProfileEcpPosition(models.Model):
+    doctor_profile = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
+    arm_type = models.CharField(max_length=255, help_text='Фамилия', blank=True, default="", null=True)
+    med_personal_id = models.CharField(max_length=255, help_text='med_personal_id', blank=True, default="", null=True)
+    med_staff_fact_id = models.CharField(max_length=255, help_text='med_staff_fact_id', blank=True, default="", null=True)
+    lpu_section_profile_id = models.CharField(max_length=255, help_text='lpu_section_profile_id', blank=True, default="", null=True)
+    lpu_section_id = models.CharField(max_length=255, help_text='lpu_section_id', blank=True, default="", null=True)
+    lpu_section_name = models.CharField(max_length=255, help_text='lpu_section_name', blank=True, default="", null=True)
+    med_staff_fact_stavka = models.CharField(max_length=255, help_text='med_staff_fact_stavka', blank=True, default="", null=True)
+    org_id = models.CharField(max_length=255, help_text='org_id', blank=True, default="", null=True)
+    lpu_id = models.CharField(max_length=255, help_text='lpu_id', blank=True, default="", null=True)
+    related_information = models.CharField(max_length=255, help_text='comment', blank=True, default="", null=True)
+
+    def __str__(self):
+        return f"{self.doctor_profile} {self.lpu_section_name} {self.arm_type}"
+
+    class Meta:
+        verbose_name = 'ЕЦП-атрибут'
+        verbose_name_plural = 'ЕЦП-атрибуты'
+
+
 class AssignmentTemplates(models.Model):
     SHOW_TYPES_SITE_TYPES_TYPE = {
         'consult': 0,
