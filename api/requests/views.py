@@ -691,11 +691,7 @@ def get_requests_by_status(request):
         else:
             date_filter = {'data_sozdaniya__date': search_date}
 
-    directions = (
-        Napravleniya.objects.filter(is_request=True, **date_filter)
-        .select_related("client__individual", "doc")
-        .prefetch_related("issledovaniya_set__research")
-    )
+    directions = Napravleniya.objects.filter(is_request=True, **date_filter).select_related("client__individual", "doc").prefetch_related("issledovaniya_set__research")
 
     if allowed_hospital_ids:
         directions = directions.filter(hospital_id__in=allowed_hospital_ids)
