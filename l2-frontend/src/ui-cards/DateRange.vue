@@ -43,6 +43,7 @@ export default {
     return {
       dfrom: '',
       dto: '',
+      syncingFromProp: false,
     };
   },
   computed: {
@@ -57,11 +58,34 @@ export default {
     },
   },
   watch: {
+    value: {
+      deep: true,
+      handler(newValue) {
+        if (!Array.isArray(newValue) || newValue.length < 2) {
+          return;
+        }
+        const [from, to] = newValue;
+        if (from === this.dfrom && to === this.dto) {
+          return;
+        }
+        this.syncingFromProp = true;
+        this.dfrom = from;
+        this.dto = to;
+        this.$nextTick(() => {
+          this.updateDatepickers(from, to);
+          this.syncingFromProp = false;
+        });
+      },
+    },
     dfrom() {
-      this.emit();
+      if (!this.syncingFromProp) {
+        this.emit();
+      }
     },
     dto() {
-      this.emit();
+      if (!this.syncingFromProp) {
+        this.emit();
+      }
     },
   },
   created() {
@@ -85,6 +109,16 @@ export default {
     });
   },
   methods: {
+    updateDatepickers(from, to) {
+      const fromMoment = moment(from, this.datef, true);
+      const toMoment = moment(to, this.datef, true);
+      if (this.$refs.from && fromMoment.isValid()) {
+        window.$(this.$refs.from).datepicker('update', fromMoment.toDate());
+      }
+      if (this.$refs.to && toMoment.isValid()) {
+        window.$(this.$refs.to).datepicker('update', toMoment.toDate());
+      }
+    },
     emit() {
       this.validate();
       this.$emit('input', [this.dfrom, this.dto]);

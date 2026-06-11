@@ -332,7 +332,7 @@ def create_request(request):
         direction.dose = request_fields.get('dose', '')
         direction.anamnesis = request_fields.get('anamnesis', '')
         direction.direction_comment = request_fields.get('comment', '')
-        current_contrast = request_fields.get('currentContrast', '')
+        current_contrast = request_fields.get('currentContrast', -1)
         contrast_type = Contrasts.objects.filter(pk=int(current_contrast)).first()
         if contrast_type:
             direction.type_contrast = contrast_type
@@ -632,6 +632,7 @@ def direction_to_request(direction, doctor_profile):
         "patient": direction.client.individual.fio(short=True),
         "clinic": direction.doc.get_hospital_title() if direction.doc else "Не указан",
         "datetime": strfdatetime(direction.data_sozdaniya, "%H:%M"),
+        "orderDate": strfdatetime(direction.data_sozdaniya, "%d.%m"),
         "research": research_titles[0] if research_titles else "",
         "podrzdeleniye": podrzdeleniye_titles[0] if podrzdeleniye_titles else "-",
         "cardId": direction.client.pk,
@@ -648,7 +649,8 @@ def direction_to_request(direction, doctor_profile):
 @group_required("Заполнение заявок", "Врач-диагностики")
 def get_requests_by_status(request):
     request_data = json.loads(request.body)
-    search_date = '-'.join(request_data.get("date").split(".")[::-1])
+    date_from = request_data.get("dateFrom")
+    date_to = request_data.get("dateTo")
     is_done = request_data.get("isDone", False)
     hospital_id = request_data.get("hospitalId", -1)
 
@@ -656,16 +658,44 @@ def get_requests_by_status(request):
         allowed_hospital_ids = check_hospital_access(request.user.doctorprofile, hospital_id)
     except ValueError as e:
         return JsonResponse({"rows": [], "error": str(e)})
-    if SettingManager.get('show_directions_with_link_image', default='true', default_type='b'):
-        directions = (
-            Napravleniya.objects.filter(is_request=True, equipment_receive__isnull=False, equipment_receive__time_save_link__date=search_date)
-            .select_related("client__individual", "doc")
-            .prefetch_related("issledovaniya_set__research")
-        )
-    else:
-        directions = (
-            Napravleniya.objects.filter(is_request=True, data_sozdaniya__date=search_date).select_related("client__individual", "doc").prefetch_related("issledovaniya_set__research")
-        )
+
+    date_filter = {}
+    if date_from and date_to:
+        try:
+            search_date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+            search_date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+            if search_date_from > search_date_to:
+                search_date_from, search_date_to = search_date_to, search_date_from
+            if (search_date_to - search_date_from).days > 40:
+                return JsonResponse({"rows": [], "error": "Период не может превышать 40 дней"})
+            if SettingManager.get('show_directions_with_link_image', default='true', default_type='b'):
+                date_filter = {
+                    'equipment_receive__isnull': False,
+                    'equipment_receive__time_save_link__date__gte': search_date_from,
+                    'equipment_receive__time_save_link__date__lte': search_date_to,
+                }
+            else:
+                date_filter = {
+                    'data_sozdaniya__date__gte': search_date_from,
+                    'data_sozdaniya__date__lte': search_date_to,
+                }
+        except ValueError:
+            pass
+    elif request_data.get("date"):
+        search_date = '-'.join(request_data.get("date").split(".")[::-1])
+        if SettingManager.get('show_directions_with_link_image', default='true', default_type='b'):
+            date_filter = {
+                'equipment_receive__isnull': False,
+                'equipment_receive__time_save_link__date': search_date,
+            }
+        else:
+            date_filter = {'data_sozdaniya__date': search_date}
+
+    directions = (
+        Napravleniya.objects.filter(is_request=True, **date_filter)
+        .select_related("client__individual", "doc")
+        .prefetch_related("issledovaniya_set__research")
+    )
 
     if allowed_hospital_ids:
         directions = directions.filter(hospital_id__in=allowed_hospital_ids)
@@ -681,10 +711,11 @@ def get_requests_by_status(request):
     rows = []
     for direction in directions_list:
         rows.append(direction_to_request(direction, request.user.doctorprofile))
+    filter_department = list(set([i.get("podrzdeleniye", "-") for i in rows]))
 
     if not is_done:
         rows.sort(key=lambda x: (not x["cito"], -int(x["datetime"].replace(":", ""))))
-    return JsonResponse({"rows": rows})
+    return JsonResponse({"rows": rows, "filterDepartment": filter_department})
 
 
 @login_required

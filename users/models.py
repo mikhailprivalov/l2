@@ -602,7 +602,7 @@ class DoctorProfileEcpPosition(models.Model):
     med_staff_fact_stavka = models.CharField(max_length=255, help_text='med_staff_fact_stavka', blank=True, default="", null=True)
     org_id = models.CharField(max_length=255, help_text='org_id', blank=True, default="", null=True)
     lpu_id = models.CharField(max_length=255, help_text='lpu_id', blank=True, default="", null=True)
-    comment = models.CharField(max_length=255, help_text='comment', blank=True, default="", null=True)
+    related_information = models.CharField(max_length=255, help_text='comment', blank=True, default="", null=True)
 
     def __str__(self):
         return f"{self.doctor_profile} {self.lpu_section_name} {self.arm_type}"

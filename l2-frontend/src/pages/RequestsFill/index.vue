@@ -1,6 +1,6 @@
 <template>
   <PageInnerLayout>
-    <TwoSidedLayout :left-width-px="301">
+    <TwoSidedLayout :left-width-px="340">
       <template #left>
         <TopBottomLayout
           :top-height-px="69"
@@ -43,49 +43,83 @@
           </template>
           <template #bottom>
             <TopBottomLayout
-              :top-height-px="36"
+              :top-height-px="toolbarHeightPx"
               no-border
             >
               <template #top>
-                <DateFieldNav
-                  :def="date"
-                  :val.sync="date"
-                  w="100%"
-                />
+                <div class="requests-toolbar">
+                  <div class="requests-toolbar__row">
+                    <DateRange
+                      :key="dateRangeResetKey"
+                      v-model="dateRange"
+                    />
+                    <button
+                      class="date-range-reset"
+                      type="button"
+                      title="Сбросить настройки"
+                      @click="resetSettings"
+                    >
+                      <i class="fa fa-refresh" />
+                    </button>
+                    <div class="requests-toolbar__filter">
+                      <button
+                        class="filter-btn filter-btn--compact"
+                        :class="{ 'filter-btn--active': !showAccepted }"
+                        @click="showAccepted = false"
+                      >
+                        {{ `Все (${departmentFilteredWaitRequests.length})` }}
+                      </button>
+                      <button
+                        class="filter-btn filter-btn--compact"
+                        :class="{ 'filter-btn--active': showAccepted }"
+                        @click="showAccepted = true"
+                      >
+                        {{ `Принято (${departmentFilteredWaitRequests.filter(request => request.accepted).length})` }}
+                      </button>
+                      <button
+                        class="filter-btn filter-btn--compact filter-btn--icon"
+                        :class="{ 'filter-btn--active': isSearchMode }"
+                        title="Поиск по пациенту"
+                        @click="isSearchMode = !isSearchMode"
+                      >
+                        <i class="fa fa-search" />
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    v-if="filterDepartments.length"
+                    class="requests-toolbar__row requests-toolbar__row--departments"
+                  >
+                    <label
+                      v-for="department in filterDepartments"
+                      :key="department"
+                      class="department-filter"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="isDepartmentSelected(department)"
+                        @change="toggleDepartment(department)"
+                      >
+                      <span :title="department">{{ formatDepartmentLabel(department) }}</span>
+                    </label>
+                  </div>
+                  <div
+                    v-if="isSearchMode"
+                    class="requests-toolbar__row requests-toolbar__row--search"
+                  >
+                    <input
+                      v-model.trim="patientQuery"
+                      type="text"
+                      class="form-control requests-toolbar__search-input"
+                      placeholder="поиск по пациенту"
+                    >
+                  </div>
+                </div>
               </template>
               <template #bottom>
                 <TopBottomLayout :top-height-percent="70">
                   <template #top>
                     <div class="requests-list">
-                      <div class="requests-list__header">
-                        <div class="requests-list__header-content">
-                          <span>Ожидают</span>
-                          <div class="requests-list__filter">
-                            <button
-                              class="filter-btn"
-                              :class="{ 'filter-btn--active': !showAccepted }"
-                              @click="showAccepted = false"
-                            >
-                              {{ `Все (${requestsWait.length})` }}
-                            </button>
-                            <button
-                              class="filter-btn"
-                              :class="{ 'filter-btn--active': showAccepted }"
-                              @click="showAccepted = true"
-                            >
-                              {{ `Принятые (${requestsWait.filter(request => request.accepted).length})` }}
-                            </button>
-                            <button
-                              class="filter-btn"
-                              :class="{ 'filter-btn--active': isSearchMode }"
-                              title="поиск по пациенту"
-                              @click="isSearchMode = !isSearchMode"
-                            >
-                              <i class="fa fa-search" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                       <div
                         v-if="initialLoading"
                         class="requests-list__loading"
@@ -96,17 +130,6 @@
                         v-else
                         class="requests-list__items"
                       >
-                        <div
-                          v-if="isSearchMode"
-                          class="requests-list__search"
-                        >
-                          <input
-                            v-model.trim="patientQuery"
-                            type="text"
-                            class="form-control"
-                            placeholder="поиск по пациенту"
-                          >
-                        </div>
                         <RequestCard
                           v-for="request in filteredWaitRequests"
                           :key="request.id"
@@ -140,14 +163,14 @@
                         class="requests-list__items"
                       >
                         <RequestCard
-                          v-for="request in requestsDone"
+                          v-for="request in filteredDoneRequests"
                           :key="request.id"
                           :request="request"
                           :hospital-id="selectedHospitalId"
                           @card-clicked="handleCardClick"
                         />
                         <div
-                          v-if="requestsDone.length === 0"
+                          v-if="filteredDoneRequests.length === 0"
                           class="requests-list__empty"
                         >
                           Нет исполненных заявок
@@ -439,7 +462,7 @@ import ResultsParaclinic from '@/pages/ResultsParaclinic.vue';
 import PageInnerLayout from '@/layouts/PageInnerLayout.vue';
 import TwoSidedLayout from '@/layouts/TwoSidedLayout.vue';
 import TopBottomLayout from '@/layouts/TopBottomLayout.vue';
-import DateFieldNav from '@/fields/DateFieldNav.vue';
+import DateRange from '@/ui-cards/DateRange.vue';
 import api from '@/api';
 import directionsPoint from '@/api/directions-point';
 import useLoader from '@/hooks/useLoader';
@@ -454,12 +477,22 @@ interface Hospital {
   label: string;
 }
 
-const date = ref(moment().format('DD.MM.YYYY'));
+const MAX_PERIOD_DAYS = 40;
+
+const getDefaultDateRange = (): [string, string] => [
+  moment().subtract(10, 'days').format('DD.MM.YYYY'),
+  moment().format('DD.MM.YYYY'),
+];
+
+const dateRange = ref(getDefaultDateRange());
+const dateRangeResetKey = ref(0);
 const hospitals = ref<Hospital[]>([]);
 const selectedHospitalId = ref<number>(-1);
 const hospitalsLoading = ref(false);
 const requestsDone = ref<Request[]>([]);
 const requestsWait = ref<Request[]>([]);
+const filterDepartments = ref<string[]>([]);
+const selectedDepartments = ref<Set<string>>(new Set());
 const initialLoading = ref(false);
 const showAccepted = ref(false);
 const selectedRequest = ref<Request | null>(null);
@@ -475,15 +508,82 @@ let refreshInterval: any = null;
 const loader = useLoader();
 const notify = useNotify();
 
+const toolbarHeightPx = computed(() => {
+  let height = 36;
+  if (filterDepartments.value.length) {
+    height += Math.max(22, Math.ceil(filterDepartments.value.length / 2) * 20);
+  }
+  if (isSearchMode.value) {
+    height += 36;
+  }
+  return height;
+});
+
+const matchesDepartmentFilter = (request: Request) => {
+  if (filterDepartments.value.length === 0) {
+    return true;
+  }
+  if (selectedDepartments.value.size === 0) {
+    return false;
+  }
+  return selectedDepartments.value.has(request.podrzdeleniye || '-');
+};
+
+const departmentFilteredWaitRequests = computed(() => (
+  requestsWait.value.filter(matchesDepartmentFilter)
+));
+
+const departmentFilteredDoneRequests = computed(() => (
+  requestsDone.value.filter(matchesDepartmentFilter)
+));
+
 const filteredWaitRequests = computed(() => {
   const base = showAccepted.value
-    ? requestsWait.value.filter(request => request.accepted)
-    : requestsWait.value;
+    ? departmentFilteredWaitRequests.value.filter(request => request.accepted)
+    : departmentFilteredWaitRequests.value;
 
   const query = patientQuery.value.trim().toLowerCase();
   if (!query) return base;
   return base.filter(request => request.patient.toLowerCase().includes(query));
 });
+
+const filteredDoneRequests = computed(() => departmentFilteredDoneRequests.value);
+
+const isDepartmentSelected = (department: string) => selectedDepartments.value.has(department);
+
+const formatDepartmentLabel = (department: string) => (
+  department.length > 5 ? `${department.slice(0, 5)}...` : department
+);
+
+const mergeFilterDepartments = (incoming: string[]) => {
+  const sorted = [...new Set(incoming)].sort((a, b) => a.localeCompare(b, 'ru'));
+  const previousDepartments = filterDepartments.value;
+  const wasEmpty = previousDepartments.length === 0;
+  const previousSelected = selectedDepartments.value;
+
+  selectedDepartments.value = new Set(
+    sorted.filter(department => {
+      if (wasEmpty) {
+        return true;
+      }
+      if (!previousDepartments.includes(department)) {
+        return true;
+      }
+      return previousSelected.has(department);
+    }),
+  );
+  filterDepartments.value = sorted;
+};
+
+const toggleDepartment = (department: string) => {
+  const next = new Set(selectedDepartments.value);
+  if (next.has(department)) {
+    next.delete(department);
+  } else {
+    next.add(department);
+  }
+  selectedDepartments.value = next;
+};
 
 const loadHospitals = async () => {
   try {
@@ -510,34 +610,77 @@ const loadHospitals = async () => {
   }
 };
 
+const resetSettings = () => {
+  dateRange.value = getDefaultDateRange();
+  dateRangeResetKey.value += 1;
+  selectedDepartments.value = new Set(filterDepartments.value);
+};
+
+const clampDateRange = (): boolean => {
+  const from = moment(dateRange.value[0], 'DD.MM.YYYY', true);
+  const to = moment(dateRange.value[1], 'DD.MM.YYYY', true);
+
+  if (!from.isValid() || !to.isValid()) {
+    return false;
+  }
+
+  const start = from.isAfter(to) ? to : from;
+  const end = from.isAfter(to) ? from : to;
+
+  if (end.diff(start, 'days') <= MAX_PERIOD_DAYS) {
+    if (from.isAfter(to)) {
+      dateRange.value = [start.format('DD.MM.YYYY'), end.format('DD.MM.YYYY')];
+      return true;
+    }
+    return false;
+  }
+
+  notify.error(`Период не может превышать ${MAX_PERIOD_DAYS} дней`);
+  dateRange.value = [
+    end.clone().subtract(MAX_PERIOD_DAYS, 'days').format('DD.MM.YYYY'),
+    end.format('DD.MM.YYYY'),
+  ];
+  return true;
+};
+
 const loadRequestsByStatus = async (isDone: boolean) => {
   try {
     const response = await api('requests/by-status', {
-      date: date.value,
+      dateFrom: dateRange.value[0],
+      dateTo: dateRange.value[1],
       isDone,
       hospitalId: selectedHospitalId.value,
     });
 
-    if (response.rows) {
-      return response.rows;
+    if (response.error) {
+      notify.error(response.error);
+      return { rows: [], filterDepartment: [] as string[] };
     }
-    return [];
+
+    return {
+      rows: response.rows || [],
+      filterDepartment: response.filterDepartment || [],
+    };
   } catch (error) {
     notify.error('Ошибка загрузки заявок');
     // eslint-disable-next-line no-console
     console.error('Ошибка загрузки заявок:', error);
-    return [];
+    return { rows: [], filterDepartment: [] as string[] };
   }
 };
 
 const loadAllRequests = async () => {
-  const [waitRequests, doneRequests] = await Promise.all([
+  const [waitResult, doneResult] = await Promise.all([
     loadRequestsByStatus(false),
     loadRequestsByStatus(true),
   ]);
 
-  requestsWait.value = waitRequests;
-  requestsDone.value = doneRequests;
+  requestsWait.value = waitResult.rows;
+  requestsDone.value = doneResult.rows;
+  mergeFilterDepartments([
+    ...waitResult.filterDepartment,
+    ...doneResult.filterDepartment,
+  ]);
 };
 
 useOn('change-document-state', loadAllRequests);
@@ -627,13 +770,18 @@ const searchByNumber = async () => {
   }
 };
 
-watch(date, () => {
+watch(dateRange, () => {
+  if (clampDateRange()) {
+    return;
+  }
   loadAllRequests();
-});
+}, { deep: true });
 
 watch(selectedHospitalId, () => {
   selectedRequest.value = null;
   requestParams.value = null;
+  filterDepartments.value = [];
+  selectedDepartments.value = new Set();
   loadAllRequests();
 });
 
@@ -658,6 +806,167 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+.requests-toolbar {
+  --toolbar-control-height: 34px;
+  --toolbar-btn-height: 26px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    &--search {
+      min-height: var(--toolbar-control-height);
+    }
+
+    &--departments {
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 2px 8px;
+      line-height: 1.2;
+    }
+  }
+
+  &__filter {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  &__search-input {
+    flex: 1;
+    min-width: 0;
+    height: var(--toolbar-control-height);
+    padding: 6px 8px;
+    font-size: 12px;
+    border-radius: 0;
+  }
+
+  :deep(.input-daterange) {
+    display: inline-flex;
+    width: auto;
+    flex-shrink: 0;
+
+    .form-control {
+      flex: 0 0 auto;
+      width: 76px;
+      height: var(--toolbar-control-height);
+      padding: 5px;
+    }
+
+    .input-group-addon {
+      flex: 0 0 auto;
+      padding: 5px 4px;
+      min-width: 0;
+      height: var(--toolbar-control-height);
+    }
+  }
+
+  .date-range-reset,
+  .filter-btn {
+    height: var(--toolbar-btn-height);
+    min-height: var(--toolbar-btn-height);
+    box-sizing: border-box;
+  }
+
+  .date-range-reset {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--toolbar-btn-height);
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    font-size: 13px;
+
+    &:hover {
+      color: #049372;
+    }
+  }
+
+  .filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff;
+    cursor: pointer;
+    font-size: 10px;
+    line-height: 1;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    color: #666;
+    min-width: 0;
+
+    &:hover {
+      background-color: #f0f0f0;
+      border-color: #bbb;
+      color: #333;
+    }
+
+    &--active {
+      background-color: #049372;
+      border-color: #049372;
+      color: white;
+    }
+
+    &--icon {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 0;
+      padding: 0 4px;
+      font-size: 12px;
+    }
+
+    &--compact {
+      flex: 0 0 auto;
+    }
+  }
+}
+
+.department-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: normal;
+  color: #555;
+  cursor: pointer;
+  max-width: 100%;
+
+  input {
+    margin: 0;
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .requests-list {
   height: 100%;
   width: 100%;
@@ -677,54 +986,8 @@ onBeforeUnmount(() => {
   border-radius: 6px;
 }
 
-.requests-list__header-content {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.requests-list__filter {
-  display: flex;
-  gap: 5px;
-}
-
-.filter-btn {
-  padding: 4px 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  background-color: #fff;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s ease;
-  color: #666;
-
-  &:hover {
-    background-color: #f0f0f0;
-    border-color: #bbb;
-    color: #333;
-  }
-
-  &--active {
-    background-color: #049372;
-    border-color: #049372;
-    color: white;
-  }
-}
-
 .requests-list__items {
   padding: 5px;
-}
-
-.requests-list__search {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: #ffffff;
-  padding-bottom: 5px;
-}
-
-.requests-list__search input {
-  width: 100%;
 }
 
 .requests-list__loading {
@@ -742,7 +1005,7 @@ onBeforeUnmount(() => {
 .results-editor {
   height: 100%;
   width: 100%;
-  max-width: calc(100vw - 300px);
+  max-width: calc(100vw - 340px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px;

@@ -11,7 +11,9 @@
         >
           CITO
         </span>
-        <span :class="$style.datetime">{{ props.request.datetime }}</span>
+        <span :class="$style.datetime">
+          {{ props.request.datetime }}<template v-if="props.request.orderDate"> {{ props.request.orderDate }}</template>
+        </span>
       </div>
       <span :class="$style.requestId">{{ props.request.id }}</span>
       <div class="topBtn">
@@ -53,7 +55,9 @@ export type Request = {
   patient: string;
   clinic: string;
   datetime: string;
+  orderDate?: string;
   research: string;
+  podrzdeleniye?: string;
   cardId: number;
   waitFill: boolean;
   cito?: boolean;
