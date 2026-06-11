@@ -73,8 +73,14 @@ class ResDoctorProfileEmployeePosition(admin.ModelAdmin):
 
 
 class ResDoctorProfileEcpPosition(admin.ModelAdmin):
-    list_display = ('doctor_profile', 'arm_type',)
-    list_display_links = ('doctor_profile', 'lpu_section_name',)
+    list_display = (
+        'doctor_profile',
+        'arm_type',
+    )
+    list_display_links = (
+        'doctor_profile',
+        'lpu_section_name',
+    )
 
 
 admin.site.register(DoctorProfile, DocAdmin)
