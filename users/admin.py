@@ -11,7 +11,7 @@ from .models import (
     DistrictResearchLimitAssign,
     PermissionHospitalProtocolDoctorProfile,
     DoctorProfileEmployeePosition,
-    DoctorProfileEcpPosition
+    DoctorProfileEcpPosition,
 )
 
 
