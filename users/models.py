@@ -407,6 +407,14 @@ class DoctorProfile(models.Model):
             return hosp.safe_short_title
         return None
 
+    def get_rmis_password_hint(self):
+        password = self.rmis_password or ''
+        if not password:
+            return ''
+        if len(password) == 1:
+            return f'{password[0]}{"*" * 8}{password[0]}'
+        return f'{password[0]}{"*" * 8}{password[-1]}'
+
     def get_hospital(self):
         if not self.hospital:
             from hospitals.models import Hospitals
@@ -592,13 +600,22 @@ class DoctorProfileEmployeePosition(models.Model):
 
 
 class DoctorProfileEcpPosition(models.Model):
+    TYPE_MEDICAL_FORM_CHOICES = (
+        (0, 'Экстренная служба'),
+        (1, 'Стационар'),
+    )
+
     doctor_profile = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
-    arm_type = models.CharField(max_length=255, help_text='Фамилия', blank=True, default="", null=True)
+    type_medical_form = models.SmallIntegerField(choices=TYPE_MEDICAL_FORM_CHOICES, help_text='Тип ограничения на период', default=None, blank=True, null=True)
+    arm_type = models.CharField(max_length=255, help_text='arm_type', blank=True, default="", null=True)
+    arm_name = models.CharField(max_length=255, help_text='arm_name', blank=True, default="", null=True)
     med_personal_id = models.CharField(max_length=255, help_text='med_personal_id', blank=True, default="", null=True)
     med_staff_fact_id = models.CharField(max_length=255, help_text='med_staff_fact_id', blank=True, default="", null=True)
     lpu_section_profile_id = models.CharField(max_length=255, help_text='lpu_section_profile_id', blank=True, default="", null=True)
     lpu_section_id = models.CharField(max_length=255, help_text='lpu_section_id', blank=True, default="", null=True)
     lpu_section_name = models.CharField(max_length=255, help_text='lpu_section_name', blank=True, default="", null=True)
+    post_med_name = models.CharField(max_length=255, help_text='post_med_name', blank=True, default="", null=True)
+    med_personal_FIO =  models.CharField(max_length=255, help_text='med_personal_FIO', blank=True, default="", null=True)
     med_staff_fact_stavka = models.CharField(max_length=255, help_text='med_staff_fact_stavka', blank=True, default="", null=True)
     org_id = models.CharField(max_length=255, help_text='org_id', blank=True, default="", null=True)
     lpu_id = models.CharField(max_length=255, help_text='lpu_id', blank=True, default="", null=True)

@@ -8,6 +8,7 @@ urlpatterns = [
     path('set-password', views.set_password),
     path('set-rmis', views.set_rmis),
     path('check-rmis', views.check_rmis),
+    path('get-ecp-positions', views.get_ecp_positions),
     path('set-new-email', views.set_new_email),
     path('loose-password', views.loose_password),
     path('generate-totp-code', views.generate_totp_code),
