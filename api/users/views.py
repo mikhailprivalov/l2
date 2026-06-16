@@ -181,10 +181,13 @@ def get_ecp_positions(request):
 
     doc: DoctorProfile = request.user.doctorprofile
     rows = _get_ecp_position_rows(doc)
-    return status_response(True, data={
-        'rows': rows,
-        'rmis_password_hint': doc.get_rmis_password_hint(),
-    })
+    return status_response(
+        True,
+        data={
+            'rows': rows,
+            'rmis_password_hint': doc.get_rmis_password_hint(),
+        },
+    )
 
 
 @login_required
