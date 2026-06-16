@@ -171,10 +171,7 @@ def _validate_unique_type_medical_form(ecp_positions):
 
 
 def _get_ecp_position_rows(doc: DoctorProfile):
-    return [
-        _serialize_ecp_position(position)
-        for position in DoctorProfileEcpPosition.objects.filter(doctor_profile=doc).order_by('id')
-    ]
+    return [_serialize_ecp_position(position) for position in DoctorProfileEcpPosition.objects.filter(doctor_profile=doc).order_by('id')]
 
 
 @login_required
