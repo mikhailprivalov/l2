@@ -615,7 +615,7 @@ class DoctorProfileEcpPosition(models.Model):
     lpu_section_id = models.CharField(max_length=255, help_text='lpu_section_id', blank=True, default="", null=True)
     lpu_section_name = models.CharField(max_length=255, help_text='lpu_section_name', blank=True, default="", null=True)
     post_med_name = models.CharField(max_length=255, help_text='post_med_name', blank=True, default="", null=True)
-    med_personal_FIO =  models.CharField(max_length=255, help_text='med_personal_FIO', blank=True, default="", null=True)
+    med_personal_FIO = models.CharField(max_length=255, help_text='med_personal_FIO', blank=True, default="", null=True)
     med_staff_fact_stavka = models.CharField(max_length=255, help_text='med_staff_fact_stavka', blank=True, default="", null=True)
     org_id = models.CharField(max_length=255, help_text='org_id', blank=True, default="", null=True)
     lpu_id = models.CharField(max_length=255, help_text='lpu_id', blank=True, default="", null=True)
