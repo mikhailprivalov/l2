@@ -220,10 +220,13 @@ def set_rmis(request):
         DoctorProfileEcpPosition.objects.filter(pk=position_id, doctor_profile=doc).update(type_medical_form=type_medical_form)
 
     slog.Log(key='', type=120000, body="IP: {0}, RMIS".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
-    return status_response(True, data={
-        'rmis_login': doc.rmis_login or '',
-        'rmis_password_hint': doc.get_rmis_password_hint(),
-    })
+    return status_response(
+        True,
+        data={
+            'rmis_login': doc.rmis_login or '',
+            'rmis_password_hint': doc.get_rmis_password_hint(),
+        },
+    )
 
 
 @login_required
