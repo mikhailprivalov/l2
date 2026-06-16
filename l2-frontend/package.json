@@ -112,7 +112,7 @@
     "eslint-plugin-vuejs-accessibility": "^1.2.0",
     "postcss": "^8.4.22",
     "sass": "~1.32",
-    "sass-loader": "^10.1.1",
+    "sass-loader": "^17.0.0",
     "thread-loader": "^4.0.1",
     "typescript": "~5.0.4",
     "url-loader": "^4.1.1",
