@@ -24,7 +24,7 @@ from users.tasks import send_password_reset_code
 
 from utils.response import status_response
 import slog.models as slog
-from users.models import DoctorProfile
+from users.models import DoctorProfile, DoctorProfileEcpPosition
 from django.http import JsonResponse
 
 
@@ -135,6 +135,61 @@ def set_password(request):
     return status_response(True)
 
 
+def _serialize_ecp_position(position: DoctorProfileEcpPosition):
+    return {
+        'id': position.pk,
+        'type_medical_form': position.type_medical_form,
+        'arm_type': position.arm_type or '',
+        'med_staff_fact_id': position.med_staff_fact_id or '',
+        'lpu_section_id': position.lpu_section_id or '',
+        'lpu_section_name': position.lpu_section_name or '',
+        'med_staff_fact_stavka': position.med_staff_fact_stavka or '',
+    }
+
+
+def _normalize_type_medical_form(value):
+    if value in (None, '', -1, '-1', 'unset'):
+        return None
+    if value in ('emergency', '0', 0):
+        return 0
+    if value in ('stationary', '1', 1):
+        return 1
+    return int(value)
+
+
+def _validate_unique_type_medical_form(ecp_positions):
+    seen = {}
+    labels = {0: 'Экстренная служба', 1: 'Стационар'}
+    for item in ecp_positions:
+        type_medical_form = _normalize_type_medical_form(item.get('type_medical_form'))
+        if type_medical_form is None:
+            continue
+        if type_medical_form in seen:
+            return False, f'Тип медпомощи «{labels[type_medical_form]}» указан более одного раза'
+        seen[type_medical_form] = True
+    return True, None
+
+
+def _get_ecp_position_rows(doc: DoctorProfile):
+    return [_serialize_ecp_position(position) for position in DoctorProfileEcpPosition.objects.filter(doctor_profile=doc).order_by('id')]
+
+
+@login_required
+def get_ecp_positions(request):
+    if not SHOW_RMIS_CHANGE_PASSWORD:
+        return status_response(False, message='Функция недоступна')
+
+    doc: DoctorProfile = request.user.doctorprofile
+    rows = _get_ecp_position_rows(doc)
+    return status_response(
+        True,
+        data={
+            'rows': rows,
+            'rmis_password_hint': doc.get_rmis_password_hint(),
+        },
+    )
+
+
 @login_required
 def set_rmis(request):
     if not SHOW_RMIS_CHANGE_PASSWORD:
@@ -143,16 +198,35 @@ def set_rmis(request):
     data = json.loads(request.body)
     rmis_login = (data.get('rmis_login') or '').strip() or None
     rmis_password = (data.get('rmis_password') or '').strip() or None
+    ecp_positions = data.get('ecp_positions') or []
 
     doc: DoctorProfile = request.user.doctorprofile
+    ok, message = _validate_unique_type_medical_form(ecp_positions)
+    if not ok:
+        return status_response(False, message=message)
+
     doc.rmis_login = rmis_login
     if rmis_password:
         doc.rmis_password = rmis_password
     elif not rmis_login:
         doc.rmis_password = None
     doc.save(update_fields=['rmis_login', 'rmis_password'])
+
+    for item in ecp_positions:
+        position_id = item.get('id')
+        if not position_id:
+            continue
+        type_medical_form = _normalize_type_medical_form(item.get('type_medical_form'))
+        DoctorProfileEcpPosition.objects.filter(pk=position_id, doctor_profile=doc).update(type_medical_form=type_medical_form)
+
     slog.Log(key='', type=120000, body="IP: {0}, RMIS".format(slog.Log.get_client_ip(request)), user=request.user.doctorprofile).save()
-    return status_response(True, data={'rmis_login': doc.rmis_login or ''})
+    return status_response(
+        True,
+        data={
+            'rmis_login': doc.rmis_login or '',
+            'rmis_password_hint': doc.get_rmis_password_hint(),
+        },
+    )
 
 
 @login_required
@@ -160,17 +234,43 @@ def check_rmis(request):
     if not SHOW_RMIS_CHANGE_PASSWORD:
         return status_response(False, message='Функция недоступна')
 
-    rmis_login = request.user.doctorprofile.rmis_login
-    rmis_password = request.user.doctorprofile.rmis_password
+    data = json.loads(request.body) if request.body else {}
+    doc_profile = request.user.doctorprofile
+    rmis_login = (data.get('rmis_login') or '').strip() or doc_profile.rmis_login
+    rmis_password = (data.get('rmis_password') or '').strip() or doc_profile.rmis_password
+
+    if not rmis_login:
+        return status_response(False, message='Укажите логин РМИС')
 
     message = "Успех"
     result = check_doctor_data({"docLogin": rmis_login, "docPassword": rmis_password})
     if result.get("success"):
         ok = True
+        DoctorProfileEcpPosition.objects.filter(doctor_profile=doc_profile).delete()
+        for i in result.get('arms', []):
+            if i.get('ARMType') == 'stac6' or i.get('ARMType') == 'htm':
+                continue
+            DoctorProfileEcpPosition(
+                doctor_profile=doc_profile,
+                arm_type=i.get('ARMType'),
+                arm_name=i.get('ARMName'),
+                med_personal_id=i.get('MedPersonal_id'),
+                med_staff_fact_id=i.get('MedStaffFact_id'),
+                lpu_section_profile_id=i.get('LpuSectionProfile_id'),
+                lpu_section_id=i.get('LpuSection_id'),
+                lpu_section_name=i.get('LpuSection_Name'),
+                med_staff_fact_stavka=i.get('MedStaffFact_Stavka'),
+                med_personal_FIO=i.get('MedPersonal_FIO'),
+                post_med_name=i.get('PostMed_Name'),
+                org_id=i.get('Org_id'),
+                lpu_id=i.get('Lpu_id'),
+            ).save()
+        rows = _get_ecp_position_rows(doc_profile)
     else:
         ok = False
         message = "Не успех"
-    return status_response(ok, message=message)
+        rows = []
+    return status_response(ok, message=message, data={'rows': rows})
 
 
 @login_required

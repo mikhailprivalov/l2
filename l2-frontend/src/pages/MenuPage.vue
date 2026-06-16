@@ -418,7 +418,7 @@
           v-if="modalRmis"
           show-footer="true"
           white-bg="true"
-          max-width="710px"
+          max-width="1100px"
           width="100%"
           margin-left-right="auto"
           :no-close="!!loading"
@@ -435,13 +435,19 @@
               class="form-control mb10"
               placeholder="РМИС логин"
             >
-            <input
-              v-model="rmis_password"
-              type="password"
-              class="form-control mb10"
-              placeholder="РМИС пароль (для замены введите значение)"
-              autocomplete="new-password"
-            >
+            <div class="rmis-password-row mb10">
+              <input
+                v-model="rmis_password"
+                type="password"
+                class="form-control rmis-password-input"
+                placeholder="РМИС пароль (для замены введите значение)"
+                autocomplete="new-password"
+              >
+              <span
+                v-if="rmisPasswordHint"
+                class="rmis-password-hint"
+              >{{ rmisPasswordHint }}</span>
+            </div>
             <button
               class="btn btn-blue-nb mr10"
               :disabled="loading"
@@ -458,6 +464,75 @@
             >
               Сохранить
             </button>
+            <div
+              v-if="ecpPositions.length"
+              class="rmis-ecp-wrap"
+            >
+              <table class="table table-condensed table-bordered rmis-ecp-table">
+                <colgroup>
+                  <col class="col-type-medical-form">
+                  <col class="col-arm-type">
+                  <col>
+                  <col>
+                  <col class="col-med-staff-fact-stavka">
+                  <col class="col-lpu-section-name">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th>Тип медпомощи</th>
+                    <th class="col-arm-type">
+                      arm_type
+                    </th>
+                    <th>med_staff_fact_id</th>
+                    <th>lpu_section_id</th>
+                    <th class="col-med-staff-fact-stavka">
+                      med_staff_fact_stavka
+                    </th>
+                    <th class="col-lpu-section-name">
+                      lpu_section_name
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="row in ecpPositions"
+                    :key="row.id"
+                  >
+                    <td>
+                      <select
+                        v-model="row.type_medical_form"
+                        class="form-control rmis-type-select"
+                      >
+                        <option value="unset">
+                          Не установлено
+                        </option>
+                        <option value="emergency"
+                          :disabled="isTypeMedicalFormTaken('emergency', row.id)"
+                        >
+                          Экстренная служба
+                        </option>
+                        <option value="stationary"
+                          :disabled="isTypeMedicalFormTaken('stationary', row.id)"
+                        >
+                          Стационар
+                        </option>
+                      </select>
+                    </td>
+                    <td class="col-arm-type">
+                      {{ row.arm_type || '—' }}
+                    </td>
+                    <td>{{ row.med_staff_fact_id || '—' }}</td>
+                    <td>{{ row.lpu_section_id || '—' }}</td>
+                    <td class="col-med-staff-fact-stavka">
+                      {{ row.med_staff_fact_stavka || '—' }}
+                    </td>
+                    <td class="col-lpu-section-name">
+                      {{ row.lpu_section_name || '—' }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           <div slot="footer">
             <div class="row">
@@ -623,6 +698,68 @@ import { Button, Menu } from '@/types/menu';
 import { validateEmail } from '@/utils';
 import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
 
+const TYPE_MEDICAL_FORM_UNSET = 'unset';
+const TYPE_MEDICAL_FORM_EMERGENCY = 'emergency';
+const TYPE_MEDICAL_FORM_STATIONARY = 'stationary';
+
+function normalizeTypeMedicalForm(value: unknown) {
+  if (value === null || value === undefined || value === '' || value === TYPE_MEDICAL_FORM_UNSET) {
+    return TYPE_MEDICAL_FORM_UNSET;
+  }
+  if (value === 0 || value === '0' || value === TYPE_MEDICAL_FORM_EMERGENCY) {
+    return TYPE_MEDICAL_FORM_EMERGENCY;
+  }
+  if (value === 1 || value === '1' || value === TYPE_MEDICAL_FORM_STATIONARY) {
+    return TYPE_MEDICAL_FORM_STATIONARY;
+  }
+  return TYPE_MEDICAL_FORM_UNSET;
+}
+
+function serializeTypeMedicalForm(value: string) {
+  if (value === TYPE_MEDICAL_FORM_EMERGENCY) {
+    return 0;
+  }
+  if (value === TYPE_MEDICAL_FORM_STATIONARY) {
+    return 1;
+  }
+  return null;
+}
+
+function mapEcpPositionRows(rows: Array<Record<string, unknown>>) {
+  return (rows || []).map(row => ({
+    id: row.id as number,
+    type_medical_form: normalizeTypeMedicalForm(row.type_medical_form),
+    arm_type: (row.arm_type as string) || '',
+    med_staff_fact_id: (row.med_staff_fact_id as string) || '',
+    lpu_section_id: (row.lpu_section_id as string) || '',
+    med_staff_fact_stavka: (row.med_staff_fact_stavka as string) || '',
+    lpu_section_name: (row.lpu_section_name as string) || '',
+  }));
+}
+
+function validateUniqueTypeMedicalForm(
+  rows: Array<{ type_medical_form: string }>,
+) {
+  const labels: Record<string, string> = {
+    [TYPE_MEDICAL_FORM_EMERGENCY]: 'Экстренная служба',
+    [TYPE_MEDICAL_FORM_STATIONARY]: 'Стационар',
+  };
+  const seen = new Set<string>();
+
+  for (const row of rows) {
+    const type = row.type_medical_form;
+    if (type === TYPE_MEDICAL_FORM_UNSET) {
+      continue;
+    }
+    if (seen.has(type)) {
+      return `Тип медпомощи «${labels[type]}» указан более одного раза`;
+    }
+    seen.add(type);
+  }
+
+  return null;
+}
+
 @Component({
   components: { ChatsBody, Modal },
   data() {
@@ -644,6 +781,8 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
       confirmPassword: '',
       rmis_login: '',
       rmis_password: '',
+      rmisPasswordHint: '',
+      ecpPositions: [],
       secretQRBase64: null,
       secretCode: null,
       checkCode: '',
@@ -662,9 +801,12 @@ import ChatsBody from '@/ui-cards/Chat/ChatsBody.vue';
       if (open) {
         this.rmis_login = this.user_data?.rmis_login || '';
         this.rmis_password = '';
+        this.loadEcpPositions();
       } else {
         this.rmis_login = '';
         this.rmis_password = '';
+        this.rmisPasswordHint = '';
+        this.ecpPositions = [];
         this.loading = false;
       }
     },
@@ -779,6 +921,18 @@ export default class MenuPage extends Vue {
 
   rmis_password: string;
 
+  rmisPasswordHint: string;
+
+  ecpPositions: Array<{
+    id: number;
+    type_medical_form: string;
+    arm_type: string;
+    med_staff_fact_id: string;
+    lpu_section_id: string;
+    med_staff_fact_stavka: string;
+    lpu_section_name: string;
+  }>;
+
   secretQRBase64: string | null;
 
   secretCode: string | null;
@@ -845,6 +999,40 @@ export default class MenuPage extends Vue {
     this.loading = false;
   }
 
+  async loadEcpPositions() {
+    try {
+      const { ok, rows, rmis_password_hint: rmisPasswordHint } = await this.$api('users/get-ecp-positions');
+      if (!ok) {
+        this.ecpPositions = [];
+        this.rmisPasswordHint = '';
+        return;
+      }
+      this.ecpPositions = mapEcpPositionRows(rows);
+      this.rmisPasswordHint = rmisPasswordHint || '';
+    } catch (error) {
+      this.ecpPositions = [];
+      this.rmisPasswordHint = '';
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
+  serializeEcpPositions() {
+    return this.ecpPositions.map(row => ({
+      id: row.id,
+      type_medical_form: serializeTypeMedicalForm(row.type_medical_form),
+    }));
+  }
+
+  isTypeMedicalFormTaken(type: string, currentRowId: number) {
+    if (type === TYPE_MEDICAL_FORM_UNSET) {
+      return false;
+    }
+    return this.ecpPositions.some(
+      row => row.id !== currentRowId && row.type_medical_form === type,
+    );
+  }
+
   async doCheckRmis() {
     const rmisLogin = (this.rmis_login || '').trim();
     if (!rmisLogin) {
@@ -855,10 +1043,15 @@ export default class MenuPage extends Vue {
     this.loading = true;
 
     try {
-      const { ok, message } = await this.$api('/users/check-rmis', null, null, {
+      const { ok, message, rows } = await this.$api('/users/check-rmis', null, null, {
         rmis_login: rmisLogin,
         rmis_password: this.rmis_password,
       });
+      if (ok) {
+        this.ecpPositions = mapEcpPositionRows(rows);
+      } else {
+        await this.loadEcpPositions();
+      }
       this.$root.$emit('msg', ok ? 'ok' : 'error', message || (ok ? 'Авторизация успешна' : 'Ошибка авторизации'));
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -868,13 +1061,25 @@ export default class MenuPage extends Vue {
   }
 
   async doSetRmis() {
+    const typeMedicalFormError = validateUniqueTypeMedicalForm(this.ecpPositions);
+    if (typeMedicalFormError) {
+      this.$root.$emit('msg', 'error', typeMedicalFormError);
+      return;
+    }
+
     this.loading = true;
     const rmisLogin = (this.rmis_login || '').trim();
 
     try {
-      const { ok, message, rmis_login: savedLogin } = await this.$api('/users/set-rmis', null, null, {
+      const {
+        ok,
+        message,
+        rmis_login: savedLogin,
+        rmis_password_hint: rmisPasswordHint,
+      } = await this.$api('/users/set-rmis', null, null, {
         rmis_login: rmisLogin,
         rmis_password: this.rmis_password,
+        ecp_positions: this.serializeEcpPositions(),
       });
       if (ok) {
         this.$store.commit('SET_USER_DATA', {
@@ -882,6 +1087,7 @@ export default class MenuPage extends Vue {
         });
         this.rmis_login = savedLogin ?? rmisLogin;
         this.rmis_password = '';
+        this.rmisPasswordHint = rmisPasswordHint || '';
         this.$root.$emit('msg', 'ok', 'Данные РМИС сохранены');
         return;
       }
@@ -1043,6 +1249,68 @@ export default class MenuPage extends Vue {
 
 .mr10 {
   margin-right: 10px;
+}
+
+.rmis-password-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rmis-password-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.rmis-password-hint {
+  flex: 0 0 auto;
+  font-family: monospace;
+  color: #666;
+  white-space: nowrap;
+}
+
+.rmis-ecp-wrap {
+  margin-top: 15px;
+  overflow-x: auto;
+}
+
+.rmis-ecp-table {
+  margin-bottom: 0;
+  font-size: 12px;
+  table-layout: fixed;
+  width: 100%;
+
+  th,
+  td {
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .col-type-medical-form {
+    width: 190px;
+  }
+
+  .col-arm-type {
+    width: 72px;
+  }
+
+  .col-med-staff-fact-stavka {
+    width: 72px;
+  }
+
+  .col-lpu-section-name {
+    width: auto;
+    min-width: 220px;
+    white-space: normal;
+  }
+}
+
+.rmis-type-select {
+  height: 34px;
+  padding: 4px 6px;
+  font-size: 12px;
 }
 
 .alert-modal {
