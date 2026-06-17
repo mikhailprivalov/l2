@@ -31,11 +31,7 @@ def _resolve_direction_pk(pk, year=None):
 
 
 def _prepare_paraclinic_form_params(request_data):
-    form_params = {
-        key: value
-        for key, value in request_data.items()
-        if key not in ("iss_pk", "user_n3_id_for_html")
-    }
+    form_params = {key: value for key, value in request_data.items() if key not in ("iss_pk", "user_n3_id_for_html")}
     resolved_pk = _resolve_direction_pk(form_params.get("pk"), form_params.get("year"))
     if resolved_pk:
         form_params["pk"] = resolved_pk
