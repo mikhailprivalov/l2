@@ -645,7 +645,7 @@ class DoctorProfileEcpPosition(models.Model):
             "med_staff_fact_stavka": self.med_staff_fact_stavka,
             "org_id": self.org_id,
             "lpu_id": self.lpu_id,
-            "related_information": self.related_information
+            "related_information": self.related_information,
         }
         return result
 
