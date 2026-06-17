@@ -9,6 +9,8 @@ from utils.dates import normalize_date
 
 EPICRIZIS_START_TITLE = "Выписной эпикриз из медицинской карты стационарного больного."
 
+DISCHARGE_DATE_TITLES = ("в.э.-Дата выписки", "Дата выписки")
+
 _TABLE_STYLE = "width:100%;border-collapse:collapse;border:1px solid #000"
 _CELL_STYLE = "border:1px solid #000;padding:2px 4px;vertical-align:top"
 
@@ -509,6 +511,47 @@ def _extract_patient_birthday(patient):
         return ""
     match = re.search(r"(\d{2}\.\d{2}\.\d{4})", fio_age)
     return match.group(1) if match else ""
+
+
+def _format_person_date(value):
+    if value in (None, ""):
+        return ""
+
+    text = str(value).strip()
+    if len(text) >= 10 and text[4] == "-" and text[7] == "-":
+        return normalize_date(text[:10])
+    return normalize_date(text)
+
+
+def _find_field_value_by_title(form_data, title):
+    for iss in form_data.get("researches") or []:
+        research = iss.get("research") or {}
+        for group in research.get("groups") or []:
+            for field in group.get("fields") or []:
+                if (field.get("title") or "").strip() == title:
+                    value = field.get("value")
+                    if value not in (None, ""):
+                        return value
+    return ""
+
+
+def _find_discharge_date_in_form_data(form_data):
+    for title in DISCHARGE_DATE_TITLES:
+        value = _find_field_value_by_title(form_data, title)
+        if value not in (None, ""):
+            formatted = _format_person_date(value)
+            if formatted:
+                return formatted
+    return ""
+
+
+def build_patient_data(form_data):
+    patient = form_data.get("patient") or {}
+    return {
+        "fullFio": (patient.get("fio") or "").strip(),
+        "birthday": _extract_patient_birthday(patient),
+        "dateExtract": _find_discharge_date_in_form_data(form_data),
+    }
 
 
 def _render_service_fields_html(form_data):

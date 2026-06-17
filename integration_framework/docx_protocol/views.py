@@ -1,12 +1,12 @@
 import json
 
-from django.http import HttpResponse, JsonResponse
-from directions.models import Napravleniya
+from django.http import JsonResponse
+from directions.models import Napravleniya, Issledovaniya
 from rest_framework.decorators import api_view
 
-from users.models import DoctorProfile
+from users.models import DoctorProfile, DoctorProfileEcpPosition
 
-from .utils import build_paraclinic_protocol_html, fetch_paraclinic_form_data
+from .utils import build_paraclinic_protocol_html, fetch_paraclinic_form_data, build_patient_data
 
 
 def _get_paraclinic_form_user(user_n3_id_for_html):
@@ -71,5 +71,16 @@ def paraclinic_protocol_html(request):
     html_content, error = build_paraclinic_protocol_html(form_data)
     if error:
         return JsonResponse({"ok": False, "message": error}, status=400)
+    iss = Issledovaniya.objects.filter(napravleniye_id=resolved_pk).first()
+    doctor_profile = iss.doc_confirmation if iss else None
+    doctor_ecp_position = DoctorProfileEcpPosition.objects.filter(doctor_profile=doctor_profile, type_medical_form=1).first() if doctor_profile else None
+    patientData = build_patient_data(form_data)
 
-    return HttpResponse(html_content, content_type="text/html; charset=utf-8")
+    return JsonResponse(
+        {
+            "ok": True,
+            "result": html_content,
+            "doctor": doctor_ecp_position.as_json() if doctor_ecp_position else None,
+            "patientData": patientData,
+        }
+    )

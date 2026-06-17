@@ -628,6 +628,27 @@ class DoctorProfileEcpPosition(models.Model):
         verbose_name = 'ЕЦП-атрибут'
         verbose_name_plural = 'ЕЦП-атрибуты'
 
+    def as_json(self):
+        result = {
+            "pk": self.pk,
+            "arm_type": self.arm_type,
+            "login": self.doctor_profile.rmis_login,
+            "pass": self.doctor_profile.rmis_password,
+            "arm_name": self.arm_name,
+            "med_personal_id": self.med_personal_id,
+            "med_staff_fact_id": self.med_staff_fact_id,
+            "lpu_section_profile_id": self.lpu_section_profile_id,
+            "lpu_section_id": self.lpu_section_id,
+            "lpu_section_name": self.lpu_section_name,
+            "post_med_name": self.post_med_name,
+            "med_personal_FIO": self.med_personal_FIO,
+            "med_staff_fact_stavka": self.med_staff_fact_stavka,
+            "org_id": self.org_id,
+            "lpu_id": self.lpu_id,
+            "related_information": self.related_information,
+        }
+        return result
+
 
 class AssignmentTemplates(models.Model):
     SHOW_TYPES_SITE_TYPES_TYPE = {
