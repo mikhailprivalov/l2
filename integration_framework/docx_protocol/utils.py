@@ -186,7 +186,6 @@ def _format_field_display(field):
 
     field_type = field.get("field_type")
     value = field.get("value")
-    title = field.get("title") or ""
 
     if field_type == 42:
         files = field.get("files") or []
