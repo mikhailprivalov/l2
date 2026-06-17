@@ -7,7 +7,6 @@ from django.utils.html import escape
 
 from utils.dates import normalize_date
 
-
 EPICRIZIS_START_TITLE = "Выписной эпикриз из медицинской карты стационарного больного."
 
 _TABLE_STYLE = "width:100%;border-collapse:collapse;border:1px solid #000"
