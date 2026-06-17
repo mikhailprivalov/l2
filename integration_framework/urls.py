@@ -1,6 +1,7 @@
 from django.urls import path, include
 
 from . import views
+from integration_framework.docx_protocol import views as docx_protocol_views
 
 urlpatterns = [
     path('result/next', views.next_result_direction),
@@ -39,6 +40,7 @@ urlpatterns = [
     path('get-direction-data-by-period', views.get_direction_data_by_period),
     path('get-directions-data', views.get_direction_data_by_num),
     path('protocol-result', views.get_protocol_result),
+    path('paraclinic-protocol-html', docx_protocol_views.paraclinic_protocol_html),
     path('eds/get-user-data', views.eds_get_user_data),
     path('eds/get-cda-data', views.eds_get_cda_data),
     path('external/check-result', views.external_check_result),
