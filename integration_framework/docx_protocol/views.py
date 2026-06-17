@@ -3,13 +3,14 @@ import json
 from django.http import HttpResponse, JsonResponse
 from directions.models import Napravleniya
 from rest_framework.decorators import api_view
+
 from users.models import DoctorProfile
 
 from .utils import build_paraclinic_protocol_html, fetch_paraclinic_form_data
 
 
-def _get_paraclinic_form_user():
-    doctor = DoctorProfile.objects.filter(pk=1).first()
+def _get_paraclinic_form_user(user_n3_id_for_html):
+    doctor = DoctorProfile.objects.filter(n3_id=user_n3_id_for_html).first()
     return doctor.user if doctor else None
 
 
@@ -30,7 +31,11 @@ def _resolve_direction_pk(pk, year=None):
 
 
 def _prepare_paraclinic_form_params(request_data):
-    form_params = {key: value for key, value in request_data.items() if key not in ("iss_pk",)}
+    form_params = {
+        key: value
+        for key, value in request_data.items()
+        if key not in ("iss_pk", "user_n3_id_for_html")
+    }
     resolved_pk = _resolve_direction_pk(form_params.get("pk"), form_params.get("year"))
     if resolved_pk:
         form_params["pk"] = resolved_pk
@@ -52,7 +57,11 @@ def paraclinic_protocol_html(request):
     if not resolved_pk:
         return JsonResponse({"ok": False, "message": "Направление не найдено"}, status=400)
 
-    user = _get_paraclinic_form_user()
+    user_n3_id_for_html = request_data.get("user_n3_id_for_html")
+    if not user_n3_id_for_html:
+        return JsonResponse({"ok": False, "message": "Не указан user_n3_id_for_html"}, status=400)
+
+    user = _get_paraclinic_form_user(user_n3_id_for_html)
     if not user:
         return JsonResponse({"ok": False, "message": "Служебный пользователь для параклиники не найден"}, status=500)
 
