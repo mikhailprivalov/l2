@@ -76,9 +76,11 @@ def paraclinic_protocol_html(request):
     doctor_ecp_position = DoctorProfileEcpPosition.objects.filter(doctor_profile=doctor_profile, type_medical_form=1).first() if doctor_profile else None
     patientData = build_patient_data(form_data)
 
-    return JsonResponse({
-        "ok": True,
-        "result": html_content,
-        "doctor": doctor_ecp_position.as_json() if doctor_ecp_position else None,
-        "patientData": patientData,
-    })
+    return JsonResponse(
+        {
+            "ok": True,
+            "result": html_content,
+            "doctor": doctor_ecp_position.as_json() if doctor_ecp_position else None,
+            "patientData": patientData,
+        }
+    )
