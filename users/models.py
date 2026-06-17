@@ -649,6 +649,7 @@ class DoctorProfileEcpPosition(models.Model):
         }
         return result
 
+
 class AssignmentTemplates(models.Model):
     SHOW_TYPES_SITE_TYPES_TYPE = {
         'consult': 0,
