@@ -73,11 +73,7 @@ def paraclinic_protocol_html(request):
         return JsonResponse({"ok": False, "message": error}, status=400)
     iss = Issledovaniya.objects.filter(napravleniye_id=resolved_pk).first()
     doctor_profile = iss.doc_confirmation if iss else None
-    doctor_ecp_position = (
-        DoctorProfileEcpPosition.objects.filter(doctor_profile=doctor_profile, type_medical_form=1).first()
-        if doctor_profile
-        else None
-    )
+    doctor_ecp_position = DoctorProfileEcpPosition.objects.filter(doctor_profile=doctor_profile, type_medical_form=1).first() if doctor_profile else None
     patientData = build_patient_data(form_data)
 
     return JsonResponse({
