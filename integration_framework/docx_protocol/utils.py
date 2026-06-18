@@ -35,9 +35,7 @@ _TABLE_OPEN = (
 )
 _TABLE_CLOSE = "</table>"
 _CELL_STYLE = (
-    f"border:{_TABLE_BORDER};border-color:{_TABLE_BORDER_COLOR};"
-    "padding:2px 4px;vertical-align:top;"
-    f"word-wrap:break-word;overflow-wrap:break-word;font-size:{_TABLE_FONT_SIZE}"
+    f"border:{_TABLE_BORDER};border-color:{_TABLE_BORDER_COLOR};" "padding:2px 4px;vertical-align:top;" f"word-wrap:break-word;overflow-wrap:break-word;font-size:{_TABLE_FONT_SIZE}"
 )
 _LAB_CELL_STYLE = (
     f"border:{_TABLE_BORDER};border-color:{_TABLE_BORDER_COLOR};"
