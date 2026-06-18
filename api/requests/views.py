@@ -3,6 +3,7 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
+from django.db.models import Q
 from django.core.files.base import ContentFile
 import base64
 import uuid
@@ -691,7 +692,7 @@ def get_requests_by_status(request):
         else:
             date_filter = {'data_sozdaniya__date': search_date}
 
-    directions = Napravleniya.objects.filter(is_request=True, **date_filter).select_related("client__individual", "doc").prefetch_related("issledovaniya_set__research")
+    directions = Napravleniya.objects.filter(is_request=True, **date_filter).select_related("client__individual", "doc", "accept_who_doctor").prefetch_related("issledovaniya_set__research")
 
     if allowed_hospital_ids:
         directions = directions.filter(hospital_id__in=allowed_hospital_ids)
@@ -699,7 +700,11 @@ def get_requests_by_status(request):
     if is_done:
         directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-issledovaniya__time_confirmation").distinct()
     else:
-        directions = directions.filter(total_confirmed=False).order_by("-last_confirmed_at").distinct()
+        directions = directions.filter(
+            total_confirmed=False,
+        ).filter(
+            Q(accept_who_doctor__isnull=True) | Q(accept_who_doctor=request.user.doctorprofile),
+        ).order_by("-last_confirmed_at").distinct()
     directions = directions.filter(cancel=False)
 
     directions_list = list(directions)
