@@ -37,9 +37,7 @@ _TABLE_OPEN = (
 )
 _TABLE_CLOSE = "</table>"
 _CELL_STYLE = (
-    f"border:{_TABLE_BORDER};border-color:{_TABLE_BORDER_COLOR};"
-    "padding:2px 4px;vertical-align:top;"
-    f"word-wrap:break-word;overflow-wrap:break-word;font-size:{_TABLE_FONT_SIZE}"
+    f"border:{_TABLE_BORDER};border-color:{_TABLE_BORDER_COLOR};" "padding:2px 4px;vertical-align:top;" f"word-wrap:break-word;overflow-wrap:break-word;font-size:{_TABLE_FONT_SIZE}"
 )
 _LAB_CELL_STYLE = (
     f"border:{_TABLE_BORDER};border-color:{_TABLE_BORDER_COLOR};"
@@ -121,11 +119,7 @@ def _lab_font_size(width_mm):
 def _lab_cell(tag, content, width_mm):
     font_size = _lab_font_size(width_mm)
     cell_style = _LAB_CELL_STYLE.replace(f"font-size:{_LAB_TABLE_FONT_SIZE}", f"font-size:{font_size}")
-    return (
-        f'<{tag} {_CELL_BORDER_ATTR} width="{width_mm}mm" '
-        f'style="{cell_style};width:{width_mm}mm;max-width:{width_mm}mm;min-width:{width_mm}mm">'
-        f'{content}</{tag}>'
-    )
+    return f'<{tag} {_CELL_BORDER_ATTR} width="{width_mm}mm" ' f'style="{cell_style};width:{width_mm}mm;max-width:{width_mm}mm;min-width:{width_mm}mm">' f'{content}</{tag}>'
 
 
 def fetch_paraclinic_form_data(user, params):
