@@ -700,11 +700,16 @@ def get_requests_by_status(request):
     if is_done:
         directions = directions.filter(issledovaniya__doc_confirmation=request.user.doctorprofile, total_confirmed=True).order_by("-issledovaniya__time_confirmation").distinct()
     else:
-        directions = directions.filter(
-            total_confirmed=False,
-        ).filter(
-            Q(accept_who_doctor__isnull=True) | Q(accept_who_doctor=request.user.doctorprofile),
-        ).order_by("-last_confirmed_at").distinct()
+        directions = (
+            directions.filter(
+                total_confirmed=False,
+            )
+            .filter(
+                Q(accept_who_doctor__isnull=True) | Q(accept_who_doctor=request.user.doctorprofile),
+            )
+            .order_by("-last_confirmed_at")
+            .distinct()
+        )
     directions = directions.filter(cancel=False)
 
     directions_list = list(directions)
