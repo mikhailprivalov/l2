@@ -23,6 +23,8 @@ _TABLE_MAX_WIDTH_MM = 165
 _TABLE_MAX_WIDTH = f"{_TABLE_MAX_WIDTH_MM}mm"
 _LAB_VALUE_COL_MM = 7.5
 _LAB_NARROW_COL_MM = 8
+_LAB_TABLE_MAX_WIDTH_MM = 180
+_LAB_TABLE_MAX_WIDTH = f"{_LAB_TABLE_MAX_WIDTH_MM}mm"
 
 _TABLE_BORDER_COLOR = "#000000"
 _TABLE_BORDER = f"1pt solid {_TABLE_BORDER_COLOR}"
@@ -51,24 +53,30 @@ _AGGREGATE_FIELD_HTML_TAGS = ("sub", "sup", "u", "p", "strong", "em")
 
 
 def _lab_table_open(table_width_mm):
-    table_width_mm = round(table_width_mm, 2)
+    table_width_mm = min(round(table_width_mm, 2), _LAB_TABLE_MAX_WIDTH_MM)
     table_width = f"{table_width_mm}mm"
     return (
         f'<table border="1" bordercolor="{_TABLE_BORDER_COLOR}" cellspacing="0" cellpadding="0" '
         f'width="{table_width_mm}mm" '
-        f'style="width:{table_width};max-width:{table_width};'
+        f'style="width:{table_width};max-width:{_LAB_TABLE_MAX_WIDTH};'
         f'border-collapse:collapse;border:{_TABLE_BORDER};table-layout:fixed;word-wrap:break-word">'
     )
 
 
-def _lab_value_col_width():
-    return _LAB_VALUE_COL_MM
+def _lab_col_width_mm(num_columns):
+    if num_columns <= 0:
+        return _LAB_VALUE_COL_MM
+    natural_width = _LAB_VALUE_COL_MM * num_columns
+    if natural_width <= _LAB_TABLE_MAX_WIDTH_MM:
+        return _LAB_VALUE_COL_MM
+    return round(_LAB_TABLE_MAX_WIDTH_MM / num_columns, 2)
 
 
 def _lab_colgroup_vertical(num_fractions):
     if num_fractions <= 0:
         return ""
-    col_width = _lab_value_col_width()
+    num_columns = 1 + num_fractions
+    col_width = _lab_col_width_mm(num_columns)
     cols = [f'<col width="{col_width}mm" style="width:{col_width}mm">']
     cols.extend(f'<col width="{col_width}mm" style="width:{col_width}mm">' for _ in range(num_fractions))
     return f"<colgroup>{''.join(cols)}</colgroup>"
@@ -77,24 +85,27 @@ def _lab_colgroup_vertical(num_fractions):
 def _lab_colgroup_horizontal(num_dates):
     if num_dates <= 0:
         return ""
-    col_width = _lab_value_col_width()
+    num_columns = 1 + num_dates
+    col_width = _lab_col_width_mm(num_columns)
     cols = [f'<col width="{col_width}mm" style="width:{col_width}mm">']
     cols.extend(f'<col width="{col_width}mm" style="width:{col_width}mm">' for _ in range(num_dates))
     return f"<colgroup>{''.join(cols)}</colgroup>"
 
 
 def _lab_vertical_col_widths(num_fractions):
-    col_width = _lab_value_col_width()
-    return [col_width] * (1 + num_fractions)
+    num_columns = 1 + num_fractions
+    col_width = _lab_col_width_mm(num_columns)
+    return [col_width] * num_columns
 
 
 def _lab_horizontal_col_widths(num_dates):
-    col_width = _lab_value_col_width()
-    return [col_width] * (1 + num_dates)
+    num_columns = 1 + num_dates
+    col_width = _lab_col_width_mm(num_columns)
+    return [col_width] * num_columns
 
 
 def _lab_table_width_mm(num_columns):
-    return _LAB_VALUE_COL_MM * num_columns
+    return min(_LAB_VALUE_COL_MM * num_columns, _LAB_TABLE_MAX_WIDTH_MM)
 
 
 def _lab_font_size(width_mm):
@@ -533,7 +544,7 @@ def _render_aggregate_laboratory_table(value):
                 f'<thead>'
                 f'<tr><th {_CELL_BORDER_ATTR} colspan="{colspan}" '
                 f'width="{table_width_mm}mm" '
-                f'style="{_LAB_CELL_STYLE};width:{table_width};max-width:{table_width};'
+                f'style="{_LAB_CELL_STYLE};width:{table_width};max-width:{_LAB_TABLE_MAX_WIDTH};'
                 f'font-size:5.5pt;word-break:break-word">'
                 f'<strong>{escape(title_research)}</strong></th></tr>'
                 f'<tr>{"".join(header_cells)}</tr>'
@@ -584,7 +595,7 @@ def _render_aggregate_laboratory_table(value):
                 f'<thead>'
                 f'<tr><th {_CELL_BORDER_ATTR} colspan="{colspan}" '
                 f'width="{table_width_mm}mm" '
-                f'style="{_LAB_CELL_STYLE};width:{table_width};max-width:{table_width};'
+                f'style="{_LAB_CELL_STYLE};width:{table_width};max-width:{_LAB_TABLE_MAX_WIDTH};'
                 f'font-size:5.5pt;word-break:break-word">'
                 f'<strong>{escape(type_lab)}</strong></th></tr>'
                 f'<tr>{"".join(header_cells)}</tr>'
