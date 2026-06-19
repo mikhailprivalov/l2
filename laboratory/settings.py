@@ -587,6 +587,10 @@ PARACLINIC_FILE_NAME_POLICY = {
 ACCOMPANYING_CHILD = {'мама': 'Ж', 'папа': 'М', 'бабушка': 'Ж', 'дедушка': 'М'}
 PERIOD_DEFAULT_HOSPITALI = 3
 
+# Максимальный период (дней) для фильтра дат в журнале заявок (/ui/requests-journal).
+# Переопределение: REQUESTS_JOURNAL_MAX_PERIOD_DAYS = N в laboratory/local_settings.py
+REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

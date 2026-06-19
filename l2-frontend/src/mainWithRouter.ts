@@ -891,6 +891,15 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/requests-journal',
+      name: 'requests_journal',
+      component: () => import('@/pages/RequestsJournal/index.vue'),
+      meta: {
+        title: 'Журнал заявок',
+        groups: ['Журнал заявок'],
+      },
+    },
+    {
       path: '*',
       redirect: (to) => ({ name: '404', hash: to.fullPath }),
       meta: {},

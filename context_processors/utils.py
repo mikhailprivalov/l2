@@ -166,6 +166,12 @@ def menu(request):
                     "access": ["Заполнение заявок"],
                 },
                 {
+                    "url": '/ui/requests-journal',
+                    "title": "Журнал заявок",
+                    "nt": False,
+                    "access": ["Журнал заявок"],
+                },
+                {
                     "url": '/ui/extra-notification',
                     "title": "Экстренные извещения",
                     "nt": False,
