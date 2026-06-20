@@ -852,10 +852,7 @@ def _get_diagnostic_doctors_options(hospital_id=-1):
 def _get_all_list_filter_options(hospital_id=-1):
     hospitals = [
         {'id': -1, 'label': 'Все'},
-        *[
-            {'id': hospital.pk, 'label': hospital.short_title or hospital.title}
-            for hospital in _get_visible_hospitals()
-        ],
+        *[{'id': hospital.pk, 'label': hospital.short_title or hospital.title} for hospital in _get_visible_hospitals()],
     ]
 
     return {
