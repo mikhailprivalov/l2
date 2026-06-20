@@ -944,7 +944,7 @@ def get_requests_all_list(request):
     directions = _apply_doctor_filter(directions, doctor_id, statuses)
     directions = _apply_sort(directions, sort_by, sort_dir, default_order=date_type_orders[date_type])
     total = directions.count()
-    directions_list = list(directions[offset: offset + limit])
+    directions_list = list(directions[offset : offset + limit])
 
     rows = [direction_to_all_list_row(direction) for direction in directions_list]
     filter_options = _get_all_list_filter_options(hospital_id)
