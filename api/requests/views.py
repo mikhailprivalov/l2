@@ -913,20 +913,25 @@ def get_requests_all_list(request):
         **date_filter,
     )
 
-    directions = Napravleniya.objects.filter(
-        is_request=True,
-        cancel=False,
-        **date_filter,
-    ).filter(
-        Q(hospital__isnull=True) | Q(hospital__hide=False),
-    ).select_related(
-        'client__individual',
-        'doc',
-        'hospital',
-        'accept_who_doctor',
-    ).prefetch_related(
-        'issledovaniya_set__research',
-        'issledovaniya_set__doc_confirmation',
+    directions = (
+        Napravleniya.objects.filter(
+            is_request=True,
+            cancel=False,
+            **date_filter,
+        )
+        .filter(
+            Q(hospital__isnull=True) | Q(hospital__hide=False),
+        )
+        .select_related(
+            'client__individual',
+            'doc',
+            'hospital',
+            'accept_who_doctor',
+        )
+        .prefetch_related(
+            'issledovaniya_set__research',
+            'issledovaniya_set__doc_confirmation',
+        )
     )
 
     directions = _apply_status_filter(directions, statuses)
