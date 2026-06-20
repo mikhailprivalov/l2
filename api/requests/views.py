@@ -949,12 +949,14 @@ def get_requests_all_list(request):
     rows = [direction_to_all_list_row(direction) for direction in directions_list]
     filter_options = _get_all_list_filter_options(hospital_id)
 
-    return JsonResponse({
-        'rows': rows,
-        'total': total,
-        'maxPeriodDays': get_requests_journal_max_period_days(),
-        **filter_options,
-    })
+    return JsonResponse(
+        {
+            'rows': rows,
+            'total': total,
+            'maxPeriodDays': get_requests_journal_max_period_days(),
+            **filter_options,
+        }
+    )
 
 
 @login_required
