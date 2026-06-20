@@ -845,10 +845,7 @@ def _get_diagnostic_doctors_options(hospital_id=-1):
         .distinct()
         .order_by('fio')
     )
-    doctors.extend(
-        {'id': doctor.pk, 'label': doctor.get_fio()}
-        for doctor in diagnostic_doctors
-    )
+    doctors.extend({'id': doctor.pk, 'label': doctor.get_fio()} for doctor in diagnostic_doctors)
     return doctors
 
 
