@@ -3,10 +3,11 @@ from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 from django.core.files.base import ContentFile
 import base64
 import uuid
+from django.conf import settings as django_settings
 from django.utils import timezone
 
 from appconf.manager import SettingManager
@@ -17,7 +18,15 @@ from utils.response import status_response
 from directions.models import Napravleniya, IstochnikiFinansirovaniya, NapravleniyaFiles
 from clients.models import Card
 from integration_framework.models import EquipmentReceive
-from users.models import DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
+from hospitals.models import Hospitals
+from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
+
+ALL_LIST_PAGE_SIZE = 50
+ALLOWED_ALL_LIST_PAGE_SIZES = {50, 100, 150}
+
+
+def get_requests_journal_max_period_days():
+    return getattr(django_settings, 'REQUESTS_JOURNAL_MAX_PERIOD_DAYS', 40)
 
 
 def get_allowed_hospital_ids(doctor_profile):
@@ -644,6 +653,304 @@ def direction_to_request(direction, doctor_profile):
         "acceptedBy": direction.accept_who_doctor.get_fio() if direction.accept_who_doctor else None,
         "acceptedByCurrentUser": direction.accept_who_doctor == doctor_profile if direction.accept_who_doctor else False,
     }
+
+
+def _parse_date_range(date_from, date_to, max_days=None):
+    if max_days is None:
+        max_days = get_requests_journal_max_period_days()
+    if not date_from or not date_to:
+        return None, None, None
+
+    try:
+        search_date_from = datetime.strptime(date_from, '%d.%m.%Y').date()
+        search_date_to = datetime.strptime(date_to, '%d.%m.%Y').date()
+    except ValueError:
+        return None, None, 'Некорректный формат даты'
+
+    if search_date_from > search_date_to:
+        search_date_from, search_date_to = search_date_to, search_date_from
+
+    if (search_date_to - search_date_from).days > max_days:
+        return None, None, f'Период не может превышать {max_days} дней'
+
+    return search_date_from, search_date_to, None
+
+
+def _get_research_title(direction):
+    for iss in direction.issledovaniya_set.all():
+        if iss.research and iss.research.short_title:
+            return iss.research.short_title
+        if iss.research and iss.research.title:
+            return iss.research.title
+    return ''
+
+
+def _get_last_confirmed_issledovaniya(direction):
+    confirmed = [iss for iss in direction.issledovaniya_set.all() if iss.time_confirmation]
+    if not confirmed:
+        return None
+    return max(confirmed, key=lambda iss: iss.time_confirmation)
+
+
+def _get_request_status_label(direction):
+    if direction.total_confirmed:
+        return 'Исполнена'
+    if direction.accept_who_doctor_id:
+        return 'В работе'
+    if direction.is_cito:
+        return 'CITO'
+    return 'Новая'
+
+
+def direction_to_all_list_row(direction):
+    last_confirmed = _get_last_confirmed_issledovaniya(direction)
+    confirmed_by = None
+    if last_confirmed:
+        if last_confirmed.doc_confirmation:
+            confirmed_by = last_confirmed.doc_confirmation.get_fio()
+        elif last_confirmed.doc_confirmation_string:
+            confirmed_by = last_confirmed.doc_confirmation_string
+
+    hospital_title = 'Не указана'
+    if direction.hospital:
+        hospital_title = direction.hospital.short_title or direction.hospital.title
+
+    return {
+        'id': direction.pk,
+        'hospital': hospital_title,
+        'patient': direction.client.individual.fio(short=True),
+        'research': _get_research_title(direction),
+        'doctorFio': direction.doc.get_fio() if direction.doc else '—',
+        'createdAt': strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M'),
+        'acceptedAt': strfdatetime(direction.accept_time, '%d.%m.%Y %H:%M') if direction.accept_time else None,
+        'acceptedBy': direction.accept_who_doctor.get_fio() if direction.accept_who_doctor else None,
+        'confirmedAt': strfdatetime(direction.last_confirmed_at, '%d.%m.%Y %H:%M') if direction.last_confirmed_at else None,
+        'confirmedBy': confirmed_by,
+        'status': _get_request_status_label(direction),
+        'cito': direction.is_cito,
+    }
+
+
+def _apply_status_filter(directions, statuses):
+    if not statuses:
+        return directions
+
+    status_filter = Q()
+    if 'new' in statuses:
+        status_filter |= Q(accept_who_doctor__isnull=True, total_confirmed=False)
+    if 'cito' in statuses:
+        status_filter |= Q(is_cito=True)
+    if 'accepted' in statuses:
+        status_filter |= Q(accept_who_doctor__isnull=False, total_confirmed=False)
+    if 'confirmed' in statuses:
+        status_filter |= Q(total_confirmed=True)
+
+    return directions.filter(status_filter).distinct()
+
+
+def _apply_doctor_filter(directions, doctor_id, statuses):
+    if not doctor_id or doctor_id == -1:
+        return directions
+
+    doctor_q = Q()
+
+    if not statuses:
+        doctor_q = (
+            Q(doc_id=doctor_id)
+            | Q(accept_who_doctor_id=doctor_id)
+            | Q(
+                issledovaniya__doc_confirmation_id=doctor_id,
+                issledovaniya__time_confirmation__isnull=False,
+            )
+        )
+    else:
+        if 'new' in statuses:
+            doctor_q |= Q(
+                doc_id=doctor_id,
+                accept_who_doctor__isnull=True,
+                total_confirmed=False,
+                is_cito=False,
+            )
+        if 'cito' in statuses:
+            doctor_q |= Q(is_cito=True) & (
+                Q(doc_id=doctor_id, accept_who_doctor__isnull=True, total_confirmed=False)
+                | Q(accept_who_doctor_id=doctor_id, total_confirmed=False)
+                | Q(
+                    total_confirmed=True,
+                    issledovaniya__doc_confirmation_id=doctor_id,
+                    issledovaniya__time_confirmation__isnull=False,
+                )
+            )
+        if 'accepted' in statuses:
+            doctor_q |= Q(accept_who_doctor_id=doctor_id, total_confirmed=False)
+        if 'confirmed' in statuses:
+            doctor_q |= Q(
+                total_confirmed=True,
+                issledovaniya__doc_confirmation_id=doctor_id,
+                issledovaniya__time_confirmation__isnull=False,
+            )
+
+    return directions.filter(doctor_q).distinct()
+
+
+def _apply_sort(directions, sort_by, sort_dir, default_order='-data_sozdaniya'):
+    allowed_sort_fields = {
+        'created': 'data_sozdaniya',
+        'accepted': 'accept_time',
+        'confirmed': 'last_confirmed_at',
+        'status': 'status_sort',
+    }
+    if sort_by not in allowed_sort_fields:
+        return directions.order_by(default_order, '-pk')
+
+    if sort_dir not in ('asc', 'desc'):
+        sort_dir = 'desc'
+
+    if sort_by == 'status':
+        directions = directions.annotate(
+            status_sort=Case(
+                When(total_confirmed=True, then=Value(3)),
+                When(accept_who_doctor__isnull=False, total_confirmed=False, then=Value(2)),
+                When(is_cito=True, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        )
+
+    prefix = '' if sort_dir == 'asc' else '-'
+    field = allowed_sort_fields[sort_by]
+    return directions.order_by(f'{prefix}{field}', '-pk')
+
+
+def _get_visible_hospitals():
+    return Hospitals.objects.filter(hide=False).order_by('short_title', 'title')
+
+
+def _get_diagnostic_doctors_options(hospital_id=-1):
+    if hospital_id and hospital_id != -1:
+        hospital = _get_visible_hospitals().filter(pk=hospital_id).first()
+    else:
+        hospital = Hospitals.get_default_hospital()
+
+    doctors = [{'id': -1, 'label': 'Все'}]
+    if not hospital:
+        return doctors
+
+    diagnostic_doctors = (
+        DoctorProfile.objects.filter(
+            hospital=hospital,
+            dismissed=False,
+            user__groups__name='Врач-диагностики',
+        )
+        .distinct()
+        .order_by('fio')
+    )
+    doctors.extend({'id': doctor.pk, 'label': doctor.get_fio()} for doctor in diagnostic_doctors)
+    return doctors
+
+
+def _get_all_list_filter_options(hospital_id=-1):
+    hospitals = [
+        {'id': -1, 'label': 'Все'},
+        *[{'id': hospital.pk, 'label': hospital.short_title or hospital.title} for hospital in _get_visible_hospitals()],
+    ]
+
+    return {
+        'hospitals': hospitals,
+        'doctors': _get_diagnostic_doctors_options(hospital_id),
+    }
+
+
+@login_required
+@group_required('Журнал заявок')
+def get_requests_all_list(request):
+    request_data = json.loads(request.body)
+    date_type = request_data.get('dateType', 'created')
+    date_from = request_data.get('dateFrom')
+    date_to = request_data.get('dateTo')
+    hospital_id = request_data.get('hospitalId', -1)
+    doctor_id = request_data.get('doctorId', -1)
+    statuses = request_data.get('statuses') or []
+    sort_by = request_data.get('sortBy', '')
+    sort_dir = request_data.get('sortDir', 'desc')
+    offset = request_data.get('offset', 0)
+    try:
+        limit = int(request_data.get('limit', ALL_LIST_PAGE_SIZE))
+    except (TypeError, ValueError):
+        limit = ALL_LIST_PAGE_SIZE
+    if limit not in ALLOWED_ALL_LIST_PAGE_SIZES:
+        limit = ALL_LIST_PAGE_SIZE
+
+    date_type_fields = {
+        'created': 'data_sozdaniya__date',
+        'accepted': 'accept_time__date',
+        'confirmed': 'last_confirmed_at__date',
+    }
+    date_type_orders = {
+        'created': '-data_sozdaniya',
+        'accepted': '-accept_time',
+        'confirmed': '-last_confirmed_at',
+    }
+    if date_type not in date_type_fields:
+        date_type = 'created'
+
+    search_date_from, search_date_to, date_error = _parse_date_range(date_from, date_to)
+    if date_error:
+        return JsonResponse({'rows': [], 'total': 0, 'error': date_error})
+
+    if not search_date_from or not search_date_to:
+        return JsonResponse({'rows': [], 'total': 0, 'error': 'Укажите период дат'})
+
+    date_field = date_type_fields[date_type]
+    date_filter = {
+        f'{date_field}__gte': search_date_from,
+        f'{date_field}__lte': search_date_to,
+    }
+
+    directions = (
+        Napravleniya.objects.filter(
+            is_request=True,
+            cancel=False,
+            **date_filter,
+        )
+        .filter(
+            Q(hospital__isnull=True) | Q(hospital__hide=False),
+        )
+        .select_related(
+            'client__individual',
+            'doc',
+            'hospital',
+            'accept_who_doctor',
+        )
+        .prefetch_related(
+            'issledovaniya_set__research',
+            'issledovaniya_set__doc_confirmation',
+        )
+    )
+
+    directions = _apply_status_filter(directions, statuses)
+
+    if hospital_id and hospital_id != -1:
+        if not _get_visible_hospitals().filter(pk=hospital_id).exists():
+            return JsonResponse({'rows': [], 'total': 0, 'error': 'Больница недоступна'})
+        directions = directions.filter(hospital_id=hospital_id)
+
+    directions = _apply_doctor_filter(directions, doctor_id, statuses)
+    directions = _apply_sort(directions, sort_by, sort_dir, default_order=date_type_orders[date_type])
+    total = directions.count()
+    directions_list = list(directions[offset : offset + limit])
+
+    rows = [direction_to_all_list_row(direction) for direction in directions_list]
+    filter_options = _get_all_list_filter_options(hospital_id)
+
+    return JsonResponse(
+        {
+            'rows': rows,
+            'total': total,
+            'maxPeriodDays': get_requests_journal_max_period_days(),
+            **filter_options,
+        }
+    )
 
 
 @login_required
