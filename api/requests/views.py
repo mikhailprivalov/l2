@@ -907,12 +907,6 @@ def get_requests_all_list(request):
         f'{date_field}__lte': search_date_to,
     }
 
-    base_directions = Napravleniya.objects.filter(
-        is_request=True,
-        cancel=False,
-        **date_filter,
-    )
-
     directions = (
         Napravleniya.objects.filter(
             is_request=True,
