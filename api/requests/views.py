@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import Case, IntegerField, Q, Value, When
-from django.db.models.functions import Lower
 from django.core.files.base import ContentFile
 import base64
 import uuid
@@ -794,23 +793,6 @@ def _apply_doctor_filter(directions, doctor_id, statuses):
     return directions.filter(doctor_q).distinct()
 
 
-def _apply_patient_filter(directions, patient_query):
-    patient_query = (patient_query or '').strip()
-    if not patient_query:
-        return directions
-
-    patient_query_lower = patient_query.lower()
-    return directions.annotate(
-        _patient_family=Lower('client__individual__family'),
-        _patient_name=Lower('client__individual__name'),
-        _patient_patronymic=Lower('client__individual__patronymic'),
-    ).filter(
-        Q(_patient_family__contains=patient_query_lower)
-        | Q(_patient_name__contains=patient_query_lower)
-        | Q(_patient_patronymic__contains=patient_query_lower)
-    )
-
-
 def _apply_sort(directions, sort_by, sort_dir, default_order='-data_sozdaniya'):
     allowed_sort_fields = {
         'created': 'data_sozdaniya',
@@ -840,38 +822,48 @@ def _apply_sort(directions, sort_by, sort_dir, default_order='-data_sozdaniya'):
     return directions.order_by(f'{prefix}{field}', '-pk')
 
 
-def _get_all_list_filter_options(base_directions):
+def _get_visible_hospitals():
+    return Hospitals.objects.filter(hide=False).order_by('short_title', 'title')
+
+
+def _get_diagnostic_doctors_options(hospital_id=-1):
+    if hospital_id and hospital_id != -1:
+        hospital = _get_visible_hospitals().filter(pk=hospital_id).first()
+    else:
+        hospital = Hospitals.get_default_hospital()
+
+    doctors = [{'id': -1, 'label': 'Все'}]
+    if not hospital:
+        return doctors
+
+    diagnostic_doctors = (
+        DoctorProfile.objects.filter(
+            hospital=hospital,
+            dismissed=False,
+            user__groups__name='Врач-диагностики',
+        )
+        .distinct()
+        .order_by('fio')
+    )
+    doctors.extend(
+        {'id': doctor.pk, 'label': doctor.get_fio()}
+        for doctor in diagnostic_doctors
+    )
+    return doctors
+
+
+def _get_all_list_filter_options(hospital_id=-1):
     hospitals = [
         {'id': -1, 'label': 'Все'},
         *[
             {'id': hospital.pk, 'label': hospital.short_title or hospital.title}
-            for hospital in Hospitals.objects.filter(hide=False).order_by('short_title', 'title')
-        ],
-    ]
-
-    creator_doctor_ids = base_directions.filter(doc__isnull=False).values_list('doc_id', flat=True).distinct()
-    accepted_doctor_ids = (
-        base_directions.filter(accept_who_doctor__isnull=False)
-        .values_list('accept_who_doctor_id', flat=True)
-        .distinct()
-    )
-    confirmed_doctor_ids = (
-        base_directions.filter(issledovaniya__time_confirmation__isnull=False, issledovaniya__doc_confirmation__isnull=False)
-        .values_list('issledovaniya__doc_confirmation_id', flat=True)
-        .distinct()
-    )
-    doctor_ids = set(creator_doctor_ids) | set(accepted_doctor_ids) | set(confirmed_doctor_ids)
-    doctors = [
-        {'id': -1, 'label': 'Все'},
-        *[
-            {'id': doctor.pk, 'label': doctor.get_fio()}
-            for doctor in DoctorProfile.objects.filter(pk__in=doctor_ids).order_by('fio')
+            for hospital in _get_visible_hospitals()
         ],
     ]
 
     return {
         'hospitals': hospitals,
-        'doctors': doctors,
+        'doctors': _get_diagnostic_doctors_options(hospital_id),
     }
 
 
@@ -885,7 +877,6 @@ def get_requests_all_list(request):
     hospital_id = request_data.get('hospitalId', -1)
     doctor_id = request_data.get('doctorId', -1)
     statuses = request_data.get('statuses') or []
-    patient_query = request_data.get('patientQuery', '')
     sort_by = request_data.get('sortBy', '')
     sort_dir = request_data.get('sortDir', 'desc')
     offset = request_data.get('offset', 0)
@@ -932,6 +923,8 @@ def get_requests_all_list(request):
         is_request=True,
         cancel=False,
         **date_filter,
+    ).filter(
+        Q(hospital__isnull=True) | Q(hospital__hide=False),
     ).select_related(
         'client__individual',
         'doc',
@@ -945,16 +938,17 @@ def get_requests_all_list(request):
     directions = _apply_status_filter(directions, statuses)
 
     if hospital_id and hospital_id != -1:
+        if not _get_visible_hospitals().filter(pk=hospital_id).exists():
+            return JsonResponse({'rows': [], 'total': 0, 'error': 'Больница недоступна'})
         directions = directions.filter(hospital_id=hospital_id)
 
     directions = _apply_doctor_filter(directions, doctor_id, statuses)
-    directions = _apply_patient_filter(directions, patient_query)
     directions = _apply_sort(directions, sort_by, sort_dir, default_order=date_type_orders[date_type])
     total = directions.count()
     directions_list = list(directions[offset: offset + limit])
 
     rows = [direction_to_all_list_row(direction) for direction in directions_list]
-    filter_options = _get_all_list_filter_options(base_directions)
+    filter_options = _get_all_list_filter_options(hospital_id)
 
     return JsonResponse({
         'rows': rows,

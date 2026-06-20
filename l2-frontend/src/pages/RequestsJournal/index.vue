@@ -8,18 +8,20 @@
         >
           <div class="row filter-row filter-row--first">
             <div class="col-xs-6">
-              <div class="input-group treeselect-noborder-left">
-                <span class="input-group-addon">Больница</span>
-                <Treeselect
-                  v-model="filters.hospitalId"
-                  :multiple="false"
-                  :disable-branch-nodes="true"
-                  :options="hospitals"
-                  placeholder="Все"
-                  :clearable="false"
-                  class="treeselect-wide"
-                  :append-to-body="true"
-                />
+              <div class="filter-line">
+                <span class="filter-line__label">Больница</span>
+                <div class="filter-line__control">
+                  <Treeselect
+                    v-model="filters.hospitalId"
+                    :multiple="false"
+                    :disable-branch-nodes="true"
+                    :options="hospitals"
+                    placeholder="Все"
+                    :clearable="false"
+                    class="treeselect-wide filter-line__treeselect"
+                    :append-to-body="true"
+                  />
+                </div>
               </div>
             </div>
             <div class="col-xs-6">
@@ -40,34 +42,45 @@
           </div>
           <div class="row filter-row filter-row--second">
             <div class="col-xs-6">
-              <div class="status-filters">
-                <span class="status-filters__label">Статус:</span>
-                <label
-                  v-for="status in statusOptions"
-                  :key="status.id"
-                  class="status-filter"
-                >
-                  <input
-                    v-model="selectedStatuses"
-                    type="checkbox"
-                    :value="status.id"
-                  >
-                  {{ status.label }}
-                </label>
-                <a
-                  class="a-under status-filters__reset"
-                  href="#"
-                  @click.prevent="resetFilters"
-                >Сбросить</a>
+              <div class="filter-line">
+                <span class="filter-line__label">Дата</span>
+                <div class="filter-line__control filter-line__control--split">
+                  <div class="filter-line__date">
+                    <DateRange v-model="dateRange" />
+                  </div>
+                  <div class="filter-line__patient">
+                    <span class="filter-line__label">Пациент</span>
+                    <input
+                      v-model.trim="patientQuery"
+                      type="text"
+                      class="form-control"
+                      placeholder="поиск"
+                    >
+                  </div>
+                </div>
               </div>
             </div>
             <div class="col-xs-6">
               <div class="filter-row__right">
-                <div class="input-group treeselect-noborder-left journal-date-filter">
-                  <span class="input-group-addon">Дата</span>
-                  <div class="journal-date-filter__body">
-                    <DateRange v-model="dateRange" />
-                  </div>
+                <div class="status-filters">
+                  <span class="status-filters__label">Статус:</span>
+                  <label
+                    v-for="status in statusOptions"
+                    :key="status.id"
+                    class="status-filter"
+                  >
+                    <input
+                      v-model="selectedStatuses"
+                      type="checkbox"
+                      :value="status.id"
+                    >
+                    {{ status.label }}
+                  </label>
+                  <a
+                    class="a-under status-filters__reset"
+                    href="#"
+                    @click.prevent="resetFilters"
+                  >Сбросить</a>
                 </div>
                 <div class="filters-pagination">
                   <select
@@ -113,53 +126,44 @@
       <table class="table table-bordered table-condensed table-hover table-list">
         <colgroup>
           <col>
-          <col>
           <col width="72">
-          <col width="24%">
-          <col>
-          <col>
-          <col>
-          <col>
+          <col width="12%">
+          <col width="18%">
+          <col width="105">
+          <col width="105">
+          <col width="105">
+          <col width="14%">
           <col>
         </colgroup>
         <thead>
           <tr>
             <th>Больница</th>
-            <th class="table-list__patient">
-              <div class="table-list__patient-label">
-                ФИО пациента
-              </div>
-              <input
-                v-model.trim="patientQuery"
-                type="text"
-                class="form-control input-sm table-list__patient-input"
-                placeholder="поиск"
-                @click.stop
-              >
-            </th>
             <th>№ заявки</th>
+            <th>ФИО пациента</th>
             <th>Услуга</th>
-            <th>ФИО врача</th>
             <th
-              class="table-list__sortable"
+              class="table-list__sortable table-list__date"
               @click="toggleSort('created')"
             >
               Создана
               <i :class="sortIcon('created')" />
             </th>
             <th
-              class="table-list__sortable"
+              class="table-list__sortable table-list__date"
               @click="toggleSort('accepted')"
             >
               Принята
               <i :class="sortIcon('accepted')" />
             </th>
             <th
-              class="table-list__sortable"
+              class="table-list__sortable table-list__date"
               @click="toggleSort('confirmed')"
             >
               Исполнена
               <i :class="sortIcon('confirmed')" />
+            </th>
+            <th class="table-list__doctor">
+              ФИО врача
             </th>
             <th
               class="table-list__sortable"
@@ -172,23 +176,31 @@
         </thead>
         <tbody>
           <tr
-            v-for="row in rows"
+            v-for="row in filteredRows"
             :key="row.id"
             :class="{ 'row-cito': row.cito }"
           >
             <td>{{ row.hospital }}</td>
-            <td>{{ row.patient }}</td>
             <td>
               <a
                 class="a-under"
                 :href="getDescriptiveHref(row.id)"
               >{{ row.id }}</a>
             </td>
+            <td>{{ row.patient }}</td>
             <td>{{ row.research || '—' }}</td>
-            <td>{{ row.doctorFio }}</td>
-            <td>{{ row.createdAt }}</td>
-            <td>{{ row.acceptedAt || '—' }}</td>
-            <td>{{ row.confirmedAt || '—' }}</td>
+            <td class="table-list__date">
+              {{ row.createdAt }}
+            </td>
+            <td class="table-list__date">
+              {{ row.acceptedAt || '—' }}
+            </td>
+            <td class="table-list__date">
+              {{ row.confirmedAt || '—' }}
+            </td>
+            <td class="table-list__doctor">
+              {{ row.doctorFio }}
+            </td>
             <td :class="statusCellClass(row.status)">
               <span
                 v-if="row.cito"
@@ -197,7 +209,7 @@
               {{ row.status }}
             </td>
           </tr>
-          <tr v-if="rows.length === 0">
+          <tr v-if="filteredRows.length === 0">
             <td
               colspan="9"
               class="text-center"
@@ -287,10 +299,10 @@ const statusOptions = [
   { id: 'confirmed', label: 'Исполнены' },
 ];
 
-const getDefaultDateRange = (): [string, string] => [
-  moment().subtract(10, 'days').format('DD.MM.YYYY'),
-  moment().format('DD.MM.YYYY'),
-];
+const getDefaultDateRange = (): [string, string] => {
+  const today = moment().format('DD.MM.YYYY');
+  return [today, today];
+};
 
 const notify = useNotify();
 
@@ -314,6 +326,16 @@ const loaded = ref(false);
 const loading = ref(false);
 
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
+
+const filteredRows = computed(() => {
+  const query = patientQuery.value.trim().toLocaleLowerCase('ru');
+  if (!query) {
+    return rows.value;
+  }
+  return rows.value.filter((row) => (
+    row.patient.toLocaleLowerCase('ru').startsWith(query)
+  ));
+});
 
 const getDescriptiveHref = (pk: number) => (
   `/ui/results/descriptive#${encodeURIComponent(JSON.stringify({ pk }))}`
@@ -394,7 +416,6 @@ const load = async (targetPage = 1) => {
       statuses: selectedStatuses.value,
       dateFrom: normalizedRange[0],
       dateTo: normalizedRange[1],
-      patientQuery: patientQuery.value,
       sortBy: sortBy.value,
       sortDir: sortDir.value,
       offset: (targetPage - 1) * pageSize.value,
@@ -458,10 +479,14 @@ const resetFilters = () => {
 };
 
 watch(selectedStatuses, onFiltersChange, { deep: true });
-watch(() => filters.value.hospitalId, onFiltersChange);
+watch(() => filters.value.hospitalId, (newHospitalId, oldHospitalId) => {
+  if (newHospitalId !== oldHospitalId) {
+    filters.value.doctorId = -1;
+  }
+  onFiltersChange();
+});
 watch(() => filters.value.doctorId, onFiltersChange);
 watch(dateRange, onFiltersChange, { deep: true });
-watch(patientQuery, onFiltersChange);
 watch(pageSize, () => {
   load(1);
 });
@@ -489,6 +514,119 @@ onMounted(() => {
 
   .panel-body {
     padding: 4px 6px;
+  }
+
+  .input-group > .input-group-addon {
+    width: 82px;
+    min-width: 82px;
+    text-align: left;
+    white-space: nowrap;
+  }
+}
+
+$filter-label-width: 82px;
+
+.filter-line {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+
+  &__label {
+    flex: 0 0 $filter-label-width;
+    width: $filter-label-width;
+    min-width: $filter-label-width;
+    max-width: $filter-label-width;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    color: #fff;
+    text-align: left;
+    background-color: #aab2bd;
+    border: 1px solid #96a0ad;
+    border-radius: 4px 0 0 4px;
+    white-space: nowrap;
+  }
+
+  &__control {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+
+    &--split {
+      gap: 8px;
+    }
+  }
+
+  &__treeselect {
+    flex: 1 1 0;
+    min-width: 0;
+
+    :deep(.vue-treeselect__control) {
+      border-left: none !important;
+      border-radius: 0 4px 4px 0 !important;
+      height: 34px !important;
+    }
+
+    :deep(.vue-treeselect__placeholder),
+    :deep(.vue-treeselect__single-value) {
+      line-height: 34px !important;
+    }
+  }
+
+  &__date {
+    flex: 0 0 auto;
+
+    :deep(.input-daterange) {
+      display: inline-flex;
+      width: auto;
+      margin: 0;
+
+      .form-control {
+        width: 80px;
+        height: 34px;
+        padding: 5px;
+        border-radius: 0;
+      }
+
+      .form-control:first-child {
+        border-left: none;
+        border-radius: 0;
+      }
+
+      .form-control:last-child {
+        border-radius: 0;
+      }
+
+      > .input-group-addon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 24px;
+        height: 34px;
+        padding: 5px 6px;
+        border-radius: 0;
+      }
+    }
+  }
+
+  &__patient {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: stretch;
+
+    .form-control {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 34px;
+      border-left: none;
+      border-radius: 0 4px 4px 0;
+    }
   }
 }
 
@@ -556,47 +694,6 @@ onMounted(() => {
   }
 }
 
-.journal-date-filter {
-  width: auto;
-  max-width: 100%;
-
-  &__body {
-    flex: 0 0 auto;
-    display: flex;
-
-    :deep(.input-daterange) {
-      display: inline-flex;
-      width: auto;
-      margin: 0;
-
-      .form-control {
-        width: 80px;
-        height: 34px;
-        padding: 5px;
-        border-radius: 0;
-      }
-
-      .form-control:first-child {
-        border-left: none;
-      }
-
-      .form-control:last-child {
-        border-radius: 0 4px 4px 0;
-      }
-
-      > .input-group-addon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 24px;
-        height: 34px;
-        padding: 5px 6px;
-        border-radius: 0;
-      }
-    }
-  }
-}
-
 .not-loaded {
   text-align: center;
   color: grey;
@@ -634,28 +731,28 @@ onMounted(() => {
   table-layout: fixed;
   margin-bottom: 0;
 
-  td:nth-child(3) {
+  td:nth-child(2) {
     text-align: center;
     white-space: nowrap;
+  }
+
+  td:nth-child(3) {
+    word-break: break-word;
   }
 
   td:nth-child(4) {
     word-break: break-word;
   }
 
-  &__patient {
-    vertical-align: top;
-  }
-
-  &__patient-label {
-    margin-bottom: 4px;
+  &__date {
     white-space: nowrap;
+    font-size: 12px;
+    padding-left: 4px;
+    padding-right: 4px;
   }
 
-  &__patient-input {
-    height: 24px;
-    padding: 2px 6px;
-    font-size: 12px;
+  &__doctor {
+    word-break: break-word;
   }
 
   &__sortable {
