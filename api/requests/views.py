@@ -702,6 +702,14 @@ def _get_request_status_label(direction):
     return 'Новая'
 
 
+def _get_journal_doctor_fio(direction, confirmed_by):
+    if direction.total_confirmed and confirmed_by:
+        return confirmed_by
+    if direction.accept_who_doctor:
+        return direction.accept_who_doctor.get_fio()
+    return '—'
+
+
 def direction_to_all_list_row(direction):
     last_confirmed = _get_last_confirmed_issledovaniya(direction)
     confirmed_by = None
@@ -720,7 +728,7 @@ def direction_to_all_list_row(direction):
         'hospital': hospital_title,
         'patient': direction.client.individual.fio(short=True),
         'research': _get_research_title(direction),
-        'doctorFio': direction.doc.get_fio() if direction.doc else '—',
+        'doctorFio': _get_journal_doctor_fio(direction, confirmed_by),
         'createdAt': strfdatetime(direction.data_sozdaniya, '%d.%m.%Y %H:%M'),
         'acceptedAt': strfdatetime(direction.accept_time, '%d.%m.%Y %H:%M') if direction.accept_time else None,
         'acceptedBy': direction.accept_who_doctor.get_fio() if direction.accept_who_doctor else None,
