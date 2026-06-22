@@ -3,7 +3,7 @@ from django.db import connection
 from laboratory.settings import TIME_ZONE, DEATH_RESEARCH_PK
 from statistics_tickets.models import VisitPurpose
 from utils.db import namedtuplefetchall
-from directory.models import Researches
+from directory.models import Researches, HospitalService, ParaclinicInputField
 
 
 def direct_job_sql(d_conf, d_s, d_e, fin, can_null):
@@ -2026,6 +2026,156 @@ def get_researches_by_templates(template_ids):
                 WHERE users_assignmentresearches.template_id in %(template_ids)s
             """,
             params={'template_ids': template_ids},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
+def resolve_hospital_discharge_epicrisis_scope(research):
+    """ID услуг выписки и полей протокола для отчёта (вычисляется один раз в Python)."""
+    if research.is_hospital:
+        extract_research_ids = list(HospitalService.objects.filter(main_research_id=research.pk, site_type__in=[6, 7]).values_list('slave_research_id', flat=True))
+    else:
+        extract_research_ids = [research.pk]
+
+    if not extract_research_ids:
+        extract_research_ids = [-1]
+
+    date_field_ids = list(
+        ParaclinicInputField.objects.filter(
+            group__research_id__in=extract_research_ids,
+            title__in=['Дата выписки', 'в.э.-Дата выписки'],
+        ).values_list('pk', flat=True)
+    )
+    if not date_field_ids:
+        date_field_ids = [-1]
+
+    time_field_ids = list(
+        ParaclinicInputField.objects.filter(
+            group__research_id__in=extract_research_ids,
+            title='Время выписки',
+        ).values_list('pk', flat=True)
+    )
+    if not time_field_ids:
+        time_field_ids = [-1]
+
+    return extract_research_ids, date_field_ids, time_field_ids
+
+
+def statistics_hospital_discharge_epicrisis(
+    research_id,
+    d_start,
+    d_end,
+    hospital_id_filter,
+    is_main_hospital,
+    extract_research_ids,
+    date_field_ids,
+    time_field_ids,
+):
+    """
+    Отчёт по выпискным эпикризам за период по дате выписки из протокола.
+    Сначала отбор issledovaniya по field_id + дате выписки, затем джойны.
+    """
+    d_start_str = d_start.strftime('%d.%m.%Y')
+    d_end_str = d_end.strftime('%d.%m.%Y')
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            WITH discharge_in_period AS (
+                SELECT DISTINCT ON (pr.issledovaniye_id)
+                    pr.issledovaniye_id,
+                    pr.value AS discharge_date
+                FROM directions_paraclinicresult pr
+                INNER JOIN directory_paraclinicinputfield f ON f.id = pr.field_id
+                WHERE pr.field_id = ANY(%(date_field_ids)s)
+                  AND pr.value IS NOT NULL
+                  AND pr.value <> ''
+                  AND (
+                    (substring(pr.value, 3, 1) = '.'
+                      AND length(pr.value) >= 10
+                      AND pr.value BETWEEN %(d_start_str)s AND %(d_end_str)s)
+                    OR (substring(pr.value, 5, 1) = '-'
+                      AND length(pr.value) >= 10
+                      AND to_date(substring(pr.value, 1, 10), 'YYYY-MM-DD') BETWEEN %(d_start)s AND %(d_end)s)
+                  )
+                ORDER BY pr.issledovaniye_id, f."order"
+            ),
+            time_values AS (
+                SELECT DISTINCT ON (pr.issledovaniye_id)
+                    pr.issledovaniye_id,
+                    pr.value AS discharge_time
+                FROM directions_paraclinicresult pr
+                INNER JOIN directory_paraclinicinputfield f ON f.id = pr.field_id
+                WHERE pr.field_id = ANY(%(time_field_ids)s)
+                  AND pr.issledovaniye_id IN (SELECT issledovaniye_id FROM discharge_in_period)
+                  AND pr.value IS NOT NULL
+                  AND pr.value <> ''
+                ORDER BY pr.issledovaniye_id, f."order"
+            )
+            SELECT
+                trim(concat(ci.family, ' ', ci.name, ' ', ci.patronymic)) AS patient_fio,
+                to_char(ci.birthday, 'DD.MM.YYYY') AS patient_birthday,
+                dr_extract.title AS extract_research_title,
+                COALESCE(
+                    NULLIF(trim(doc_confirm.fio), ''),
+                    trim(concat_ws(' ', doc_confirm.family, doc_confirm.name, doc_confirm.patronymic))
+                ) AS doc_fio,
+                dn_extract.id AS extract_direction_id,
+                CASE
+                    WHEN dip.discharge_date ~ '^\\d{4}-\\d{2}-\\d{2}'
+                        THEN to_char(to_date(substring(dip.discharge_date, 1, 10), 'YYYY-MM-DD'), 'DD.MM.YYYY')
+                    ELSE dip.discharge_date
+                END AS discharge_date,
+                tv.discharge_time,
+                parent_iss.napravleniye_id AS parent_direction_id,
+                dr_parent.title AS parent_research_title
+            FROM discharge_in_period dip
+            INNER JOIN directions_issledovaniya extract_iss ON extract_iss.id = dip.issledovaniye_id
+                AND extract_iss.time_confirmation IS NOT NULL
+                AND extract_iss.research_id = ANY(%(extract_research_ids)s)
+            INNER JOIN directions_napravleniya dn_extract ON dn_extract.id = extract_iss.napravleniye_id
+            INNER JOIN directory_researches dr_extract ON dr_extract.id = extract_iss.research_id
+            LEFT JOIN directions_issledovaniya parent_iss ON parent_iss.id = dn_extract.parent_id
+            LEFT JOIN directory_researches dr_parent ON dr_parent.id = parent_iss.research_id
+            LEFT JOIN clients_card cc ON cc.id = dn_extract.client_id
+            LEFT JOIN clients_individual ci ON ci.id = cc.individual_id
+            LEFT JOIN users_doctorprofile doc_confirm ON doc_confirm.id = extract_iss.doc_confirmation_id
+            LEFT JOIN time_values tv ON tv.issledovaniye_id = extract_iss.id
+            WHERE CASE WHEN %(is_main_hospital)s = 1 THEN
+                    parent_iss.research_id = %(research_id)s
+                  ELSE
+                    TRUE
+                  END
+              AND CASE WHEN %(hospital_id_filter)s > 0 THEN
+                    dn_extract.hospital_id = %(hospital_id_filter)s
+                  WHEN %(hospital_id_filter)s = -1 THEN
+                    dn_extract.hospital_id IS NOT NULL
+                  END
+            ORDER BY
+                CASE
+                    WHEN dip.discharge_date ~ '^\\d{2}\\.\\d{2}\\.\\d{4}' THEN to_date(dip.discharge_date, 'DD.MM.YYYY')
+                    WHEN dip.discharge_date ~ '^\\d{4}-\\d{2}-\\d{2}' THEN to_date(substring(dip.discharge_date, 1, 10), 'YYYY-MM-DD')
+                END,
+                COALESCE(
+                    (substring(tv.discharge_time from '^([0-9]{1,2}:[0-9]{2}(:[0-9]{2})?)'))::time,
+                    '00:00:00'::time
+                ),
+                patient_fio,
+                extract_direction_id
+            """,
+            params={
+                'research_id': research_id,
+                'd_start': d_start,
+                'd_end': d_end,
+                'd_start_str': d_start_str,
+                'd_end_str': d_end_str,
+                'hospital_id_filter': hospital_id_filter,
+                'is_main_hospital': 1 if is_main_hospital else 0,
+                'extract_research_ids': extract_research_ids,
+                'date_field_ids': date_field_ids,
+                'time_field_ids': time_field_ids,
+            },
         )
         rows = namedtuplefetchall(cursor)
     return rows

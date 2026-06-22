@@ -54,6 +54,7 @@ from .report import (
     lab_result,
     partner_coast_data,
     reestr_hospital,
+    hospital_discharge_epicrisis,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -90,6 +91,12 @@ from laboratory.settings import (
     MAGAZINE_REPORT,
 )
 from .statistic_func import save_file_disk, initial_work_book
+
+
+def _is_hospital_discharge_research(research):
+    if research.is_hospital or research.is_extract_service:
+        return True
+    return directory.HospitalService.objects.filter(slave_research=research, site_type__in=[6, 7]).exists()
 
 
 # @ratelimit(key=lambda g, r: r.user.username + "_stats_" + (r.POST.get("type", "") if r.method == "POST" else r.GET.get("type", "")), rate="20/m", block=True)
@@ -833,6 +840,27 @@ def statistic_xls(request):
             data = weapon_form_result_parse(researches_sql, reserved=False)
             ws = structure_sheet.statistic_research_wepon_base(ws, d1, d2, research_title[0])
             ws = structure_sheet.statistic_research_weapon_data(ws, data)
+        elif _is_hospital_discharge_research(research):
+            d_s_filter = request_data.get("date-start")
+            d_e_filter = request_data.get("date-end")
+            if not d_s_filter or not d_e_filter:
+                return JsonResponse({"error": "Не указан период (date-start / date-end)"})
+            d1_discharge = datetime.datetime.strptime(d_s_filter, '%d.%m.%Y').date()
+            d2_discharge = datetime.datetime.strptime(d_e_filter, '%d.%m.%Y').date()
+            extract_research_ids, date_field_ids, time_field_ids = sql_func.resolve_hospital_discharge_epicrisis_scope(research)
+            researches_sql = sql_func.statistics_hospital_discharge_epicrisis(
+                research_id,
+                d1_discharge,
+                d2_discharge,
+                hospital_id,
+                research.is_hospital,
+                extract_research_ids,
+                date_field_ids,
+                time_field_ids,
+            )
+            ws = hospital_discharge_epicrisis.hospital_discharge_epicrisis_base(ws, d1_discharge, d2_discharge, research_title)
+            ws = hospital_discharge_epicrisis.hospital_discharge_epicrisis_fill_data(ws, researches_sql)
+            response['Content-Disposition'] = str.translate("attachment; filename=\"Выпискные_эпикризы.xlsx\"", tr)
         elif is_purpose == 1:
             ws = structure_sheet.statistic_research_base(ws, d1, d2, research_title[0])
             researches_sql = sql_func.statistics_research(research_id, start_date, end_date, hospital_id, is_purpose, purposes)
