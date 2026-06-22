@@ -2034,9 +2034,7 @@ def get_researches_by_templates(template_ids):
 def resolve_hospital_discharge_epicrisis_scope(research):
     """ID услуг выписки и полей протокола для отчёта (вычисляется один раз в Python)."""
     if research.is_hospital:
-        extract_research_ids = list(
-            HospitalService.objects.filter(main_research_id=research.pk, site_type__in=[6, 7]).values_list('slave_research_id', flat=True)
-        )
+        extract_research_ids = list(HospitalService.objects.filter(main_research_id=research.pk, site_type__in=[6, 7]).values_list('slave_research_id', flat=True))
     else:
         extract_research_ids = [research.pk]
 
