@@ -771,15 +771,15 @@ $filter-label-width: 82px;
   }
 
   &__status--cito {
-    border-right: 3px solid #d9534f;
+    border-right: 6px solid #d9534f;
   }
 
   &__status--accepted {
-    border-right: 3px solid #046d93;
+    border-right: 6px solid #046d93;
   }
 
   &__status--confirmed {
-    border-right: 3px solid #049372;
+    border-right: 6px solid #049372;
   }
 }
 
