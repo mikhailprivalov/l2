@@ -32,6 +32,10 @@ def hospital_discharge_epicrisis_base(ws1, d1, d2, research_title):
         ('время выписки из протокола', 22),
         ('№ родительского направления', 26),
         ('Название услуги родительского направления', 40),
+        ('Случай', 18),
+        ('Посещение', 18),
+        ('Успех', 10),
+        ('Сообщение', 40),
     ]
     header_row = 5
     for idx, (title, width) in enumerate(columns, 1):
@@ -58,6 +62,10 @@ def hospital_discharge_epicrisis_fill_data(ws1, rows, start_row=6):
             row.discharge_time or '',
             row.parent_direction_id or '',
             row.parent_research_title or '',
+            row.rmis_case_number or '',
+            row.rmis_visit_number or '',
+            row.rmis_success or 'Нет',
+            row.amd_message or '',
         ]
         for col, value in enumerate(values, 1):
             cell = ws1.cell(row=r, column=col)

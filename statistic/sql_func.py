@@ -2129,7 +2129,11 @@ def statistics_hospital_discharge_epicrisis(
                 END AS discharge_date,
                 tv.discharge_time,
                 parent_iss.napravleniye_id AS parent_direction_id,
-                dr_parent.title AS parent_research_title
+                dr_parent.title AS parent_research_title,
+                dn_extract.rmis_case_number,
+                dn_extract.rmis_visit_number,
+                CASE WHEN dn_extract.result_rmis_send THEN 'Да' ELSE 'Нет' END AS rmis_success,
+                dn_extract.amd_message
             FROM discharge_in_period dip
             INNER JOIN directions_issledovaniya extract_iss ON extract_iss.id = dip.issledovaniye_id
                 AND extract_iss.time_confirmation IS NOT NULL
