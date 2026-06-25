@@ -498,7 +498,10 @@
                 v-for="rec in stripRecordsInPeriod"
                 :key="`strip-card-${rec.pk}-${rec.direction_pk}`"
                 class="strip-card record record--draggable"
-                :class="{ 'strip-card--drop-hover': dragOverStripRecordPk === rec.pk }"
+                :class="{
+                  'strip-card--forbidden-edit': rec.is_extract,
+                  'strip-card--drop-hover': dragOverStripRecordPk === rec.pk,
+                }"
                 :style="duplicateHighlightStyleForRecord(rec)"
                 draggable="true"
                 :title="recordHoverTitle(rec, stripDefaultDayKey)"
