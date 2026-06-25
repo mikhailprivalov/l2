@@ -3685,6 +3685,10 @@ def send_laboratory_order(request):
 
             if not result["r"]:
                 raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
+            if result["r"]:
+                number_generator = directions.NumberGenerator.objects.filter(hospital=hospital, is_active=True).first()
+                number_generator.last = external_order.order_number
+                number_generator.save()
 
             Log.log(
                 json.dumps(order_numbers),
