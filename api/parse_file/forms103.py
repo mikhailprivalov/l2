@@ -1,11 +1,16 @@
+import time
 from typing import Union
+
+from django.db import transaction
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
+
 from api.parse_file.normalization import normalize_values
 from api.parse_file.validation import check_values
 from employees.models import Department, Position, Employee, EmployeePosition, TypeWorkTimeEmployee
 from hospitals.models import Hospitals
-from laboratory.settings import WORK_DAYS_PER_WEEK_DEFAULT
+
+BULK_BATCH_SIZE = 500
 
 
 def check_request_data(organization_id, user=None):
@@ -208,31 +213,61 @@ def validate_employee_data(normalized_data: dict, russian_keys: dict, values_len
 
 
 def update_organization_departments(organization_id: int, new_departments_titles: Union[list, set]):
-    """
-    Добавляет подразделения в организации если их не было
-    """
-    all_current_departments_titles = Department.get_active_titles(organization_id)
-    for department_title in new_departments_titles:
-        if department_title not in all_current_departments_titles:
-            Department.create_department(department_title, organization_id)
+    existing_titles = set(Department.objects.filter(is_active=True, hospital_id=organization_id).values_list("name", flat=True))
+    missing_titles = [title for title in new_departments_titles if title not in existing_titles]
+    if not missing_titles:
+        return
+    Department.objects.bulk_create(
+        [Department(hospital_id=organization_id, name=title, is_active=True) for title in missing_titles],
+        ignore_conflicts=True,
+        batch_size=BULK_BATCH_SIZE,
+    )
 
 
 def update_organization_positions(organization_id: int, new_positions_titles: Union[list, set]):
-    """
-    Добавляет должности в организации если их не было
-    """
-    all_current_positions_titles = Position.get_active_titles(organization_id)
-    for position_title in new_positions_titles:
-        if position_title not in all_current_positions_titles:
-            Position.create_position(position_title, organization_id)
+    existing_titles = set(Position.objects.filter(is_active=True, hospital_id=organization_id).values_list("name", flat=True))
+    missing_titles = [title for title in new_positions_titles if title not in existing_titles]
+    if not missing_titles:
+        return
+    Position.objects.bulk_create(
+        [Position(hospital_id=organization_id, name=title, is_active=True) for title in missing_titles],
+        ignore_conflicts=True,
+        batch_size=BULK_BATCH_SIZE,
+    )
 
 
-def update_employee_position(employee_position, employee_data):
-    """
-    Обновляет данные трудового договора (EmployeePosition)
-    недельная норма указывается общая, не на ставку конкретного трудового договора
-    Для получения нормы на день, умножается на ставку в текущем ТД
-    """
+def _make_employee_position_key(*, is_active, employee_id, position_id, department_id, tabel_number):
+    return (is_active, employee_id, position_id, department_id, tabel_number)
+
+
+def _employee_position_key(employee, department, position, tabel_number, is_active):
+    return _make_employee_position_key(
+        is_active=is_active,
+        employee_id=employee.pk,
+        position_id=position.pk,
+        department_id=department.pk,
+        tabel_number=tabel_number,
+    )
+
+
+def _find_employee_position(employee_position_index, employee, department, position, tabel_number, is_active):
+    return employee_position_index.get(_employee_position_key(employee, department, position, tabel_number, is_active))
+
+
+def _load_employee_position_index(organization_id):
+    return {
+        _make_employee_position_key(
+            is_active=employee_position.is_active,
+            employee_id=employee_position.employee_id,
+            position_id=employee_position.position_id,
+            department_id=employee_position.department_id,
+            tabel_number=employee_position.tabel_number,
+        ): employee_position
+        for employee_position in EmployeePosition.objects.filter(employee__hospital_id=organization_id)
+    }
+
+
+def _apply_employee_position_fields(employee_position, employee_data):
     if employee_data.get("date_dismissal"):
         employee_position.date_dismissal = employee_data.get("date_dismissal")
         employee_position.is_active = False
@@ -242,18 +277,13 @@ def update_employee_position(employee_position, employee_data):
         work_schedule_minutes_day = work_schedule_minutes_weekly // employee_position.work_days_per_week
         work_schedule_minutes_per_rate = work_schedule_minutes_day * employee_position.rate if employee_position.rate else work_schedule_minutes_day
         employee_position.daily_hours_norm = int(work_schedule_minutes_per_rate)
-    employee_position.save()
+    return employee_position
 
 
-def create_employee_position(employee_data, employee, department, position, employment_form):
-    """
-    Создает новый трудовой договор (EmployeePosition)
-    недельная норма указывается общая, не на ставку конкретного трудового договора
-    Для получения нормы на день, умножается на ставку в текущем ТД
-    """
+def _build_employee_position(employee_data, employee, department, position, employment_form):
     active = False if employee_data.get("date_dismissal") else True
     work_schedule_minutes_weekly = employee_data.get("work_schedule")
-    new_employee_position: EmployeePosition = EmployeePosition(
+    employee_position = EmployeePosition(
         is_active=active,
         employee_id=employee.pk,
         position_id=position.pk,
@@ -265,16 +295,23 @@ def create_employee_position(employee_data, employee, department, position, empl
         date_dismissal=employee_data.get("date_dismissal"),
         weekly_hours_norm=work_schedule_minutes_weekly,
     )
-    if new_employee_position.work_days_per_week and work_schedule_minutes_weekly:
-        work_schedule_minutes_day = work_schedule_minutes_weekly // new_employee_position.work_days_per_week
-        work_schedule_minutes_per_rate = work_schedule_minutes_day * new_employee_position.rate if new_employee_position.rate else work_schedule_minutes_day
-        new_employee_position.daily_hours_norm = int(work_schedule_minutes_per_rate)
-    new_employee_position.save()
-
-
-def find_employee_position(employee_position_query_set, active: bool, employee: Employee, position: Position, deparment: Department, tabel_number: str):
-    employee_position = employee_position_query_set.filter(is_active=active, employee_id=employee.pk, position_id=position.pk, department_id=deparment.pk, tabel_number=tabel_number).first()
+    if employee_position.work_days_per_week and work_schedule_minutes_weekly:
+        work_schedule_minutes_day = work_schedule_minutes_weekly // employee_position.work_days_per_week
+        work_schedule_minutes_per_rate = work_schedule_minutes_day * employee_position.rate if employee_position.rate else work_schedule_minutes_day
+        employee_position.daily_hours_norm = int(work_schedule_minutes_per_rate)
     return employee_position
+
+
+def _load_employees_by_snils(organization_id):
+    return {employee.snils: employee for employee in Employee.objects.filter(hospital_id=organization_id).exclude(snils__isnull=True).exclude(snils="")}
+
+
+def _load_departments_by_name(organization_id):
+    return {department.name: department for department in Department.objects.filter(is_active=True, hospital_id=organization_id)}
+
+
+def _load_positions_by_name(organization_id):
+    return {position.name: position for position in Position.objects.filter(is_active=True, hospital_id=organization_id)}
 
 
 def update_organization_employee_positions(organization_id: int, employees):
@@ -283,34 +320,93 @@ def update_organization_employee_positions(organization_id: int, employees):
     Ищет активный трудовой договор - обновляет, если нет и стоит дата увольнения, ищет архивный, если нет - создает архивный
     Если не нашло ничего - создает новый трудовой договор
     """
-    departments = Department.get_active_departments(organization_id)
-    positions = Position.get_active_positions(organization_id)
-    employment_forms = TypeWorkTimeEmployee.objects.all()
-    employee_position_in_organization = EmployeePosition.all_by_organization(organization_id)
-    incorrent_employees = []
-    for employee in employees:
-        snils = employee.get("snils")
-        employment_form = employee.get("employment_form")
-        tabel_number = employee.get("tabel_number")
-        current_employee = Employee.find_by_snils(snils, organization_id)
-        if not current_employee:
-            current_employee = Employee.create_employee(employee.get("family"), employee.get("name"), employee.get("patronymic"), snils, organization_id, True)
-        current_department = departments.get(name=employee.get("department_title"))
-        current_position = positions.get(name=employee.get("position_title"))
-        current_employment_form = employment_forms.filter(title=employment_form).first()
-        if not current_employment_form:
-            incorrent_employees.append({"fio": employee["fio"], "reason": f"Нет такого вида занятости в справочнике ({employment_form})"})
+    departments_by_name = _load_departments_by_name(organization_id)
+    positions_by_name = _load_positions_by_name(organization_id)
+    employment_forms_by_title = {employment_form.title: employment_form for employment_form in TypeWorkTimeEmployee.objects.all()}
+    employees_by_snils = _load_employees_by_snils(organization_id)
+    employee_position_index = _load_employee_position_index(organization_id)
+
+    incorrect_employees = []
+    employees_to_create = {}
+
+    for employee_data in employees:
+        snils = employee_data.get("snils")
+        if snils in employees_by_snils or snils in employees_to_create:
             continue
-        current_active_employee_position = find_employee_position(employee_position_in_organization, True, current_employee, current_position, current_department, tabel_number)
-        if current_active_employee_position:
-            update_employee_position(current_active_employee_position, employee)
-        elif not current_active_employee_position and employee.get("date_dismissal"):
-            current_non_active_employee_position = find_employee_position(employee_position_in_organization, False, current_employee, current_position, current_department, tabel_number)
-            if not current_non_active_employee_position:
-                create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
+        employees_to_create[snils] = Employee(
+            hospital_id=organization_id,
+            family=employee_data.get("family"),
+            name=employee_data.get("name"),
+            patronymic=employee_data.get("patronymic"),
+            snils=snils,
+        )
+
+    if employees_to_create:
+        Employee.objects.bulk_create(list(employees_to_create.values()), batch_size=BULK_BATCH_SIZE)
+        for employee in Employee.objects.filter(hospital_id=organization_id, snils__in=employees_to_create.keys()):
+            employees_by_snils[employee.snils] = employee
+
+    employee_positions_to_create = []
+    employee_positions_to_update = {}
+    planned_employee_position_keys = set()
+
+    for employee_data in employees:
+        snils = employee_data.get("snils")
+        employment_form_title = employee_data.get("employment_form")
+        tabel_number = employee_data.get("tabel_number")
+
+        employment_form = employment_forms_by_title.get(employment_form_title)
+        if not employment_form:
+            incorrect_employees.append({"fio": employee_data["fio"], "reason": f"Нет такого вида занятости в справочнике ({employment_form_title})"})
+            continue
+
+        department = departments_by_name.get(employee_data.get("department_title"))
+        if not department:
+            incorrect_employees.append({"fio": employee_data["fio"], "reason": f"Нет подразделения ({employee_data.get('department_title')})"})
+            continue
+
+        position = positions_by_name.get(employee_data.get("position_title"))
+        if not position:
+            incorrect_employees.append({"fio": employee_data["fio"], "reason": f"Нет должности ({employee_data.get('position_title')})"})
+            continue
+
+        employee = employees_by_snils.get(snils)
+        if not employee:
+            incorrect_employees.append({"fio": employee_data["fio"], "reason": "Не удалось найти или создать сотрудника"})
+            continue
+
+        active_employee_position = _find_employee_position(employee_position_index, employee, department, position, tabel_number, is_active=True)
+        if active_employee_position:
+            _apply_employee_position_fields(active_employee_position, employee_data)
+            employee_positions_to_update[active_employee_position.pk] = active_employee_position
+            continue
+
+        if employee_data.get("date_dismissal"):
+            inactive_employee_position = _find_employee_position(employee_position_index, employee, department, position, tabel_number, is_active=False)
+            if inactive_employee_position:
+                continue
+            create_as_active = False
         else:
-            create_employee_position(employee, current_employee, current_department, current_position, current_employment_form)
-    return {"ok": True, "message": "", "data": incorrent_employees}
+            create_as_active = True
+
+        employee_position_key = _employee_position_key(employee, department, position, tabel_number, create_as_active)
+        if employee_position_key in employee_position_index or employee_position_key in planned_employee_position_keys:
+            continue
+
+        employee_positions_to_create.append(_build_employee_position(employee_data, employee, department, position, employment_form))
+        planned_employee_position_keys.add(employee_position_key)
+
+    if employee_positions_to_create:
+        EmployeePosition.objects.bulk_create(employee_positions_to_create, batch_size=BULK_BATCH_SIZE)
+
+    if employee_positions_to_update:
+        EmployeePosition.objects.bulk_update(
+            list(employee_positions_to_update.values()),
+            ["date_dismissal", "is_active", "weekly_hours_norm", "daily_hours_norm"],
+            batch_size=BULK_BATCH_SIZE,
+        )
+
+    return {"ok": True, "message": "", "data": incorrect_employees}
 
 
 def unmerge_cells(work_sheet: Worksheet):
