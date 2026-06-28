@@ -372,7 +372,7 @@ def update_organization_employee_positions(organization_id: int, employees):
 
         employee = employees_by_snils.get(snils)
         if not employee:
-            incorrect_employees.append({"fio": employee_data["fio"], "reason": "Не удалось найти или создать сотрудника"})
+            incorrect_employees.append({"fio": employee_data["fio"], "reason": "Не удалось найти или создать работника"})
             continue
 
         active_employee_position = _find_employee_position(employee_position_index, employee, department, position, tabel_number, is_active=True)
@@ -434,7 +434,7 @@ def prepare_employee_file(work_sheet: Worksheet):
 
 def form_01(request_data):
     """
-    Загрузка сотрудников организации
+    Загрузка работников организации
 
     На входе:
     "file" - Файл XLSX со столбцами (указаны в need_col_name)
