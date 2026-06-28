@@ -7,8 +7,8 @@
 
 | Фаза | Кол-во | Описание |
 |------|-------:|----------|
-| ✅ Готово | 86 | Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек. |
-| 🟢 Фаза 1 — простой перенос | 149 | Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк. |
+| ✅ Готово | 88 | Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек. |
+| 🟢 Фаза 1 — простой перенос | 147 | Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк. |
 | 🟡 Фаза 1b — крупные файлы | 24 | Тот же механический перенос, но файл > 400 строк — больше объём работы. |
 | 🟠 Фаза 2 — с рефакторингом | 43 | Перенос на Composition API + замена jQuery / vue2-typeahead / v-calendar / mixins / `new Vue()`. |
 | 🔵 Фаза 3 — class components | 46 | Полная переписка с `vue-class-component` / `vue-property-decorator` на `<script setup lang="ts">`. |
@@ -16,7 +16,7 @@
 
 ## Стратегия
 
-1. **Фаза 1–1b** — механический перенос Options API на `<script setup lang="ts">` (173 компонента).
+1. **Фаза 1–1b** — механический перенос Options API на `<script setup lang="ts">` (171 компонент).
 2. **Фаза 2** — перенос + рефакторинг jQuery/typeahead/mixins (43 компонента).
 3. **Фаза 3** — переписать class components (46 компонентов).
 4. **Фаза 4** — заменить Vue 2-only библиотеки, затем перенести (9 компонентов).
@@ -98,11 +98,11 @@ function save() { emit('input', local.value); }
 
 ---
 
-## ✅ Готово (86)
+## ✅ Готово (88)
 
 Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек.
 
-### `components/` (14)
+### `components/` (16)
 
 | Файл | Строк | Заметки |
 |------|------:|---------|
@@ -120,6 +120,8 @@ function save() { emit('input', local.value); }
 | `components/Spinner.vue` | 54 | — |
 | `components/TippyBeds.vue` | 67 | — |
 | `components/UploadFile.vue` | 341 | — |
+| `components/VisibilityFieldWrapper.vue` | 35 | — |
+| `components/VisibilityGroupWrapper.vue` | 20 | — |
 
 ### `construct/` (16)
 
@@ -228,16 +230,9 @@ function save() { emit('input', local.value); }
 | `ui-cards/PatientCompactPicker.vue` | 982 | jQuery |
 | `ui-cards/PharmacotherapyTemplate.vue` | 391 | — |
 
-## 🟢 Фаза 1 — простой перенос (149)
+## 🟢 Фаза 1 — простой перенос (147)
 
 Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк.
-
-### `components/` (2)
-
-| Файл | Строк | Заметки |
-|------|------:|---------|
-| `components/VisibilityFieldWrapper.vue` | 31 | — |
-| `components/VisibilityGroupWrapper.vue` | 20 | — |
 
 ### `construct/` (11)
 

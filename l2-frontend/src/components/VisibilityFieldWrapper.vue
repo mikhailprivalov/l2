@@ -4,27 +4,32 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { computed } from 'vue';
+
 import { vField } from './visibility-triggers';
 
-export default {
-  name: 'VisibilityFieldWrapper',
-  props: ['group', 'groups', 'formula', 'patient', 'paid_fin_source', 'is_gistology'],
-  computed: {
-    visible() {
-      if (this.is_gistology && this.paid_fin_source) {
-        if (this.formula === 'платно') {
-          return true;
-        }
-      }
-      if (this.is_gistology && !this.paid_fin_source) {
-        if (this.formula === '!платно') {
-          return true;
-        }
-      }
+const props = defineProps<{
+  group?: any;
+  groups?: any;
+  formula?: any;
+  patient?: any;
+  paid_fin_source?: any;
+  is_gistology?: any;
+}>();
 
-      return vField(this.group, this.groups, this.formula, this.patient);
-    },
-  },
-};
+const visible = computed(() => {
+  if (props.is_gistology && props.paid_fin_source) {
+    if (props.formula === 'платно') {
+      return true;
+    }
+  }
+  if (props.is_gistology && !props.paid_fin_source) {
+    if (props.formula === '!платно') {
+      return true;
+    }
+  }
+
+  return vField(props.group, props.groups, props.formula, props.patient);
+});
 </script>
