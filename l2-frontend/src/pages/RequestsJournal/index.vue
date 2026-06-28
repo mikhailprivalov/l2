@@ -234,15 +234,15 @@
             </option>
           </select>
           <Paginate
-          v-model="page"
-          :page-count="pages"
-          :page-range="4"
-          :margin-pages="2"
-          :click-handler="load"
-          prev-text="Назад"
-          next-text="Вперёд"
-          container-class="pagination"
-        />
+            v-model="page"
+            :page-count="pages"
+            :page-range="4"
+            :margin-pages="2"
+            :click-handler="load"
+            prev-text="Назад"
+            next-text="Вперёд"
+            container-class="pagination"
+          />
         </div>
       </div>
       <div class="founded">

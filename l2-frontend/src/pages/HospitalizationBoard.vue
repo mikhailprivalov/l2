@@ -18,98 +18,98 @@
                 />
               </div>
               <div class="toolbar-controls toolbar-controls--nav">
-            <div
-              class="mode-switch"
-              :class="{ 'mode-switch--period-frozen': isCustomPeriodActive }"
-            >
-              <label
-                v-if="canUseCustomPeriod"
-                class="toolbar-period-toggle"
-              >
-                <input
-                  v-model="isCustomPeriodMode"
-                  type="checkbox"
+                <div
+                  class="mode-switch"
+                  :class="{ 'mode-switch--period-frozen': isCustomPeriodActive }"
                 >
-                Период
-              </label>
-              <div
-                v-if="isCustomPeriodActive"
-                class="toolbar-custom-period"
-              >
-                <input
-                  v-model="customPeriodStart"
-                  class="form-control toolbar-custom-period-input"
-                  type="date"
-                  :max="customPeriodEnd || customPeriodEndMax"
+                  <label
+                    v-if="canUseCustomPeriod"
+                    class="toolbar-period-toggle"
+                  >
+                    <input
+                      v-model="isCustomPeriodMode"
+                      type="checkbox"
+                    >
+                    Период
+                  </label>
+                  <div
+                    v-if="isCustomPeriodActive"
+                    class="toolbar-custom-period"
+                  >
+                    <input
+                      v-model="customPeriodStart"
+                      class="form-control toolbar-custom-period-input"
+                      type="date"
+                      :max="customPeriodEnd || customPeriodEndMax"
+                    >
+                    <span class="toolbar-custom-period-sep">-</span>
+                    <input
+                      v-model="customPeriodEnd"
+                      class="form-control toolbar-custom-period-input"
+                      type="date"
+                      :min="customPeriodStart"
+                      :max="customPeriodEndMax"
+                    >
+                  </div>
+                  <button
+                    class="btn btn-default"
+                    :class="{ active: viewMode === 'day' && !isCustomPeriodActive }"
+                    :disabled="isCustomPeriodActive"
+                    @click="viewMode = 'day'"
+                  >
+                    День
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    :class="{ active: viewMode === 'week' && !isCustomPeriodActive }"
+                    :disabled="isCustomPeriodActive"
+                    @click="viewMode = 'week'"
+                  >
+                    Неделя
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    :class="{ active: viewMode === 'month' && !isCustomPeriodActive }"
+                    :disabled="isCustomPeriodActive"
+                    @click="setViewMonth"
+                  >
+                    Месяц
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-default"
+                    title="Обновить"
+                    @click="refreshBoard"
+                  >
+                    <i class="fa-solid fa-rotate" />
+                  </button>
+                </div>
+                <div
+                  class="btn-group"
+                  :class="{ 'btn-group--period-frozen': isCustomPeriodActive }"
                 >
-                <span class="toolbar-custom-period-sep">-</span>
-                <input
-                  v-model="customPeriodEnd"
-                  class="form-control toolbar-custom-period-input"
-                  type="date"
-                  :min="customPeriodStart"
-                  :max="customPeriodEndMax"
-                >
-              </div>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'day' && !isCustomPeriodActive }"
-                :disabled="isCustomPeriodActive"
-                @click="viewMode = 'day'"
-              >
-                День
-              </button>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'week' && !isCustomPeriodActive }"
-                :disabled="isCustomPeriodActive"
-                @click="viewMode = 'week'"
-              >
-                Неделя
-              </button>
-              <button
-                class="btn btn-default"
-                :class="{ active: viewMode === 'month' && !isCustomPeriodActive }"
-                :disabled="isCustomPeriodActive"
-                @click="setViewMonth"
-              >
-                Месяц
-              </button>
-              <button
-                type="button"
-                class="btn btn-default"
-                title="Обновить"
-                @click="refreshBoard"
-              >
-                <i class="fa-solid fa-rotate" />
-              </button>
-            </div>
-            <div
-              class="btn-group"
-              :class="{ 'btn-group--period-frozen': isCustomPeriodActive }"
-            >
-              <button
-                class="btn btn-default"
-                :disabled="isCustomPeriodActive"
-                @click="navigate(-1)"
-              >
-                ←
-              </button>
-              <button
-                class="btn btn-default"
-                :disabled="isCustomPeriodActive"
-                @click="goToday"
-              >
-                Текущий
-              </button>
-              <button
-                class="btn btn-default"
-                :disabled="isCustomPeriodActive"
-                @click="navigate(1)"
-              >
-                →
-              </button>
-            </div>
+                  <button
+                    class="btn btn-default"
+                    :disabled="isCustomPeriodActive"
+                    @click="navigate(-1)"
+                  >
+                    ←
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    :disabled="isCustomPeriodActive"
+                    @click="goToday"
+                  >
+                    Текущий
+                  </button>
+                  <button
+                    class="btn btn-default"
+                    :disabled="isCustomPeriodActive"
+                    @click="navigate(1)"
+                  >
+                    →
+                  </button>
+                </div>
               </div>
             </div>
             <div class="doctor-badges doctor-badges--toolbar">
@@ -157,42 +157,42 @@
                 </button>
               </div>
               <div class="board-aside-scroll-controls board-aside-scroll-controls--toolbar">
-              <button
-                type="button"
-                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
-                title="Сдвинуть списки выше"
-                :disabled="!canAsideScrollUp"
-                @mousedown.prevent="startAsideScrollHold(-1)"
-                @mouseup="stopAsideScrollHold"
-                @mouseleave="stopAsideScrollHold"
-                @touchstart.prevent="startAsideScrollHold(-1)"
-                @touchend="stopAsideScrollHold"
-                @touchcancel="stopAsideScrollHold"
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
-                title="Сдвинуть списки ниже"
-                @mousedown.prevent="startAsideScrollHold(1)"
-                @mouseup="stopAsideScrollHold"
-                @mouseleave="stopAsideScrollHold"
-                @touchstart.prevent="startAsideScrollHold(1)"
-                @touchend="stopAsideScrollHold"
-                @touchcancel="stopAsideScrollHold"
-              >
-                ↓
-              </button>
-              <button
-                type="button"
-                class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
-                title="В начало списков"
-                :disabled="asideScrollOffset <= 0"
-                @click="resetAsideScroll"
-              >
-                ⌂
-              </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
+                  title="Сдвинуть списки выше"
+                  :disabled="!canAsideScrollUp"
+                  @mousedown.prevent="startAsideScrollHold(-1)"
+                  @mouseup="stopAsideScrollHold"
+                  @mouseleave="stopAsideScrollHold"
+                  @touchstart.prevent="startAsideScrollHold(-1)"
+                  @touchend="stopAsideScrollHold"
+                  @touchcancel="stopAsideScrollHold"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
+                  title="Сдвинуть списки ниже"
+                  @mousedown.prevent="startAsideScrollHold(1)"
+                  @mouseup="stopAsideScrollHold"
+                  @mouseleave="stopAsideScrollHold"
+                  @touchstart.prevent="startAsideScrollHold(1)"
+                  @touchend="stopAsideScrollHold"
+                  @touchcancel="stopAsideScrollHold"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-default btn-sm board-aside-scroll-btn board-aside-scroll-btn--toolbar"
+                  title="В начало списков"
+                  :disabled="asideScrollOffset <= 0"
+                  @click="resetAsideScroll"
+                >
+                  ⌂
+                </button>
               </div>
             </div>
             <div class="toolbar-quick-filters">
@@ -990,7 +990,6 @@ type DischargedPatientRow = {
 
 const STRIP_BOARD_ID = 'strip-board';
 const STRIP_BOARD_COLUMNS = 6;
-const MAX_CELL_PATIENTS = 2;
 
 const ASIDE_SCROLL_STEP_PX = 56;
 const ASIDE_SCROLL_HOLD_MS = 45;
@@ -2662,8 +2661,11 @@ const syncStripRecordsDischargeMeta = async () => {
   }
   for (const rec of stripRecords.value) {
     const dirPk = rec.direction_pk;
-    if (dirPk != null && dirPk > 0 && byDir.has(dirPk)) {
-      Object.assign(rec, applyStripHospMeta(rec, byDir.get(dirPk)!));
+    if (dirPk != null && dirPk > 0) {
+      const meta = byDir.get(dirPk);
+      if (meta) {
+        Object.assign(rec, applyStripHospMeta(rec, meta));
+      }
     }
   }
 };
@@ -3061,8 +3063,6 @@ const onPatientBedDrop = async (targetBedPk: number, targetDayKey: string, recor
     await loadCalendar();
     return;
   }
-  const movePlanIn = targetDayKey;
-  const movePlanOut = sourceRec.plan_date_out || sourceRec.date_out || null;
   await store.dispatch(actions.INC_LOADING);
   const { ok, message } = await api('chambers/move-hospitalization-to-bed', {
     department_pk: departmentPk.value,
