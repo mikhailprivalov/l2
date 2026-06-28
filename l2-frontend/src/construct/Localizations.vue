@@ -1,13 +1,13 @@
 <template>
   <Modal
-    ref="modal"
+    ref="modalRef"
     show-footer="true"
     white-bg="true"
     max-width="680px"
     width="100%"
     margin-top
     margin-left-right="auto"
-    @close="hide_modal"
+    @close="hideModal"
   >
     <span slot="header">Настройка локализаций ({{ title }})</span>
     <div
@@ -55,7 +55,7 @@
           <button
             type="button"
             class="btn btn-primary-nb btn-blue-nb"
-            @click="hide_modal"
+            @click="hideModal"
           >
             Закрыть
           </button>
@@ -65,65 +65,69 @@
   </Modal>
 </template>
 
-<script lang="ts">
-import Modal from '@/ui-cards/Modal.vue';
-import * as actions from '@/store/action-types';
+<script setup lang="ts">
+import { getCurrentInstance, onMounted, ref } from 'vue';
 
-export default {
-  components: { Modal },
-  props: {
-    research_pk: {
-      type: Number,
-      required: true,
-    },
-    title: {
-      type: String,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      loaded: false,
-      localizations: [],
-      selected: {},
-      hasChanges: false,
-    };
-  },
-  created() {
-    this.load_data();
-  },
-  methods: {
-    hide_modal() {
-      this.$emit('hide');
-      if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none';
-      }
-    },
-    async load_data() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      this.loaded = false;
-      const { localizations, selected } = await this.$api('researches/localization', { pk: this.research_pk });
-      this.localizations = localizations;
-      this.selected = localizations.reduce((a, { pk }) => ({ ...a, [pk]: selected.includes(pk) }), {});
-      this.loaded = true;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    toggleSelected(pk) {
-      this.selected[pk] = !this.selected[pk];
-      this.hasChanges = true;
-    },
-    async save() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      await this.$api('researches/localization/save', {
-        pk: this.research_pk,
-        selected: Object.keys(this.selected).filter(pk => this.selected[pk]),
-      });
-      this.hasChanges = false;
-      await this.$store.dispatch(actions.DEC_LOADING);
-      this.$root.$emit('msg', 'ok', `Локализации для исследования\n«‎${this.title}»‎\nсохранены`, 4000);
-    },
-  },
+import Modal from '@/ui-cards/Modal.vue';
+import api from '@/api';
+import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
+
+const props = defineProps<{
+  research_pk: number;
+  title: string;
+}>();
+
+const emit = defineEmits(['hide']);
+
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
+
+const modalRef = ref<InstanceType<typeof Modal> | null>(null);
+const loaded = ref(false);
+const localizations = ref<any[]>([]);
+const selected = ref<Record<number, boolean>>({});
+const hasChanges = ref(false);
+
+const hideModal = () => {
+  emit('hide');
+  if (modalRef.value) {
+    modalRef.value.$el.style.display = 'none';
+  }
 };
+
+const loadData = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  loaded.value = false;
+  const { localizations: locs, selected: selectedIds } = await api('researches/localization', { pk: props.research_pk });
+  localizations.value = locs;
+  selected.value = locs.reduce((a: Record<number, boolean>, { pk }: { pk: number }) => ({
+    ...a,
+    [pk]: selectedIds.includes(pk),
+  }), {});
+  loaded.value = true;
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const toggleSelected = (pk: number) => {
+  selected.value[pk] = !selected.value[pk];
+  hasChanges.value = true;
+};
+
+const save = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  await api('researches/localization/save', {
+    pk: props.research_pk,
+    selected: Object.keys(selected.value).filter((pk) => selected.value[Number(pk)]),
+  });
+  hasChanges.value = false;
+  await store.dispatch(actions.DEC_LOADING);
+  root.$emit('msg', 'ok', `Локализации для исследования\n«‎${props.title}»‎\nсохранены`, 4000);
+};
+
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <style scoped lang="scss">

@@ -4,7 +4,7 @@
     class="construct-root"
   >
     <div
-      v-show="opened_id === -2"
+      v-show="openedId === -2"
       class="construct-sidebar"
     >
       <div class="sidebar-select">
@@ -16,9 +16,9 @@
       </div>
       <div
         class="sidebar-content"
-        :class="{ fcenter: templates_list.length === 0 }"
+        :class="{ fcenter: templatesList.length === 0 }"
       >
-        <div v-if="templates_list.length === 0">
+        <div v-if="templatesList.length === 0">
           Не найдено
         </div>
         <div
@@ -26,7 +26,7 @@
           :key="row.pk"
           class="research"
           :class="{ rhide: row.hide }"
-          @click="open_editor(row.pk)"
+          @click="openEditor(row.pk)"
         >
           <div class="t-t">
             {{ row.title }}
@@ -42,7 +42,7 @@
       </div>
       <button
         class="btn btn-blue-nb sidebar-footer"
-        @click="open_editor(-1)"
+        @click="openEditor(-1)"
       >
         <i class="glyphicon glyphicon-plus" />
         Добавить
@@ -50,92 +50,94 @@
     </div>
     <div class="construct-content">
       <TemplateEditor
-        v-if="opened_id > -2"
+        v-if="openedId > -2"
         style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
-        :pk="opened_id"
-        :global_template_p="parseInt(type, 10)"
+        :pk="openedId"
+        :global_template_p="parseInt(String(type), 10)"
       />
     </div>
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import {
+  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
+} from 'vue';
+
 import SelectPickerM from '@/fields/SelectPickerM.vue';
 import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 
 import UrlData from '../UrlData';
 import TemplateEditor from './TemplateEditor.vue';
 
-export default {
-  name: 'ConstructTemplates',
-  components: {
-    SelectPickerM,
-    TemplateEditor,
-  },
-  data() {
-    return {
-      type: 1,
-      templates_list: [],
-      opened_id: -2,
-      inLoading: true,
-    };
-  },
-  computed: {
-    types() {
-      return [
-        { value: 1, label: 'Глобальные' },
-        { value: 2, label: 'В поиске' },
-      ];
-    },
-    rows() {
-      return this.templates_list.map(r => ({
-        ...r,
-        researches: r.researches.map(rpk => this.$store.getters.researches_obj[rpk]).filter(Boolean),
-      }));
-    },
-  },
-  watch: {
-    type() {
-      this.load_templates();
-    },
-  },
-  mounted() {
-    const storedData = UrlData.get();
-    if (storedData && typeof storedData === 'object' && storedData.pk) {
-      this.opened_id = storedData.pk;
-    }
-    this.$root.$on('research-editor:cancel', this.cancel_edit);
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
-    this.$store.dispatch(actions.INC_LOADING);
-    this.$store.dispatch(actions.GET_RESEARCHES).finally(() => {
-      this.$store.dispatch(actions.DEC_LOADING);
+const type = ref(1);
+const templatesList = ref<any[]>([]);
+const openedId = ref(-2);
+
+const types = computed(() => [
+  { value: 1, label: 'Глобальные' },
+  { value: 2, label: 'В поиске' },
+]);
+
+const rows = computed(() => templatesList.value.map((r) => ({
+  ...r,
+  researches: r.researches.map((rpk: number) => store.getters.researches_obj[rpk]).filter(Boolean),
+})));
+
+let unwatchResearches: (() => void) | null = null;
+
+const loadTemplates = () => {
+  templatesList.value = [];
+  fetch(`/api/load-templates?type=${type.value}`)
+    .then((r) => r.json())
+    .then((data) => {
+      templatesList.value = data.result;
     });
-
-    this.$store.watch(
-      state => state.researches,
-      () => {
-        this.load_templates();
-      },
-    );
-  },
-  methods: {
-    load_templates() {
-      this.templates_list = [];
-      fetch(`/api/load-templates?type=${this.type}`)
-        .then(r => r.json())
-        .then(data => {
-          this.templates_list = data.result;
-        });
-    },
-    open_editor(pk) {
-      this.opened_id = pk;
-    },
-    cancel_edit() {
-      this.opened_id = -2;
-      this.load_templates();
-    },
-  },
 };
+
+const openEditor = (pk: number) => {
+  openedId.value = pk;
+};
+
+const cancelEdit = () => {
+  openedId.value = -2;
+  loadTemplates();
+};
+
+watch(type, () => {
+  loadTemplates();
+});
+
+onMounted(() => {
+  const storedData = UrlData.get();
+  if (storedData && typeof storedData === 'object' && storedData.pk) {
+    openedId.value = storedData.pk;
+  }
+  root.$on('research-editor:cancel', cancelEdit);
+
+  store.dispatch(actions.INC_LOADING);
+  store.dispatch(actions.GET_RESEARCHES).finally(() => {
+    store.dispatch(actions.DEC_LOADING);
+  });
+
+  unwatchResearches = store.watch(
+    (state) => state.researches,
+    () => {
+      loadTemplates();
+    },
+  );
+});
+
+onUnmounted(() => {
+  root.$off('research-editor:cancel', cancelEdit);
+  if (unwatchResearches) {
+    unwatchResearches();
+  }
+});
 </script>
 
 <style scoped lang="scss">

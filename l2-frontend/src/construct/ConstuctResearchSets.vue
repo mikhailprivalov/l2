@@ -161,173 +161,173 @@
   </div>
 </template>
 
-<script lang="ts">
-
+<script setup lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
+import {
+  computed, getCurrentInstance, onMounted, ref, watch,
+} from 'vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import VueTippyTd from '@/construct/VueTippyTd.vue';
+import api from '@/api';
 import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 
-export default {
-  name: 'ConstuctResearchSets',
-  components: { Treeselect, VueTippyTd },
-  data() {
-    return {
-      currentSet: null,
-      currentResearch: null,
-      sets: [],
-      titleSet: '',
-      hideStatus: false,
-      researchesInSet: [],
-      researches: [],
-    };
-  },
-  computed: {
-    setIsSelected() {
-      return !!this.currentSet;
-    },
-    setIsHidden() {
-      return this.hideStatus.ok;
-    },
-    min_max_order() {
-      let min = 0;
-      let max = 0;
-      for (const row of this.researchesInSet) {
-        if (min === 0) {
-          min = row.order;
-        } else {
-          min = Math.min(min, row.order);
-        }
-        max = Math.max(max, row.order);
-      }
-      return { min, max };
-    },
-  },
-  watch: {
-    currentSet() {
-      if (!this.currentSet) {
-        this.titleSet = '';
-      } else {
-        this.checkSetHidden();
-        this.getResearchesInSet();
-        this.titleSet = this.currentSet.label;
-      }
-    },
-  },
-  mounted() {
-    this.getSets();
-    this.getResearches();
-  },
-  methods: {
-    async checkSetHidden() {
-      if (this.setIsSelected) {
-        this.hideStatus = await this.$api('/check-set-hidden', this.currentSet.id);
-      }
-    },
-    async updateOrder(research, action) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-order-in-set', {
-        id: research.id, set: this.currentSet.id, order: research.order, action,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Порядок изменён');
-        await this.getResearchesInSet();
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-    },
-    isFirstRow(order) {
-      return order === this.min_max_order.max;
-    },
-    isLastRow(order) {
-      return order === this.min_max_order.min;
-    },
-    async getSets() {
-      this.sets = await this.$api('/get-research-sets');
-    },
-    async getResearches() {
-      this.researches = await this.$api('/get-research-list');
-    },
-    async getResearchesInSet() {
-      const researches = await this.$api('/get-researches-in-set', this.currentSet.id);
-      this.researchesInSet = researches.data;
-    },
-    async addResearchInSet() {
-      if (this.researchesInSet.find((i) => i.research.id === this.currentResearch)) {
-        this.$root.$emit('msg', 'error', 'Такое исследование уже есть');
-      } else {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/add-research-in-set', {
-          set: this.currentSet.id,
-          research: this.currentResearch,
-          minOrder: this.min_max_order.min,
-        });
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Исследование добавлено');
-          await this.getResearchesInSet();
-          this.currentResearch = null;
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      }
-    },
-    async updateSet() {
-      if (this.setIsSelected) {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/update-research-set', {
-          id: this.currentSet.id,
-          label: this.titleSet,
-        });
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Набор изменён');
-          await this.getSets();
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      } else {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/update-research-set', {
-          id: -1,
-          label: this.titleSet,
-        });
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Набор добавлен');
-          await this.getSets();
-          this.titleSet = '';
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      }
-    },
-    async updateSetHiding() {
-      if (!this.setIsHidden) {
-        try {
-          await this.$dialog.confirm('Подтвердите скрытие набора');
-        } catch (_) {
-          return;
-        }
-      }
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-set-hiding', this.currentSet.id);
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        if (!this.setIsHidden) {
-          this.$root.$emit('msg', 'ok', 'Набор скрыт');
-        } else {
-          this.$root.$emit('msg', 'ok', 'Скрытие отменено');
-        }
-        await this.checkSetHidden();
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-    },
-  },
+const store = useStore();
+const vm = getCurrentInstance().proxy;
+const root = vm.$root;
+
+const currentSet = ref<any>(null);
+const currentResearch = ref<number | null>(null);
+const sets = ref<any>({ data: [] });
+const titleSet = ref('');
+const hideStatus = ref<any>(false);
+const researchesInSet = ref<any[]>([]);
+const researches = ref<any>({ data: [] });
+
+const setIsSelected = computed(() => !!currentSet.value);
+const setIsHidden = computed(() => hideStatus.value.ok);
+
+const minMaxOrder = computed(() => {
+  let min = 0;
+  let max = 0;
+  for (const row of researchesInSet.value) {
+    if (min === 0) {
+      min = row.order;
+    } else {
+      min = Math.min(min, row.order);
+    }
+    max = Math.max(max, row.order);
+  }
+  return { min, max };
+});
+
+const checkSetHidden = async () => {
+  if (setIsSelected.value) {
+    hideStatus.value = await api('/check-set-hidden', currentSet.value.id);
+  }
 };
+
+const getResearchesInSet = async () => {
+  const result = await api('/get-researches-in-set', currentSet.value.id);
+  researchesInSet.value = result.data;
+};
+
+watch(currentSet, () => {
+  if (!currentSet.value) {
+    titleSet.value = '';
+  } else {
+    checkSetHidden();
+    getResearchesInSet();
+    titleSet.value = currentSet.value.label;
+  }
+});
+
+const updateOrder = async (research: any, action: string) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/update-order-in-set', {
+    id: research.id, set: currentSet.value.id, order: research.order, action,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Порядок изменён');
+    await getResearchesInSet();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
+const isFirstRow = (order: number) => order === minMaxOrder.value.max;
+
+const isLastRow = (order: number) => order === minMaxOrder.value.min;
+
+const getSets = async () => {
+  sets.value = await api('/get-research-sets');
+};
+
+const getResearches = async () => {
+  researches.value = await api('/get-research-list');
+};
+
+const addResearchInSet = async () => {
+  if (researchesInSet.value.find((i) => i.research.id === currentResearch.value)) {
+    root.$emit('msg', 'error', 'Такое исследование уже есть');
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/add-research-in-set', {
+      set: currentSet.value.id,
+      research: currentResearch.value,
+      minOrder: minMaxOrder.value.min,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Исследование добавлено');
+      await getResearchesInSet();
+      currentResearch.value = null;
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  }
+};
+
+const updateSet = async () => {
+  if (setIsSelected.value) {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/update-research-set', {
+      id: currentSet.value.id,
+      label: titleSet.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Набор изменён');
+      await getSets();
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/update-research-set', {
+      id: -1,
+      label: titleSet.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Набор добавлен');
+      await getSets();
+      titleSet.value = '';
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  }
+};
+
+const updateSetHiding = async () => {
+  if (!setIsHidden.value) {
+    try {
+      await vm.$dialog.confirm('Подтвердите скрытие набора');
+    } catch (_) {
+      return;
+    }
+  }
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/update-set-hiding', currentSet.value.id);
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    if (!setIsHidden.value) {
+      root.$emit('msg', 'ok', 'Набор скрыт');
+    } else {
+      root.$emit('msg', 'ok', 'Скрытие отменено');
+    }
+    await checkSetHidden();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
+onMounted(() => {
+  getSets();
+  getResearches();
+});
 </script>
 
 <style scoped>

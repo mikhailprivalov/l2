@@ -169,7 +169,7 @@
     </div>
     <Modal
       v-if="modal"
-      ref="modal"
+      ref="modalRef"
       margin-top="30px"
       margin-left-right="auto"
       max-width="1500px"
@@ -208,109 +208,112 @@
   </div>
 </template>
 
-<script lang="ts">
-
+<script setup lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 
 import RegexFormatInput from '@/construct/RegexFormatInput.vue';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import api from '@/api';
 import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 import Modal from '@/ui-cards/Modal.vue';
 
-export default {
-  name: 'ConstructHarmfulFactor',
-  components: { Treeselect, Modal, RegexFormatInput },
-  data() {
-    return {
-      factors: [],
-      templates: {},
-      search: '',
-      title: '',
-      description: '',
-      templateId: null,
-      modal: false,
-      editTemplateId: null,
-    };
-  },
-  computed: {
-    filteredFactors() {
-      return this.factors.filter(factor => {
-        const title = factor.title.toLowerCase();
-        const description = factor.description.toLowerCase();
-        const searchTerm = this.search.toLowerCase();
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
-        return description.includes(searchTerm) || title.includes(searchTerm);
-      });
-    },
-  },
-  mounted() {
-    this.getFactors();
-    this.getTemplates();
-  },
-  methods: {
-    async getFactors() {
-      this.factors = await this.$api('/get-harmful-factors');
-    },
-    downloadHarmFullFactors() {
-      window.open('/statistic/harmful-factors', '_blank');
-    },
-    async getTemplates() {
-      this.templates = await this.$api('/get-templates');
-    },
-    showModal(templateId) {
-      this.modal = true;
-      this.editTemplateId = templateId;
-    },
-    hideModal() {
-      this.modal = false;
-      this.getTemplates();
-      if (this.$refs.modal) {
-        this.$refs.modal.$el.style.display = 'none';
-      }
-      this.$root.$emit('hide_template_editor');
-    },
-    async updateFactor(currentFactor) {
-      if (!currentFactor.title || !currentFactor.template_id) {
-        this.$root.$emit('msg', 'error', 'Данные не заполнены');
-      } else if (this.factors.find((factor) => factor.title === currentFactor.title && factor.id !== currentFactor.id)) {
-        this.$root.$emit('msg', 'error', 'Такое название уже есть');
-      } else {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/update-factor', currentFactor);
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Сохранено');
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      }
-    },
-    async addFactor() {
-      if (!this.title || !this.templateId) {
-        this.$root.$emit('msg', 'error', 'Данные не заполнены');
-      } else if (this.factors.find((factor) => factor.title === this.title)) {
-        this.$root.$emit('msg', 'error', 'Такое название уже есть');
-      } else {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('/add-factor', {
-          title: this.title,
-          description: this.description,
-          templateId: this.templateId,
-        });
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Сохранено');
-          await this.getFactors();
-          this.title = '';
-          this.description = '';
-          this.templateId = null;
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      }
-    },
-  },
+const factors = ref<any[]>([]);
+const templates = ref<any>({});
+const search = ref('');
+const title = ref('');
+const description = ref('');
+const templateId = ref<number | null>(null);
+const modal = ref(false);
+const editTemplateId = ref<number | null>(null);
+const modalRef = ref<InstanceType<typeof Modal> | null>(null);
+
+const filteredFactors = computed(() => factors.value.filter((factor) => {
+  const factorTitle = factor.title.toLowerCase();
+  const factorDescription = factor.description.toLowerCase();
+  const searchTerm = search.value.toLowerCase();
+
+  return factorDescription.includes(searchTerm) || factorTitle.includes(searchTerm);
+}));
+
+const getFactors = async () => {
+  factors.value = await api('/get-harmful-factors');
 };
+
+const downloadHarmFullFactors = () => {
+  window.open('/statistic/harmful-factors', '_blank');
+};
+
+const getTemplates = async () => {
+  templates.value = await api('/get-templates');
+};
+
+const showModal = (id: number) => {
+  modal.value = true;
+  editTemplateId.value = id;
+};
+
+const hideModal = () => {
+  modal.value = false;
+  getTemplates();
+  if (modalRef.value) {
+    modalRef.value.$el.style.display = 'none';
+  }
+  root.$emit('hide_template_editor');
+};
+
+const updateFactor = async (currentFactor: any) => {
+  if (!currentFactor.title || !currentFactor.template_id) {
+    root.$emit('msg', 'error', 'Данные не заполнены');
+  } else if (factors.value.find((factor) => factor.title === currentFactor.title && factor.id !== currentFactor.id)) {
+    root.$emit('msg', 'error', 'Такое название уже есть');
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/update-factor', currentFactor);
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Сохранено');
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  }
+};
+
+const addFactor = async () => {
+  if (!title.value || !templateId.value) {
+    root.$emit('msg', 'error', 'Данные не заполнены');
+  } else if (factors.value.find((factor) => factor.title === title.value)) {
+    root.$emit('msg', 'error', 'Такое название уже есть');
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('/add-factor', {
+      title: title.value,
+      description: description.value,
+      templateId: templateId.value,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Сохранено');
+      await getFactors();
+      title.value = '';
+      description.value = '';
+      templateId.value = null;
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  }
+};
+
+onMounted(() => {
+  getFactors();
+  getTemplates();
+});
 </script>
 
 <style scoped>

@@ -140,98 +140,102 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
+import {
+  getCurrentInstance, onMounted, ref, watch,
+} from 'vue';
 
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
+import api from '@/api';
 import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 
 const types = ['День', 'Месяц'];
 const makeDefaultRow = (type = null) => ({ count: 0, type: type || types[0] });
 
-export default {
-  name: 'ConstructDistrict',
-  components: { Treeselect },
-  model: {
-    event: 'modified',
-  },
-  data() {
-    return {
-      tbData: [makeDefaultRow()],
-      data: [],
-      types,
-      researches: [],
-      district: {},
-      newDistrictTitle: '',
-    };
-  },
-  watch: {
-    tbData: {
-      handler() {
-        this.changeValue(this.tbData);
-      },
-      immediate: true,
-    },
-  },
-  mounted() {
-    this.$api('researches/research-dispensary').then(rows => {
-      this.researches = rows;
-    });
-    this.loadDistrict();
-  },
-  methods: {
-    async saveLimitData(tbData) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('districts/district-save-limit', {
-        district: this.district.pk,
-        tb_data: tbData,
-      });
-      if (ok) {
-        this.$root.$emit('msg', 'ok', message);
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    addNewRow() {
-      const tl = this.tbData.length;
-      this.tbData.push(makeDefaultRow(tl > 0 ? this.tbData[tl - 1].type : null));
-    },
-    async addNewDistrict() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('districts/district-create', {
-        district: this.newDistrictTitle,
-      });
-      if (ok) {
-        this.$root.$emit('msg', 'ok', message);
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-      await this.loadDistrict();
-      this.newDistrictTitle = '';
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    deleteRow(index) {
-      this.tbData.splice(index, 1);
-    },
-    changeValue(newVal) {
-      this.$emit('modified', newVal);
-    },
-    async loadDistrict() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { result } = await this.$api('districts/districts-load');
-      this.data = result;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async editDistrict(row) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      this.district = row;
-      const { result } = await this.$api('districts/district-edit', { pk: row.pk });
-      this.tbData = result;
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-  },
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
+
+const emit = defineEmits(['modified']);
+
+const tbData = ref<any[]>([makeDefaultRow()]);
+const data = ref<any[]>([]);
+const researches = ref<any[]>([]);
+const district = ref<any>({});
+const newDistrictTitle = ref('');
+
+const changeValue = (newVal: any[]) => {
+  emit('modified', newVal);
 };
+
+const loadDistrict = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { result } = await api('districts/districts-load');
+  data.value = result;
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+watch(
+  tbData,
+  () => {
+    changeValue(tbData.value);
+  },
+  { immediate: true, deep: true },
+);
+
+const saveLimitData = async (rows: any[]) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('districts/district-save-limit', {
+    district: district.value.pk,
+    tb_data: rows,
+  });
+  if (ok) {
+    root.$emit('msg', 'ok', message);
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const addNewRow = () => {
+  const tl = tbData.value.length;
+  tbData.value.push(makeDefaultRow(tl > 0 ? tbData.value[tl - 1].type : null));
+};
+
+const addNewDistrict = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('districts/district-create', {
+    district: newDistrictTitle.value,
+  });
+  if (ok) {
+    root.$emit('msg', 'ok', message);
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+  await loadDistrict();
+  newDistrictTitle.value = '';
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const deleteRow = (index: number) => {
+  tbData.value.splice(index, 1);
+};
+
+const editDistrict = async (row: any) => {
+  await store.dispatch(actions.INC_LOADING);
+  district.value = row;
+  const { result } = await api('districts/district-edit', { pk: row.pk });
+  tbData.value = result;
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+onMounted(() => {
+  api('researches/research-dispensary').then((rows) => {
+    researches.value = rows;
+  });
+  loadDistrict();
+});
 </script>
 
 <style scoped lang="scss">

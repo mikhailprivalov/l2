@@ -7,8 +7,8 @@
 
 | Фаза | Кол-во | Описание |
 |------|-------:|----------|
-| ✅ Готово | 88 | Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек. |
-| 🟢 Фаза 1 — простой перенос | 147 | Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк. |
+| ✅ Готово | 99 | Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек. |
+| 🟢 Фаза 1 — простой перенос | 136 | Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк. |
 | 🟡 Фаза 1b — крупные файлы | 24 | Тот же механический перенос, но файл > 400 строк — больше объём работы. |
 | 🟠 Фаза 2 — с рефакторингом | 43 | Перенос на Composition API + замена jQuery / vue2-typeahead / v-calendar / mixins / `new Vue()`. |
 | 🔵 Фаза 3 — class components | 46 | Полная переписка с `vue-class-component` / `vue-property-decorator` на `<script setup lang="ts">`. |
@@ -16,8 +16,8 @@
 
 ## Стратегия
 
-1. **Фаза 1–1b** — механический перенос Options API на `<script setup lang="ts">` (171 компонент).
-2. **Фаза 2** — перенос + рефакторинг jQuery/typeahead/mixins (43 компонента).
+1. **Фаза 1–1b** — механический перенос Options API на `<script setup lang="ts">` (160 компонентов).
+2. **Фаза 2** — перенос + рефакторинг jQuery/typeahead/mixins (43 компонентов).
 3. **Фаза 3** — переписать class components (46 компонентов).
 4. **Фаза 4** — заменить Vue 2-only библиотеки, затем перенести (9 компонентов).
 5. **Инфраструктура** — `main.ts`, `mainWithRouter.ts`, `registerVue.ts`, Vuex 3 → Pinia/Vuex 4, vue-router 3 → 4.
@@ -98,7 +98,7 @@ function save() { emit('input', local.value); }
 
 ---
 
-## ✅ Готово (88)
+## ✅ Готово (99)
 
 Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек.
 
@@ -120,29 +120,40 @@ function save() { emit('input', local.value); }
 | `components/Spinner.vue` | 54 | — |
 | `components/TippyBeds.vue` | 67 | — |
 | `components/UploadFile.vue` | 341 | — |
-| `components/VisibilityFieldWrapper.vue` | 35 | — |
+| `components/VisibilityFieldWrapper.vue` | 36 | — |
 | `components/VisibilityGroupWrapper.vue` | 20 | — |
 
-### `construct/` (16)
+### `construct/` (27)
 
 | Файл | Строк | Заметки |
 |------|------:|---------|
 | `construct/ConstructComplexServices.vue` | 393 | — |
+| `construct/ConstructControlParam.vue` | 310 | — |
+| `construct/ConstructDispensaryPlan.vue` | 58 | — |
+| `construct/ConstructDistrict.vue` | 353 | — |
 | `construct/ConstructEmployees.vue` | 158 | — |
+| `construct/ConstructHarmfulFactor.vue` | 376 | — |
 | `construct/ConstructLaboratory.vue` | 265 | — |
 | `construct/ConstructRelatedTube.vue` | 160 | — |
+| `construct/ConstructRoutePerformService.vue` | 167 | — |
+| `construct/ConstructTemplates.vue` | 257 | — |
 | `construct/ConstructTubes/ColorInput.vue` | 44 | — |
 | `construct/ConstructTubes/ConstructTubes.vue` | 290 | — |
 | `construct/ConstructTubes/InputColorString.vue` | 46 | — |
+| `construct/ConstuctResearchSets.vue` | 385 | — |
 | `construct/FractionsGroup.vue` | 450 | — |
 | `construct/LinkFieldModal.vue` | 203 | — |
 | `construct/LinkLabAdd.vue` | 324 | — |
+| `construct/Localizations.vue` | 172 | — |
 | `construct/ParaclinicResearchEditorComponents/FieldKinds/FileConstructField.vue` | 426 | — |
+| `construct/RegexFormatInput.vue` | 46 | — |
 | `construct/ResearchDetail.vue` | 827 | — |
 | `construct/ResearchPermissionsModal.vue` | 153 | — |
 | `construct/ResearchesGroup.vue` | 235 | — |
+| `construct/StationarFormEditor.vue` | 165 | — |
 | `construct/TableMutiselectEditor.vue` | 284 | — |
 | `construct/TippyTreeselect.vue` | 76 | — |
+| `construct/VueTippyTd.vue` | 33 | — |
 
 ### `fields/` (4)
 
@@ -230,25 +241,9 @@ function save() { emit('input', local.value); }
 | `ui-cards/PatientCompactPicker.vue` | 982 | jQuery |
 | `ui-cards/PharmacotherapyTemplate.vue` | 391 | — |
 
-## 🟢 Фаза 1 — простой перенос (147)
+## 🟢 Фаза 1 — простой перенос (136)
 
 Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк.
-
-### `construct/` (11)
-
-| Файл | Строк | Заметки |
-|------|------:|---------|
-| `construct/ConstructControlParam.vue` | 307 | — |
-| `construct/ConstructDispensaryPlan.vue` | 65 | — |
-| `construct/ConstructDistrict.vue` | 349 | — |
-| `construct/ConstructHarmfulFactor.vue` | 373 | — |
-| `construct/ConstructRoutePerformService.vue` | 162 | — |
-| `construct/ConstructTemplates.vue` | 255 | — |
-| `construct/ConstuctResearchSets.vue` | 381 | — |
-| `construct/Localizations.vue` | 168 | — |
-| `construct/RegexFormatInput.vue` | 55 | — |
-| `construct/StationarFormEditor.vue` | 174 | — |
-| `construct/VueTippyTd.vue` | 46 | — |
 
 ### `fields/` (28)
 

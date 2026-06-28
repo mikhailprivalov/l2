@@ -5,8 +5,8 @@
         <div class="input-group">
           <span class="input-group-addon">Стационарная услуга</span>
           <SelectFieldTitled
-            v-model="main_service_pk"
-            :variants="researches_list"
+            v-model="mainServicePk"
+            :variants="researchesList"
           />
         </div>
       </div>
@@ -19,7 +19,7 @@
             title="Другой цвет в ленте стационара"
           >
             <input
-              v-model="another_color_in_stationar_panel"
+              v-model="anotherColorInStationarPanel"
               type="checkbox"
             > Изм. цвет
           </label>
@@ -39,86 +39,77 @@
       <ParaclinicResearchEditor
         style="position: absolute;top: 0;right: 0;bottom: 0;left: 0;"
         simple
-        :main_service_pk="main_service_pk"
+        :main_service_pk="mainServicePk"
         :hs_pk="pk"
         :hide_main="hide"
-        :pk="slave_service_pk"
+        :pk="slaveServicePk"
         :department="department"
-        :another_color_in_stationar_panel="another_color_in_stationar_panel"
+        :another_color_in_stationar_panel="anotherColorInStationarPanel"
       />
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import * as actions from '@/store/action-types';
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue';
+
 import constructPoint from '@/api/construct-point';
 import researchesPoint from '@/api/researches-point';
 import SelectFieldTitled from '@/fields/SelectFieldTitled.vue';
+import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 
 import ParaclinicResearchEditor from './ParaclinicResearchEditor.vue';
 
-export default {
-  name: 'StationarFormEditor',
-  components: { SelectFieldTitled, ParaclinicResearchEditor },
-  props: {
-    pk: {
-      type: Number,
-      required: true,
-    },
-    department: {
-      type: Number,
-      required: true,
-    },
-  },
-  data() {
-    return {
-      hide: false,
-      has_unsaved: false,
-      loaded_pk: -2,
-      main_service_pk: -1,
-      slave_service_pk: -1,
-      researches_list: [],
-      another_color_in_stationar_panel: false,
-    };
-  },
-  watch: {
-    pk() {
-      this.load();
-    },
-    loaded_pk() {
-      this.has_unsaved = false;
-    },
-  },
-  created() {
-    this.load();
-  },
-  methods: {
-    async load() {
-      this.hide = false;
-      this.another_color_in_stationar_panel = false;
-      this.research = -1;
-      this.main_service_pk = -1;
-      this.slave_service_pk = -1;
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { researches } = await researchesPoint.getResearchesByDepartment({ department: -5 });
-      this.researches_list = researches;
-      if (this.pk >= 0) {
-        const data = await constructPoint.hospServiceDetails(this, 'pk');
+const props = defineProps<{
+  pk: number;
+  department: number;
+}>();
 
-        this.main_service_pk = data.main_service_pk;
-        this.slave_service_pk = data.slave_service_pk;
-        this.hide = data.hide;
-        this.another_color_in_stationar_panel = data.another_color_in_stationar_panel;
-        this.loaded_pk = this.pk;
-      }
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (this.main_service_pk === -1) {
-        this.main_service_pk = this.researches_list[0].pk;
-      }
-    },
-  },
+const store = useStore();
+
+const hide = ref(false);
+const hasUnsaved = ref(false);
+const loadedPk = ref(-2);
+const mainServicePk = ref(-1);
+const slaveServicePk = ref(-1);
+const researchesList = ref<any[]>([]);
+const anotherColorInStationarPanel = ref(false);
+
+const load = async () => {
+  hide.value = false;
+  anotherColorInStationarPanel.value = false;
+  mainServicePk.value = -1;
+  slaveServicePk.value = -1;
+  await store.dispatch(actions.INC_LOADING);
+  const { researches } = await researchesPoint.getResearchesByDepartment({ department: -5 });
+  researchesList.value = researches;
+  if (props.pk >= 0) {
+    const data = await constructPoint.hospServiceDetails({ pk: props.pk }, 'pk');
+
+    mainServicePk.value = data.main_service_pk;
+    slaveServicePk.value = data.slave_service_pk;
+    hide.value = data.hide;
+    anotherColorInStationarPanel.value = data.another_color_in_stationar_panel;
+    loadedPk.value = props.pk;
+  }
+  await store.dispatch(actions.DEC_LOADING);
+  if (mainServicePk.value === -1) {
+    mainServicePk.value = researchesList.value[0].pk;
+  }
 };
+
+watch(() => props.pk, () => {
+  load();
+});
+
+watch(loadedPk, () => {
+  hasUnsaved.value = false;
+});
+
+onMounted(() => {
+  load();
+});
 </script>
 
 <style scoped lang="scss">

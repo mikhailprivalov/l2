@@ -4,51 +4,42 @@
   >
 </template>
 
-<script>
-export default {
-  name: 'RegexFormatInput',
-  props: {
-    value: {
-      type: String,
-    },
-    rules: {
-      type: RegExp,
-      required: true,
-    },
-    reverseMode: {
-      type: Boolean,
-      required: false,
-    },
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+
+const props = defineProps<{
+  value?: string;
+  rules: RegExp;
+  reverseMode?: boolean;
+}>();
+
+const emit = defineEmits(['input']);
+
+const content = ref('');
+
+watch(
+  () => props.value,
+  () => {
+    content.value = props.value ?? '';
   },
-  data() {
-    return {
-      content: '',
-    };
-  },
-  watch: {
-    value: {
-      handler() {
-        this.content = this.value;
-      },
-      immediate: true,
-    },
-    content() {
-      if (!this.reverseMode) {
-        const newContent = this.content.replace(this.rules, '');
-        if (newContent === this.content) {
-          this.$emit('input', this.content);
-        } else {
-          this.content = newContent;
-        }
-      } else {
-        const newContentValid = this.rules.test(this.content);
-        if (!newContentValid) {
-          this.content = this.content.slice(0, -1);
-        } else {
-          this.$emit('input', this.content);
-        }
-      }
-    },
-  },
-};
+  { immediate: true },
+);
+
+watch(content, () => {
+  if (!props.reverseMode) {
+    const newContent = content.value.replace(props.rules, '');
+    if (newContent === content.value) {
+      emit('input', content.value);
+    } else {
+      content.value = newContent;
+    }
+  } else {
+    const newContentValid = props.rules.test(content.value);
+    if (!newContentValid) {
+      content.value = content.value.slice(0, -1);
+    } else {
+      emit('input', content.value);
+    }
+  }
+});
 </script>
