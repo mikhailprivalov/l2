@@ -155,111 +155,110 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import {
+  computed, getCurrentInstance, onMounted, ref,
+} from 'vue';
 
 import RegexFormatInput from '@/construct/RegexFormatInput.vue';
+import api from '@/api';
+import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 
-import * as actions from '../store/action-types';
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
 
-export default {
-  name: 'ConstructPatientControlParam',
-  components: { RegexFormatInput },
-  data() {
-    return {
-      params: [],
-      newParam: {
-        title: '',
-        code: '',
-        allPatientControl: false,
-      },
-    };
-  },
-  computed: {
-    min_max_order() {
-      let min = 0;
-      let max = 0;
-      for (const row of this.params) {
-        min = Math.min(min, row.order);
-        max = Math.max(max, row.order);
-      }
-      return { min, max };
-    },
-  },
-  mounted() {
-    this.getParams();
-  },
-  methods: {
-    async getParams() {
-      const params = await this.$api('/get-control-params');
-      this.params = params.data;
-    },
-    async updateParam(currentParam) {
-      if (!currentParam.title || !currentParam.code) {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
-      } else if (this.params.find((param) => currentParam.title === param.title && currentParam.id !== param.id)) {
-        this.$root.$emit('msg', 'error', 'Такое название уже есть');
-      } else if (this.params.find((param) => currentParam.code === param.code && currentParam.id !== param.id)) {
-        this.$root.$emit('msg', 'error', 'Такой код уже есть');
-      } else {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('update-control-param', currentParam);
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Сохранено');
-          await this.getParams();
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      }
-    },
-    async addParam() {
-      if (!this.newParam.title || !this.newParam.code) {
-        this.$root.$emit('msg', 'error', 'Ошибка заполнения');
-      } else if (this.params.find((param) => param.title === this.newParam.title)) {
-        this.$root.$emit('msg', 'error', 'Такое название уже есть');
-      } else if (this.params.find((param) => param.code === this.newParam.code)) {
-        this.$root.$emit('msg', 'error', 'Такой код уже есть');
-      } else {
-        await this.$store.dispatch(actions.INC_LOADING);
-        const { ok, message } = await this.$api('add-control-param', {
-          title: this.newParam.title,
-          code: this.newParam.code,
-          allPatientControl: this.newParam.allPatientControl,
-          maxOrder: this.min_max_order.max,
-        });
-        await this.$store.dispatch(actions.DEC_LOADING);
-        if (ok) {
-          this.$root.$emit('msg', 'ok', 'Сохранено');
-          await this.getParams();
-          this.newParam.title = '';
-          this.newParam.code = '';
-          this.newParam.allPatientControl = false;
-        } else {
-          this.$root.$emit('msg', 'error', message);
-        }
-      }
-    },
-    isFirstRow(order) {
-      return order === this.min_max_order.min;
-    },
-    isLastRow(order) {
-      return order === this.min_max_order.max;
-    },
-    async updateOrder(param, action) {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, message } = await this.$api('/update-order-param', {
-        id: param.pk, order: param.order, action,
-      });
-      await this.$store.dispatch(actions.DEC_LOADING);
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Порядок изменён');
-        await this.getParams();
-      } else {
-        this.$root.$emit('msg', 'error', message);
-      }
-    },
-  },
+const params = ref<any[]>([]);
+const newParam = ref({
+  title: '',
+  code: '',
+  allPatientControl: false,
+});
+
+const minMaxOrder = computed(() => {
+  let min = 0;
+  let max = 0;
+  for (const row of params.value) {
+    min = Math.min(min, row.order);
+    max = Math.max(max, row.order);
+  }
+  return { min, max };
+});
+
+const getParams = async () => {
+  const result = await api('/get-control-params');
+  params.value = result.data;
 };
+
+const updateParam = async (currentParam: any) => {
+  if (!currentParam.title || !currentParam.code) {
+    root.$emit('msg', 'error', 'Ошибка заполнения');
+  } else if (params.value.find((param) => currentParam.title === param.title && currentParam.id !== param.id)) {
+    root.$emit('msg', 'error', 'Такое название уже есть');
+  } else if (params.value.find((param) => currentParam.code === param.code && currentParam.id !== param.id)) {
+    root.$emit('msg', 'error', 'Такой код уже есть');
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('update-control-param', currentParam);
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Сохранено');
+      await getParams();
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  }
+};
+
+const addParam = async () => {
+  if (!newParam.value.title || !newParam.value.code) {
+    root.$emit('msg', 'error', 'Ошибка заполнения');
+  } else if (params.value.find((param) => param.title === newParam.value.title)) {
+    root.$emit('msg', 'error', 'Такое название уже есть');
+  } else if (params.value.find((param) => param.code === newParam.value.code)) {
+    root.$emit('msg', 'error', 'Такой код уже есть');
+  } else {
+    await store.dispatch(actions.INC_LOADING);
+    const { ok, message } = await api('add-control-param', {
+      title: newParam.value.title,
+      code: newParam.value.code,
+      allPatientControl: newParam.value.allPatientControl,
+      maxOrder: minMaxOrder.value.max,
+    });
+    await store.dispatch(actions.DEC_LOADING);
+    if (ok) {
+      root.$emit('msg', 'ok', 'Сохранено');
+      await getParams();
+      newParam.value.title = '';
+      newParam.value.code = '';
+      newParam.value.allPatientControl = false;
+    } else {
+      root.$emit('msg', 'error', message);
+    }
+  }
+};
+
+const isFirstRow = (order: number) => order === minMaxOrder.value.min;
+
+const isLastRow = (order: number) => order === minMaxOrder.value.max;
+
+const updateOrder = async (param: any, action: string) => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, message } = await api('/update-order-param', {
+    id: param.pk, order: param.order, action,
+  });
+  await store.dispatch(actions.DEC_LOADING);
+  if (ok) {
+    root.$emit('msg', 'ok', 'Порядок изменён');
+    await getParams();
+  } else {
+    root.$emit('msg', 'error', message);
+  }
+};
+
+onMounted(() => {
+  getParams();
+});
 </script>
 
 <style scoped>

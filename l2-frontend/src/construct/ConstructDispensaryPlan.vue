@@ -14,20 +14,13 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import { ref } from 'vue';
 
 import ConfigureDispenseryResearch from '@/fields/ConfigureDispenseryResearch.vue';
 import MKBFieldForm from '@/fields/MKBFieldForm.vue';
 
-export default {
-  name: 'ConstructDispensaryPlan',
-  components: { MKBFieldForm, ConfigureDispenseryResearch },
-  data() {
-    return {
-      diagnos: '',
-    };
-  },
-};
+const diagnos = ref('');
 </script>
 
 <style scoped lang="scss">
