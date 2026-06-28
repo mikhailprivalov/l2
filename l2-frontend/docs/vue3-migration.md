@@ -7,8 +7,8 @@
 
 | Фаза | Кол-во | Описание |
 |------|-------:|----------|
-| ✅ Готово | 99 | Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек. |
-| 🟢 Фаза 1 — простой перенос | 136 | Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк. |
+| ✅ Готово | 102 | Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек. |
+| 🟢 Фаза 1 — простой перенос | 133 | Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк. |
 | 🟡 Фаза 1b — крупные файлы | 24 | Тот же механический перенос, но файл > 400 строк — больше объём работы. |
 | 🟠 Фаза 2 — с рефакторингом | 43 | Перенос на Composition API + замена jQuery / vue2-typeahead / v-calendar / mixins / `new Vue()`. |
 | 🔵 Фаза 3 — class components | 46 | Полная переписка с `vue-class-component` / `vue-property-decorator` на `<script setup lang="ts">`. |
@@ -16,7 +16,7 @@
 
 ## Стратегия
 
-1. **Фаза 1–1b** — механический перенос Options API на `<script setup lang="ts">` (160 компонентов).
+1. **Фаза 1–1b** — механический перенос Options API на `<script setup lang="ts">` (157 компонентов).
 2. **Фаза 2** — перенос + рефакторинг jQuery/typeahead/mixins (43 компонентов).
 3. **Фаза 3** — переписать class components (46 компонентов).
 4. **Фаза 4** — заменить Vue 2-only библиотеки, затем перенести (9 компонентов).
@@ -115,7 +115,7 @@ const save = () => { emit('input', local.value); };
 
 ---
 
-## ✅ Готово (99)
+## ✅ Готово (102)
 
 Уже на `<script setup lang="ts">`. Перед Vue 3 — проверить/обновить зависимости библиотек.
 
@@ -145,7 +145,7 @@ const save = () => { emit('input', local.value); };
 | Файл | Строк | Заметки |
 |------|------:|---------|
 | `construct/ConstructComplexServices.vue` | 393 | — |
-| `construct/ConstructControlParam.vue` | 310 | — |
+| `construct/ConstructControlParam.vue` | 306 | — |
 | `construct/ConstructDispensaryPlan.vue` | 58 | — |
 | `construct/ConstructDistrict.vue` | 353 | — |
 | `construct/ConstructEmployees.vue` | 158 | — |
@@ -157,7 +157,7 @@ const save = () => { emit('input', local.value); };
 | `construct/ConstructTubes/ColorInput.vue` | 44 | — |
 | `construct/ConstructTubes/ConstructTubes.vue` | 290 | — |
 | `construct/ConstructTubes/InputColorString.vue` | 46 | — |
-| `construct/ConstuctResearchSets.vue` | 385 | — |
+| `construct/ConstuctResearchSets.vue` | 381 | — |
 | `construct/FractionsGroup.vue` | 450 | — |
 | `construct/LinkFieldModal.vue` | 203 | — |
 | `construct/LinkLabAdd.vue` | 324 | — |
@@ -181,12 +181,15 @@ const save = () => { emit('input', local.value); };
 | `fields/FormulateObjectSelect.vue` | 163 | local filters |
 | `fields/LinkToDocumentField.vue` | 396 | — |
 
-### `forms/` (2)
+### `forms/` (5)
 
 | Файл | Строк | Заметки |
 |------|------:|---------|
+| `forms/DepartmentEditRow.vue` | 155 | — |
+| `forms/FastTemplates.vue` | 56 | — |
 | `forms/Fields/FileResultField.vue` | 629 | — |
 | `forms/Fields/ParagraphResultField.vue` | 289 | — |
+| `forms/InputTemplates.vue` | 279 | — |
 
 ### `layouts/` (4)
 
@@ -258,7 +261,7 @@ const save = () => { emit('input', local.value); };
 | `ui-cards/PatientCompactPicker.vue` | 982 | jQuery |
 | `ui-cards/PharmacotherapyTemplate.vue` | 391 | — |
 
-## 🟢 Фаза 1 — простой перенос (136)
+## 🟢 Фаза 1 — простой перенос (133)
 
 Механический перенос Options API → `<script setup lang="ts">`. Без class components, filters, jQuery, mixins. < 400 строк.
 
@@ -294,14 +297,6 @@ const save = () => { emit('input', local.value); };
 | `fields/TextareaAutocomplete.vue` | 280 | — |
 | `fields/TreeSelectField.vue` | 72 | — |
 | `fields/TreeSelectMultiField.vue` | 86 | — |
-
-### `forms/` (3)
-
-| Файл | Строк | Заметки |
-|------|------:|---------|
-| `forms/DepartmentEditRow.vue` | 167 | — |
-| `forms/FastTemplates.vue` | 79 | — |
-| `forms/InputTemplates.vue` | 266 | — |
 
 ### `modals/` (11)
 

@@ -34,7 +34,7 @@
           href="#"
           class="a-under"
           style="padding-right: 10px"
-          @click.prevent="editDepartment(department.pk)"
+          @click.prevent="editDepartment"
         >
           <i
             v-if="department.type === '7'"
@@ -54,113 +54,101 @@
       </div>
     </td>
     <SubGroupsDepartment
-      v-if="subgroups_department"
+      v-if="subgroupsDepartment"
       :department_pk="department.pk"
       :readonly="false"
     />
   </tr>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import Treeselect from '@riophae/vue-treeselect';
 import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 import _ from 'lodash';
+import {
+  computed, getCurrentInstance, onMounted, onUnmounted, ref, watch,
+} from 'vue';
 
 import departmentsDirectory from '@/api/departments-directory';
 import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 import SubGroupsDepartment from '@/modals/SubGroupDepartment.vue';
 
-export default {
-  name: 'DepartmentEditRow',
-  components: { Treeselect, SubGroupsDepartment },
-  props: {
-    can_edit: {
-      type: Boolean,
-    },
-    selected_hospital: {
-      type: Number,
-    },
-    department: {
-      type: Object,
-    },
-    types_options: {
-      type: Array,
-    },
-  },
-  data() {
-    return {
-      updated: false,
-      timer: null,
-      subgroups_department: false,
-    };
-  },
-  computed: {
-    department_title() {
-      return this.department.title;
-    },
-    department_type() {
-      return this.department.type;
-    },
-    department_oid() {
-      return this.department.oid;
-    },
-  },
-  watch: {
-    department_title() {
-      this.save_clear_deb();
-    },
-    department_type() {
-      this.save_clear_deb();
-    },
-    department_oid() {
-      this.save_clear_deb();
-    },
-  },
-  created() {
-    this.$root.$on('hide_subgroups_department', () => {
-      this.subgroups_department = false;
-    });
-  },
-  beforeMount() {
-    clearTimeout(this.timer);
-  },
-  methods: {
-    save_clear_deb() {
-      this.updated = false;
-      this.save_deb();
-    },
-    save_deb: _.debounce(function () {
-      this.save();
-    }, 300),
-    async save() {
-      const ok = await departmentsDirectory.sendDepartments({
-        method: 'POST',
-        hospital: this.selected_hospital,
-        type: 'update',
-        data: [
-          {
-            pk: this.department.pk,
-            title: this.department_title,
-            type: this.department_type,
-            oid: this.department_oid,
-          },
-        ],
-      });
-      if (ok) {
-        this.$root.$emit('msg', 'ok', 'Сохранено');
-        this.updated = true;
-        this.timer = setTimeout(() => {
-          this.updated = false;
-        }, 4000);
-      } else {
-        this.$root.$emit('msg', 'error', 'Ошибка');
-      }
+const props = defineProps<{
+  can_edit?: boolean;
+  selected_hospital?: number;
+  department: Record<string, any>;
+  types_options?: any[];
+}>();
 
-      await this.$store.dispatch(actions.GET_ALL_DEPARTMENTS);
-    },
-    editDepartment() {
-      this.subgroups_department = true;
-    },
-  },
+const store = useStore();
+const root = getCurrentInstance().proxy.$root;
+
+const updated = ref(false);
+const timer = ref<ReturnType<typeof setTimeout> | null>(null);
+const subgroupsDepartment = ref(false);
+
+const departmentTitle = computed(() => props.department.title);
+const departmentType = computed(() => props.department.type);
+const departmentOid = computed(() => props.department.oid);
+
+const save = async () => {
+  const ok = await departmentsDirectory.sendDepartments({
+    method: 'POST',
+    hospital: props.selected_hospital,
+    type: 'update',
+    data: [
+      {
+        pk: props.department.pk,
+        title: departmentTitle.value,
+        type: departmentType.value,
+        oid: departmentOid.value,
+      },
+    ],
+  });
+  if (ok) {
+    root.$emit('msg', 'ok', 'Сохранено');
+    updated.value = true;
+    timer.value = setTimeout(() => {
+      updated.value = false;
+    }, 4000);
+  } else {
+    root.$emit('msg', 'error', 'Ошибка');
+  }
+
+  await store.dispatch(actions.GET_ALL_DEPARTMENTS);
 };
+
+const saveDeb = _.debounce(() => {
+  save();
+}, 300);
+
+const saveClearDeb = () => {
+  updated.value = false;
+  saveDeb();
+};
+
+const editDepartment = () => {
+  subgroupsDepartment.value = true;
+};
+
+const hideSubgroupsDepartment = () => {
+  subgroupsDepartment.value = false;
+};
+
+watch(departmentTitle, saveClearDeb);
+watch(departmentType, saveClearDeb);
+watch(departmentOid, saveClearDeb);
+
+onMounted(() => {
+  root.$on('hide_subgroups_department', hideSubgroupsDepartment);
+});
+
+onUnmounted(() => {
+  root.$off('hide_subgroups_department', hideSubgroupsDepartment);
+  if (timer.value) {
+    clearTimeout(timer.value);
+  }
+  saveDeb.cancel();
+});
 </script>

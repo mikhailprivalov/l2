@@ -137,93 +137,106 @@
   </div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
+import {
+  getCurrentInstance, onMounted, onUnmounted, ref,
+} from 'vue';
+
 import Modal from '@/ui-cards/Modal.vue';
+import api from '@/api';
 import * as actions from '@/store/action-types';
+import { useStore } from '@/store';
 
-export default {
-  name: 'InputTemplates',
-  components: {
-    Modal,
-  },
-  props: {
-    field: Object,
-    group: Object,
-  },
-  data() {
-    return {
-      loading: false,
-      open: false,
-      templates: [],
-      value: '',
-    };
-  },
-  mounted() {
-    this.$root.$on(`templates-open:${this.field.pk}`, () => this.show());
-  },
-  methods: {
-    async show() {
-      this.value = '';
-      this.open = true;
-      this.loading = true;
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { rows } = await this.$api('/input-templates/get', { pk: this.field.pk });
-      this.templates = rows;
-      await this.$store.dispatch(actions.DEC_LOADING);
-      this.loading = false;
-    },
-    async add() {
-      await this.$store.dispatch(actions.INC_LOADING);
-      const { ok, pk } = await this.$api('/input-templates/add', { pk: this.field.pk, value: this.value });
-      if (ok) {
-        this.templates = [...this.templates, { pk, value: this.value }];
-        this.value = '';
-        this.$root.$emit('msg', 'ok', 'Шаблон добавлен', 2000);
-      } else {
-        this.$root.$emit('msg', 'error', 'Такой шаблон уже существует', 2000);
-      }
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    async deleteTemplate(pk) {
-      try {
-        await this.$dialog.confirm('Подтвердите удаление шаблона');
-      } catch (_) {
-        return;
-      }
-      await this.$store.dispatch(actions.INC_LOADING);
-      await this.$api('/input-templates/delete', { pk });
-      this.templates = this.templates.filter(t => t.pk !== pk);
-      this.$root.$emit('msg', 'ok', 'Шаблон удалён', 2000);
-      await this.$store.dispatch(actions.DEC_LOADING);
-    },
-    useTemplate(v) {
-      // eslint-disable-next-line vue/no-mutating-props
-      this.field.value = v;
-      this.open = false;
-      this.$root.$emit('msg', 'ok', 'Шаблон применён', 2000);
-    },
-    useTemplateAppend(v) {
-      if (!v) {
-        return;
-      }
-      let result = this.field.value.trim();
-      let vToAppend: string = v;
+const props = defineProps<{
+  field: Record<string, any>;
+  group: Record<string, any>;
+}>();
 
-      if (result.length > 0) {
-        const li = result.length - 1;
-        if (result[li] === '.') {
-          vToAppend = vToAppend.charAt(0).toLocaleUpperCase() + vToAppend.slice(1);
-        }
+const store = useStore();
+const vm = getCurrentInstance().proxy;
+const root = vm.$root;
 
-        vToAppend = ` ${vToAppend}`;
-      }
+const loading = ref(false);
+const open = ref(false);
+const templates = ref<{ pk: number; value: string }[]>([]);
+const value = ref('');
 
-      result += vToAppend;
-
-      this.useTemplate(result);
-    },
-  },
+const show = async () => {
+  value.value = '';
+  open.value = true;
+  loading.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  const { rows } = await api('/input-templates/get', { pk: props.field.pk });
+  templates.value = rows;
+  await store.dispatch(actions.DEC_LOADING);
+  loading.value = false;
 };
+
+const add = async () => {
+  await store.dispatch(actions.INC_LOADING);
+  const { ok, pk } = await api('/input-templates/add', { pk: props.field.pk, value: value.value });
+  if (ok) {
+    templates.value = [...templates.value, { pk, value: value.value }];
+    value.value = '';
+    root.$emit('msg', 'ok', 'Шаблон добавлен', 2000);
+  } else {
+    root.$emit('msg', 'error', 'Такой шаблон уже существует', 2000);
+  }
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const deleteTemplate = async (pk: number) => {
+  try {
+    await vm.$dialog.confirm('Подтвердите удаление шаблона');
+  } catch (_) {
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  await api('/input-templates/delete', { pk });
+  templates.value = templates.value.filter((t) => t.pk !== pk);
+  root.$emit('msg', 'ok', 'Шаблон удалён', 2000);
+  await store.dispatch(actions.DEC_LOADING);
+};
+
+const useTemplate = (v: string) => {
+  // eslint-disable-next-line vue/no-mutating-props
+  props.field.value = v;
+  open.value = false;
+  root.$emit('msg', 'ok', 'Шаблон применён', 2000);
+};
+
+const useTemplateAppend = (v: string) => {
+  if (!v) {
+    return;
+  }
+  let result = props.field.value.trim();
+  let vToAppend: string = v;
+
+  if (result.length > 0) {
+    const li = result.length - 1;
+    if (result[li] === '.') {
+      vToAppend = vToAppend.charAt(0).toLocaleUpperCase() + vToAppend.slice(1);
+    }
+
+    vToAppend = ` ${vToAppend}`;
+  }
+
+  result += vToAppend;
+
+  useTemplate(result);
+};
+
+const templatesOpenHandler = () => {
+  show();
+};
+
+onMounted(() => {
+  root.$on(`templates-open:${props.field.pk}`, templatesOpenHandler);
+});
+
+onUnmounted(() => {
+  root.$off(`templates-open:${props.field.pk}`, templatesOpenHandler);
+});
 </script>
 
 <style scoped lang="scss">
