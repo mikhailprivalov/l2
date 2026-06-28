@@ -1,7 +1,4 @@
-import time
 from typing import Union
-
-from django.db import transaction
 from openpyxl.reader.excel import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 
