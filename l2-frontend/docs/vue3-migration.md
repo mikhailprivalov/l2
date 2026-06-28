@@ -40,13 +40,30 @@ export default {
 import { ref, computed } from 'vue';
 
 const props = defineProps<{ value?: string }>();
-const emit = defineEmits<{ (e: 'input', v: string): void }>();
+const emit = defineEmits(['input']);
 
 const local = ref('');
 const upper = computed(() => local.value.toUpperCase());
-function save() { emit('input', local.value); }
+const save = () => { emit('input', local.value); };
 </script>
 ```
+
+**Стиль кода при переносе:**
+
+- **Стрелочные функции** — все методы, обработчики и хелперы объявлять через `const fn = () => {}` / `const fn = async () => {}`, а не через `function fn() {}`. Исключение: hoisting действительно нужен (редко; лучше переупорядочить объявления).
+- **camelCase для локальных переменных** — при переносе переименовывать `snake_case` → `camelCase` там, где это не ломает контракт:
+  - ✅ можно: `opened_id` → `openedId`, `main_service_pk` → `mainServicePk`, `new_param` → `newParam`
+  - ❌ нельзя: поля из API/Django (`paid_fin_source`, `all_patient_control`), props, которые пробрасываются родителю/ребёнку, ключи в теле запроса к бэкенду, имена в template если они привязаны к внешнему контракту
+  - props с `snake_case` из бэкенда оставлять как есть в `defineProps`, но внутри скрипта можно деструктурировать в camelCase-алиас только если это не усложняет template
+
+**Примеры именования:**
+
+| Было (Options API) | Стало (script setup) | Комментарий |
+|--------------------|----------------------|-------------|
+| `opened_id` | `openedId` | локальный ref |
+| `templates_list` | `templatesList` | локальный ref |
+| `paid_fin_source` | `paid_fin_source` | prop из API — не трогаем |
+| `main_service_pk` | `mainServicePk` | локальный ref; в template prop `:main_service_pk="mainServicePk"` |
 
 **Замены при переносе:**
 
