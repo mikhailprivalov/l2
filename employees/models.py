@@ -874,7 +874,8 @@ class EmployeeWorkingHoursSchedule(models.Model):
         verbose_name_plural = "Сотрудники - фактическое время за дату"
 
     def __str__(self):
-        return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+        employee = self.employee_position.employee if self.employee_position else None
+        return f'{employee} {self.start} - {self.end}'
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
@@ -1076,7 +1077,8 @@ class EmployeeVacation(models.Model):
         verbose_name_plural = "Работники - отпуска"
 
     def __str__(self):
-        return f'{self.employee_position.employee.__str__()} {self.start} - {self.end}'
+        employee = self.employee_position.employee if self.employee_position else None
+        return f'{employee} {self.start} - {self.end}'
 
     @staticmethod
     def create_day_off_for_document(time_tracking_document: TimeTrackingDocument):
@@ -1121,7 +1123,8 @@ class CashRegister(models.Model):
     return_cash = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
 
     def __str__(self):
-        return f'{self.employee_position.employee.__str__()} {self.accounting_day}'
+        employee = self.employee_position.employee if self.employee_position else None
+        return f'{employee} {self.accounting_day}'
 
     class Meta:
         verbose_name = "Сотрудник - учет финансов за день"
@@ -1152,7 +1155,7 @@ class EmployeePositionCountWorkDayPerMonth(models.Model):
     plan_day_profit = models.DecimalField(max_digits=10, null=True, blank=True, default=None, decimal_places=2)
 
     def __str__(self):
-        return f'{self.employee_position.__str__()} {self.month} {self.count_work_day_per_month}'
+        return f'{self.employee_position} {self.month} {self.count_work_day_per_month}'
 
     class Meta:
         verbose_name = "Сотрудник - план финансовый за день"

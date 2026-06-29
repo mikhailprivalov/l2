@@ -846,7 +846,7 @@ const router = new Router({
       name: 'employees',
       component: () => import('@/pages/Employees/Employees.vue'),
       meta: {
-        title: 'Сотрудники',
+        title: 'Работники',
         groups: ['Конструктор: Настройка организации'],
         fullPageLayout: true,
       },
