@@ -253,6 +253,9 @@ class PatientStationarWithoutBeds(models.Model):
     date_out = models.DateField(null=True)
     plan_date_in = models.DateField(null=True, default=None, blank=True)
     plan_date_out = models.DateField(null=True, default=None, blank=True)
+    accompanyng_child_type = models.CharField(null=True, blank=True, default='', max_length=10, help_text='Сопровождающий ребенка')
+    accompanyng_child_sex = models.CharField(max_length=2, default="-", help_text="Пол сопровождающего", db_index=True)
+    is_need_sick = models.BooleanField(default=False, blank=True, help_text="Требуется больничный")
     is_extract = models.BooleanField(default=False, blank=True, help_text="Подтверждена выписка")
     record_source = models.CharField(
         max_length=16,

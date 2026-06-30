@@ -122,6 +122,14 @@
                 Все врачи
               </button>
               <button
+                type="button"
+                class="badge badge-secondary doctor-badge-btn"
+                :class="{ active: doctorPk === 0 }"
+                @click="doctorPk = 0"
+              >
+                Без врача - {{ noDoctorPatientCount }}
+              </button>
+              <button
                 v-for="doctor in doctors"
                 :key="`doctor-${doctor.pk}`"
                 type="button"
@@ -1385,9 +1393,16 @@ const recordOverlapsVisiblePeriod = (rec: CalendarRecord) => {
   return recStart <= bounds.end && recEnd >= bounds.start;
 };
 
+const isRecordWithoutDoctor = (rec: CalendarRecord) => (
+  rec.doctor_pk == null || rec.doctor_pk <= 0
+);
+
 const filterRecordsByDoctor = (list: CalendarRecord[]) => {
-  if (doctorPk.value <= 0) {
+  if (doctorPk.value === -1) {
     return list;
+  }
+  if (doctorPk.value === 0) {
+    return list.filter(isRecordWithoutDoctor);
   }
   return list.filter((rec) => rec.doctor_pk === doctorPk.value);
 };
@@ -2086,6 +2101,25 @@ const accompanyingDisplayLetter = (record: CalendarRecord) => {
   return t.charAt(0).toLocaleUpperCase('ru-RU');
 };
 
+const ACCOMPANYING_CHILD_SEX: Record<string, string> = {
+  мама: 'Ж',
+  папа: 'М',
+  бабушка: 'Ж',
+  дедушка: 'М',
+};
+
+const accompanyngSexFromType = (typeRaw: string | null | undefined) => {
+  const type = (typeRaw || '').trim();
+  if (!type) {
+    return '-';
+  }
+  return ACCOMPANYING_CHILD_SEX[type] || '-';
+};
+
+const parseNeedSickFlag = (value: unknown) => (
+  value === true || value === 1 || value === '1' || value === 'true'
+);
+
 const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
 
 type DayColumnTotals = { male: number, female: number, accompanying: number, free: number };
@@ -2428,6 +2462,23 @@ const doctorPatientCountMap = computed(() => {
 
 const doctorPatientCount = (docPk: number) => doctorPatientCountMap.value.get(docPk) || 0;
 
+const noDoctorPatientCount = computed(() => {
+  const keys = new Set<string>();
+  const tryAdd = (rec: CalendarRecord) => {
+    if (!isRecordWithoutDoctor(rec) || !recordOverlapsVisiblePeriod(rec)) {
+      return;
+    }
+    keys.add(uniqueRecordKey(rec));
+  };
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    tryAdd(rec);
+  }
+  for (const rec of stripRecords.value) {
+    tryAdd(rec);
+  }
+  return keys.size;
+});
+
 const accompanyingLetterTitle = (record: CalendarRecord) => {
   const t = (record.accompanyng_child_type || '').trim();
   const s = (record.accompanyng_child_sex || '').trim();
@@ -2539,6 +2590,9 @@ type StripServerPatient = {
   age: number;
   doctor_pk?: number | null;
   is_extract?: boolean;
+  accompanyng_child_type?: string;
+  accompanyng_child_sex?: string;
+  is_need_sick?: boolean;
   date_in?: string | null;
   date_out?: string | null;
   plan_date_in?: string | null;
@@ -2586,6 +2640,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
       pswb_pk: rec.pswb_pk ?? null,
       patient_fio_text: rec.patient_fio,
       patient_sex: rec.patient_sex,
+      accompanyng_child_type: rec.accompanyng_child_type || '',
+      is_need_sick: Boolean(rec.is_need_sick),
     },
     patient_fio_text: rec.patient_fio,
     patient_sex: rec.patient_sex,
@@ -2593,6 +2649,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
     plan_date_in: rec.plan_date_in,
     plan_date_out: rec.plan_date_out,
     date_out: rec.date_out,
+    accompanyng_child_type: rec.accompanyng_child_type || '',
+    is_need_sick: Boolean(rec.is_need_sick),
     is_extract: Boolean(rec.is_extract),
     record_source: rec.record_source || 'from_history',
   });
@@ -2623,11 +2681,11 @@ const newStripRecordFromServerPatient = (
     date_out: p.date_out || null,
     plan_date_in: planIn,
     plan_date_out: planOut,
-    accompanyng_child_type: '',
-    accompanyng_child_sex: '-',
+    accompanyng_child_type: p.accompanyng_child_type || '',
+    accompanyng_child_sex: p.accompanyng_child_sex || '-',
     date_comments: {},
     is_day_hosp: true,
-    is_need_sick: false,
+    is_need_sick: parseNeedSickFlag(p.is_need_sick),
     is_extract: Boolean(p.is_extract),
     record_source: p.record_source || 'from_history',
   };
@@ -2685,7 +2743,10 @@ const loadPatientsWithoutBed = async () => {
     end_date: bounds.end,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const list = Array.isArray(row?.data) ? row.data : [];
+  if (!row || !Array.isArray(row.data)) {
+    return;
+  }
+  const list = row.data;
   const dayKey = stripDefaultDayKey.value;
   stripRecords.value = list
     .filter((p: any) => {
@@ -2701,6 +2762,9 @@ const loadPatientsWithoutBed = async () => {
       age: Number(p.age ?? ''),
       doctor_pk: p.doctor_pk != null ? Number(p.doctor_pk) : null,
       is_extract: Boolean(p.is_extract),
+      accompanyng_child_type: p.accompanyng_child_type || '',
+      accompanyng_child_sex: p.accompanyng_child_sex || '-',
+      is_need_sick: parseNeedSickFlag(p.is_need_sick),
       date_in: p.date_in || null,
       date_out: p.date_out || null,
       plan_date_in: p.plan_date_in || null,
@@ -3402,7 +3466,9 @@ const saveEditingCell = async () => {
     rec.date_out = editingForm.value.planDateOut || rec.date_out;
     rec.doctor_pk = editingForm.value.doctorPk;
     rec.doctor_fio = editingForm.value.doctorFio;
-    rec.accompanyng_child_type = editingForm.value.accompanyngChildType || '';
+    const accompanyngType = (editingForm.value.accompanyngChildType || '').trim();
+    rec.accompanyng_child_type = accompanyngType;
+    rec.accompanyng_child_sex = accompanyngSexFromType(accompanyngType);
     rec.is_need_sick = Boolean(editingForm.value.isNeedSick);
     rec.direction_pk = directionIdPayload;
     rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
@@ -3449,7 +3515,8 @@ const saveEditingCell = async () => {
       plan_date_out: planOut,
       date_in: planIn,
       date_out: planOut || existingRec.date_out || null,
-      accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      accompanyng_child_type: (editingForm.value.accompanyngChildType || '').trim(),
+      accompanyng_child_sex: accompanyngSexFromType(editingForm.value.accompanyngChildType),
       is_day_hosp: true,
       is_need_sick: Boolean(editingForm.value.isNeedSick),
       date_comments: { ...(existingRec.date_comments || {}), [editingDayKey.value]: commentPayload },
