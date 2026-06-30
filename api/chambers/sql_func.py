@@ -130,6 +130,9 @@ def load_patient_without_bed_by_department(department_id, start_date=None, end_d
                 pswb.date_out,
                 pswb.plan_date_in,
                 pswb.plan_date_out,
+                pswb.accompanyng_child_type,
+                pswb.accompanyng_child_sex,
+                pswb.is_need_sick,
                 dp.id AS doctor_id,
                 pswb.is_extract,
                 pswb.record_source

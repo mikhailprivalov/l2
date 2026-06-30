@@ -56,6 +56,79 @@ def _accompanying_child_from_request(request_data):
     return raw[:10], sex
 
 
+def _accompanying_child_from_payload(request_data, patient_obj=None):
+    acc_type, acc_sex = _accompanying_child_from_request(request_data)
+    if acc_type or not patient_obj:
+        return acc_type, acc_sex
+    return _accompanying_child_from_request(patient_obj)
+
+
+def _need_sick_from_payload(request_data, patient_obj=None):
+    if "is_need_sick" in request_data:
+        return _parse_bool(request_data.get("is_need_sick"))
+    if patient_obj and "is_need_sick" in patient_obj:
+        return _parse_bool(patient_obj.get("is_need_sick"))
+    return False
+
+
+def _enrich_patients_without_bed_rows(patients):
+    if not patients:
+        return patients
+    pswb_pks = [p["pswb_pk"] for p in patients if p.get("pswb_pk")]
+    direction_pks = [p["direction_pk"] for p in patients if p.get("direction_pk")]
+
+    pswb_meta = {}
+    if pswb_pks:
+        for row in PatientStationarWithoutBeds.objects.filter(pk__in=pswb_pks).values(
+            "pk",
+            "accompanyng_child_type",
+            "accompanyng_child_sex",
+            "is_need_sick",
+        ):
+            pswb_meta[row["pk"]] = row
+
+    ptb_meta = {}
+    for dir_pk in direction_pks:
+        ptb_row = (
+            PatientToBed.objects.filter(direction_id=dir_pk)
+            .order_by("-pk")
+            .values("accompanyng_child_type", "accompanyng_child_sex", "is_need_sick")
+            .first()
+        )
+        if ptb_row:
+            ptb_meta[dir_pk] = ptb_row
+
+    for patient in patients:
+        pswb_pk = patient.get("pswb_pk")
+        dir_pk = patient.get("direction_pk")
+        orm_row = pswb_meta.get(pswb_pk) if pswb_pk else None
+        ptb_row = ptb_meta.get(dir_pk) if dir_pk else None
+
+        acc_type = (patient.get("accompanyng_child_type") or "").strip()
+        acc_sex = (patient.get("accompanyng_child_sex") or "-").strip() or "-"
+        is_need_sick = bool(patient.get("is_need_sick"))
+
+        if orm_row:
+            is_need_sick = bool(orm_row.get("is_need_sick"))
+            orm_acc = (orm_row.get("accompanyng_child_type") or "").strip()
+            if orm_acc:
+                acc_type = orm_acc
+                acc_sex = (orm_row.get("accompanyng_child_sex") or "-").strip() or "-"
+
+        if not acc_type and ptb_row:
+            ptb_acc = (ptb_row.get("accompanyng_child_type") or "").strip()
+            if ptb_acc:
+                acc_type = ptb_acc
+                acc_sex = (ptb_row.get("accompanyng_child_sex") or "-").strip() or "-"
+        if not orm_row and not is_need_sick and ptb_row:
+            is_need_sick = bool(ptb_row.get("is_need_sick"))
+
+        patient["accompanyng_child_type"] = acc_type
+        patient["accompanyng_child_sex"] = acc_sex or "-"
+        patient["is_need_sick"] = is_need_sick
+    return patients
+
+
 def _patient_fields_from_direction_client(direction_pk: int):
     """ФИО, пол, д.р., возраст из карты направления (Napravleniya.client.individual)."""
     nap = Napravleniya.objects.select_related("client__individual").filter(pk=direction_pk).first()
@@ -837,6 +910,9 @@ def get_patients_without_bed(request):
             "direction_pk": patient.direction_id,
             "pswb_pk": patient.pswb_pk,
             "doctor_pk": patient.doctor_id,
+            "accompanyng_child_type": getattr(patient, "accompanyng_child_type", None) or "",
+            "accompanyng_child_sex": getattr(patient, "accompanyng_child_sex", None) or "-",
+            "is_need_sick": bool(getattr(patient, "is_need_sick", False)),
             "record_source": getattr(patient, "record_source", None) or RECORD_SOURCE_FROM_HISTORY,
         }
         row.update(
@@ -849,6 +925,7 @@ def get_patients_without_bed(request):
             )
         )
         patients.append(row)
+    patients = _enrich_patients_without_bed_rows(patients)
     return JsonResponse({"data": patients})
 
 
@@ -919,6 +996,8 @@ def save_patient_without_bed(request):
     is_extract = _parse_bool(request_data.get("is_extract"))
     if patient_obj.get("is_extract") is not None:
         is_extract = _parse_bool(patient_obj.get("is_extract"))
+    is_need_sick = _need_sick_from_payload(request_data, patient_obj)
+    acc_type, acc_sex = _accompanying_child_from_payload(request_data, patient_obj)
     patient_without_bed = None
     if pswb_pk:
         patient_without_bed = PatientStationarWithoutBeds.objects.filter(
@@ -953,6 +1032,9 @@ def save_patient_without_bed(request):
                 plan_date_in=plan_date_in,
                 plan_date_out=plan_date_out,
                 date_out=date_out,
+                accompanyng_child_type=acc_type,
+                accompanyng_child_sex=acc_sex,
+                is_need_sick=is_need_sick,
                 is_extract=is_extract,
                 record_source=record_source,
             )
@@ -966,6 +1048,9 @@ def save_patient_without_bed(request):
                 plan_date_in=plan_date_in,
                 plan_date_out=plan_date_out,
                 date_out=date_out,
+                accompanyng_child_type=acc_type,
+                accompanyng_child_sex=acc_sex,
+                is_need_sick=is_need_sick,
                 is_extract=is_extract,
                 record_source=record_source,
             )
@@ -975,6 +1060,9 @@ def save_patient_without_bed(request):
         patient_without_bed.plan_date_out = plan_date_out
         patient_without_bed.date_out = date_out
         patient_without_bed.is_extract = is_extract or bool(patient_without_bed.is_extract)
+        patient_without_bed.accompanyng_child_type = acc_type
+        patient_without_bed.accompanyng_child_sex = acc_sex
+        patient_without_bed.is_need_sick = is_need_sick
         if not patient_without_bed.direction_id and patient_fio_text:
             patient_without_bed.patient_fio_text = patient_fio_text
             patient_without_bed.patient_sex = patient_sex or "м"
