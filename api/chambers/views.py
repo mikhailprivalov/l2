@@ -89,12 +89,7 @@ def _enrich_patients_without_bed_rows(patients):
 
     ptb_meta = {}
     for dir_pk in direction_pks:
-        ptb_row = (
-            PatientToBed.objects.filter(direction_id=dir_pk)
-            .order_by("-pk")
-            .values("accompanyng_child_type", "accompanyng_child_sex", "is_need_sick")
-            .first()
-        )
+        ptb_row = PatientToBed.objects.filter(direction_id=dir_pk).order_by("-pk").values("accompanyng_child_type", "accompanyng_child_sex", "is_need_sick").first()
         if ptb_row:
             ptb_meta[dir_pk] = ptb_row
 
