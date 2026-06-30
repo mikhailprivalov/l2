@@ -122,6 +122,14 @@
                 Все врачи
               </button>
               <button
+                type="button"
+                class="badge badge-secondary doctor-badge-btn"
+                :class="{ active: doctorPk === 0 }"
+                @click="doctorPk = 0"
+              >
+                Без врача - {{ noDoctorPatientCount }}
+              </button>
+              <button
                 v-for="doctor in doctors"
                 :key="`doctor-${doctor.pk}`"
                 type="button"
@@ -1385,9 +1393,16 @@ const recordOverlapsVisiblePeriod = (rec: CalendarRecord) => {
   return recStart <= bounds.end && recEnd >= bounds.start;
 };
 
+const isRecordWithoutDoctor = (rec: CalendarRecord) => (
+  rec.doctor_pk == null || rec.doctor_pk <= 0
+);
+
 const filterRecordsByDoctor = (list: CalendarRecord[]) => {
-  if (doctorPk.value <= 0) {
+  if (doctorPk.value === -1) {
     return list;
+  }
+  if (doctorPk.value === 0) {
+    return list.filter(isRecordWithoutDoctor);
   }
   return list.filter((rec) => rec.doctor_pk === doctorPk.value);
 };
@@ -2427,6 +2442,23 @@ const doctorPatientCountMap = computed(() => {
 });
 
 const doctorPatientCount = (docPk: number) => doctorPatientCountMap.value.get(docPk) || 0;
+
+const noDoctorPatientCount = computed(() => {
+  const keys = new Set<string>();
+  const tryAdd = (rec: CalendarRecord) => {
+    if (!isRecordWithoutDoctor(rec) || !recordOverlapsVisiblePeriod(rec)) {
+      return;
+    }
+    keys.add(uniqueRecordKey(rec));
+  };
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    tryAdd(rec);
+  }
+  for (const rec of stripRecords.value) {
+    tryAdd(rec);
+  }
+  return keys.size;
+});
 
 const accompanyingLetterTitle = (record: CalendarRecord) => {
   const t = (record.accompanyng_child_type || '').trim();
