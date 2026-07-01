@@ -54,6 +54,9 @@
           <col style="width: 90px">
           <col style="width: 160px">
           <col style="width: 120px">
+          <col style="width: 100px">
+          <col style="width: 100px">
+          <col style="width: 200px">
         </colgroup>
         <thead>
           <tr>
@@ -64,6 +67,9 @@
             <th>Балл, МО</th>
             <th>Значение, куратор</th>
             <th>Балл, куратор</th>
+            <th />
+            <th>Статус</th>
+            <th>Комментарий</th>
           </tr>
           <tr>
             <th>
@@ -143,6 +149,9 @@
                 class="treeselect-wide"
               />
             </th>
+            <th />
+            <th />
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -154,7 +163,7 @@
           />
           <tr v-if="filteredRows.length === 0">
             <td
-              colspan="7"
+              colspan="10"
               class="text-center"
             >
               не найдено

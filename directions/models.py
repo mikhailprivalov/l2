@@ -3119,6 +3119,8 @@ class ParaclinicResultIndicator(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     value = models.TextField()
+    approved = models.BooleanField(default=False, blank=True, help_text='Утверждено куратором')
+    comment = models.TextField(default='', blank=True, help_text='Комментарий куратора')
     doctor_profile = models.ForeignKey(DoctorProfile, db_index=True, null=True, default=None, blank=True, help_text='Куратор показателя', on_delete=models.SET_NULL)
     updated_at = models.DateTimeField(auto_now=True, help_text='Дата и время последнего изменения')
 
