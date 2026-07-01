@@ -106,15 +106,16 @@ def search_indicator(request):
     score_field_ids = [group_to_score_field[r["groupId"]].pk for r in result if r.get("groupId") in group_to_score_field]
     all_field_ids = list(set(curator_field_ids + score_field_ids))
 
-    saved_values = {}
+    saved_records = {}
     if issledovaniye_ids and all_field_ids:
-        saved_values = {
-            (x.issledovaniye_id, x.field_id): x.value
+        saved_records = {
+            (x.issledovaniye_id, x.field_id): x
             for x in ParaclinicResultIndicator.objects.filter(
                 issledovaniye_id__in=issledovaniye_ids,
                 field_id__in=all_field_ids,
             )
         }
+    saved_values = {key: record.value for key, record in saved_records.items()}
 
     for row in result:
         curator_field = group_to_curator_field.get(row.get("groupId"))
@@ -127,9 +128,12 @@ def search_indicator(request):
             row["curatorScoreFieldPk"] = score_field.pk if score_field else None
             row["curatorScoreFormula"] = ""
             row["curatorScore"] = saved_values.get((row["issledovaniye"], score_field.pk), "") if score_field else ""
+            row["curatorApproved"] = False
+            row["curatorComment"] = ""
             row.pop("groupId", None)
             continue
 
+        curator_record = saved_records.get((row["issledovaniye"], curator_field.pk))
         variants = _parse_input_templates(curator_field)
         default_value = variants[0] if curator_field.field_type == 10 and variants else ""
         value = saved_values.get((row["issledovaniye"], curator_field.pk), default_value)
@@ -141,6 +145,8 @@ def search_indicator(request):
         row["curatorScoreFieldPk"] = score_field.pk if score_field else None
         row["curatorScoreFormula"] = formula
         row["curatorScore"] = saved_values.get((row["issledovaniye"], score_field.pk), "") if score_field else ""
+        row["curatorApproved"] = curator_record.approved if curator_record else False
+        row["curatorComment"] = curator_record.comment if curator_record else ""
         row.pop("groupId", None)
 
     return JsonResponse({'rows': result})
@@ -154,6 +160,8 @@ def save_indicator_value(request):
     value = request_data.get("value", "")
     score_field_pk = int(request_data.get("scoreFieldPk", 0))
     curator_score_value = request_data.get("curatorScore", "")
+    approved = bool(request_data.get("approved", False))
+    comment = request_data.get("comment", "")
     if not iss_pk or not field_pk:
         return JsonResponse({"ok": False, "message": "issledovaniye and fieldPk are required"}, status=400)
 
@@ -162,6 +170,8 @@ def save_indicator_value(request):
         field_id=field_pk,
         defaults={
             "value": value,
+            "approved": approved,
+            "comment": comment,
             "doctor_profile": request.user.doctorprofile,
         },
     )
