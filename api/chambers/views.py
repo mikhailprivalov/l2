@@ -42,7 +42,7 @@ from .discharge_sync import (
     sync_patient_without_bed_discharge_date,
 )
 from .bed_action_log import log_bed_action
-from ..stationar.sql_func import get_extract_by_department_for_period
+from ..stationar.sql_func import get_extract_by_department_for_period, get_hosp_directions_with_confirmed_expertise
 import calendar
 
 
@@ -954,6 +954,28 @@ def get_directions_hosp_meta(request):
 
 @login_required
 @group_required("Оператор лечащего врача", "Лечащий врач")
+def check_discharged_expertise(request):
+    request_data = json.loads(request.body)
+    direction_pks = []
+    seen = set()
+    for raw in request_data.get("direction_pks") or []:
+        try:
+            pk = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if pk <= 0 or pk in seen:
+            continue
+        seen.add(pk)
+        direction_pks.append(pk)
+    if not direction_pks:
+        return JsonResponse({"ok": True, "data": {"expertise_direction_pks": []}})
+
+    expertise_direction_pks = sorted(get_hosp_directions_with_confirmed_expertise(direction_pks))
+    return JsonResponse({"ok": True, "data": {"expertise_direction_pks": expertise_direction_pks}})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
 def save_patient_without_bed(request):
     request_data = json.loads(request.body)
     department_pk = request_data.get('department_pk')
@@ -1249,15 +1271,20 @@ def get_hospitalization_calendar(request):
     total_direction_list = []
 
     for i in extract_proto_for_period:
+        patient_name = f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"
+        patient_extract_add = {
+            "directionPk": i.hosp_direction,
+            "name": patient_name,
+        }
         if not extracts_data.get(i.date_extract):
             extracts_data[i.date_extract] = {
                 "count": 1,
                 "directionsList": [i.napravleniye_id],
-                "patientExtractsAdds": [{i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"}],
+                "patientExtractsAdds": [patient_extract_add],
             }
         else:
             extracts_data[i.date_extract]["count"] += 1
-            extracts_data[i.date_extract]["patientExtractsAdds"].append({i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"})
+            extracts_data[i.date_extract]["patientExtractsAdds"].append(patient_extract_add)
         total_direction_list.append(i.napravleniye_id)
 
     extracts_count = sum(item["count"] for item in extracts_data.values())

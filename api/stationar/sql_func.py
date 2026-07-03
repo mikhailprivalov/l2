@@ -319,6 +319,47 @@ def get_extract_by_department_for_period(date_start, date_end, cda_option_id, ho
     return rows
 
 
+def get_hosp_directions_with_confirmed_expertise(hosp_direction_pks):
+    if not hosp_direction_pks:
+        return set()
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            WITH RECURSIVE direction_tree AS (
+                SELECT
+                    ii.id AS iss,
+                    ii.napravleniye_id AS root_hosp_direction,
+                    ii.napravleniye_id AS dir_id
+                FROM directions_issledovaniya ii
+                WHERE ii.napravleniye_id IN %(hosp_direction_pks)s
+
+                UNION ALL
+
+                SELECT
+                    child_iss.id,
+                    direction_tree.root_hosp_direction,
+                    child_iss.napravleniye_id
+                FROM direction_tree
+                INNER JOIN directions_napravleniya child_dn ON child_dn.parent_id = direction_tree.iss
+                INNER JOIN directions_issledovaniya child_iss ON child_iss.napravleniye_id = child_dn.id
+            ),
+            directions_in_tree AS (
+                SELECT DISTINCT root_hosp_direction, dir_id
+                FROM direction_tree
+            )
+            SELECT DISTINCT dit.root_hosp_direction
+            FROM directions_in_tree dit
+            INNER JOIN directions_issledovaniya di ON di.napravleniye_id = dit.dir_id
+            INNER JOIN directory_researches dr ON di.research_id = dr.id
+            WHERE dr.is_expertise = TRUE
+              AND di.time_confirmation IS NOT NULL
+            """,
+            params={"hosp_direction_pks": tuple(hosp_direction_pks)},
+        )
+        rows = namedtuplefetchall(cursor)
+    return {row.root_hosp_direction for row in rows}
+
+
 def get_extract_by_main_directions(main_directions, cda_option_id):
     with connection.cursor() as cursor:
         cursor.execute(
