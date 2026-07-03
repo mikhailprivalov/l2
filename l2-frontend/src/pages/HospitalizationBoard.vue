@@ -641,6 +641,14 @@
                     @click.prevent="openExtractsDetailForm"
                   >Выписаны - {{ extractsCount }}</a>
                 </h5>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-blue-nb board-discharged-check-btn"
+                  :disabled="!canCheckDischargedExpertise"
+                  @click="checkDischargedExpertise"
+                >
+                  {{ expertiseCheckLoading ? '…' : 'Проверены' }}
+                </button>
               </div>
               <div class="board-aside-section-body">
                 <p
@@ -660,6 +668,7 @@
                     v-for="row in dischargedPatientsInPeriod"
                     :key="row.key"
                     class="board-patient-row board-patient-row--discharged"
+                    :class="{ 'board-patient-row--expertise': isDischargedExpertiseVerified(row.directionPk) }"
                   >
                     <a
                       class="board-patient-link"
@@ -1114,14 +1123,21 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
+type ExtractPatientAdd = {
+  directionPk?: number;
+  name?: string;
+};
+
 type ExtractDayInfo = {
   count: number;
   directionsList?: number[];
-  patientExtractsAdds?: Array<Record<string, string>>;
+  patientExtractsAdds?: Array<ExtractPatientAdd | Record<string, string>>;
 };
 const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
+const verifiedExpertiseDirections = ref<Set<number>>(new Set());
+const expertiseCheckLoading = ref(false);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('day');
 const anchorDate = ref(moment());
@@ -2189,13 +2205,21 @@ const openExtractsDetailForm = () => {
 
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
-const parseExtractAddsEntry = (entry: Record<string, string>) => {
+const parseExtractAddsEntry = (entry: ExtractPatientAdd | Record<string, string>) => {
+  if ('directionPk' in entry && entry.directionPk != null) {
+    const directionPk = Number(entry.directionPk);
+    const name = (entry.name || '').trim();
+    if (!Number.isFinite(directionPk) || directionPk <= 0 || !name) {
+      return null;
+    }
+    return { directionPk, name };
+  }
   const keys = Object.keys(entry);
   if (!keys.length) {
     return null;
   }
   const directionPk = Number(keys[0]);
-  const name = (entry[keys[0]] || '').trim();
+  const name = (entry[keys[0] as keyof typeof entry] || '').trim();
   if (!Number.isFinite(directionPk) || directionPk <= 0 || !name) {
     return null;
   }
@@ -2254,6 +2278,47 @@ const dischargedPatientsInPeriod = computed(() => {
 });
 
 const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
+
+const canCheckDischargedExpertise = computed(() => (
+  Boolean(departmentPk.value)
+  && hasDischargedInPeriod.value
+  && !expertiseCheckLoading.value
+));
+
+const isDischargedExpertiseVerified = (directionPk: number) => (
+  verifiedExpertiseDirections.value.has(directionPk)
+);
+
+const checkDischargedExpertise = async () => {
+  if (!canCheckDischargedExpertise.value) {
+    return;
+  }
+  const directionPks = [...new Set(
+    dischargedPatientsInPeriodAll.value.map((row) => row.directionPk),
+  )];
+  if (!directionPks.length) {
+    root.$emit('msg', 'error', 'Нет выписок за выбранный период');
+    return;
+  }
+  expertiseCheckLoading.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const response = await api('chambers/check-discharged-expertise', {
+      direction_pks: directionPks,
+    });
+    if (!response?.ok) {
+      root.$emit('msg', 'error', response?.message || 'Не удалось проверить экспертизы');
+      return;
+    }
+    const pks = Array.isArray(response?.data?.expertise_direction_pks)
+      ? response.data.expertise_direction_pks.map((pk: unknown) => Number(pk)).filter((pk: number) => Number.isFinite(pk))
+      : [];
+    verifiedExpertiseDirections.value = new Set(pks);
+  } finally {
+    expertiseCheckLoading.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
 
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
@@ -2827,6 +2892,7 @@ const loadCalendar = async () => {
   if (!departmentPk.value || visibleDays.value.length === 0) {
     return;
   }
+  verifiedExpertiseDirections.value = new Set();
   await store.dispatch(actions.INC_LOADING);
   const start = visibleDays.value[0].key;
   const end = visibleDays.value[visibleDays.value.length - 1].key;
@@ -3899,6 +3965,21 @@ onBeforeUnmount(() => {
   cursor: default;
 }
 
+.board-patient-row--discharged.board-patient-row--expertise {
+  background: #049372;
+}
+
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link,
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link:hover,
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link:focus,
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link:visited {
+  color: #fff;
+}
+
+.board-patient-row--discharged.board-patient-row--expertise .board-discharged-date {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .board-patient-row--discharged:active {
   cursor: default;
 }
@@ -4236,6 +4317,13 @@ onBeforeUnmount(() => {
 .board-discharged-heading-link:focus {
   color: #1565c0;
   text-decoration: underline;
+}
+
+.board-discharged-check-btn {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .calendar-wrap {
