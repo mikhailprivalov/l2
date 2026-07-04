@@ -10,6 +10,12 @@ from django.core.paginator import Paginator
 from django.utils.formats import date_format
 
 from employees.sql_func import get_employee_position, get_employee_work_time, get_employee_fact_time_work
+from employees.work_time_parse import (
+    iter_changed_work_time_cells,
+    normalize_work_day_status_id,
+    parse_fact_start_end_datetimes,
+    parse_schedule_start_end,
+)
 from hospitals.models import Hospitals
 from laboratory.settings import TIME_ZONE, LUNCH_DURATION_BY_POSITIONS, WORK_DAYS_PER_WEEK_DEFAULT, EMPLOYEE_START_WORK_TIME_DEFAULT
 from laboratory.utils import strfdatetime, current_time
@@ -879,7 +885,9 @@ class EmployeeWorkingHoursSchedule(models.Model):
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": "", "endWorkTime": "", "typeId": "", "blocked": False} for day in range(1, length_month + 1)}
+        template_days = {
+            datetime.date(year, month, day).strftime('%Y-%m-%d'): {"startWorkTime": None, "endWorkTime": None, "typeId": None, "blocked": False} for day in range(1, length_month + 1)
+        }
         return template_days
 
     @staticmethod
@@ -937,22 +945,13 @@ class EmployeeWorkingHoursSchedule(models.Model):
             return result_check
 
         desired = {}
-        for employee_position_id, work_times in changed_time.items():
-            position_id = int(employee_position_id)
-            for date, work_time in work_times.items():
-                if date == "lunchDuration":
-                    continue
-                start = f"{date} {work_time.get('startWorkTime')}" if work_time.get("startWorkTime") else None
-                end_time = work_time.get("endWorkTime")
-                end = f"{date} {end_time}" if end_time else None
-                if end_time == "00:00":
-                    end_dt = datetime.datetime.strptime(end, "%Y-%m-%d %H:%M") + datetime.timedelta(days=1)
-                    end = end_dt.strftime("%Y-%m-%d %H:%M")
-                desired[(position_id, date)] = {
-                    "start": start,
-                    "end": end,
-                    "work_day_status_id": work_time.get("typeId") or None,
-                }
+        for position_id, date, work_time, _ in iter_changed_work_time_cells(changed_time):
+            start, end = parse_schedule_start_end(date, work_time)
+            desired[(position_id, date)] = {
+                "start": start,
+                "end": end,
+                "work_day_status_id": normalize_work_day_status_id(work_time),
+            }
 
         if not desired:
             return {"ok": True, "message": ""}
@@ -1038,7 +1037,7 @@ class EmployeeWorkingHoursSchedule(models.Model):
         result = {
             "startWorkTime": start_work_time_by_employee_template.strftime("%H:%M"),
             "endWorkTime": end_work_time_by_employee_template.strftime("%H:%M"),
-            "typeId": "",
+            "typeId": None,
         }
         return result
 
@@ -1050,11 +1049,11 @@ class EmployeeWorkingHoursSchedule(models.Model):
         holidays = Holidays.get_holidays(datetime.date(year, month, 1))
         for employee_work_time in employees_work_time_data:
             employee_position_ids.add(employee_work_time.get("employeePositionId"))
-        employee_positions = EmployeePosition.get_by_ids(employee_position_ids)
+        employee_positions_by_id = {employee_position.pk: employee_position for employee_position in EmployeePosition.get_by_ids(employee_position_ids)}
         for employee_work_time in employees_work_time_data:
             current_employee_position_id = employee_work_time.get("employeePositionId")
             lunch_duration = employee_work_time.get("lunchDuration")
-            current_employee_position = employee_positions.filter(pk=current_employee_position_id).first()
+            current_employee_position = employee_positions_by_id.get(current_employee_position_id)
             for key, value in employee_work_time.items():
                 try:
                     date_key = datetime.datetime.strptime(key, "%Y-%m-%d")
@@ -1297,31 +1296,21 @@ class FactTimeWork(models.Model):
         tabel_document: TabelDocument = TabelDocument.get_or_create_tabel(first_date_month, last_date_month, department_id)
 
         desired = {}
-        for employee_position_id, work_times in changed_time.items():
-            position_id = int(employee_position_id)
-            lunch_duration = work_times.get("lunchDuration")
-            for date, work_time in work_times.items():
-                if date == "lunchDuration":
-                    continue
-                day_hours = None
-                night_hours = None
-                start_time = work_time.get("startWorkTime")
-                end_time = work_time.get("endWorkTime")
-                if start_time and end_time:
-                    start = datetime.datetime.strptime(f'{date} {start_time}', "%Y-%m-%d %H:%M")
-                    end = datetime.datetime.strptime(f'{date} {end_time}', "%Y-%m-%d %H:%M")
-                    if end_time == "00:00":
-                        end = end + datetime.timedelta(days=1)
-                    hours = FactTimeWork.calculate_day_night_hours(start, end)
-                    day_hours = hours.get("day_hours")
-                    if lunch_duration:
-                        day_hours = max(day_hours - lunch_duration / 60, 0)
-                    night_hours = hours.get("night_hours")
-                desired[(position_id, date)] = {
-                    "common_hours": day_hours,
-                    "night_hours": night_hours,
-                    "work_day_status_id": work_time.get("typeId") or None,
-                }
+        for position_id, date, work_time, lunch_duration in iter_changed_work_time_cells(changed_time):
+            day_hours = None
+            night_hours = None
+            start, end = parse_fact_start_end_datetimes(date, work_time)
+            if start and end:
+                hours = FactTimeWork.calculate_day_night_hours(start, end)
+                day_hours = hours.get("day_hours")
+                if lunch_duration:
+                    day_hours = max(day_hours - lunch_duration / 60, 0)
+                night_hours = hours.get("night_hours")
+            desired[(position_id, date)] = {
+                "common_hours": day_hours,
+                "night_hours": night_hours,
+                "work_day_status_id": normalize_work_day_status_id(work_time),
+            }
 
         if not desired:
             return
@@ -1361,7 +1350,7 @@ class FactTimeWork(models.Model):
 
     @staticmethod
     def get_month_days_template(year: int, month: int, length_month: int):
-        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"day_hours": "", "night_hours": "", "typeId": ""} for day in range(1, length_month + 1)}
+        template_days = {datetime.date(year, month, day).strftime('%Y-%m-%d'): {"day_hours": "", "night_hours": "", "typeId": None} for day in range(1, length_month + 1)}
         return template_days
 
     @staticmethod
