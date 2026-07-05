@@ -69,7 +69,10 @@ def rest_make_request_get(default_part_url, path, token, auth_data, data, method
         auth = (auth_data.get("auth_login"), auth_data.get("auth_password"))
         response = requests.request(method, url, auth=auth, headers=headers, data=(json.dumps(data, ensure_ascii=False)).encode('utf-8'))
         result = json.loads(response.content.decode())
-        interactive_log(f"[REST] Ответ {path}: {_short_repr(result)}")
+        if path == "result":
+            interactive_log(f"[REST] Ответ {path} (полный): {json.dumps(result, ensure_ascii=False)}")
+        else:
+            interactive_log(f"[REST] Ответ {path}: {_short_repr(result)}")
         return result
     except Exception as e:
         interactive_log(f"[REST] Ошибка запроса {path}: {e}")
