@@ -167,10 +167,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
     if finished:
         direction.order_redirection_number_is_finished = True
         direction.save()
-    interactive_log(
-        f"Заключение по заказу {order_redirection_number}: обработано позиций={processed_articles}, "
-        f"статус={result.get('status')}, завершён={'да' if finished else 'нет'}"
-    )
+    interactive_log(f"Заключение по заказу {order_redirection_number}: обработано позиций={processed_articles}, " f"статус={result.get('status')}, завершён={'да' if finished else 'нет'}")
 
 
 def rest_api_pull_result(only_new_order=True):
