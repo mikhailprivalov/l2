@@ -17,7 +17,7 @@ import base64
 from laboratory.utils import current_time
 from slog.models import Log
 import os
-from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT
+from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT, REST_API_PULL_RESULT_INTERVAL_SECONDS
 import datetime
 from sys import stdout
 import time
@@ -222,8 +222,31 @@ def rest_api_pull_result_for_directions(direction_pks, only_new_order=False):
     interactive_log(f"Заключение: обработано заказов {len(order_redirection_numbers)}")
 
 
+def rest_api_pull_result_manual():
+    ctx = _get_hospitals_context()
+    direction_pks = list(
+        Napravleniya.objects.filter(
+            need_pull_result=True,
+            order_redirection_number__isnull=False,
+            hospital_id__in=ctx['hospitals_id'].keys(),
+        ).values_list('pk', flat=True)
+    )
+    if not direction_pks:
+        return
+    interactive_log(f"Ручная очередь: направлений={len(direction_pks)}")
+    rest_api_pull_result_for_directions(direction_pks, only_new_order=False)
+    Napravleniya.objects.filter(pk__in=direction_pks).update(need_pull_result=False)
+
+
 def process_rest_api_pull_result_start():
     stdout.write("Starting pull_orders process")
     while True:
         rest_api_pull_result()
-        time.sleep(10)
+        time.sleep(REST_API_PULL_RESULT_INTERVAL_SECONDS)
+
+
+def process_rest_api_pull_result_manual_start():
+    stdout.write("Starting manual pull_results process")
+    while True:
+        rest_api_pull_result_manual()
+        time.sleep(5)

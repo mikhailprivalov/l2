@@ -22,7 +22,6 @@ import collections
 
 from integration_framework.views import get_cda_data
 from results.prepare_data import fields_result_only_title_fields
-from external_rest_integration.utils import rest_api_pull_result_for_directions
 from utils.response import status_response
 from hospitals.models import Hospitals, HospitalParams
 import operator
@@ -373,7 +372,7 @@ def need_order_redirection(request):
 def request_result(request):
     request_data = json.loads(request.body)
     ids = request_data['ids']
-    rest_api_pull_result_for_directions(ids, only_new_order=False)
+    Napravleniya.objects.filter(pk__in=ids).update(need_pull_result=True)
     return status_response(True)
 
 
