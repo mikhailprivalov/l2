@@ -171,21 +171,25 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
     interactive_log(f"Заключение по заказу {order_redirection_number}: обработано позиций={processed_articles}, " f"статус={result.get('status')}, завершён={'да' if finished else 'нет'}")
 
 
-def rest_api_pull_result(only_new_order=True):
-    ctx = _get_hospitals_context()
-    stdout.write(f"Iterating over {len(ctx['hospitals_id_ftp_connect'])} servers\n")
-    interactive_log(f"Старт опроса результатов, only_new={only_new_order}, серверов={len(ctx['hospitals_id_ftp_connect'])}")
-
-    date_from = timezone.now() - datetime.timedelta(days=REST_API_PULL_RESULT_DAYS_LIMIT)
-    interactive_log(f"Фильтр направлений: созданы не ранее {date_from.strftime('%Y-%m-%d %H:%M:%S')} ({REST_API_PULL_RESULT_DAYS_LIMIT} дн.)")
-    d_qs = Napravleniya.objects.filter(
-        order_redirection_number_is_finished=False,
+def _get_order_redirection_numbers(ctx, direction_pks=None, days_limit=None):
+    qs = Napravleniya.objects.filter(
         order_redirection_number__isnull=False,
         hospital_id__in=ctx['hospitals_id'].keys(),
-        data_sozdaniya__gte=date_from,
     )
-    order_redirection_numbers = {i.order_redirection_number: i.hospital_id for i in d_qs}
-    interactive_log(f"Заказов к обработке: {len(order_redirection_numbers)}")
+    if direction_pks is not None:
+        qs = qs.filter(pk__in=direction_pks)
+    else:
+        qs = qs.filter(order_redirection_number_is_finished=False)
+    if days_limit is not None:
+        date_from = timezone.now() - datetime.timedelta(days=days_limit)
+        interactive_log(f"Фильтр направлений: созданы не ранее {date_from.strftime('%Y-%m-%d %H:%M:%S')} ({days_limit} дн.)")
+        qs = qs.filter(data_sozdaniya__gte=date_from)
+    elif direction_pks is not None:
+        interactive_log("Ручной запрос: без ограничения по дате создания направления")
+    return {i.order_redirection_number: i.hospital_id for i in qs}
+
+
+def _run_pull_for_orders(ctx, order_redirection_numbers, only_new_order):
     for order_redirection_number, hospital_id in order_redirection_numbers.items():
         _pull_and_process_order(
             order_redirection_number,
@@ -195,28 +199,26 @@ def rest_api_pull_result(only_new_order=True):
             ctx['hospitals_object'],
             only_new_order,
         )
+
+
+def rest_api_pull_result(only_new_order=True):
+    ctx = _get_hospitals_context()
+    stdout.write(f"Iterating over {len(ctx['hospitals_id_ftp_connect'])} servers\n")
+    interactive_log(f"Старт опроса результатов, only_new={only_new_order}, серверов={len(ctx['hospitals_id_ftp_connect'])}")
+
+    order_redirection_numbers = _get_order_redirection_numbers(ctx, days_limit=REST_API_PULL_RESULT_DAYS_LIMIT)
+    interactive_log(f"Заказов к обработке: {len(order_redirection_numbers)}")
+    _run_pull_for_orders(ctx, order_redirection_numbers, only_new_order)
     interactive_log(f"Заключение: обработано заказов {len(order_redirection_numbers)}")
 
 
 def rest_api_pull_result_for_directions(direction_pks, only_new_order=False):
     ctx = _get_hospitals_context()
     interactive_log(f"Ручной запрос результатов, only_new={only_new_order}, направлений={len(direction_pks)}")
-    d_qs = Napravleniya.objects.filter(
-        pk__in=direction_pks,
-        order_redirection_number__isnull=False,
-        hospital_id__in=ctx['hospitals_id'].keys(),
-    )
-    order_redirection_numbers = {i.order_redirection_number: i.hospital_id for i in d_qs}
+
+    order_redirection_numbers = _get_order_redirection_numbers(ctx, direction_pks=direction_pks, days_limit=None)
     interactive_log(f"Заказов к обработке: {len(order_redirection_numbers)}")
-    for order_redirection_number, hospital_id in order_redirection_numbers.items():
-        _pull_and_process_order(
-            order_redirection_number,
-            hospital_id,
-            ctx['hospitals_id'],
-            ctx['hospitals_id_ftp_connect'],
-            ctx['hospitals_object'],
-            only_new_order,
-        )
+    _run_pull_for_orders(ctx, order_redirection_numbers, only_new_order)
     interactive_log(f"Заключение: обработано заказов {len(order_redirection_numbers)}")
 
 
