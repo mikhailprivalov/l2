@@ -1,4 +1,5 @@
 from django.core.files.base import ContentFile
+from django.utils import timezone
 from directions.sql_func import get_tube_by_number
 from external_rest_integration.integration import (
     make_request_get_token,
@@ -16,7 +17,7 @@ import base64
 from laboratory.utils import current_time
 from slog.models import Log
 import os
-from laboratory.settings import BASE_DIR
+from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT
 import datetime
 from sys import stdout
 import time
@@ -178,10 +179,13 @@ def rest_api_pull_result(only_new_order=True):
     stdout.write(f"Iterating over {len(ctx['hospitals_id_ftp_connect'])} servers\n")
     interactive_log(f"Старт опроса результатов, only_new={only_new_order}, серверов={len(ctx['hospitals_id_ftp_connect'])}")
 
+    date_from = timezone.now() - datetime.timedelta(days=REST_API_PULL_RESULT_DAYS_LIMIT)
+    interactive_log(f"Фильтр направлений: созданы не ранее {date_from.strftime('%Y-%m-%d %H:%M:%S')} ({REST_API_PULL_RESULT_DAYS_LIMIT} дн.)")
     d_qs = Napravleniya.objects.filter(
         order_redirection_number_is_finished=False,
         order_redirection_number__isnull=False,
         hospital_id__in=ctx['hospitals_id'].keys(),
+        data_sozdaniya__gte=date_from,
     )
     order_redirection_numbers = {i.order_redirection_number: i.hospital_id for i in d_qs}
     interactive_log(f"Заказов к обработке: {len(order_redirection_numbers)}")
