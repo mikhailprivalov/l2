@@ -97,6 +97,13 @@ const menuItems = [
     },
   },
   {
+    title: 'Запросить результат',
+    requiredModule: 'l2_need_order_redirection',
+    handler() {
+      this.$root.$emit('directions:request_result', this.checked);
+    },
+  },
+  {
     title: 'Оплатить',
     requiredModule: 'l2_cash',
     handler() {

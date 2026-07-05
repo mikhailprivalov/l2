@@ -71,6 +71,11 @@ export default (instance: Vue): void => {
     instance.$ok('Запланирована повторная отправка направления исполнителю');
   });
 
+  instance.$root.$on('directions:request_result', async ids => {
+    await instance.$api('directions/request-result', { ids });
+    instance.$ok('Запланирован запрос результатов из внешней системы');
+  });
+
   instance.$root.$on('print:aggregate_laboratory_results', async pks => {
     window.open(`/forms/docx?type=113.02&directions=${pks}`, '_blank');
   });
