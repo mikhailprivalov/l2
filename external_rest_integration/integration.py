@@ -37,8 +37,7 @@ def make_request_get_token(hosp_data, method="GET", get_new_token=False):
         url = f"{hosp_data.get('url')}/ky"
         interactive_log(f"[REST] Запрос ключа: {method} {url}")
         interactive_log(
-            f"[REST] login={hosp_data.get('login')}, password={hosp_data.get('password')}, "
-            f"auth_login={hosp_data.get('auth_login')}, auth_password={hosp_data.get('auth_password')}"
+            f"[REST] login={hosp_data.get('login')}, password={hosp_data.get('password')}, " f"auth_login={hosp_data.get('auth_login')}, auth_password={hosp_data.get('auth_password')}"
         )
         headers = {"login": hosp_data.get("login"), "password": hosp_data.get("password")}
         auth = (hosp_data.get("auth_login"), hosp_data.get("auth_password"))
