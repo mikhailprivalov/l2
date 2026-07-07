@@ -5,7 +5,7 @@ import simplejson as json
 
 import slog.models as slog
 from clients.models import Document
-from laboratory.settings import RMQ_AUTH_PARAM_RENTGEN
+from laboratory.settings import RMQ_AUTH_PARAM_RENTGEN, RMQ_AUTH_PARAM_RENTGEN_DCM
 from laboratory.utils import current_time
 
 logger = logging.getLogger(__name__)
@@ -82,16 +82,42 @@ def build_dcm_study_link_payload(direction, equipment_receive, doc_profile):
     }
 
 
-def _broker_publish_rentgen_message(message, exchange_name, routing_key, message_type, log_key):
-    if not RMQ_AUTH_PARAM_RENTGEN.get('address'):
+def build_dcm_order_create_status_payload(direction, hospital, id_in_hospital, direction_ids, doc_profile):
+    return {
+        'ok': True,
+        'oid': hospital.oid if hospital else '',
+        'internalId': id_in_hospital,
+        'directionNum': direction.pk,
+        'directions': direction_ids,
+        'operatorCreatedId': doc_profile.get_operator_created_id_for_external(),
+        'status': 'created',
+        'message': '',
+    }
+
+
+def build_dcm_study_link_status_payload(direction, equipment_receive, doc_profile, ok=True, message=''):
+    return {
+        'ok': ok,
+        'internalId': str(direction.id_in_hospital or direction.pk),
+        'directionNum': direction.pk,
+        'studyInstanceUID': equipment_receive.study_instance_uid_tag or '',
+        'deviceId': equipment_receive.equipment_model_id,
+        'operatorCreatedId': doc_profile.get_operator_created_id_for_external(),
+        'status': 'linked' if ok else 'error',
+        'message': message,
+    }
+
+
+def _broker_publish_message(auth_params, message, exchange_name, routing_key, message_type, log_key):
+    if not auth_params.get('address'):
         return False
 
-    credentials = pika.PlainCredentials(RMQ_AUTH_PARAM_RENTGEN.get('login'), RMQ_AUTH_PARAM_RENTGEN.get('password'))
+    credentials = pika.PlainCredentials(auth_params.get('login'), auth_params.get('password'))
     parameters = pika.ConnectionParameters(
-        host=RMQ_AUTH_PARAM_RENTGEN.get('address'),
-        port=RMQ_AUTH_PARAM_RENTGEN.get('port'),
+        host=auth_params.get('address'),
+        port=auth_params.get('port'),
         credentials=credentials,
-        virtual_host=RMQ_AUTH_PARAM_RENTGEN.get('virtual_host', '/'),
+        virtual_host=auth_params.get('virtual_host', '/'),
     )
 
     cur_time = current_time().strftime('%Y%m%d%H:%M:%S')
@@ -117,14 +143,35 @@ def broker_publish_rentgen_order(message):
     exchange_name = RMQ_AUTH_PARAM_RENTGEN.get('exchange_name', 'l2.dicom.orders')
     routing_key = RMQ_AUTH_PARAM_RENTGEN.get('routing_key', 'order.create')
     log_key = message.get('orderData', {}).get('internalId', '')
-    return _broker_publish_rentgen_message(message, exchange_name, routing_key, 'dcm_order_create', log_key)
+    return _broker_publish_message(RMQ_AUTH_PARAM_RENTGEN, message, exchange_name, routing_key, 'dcm_order_create', log_key)
 
 
 def broker_publish_rentgen_study_link(message):
     exchange_name = RMQ_AUTH_PARAM_RENTGEN.get('study_link_exchange_name', 'l2.dicom.study')
     routing_key = RMQ_AUTH_PARAM_RENTGEN.get('study_link_routing_key', 'study.link')
     log_key = message.get('internalId', '')
-    return _broker_publish_rentgen_message(message, exchange_name, routing_key, 'dcm_study_link', log_key)
+    return _broker_publish_message(RMQ_AUTH_PARAM_RENTGEN, message, exchange_name, routing_key, 'dcm_study_link', log_key)
+
+
+def broker_publish_dcm_order_create_status(message):
+    exchange_name = RMQ_AUTH_PARAM_RENTGEN_DCM.get('order_create_exchange_name', 'l2.dicom.order.status')
+    routing_key = RMQ_AUTH_PARAM_RENTGEN_DCM.get('order_create_routing_key', 'order.created')
+    log_key = message.get('internalId', '')
+    return _broker_publish_message(RMQ_AUTH_PARAM_RENTGEN_DCM, message, exchange_name, routing_key, 'dcm_order_create_status', log_key)
+
+
+def broker_publish_dcm_study_link_response(message):
+    exchange_name = RMQ_AUTH_PARAM_RENTGEN_DCM.get('study_link_exchange_name', 'l2.dicom.study.response')
+    routing_key = RMQ_AUTH_PARAM_RENTGEN_DCM.get('study_link_routing_key', 'study.linked')
+    log_key = message.get('internalId', '')
+    return _broker_publish_message(RMQ_AUTH_PARAM_RENTGEN_DCM, message, exchange_name, routing_key, 'dcm_study_link', log_key)
+
+
+def broker_publish_dcm_study_link_status(message):
+    exchange_name = RMQ_AUTH_PARAM_RENTGEN_DCM.get('study_link_status_exchange_name', 'l2.dicom.study.status')
+    routing_key = RMQ_AUTH_PARAM_RENTGEN_DCM.get('study_link_status_routing_key', 'study.link.status')
+    log_key = message.get('internalId', '')
+    return _broker_publish_message(RMQ_AUTH_PARAM_RENTGEN_DCM, message, exchange_name, routing_key, 'dcm_study_link_status', log_key)
 
 
 def send_request_to_rentgen_rmq(direction, doc_profile, research):
@@ -142,4 +189,31 @@ def send_study_link_to_rentgen_rmq(direction, equipment_receive, doc_profile):
         return broker_publish_rentgen_study_link(payload)
     except Exception:
         logger.exception('Failed to send study link for request %s to rentgen RMQ', direction.pk)
+        return False
+
+
+def send_dcm_order_create_status_to_rmq(direction, hospital, id_in_hospital, direction_ids, doc_profile):
+    try:
+        payload = build_dcm_order_create_status_payload(direction, hospital, id_in_hospital, direction_ids, doc_profile)
+        return broker_publish_dcm_order_create_status(payload)
+    except Exception:
+        logger.exception('Failed to send dcm_order_create status for request %s to RMQ', direction.pk)
+        return False
+
+
+def send_dcm_study_link_response_to_rmq(direction, equipment_receive, doc_profile):
+    try:
+        payload = build_dcm_study_link_payload(direction, equipment_receive, doc_profile)
+        return broker_publish_dcm_study_link_response(payload)
+    except Exception:
+        logger.exception('Failed to send dcm_study_link response for request %s to RMQ', direction.pk)
+        return False
+
+
+def send_dcm_study_link_status_to_rmq(direction, equipment_receive, doc_profile, ok=True, message=''):
+    try:
+        payload = build_dcm_study_link_status_payload(direction, equipment_receive, doc_profile, ok=ok, message=message)
+        return broker_publish_dcm_study_link_status(payload)
+    except Exception:
+        logger.exception('Failed to send dcm_study_link status for request %s to RMQ', direction.pk)
         return False
