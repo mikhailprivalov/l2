@@ -612,6 +612,8 @@ class Napravleniya(models.Model):
     )
     accept_time = models.DateTimeField(null=True, blank=True, default=None, help_text='Время принятия заявки')
     is_sent_to_work_place = models.BooleanField(null=True, blank=True, default=False, help_text='Отправлен протокол работодателю', db_index=True)
+    dcm_study_link_status = models.CharField(max_length=32, blank=True, default='', help_text='Статус привязки DICOM исследования')
+    dcm_study_link_message = models.TextField(blank=True, default='', help_text='Сообщение статуса привязки DICOM')
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()

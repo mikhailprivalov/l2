@@ -26,7 +26,7 @@ class DocAdmin(admin.ModelAdmin):
         'podrazdeleniye',
     )
     list_display_links = ('fio',)
-    search_fields = ('fio',)
+    search_fields = ('fio', 'uuid')
     filter_horizontal = (
         'white_list_monitoring',
         'black_list_monitoring',

@@ -11,7 +11,8 @@ from django.conf import settings as django_settings
 from django.utils import timezone
 
 from appconf.manager import SettingManager
-from directory.models import Contrasts
+from brokers_queue.rmq.rentgen_publisher import send_request_to_rentgen_rmq, send_study_link_to_rentgen_rmq
+from directory.models import Contrasts, Researches
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
@@ -376,6 +377,10 @@ def create_request(request):
                 napravleniya_file = NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file)
                 napravleniya_file.save()
 
+    direction = Napravleniya.objects.select_related('client__individual', 'hospital', 'type_contrast').get(pk=direction_id)
+    research = Researches.objects.filter(pk=research_id).first()
+    send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
+
     return status_response(True, "Заявка успешно создана", {"requestId": direction_id})
 
 
@@ -422,6 +427,8 @@ def link_image_to_request(request):
             equipment_receive.doc_reset_link = None
             equipment_receive.time_reset_link = None
             equipment_receive.save(update_fields=['napravleniye', 'doc_save_link', 'time_save_link', 'doc_reset_link', 'time_reset_link'])
+
+            send_study_link_to_rentgen_rmq(napravleniye, equipment_receive, request.user.doctorprofile)
 
             return status_response(True, "Изображение успешно привязано к заявке")
         else:

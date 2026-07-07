@@ -132,6 +132,24 @@ class DoctorProfile(models.Model):
     is_structure_data_in_protocol = models.BooleanField(default=False, help_text="Только структурированные текст в протоколе")
     is_curator = models.BooleanField(default=False, help_text="Куратор показателей в мониторинге")
     service_code_ambulatory = models.CharField(max_length=255, default="", blank=True)
+    uuid = models.CharField(max_length=64, blank=True, default='', db_index=True, help_text='Внешний идентификатор оператора для интеграций')
+
+    @staticmethod
+    def get_by_operator_created_id(operator_created_id):
+        from django.conf import settings as django_settings
+
+        if getattr(django_settings, 'DICOM_USE_OPERATOR_CREATED_EXTERNAL_ID', False):
+            return DoctorProfile.objects.filter(uuid=str(operator_created_id)).first()
+        try:
+            operator_id = int(operator_created_id)
+        except (TypeError, ValueError):
+            return None
+        return DoctorProfile.objects.filter(id=operator_id).first()
+
+    def get_operator_created_id_for_external(self):
+        if self.uuid:
+            return self.uuid
+        return self.pk
 
     @staticmethod
     def get_system_profile():
