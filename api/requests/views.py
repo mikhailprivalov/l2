@@ -377,10 +377,7 @@ def create_request(request):
                 napravleniya_file = NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file)
                 napravleniya_file.save()
 
-    direction = (
-        Napravleniya.objects.select_related('client__individual', 'hospital', 'type_contrast')
-        .get(pk=direction_id)
-    )
+    direction = Napravleniya.objects.select_related('client__individual', 'hospital', 'type_contrast').get(pk=direction_id)
     research = Researches.objects.filter(pk=research_id).first()
     send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
 
