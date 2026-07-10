@@ -131,10 +131,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
                         interactive_log(f"Заказ {order_redirection_number}: ошибка сохранения файла, " f"tube={tube_number}, internal_code={internal_code}: {e}")
                     break
             if not iss or not direction:
-                interactive_log(
-                    f"Заказ {order_redirection_number}: пропуск FTP, "
-                    f"tube={tube_number}, internal_code={internal_code}, iss/direction не найдены"
-                )
+                interactive_log(f"Заказ {order_redirection_number}: пропуск FTP, " f"tube={tube_number}, internal_code={internal_code}, iss/direction не найдены")
                 continue
             # проверить статус - если 3 зафинишировать
             try:
