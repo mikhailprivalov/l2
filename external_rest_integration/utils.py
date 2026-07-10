@@ -73,8 +73,8 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
         try:
             pdf_base_64 = i.get("binary")
             base64_bytes = pdf_base_64.encode('utf-8')
-            data = ContentFile(base64.b64decode(base64_bytes))
-        except:
+            pdf_content_file = ContentFile(base64.b64decode(base64_bytes))
+        except Exception:
             Log.log(
                 key=order_redirection_number,
                 type=190006,
@@ -93,24 +93,46 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
             doctor_data = doctor.split(" ")
             date_time_confirm = article.get("date")
             tubes_sql = get_tube_by_number(tube_number)
+            iss = None
+            direction = None
             for t in tubes_sql:
                 if internal_code == t.research_internal_code:
                     iss = Issledovaniya.objects.filter(id=t.issledovaniye_id).first()
-                    if IssledovaniyaFiles.objects.filter(issledovaniye=iss).exists():
-                        iss_files = IssledovaniyaFiles.objects.filter(issledovaniye=iss)
-                        for iss_file in iss_files:
-                            iss_file.delete()
-                    iss_file = IssledovaniyaFiles(issledovaniye=iss, uploaded_file=data)
-                    file_name_internal_code = internal_code.replace(".", "_")
-                    iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
-                    iss_file.save()
-                    iss.lab_comment = ""
-                    iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y.%m.%dT%H:%M:%S")
-                    iss.time_save = current_time()
-                    iss.doc_confirmation_string = doctor
-                    iss.save()
-                    direction = Napravleniya.objects.filter(pk=t.direction_number).first()
+                    if not iss:
+                        interactive_log(f"Заказ {order_redirection_number}: исследование не найдено, " f"tube={tube_number}, internal_code={internal_code}")
+                        break
+                    try:
+                        if IssledovaniyaFiles.objects.filter(issledovaniye=iss).exists():
+                            iss_files = IssledovaniyaFiles.objects.filter(issledovaniye=iss)
+                            for iss_file in iss_files:
+                                iss_file.delete()
+                        iss_file = IssledovaniyaFiles(issledovaniye=iss, uploaded_file=pdf_content_file)
+                        file_name_internal_code = internal_code.replace(".", "_")
+                        iss_file.uploaded_file.name = f"{tube_number}_{file_name_internal_code}.pdf"
+                        iss_file.save()
+                        iss.lab_comment = ""
+                        iss.time_confirmation = datetime.datetime.strptime(date_time_confirm, "%Y.%m.%dT%H:%M:%S")
+                        iss.time_save = current_time()
+                        iss.doc_confirmation_string = doctor
+                        iss.save()
+                        direction = Napravleniya.objects.filter(pk=t.direction_number).first()
+                    except Exception as e:
+                        Log.log(
+                            key=order_redirection_number,
+                            type=190006,
+                            body={
+                                "order_redirection_number": order_redirection_number,
+                                "tube": tube_number,
+                                "internal_code": internal_code,
+                                "reason": str(e),
+                            },
+                            user=None,
+                        )
+                        interactive_log(f"Заказ {order_redirection_number}: ошибка сохранения файла, " f"tube={tube_number}, internal_code={internal_code}: {e}")
                     break
+            if not iss or not direction:
+                interactive_log(f"Заказ {order_redirection_number}: пропуск FTP, " f"tube={tube_number}, internal_code={internal_code}, iss/direction не найдены")
+                continue
             # проверить статус - если 3 зафинишировать
             try:
                 ftp_connection = FTPConnection(hospitals_id_ftp_connect.get(hospital_id), hospital=hospitals_object.get(hospital_id))
@@ -141,8 +163,8 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
                 "patient_sec": "",
             }
 
-            data = create_sample_data(data_patient, obr_data, pdf_base_64)
-            hl7_message = generator.generate_hl7_message(data)
+            hl7_data = create_sample_data(data_patient, obr_data, pdf_base_64)
+            hl7_message = generator.generate_hl7_message(hl7_data)
 
             created_at = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
 
