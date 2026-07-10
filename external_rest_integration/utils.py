@@ -128,10 +128,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
                             },
                             user=None,
                         )
-                        interactive_log(
-                            f"Заказ {order_redirection_number}: ошибка сохранения файла, "
-                            f"tube={tube_number}, internal_code={internal_code}: {e}"
-                        )
+                        interactive_log(f"Заказ {order_redirection_number}: ошибка сохранения файла, " f"tube={tube_number}, internal_code={internal_code}: {e}")
                     break
             if not iss or not direction:
                 interactive_log(
