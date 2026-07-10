@@ -99,10 +99,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
                 if internal_code == t.research_internal_code:
                     iss = Issledovaniya.objects.filter(id=t.issledovaniye_id).first()
                     if not iss:
-                        interactive_log(
-                            f"Заказ {order_redirection_number}: исследование не найдено, "
-                            f"tube={tube_number}, internal_code={internal_code}"
-                        )
+                        interactive_log(f"Заказ {order_redirection_number}: исследование не найдено, " f"tube={tube_number}, internal_code={internal_code}")
                         break
                     try:
                         if IssledovaniyaFiles.objects.filter(issledovaniye=iss).exists():
