@@ -700,6 +700,8 @@ def _get_last_confirmed_issledovaniya(direction):
 
 
 def _get_request_status_label(direction):
+    if direction.cancel:
+        return 'Скрыта'
     if direction.total_confirmed:
         return 'Исполнена'
     if direction.accept_who_doctor_id:
@@ -743,22 +745,30 @@ def direction_to_all_list_row(direction):
         'confirmedBy': confirmed_by,
         'status': _get_request_status_label(direction),
         'cito': direction.is_cito,
+        'hidden': direction.cancel,
+        'canHide': (
+            not direction.cancel
+            and not direction.total_confirmed
+            and not direction.accept_who_doctor_id
+        ),
     }
 
 
 def _apply_status_filter(directions, statuses):
     if not statuses:
-        return directions
+        return directions.filter(cancel=False)
 
     status_filter = Q()
+    if 'hidden' in statuses:
+        status_filter |= Q(cancel=True)
     if 'new' in statuses:
-        status_filter |= Q(accept_who_doctor__isnull=True, total_confirmed=False)
+        status_filter |= Q(accept_who_doctor__isnull=True, total_confirmed=False, cancel=False)
     if 'cito' in statuses:
-        status_filter |= Q(is_cito=True)
+        status_filter |= Q(is_cito=True, cancel=False)
     if 'accepted' in statuses:
-        status_filter |= Q(accept_who_doctor__isnull=False, total_confirmed=False)
+        status_filter |= Q(accept_who_doctor__isnull=False, total_confirmed=False, cancel=False)
     if 'confirmed' in statuses:
-        status_filter |= Q(total_confirmed=True)
+        status_filter |= Q(total_confirmed=True, cancel=False)
 
     return directions.filter(status_filter).distinct()
 
@@ -824,6 +834,7 @@ def _apply_sort(directions, sort_by, sort_dir, default_order='-data_sozdaniya'):
     if sort_by == 'status':
         directions = directions.annotate(
             status_sort=Case(
+                When(cancel=True, then=Value(4)),
                 When(total_confirmed=True, then=Value(3)),
                 When(accept_who_doctor__isnull=False, total_confirmed=False, then=Value(2)),
                 When(is_cito=True, then=Value(1)),
@@ -925,7 +936,6 @@ def get_requests_all_list(request):
     directions = (
         Napravleniya.objects.filter(
             is_request=True,
-            cancel=False,
             **date_filter,
         )
         .filter(
