@@ -1037,9 +1037,9 @@ th:not(.nopd):not(.button-td) {
   color: #cf3a24;
 
   .material-get-icon {
-    margin-left: 3px;
+    margin-left: 0;
     font-size: 11px;
-    color: #cf3a24;
+    color: #4b77be;
   }
 }
 
