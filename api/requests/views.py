@@ -746,11 +746,7 @@ def direction_to_all_list_row(direction):
         'status': _get_request_status_label(direction),
         'cito': direction.is_cito,
         'hidden': direction.cancel,
-        'canHide': (
-            not direction.cancel
-            and not direction.total_confirmed
-            and not direction.accept_who_doctor_id
-        ),
+        'canHide': (not direction.cancel and not direction.total_confirmed and not direction.accept_who_doctor_id),
     }
 
 
