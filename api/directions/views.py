@@ -1021,6 +1021,7 @@ def directions_cancel(request):
             response["ok"] = True
             response["message"] = "Успешно отменена"
             Log(key=pk, type=5002, body="да" if direction.cancel else "нет", user=request.user.doctorprofile).save()
+
     return JsonResponse(response)
 
 
