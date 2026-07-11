@@ -249,6 +249,7 @@
               class="text-center"
               :title="
                 statuses[row.status === 1 && row.has_descriptive ? -2 : row.status] +
+                  (row.status === 0 && row.material_get ? '. Биоматериал забран' : '') +
                   (row.maybe_onco ? '. Онкоподозрение' : '') +
                   (row.is_expertise
                     ? row.expertise_status > 0
@@ -264,6 +265,10 @@
               <strong>
                 <span v-if="row.rmis_number">e</span>
                 {{ row.status }}
+                <i
+                  v-if="row.status === 0 && row.material_get"
+                  class="fa-solid fa-syringe material-get-icon"
+                />
                 <span v-if="row.maybe_onco">*О</span>
                 <span v-if="row.is_application">**З</span>
                 <span
@@ -1030,6 +1035,12 @@ th:not(.nopd):not(.button-td) {
 
 .status-0 {
   color: #cf3a24;
+
+  .material-get-icon {
+    margin-left: 3px;
+    font-size: 11px;
+    color: #cf3a24;
+  }
 }
 
 .status-1 {
