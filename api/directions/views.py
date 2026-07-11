@@ -589,7 +589,7 @@ def directions_history(request):
     result_sql = get_history_dir(date_start, date_end, patient_card, user_creater, services, is_service, iss_pk, is_parent, for_slave_hosp)
     # napravleniye_id, cancel, iss_id, tubesregistration_id, res_id, res_title, date_create,
     # doc_confirmation_id, time_recive, ch_time_save, podr_title, is_hospital, maybe_onco, can_has_pacs,
-    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id, tube_number
+    # is_slave_hospital, is_treatment, is_stom, is_doc_refferal, is_paraclinic, is_microbiology, parent_id, study_instance_uid, parent_slave_hosp_id, tube_number, time_get
     researches_pks = []
     researches_titles = ''
     child_researches_titles = ''
@@ -602,6 +602,7 @@ def directions_history(request):
     lab = set()
     lab_title = None
     person_contract_dirs, planed_doctor, register_number, rmis_number = "", "", "", ""
+    material_collected = False
     created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
     user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
@@ -660,6 +661,7 @@ def directions_history(request):
                         'register_number': register_number,
                         'rmis_number': rmis_number,
                         'countConfirms': "",
+                        'material_get': material_collected,
                     }
                 )
                 child_researches_titles = ""
@@ -670,6 +672,7 @@ def directions_history(request):
                 rmis_number = ""
 
             dir = i[0]
+            material_collected = False
             expertise_data = get_expertise(dir)
             is_expertise = False
             expertise_status = False
@@ -734,6 +737,8 @@ def directions_history(request):
         if i[1]:
             status_val = -1
         status_set.add(status_val)
+        if i[39]:
+            material_collected = True
         researches_pks.append(i[4])
         if i[12]:
             maybe_onco = True
@@ -799,6 +804,7 @@ def directions_history(request):
                 'register_number': register_number,
                 'rmis_number': rmis_number,
                 'countConfirms': "",
+                'material_get': material_collected,
             }
         )
     res['directions'] = final_result
@@ -1015,6 +1021,7 @@ def directions_cancel(request):
             response["ok"] = True
             response["message"] = "Успешно отменена"
             Log(key=pk, type=5002, body="да" if direction.cancel else "нет", user=request.user.doctorprofile).save()
+
     return JsonResponse(response)
 
 
