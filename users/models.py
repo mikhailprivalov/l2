@@ -905,6 +905,4 @@ class PermissionHospitalProtocolDoctorProfile(models.Model):
 
     @staticmethod
     def get_doctor_hospital_protocol_hospitals_ids(doctor_profile: DoctorProfile):
-        return list(
-            PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile_id=doctor_profile.id).values_list("hospital_id", flat=True)
-        )
+        return list(PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile_id=doctor_profile.id).values_list("hospital_id", flat=True))
