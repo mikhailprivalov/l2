@@ -565,11 +565,7 @@ class DoctorProfileEquipment(models.Model):
         if not hospital_ids:
             return []
 
-        equipments = (
-            Equipment.objects.filter(hospital_id__in=hospital_ids)
-            .select_related("hospital")
-            .order_by("hospital__short_title", "hospital__title", "title")
-        )
+        equipments = Equipment.objects.filter(hospital_id__in=hospital_ids).select_related("hospital").order_by("hospital__short_title", "hospital__title", "title")
 
         grouped = {}
         hospital_labels = {}
