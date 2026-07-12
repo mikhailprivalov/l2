@@ -542,6 +542,47 @@ class DoctorProfileEquipment(models.Model):
         verbose_name = 'Пользователь-оборудование'
         verbose_name_plural = 'Пользователи-оборудование'
 
+    @staticmethod
+    def save_doctor_equipment(doctor_profile: DoctorProfile, equipment_ids: list):
+        DoctorProfileEquipment.objects.filter(doctor_profile=doctor_profile).delete()
+        if equipment_ids:
+            DoctorProfileEquipment.objects.bulk_create(
+                [
+                    DoctorProfileEquipment(
+                        doctor_profile=doctor_profile,
+                        equipment_id=equipment_id,
+                    )
+                    for equipment_id in equipment_ids
+                ]
+            )
+
+    @staticmethod
+    def get_doctor_equipment_ids(doctor_profile: DoctorProfile):
+        return list(DoctorProfileEquipment.objects.filter(doctor_profile_id=doctor_profile.id).values_list("equipment_id", flat=True))
+
+    @staticmethod
+    def get_equipment_tree_options(hospital_ids: list):
+        if not hospital_ids:
+            return []
+
+        equipments = (
+            Equipment.objects.filter(hospital_id__in=hospital_ids)
+            .select_related("hospital")
+            .order_by("hospital__short_title", "hospital__title", "title")
+        )
+
+        grouped = {}
+        hospital_labels = {}
+        for equipment in equipments:
+            hospital_key = equipment.hospital_id
+            hospital_labels[hospital_key] = equipment.hospital.short_title or equipment.hospital.title
+            grouped.setdefault(hospital_key, []).append({"id": equipment.pk, "label": equipment.title or str(equipment)})
+
+        return [
+            {"id": f"h-{hospital_key}", "label": hospital_labels[hospital_key], "children": grouped[hospital_key]}
+            for hospital_key in sorted(grouped.keys(), key=lambda x: hospital_labels.get(x, ""))
+        ]
+
 
 class DoctorProfileEmployeePosition(models.Model):
     doctor_profile = models.ForeignKey(DoctorProfile, null=True, blank=True, on_delete=models.CASCADE)
