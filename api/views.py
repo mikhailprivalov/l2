@@ -1463,7 +1463,23 @@ def users_view(request):
 
     employee_departments = employees_models.Department.get_active(hospital_pk)
 
-    return JsonResponse({"departments": data, "specialities": spec_data, "positions": positions, "districts": districts, "employee_departments": employee_departments})
+    if request.user.is_superuser or request.user.doctorprofile.all_hospitals_users_control:
+        equipment_hospital_ids = list(Hospitals.objects.filter(hide=False).values_list("pk", flat=True))
+    else:
+        equipment_hospital_ids = [hospital_pk] if hospital_pk else []
+
+    equipment_options = users.DoctorProfileEquipment.get_equipment_tree_options(equipment_hospital_ids)
+
+    return JsonResponse(
+        {
+            "departments": data,
+            "specialities": spec_data,
+            "positions": positions,
+            "districts": districts,
+            "employee_departments": employee_departments,
+            "equipment_options": equipment_options,
+        }
+    )
 
 
 @login_required
@@ -1512,6 +1528,8 @@ def user_view(request):
             "dismissed": False,
             "allowed_employee_departments": [],
             "schedule_employee_positions": [],
+            "hospital_protocol_hospitals": [],
+            "doctor_equipment": [],
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1533,6 +1551,8 @@ def user_view(request):
         department_doctors = users.DoctorProfile.objects.filter(podrazdeleniye_id=doc.podrazdeleniye_id)
         allowed_employee_departments = employees_models.DoctorProfileDepartment.get_doctor_departments_ids(doc)
         schedule_employee_positions = users.DoctorProfileEmployeePosition.get_doctor_employee_positions_ids(doc)
+        hospital_protocol_hospitals = users.PermissionHospitalProtocolDoctorProfile.get_doctor_hospital_protocol_hospitals_ids(doc)
+        doctor_equipment = users.DoctorProfileEquipment.get_doctor_equipment_ids(doc)
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1575,6 +1595,8 @@ def user_view(request):
             "dismissed": doc.dismissed,
             "allowed_employee_departments": allowed_employee_departments,
             "schedule_employee_positions": schedule_employee_positions,
+            "hospital_protocol_hospitals": hospital_protocol_hospitals,
+            "doctor_equipment": doctor_equipment,
         }
 
     return JsonResponse({"user": data})
@@ -1612,6 +1634,8 @@ def user_save_view(request):
     dismissed = ud.get("dismissed", False)
     allowed_employee_departments = ud.get("allowed_employee_departments", [])
     schedule_employee_positions = ud.get("schedule_employee_positions", [])
+    hospital_protocol_hospitals = ud.get("hospital_protocol_hospitals", [])
+    doctor_equipment = ud.get("doctor_equipment", [])
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1743,6 +1767,8 @@ def user_save_view(request):
 
     employees_models.DoctorProfileDepartment.save_doctor_departments(doc, allowed_employee_departments)
     users.DoctorProfileEmployeePosition.save_doctor_employee_positions(doc, schedule_employee_positions)
+    users.PermissionHospitalProtocolDoctorProfile.save_doctor_hospital_protocol_hospitals(doc, hospital_protocol_hospitals)
+    users.DoctorProfileEquipment.save_doctor_equipment(doc, doctor_equipment)
 
     data_doc_profile = {key: value for key, value in doc.dict_data.items()}
     data_doc_profile["id"] = doc.pk

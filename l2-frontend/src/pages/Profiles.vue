@@ -977,6 +977,47 @@
               />
             </div>
           </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">Протоколы больницы</span>
+              <Treeselect
+                v-model="user.hospital_protocol_hospitals"
+                class="treeselect-nbr treeselect-wide treeselect-34px"
+                :multiple="true"
+                :disable-branch-nodes="true"
+                :options="hospitalProtocolOptions"
+                placeholder="Выберите организации"
+                :append-to-body="true"
+                :clearable="true"
+              />
+            </div>
+          </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">Лаборант-оборудование</span>
+              <Treeselect
+                v-model="user.doctor_equipment"
+                class="treeselect-nbr treeselect-wide treeselect-34px"
+                :multiple="true"
+                :disable-branch-nodes="true"
+                :default-expand-level="1"
+                :options="equipmentOptions"
+                placeholder="Выберите оборудование"
+                :append-to-body="true"
+                :clearable="true"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
@@ -1093,6 +1134,7 @@ const resourceTemplatesList = ref([]);
 const currentResourcePk = ref(-1);
 const currentResourceTitle = ref('');
 const employeeDepartments = ref([]);
+const equipmentOptions = ref([]);
 const scheduleEmployeePositionsDefaultOptions = ref(null);
 const user = ref({
   username: '',
@@ -1136,6 +1178,8 @@ const user = ref({
   speciality: null,
   allowed_employee_departments: [],
   schedule_employee_positions: [],
+  hospital_protocol_hospitals: [],
+  doctor_equipment: [],
 });
 const selectedHospital = ref(-1);
 const openPk = ref(-2);
@@ -1180,6 +1224,11 @@ const canEditAnyOrganization = computed(() => l2UserData.value.su || l2UserData.
 const userHospital = computed(() => l2UserData.value.hospital || -1);
 
 const ownHospital = computed(() => [hospitals.value.find(({ id }) => id === l2UserData.value.hospital) || {}]);
+
+const hospitalProtocolOptions = computed(() => {
+  const list = canEditAnyOrganization.value ? hospitals.value : ownHospital.value;
+  return list.filter((h) => h.id > 0);
+});
 
 // method block
 const openSchedule = (pk) => {
@@ -1276,6 +1325,7 @@ const loadUsers = async (prevClr = false) => {
   districts.value = data.districts;
   doctorProfiles.value = data.doctorProfiles;
   employeeDepartments.value = data.employee_departments;
+  equipmentOptions.value = data.equipment_options || [];
   await store.dispatch(actions.DEC_LOADING);
 };
 
@@ -1392,6 +1442,8 @@ const close = async () => {
     dismissed: false,
     allowed_employee_departments: [],
     schedule_employee_positions: [],
+    hospital_protocol_hospitals: [],
+    doctor_equipment: [],
   };
   scheduleEmployeePositionsDefaultOptions.value = null;
   currentResourcePk.value = -1;
