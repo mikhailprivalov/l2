@@ -851,3 +851,23 @@ class PermissionHospitalProtocolDoctorProfile(models.Model):
         rows = [{"id": -1, "title": "Все"}]
         rows.extend([{"id": i.hospital.pk, "title": i.hospital.title} for i in permissions])
         return rows
+
+    @staticmethod
+    def save_doctor_hospital_protocol_hospitals(doctor_profile: DoctorProfile, hospital_ids: list):
+        PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile=doctor_profile).delete()
+        if hospital_ids:
+            PermissionHospitalProtocolDoctorProfile.objects.bulk_create(
+                [
+                    PermissionHospitalProtocolDoctorProfile(
+                        doctor_profile=doctor_profile,
+                        hospital_id=hospital_id,
+                    )
+                    for hospital_id in hospital_ids
+                ]
+            )
+
+    @staticmethod
+    def get_doctor_hospital_protocol_hospitals_ids(doctor_profile: DoctorProfile):
+        return list(
+            PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile_id=doctor_profile.id).values_list("hospital_id", flat=True)
+        )

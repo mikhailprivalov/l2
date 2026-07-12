@@ -977,6 +977,26 @@
               />
             </div>
           </div>
+          <div
+            class="row left-padding-10"
+          >
+            <div
+              class="input-group"
+              style="width: 100%"
+            >
+              <span class="input-group-addon">Протоколы больницы</span>
+              <Treeselect
+                v-model="user.hospital_protocol_hospitals"
+                class="treeselect-nbr treeselect-wide treeselect-34px"
+                :multiple="true"
+                :disable-branch-nodes="true"
+                :options="hospitalProtocolOptions"
+                placeholder="Выберите организации"
+                :append-to-body="true"
+                :clearable="true"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <div class="right-bottom">
@@ -1136,6 +1156,7 @@ const user = ref({
   speciality: null,
   allowed_employee_departments: [],
   schedule_employee_positions: [],
+  hospital_protocol_hospitals: [],
 });
 const selectedHospital = ref(-1);
 const openPk = ref(-2);
@@ -1180,6 +1201,11 @@ const canEditAnyOrganization = computed(() => l2UserData.value.su || l2UserData.
 const userHospital = computed(() => l2UserData.value.hospital || -1);
 
 const ownHospital = computed(() => [hospitals.value.find(({ id }) => id === l2UserData.value.hospital) || {}]);
+
+const hospitalProtocolOptions = computed(() => {
+  const list = canEditAnyOrganization.value ? hospitals.value : ownHospital.value;
+  return list.filter((h) => h.id > 0);
+});
 
 // method block
 const openSchedule = (pk) => {
@@ -1392,6 +1418,7 @@ const close = async () => {
     dismissed: false,
     allowed_employee_departments: [],
     schedule_employee_positions: [],
+    hospital_protocol_hospitals: [],
   };
   scheduleEmployeePositionsDefaultOptions.value = null;
   currentResourcePk.value = -1;

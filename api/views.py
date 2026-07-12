@@ -1512,6 +1512,7 @@ def user_view(request):
             "dismissed": False,
             "allowed_employee_departments": [],
             "schedule_employee_positions": [],
+            "hospital_protocol_hospitals": [],
         }
     else:
         doc: users.DoctorProfile = users.DoctorProfile.objects.get(pk=pk)
@@ -1533,6 +1534,7 @@ def user_view(request):
         department_doctors = users.DoctorProfile.objects.filter(podrazdeleniye_id=doc.podrazdeleniye_id)
         allowed_employee_departments = employees_models.DoctorProfileDepartment.get_doctor_departments_ids(doc)
         schedule_employee_positions = users.DoctorProfileEmployeePosition.get_doctor_employee_positions_ids(doc)
+        hospital_protocol_hospitals = users.PermissionHospitalProtocolDoctorProfile.get_doctor_hospital_protocol_hospitals_ids(doc)
         data = {
             "family": fio_parts[0],
             "name": fio_parts[1],
@@ -1575,6 +1577,7 @@ def user_view(request):
             "dismissed": doc.dismissed,
             "allowed_employee_departments": allowed_employee_departments,
             "schedule_employee_positions": schedule_employee_positions,
+            "hospital_protocol_hospitals": hospital_protocol_hospitals,
         }
 
     return JsonResponse({"user": data})
@@ -1612,6 +1615,7 @@ def user_save_view(request):
     dismissed = ud.get("dismissed", False)
     allowed_employee_departments = ud.get("allowed_employee_departments", [])
     schedule_employee_positions = ud.get("schedule_employee_positions", [])
+    hospital_protocol_hospitals = ud.get("hospital_protocol_hospitals", [])
 
     if date_stop_external_access == "":
         date_stop_external_access = None
@@ -1743,6 +1747,7 @@ def user_save_view(request):
 
     employees_models.DoctorProfileDepartment.save_doctor_departments(doc, allowed_employee_departments)
     users.DoctorProfileEmployeePosition.save_doctor_employee_positions(doc, schedule_employee_positions)
+    users.PermissionHospitalProtocolDoctorProfile.save_doctor_hospital_protocol_hospitals(doc, hospital_protocol_hospitals)
 
     data_doc_profile = {key: value for key, value in doc.dict_data.items()}
     data_doc_profile["id"] = doc.pk
