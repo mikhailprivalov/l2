@@ -1470,14 +1470,16 @@ def users_view(request):
 
     equipment_options = users.DoctorProfileEquipment.get_equipment_tree_options(equipment_hospital_ids)
 
-    return JsonResponse({
-        "departments": data,
-        "specialities": spec_data,
-        "positions": positions,
-        "districts": districts,
-        "employee_departments": employee_departments,
-        "equipment_options": equipment_options,
-    })
+    return JsonResponse(
+        {
+            "departments": data,
+            "specialities": spec_data,
+            "positions": positions,
+            "districts": districts,
+            "employee_departments": employee_departments,
+            "equipment_options": equipment_options,
+        }
+    )
 
 
 @login_required
