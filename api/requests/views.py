@@ -593,11 +593,7 @@ def update_request(request):
                 return status_response(False, "Размер файла превышает 10 МБ")
 
     try:
-        direction = (
-            Napravleniya.objects.select_related('type_contrast')
-            .prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set')
-            .get(pk=request_id, is_request=True)
-        )
+        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id, is_request=True)
     except Napravleniya.DoesNotExist:
         return status_response(False, "Заявка не найдена")
 
