@@ -1011,7 +1011,8 @@ def directions_cancel(request):
             if iss.study_instance_uid or iss.study_instance_uid_tag:
                 response["cancel"] = False
                 response["ok"] = False
-        if direction.total_confirmed or direction.accept_who_doctor:
+        blocked_by_status = not direction.is_request and (direction.total_confirmed or direction.accept_who_doctor)
+        if blocked_by_status:
             response["cancel"] = False
             response["ok"] = False
         else:
