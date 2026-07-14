@@ -447,11 +447,7 @@ def link_image_to_request(request):
 
 
 def _is_request_editable(direction):
-    return (
-        not direction.cancel
-        and not direction.accept_who_doctor_id
-        and not direction.total_confirmed
-    )
+    return not direction.cancel and not direction.accept_who_doctor_id and not direction.total_confirmed
 
 
 def _get_request_research_id(direction):
