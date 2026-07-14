@@ -656,11 +656,7 @@ def update_request(request):
                 django_file = ContentFile(file_content, name=file_name)
                 NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file).save()
 
-        direction = (
-            Napravleniya.objects.select_related('type_contrast')
-            .prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set')
-            .get(pk=request_id)
-        )
+        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id)
         new_snapshot = _build_request_edit_snapshot(direction)
         log_body = _build_edit_log_body(old_snapshot, new_snapshot)
         if log_body:
