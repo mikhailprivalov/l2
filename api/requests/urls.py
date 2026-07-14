@@ -9,6 +9,7 @@ urlpatterns = [
     path('image-details', views.get_image_details),
     path('request-details', views.get_request_details),
     path('create', views.create_request),
+    path('update', views.update_request),
     path('link-image', views.link_image_to_request),
     path('unlinked-requests', views.get_unlinked_requests),
     path('by-status', views.get_requests_by_status),

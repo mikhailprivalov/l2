@@ -549,9 +549,7 @@ export default {
       immediate: true,
     },
     value(v) {
-      if (v instanceof Array) {
-        this.checked_researches = v;
-      }
+      this.syncCheckedResearchesFromValue(v);
     },
     types() {
       this.checkType();
@@ -622,9 +620,42 @@ export default {
 
     if (this.value instanceof Array) {
       this.checked_researches = this.value;
+    } else {
+      this.syncCheckedResearchesFromValue(this.value, true);
     }
   },
   methods: {
+    syncCheckedResearchesFromValue(v, navigate = false) {
+      if (v instanceof Array) {
+        this.checked_researches = [...v];
+        return;
+      }
+
+      if (!this.oneselect) {
+        return;
+      }
+
+      if (!v || v === -1) {
+        this.checked_researches = [];
+        return;
+      }
+
+      this.checked_researches = [v];
+
+      if (!navigate) {
+        return;
+      }
+
+      const research = this.research_data(v);
+      if (!research?.pk) {
+        return;
+      }
+
+      this.select_type(research.type);
+      if (research.type !== '4') {
+        this.select_dep(research.department_pk);
+      }
+    },
     researches_sub_categories(scId) {
       const r = [];
       for (const row of this.$store.getters.researches[this.rev_t] || []) {

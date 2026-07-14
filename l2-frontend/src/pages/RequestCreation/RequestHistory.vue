@@ -267,8 +267,32 @@
                 <h4 class="detail-section-title">
                   Исследования
                 </h4>
+                <template v-if="requestDetails.editable">
+                  <div class="detail-research-labels">
+                    <div class="detail-research-row">
+                      <span class="detail-label">текущее</span>
+                      <span class="detail-value">{{ currentResearchTitle || '—' }}</span>
+                    </div>
+                    <div class="detail-research-row">
+                      <span class="detail-label">новое</span>
+                      <span class="detail-value">{{ newResearchTitle || '—' }}</span>
+                    </div>
+                  </div>
+                  <div class="research-picker-wrap">
+                    <ResearchesPicker
+                      v-model="editForm.researchId"
+                      :hidetemplates="true"
+                      oneselect
+                      :autoselect="false"
+                      kk="request_details_edit"
+                      just_search
+                      :types-only="[3]"
+                      hide-type-picker
+                    />
+                  </div>
+                </template>
                 <div
-                  v-if="requestDetails.researches && requestDetails.researches.length > 0"
+                  v-else-if="requestDetails.researches && requestDetails.researches.length > 0"
                   class="researches-list"
                 >
                   <div
@@ -309,10 +333,69 @@
                   </a>
                 </div>
                 <div
-                  v-else
+                  v-else-if="!requestDetails.editable"
                   class="no-files"
                 >
                   Файлы не прикреплены
+                </div>
+                <div
+                  v-if="requestDetails.editable"
+                  class="file-upload-edit"
+                >
+                  <input
+                    ref="detailFileInput"
+                    type="file"
+                    style="display: none"
+                    @change="handleDetailFileChange"
+                  >
+                  <div
+                    v-if="!selectedDetailFile"
+                    class="file-drop-zone"
+                    @click="openDetailFileDialog"
+                    @dragover.prevent
+                    @drop.prevent="handleDetailFileDrop"
+                  >
+                    <div class="file-drop-content">
+                      <i class="fa fa-cloud-upload" />
+                      <span>Добавить файл (до 10 МБ)</span>
+                    </div>
+                  </div>
+                  <div
+                    v-else
+                    class="selected-file"
+                  >
+                    <div class="file-info">
+                      <div class="file-icon">
+                        <i class="fa fa-file" />
+                      </div>
+                      <div class="file-details">
+                        <div class="file-name">
+                          {{ selectedDetailFile.name }}
+                        </div>
+                        <div class="file-size">
+                          {{ formatFileSize(selectedDetailFile.size) }}
+                        </div>
+                      </div>
+                    </div>
+                    <div class="file-actions">
+                      <button
+                        type="button"
+                        class="btn-change"
+                        title="Заменить файл"
+                        @click="openDetailFileDialog"
+                      >
+                        <i class="fa fa-refresh" />
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-remove"
+                        title="Удалить файл"
+                        @click="removeDetailFile"
+                      >
+                        <i class="fa fa-times" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -322,49 +405,117 @@
                 <h4 class="detail-section-title">
                   Параметры исследования
                 </h4>
-                <div class="detail-row">
-                  <span class="detail-label">Дата исследования:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !requestDetails.factResearchDate }"
-                  >{{ requestDetails.factResearchDate || '(не указана)' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Время исследования:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !requestDetails.factResearchTime }"
-                  >{{ requestDetails.factResearchTime || '(не указано)' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Доза:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !requestDetails.dose }"
-                  >{{ requestDetails.dose || '(не указана)' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Объем контраста:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !requestDetails.contrastAmount }"
-                  >{{ requestDetails.contrastAmount || '(не указан)' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Контраст:</span>
-                  <span
-                    class="detail-value"
-                    :class="{ 'empty-value': !requestDetails.contrastText }"
-                  >{{ requestDetails.contrastText || '(не указан)' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Срочность:</span>
-                  <span class="detail-value">{{ requestDetails.isCito ? 'Cito' : 'Обычное' }}</span>
-                </div>
-                <div class="detail-row">
-                  <span class="detail-label">Динамика:</span>
-                  <span class="detail-value">{{ requestDetails.isDynamic ? 'Да' : 'Нет' }}</span>
-                </div>
+                <template v-if="requestDetails.editable">
+                  <div class="detail-params-row">
+                    <div class="detail-params-field detail-params-field--datetime">
+                      <label class="detail-params-label">Дата и время исследования</label>
+                      <div class="detail-params-datetime">
+                        <input
+                          v-model="editForm.date"
+                          type="date"
+                          class="form-control detail-edit-input detail-edit-input--date"
+                        >
+                        <input
+                          v-model="editForm.time"
+                          type="time"
+                          class="form-control detail-edit-input detail-edit-input--time"
+                        >
+                      </div>
+                    </div>
+                    <div class="detail-params-field detail-params-field--dose">
+                      <label class="detail-params-label">Доза</label>
+                      <input
+                        v-model="editForm.dose"
+                        type="number"
+                        class="form-control detail-edit-input detail-edit-input--dose"
+                        placeholder="мЗв"
+                      >
+                    </div>
+                    <div class="detail-params-field detail-params-field--checkboxes">
+                      <label class="detail-checkbox">
+                        <input
+                          v-model="editForm.cito"
+                          type="checkbox"
+                        >
+                        Cito
+                      </label>
+                      <label class="detail-checkbox">
+                        <input
+                          v-model="editForm.isDynamic"
+                          type="checkbox"
+                        >
+                        Динамика
+                      </label>
+                    </div>
+                  </div>
+                  <div class="detail-params-row">
+                    <div class="detail-params-field detail-params-field--contrast">
+                      <label class="detail-params-label">Контраст</label>
+                      <Treeselect
+                        v-model="editForm.currentContrast"
+                        :multiple="false"
+                        :options="contrastOptions"
+                        :append-to-body="true"
+                        placeholder="Выберите контраст"
+                        class="detail-edit-treeselect"
+                      />
+                    </div>
+                    <div class="detail-params-field detail-params-field--volume">
+                      <label class="detail-params-label">Объём</label>
+                      <input
+                        v-model="editForm.contrastAmount"
+                        type="number"
+                        class="form-control detail-edit-input detail-edit-input--volume"
+                        placeholder="мг"
+                      >
+                    </div>
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="detail-row">
+                    <span class="detail-label">Дата исследования:</span>
+                    <span
+                      class="detail-value"
+                      :class="{ 'empty-value': !requestDetails.factResearchDate }"
+                    >{{ requestDetails.factResearchDate || '(не указана)' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Время исследования:</span>
+                    <span
+                      class="detail-value"
+                      :class="{ 'empty-value': !requestDetails.factResearchTime }"
+                    >{{ requestDetails.factResearchTime || '(не указано)' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Доза:</span>
+                    <span
+                      class="detail-value"
+                      :class="{ 'empty-value': !requestDetails.dose }"
+                    >{{ requestDetails.dose || '(не указана)' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Объем контраста:</span>
+                    <span
+                      class="detail-value"
+                      :class="{ 'empty-value': !requestDetails.contrastAmount }"
+                    >{{ requestDetails.contrastAmount || '(не указан)' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Контраст:</span>
+                    <span
+                      class="detail-value"
+                      :class="{ 'empty-value': !requestDetails.contrastText }"
+                    >{{ requestDetails.contrastText || '(не указан)' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Срочность:</span>
+                    <span class="detail-value">{{ requestDetails.isCito ? 'Cito' : 'Обычное' }}</span>
+                  </div>
+                  <div class="detail-row">
+                    <span class="detail-label">Динамика:</span>
+                    <span class="detail-value">{{ requestDetails.isDynamic ? 'Да' : 'Нет' }}</span>
+                  </div>
+                </template>
                 <div class="detail-row">
                   <span class="detail-label">Привязанное изображение:</span>
                   <span class="detail-value">{{ requestDetails.hasImage ? 'Есть' : 'Отсутствует' }}</span>
@@ -377,7 +528,14 @@
                 </h4>
                 <div class="detail-textarea-row">
                   <span class="detail-label">Краткий анамнез:</span>
+                  <textarea
+                    v-if="requestDetails.editable"
+                    v-model="editForm.anamnesis"
+                    class="form-control detail-edit-textarea"
+                    placeholder="Анамнез"
+                  />
                   <div
+                    v-else
                     class="detail-textarea-value"
                     :class="{ 'empty-value': !requestDetails.anamnesis }"
                     v-text="requestDetails.anamnesis || '(не указан)'"
@@ -385,7 +543,14 @@
                 </div>
                 <div class="detail-textarea-row">
                   <span class="detail-label">Комментарий:</span>
+                  <textarea
+                    v-if="requestDetails.editable"
+                    v-model="editForm.comment"
+                    class="form-control detail-edit-textarea"
+                    placeholder="Комментарий"
+                  />
                   <div
+                    v-else
                     class="detail-textarea-value"
                     :class="{ 'empty-value': !requestDetails.comment }"
                     v-text="requestDetails.comment || '(не указан)'"
@@ -399,14 +564,25 @@
       <div slot="footer">
         <div class="row">
           <div class="col-xs-8" />
-          <div class="col-xs-4">
-            <button
-              class="btn btn-primary-nb btn-blue-nb"
-              type="button"
-              @click="hideRequestDetailsModal"
-            >
-              Закрыть
-            </button>
+          <div class="col-xs-4 text-right">
+            <div class="detail-modal-footer-buttons">
+              <button
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                @click="hideRequestDetailsModal"
+              >
+                Закрыть
+              </button>
+              <button
+                v-if="requestDetails && requestDetails.editable"
+                class="btn btn-primary-nb btn-blue-nb"
+                type="button"
+                :disabled="isSavingDetails"
+                @click="saveRequestDetails"
+              >
+                {{ isSavingDetails ? 'Сохранение...' : 'Сохранить' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -419,19 +595,27 @@ import {
   computed, onMounted, onUnmounted, ref, watch,
 } from 'vue';
 import moment from 'moment';
+import Treeselect from '@riophae/vue-treeselect';
+import '@riophae/vue-treeselect/dist/vue-treeselect.css';
 
 import api from '@/api';
-import DateRange from '@/ui-cards/DateRange.vue';
+import researchesPoint from '@/api/researches-point';
 import useNotify from '@/hooks/useNotify';
+import useLoader from '@/hooks/useLoader';
 import usePrint from '@/hooks/usePrint';
+import { useStore } from '@/store';
+import DateRange from '@/ui-cards/DateRange.vue';
 import Modal from '@/ui-cards/Modal.vue';
+import ResearchesPicker from '@/ui-cards/ResearchesPicker.vue';
 
 const props = defineProps<{
   cardId?: number | null;
   highlightedRequestId?: number | string | null;
 }>();
 const notify = useNotify();
+const loader = useLoader();
 const { printResults } = usePrint();
+const store = useStore();
 
 const printResult = (id: number) => {
   printResults([id]);
@@ -461,6 +645,59 @@ const currentImageForLink = ref<any>(null);
 const showRequestDetailsModal = ref(false);
 const requestDetails = ref<any>(null);
 const isLoadingDetails = ref(false);
+const isSavingDetails = ref(false);
+const detailFileInput = ref<HTMLInputElement>();
+const selectedDetailFile = ref<File | null>(null);
+const contrastOptions = ref([]);
+
+type EditForm = {
+  researchId: number | null;
+  date: string;
+  time: string;
+  dose: string;
+  cito: boolean;
+  isDynamic: boolean;
+  currentContrast: number;
+  contrastAmount: string;
+  anamnesis: string;
+  comment: string;
+  files: Array<{ url: string; name: string; type: string }>;
+};
+
+const defaultEditForm = (): EditForm => ({
+  researchId: null,
+  date: '',
+  time: '',
+  dose: '',
+  cito: false,
+  isDynamic: false,
+  currentContrast: -1,
+  contrastAmount: '',
+  anamnesis: '',
+  comment: '',
+  files: [],
+});
+
+const editForm = ref<EditForm>(defaultEditForm());
+const currentResearchTitle = ref('');
+
+const getResearchTitle = (researchId: number | null) => {
+  if (!researchId || researchId === -1) {
+    return '';
+  }
+
+  const fromStore = store.getters.researches_obj?.[researchId];
+  if (fromStore?.title) {
+    return fromStore.short_title || fromStore.title;
+  }
+
+  const fromDetails = requestDetails.value?.researches?.find(
+    (research: { id: number }) => research.id === researchId,
+  );
+  return fromDetails?.short_title || fromDetails?.title || '';
+};
+
+const newResearchTitle = computed(() => getResearchTitle(editForm.value.researchId));
 
 const selectMode = (id: string) => {
   searchMode.value = id;
@@ -474,7 +711,7 @@ const formatDateTime = (datetime: string) => {
   return datetime.split(' ')[1] || datetime;
 };
 
-type File = {
+type RequestFile = {
   id: number;
   name: string;
   url: string;
@@ -488,7 +725,7 @@ type Request = {
   hasResult: boolean;
   acceptWhoDoctor: boolean;
   cardId: number;
-  files: File[];
+  files: RequestFile[];
   researchTitle: string;
   isCito: boolean;
   creator?: string;
@@ -680,15 +917,126 @@ const cancelDirection = async (pk: number) => {
   await getRequests();
 };
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Б';
+  const k = 1024;
+  const sizes = ['Б', 'КБ', 'МБ', 'ГБ'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${Math.round((bytes / (k ** i)) * 100) / 100} ${sizes[i]}`;
+};
+
+const convertFileToBase64 = (
+  file: File,
+): Promise<{ url: string; name: string; type: string }> => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    resolve({
+      url: e.target?.result as string,
+      name: file.name,
+      type: file.type,
+    });
+  };
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});
+
+const updateEditFormFiles = async () => {
+  if (selectedDetailFile.value) {
+    const fileData = await convertFileToBase64(selectedDetailFile.value);
+    editForm.value.files = [fileData];
+  } else {
+    editForm.value.files = [];
+  }
+};
+
+const handleDetailFileChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (!file) {
+    selectedDetailFile.value = null;
+    await updateEditFormFiles();
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    notify.error('Размер файла больше 10 МБ');
+    selectedDetailFile.value = null;
+    await updateEditFormFiles();
+    return;
+  }
+
+  selectedDetailFile.value = file;
+  await updateEditFormFiles();
+  input.value = '';
+};
+
+const handleDetailFileDrop = async (event: DragEvent) => {
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    notify.error(`Размер файла "${file.name}" превышает установленный лимит в 10 МБ.`);
+    selectedDetailFile.value = null;
+    await updateEditFormFiles();
+    return;
+  }
+
+  selectedDetailFile.value = file;
+  await updateEditFormFiles();
+};
+
+const openDetailFileDialog = () => {
+  detailFileInput.value?.click();
+};
+
+const removeDetailFile = async () => {
+  selectedDetailFile.value = null;
+  await updateEditFormFiles();
+};
+
+const populateEditForm = (details: any) => {
+  editForm.value = {
+    researchId: details.researchId || null,
+    date: details.editDate || '',
+    time: details.editTime || '',
+    dose: details.dose || '',
+    cito: details.isCito || false,
+    isDynamic: details.isDynamic || false,
+    currentContrast: details.currentContrast ?? -1,
+    contrastAmount: details.contrastAmount || '',
+    anamnesis: details.anamnesis || '',
+    comment: details.comment || '',
+    files: [],
+  };
+  currentResearchTitle.value = details.researches?.[0]?.short_title
+    || details.researches?.[0]?.title
+    || '';
+  selectedDetailFile.value = null;
+};
+
+const loadContrastOptions = async () => {
+  const response = await researchesPoint.getContrastCollect();
+  contrastOptions.value = response.data;
+};
+
 const showRequestDetails = async (requestId: number) => {
   isLoadingDetails.value = true;
   showRequestDetailsModal.value = true;
   requestDetails.value = null;
 
   try {
+    if (!contrastOptions.value.length) {
+      await loadContrastOptions();
+    }
     const response = await api('requests/request-details', { requestId });
     if (response.success) {
       requestDetails.value = response.data;
+      if (response.data.editable) {
+        populateEditForm(response.data);
+      }
     } else {
       notify.error(response.message || 'Ошибка при получении деталей заявки');
       showRequestDetailsModal.value = false;
@@ -704,6 +1052,62 @@ const showRequestDetails = async (requestId: number) => {
 const hideRequestDetailsModal = () => {
   showRequestDetailsModal.value = false;
   requestDetails.value = null;
+  editForm.value = defaultEditForm();
+  currentResearchTitle.value = '';
+  selectedDetailFile.value = null;
+};
+
+const saveRequestDetails = async () => {
+  if (!requestDetails.value?.editable) {
+    return;
+  }
+
+  if (!editForm.value.date || !editForm.value.time) {
+    notify.error('Не указана дата или время исследования');
+    return;
+  }
+
+  if (!editForm.value.researchId) {
+    notify.error('Не указана услуга');
+    return;
+  }
+
+  isSavingDetails.value = true;
+  loader.inc();
+  try {
+    const response = await api('requests/update', {
+      requestId: requestDetails.value.id,
+      researchId: editForm.value.researchId,
+      requestFields: {
+        date: editForm.value.date,
+        time: editForm.value.time,
+        dose: editForm.value.dose,
+        cito: editForm.value.cito,
+        isDynamic: editForm.value.isDynamic,
+        currentContrast: editForm.value.currentContrast,
+        contrastAmount: editForm.value.contrastAmount,
+        anamnesis: editForm.value.anamnesis,
+        comment: editForm.value.comment,
+        files: editForm.value.files,
+      },
+    });
+
+    if (!response.ok) {
+      notify.error(response.message || 'Ошибка при сохранении заявки');
+      return;
+    }
+
+    notify.ok(response.message || 'Заявка успешно обновлена');
+    await getRequests();
+    hideRequestDetailsModal();
+  } catch (error) {
+    notify.error('Ошибка при сохранении заявки');
+    // eslint-disable-next-line no-console
+    console.error('Ошибка при сохранении заявки:', error);
+  } finally {
+    isSavingDetails.value = false;
+    loader.dec();
+  }
 };
 
 const onRequestClick = (request: Request) => {
@@ -1286,16 +1690,18 @@ defineExpose({
 }
 
 .left-column {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 10px;
   border-right: 1px solid #e0e0e0;
 }
 
 .right-column {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-left: 10px;
 }
@@ -1337,6 +1743,45 @@ defineExpose({
   color: #333;
 }
 
+.detail-research-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.detail-research-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+
+  .detail-label {
+    flex: 0 0 80px;
+    min-width: 80px;
+    margin-bottom: 0;
+    font-weight: 500;
+    color: #666;
+  }
+
+  .detail-value {
+    flex: 1;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    word-break: break-word;
+  }
+}
+
+.detail-modal-footer-buttons {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  white-space: nowrap;
+}
+
 .detail-row {
   display: flex;
   justify-content: space-between;
@@ -1362,6 +1807,12 @@ defineExpose({
 .detail-value.empty-value {
   color: #888;
   font-style: italic;
+}
+
+.research-picker-wrap {
+  position: relative;
+  height: 280px;
+  margin-bottom: 8px;
 }
 
 .researches-list {
@@ -1460,5 +1911,227 @@ defineExpose({
 .detail-textarea-value.empty-value {
   color: #888;
   font-style: italic;
+}
+
+.detail-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+
+  .detail-label {
+    flex: 0 0 150px;
+    margin-bottom: 0;
+  }
+
+  &--checkboxes {
+    gap: 20px;
+    margin-top: 4px;
+  }
+}
+
+.detail-params-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
+  min-width: 0;
+}
+
+.detail-params-field {
+  flex: 1 1 0;
+  min-width: 0;
+
+  &--datetime {
+    flex: 0 0 auto;
+    width: 248px;
+  }
+
+  &--dose {
+    flex: 0 0 100px;
+    width: 100px;
+  }
+
+  &--checkboxes {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 6px;
+    white-space: nowrap;
+  }
+
+  &--contrast,
+  &--volume {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.detail-params-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.detail-params-datetime {
+  display: flex;
+  gap: 6px;
+
+  .detail-edit-input--date {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 128px;
+  }
+
+  .detail-edit-input--time {
+    flex: 0 0 100px;
+    width: 100px;
+    min-width: 100px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+}
+
+.detail-edit-input {
+  width: 100%;
+  height: 34px;
+
+  &--dose {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  &--volume {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+}
+
+.detail-edit-treeselect {
+  width: 100%;
+}
+
+.detail-edit-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.detail-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: normal;
+  cursor: pointer;
+
+  input {
+    margin: 0;
+  }
+}
+
+.file-upload-edit {
+  margin-top: 10px;
+}
+
+.file-drop-zone {
+  border: 2px dashed #ccc;
+  border-radius: 6px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  color: #666;
+  font-size: 14px;
+}
+
+.file-drop-zone:hover {
+  border-color: #6c757d;
+  background-color: #e9ecef;
+}
+
+.file-drop-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selected-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-icon {
+  font-size: 24px;
+  color: #049372;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.file-size {
+  font-size: 14px;
+  color: #666;
+}
+
+.file-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.btn-change,
+.btn-remove {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-change {
+  color: #049372;
+}
+
+.btn-change:hover {
+  color: #037a5a;
+}
+
+.btn-remove {
+  color: #dc3545;
+}
+
+.btn-remove:hover {
+  color: #c82333;
 }
 </style>
