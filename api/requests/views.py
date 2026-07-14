@@ -465,10 +465,7 @@ def _get_request_research_title(direction):
 
 
 def _build_request_edit_snapshot(direction):
-    files = [
-        f.uploaded_file.name.split('/')[-1] if f.uploaded_file else 'Файл'
-        for f in direction.napravleniyafiles_set.all()
-    ]
+    files = [f.uploaded_file.name.split('/')[-1] if f.uploaded_file else 'Файл' for f in direction.napravleniyafiles_set.all()]
     return {
         'researchId': _get_request_research_id(direction),
         'researchTitle': _get_request_research_title(direction),
