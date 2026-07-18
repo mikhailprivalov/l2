@@ -82,6 +82,7 @@ class Hospitals(models.Model):
     y_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Y 2 ")
     time_zone = models.CharField(max_length=100, blank=True, null=True, default="Asia/Irkutsk", help_text="Europe/Moscow")
     schema_docx = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
+    schema_docx_result_created_direction_hospital = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:
