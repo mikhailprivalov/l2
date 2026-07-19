@@ -91,7 +91,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         }
         context = {**meta_info, **result_data}
         doc.render(context)
-
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
         today = datetime.datetime.now()
         date_now1 = datetime.datetime.strftime(today, "%y%m%d%H%M%S%f")[:-3]
