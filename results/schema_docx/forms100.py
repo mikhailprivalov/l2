@@ -197,4 +197,3 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         Log.log(key=direction.pk, type=997, body={direction.pk: {"error": e, "protocolid": direction.pk}})
 
     return fwb
-
