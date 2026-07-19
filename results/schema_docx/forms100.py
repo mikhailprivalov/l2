@@ -170,7 +170,7 @@ def form_02(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
             "doc_confirm": iss.doc_confirmation.get_full_fio(),
-            "time_confirm": iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S") if iss.time_confirmation else "XX:XX:XX:XX:XX"
+            "time_confirm": iss.time_confirmation.astimezone(pytz.timezone('Europe/Moscow')).strftime("%d.%m.%Y - %H:%M:%S") if iss.time_confirmation else "XX:XX:XX:XX:XX",
         }
         context = {**meta_info, **result_data}
         doc.render(context)
