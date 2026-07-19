@@ -41,7 +41,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
         current_template_file = direction.hospital.schema_docx_result_created_direction_hospital.path
     try:
         fields_values = get_paraclinic_result_by_iss(iss.pk)
-        print(fields_values)
         result_data = {i.attached: transform_value(i.field_value, i.field_type) if i.field_type in [1, 34] else i.field_value for i in fields_values}
         name_pdf_file = ""
         for k, v in result_data.items():
@@ -90,8 +89,6 @@ def form_01(direction: Napravleniya, iss: Issledovaniya, fwb, doc, leftnone, use
             "license_data": iss.doc_confirmation.hospital.license_data if iss.doc_confirmation else "",
             "direction_pk": direction.pk,
         }
-        print(meta_info)
-        print(result_data)
         context = {**meta_info, **result_data}
         doc.render(context)
 
