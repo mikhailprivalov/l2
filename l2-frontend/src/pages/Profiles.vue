@@ -569,7 +569,7 @@
               style="height: 300px; border-right: 1px solid #eaeaea; padding-right: 0"
             >
               <ResearchesPicker
-                v-model="user.restricted_to_direct"
+                v-model="restrictedToDirect"
                 :hidetemplates="true"
                 :just_search="true"
               />
@@ -579,7 +579,7 @@
               style="height: 300px"
             >
               <SelectedResearches
-                :researches="user.restricted_to_direct"
+                :researches="restrictedToDirect"
                 :simple="true"
               />
             </div>
@@ -1127,6 +1127,7 @@ const positions = ref([]);
 const districts = ref([]);
 const doctorProfiles = ref([]);
 const resourceResearches = ref([]);
+const restrictedToDirect = ref([]);
 const setupAnalyzer = ref(false);
 const setupForbidden = ref(false);
 const setupResource = ref(false);
@@ -1386,7 +1387,10 @@ const save = async () => {
   await store.dispatch(actions.INC_LOADING);
   const { ok, npk, message } = await usersPoint.saveUser({
     pk: openPk.value,
-    user_data: user.value,
+    user_data: {
+      ...user.value,
+      restricted_to_direct: restrictedToDirect.value,
+    },
     groupsAnalyzer: analyzers.value,
     hospital_pk: selectedHospital.value,
   });
@@ -1449,6 +1453,7 @@ const close = async () => {
   currentResourcePk.value = -1;
   currentResourceTitle.value = '';
   resourceResearches.value = [];
+  restrictedToDirect.value = [];
 };
 
 const open = async (pk, dep = null) => {
@@ -1459,6 +1464,7 @@ const open = async (pk, dep = null) => {
   await store.dispatch(actions.INC_LOADING);
   const data = await usersPoint.loadUser({ pk });
   user.value = data.user;
+  restrictedToDirect.value = [...(data.user.restricted_to_direct || [])];
   if (pk === -1) {
     user.value.department = dep;
     genPasswd();

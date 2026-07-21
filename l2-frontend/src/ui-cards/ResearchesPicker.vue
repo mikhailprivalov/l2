@@ -562,6 +562,9 @@ export default {
         this.$emit('input', this.checked_researches.length === 0 ? -1 : this.checked_researches[0]);
         return;
       }
+      if (this.researchesArraysEqual(this.value, this.checked_researches)) {
+        return;
+      }
       this.$emit('input', this.checked_researches);
     },
     search() {
@@ -625,8 +628,17 @@ export default {
     }
   },
   methods: {
+    researchesArraysEqual(a, b) {
+      if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+        return false;
+      }
+      return a.every((v, i) => v === b[i]);
+    },
     syncCheckedResearchesFromValue(v, navigate = false) {
       if (v instanceof Array) {
+        if (this.researchesArraysEqual(v, this.checked_researches)) {
+          return;
+        }
         this.checked_researches = [...v];
         return;
       }
