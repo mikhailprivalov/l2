@@ -195,7 +195,9 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
         if finished:
             direction.order_redirection_number_is_finished = True
             direction.save()
-        interactive_log(f"Заключение по заказу {order_redirection_number}: обработано позиций={processed_articles}, " f"статус={result.get('status')}, завершён={'да' if finished else 'нет'}")
+        interactive_log(
+            f"Заключение по заказу {order_redirection_number}: обработано позиций={processed_articles}, " f"статус={result.get('status')}, завершён={'да' if finished else 'нет'}"
+        )
     finally:
         Log.log_if_slow("_pull_and_process_order", direction_pk, time.time() - time_start)
 
