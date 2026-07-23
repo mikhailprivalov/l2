@@ -203,10 +203,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
 
 
 def _get_order_redirection_numbers(ctx, direction_pks=None, days_limit=None):
-    qs = Napravleniya.objects.filter(
-        order_redirection_number__isnull=False,
-        hospital_id__in=ctx['hospitals_id'].keys(),
-    )
+    qs = Napravleniya.objects.filter(order_redirection_number__isnull=False, hospital_id__in=ctx['hospitals_id'].keys())
     if direction_pks is not None:
         qs = qs.filter(pk__in=direction_pks)
     else:
