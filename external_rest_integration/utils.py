@@ -36,11 +36,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
     time_start = time.time()
     iss = None
     direction = None
-    direction_pk = (
-        Napravleniya.objects.filter(order_redirection_number=order_redirection_number, hospital_id=hospital_id)
-        .values_list("pk", flat=True)
-        .first()
-    )
+    direction_pk = Napravleniya.objects.filter(order_redirection_number=order_redirection_number, hospital_id=hospital_id).values_list("pk", flat=True).first()
     try:
         interactive_log(f"--- Заказ {order_redirection_number}, hospital_id={hospital_id}, only_new={only_new_order} ---")
         auth_data = hospitals_id.get(hospital_id)
