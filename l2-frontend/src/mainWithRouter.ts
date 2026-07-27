@@ -91,8 +91,19 @@ const router = new Router({
           'Конструктор: Группировка исследований по направлениям',
           'Конструктор: Настройка скрининга',
           'Конструктор: Настройка организации',
+          'Конструктор: ДОУ',
         ],
         narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/dou',
+      name: 'construct_dou',
+      component: () => import('@/construct/ConstructDou.vue'),
+      meta: {
+        title: 'ДОУ-конструктор',
+        groups: ['Конструктор: ДОУ'],
+        fullPageLayout: true,
       },
     },
     {

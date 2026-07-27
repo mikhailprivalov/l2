@@ -361,6 +361,10 @@ RESEARCHES_PK_REQUIRED_STATTALON_FIELDS = {}  # {358: {"purpose": "Данные 
 DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK = []
 DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK = []
 HIDE_TITLE_BUTTONS_MAIN_MENU = {}
+DOU_CONSTRUCTOR_NAV_BUTTONS = [
+    {"id": "document_groups", "title": "Группа документов"},
+    {"id": "document_types", "title": "Виды документов"},
+]
 USE_COMBO_ROLE = {}
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 OFFSET_HOURS_PLAN_OPERATIONS = 0
