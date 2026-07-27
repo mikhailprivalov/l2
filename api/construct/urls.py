@@ -27,4 +27,5 @@ urlpatterns = [
     path('tubes/update-tube', views.update_tube),
     path('tubes/create-tube', views.create_tube),
     path('descriptive/get-ref-books', views.get_descriptive_ref_books),
+    path('dou/get-nav-buttons', views.get_dou_nav_buttons),
 ]

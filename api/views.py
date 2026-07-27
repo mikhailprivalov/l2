@@ -2224,6 +2224,7 @@ def construct_menu_data(request):
         {"url": "/ui/construct/patient-control-param", "title": "Контролируемые параметры пациентов", "access": ["Конструктор: Контролируемые параметры пациентов"], "module": None},
         {"url": "/ui/construct/route-perform-service", "title": "Маршрут исследований", "access": ["Конструктор: Маршрут исследований"], "module": None},
         {"url": "/ui/construct/complex-services", "title": "Комплексные услуги", "access": ["Конструктор: Настройка организации"], "module": None},
+        {"url": "/ui/construct/dou", "title": "ДОУ-конструктор", "access": ["Конструктор: ДОУ"], "module": None},
     ]
 
     from context_processors.utils import make_menu
