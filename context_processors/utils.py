@@ -34,7 +34,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:7'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:8'
         data = cache.get(k)
         if not data:
             pages = [
@@ -272,6 +272,7 @@ def menu(request):
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
+                {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]
 
             hp = SettingManager.get(key="home_page", default="false")

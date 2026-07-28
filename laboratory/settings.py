@@ -600,6 +600,11 @@ PERIOD_DEFAULT_HOSPITALI = 3
 # Переопределение: REQUESTS_JOURNAL_MAX_PERIOD_DAYS = N в laboratory/local_settings.py
 REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
 
+# Календарь годов на странице Садоводство (/ui/gardening).
+# Переопределение в laboratory/local_settings.py
+GARDENING_YEAR_MIN = 2000
+GARDENING_YEAR_MAX_OFFSET = 2
+
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
 except ImportError:

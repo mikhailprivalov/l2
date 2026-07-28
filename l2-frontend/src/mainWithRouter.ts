@@ -849,6 +849,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/gardening',
+      name: 'gardening',
+      component: () => import('@/pages/Gardening/index.vue'),
+      meta: {
+        title: 'Садоводство',
+        fullPageLayout: true,
+        groups: ['Бухгалтер садоводства'],
+      },
+    },
+    {
       path: '/ui/working-time',
       name: 'WorkingTime',
       component: () => import('@/pages/WorkingTime/WorkingTime.vue'),

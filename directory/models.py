@@ -2322,3 +2322,105 @@ class Contrasts(models.Model):
     class Meta:
         verbose_name = "Контраст"
         verbose_name_plural = "Контрасты"
+
+
+class RealEstate(models.Model):
+    title = models.CharField(max_length=255, help_text="Название контраста")
+    num_object = models.PositiveIntegerField(help_text="Номер объекта", blank=True, null=True, default=None, db_index=True, unique=True)
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие набора")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Недвижимость"
+        verbose_name_plural = "Недвижимости"
+
+
+class OwnersRealEstate(models.Model):
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие набора", db_index=True)
+    real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    individual = models.ForeignKey("clients.Individual", blank=True, null=True, default=None, help_text="Физлицо", db_index=True, on_delete=models.CASCADE)
+    date_start = models.DateField(help_text="Дата начала", blank=True, null=True, default=None)
+    date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
+    part_numerator = models.PositiveIntegerField(help_text="Числитель части доли", blank=True, null=True, default=None)
+    part_denominator = models.PositiveIntegerField(help_text="Знаменатель части доли", blank=True, null=True, default=None)
+
+    @property
+    def share_display(self):
+        return f"{self.part_numerator}/{self.part_denominator}"
+
+    @property
+    def share_decimal(self):
+        return self.part_numerator / self.part_denominator
+
+    def __str__(self):
+        return self.real_estate
+
+    class Meta:
+        verbose_name = "Недвижимость-владелец"
+        verbose_name_plural = "Недвижимости-владельцы"
+
+
+class GardeningPaymentType(models.Model):
+    PERIOD_YEAR = "year"
+    PERIOD_MONTH = "month"
+    PERIOD_CHOICES = (
+        (PERIOD_YEAR, "1 раз в год"),
+        (PERIOD_MONTH, "1 раз в месяц"),
+    )
+
+    title = models.CharField(max_length=255, help_text="Название вида платежа")
+    is_absolute = models.BooleanField(default=False, blank=True, help_text="Расчет в абсолютном выражении")
+    is_by_area = models.BooleanField(default=False, blank=True, help_text="Расчет от площади участка")
+    is_use_kilowatt = models.BooleanField(default=False, blank=True, help_text="Расчет от кВт энергии")
+    period = models.CharField(
+        max_length=16,
+        choices=PERIOD_CHOICES,
+        blank=True,
+        null=True,
+        default=None,
+        help_text="Период учета",
+    )
+    payment_date = models.DateField(
+        blank=True,
+        null=True,
+        default=None,
+        help_text="Срок оплаты (дата) для неежемесячных платежей",
+    )
+    payment_day = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        default=None,
+        help_text="День оплаты (1–31) для ежемесячных платежей",
+    )
+    hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
+    sort_weight = models.IntegerField(default=0, blank=True, help_text="Порядок")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Садоводство — вид платежа"
+        verbose_name_plural = "Садоводство — виды платежей"
+        ordering = ("sort_weight", "pk")
+
+
+class GardeningPaymentTypeRate(models.Model):
+    payment_type = models.ForeignKey(
+        GardeningPaymentType,
+        related_name="rates",
+        help_text="Вид платежа",
+        on_delete=models.CASCADE,
+    )
+    date_start = models.DateField(help_text="Дата начала", blank=True, null=True, default=None, db_index=True)
+    date_end = models.DateField(help_text="Дата окончания", blank=True, null=True, default=None)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Сумма или ставка за единицу")
+
+    def __str__(self):
+        return f"{self.payment_type_id}:{self.date_start}-{self.date_end}={self.amount}"
+
+    class Meta:
+        verbose_name = "Садоводство — тариф вида платежа"
+        verbose_name_plural = "Садоводство — тарифы видов платежей"
+        ordering = ("-date_start", "pk")
