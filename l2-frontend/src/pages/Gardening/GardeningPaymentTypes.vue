@@ -248,6 +248,16 @@
               </div>
             </div>
           </div>
+          <div class="detail-row">
+            <label class="detail-checkbox">
+              <input
+                v-model="editNotControl"
+                type="checkbox"
+                :disabled="!canEditNotControl"
+              >
+              <span>Не контролировать поступления</span>
+            </label>
+          </div>
           <div class="detail-row detail-row--actions">
             <button
               class="btn btn-blue-nb nbr detail-save-btn"
@@ -363,6 +373,7 @@ interface PaymentTypeItem {
   period: PeriodType | null;
   payment_date: string | null;
   payment_day: number | null;
+  not_control: boolean;
   rates: PaymentTypeRate[];
 }
 
@@ -416,6 +427,7 @@ const editMode = ref<CalcMode | null>(null);
 const editPeriod = ref<PeriodType | null>(null);
 const editPaymentMonth = ref<number | null>(null);
 const editPaymentDay = ref<number | null>(null);
+const editNotControl = ref(false);
 const saving = ref(false);
 const rateFormDateStart = ref('');
 const rateFormDateEnd = ref('');
@@ -430,6 +442,15 @@ const editRateAmount = ref('');
 const selectedPaymentType = computed(() => (
   paymentTypes.value.find((item) => item.id === selectedPaymentTypeId.value) || null
 ));
+
+const canEditNotControl = computed(() => {
+  if (editNotControl.value) {
+    return true;
+  }
+  return !paymentTypes.value.some(
+    (item) => item.not_control && item.id !== selectedPaymentTypeId.value,
+  );
+});
 
 const isPaymentDayValid = (value: number | null) => (
   value != null && Number.isInteger(value) && value >= 1 && value <= 31
@@ -540,6 +561,7 @@ const fillEditForm = (item: PaymentTypeItem) => {
   editTitle.value = item.title;
   editMode.value = modeFromItem(item);
   editPeriod.value = item.period || null;
+  editNotControl.value = Boolean(item.not_control);
   if (item.period === 'year') {
     const parts = parsePaymentDateParts(item.payment_date);
     editPaymentMonth.value = parts.month;
@@ -820,6 +842,7 @@ const saveSelected = async () => {
       title: editTitle.value,
       ...modeFlags(editMode.value),
       ...paymentPayload(editPeriod.value, editPaymentMonth.value, editPaymentDay.value),
+      not_control: editNotControl.value,
     });
     if (!ok) {
       root.$emit('msg', 'error', message || 'Не удалось сохранить');
@@ -1006,6 +1029,26 @@ onMounted(() => {
 .detail-row--actions {
   justify-content: flex-start;
   padding-left: 0;
+}
+
+.detail-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  cursor: pointer;
+  color: #434A54;
+  font-weight: normal;
+  user-select: none;
+
+  input {
+    margin: 0;
+    cursor: pointer;
+  }
+
+  input:disabled {
+    cursor: not-allowed;
+  }
 }
 
 .detail-row--error {

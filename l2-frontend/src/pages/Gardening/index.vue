@@ -19,39 +19,66 @@
         </div>
       </div>
       <div class="header-row__years">
-        <label class="mode-checkbox">
-          <input
-            v-model="settingsMode"
-            type="checkbox"
-          >
-          <span class="mode-checkbox__label">
-            <span
-              class="mode-checkbox__measure"
-              aria-hidden="true"
-            >Настройка</span>
-            <span class="mode-checkbox__text">{{ settingsMode ? 'Настройка' : 'Учет' }}</span>
-          </span>
-        </label>
-        <div class="years-strip">
-          <button
-            v-if="settingsMode"
-            class="year-button nbr"
-            :class="{ 'active-button': selectedYear === null }"
-            type="button"
-            @click="selectedYear = null"
-          >
-            База
-          </button>
-          <button
-            v-for="year in years"
-            :key="year"
-            class="year-button nbr"
-            :class="{ 'active-button': selectedYear === year }"
-            type="button"
-            @click="selectedYear = year"
-          >
-            {{ year }}
-          </button>
+        <div class="header-row__years-top">
+          <label class="mode-checkbox">
+            <input
+              v-model="settingsMode"
+              type="checkbox"
+            >
+            <span class="mode-checkbox__label">
+              <span
+                class="mode-checkbox__measure"
+                aria-hidden="true"
+              >Настройка</span>
+              <span class="mode-checkbox__text">{{ settingsMode ? 'Настройка' : 'Учет' }}</span>
+            </span>
+          </label>
+          <div class="years-strip">
+            <button
+              v-if="settingsMode"
+              class="year-button nbr"
+              :class="{ 'active-button': selectedYear === null }"
+              type="button"
+              @click="selectedYear = null"
+            >
+              База
+            </button>
+            <button
+              v-for="year in years"
+              :key="year"
+              class="year-button nbr"
+              :class="{ 'active-button': selectedYear === year }"
+              type="button"
+              @click="selectedYear = year"
+            >
+              {{ year }}
+            </button>
+          </div>
+        </div>
+        <div
+          v-if="showPaymentTypesStrip"
+          class="header-row__years-bottom"
+        >
+          <div class="payment-types-strip">
+            <button
+              class="year-button nbr"
+              :class="{ 'active-button': selectedPaymentTypeId === null }"
+              type="button"
+              @click="selectedPaymentTypeId = null"
+            >
+              Итого
+            </button>
+            <button
+              v-for="item in yearPaymentTypes"
+              :key="item.id"
+              class="year-button nbr"
+              :class="{ 'active-button': selectedPaymentTypeId === item.id }"
+              type="button"
+              @click="selectedPaymentTypeId = item.id"
+            >
+              {{ item.label }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -80,13 +107,44 @@
             @keydown.enter.prevent="selectedId = item.id"
             @keydown.space.prevent="selectedId = item.id"
           >
-            {{ item.num_object }}
+            <span class="object-row__label">{{ item.num_object }}</span>
+            <button
+              class="object-row__edit"
+              type="button"
+              title="Редактировать"
+              @click.stop="openEditModal(item)"
+            >
+              <i class="fa fa-pencil" />
+            </button>
           </div>
         </div>
       </div>
       <div class="side-col side-col--main">
         <div class="main-body">
           <GardeningPaymentTypes v-if="showBasePanel" />
+          <GardeningYearRates
+            v-else-if="showYearPanel"
+            :year="selectedYear"
+          />
+          <GardeningAccountingSummary
+            v-else-if="showAllPanel"
+            :year="selectedYear"
+            :payment-type-id="selectedPaymentTypeId"
+          />
+          <div
+            v-else-if="showOwnerPanel"
+            class="accounting-main"
+          >
+            <div class="accounting-main__owner">
+              <GardeningObjectOwner :real-estate-id="selectedId" />
+            </div>
+            <div class="accounting-main__rest">
+              <GardeningBankReceipts
+                :real-estate-id="selectedId"
+                :year="selectedYear"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -106,7 +164,7 @@
           margin-left-right="auto"
           @close="closeAddModal"
         >
-          <span slot="header">Добавить объект</span>
+          <span slot="header">{{ editingId ? 'Редактировать объект' : 'Добавить объект' }}</span>
           <div
             slot="body"
             class="modal-body-form"
@@ -168,10 +226,20 @@ import * as actions from '@/store/action-types';
 import api from '@/api';
 import Modal from '@/ui-cards/Modal.vue';
 import GardeningPaymentTypes from '@/pages/Gardening/GardeningPaymentTypes.vue';
+import GardeningYearRates from '@/pages/Gardening/GardeningYearRates.vue';
+import GardeningObjectOwner from '@/pages/Gardening/GardeningObjectOwner.vue';
+import GardeningBankReceipts from '@/pages/Gardening/GardeningBankReceipts.vue';
+import GardeningAccountingSummary from '@/pages/Gardening/GardeningAccountingSummary.vue';
 
 interface RealEstateItem {
   id: number;
   num_object: number | null;
+}
+
+interface YearPaymentTypeOption {
+  id: number;
+  label: string;
+  not_control?: boolean;
 }
 
 const store = useStore();
@@ -182,24 +250,75 @@ const realEstates = ref<RealEstateItem[]>([]);
 const selectedId = ref<number | null>(null);
 const searchQuery = ref('');
 const showAddModal = ref(false);
+const editingId = ref<number | null>(null);
 const newNumObject = ref('');
 const saving = ref(false);
 const yearMin = ref(2000);
 const yearMaxOffset = ref(2);
 const selectedYear = ref<number | null>(currentYear);
 const settingsMode = ref(false);
+const yearPaymentTypes = ref<YearPaymentTypeOption[]>([]);
+const selectedPaymentTypeId = ref<number | null>(null);
 
 const showBasePanel = computed(() => settingsMode.value && selectedYear.value === null);
+const showYearPanel = computed(() => settingsMode.value && selectedYear.value !== null);
+const showOwnerPanel = computed(() => !settingsMode.value && selectedId.value !== null);
+const showAllPanel = computed(() => (
+  !settingsMode.value
+  && selectedId.value === null
+  && selectedYear.value !== null
+));
+const showPaymentTypesStrip = computed(() => showAllPanel.value);
 
 watch(settingsMode, (isSettings) => {
   if (isSettings) {
     selectedYear.value = null;
+    selectedPaymentTypeId.value = null;
     return;
   }
   if (selectedYear.value === null) {
     selectedYear.value = currentYear;
   }
 });
+
+watch(selectedId, () => {
+  selectedPaymentTypeId.value = null;
+});
+
+const loadYearPaymentTypes = async () => {
+  if (!showPaymentTypesStrip.value || selectedYear.value === null) {
+    yearPaymentTypes.value = [];
+    return;
+  }
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const { ok, message, result } = await api('gardening/get-year-payment-types', {
+      year: selectedYear.value,
+    });
+    if (ok === false) {
+      root.$emit('msg', 'error', message || 'Не удалось загрузить виды платежей');
+      yearPaymentTypes.value = [];
+      return;
+    }
+    yearPaymentTypes.value = Array.isArray(result) ? result : [];
+    if (
+      selectedPaymentTypeId.value !== null
+      && !yearPaymentTypes.value.some((item) => item.id === selectedPaymentTypeId.value)
+    ) {
+      selectedPaymentTypeId.value = null;
+    }
+  } finally {
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
+
+watch(
+  () => [showPaymentTypesStrip.value, selectedYear.value],
+  () => {
+    loadYearPaymentTypes();
+  },
+  { immediate: true },
+);
 
 const years = computed(() => {
   const maxYear = currentYear + yearMaxOffset.value;
@@ -244,12 +363,20 @@ const loadRealEstates = async () => {
 };
 
 const openAddModal = () => {
+  editingId.value = null;
   newNumObject.value = '';
+  showAddModal.value = true;
+};
+
+const openEditModal = (item: RealEstateItem) => {
+  editingId.value = item.id;
+  newNumObject.value = item.num_object != null ? String(item.num_object) : '';
   showAddModal.value = true;
 };
 
 const closeAddModal = () => {
   showAddModal.value = false;
+  editingId.value = null;
   newNumObject.value = '';
 };
 
@@ -260,14 +387,18 @@ const saveRealEstate = async () => {
   saving.value = true;
   await store.dispatch(actions.INC_LOADING);
   try {
-    const { ok, message, result } = await api('gardening/create-real-estate', {
-      num_object: newNumObject.value,
-    });
+    const isEdit = editingId.value != null;
+    const { ok, message, result } = await api(
+      isEdit ? 'gardening/update-real-estate' : 'gardening/create-real-estate',
+      isEdit
+        ? { id: editingId.value, num_object: newNumObject.value }
+        : { num_object: newNumObject.value },
+    );
     if (!ok) {
-      root.$emit('msg', 'error', message || 'Не удалось создать объект');
+      root.$emit('msg', 'error', message || (isEdit ? 'Не удалось сохранить объект' : 'Не удалось создать объект'));
       return;
     }
-    root.$emit('msg', 'ok', 'Объект добавлен');
+    root.$emit('msg', 'ok', isEdit ? 'Объект сохранён' : 'Объект добавлен');
     closeAddModal();
     await loadRealEstates();
     if (result?.id) {
@@ -297,7 +428,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: 1fr 6.56fr;
   flex-shrink: 0;
-  height: 34px;
+  min-height: 34px;
   border-bottom: 1px solid #b1b1b1;
 }
 
@@ -305,12 +436,27 @@ onMounted(() => {
   display: flex;
   min-width: 0;
   border-right: 1px solid #b1b1b1;
+  align-self: stretch;
 }
 
 .header-row__years {
   min-width: 0;
   display: flex;
+  flex-direction: column;
   align-items: stretch;
+}
+
+.header-row__years-top,
+.header-row__years-bottom {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: 34px;
+  min-height: 34px;
+}
+
+.header-row__years-bottom {
+  border-top: 1px solid #b1b1b1;
 }
 
 .mode-checkbox {
@@ -381,6 +527,26 @@ onMounted(() => {
   min-height: 0;
 }
 
+.accounting-main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.accounting-main__owner {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.accounting-main__rest {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .search {
   display: flex;
   flex-direction: row;
@@ -418,6 +584,16 @@ onMounted(() => {
 }
 
 .years-strip {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  height: 100%;
+}
+
+.payment-types-strip {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -470,7 +646,9 @@ onMounted(() => {
 }
 
 .object-row {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   width: 100%;
   box-sizing: border-box;
   height: 34px;
@@ -481,14 +659,42 @@ onMounted(() => {
   border-radius: 0;
   background-color: transparent;
   color: #434A54;
-  padding: 6px 10px;
+  padding: 0 6px 0 10px;
   text-align: left;
   cursor: pointer;
   outline: none;
   box-shadow: none;
+}
+
+.object-row__label {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.object-row__edit {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.85;
+  box-shadow: none;
+  outline: none;
+}
+
+.object-row__edit:hover {
+  opacity: 1;
 }
 
 .object-row:hover {
@@ -524,7 +730,9 @@ onMounted(() => {
 }
 
 .gardening-layout .years-strip .year-button,
-.gardening-layout .years-strip .year-button.active-button {
+.gardening-layout .years-strip .year-button.active-button,
+.gardening-layout .payment-types-strip .year-button,
+.gardening-layout .payment-types-strip .year-button.active-button {
   border-radius: 0 !important;
   -webkit-border-radius: 0 !important;
   -moz-border-radius: 0 !important;

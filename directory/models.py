@@ -2396,6 +2396,7 @@ class GardeningPaymentType(models.Model):
     )
     hide = models.BooleanField(default=False, blank=True, help_text="Скрытие", db_index=True)
     sort_weight = models.IntegerField(default=0, blank=True, help_text="Порядок")
+    not_control = models.BooleanField(default=False, blank=True, help_text="Не контролировать поступления")
 
     def __str__(self):
         return self.title
@@ -2423,4 +2424,29 @@ class GardeningPaymentTypeRate(models.Model):
     class Meta:
         verbose_name = "Садоводство — тариф вида платежа"
         verbose_name_plural = "Садоводство — тарифы видов платежей"
-        ordering = ("-date_start", "pk")
+        ordering = ("date_start", "pk")
+
+
+class GardeningBankReceipt(models.Model):
+    real_estate = models.ForeignKey(RealEstate, help_text="Недвижиомть", on_delete=models.CASCADE)
+    payment_type = models.ForeignKey(GardeningPaymentType, blank=True, null=True, default=None, help_text="Вид платежа", db_index=True, on_delete=models.PROTECT)
+    date = models.DateField(help_text="Дата прихода", blank=True, null=True, default=None, db_index=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Сумма прихода")
+    comment = models.CharField(max_length=512, blank=True, default="")
+    hide = models.BooleanField(default=False, db_index=True)
+    parent = models.ForeignKey(
+        "self",
+        blank=True,
+        null=True,
+        default=None,
+        related_name="parent_pay_receipt",
+        on_delete=models.CASCADE,
+        help_text="Родительский приход (для распределения not_control)",
+    )
+
+    def __str__(self):
+        return f"{self.real_estate}:{self.payment_type}-{self.date}={self.amount}"
+
+    class Meta:
+        verbose_name = "Садоводство — приход"
+        verbose_name_plural = "Садоводство — приходы"
