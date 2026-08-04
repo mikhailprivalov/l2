@@ -31,7 +31,7 @@
 ### Security & Auth
 - **pyotp 2.8** - OTP (2FA)
 - **qrcode 7.4** - QR code generation
-- **firebase-admin 6.3** - push notifications
+- **cryptography 41** - Fernet encryption helpers
 
 ### Utilities
 - **pytils 0.3, transliterate 1.10.2** - transliteration

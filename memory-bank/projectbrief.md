@@ -16,7 +16,7 @@ Complete automation of medical facility operations: patient registration, referr
 3. **Laboratory Services** - Biomaterial reception, testing, results validation, equipment integration (ASTM), microbiology
 4. **Clinical Functions** - House calls, outpatient care, inpatient treatment, medical certificates, pharmacotherapy
 5. **Administrative** - Department/hospital management, doctor schedules, staff management, cash operations, contracts
-6. **Integrations** - Regional MIS (RMIS), external healthcare systems, digital signatures (ECP), HL7/SOAP/REST API, Firebase notifications
+6. **Integrations** - Regional MIS (RMIS), external healthcare systems, digital signatures (ECP), HL7/SOAP/REST API
 7. **Analytics & Reporting** - Statistical reports, dashboards, monitoring
 
 ## Target Users
