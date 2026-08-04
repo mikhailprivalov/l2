@@ -3941,19 +3941,3 @@ def client_results_pdf(request):
 
     return Response({"data": pdf_content, "name": f"{result.direction_id}.pdf"})
 
-
-@api_view(["POST"])
-@authentication_classes([IndividualAuthentication])
-@permission_classes([])
-def client_fcm(request):
-    individual: IndividualAuth = request.user
-    body = json.loads(request.body)
-    token = body.get("token")
-
-    if not token:
-        return Response({"ok": False, "message": "Неверный формат токена"})
-
-    individual.fcm_token = token
-    individual.save(update_fields=["fcm_token"])
-
-    return Response({"ok": True})
