@@ -3940,4 +3940,3 @@ def client_results_pdf(request):
     pdf_content = base64.b64encode(result_print(request_tuple(**req))).decode("utf-8")
 
     return Response({"data": pdf_content, "name": f"{result.direction_id}.pdf"})
-
