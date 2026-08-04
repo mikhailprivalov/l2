@@ -219,9 +219,10 @@ def load_directions_hosp_meta_bulk(direction_pks):
                     UNION ALL
                     SELECT d_iss.medical_examination, d_iss.time_confirmation
                     FROM directions_napravleniya dn
+                    INNER JOIN directions_issledovaniya parent_iss ON parent_iss.id = dn.parent_id
                     INNER JOIN directions_issledovaniya d_iss ON d_iss.napravleniye_id = dn.id
                     INNER JOIN directory_researches dr ON d_iss.research_id = dr.id
-                    WHERE dn.parent_id = d.direction_pk
+                    WHERE parent_iss.napravleniye_id = d.direction_pk
                       AND d_iss.time_confirmation IS NOT NULL
                       AND d_iss.medical_examination IS NOT NULL
                       AND dr.is_extract_service = TRUE
