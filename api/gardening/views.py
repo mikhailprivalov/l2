@@ -248,10 +248,7 @@ def update_real_estate(request):
 @login_required
 @group_required("Бухгалтер садоводства")
 def get_payment_types(request):
-    result = [
-        _serialize_payment_type(item)
-        for item in GardeningPaymentType.objects.filter(hide=False).prefetch_related("rates").order_by("sort_weight", "pk")
-    ]
+    result = [_serialize_payment_type(item) for item in GardeningPaymentType.objects.filter(hide=False).prefetch_related("rates").order_by("sort_weight", "pk")]
     return JsonResponse({"result": result})
 
 
