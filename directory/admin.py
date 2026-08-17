@@ -372,9 +372,14 @@ class ResContrasts(admin.ModelAdmin):
 
 
 class ResCGardeningPaymentType(admin.ModelAdmin):
-    list_display = ('title', 'is_absolute', 'is_by_area', 'is_use_kilowatt', 'payment_date',)
+    list_display = (
+        'title',
+        'is_absolute',
+        'is_by_area',
+        'is_use_kilowatt',
+        'payment_date',
+    )
     list_display_links = ('title',)
-
 
 
 admin.site.register(models.ResearchSite, RefSiteType)
