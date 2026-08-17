@@ -921,11 +921,7 @@ def _balance_before_year(real_estate_id, payment_type: GardeningPaymentType, yea
 def _accounting_payment_types(year, payment_type_id=None):
     options = _payment_types_for_year(year)
     ids = [item["id"] for item in options]
-    qs = (
-        GardeningPaymentType.objects.filter(hide=False, pk__in=ids)
-        .prefetch_related("rates")
-        .order_by("sort_weight", "pk")
-    )
+    qs = GardeningPaymentType.objects.filter(hide=False, pk__in=ids).prefetch_related("rates").order_by("sort_weight", "pk")
     result = []
     for item in qs:
         if _is_electricity_payment_type(item):
