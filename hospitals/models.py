@@ -88,8 +88,8 @@ class Hospitals(models.Model):
     smtp_password = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP_pass")
     smtp_port = models.CharField(max_length=5, blank=True, null=True, default=None, help_text="SMTP_port")
     dicom_ip_address = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ip-address dicom")
-    dicom_port = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ip-address dicom")
-    dicom_auth = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ip-address dicom")
+    dicom_port = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="port dicom")
+    dicom_auth = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="auth dicom")
     remote_dicom_server = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="dicom-данные одной строкой")
     web_plugin_link_study = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="plugin")
 
