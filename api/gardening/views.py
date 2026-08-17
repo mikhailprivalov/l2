@@ -815,9 +815,7 @@ def update_bank_receipt(request):
     if item.parent_id is None and not data["payment_type"].not_control:
         has_children = item.parent_pay_receipt.filter(hide=False).exists()
         if has_children:
-            return JsonResponse(
-                {"ok": False, "message": "Нельзя сменить вид платежа: есть подчинённые поступления"}
-            )
+            return JsonResponse({"ok": False, "message": "Нельзя сменить вид платежа: есть подчинённые поступления"})
 
     if item.parent_id:
         error = _check_allocation_amount(item.parent, data["amount"], exclude_id=item.pk)
