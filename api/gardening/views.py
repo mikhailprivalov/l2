@@ -646,11 +646,7 @@ def _resolve_parent(body, real_estate: RealEstate):
     parent_id = body.get("parent_id") or body.get("parent")
     if not parent_id:
         return None, None
-    parent = (
-        GardeningBankReceipt.objects.select_related("payment_type")
-        .filter(pk=parent_id, hide=False, real_estate=real_estate, parent__isnull=True)
-        .first()
-    )
+    parent = GardeningBankReceipt.objects.select_related("payment_type").filter(pk=parent_id, hide=False, real_estate=real_estate, parent__isnull=True).first()
     if not parent:
         return None, "Родительский приход не найден"
     if not parent.payment_type_id or not parent.payment_type.not_control:
