@@ -423,4 +423,3 @@ admin.site.register(models.ConstructorEditAccessResearch, ResConstructorResearch
 admin.site.register(models.GardeningPaymentType, ResCGardeningPaymentType)
 admin.site.register(models.Contrasts, ResContrasts)
 admin.site.register(models.CategoryDirectory)
-
