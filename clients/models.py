@@ -894,7 +894,6 @@ class IndividualPhones(models.Model):
     def __str__(self):
         return f"{self.individual} - {self.phone}"
 
-
     class Meta:
         verbose_name = 'Телефон физического лица'
         verbose_name_plural = 'Телефоны физических лиц'
