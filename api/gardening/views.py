@@ -301,11 +301,7 @@ def update_payment_type(request):
         return JsonResponse({"ok": False, "message": error})
 
     if data["not_control"]:
-        exists_other = (
-            GardeningPaymentType.objects.filter(hide=False, not_control=True)
-            .exclude(pk=obj.pk)
-            .exists()
-        )
+        exists_other = GardeningPaymentType.objects.filter(hide=False, not_control=True).exclude(pk=obj.pk).exists()
         if exists_other:
             return JsonResponse(
                 {"ok": False, "message": "Признак «Не контролировать поступления» уже установлен у другого вида платежа"}
