@@ -790,11 +790,7 @@ def update_bank_receipt(request):
     if not pk:
         return JsonResponse({"ok": False, "message": "Не указан идентификатор"})
 
-    item = (
-        GardeningBankReceipt.objects.select_related("real_estate", "payment_type", "parent", "parent__payment_type")
-        .filter(pk=pk, hide=False)
-        .first()
-    )
+    item = GardeningBankReceipt.objects.select_related("real_estate", "payment_type", "parent", "parent__payment_type").filter(pk=pk, hide=False).first()
     if not item:
         return JsonResponse({"ok": False, "message": "Приход не найден"})
     if item.real_estate.hide:
