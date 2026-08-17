@@ -611,6 +611,28 @@ def get_total_confirm_direction(d_s, d_e, lab_podr, is_lab=False, is_paraclinic=
     return rows
 
 
+def get_total_confirm_direction_paraclinic(d_s, d_e):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """     
+        SELECT DISTINCT ON (napravleniye_id) napravleniye_id FROM public.directions_issledovaniya
+        LEFT JOIN directions_napravleniya dn on directions_issledovaniya.napravleniye_id = dn.id
+        LEFT JOIN hospitals_hospitals hh on dn.hospital_id = hh.id
+        WHERE        
+        (time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s) AND 
+        dn.total_confirmed = true
+        AND 
+        research_id IN (SELECT id FROM directory_researches WHERE is_paraclinic = TRUE)
+        AND
+        hh.smtp_address is not NULL
+
+        """,
+            params={'d_start': d_s, 'd_end': d_e, 'tz': TIME_ZONE},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
+
+
 def get_template_research_by_department(research_id, department_id, hide="true"):
     with connection.cursor() as cursor:
         cursor.execute(

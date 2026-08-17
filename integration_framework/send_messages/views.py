@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from rest_framework.response import Response
 
-from api.directions.sql_func import get_confirm_direction_by_hospital, get_lab_podr, get_direction_data_by_directions_id, get_total_confirm_direction
+from api.directions.sql_func import get_confirm_direction_by_hospital, get_lab_podr, get_direction_data_by_directions_id, get_total_confirm_direction, get_total_confirm_direction_paraclinic
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
@@ -46,6 +46,9 @@ def get_directions_for_org_mail_send(request):
 
 @api_view(['POST'])
 def get_directions_for_person_mail_send(request):
+    print("get_directions_for_person_mail_send")
+    print("get_directions_for_person_mail_send")
+    print("get_directions_for_person_mail_send")
     if not hasattr(request.user, "hospitals"):
         return Response({"ok": False, "message": "Некорректный auth токен"})
     request_data = json.loads(request.body)
@@ -70,23 +73,25 @@ def get_directions_for_person_mail_send(request):
     else:
         lab_podr = [-1]
 
-    confirm_direction = get_total_confirm_direction(d_start, d_end, lab_podr, is_lab, is_paraclinic, is_doc_refferal)
+    # confirm_direction = get_total_confirm_direction(d_start, d_end, lab_podr, is_lab, is_paraclinic, is_doc_refferal)
+    confirm_direction = get_total_confirm_direction_paraclinic(d_start, d_end)
     if not confirm_direction:
         return Response([])
     result_direction = [i.napravleniye_id for i in confirm_direction]
+
     direction_data = get_direction_data_by_directions_id(tuple(result_direction))
     direction_structure_by_client = {}
 
     for row in direction_data:
         if row.email_with_results_sent_to_person or not row.patient_email:
             continue
-
         if not direction_structure_by_client.get(row.client_id):
             direction_structure_by_client[row.client_id] = {"mail": row.patient_email, "fio": f"{row.family} {row.name} {row.patronymic}", "directions": [row.direction_id]}
         else:
             direction_structure_by_client[row.client_id]["directions"].append(row.direction_id)
 
     result = [{"clientId": k, "mail": v["mail"], "dirs": v["directions"]} for k, v in direction_structure_by_client.items()]
+    print(result)
 
     return Response(result)
 
