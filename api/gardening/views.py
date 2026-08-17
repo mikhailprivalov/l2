@@ -507,11 +507,7 @@ def save_real_estate_owner(request):
     owner_id = body.get("owner_id")
     owner = None
     if owner_id:
-        owner = (
-            OwnersRealEstate.objects.select_related("individual")
-            .filter(pk=owner_id, real_estate=real_estate, hide=False)
-            .first()
-        )
+        owner = OwnersRealEstate.objects.select_related("individual").filter(pk=owner_id, real_estate=real_estate, hide=False).first()
         if not owner:
             return JsonResponse({"ok": False, "message": "Запись владельца не найдена"})
 
