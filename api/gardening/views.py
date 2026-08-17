@@ -394,10 +394,7 @@ def _serialize_owner(owner: OwnersRealEstate):
             "date_end": owner.date_end.isoformat() if owner.date_end else None,
             "phones": [],
         }
-    phones = [
-        {"id": phone.pk, "phone": phone.phone or ""}
-        for phone in IndividualPhones.objects.filter(individual=individual).order_by("pk")
-    ]
+    phones = [{"id": phone.pk, "phone": phone.phone or ""} for phone in IndividualPhones.objects.filter(individual=individual).order_by("pk")]
     return {
         "owner_id": owner.pk,
         "individual_id": individual.pk,
