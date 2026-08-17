@@ -626,11 +626,7 @@ def _bank_receipts_result(real_estate: RealEstate, year):
 
 def _list_bank_receipts(real_estate: RealEstate, year):
     year = int(year)
-    qs = (
-        GardeningBankReceipt.objects.select_related("payment_type")
-        .filter(real_estate=real_estate, hide=False, parent__isnull=True, date__year=year)
-        .order_by("date", "pk")
-    )
+    qs = GardeningBankReceipt.objects.select_related("payment_type").filter(real_estate=real_estate, hide=False, parent__isnull=True, date__year=year).order_by("date", "pk")
     return [_serialize_bank_receipt(item, with_children=True) for item in qs]
 
 
