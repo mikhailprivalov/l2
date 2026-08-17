@@ -847,11 +847,7 @@ def delete_bank_receipt(request):
     if not pk:
         return JsonResponse({"ok": False, "message": "Не указан идентификатор"})
 
-    item = (
-        GardeningBankReceipt.objects.select_related("real_estate")
-        .filter(pk=pk, hide=False)
-        .first()
-    )
+    item = GardeningBankReceipt.objects.select_related("real_estate").filter(pk=pk, hide=False).first()
     if not item:
         return JsonResponse({"ok": False, "message": "Приход не найден"})
     if item.real_estate.hide:
