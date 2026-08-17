@@ -883,7 +883,9 @@ def _receipts_sum(real_estate_id, payment_type_id, year):
         real_estate_id=real_estate_id,
         payment_type_id=payment_type_id,
         date__year=year,
-    ).aggregate(total=Sum("amount"))["total"]
+    ).aggregate(
+        total=Sum("amount")
+    )["total"]
     return total if total is not None else Decimal("0")
 
 
