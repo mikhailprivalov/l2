@@ -54,18 +54,25 @@ def search_dicom_study(direction=None):
         if not research_obj.research.podrazdeleniye or not research_obj.research.podrazdeleniye.can_has_pacs:
             return ''
         dicom_study = Issledovaniya.objects.values('study_instance_uid').filter(napravleniye=direction).first()
+        napravleniye = Napravleniya.objects.filter(pk=direction).first()
         if dicom_study and dicom_study['study_instance_uid']:
             if len(DICOM_SERVERS) > 1:
                 return check_dicom_study_instance_uid(DICOM_SERVERS, dicom_study['study_instance_uid'])
             else:
+                dicom_link_web = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
                 if WEB_PLUGIN_LINK_STUDY:
                     # dicom_link_web = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid_tag']}"
                     dicom_link_web = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study['study_instance_uid']}"
-                else:
-                    dicom_link_web = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study['study_instance_uid']}"
+                hospital = napravleniye.hospital if napravleniye else None
+                if hospital and hospital.remote_dicom_server and hospital.web_plugin_link_study:
+                    dicom_link_web = f"{hospital.remote_dicom_server}/{hospital.web_plugin_link_study}={dicom_study['study_instance_uid']}"
                 return dicom_link_web
         else:
-            if not check_server_port(DICOM_ADDRESS, DICOM_PORT):
+            hospital = napravleniye.hospital if napravleniye else None
+            dcm_address, dcm_port = DICOM_ADDRESS, DICOM_PORT
+            if hospital and hospital.dicom_ip_address and hospital.dicom_port:
+                dcm_address, dcm_port = hospital.dicom_ip_address, hospital.dicom_port
+            if not check_server_port(dcm_address, dcm_port):
                 return ''
             try:
                 str_dir = str(direction)
@@ -87,10 +94,11 @@ def search_dicom_study(direction=None):
                     except Exception as e:
                         print('FAIL send_task_result')  # noqa: T001
                         print(e)  # noqa: T001
+                    dicom_link_web = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link[0]}'
                     if WEB_PLUGIN_LINK_STUDY:
                         dicom_link_web = f'{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={dicom_study_link[1]}'
-                    else:
-                        dicom_link_web = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={dicom_study_link[0]}'
+                    if hospital and hospital.remote_dicom_server and hospital.web_plugin_link_study:
+                        dicom_link_web = f"{hospital.remote_dicom_server}/{hospital.web_plugin_link_study}={dicom_study_link[1]}"
                     return dicom_link_web
 
             except Exception as e:

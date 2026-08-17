@@ -606,6 +606,10 @@ def directions_history(request):
     created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
     user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
+    hospitals_by_id = {
+        h.pk: h
+        for h in Hospitals.objects.filter(pk__in={row[28] for row in result_sql if row[28]}).only('pk', 'remote_dicom_server', 'web_plugin_link_study')
+    }
     for i in result_sql:
         if created_document_only_user_hosp and i[28] != request.user.doctorprofile.hospital_id and "Направления-все МО" not in user_groups:
             continue
@@ -696,10 +700,13 @@ def directions_history(request):
                     if len(DICOM_SERVERS) > 1:
                         pacs = check_dicom_study_instance_uid(DICOM_SERVERS, i[21])
                     else:
+                        pacs = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}"
                         if WEB_PLUGIN_LINK_STUDY and i[38]:
                             pacs = f"{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={i[38]}"
-                        else:
-                            pacs = f"{DICOM_SERVER}/osimis-viewer/app/index.html?study={i[21]}"
+                        hospital = hospitals_by_id.get(i[28])
+                        if hospital and hospital.remote_dicom_server and hospital.web_plugin_link_study:
+                            study_uid = i[38] or i[21]
+                            pacs = f"{hospital.remote_dicom_server}/{hospital.web_plugin_link_study}={study_uid}"
                 else:
                     pacs = None
             has_hosp = False
@@ -3983,10 +3990,13 @@ def directions_result_year(request):
 def get_study_url(request):
     request_data = json.loads(request.body)
     study_uid = request_data.get("studyUid")
+    study_url = None
     if study_uid and len(DICOM_SERVERS) > 1:
         study_url = check_dicom_study_instance_uid(DICOM_SERVERS, study_uid)
     elif study_uid and len(DICOM_SERVERS) <= 1:
         study_url = f'{DICOM_SERVER}/osimis-viewer/app/index.html?study={study_uid}'
+        if WEB_PLUGIN_LINK_STUDY:
+            study_url = f'{DICOM_SERVER}/{WEB_PLUGIN_LINK_STUDY}={study_uid}'
     return JsonResponse({"studyUrl": study_url})
 
 
