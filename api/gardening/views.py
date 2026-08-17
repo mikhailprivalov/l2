@@ -585,11 +585,7 @@ def _serialize_bank_receipt(item: GardeningBankReceipt, with_children=False):
         "not_control": not_control,
     }
     if with_children:
-        children = (
-            item.parent_pay_receipt.filter(hide=False)
-            .select_related("payment_type")
-            .order_by("date", "pk")
-        )
+        children = item.parent_pay_receipt.filter(hide=False).select_related("payment_type").order_by("date", "pk")
         data["parent_pay_receipt"] = [_serialize_bank_receipt(child) for child in children]
     return data
 
