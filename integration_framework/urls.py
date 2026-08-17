@@ -75,7 +75,6 @@ urlpatterns = [
     path('client/categories', views.client_categories),
     path('client/results/pdf', views.client_results_pdf),
     path('client/results', views.client_results_list),
-    path('client/fcm', views.client_fcm),
     path('researches/', include('integration_framework.researches.urls')),
     path('send-messages/', include('integration_framework.send_messages.urls')),
     path('employees/', include('integration_framework.employees.urls')),

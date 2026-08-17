@@ -771,7 +771,7 @@ def extract_patient_bed(request):
     discharge_date = None
     for extract_iss in (
         Issledovaniya.objects.filter(time_confirmation__isnull=False)
-        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent__napravleniye_id=direction_pk))
         .select_related("research")
         .order_by("-time_confirmation")
     ):
