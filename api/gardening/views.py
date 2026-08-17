@@ -344,11 +344,7 @@ def update_payment_type_rate(request):
     if not pk:
         return JsonResponse({"ok": False, "message": "Не указан идентификатор тарифа"})
 
-    rate = (
-        GardeningPaymentTypeRate.objects.select_related("payment_type")
-        .filter(pk=pk, payment_type__hide=False)
-        .first()
-    )
+    rate = GardeningPaymentTypeRate.objects.select_related("payment_type").filter(pk=pk, payment_type__hide=False).first()
     if not rate:
         return JsonResponse({"ok": False, "message": "Тариф не найден"})
 
