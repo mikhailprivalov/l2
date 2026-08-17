@@ -409,11 +409,7 @@ def _serialize_owner(owner: OwnersRealEstate):
 
 
 def _list_owners(real_estate: RealEstate):
-    owners = (
-        OwnersRealEstate.objects.select_related("individual")
-        .filter(real_estate=real_estate, hide=False)
-        .order_by("date_start", "pk")
-    )
+    owners = OwnersRealEstate.objects.select_related("individual").filter(real_estate=real_estate, hide=False).order_by("date_start", "pk")
     return [_serialize_owner(owner) for owner in owners]
 
 
