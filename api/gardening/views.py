@@ -169,10 +169,7 @@ def _parse_payment_type_body(body):
 @login_required
 @group_required("Бухгалтер садоводства")
 def get_real_estates(request):
-    result = [
-        {"id": item.pk, "num_object": item.num_object}
-        for item in RealEstate.objects.filter(hide=False).order_by("num_object")
-    ]
+    result = [{"id": item.pk, "num_object": item.num_object} for item in RealEstate.objects.filter(hide=False).order_by("num_object")]
     return JsonResponse(
         {
             "result": result,
