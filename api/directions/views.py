@@ -606,10 +606,7 @@ def directions_history(request):
     created_document_only_user_hosp = SettingManager.get("created_document_only_user_hosp", default='false', default_type='b')
     user_groups = [str(x) for x in request.user.groups.all()]
     type_service = request_data.get("type_service", None)
-    hospitals_by_id = {
-        h.pk: h
-        for h in Hospitals.objects.filter(pk__in={row[28] for row in result_sql if row[28]}).only('pk', 'remote_dicom_server', 'web_plugin_link_study')
-    }
+    hospitals_by_id = {h.pk: h for h in Hospitals.objects.filter(pk__in={row[28] for row in result_sql if row[28]}).only('pk', 'remote_dicom_server', 'web_plugin_link_study')}
     for i in result_sql:
         if created_document_only_user_hosp and i[28] != request.user.doctorprofile.hospital_id and "Направления-все МО" not in user_groups:
             continue
