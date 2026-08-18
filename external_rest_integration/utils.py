@@ -17,7 +17,7 @@ import base64
 from laboratory.utils import current_time
 from slog.models import Log
 import os
-from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT, REST_API_PULL_RESULT_INTERVAL_SECONDS
+from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT, REST_API_PULL_RESULT_INTERVAL_SECONDS, REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS
 import datetime
 from sys import stdout
 import time
@@ -44,6 +44,7 @@ def _pull_and_process_order(order_redirection_number, hospital_id, hospitals_id,
             interactive_log(f"Заключение по заказу {order_redirection_number}: нет auth_data для hospital_id={hospital_id}")
             return
         hosp_data = json.loads(auth_data)
+        hosp_data['hospital_id'] = hospital_id
         interactive_log(
             f"Настройки: url={hosp_data.get('url')}, login={hosp_data.get('login')}, "
             f"password={hosp_data.get('password')}, auth_login={hosp_data.get('auth_login')}, "
@@ -271,6 +272,57 @@ def process_rest_api_pull_result_start():
     while True:
         rest_api_pull_result()
         time.sleep(REST_API_PULL_RESULT_INTERVAL_SECONDS)
+
+
+def rest_api_get_new_results(only_new_order=True):
+    ctx = _get_hospitals_context()
+    stdout.write(f"Iterating over {len(ctx['hospitals_id_ftp_connect'])} servers\n")
+    interactive_log(f"Старт опроса новых результатов, only_new={only_new_order}, серверов={len(ctx['hospitals_id_ftp_connect'])}")
+
+    order_redirection_numbers = {}
+    for hospital_id, auth_data in ctx['hospitals_id'].items():
+        if not auth_data:
+            interactive_log(f"hospital_id={hospital_id}: нет auth_data")
+            continue
+        hosp_data = json.loads(auth_data)
+        hosp_data['hospital_id'] = hospital_id
+        rest_token = make_request_get_token(hosp_data, method="GET")
+        default_part_url = hosp_data.get("url")
+        if not default_part_url:
+            interactive_log(f"hospital_id={hospital_id}: не задан url")
+            continue
+        interactive_log(f"Проверка токена: GET {default_part_url}/ky/check")
+        result_check = rest_make_request_get(default_part_url, "ky/check", rest_token, hosp_data, {}, method="GET")
+        if result_check.get("result") == "ok":
+            interactive_log("Токен действителен")
+        else:
+            interactive_log("Токен недействителен, запрос нового ключа")
+            rest_token = make_request_get_token(hosp_data, method="GET", get_new_token=True)
+        interactive_log(f"Запрос новых результатов: POST {default_part_url}/result")
+        result_data = rest_make_request_get(default_part_url, "result", rest_token, hosp_data, {"action": "GET_NEW_RESULTS"}, method="POST")
+        if not result_data or result_data.get("result") != "ok":
+            comment = result_data.get("comment") if result_data else ""
+            interactive_log(f"hospital_id={hospital_id}: ошибка GET_NEW_RESULTS, comment={comment}")
+            continue
+        data = result_data.get("data") or []
+        hospital_new_count = 0
+        for item in data:
+            number = item.get("number") if isinstance(item, dict) else None
+            if number:
+                order_redirection_numbers[number] = hospital_id
+                hospital_new_count += 1
+        interactive_log(f"hospital_id={hospital_id}: новых заявок={hospital_new_count}")
+
+    interactive_log(f"Заказов к обработке: {len(order_redirection_numbers)}")
+    _run_pull_for_orders(ctx, order_redirection_numbers, only_new_order)
+    interactive_log(f"Заключение: обработано заказов {len(order_redirection_numbers)}")
+
+
+def process_rest_api_get_new_results_start():
+    stdout.write("Starting get_new_results process")
+    while True:
+        rest_api_get_new_results()
+        time.sleep(REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS)
 
 
 def process_rest_api_pull_result_manual_start():
