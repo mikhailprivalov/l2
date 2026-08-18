@@ -5,7 +5,6 @@ import simplejson as json
 from hospitals.models import Hospitals
 from django.core.cache import cache
 from laboratory.settings import REST_API_HOSPITAL_KEY_TTL_MINUTES
-
 logger = logging.getLogger(__name__)
 
 
