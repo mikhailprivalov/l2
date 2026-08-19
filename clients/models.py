@@ -887,6 +887,18 @@ class Individual(models.Model):
         verbose_name_plural = 'Физические лица'
 
 
+class IndividualPhones(models.Model):
+    individual = models.ForeignKey(Individual, help_text="Пациент", db_index=True, on_delete=models.PROTECT)
+    phone = models.CharField(max_length=20, blank=True, default='', db_index=True)
+
+    def __str__(self):
+        return f"{self.individual} - {self.phone}"
+
+    class Meta:
+        verbose_name = 'Телефон физического лица'
+        verbose_name_plural = 'Телефоны физических лиц'
+
+
 class DocumentType(models.Model):
     title = models.CharField(max_length=60, help_text="Название типа документа")
     check_priority = models.IntegerField(default=0, help_text="Приоритет проверки документа (чем больше число - тем больше (сильнее) приоритет)")

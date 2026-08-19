@@ -54,6 +54,9 @@
           <col style="width: 90px">
           <col style="width: 160px">
           <col style="width: 120px">
+          <col style="width: 100px">
+          <col style="width: 100px">
+          <col style="width: 200px">
         </colgroup>
         <thead>
           <tr>
@@ -64,6 +67,9 @@
             <th>Балл, МО</th>
             <th>Значение, куратор</th>
             <th>Балл, куратор</th>
+            <th />
+            <th>Статус</th>
+            <th>Комментарий</th>
           </tr>
           <tr>
             <th>
@@ -143,6 +149,19 @@
                 class="treeselect-wide"
               />
             </th>
+            <th />
+            <th>
+              <treeselect
+                v-model="columnFilters.curatorStatus"
+                :multiple="false"
+                :disable-branch-nodes="true"
+                :options="curatorStatusFilterOptions"
+                placeholder="Все"
+                :clearable="true"
+                class="treeselect-wide"
+              />
+            </th>
+            <th />
           </tr>
         </thead>
         <tbody>
@@ -154,7 +173,7 @@
           />
           <tr v-if="filteredRows.length === 0">
             <td
-              colspan="7"
+              colspan="10"
               class="text-center"
             >
               не найдено
@@ -214,6 +233,8 @@ const normalizeFilterValue = (value: any) => {
   return normalized;
 };
 
+const rowCuratorStatusLabel = (row: any) => (row.curatorApproved ? 'утверждено' : '–');
+
 @Component({
   components: {
     DateRange,
@@ -241,6 +262,7 @@ const normalizeFilterValue = (value: any) => {
         score: null,
         curatorValue: null,
         curatorScore: null,
+        curatorStatus: null,
       },
     };
   },
@@ -315,6 +337,7 @@ export default class ExtraNotification extends Vue {
       score: normalizeFilterValue(this.columnFilters.score),
       curatorValue: normalizeFilterValue(this.columnFilters.curatorValue),
       curatorScore: normalizeFilterValue(this.columnFilters.curatorScore),
+      curatorStatus: normalizeFilterValue(this.columnFilters.curatorStatus),
     };
     const hasFilters = Object.values(filters).some(v => v !== null);
     if (!hasFilters) {
@@ -328,6 +351,7 @@ export default class ExtraNotification extends Vue {
       && (filters.score === null || toValue(row.score) === filters.score)
       && (filters.curatorValue === null || toValue(row.curatorValue) === filters.curatorValue)
       && (filters.curatorScore === null || toValue(row.curatorScore) === filters.curatorScore)
+      && (filters.curatorStatus === null || rowCuratorStatusLabel(row) === filters.curatorStatus)
     ));
   }
 
@@ -357,6 +381,10 @@ export default class ExtraNotification extends Vue {
 
   get curatorScoreFilterOptions() {
     return makeOptions(this.rows.map((r: any) => r.curatorScore), true);
+  }
+
+  get curatorStatusFilterOptions() {
+    return makeOptions(this.rows.map((r: any) => rowCuratorStatusLabel(r)));
   }
 
   async load() {

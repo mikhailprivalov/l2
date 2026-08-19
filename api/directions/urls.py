@@ -70,5 +70,6 @@ urlpatterns = [
     path('meta-info', views.meta_info),
     path('resend-results', views.resend_results),
     path('need-order-redirection', views.need_order_redirection),
+    path('request-result', views.request_result),
     path('patient-open-case', views.patient_open_case),
 ]

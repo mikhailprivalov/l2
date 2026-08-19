@@ -68,7 +68,7 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
         LEFT JOIN t_tubes
         ON t_iss.iss_id = t_tubes.tubes_iss_id),
         
-        t_recive AS (SELECT time_recive, "number" as tube_number, id as id_t_recive FROM directions_tubesregistration
+        t_recive AS (SELECT time_recive, time_get, "number" as tube_number, id as id_t_recive FROM directions_tubesregistration
         WHERE directions_tubesregistration.id in (SELECT tubesregistration_id  FROM t_tubes)),
         
         t_podrazdeleniye AS (SELECT id AS podr_id, can_has_pacs, title AS podr_title FROM podrazdeleniya_podrazdeleniya)
@@ -112,7 +112,8 @@ def get_history_dir(d_s, d_e, card_id, who_create_dir, services, is_serv, iss_pk
             directions_napravleniya.time_gistology_receive,
             is_case,
             directions_napravleniya.rmis_number,
-            study_instance_uid_tag
+            study_instance_uid_tag,
+            time_get
         FROM t_iss_tubes
         LEFT JOIN t_recive
         ON t_iss_tubes.tubesregistration_id = t_recive.id_t_recive

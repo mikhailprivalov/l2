@@ -361,6 +361,10 @@ RESEARCHES_PK_REQUIRED_STATTALON_FIELDS = {}  # {358: {"purpose": "Данные 
 DISPANSERIZATION_STATTALON_FIELDS_RESULTS_PK = []
 DISPANSERIZATION_STATTALON_FIELDS_PURPOSE_PK = []
 HIDE_TITLE_BUTTONS_MAIN_MENU = {}
+DOU_CONSTRUCTOR_NAV_BUTTONS = [
+    {"id": "document_groups", "title": "Группа документов"},
+    {"id": "document_types", "title": "Виды документов"},
+]
 USE_COMBO_ROLE = {}
 DASHBOARD_CHARTS_CACHE_TIME_SEC = 60 * 5
 OFFSET_HOURS_PLAN_OPERATIONS = 0
@@ -422,7 +426,6 @@ FTP_PATH_TO_SAVE = ""
 FTP_PATH_TO_SAVE_ERROR_FILE = ""
 DISABLE_PATIENT_CANVAS_MARKER = False
 
-FCM_CERT_PATH = ""
 PROMETHEUS_ENABLED = False
 USERS_PK_SHOW_FACT_ADDRESSES_025U = []
 CDA_TITLES_FIELDS_PRIMARY_RESEARCH = []
@@ -434,7 +437,10 @@ SEND_EMAIL_RESULT_TO_CORPORATION_BY_PATIENT = False
 DOC_CALLS_ACTUAL_ROWS_FROM_DATE = "2021-01-01"
 ID_RESERACH_FLG = None
 RMQ_AUTH_PARAM = {}
+RMQ_AUTH_PARAM_RENTGEN = {}
+RMQ_AUTH_PARAM_RENTGEN_DCM = {}
 RMQ_RESEARCH_SEND = []
+DICOM_USE_OPERATOR_CREATED_EXTERNAL_ID = False
 USE_RMIS_NUMBER_IN_REVISE_REPORT_ECP_SEND = 1
 
 PRINT_RESULT_FROM_QR_CODE = False
@@ -525,6 +531,14 @@ PERIOD_HAOURS_SEND_RESULT_ECP = -100
 SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT = []
 IS_WITHOUT_LIMIT_PARALINIC_ALWAYS = False
 PARAGRAPH_FIELD_ENABLED = False
+REST_API_PULL_RESULT_DAYS_LIMIT = 4
+# Время ежедневного запуска rest_api_pull_result (HH:MM, часовой пояс TIME_ZONE).
+# Переопределение в laboratory/local_settings.py
+REST_API_PULL_RESULT_RUN_TIME = "03:00"
+REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS = 30 * 60
+# Срок хранения REST-ключа больницы в кэше (минуты).
+# Переопределение в laboratory/local_settings.py
+REST_API_HOSPITAL_KEY_TTL_MINUTES = 5 * 24 * 60
 
 # ----- Настройки для полей протоколов с типом "Файл" -----
 
@@ -590,6 +604,11 @@ PERIOD_DEFAULT_HOSPITALI = 3
 # Максимальный период (дней) для фильтра дат в журнале заявок (/ui/requests-journal).
 # Переопределение: REQUESTS_JOURNAL_MAX_PERIOD_DAYS = N в laboratory/local_settings.py
 REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
+
+# Календарь годов на странице Садоводство (/ui/gardening).
+# Переопределение в laboratory/local_settings.py
+GARDENING_YEAR_MIN = 2000
+GARDENING_YEAR_MAX_OFFSET = 2
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

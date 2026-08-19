@@ -15,7 +15,13 @@ from directory.models import (
     CategoryDirectory,
 )
 from laboratory.decorators import group_required
-from laboratory.settings import PARACLINIC_FILE_HARD_LIMITS, PARACLINIC_FILE_DEFAULTS, PARACLINIC_FILE_ALLOWED_EXTENSIONS, PARAGRAPH_FIELD_ENABLED
+from laboratory.settings import (
+    PARACLINIC_FILE_HARD_LIMITS,
+    PARACLINIC_FILE_DEFAULTS,
+    PARACLINIC_FILE_ALLOWED_EXTENSIONS,
+    PARAGRAPH_FIELD_ENABLED,
+    DOU_CONSTRUCTOR_NAV_BUTTONS,
+)
 from podrazdeleniya.models import Podrazdeleniya
 from researches.models import Tubes
 from slog.models import Log
@@ -299,3 +305,9 @@ def get_descriptive_ref_books(request):
         "paragraph_field_enabled": PARAGRAPH_FIELD_ENABLED,
     }
     return JsonResponse(result)
+
+
+@login_required
+@group_required("Конструктор: ДОУ")
+def get_dou_nav_buttons(request):
+    return JsonResponse({"result": DOU_CONSTRUCTOR_NAV_BUTTONS})

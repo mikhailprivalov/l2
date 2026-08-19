@@ -726,69 +726,73 @@ def check_replace_fields(field_replace, line_new, direction):
 
 
 def send_order_by_rest_api(direction: Napravleniya):
-    hosptal_data_auth = direction.hospital.auth_data_for_rest
+    time_start = time.time()
     is_send_api_order = True
-    if hosptal_data_auth:
-        hosp_data = json.loads(hosptal_data_auth)
-        hosp_data['hospital_id'] = direction.hospital_id
-        rest_token = make_request_get_token(hosp_data, method="GET")
-        default_part_url = hosp_data.get("url")
-        path = "ky/check"
-        rest_api_data = {}
-        result = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="GET")
-        if result.get("result") == "ok":
-            pass
-        else:
-            rest_token = make_request_get_token(hosp_data, method="GET", get_new_token=True)
-        sql_resutl = get_data_by_directions_id((direction.pk,))
+    try:
+        hosptal_data_auth = direction.hospital.auth_data_for_rest
+        if hosptal_data_auth:
+            hosp_data = json.loads(hosptal_data_auth)
+            hosp_data['hospital_id'] = direction.hospital_id
+            rest_token = make_request_get_token(hosp_data, method="GET")
+            default_part_url = hosp_data.get("url")
+            path = "ky/check"
+            rest_api_data = {}
+            result = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="GET")
+            if result.get("result") == "ok":
+                pass
+            else:
+                rest_token = make_request_get_token(hosp_data, method="GET", get_new_token=True)
+            sql_resutl = get_data_by_directions_id((direction.pk,))
 
-        analyses = [{"article": i.research_internal_code, "barcode": str(i.tube_number)} for i in sql_resutl]
-        rest_api_data = {
-            "id": str(direction.pk),
-            "client": {
-                "lname": sql_resutl[0].patient_family,
-                "fname": sql_resutl[0].patient_name,
-                "patronymic": sql_resutl[0].patient_patronymic,
-                "birthdate": sql_resutl[0].patient_birthday_english,
-                "phonenumber": "",
-                "email": "",
-                "sex": sql_resutl[0].patient_sex,
-                "notify": False,
-            },
-            "analyses": analyses,
-            "cito": False,
-            "agreement": direction.price_name.symbol_code,
-        }
-        path = "order/new"
-        new_order = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="POST")
-        number_new_order = new_order.get("number")
-        if number_new_order:
-            direction.order_redirection_number = number_new_order
-            direction.need_order_redirection = False
-            direction.save()
-            Log.log(
-                direction.pk,
-                190008,
-                None,
-                {
-                    "org": direction.hospital.safe_short_title,
-                    "content": {"number_new_order": number_new_order, "def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
+            analyses = [{"article": i.research_internal_code, "barcode": str(i.tube_number)} for i in sql_resutl]
+            rest_api_data = {
+                "id": str(direction.pk),
+                "client": {
+                    "lname": sql_resutl[0].patient_family,
+                    "fname": sql_resutl[0].patient_name,
+                    "patronymic": sql_resutl[0].patient_patronymic,
+                    "birthdate": sql_resutl[0].patient_birthday_english,
+                    "phonenumber": "",
+                    "email": "",
+                    "sex": sql_resutl[0].patient_sex,
+                    "notify": False,
                 },
-            )
-        else:
-            direction.need_order_redirection = True
-            Log.log(
-                direction.pk,
-                190007,
-                None,
-                {
-                    "org": direction.hospital.safe_short_title,
-                    "content": {"def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
-                    "response": new_order,
-                },
-            )
-            is_send_api_order = False
-    return is_send_api_order
+                "analyses": analyses,
+                "cito": False,
+                "agreement": direction.price_name.symbol_code,
+            }
+            path = "order/new"
+            new_order = rest_make_request_get(default_part_url, path, rest_token, hosp_data, rest_api_data, method="POST")
+            number_new_order = new_order.get("number")
+            if number_new_order:
+                direction.order_redirection_number = number_new_order
+                direction.need_order_redirection = False
+                direction.save()
+                Log.log(
+                    direction.pk,
+                    190008,
+                    None,
+                    {
+                        "org": direction.hospital.safe_short_title,
+                        "content": {"number_new_order": number_new_order, "def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
+                    },
+                )
+            else:
+                direction.need_order_redirection = True
+                Log.log(
+                    direction.pk,
+                    190007,
+                    None,
+                    {
+                        "org": direction.hospital.safe_short_title,
+                        "content": {"def_url": default_part_url, "path": path, "rest_api_data": rest_api_data},
+                        "response": new_order,
+                    },
+                )
+                is_send_api_order = False
+        return is_send_api_order
+    finally:
+        Log.log_if_slow("send_order_by_rest_api", direction.pk, time.time() - time_start)
 
 
 def get_hospitals_pull_orders():

@@ -371,6 +371,17 @@ class ResContrasts(admin.ModelAdmin):
     list_display_links = ('title',)
 
 
+class ResCGardeningPaymentType(admin.ModelAdmin):
+    list_display = (
+        'title',
+        'is_absolute',
+        'is_by_area',
+        'is_use_kilowatt',
+        'payment_date',
+    )
+    list_display_links = ('title',)
+
+
 admin.site.register(models.ResearchSite, RefSiteType)
 admin.site.register(models.ResearchGroup)
 admin.site.register(models.Researches, ResAdmin)
@@ -414,5 +425,6 @@ admin.site.register(models.LaboratoryMaterial)
 admin.site.register(models.SubGroupDirectory)
 admin.site.register(models.SubGroupPadrazdeleniye)
 admin.site.register(models.ConstructorEditAccessResearch, ResConstructorResearchAccessDepartment)
+admin.site.register(models.GardeningPaymentType, ResCGardeningPaymentType)
 admin.site.register(models.Contrasts, ResContrasts)
 admin.site.register(models.CategoryDirectory)

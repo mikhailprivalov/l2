@@ -27,17 +27,48 @@
           localRow.curatorVariants.length > 0"
         :value="localRow.curatorValue"
         :variants="localRow.curatorVariants"
-        @modified="saveCuratorValue($event)"
+        @modified="onCuratorValueChange($event)"
       />
       <NumberField
         v-else-if="localRow.curatorFieldPk && localRow.curatorFieldType === 18"
         :value="localRow.curatorValue"
-        @modified="saveCuratorValue($event)"
+        @modified="onCuratorValueChange($event)"
       />
       <span v-else>–</span>
     </td>
     <td>
       {{ (localRow.curatorScore === 0 || localRow.curatorScore === '0') ? '0' : (localRow.curatorScore || '–') }}
+    </td>
+    <td class="approve-td">
+      <button
+        v-if="localRow.curatorFieldPk && !localRow.curatorApproved"
+        class="btn btn-blue-nb btn-sm"
+        :disabled="saving"
+        @click="saveRow(true)"
+      >
+        Утвердить
+      </button>
+      <button
+        v-else-if="localRow.curatorFieldPk"
+        class="btn btn-default btn-blue2-nb btn-sm"
+        :disabled="saving"
+        @click="saveRow(false)"
+      >
+        Отменить
+      </button>
+    </td>
+    <td class="status-td">
+      {{ localRow.curatorApproved ? 'утверждено' : '–' }}
+    </td>
+    <td class="comment-td">
+      <input
+        v-if="localRow.curatorFieldPk"
+        v-model="localRow.curatorComment"
+        type="text"
+        class="form-control input-sm"
+        placeholder="Комментарий"
+      >
+      <span v-else>–</span>
     </td>
   </tr>
 </template>
@@ -87,6 +118,7 @@ export default {
   data() {
     return {
       localRow: { ...this.row },
+      saving: false,
     };
   },
   watch: {
@@ -117,23 +149,55 @@ export default {
       );
       this.localRow.curatorScore = raw === '' || raw === null || raw === undefined ? '' : String(raw);
     },
-    async saveCuratorValue(value) {
+    onCuratorValueChange(value) {
       this.localRow.curatorValue = value;
       this.recalculateCuratorScore();
-      const response = await this.$api('indicators/save-indicator-value', {
-        issledovaniye: this.localRow.issledovaniye,
-        fieldPk: this.localRow.curatorFieldPk,
-        value,
-        scoreFieldPk: this.localRow.curatorScoreFieldPk,
-        curatorScore: this.localRow.curatorScore,
-      });
-      if (!this.localRow.curatorScoreFormula || !String(this.localRow.curatorScoreFormula).trim()) {
-        this.localRow.curatorScore = response.curatorScore;
-      } else {
-        this.recalculateCuratorScore();
+    },
+    async saveRow(approved) {
+      if (!this.localRow.curatorFieldPk || this.saving) {
+        return;
       }
-      this.$emit('row-updated', { ...this.localRow });
+      this.saving = true;
+      try {
+        const response = await this.$api('indicators/save-indicator-value', {
+          issledovaniye: this.localRow.issledovaniye,
+          fieldPk: this.localRow.curatorFieldPk,
+          value: this.localRow.curatorValue,
+          scoreFieldPk: this.localRow.curatorScoreFieldPk,
+          curatorScore: this.localRow.curatorScore,
+          approved,
+          comment: this.localRow.curatorComment || '',
+        });
+        this.localRow.curatorApproved = approved;
+        if (!this.localRow.curatorScoreFormula || !String(this.localRow.curatorScoreFormula).trim()) {
+          this.localRow.curatorScore = response.curatorScore;
+        } else {
+          this.recalculateCuratorScore();
+        }
+        this.$emit('row-updated', { ...this.localRow });
+      } finally {
+        this.saving = false;
+      }
     },
   },
 };
 </script>
+
+<style scoped lang="scss">
+.approve-td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.status-td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.comment-td {
+  .form-control {
+    width: 100%;
+    min-width: 0;
+  }
+}
+</style>

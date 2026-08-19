@@ -585,6 +585,7 @@ class Napravleniya(models.Model):
     celery_send_task_ids = ArrayField(models.CharField(max_length=64), default=list, blank=True, db_index=True)
     external_order = models.ForeignKey(RegisteredOrders, default=None, blank=True, null=True, db_index=True, on_delete=models.PROTECT, help_text='Внешний заказ')
     need_order_redirection = models.BooleanField(default=False, blank=True, help_text='Требуется проверка на перенаправление заказа')
+    need_pull_result = models.BooleanField(default=False, blank=True, help_text='Требуется ручной запрос результата из внешней системы')
     order_redirection_number = models.CharField(max_length=24, default=None, blank=True, null=True, db_index=True, help_text='Номер перенаправленного заказа')
     order_redirection_number_is_finished = models.BooleanField(default=False, blank=True, help_text='результат полностью выпонен внешней системой')
     external_executor_hospital = models.ForeignKey(
@@ -611,6 +612,8 @@ class Napravleniya(models.Model):
     )
     accept_time = models.DateTimeField(null=True, blank=True, default=None, help_text='Время принятия заявки')
     is_sent_to_work_place = models.BooleanField(null=True, blank=True, default=False, help_text='Отправлен протокол работодателю', db_index=True)
+    dcm_study_link_status = models.CharField(max_length=32, blank=True, default='', help_text='Статус привязки DICOM исследования')
+    dcm_study_link_message = models.TextField(blank=True, default='', help_text='Сообщение статуса привязки DICOM')
 
     def sync_confirmed_fields(self, skip_post=False):
         has_confirmed_iss = Issledovaniya.objects.filter(napravleniye=self, time_confirmation__isnull=False).exists()
@@ -3119,6 +3122,8 @@ class ParaclinicResultIndicator(models.Model):
     issledovaniye = models.ForeignKey(Issledovaniya, db_index=True, help_text='Направление на исследование, для которого сохранен результат', on_delete=models.CASCADE)
     field = models.ForeignKey(directory.ParaclinicInputField, db_index=True, help_text='Поле результата', on_delete=models.CASCADE)
     value = models.TextField()
+    approved = models.BooleanField(default=False, blank=True, help_text='Утверждено куратором')
+    comment = models.TextField(default='', blank=True, help_text='Комментарий куратора')
     doctor_profile = models.ForeignKey(DoctorProfile, db_index=True, null=True, default=None, blank=True, help_text='Куратор показателя', on_delete=models.SET_NULL)
     updated_at = models.DateTimeField(auto_now=True, help_text='Дата и время последнего изменения')
 

@@ -5,7 +5,6 @@ from django.db import models
 from appconf.manager import SettingManager
 from directions.models import Napravleniya
 from hospitals.models import Hospitals
-from integration_framework.tasks import send_has_result
 
 
 class ResultFeed(models.Model):
@@ -54,7 +53,7 @@ class ResultFeed(models.Model):
         }
 
     @staticmethod
-    def insert_feed_by_direction(direction: Napravleniya, disable_send=False):
+    def insert_feed_by_direction(direction: Napravleniya):
         if not SettingManager.l2('feed'):
             return None
 
@@ -118,9 +117,6 @@ class ResultFeed(models.Model):
             direction_created_at=direction_created_at,
             result_confirmed_at=result_confirmed_at,
         )
-
-        if not disable_send:
-            send_has_result.apply_async(args=[feed.unique_id])
 
         return feed
 

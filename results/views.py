@@ -620,6 +620,10 @@ def result_print(request):
                         type_form = "10001"
                         type_schema = "docx"
                         link = "hospital"
+                if direction.hospital and direction.hospital.schema_docx_result_created_direction_hospital:
+                    type_form = "10002"
+                    type_schema = "docx"
+                    link = "created_direction_hospital"
                 if type_form != 0 and type_schema != "docx":
                     current_type_form = str(type_form)
                     form_result = import_string('results.forms.forms' + current_type_form[0:3] + '.form_' + current_type_form[3:5])

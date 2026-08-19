@@ -109,6 +109,7 @@ Result (Result)
 - **Adapter Pattern** - RMIS adapter, HL7 adapter (hl7apy), ASTM adapter (lab equipment), SOAP adapter (zeep)
 - **Queue Pattern** - Celery for async processing, queues for external system data sending
 - **Webhook Pattern** - API endpoints for external system data reception
+- **REST result pull daemons** (`daemons/`): `rest_api_pull_result_start` runs once a day at `REST_API_PULL_RESULT_RUN_TIME` (`HH:MM`, `TIME_ZONE`); `rest_api_get_new_results_start` asks each hospital API `GET_NEW_RESULTS` then runs `_run_pull_for_orders`. Interval: `REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS`. Per-hospital auth from `Hospitals.auth_data_for_rest`. REST keys are cached per hospital (`{hospital_id}_hosp_key_auth`), TTL `REST_API_HOSPITAL_KEY_TTL_MINUTES` (default `5 * 24 * 60`, overridable in `local_settings.py`).
 
 ## Document Generation Patterns
 

@@ -82,6 +82,16 @@ class Hospitals(models.Model):
     y_offset = models.SmallIntegerField(blank=True, null=True, default=0, help_text="Смещение по оси Y 2 ")
     time_zone = models.CharField(max_length=100, blank=True, null=True, default="Asia/Irkutsk", help_text="Europe/Moscow")
     schema_docx = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
+    schema_docx_result_created_direction_hospital = models.FileField(upload_to=get_file_path_to_schemas, default=None, null=True, blank=True)
+    smtp_address = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP=address")
+    smtp_login = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP_login")
+    smtp_password = models.CharField(max_length=100, blank=True, null=True, default=None, help_text="SMTP_pass")
+    smtp_port = models.CharField(max_length=5, blank=True, null=True, default=None, help_text="SMTP_port")
+    dicom_ip_address = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="ip-address dicom")
+    dicom_port = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="port dicom")
+    dicom_auth = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="auth dicom")
+    remote_dicom_server = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="dicom-данные одной строкой")
+    web_plugin_link_study = models.CharField(max_length=255, blank=True, null=True, default=None, help_text="plugin")
 
     @staticmethod
     def get_default_hospital() -> Optional['Hospitals']:

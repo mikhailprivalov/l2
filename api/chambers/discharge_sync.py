@@ -48,13 +48,18 @@ def _read_discharge_date_from_protocol(iss: Issledovaniya):
     return None
 
 
+def _iss_for_hosp_direction_q(direction_pk):
+    """Исследования самого направления или дочерних (parent → iss стационара, не id направления)."""
+    return Q(napravleniye_id=direction_pk) | Q(napravleniye__parent__napravleniye_id=direction_pk)
+
+
 def get_discharge_date_for_direction(direction_pk):
     """Дата выписки из подтверждённого протокола выписки по направлению."""
     if not direction_pk:
         return None
     for extract_iss in (
         Issledovaniya.objects.filter(time_confirmation__isnull=False)
-        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .filter(_iss_for_hosp_direction_q(direction_pk))
         .select_related("research")
         .order_by("-time_confirmation")
     ):
@@ -71,7 +76,7 @@ def get_discharge_date_for_direction_by_extract_service(direction_pk):
         return None
     for extract_iss in (
         Issledovaniya.objects.filter(time_confirmation__isnull=False)
-        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .filter(_iss_for_hosp_direction_q(direction_pk))
         .select_related("research")
         .order_by("-time_confirmation")
     ):
@@ -90,9 +95,7 @@ def has_confirmed_extract_service_for_direction(direction_pk) -> bool:
             time_confirmation__isnull=False,
             research__is_extract_service=True,
         )
-        .filter(
-            Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
-        )
+        .filter(_iss_for_hosp_direction_q(direction_pk))
         .exists()
     )
 
@@ -235,7 +238,7 @@ def _hosp_direction_pk_from_extract_iss(iss: Issledovaniya):
     if not nap:
         return None
     if nap.parent_id:
-        return nap.parent_id
+        return nap.parent.napravleniye_id
     return nap.pk
 
 
@@ -260,11 +263,9 @@ def collect_direction_pks_for_recent_extract_sync(
     direction_pks.update(ptb_qs.values_list("direction_id", flat=True))
     direction_pks.update(pswb_qs.values_list("direction_id", flat=True))
 
-    extract_qs = Issledovaniya.objects.filter(time_confirmation__isnull=False).filter(research__is_extract_service=True).select_related("napravleniye")
+    extract_qs = Issledovaniya.objects.filter(time_confirmation__isnull=False).filter(research__is_extract_service=True).select_related("napravleniye", "napravleniye__parent")
     if direction_pk:
-        extract_qs = extract_qs.filter(
-            Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk),
-        )
+        extract_qs = extract_qs.filter(_iss_for_hosp_direction_q(direction_pk))
 
     for extract_iss in extract_qs.iterator():
         discharge_date = _read_discharge_date_from_protocol(extract_iss)
@@ -289,7 +290,7 @@ def get_discharge_date_from_extract_service_by_protocol_date_in_period(direction
     for extract_iss in (
         Issledovaniya.objects.filter(time_confirmation__isnull=False)
         .filter(research__is_extract_service=True)
-        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .filter(_iss_for_hosp_direction_q(direction_pk))
         .select_related("research")
         .order_by("-time_confirmation")
     ):

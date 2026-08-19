@@ -18,6 +18,7 @@ urlpatterns = [
     path('update-doctor-to-bed', views.update_doctor_to_bed),
     path('get-patients-without-bed', views.get_patients_without_bed),
     path('get-directions-hosp-meta', views.get_directions_hosp_meta),
+    path('check-discharged-expertise', views.check_discharged_expertise),
     path('save-patient-without-bed', views.save_patient_without_bed),
     path('delete-patient-without-bed', views.delete_patient_without_bed),
 ]

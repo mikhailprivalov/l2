@@ -91,8 +91,19 @@ const router = new Router({
           'Конструктор: Группировка исследований по направлениям',
           'Конструктор: Настройка скрининга',
           'Конструктор: Настройка организации',
+          'Конструктор: ДОУ',
         ],
         narrowLayout: true,
+      },
+    },
+    {
+      path: '/ui/construct/dou',
+      name: 'construct_dou',
+      component: () => import('@/construct/ConstructDou.vue'),
+      meta: {
+        title: 'ДОУ-конструктор',
+        groups: ['Конструктор: ДОУ'],
+        fullPageLayout: true,
       },
     },
     {
@@ -239,7 +250,13 @@ const router = new Router({
       component: () => import('@/pages/IndicatorСurator.vue'),
       meta: {
         title: 'Показатели куратора извещения',
-        groups: ['Лечащий врач', 'Оператор лечащего врача', 'Вызов врача', 'Заполнение экстренных извещений'],
+        groups: [
+          'Показатели куратора',
+          'Лечащий врач',
+          'Оператор лечащего врача',
+          'Вызов врача',
+          'Заполнение экстренных извещений',
+        ],
         module: 'l2_indicator_curator',
       },
     },
@@ -832,6 +849,16 @@ const router = new Router({
       },
     },
     {
+      path: '/ui/gardening',
+      name: 'gardening',
+      component: () => import('@/pages/Gardening/index.vue'),
+      meta: {
+        title: 'Садоводство',
+        fullPageLayout: true,
+        groups: ['Бухгалтер садоводства'],
+      },
+    },
+    {
       path: '/ui/working-time',
       name: 'WorkingTime',
       component: () => import('@/pages/WorkingTime/WorkingTime.vue'),
@@ -846,7 +873,7 @@ const router = new Router({
       name: 'employees',
       component: () => import('@/pages/Employees/Employees.vue'),
       meta: {
-        title: 'Сотрудники',
+        title: 'Работники',
         groups: ['Конструктор: Настройка организации'],
         fullPageLayout: true,
       },

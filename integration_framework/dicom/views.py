@@ -4,6 +4,11 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
 from api.requests.views import link_image_to_request
+from brokers_queue.rmq.rentgen_publisher import (
+    send_dcm_order_create_status_to_rmq,
+    send_dcm_study_link_response_to_rmq,
+    send_dcm_study_link_status_to_rmq,
+)
 from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
 from directory.models import Researches, Contrasts
@@ -14,6 +19,7 @@ import simplejson as json
 import re
 from django.http import HttpRequest
 
+from integration_framework.dicom.rmq_status import process_dcm_order_create_status, process_dcm_study_link_status
 from integration_framework.views import limit_str
 from django.db import transaction
 
@@ -24,7 +30,6 @@ from users.models import DoctorProfile
 @api_view(['POST'])
 def get_meta_tags(request):
     result = EquipmentReceive.save_meta_tag_from_dicom_server(request)
-
     return Response({"result": result})
 
 
@@ -160,7 +165,9 @@ def dcm_order_create(request):
     operator_created_id = order_data.get("operatorCreatedId")
     if not operator_created_id:
         return Response({"ok": False, "message": "Не указан id-оператора"})
-    doc_profile = DoctorProfile.objects.filter(id=operator_created_id).first()
+    doc_profile = DoctorProfile.get_by_operator_created_id(operator_created_id)
+    if not doc_profile:
+        return Response({"ok": False, "message": "Оператор не найден"})
     if doc_profile.hospital != hospital:
         return Response({"ok": False, "message": "Id-оператора не принадлежит вашей организации"})
     financing_source = IstochnikiFinansirovaniya.objects.filter(title="ОМС", base__internal_type=True).first()
@@ -220,6 +227,9 @@ def dcm_order_create(request):
             },
         )
 
+    direction = Napravleniya.objects.select_related('hospital').get(pk=result['list_id'][0])
+    send_dcm_order_create_status_to_rmq(direction, hospital, id_in_hospital, result['list_id'], doc_profile)
+
     return Response({"ok": True, "message": "", "directions": result["list_id"]})
 
 
@@ -241,8 +251,15 @@ def dcm_study_link(request):
     study_instance_uid = body.get("studyInstanceUID")
     equipment_model_id = body.get("deviceId")
     operatorCreatedId = body.get("operatorCreatedId")
+    if not operatorCreatedId:
+        return Response({"ok": False, "message": "Не указан id-оператора"})
+    doc_profile = DoctorProfile.get_by_operator_created_id(operatorCreatedId)
+    if not doc_profile:
+        return Response({"ok": False, "message": "Оператор не найден"})
 
-    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital__in=permission_hospitals, doc_id=operatorCreatedId).first()
+    direction = Napravleniya.objects.filter(id=int(direction_num), id_in_hospital=internal_id, hospital__in=permission_hospitals, doc_id=doc_profile.pk).first()
+    if not direction:
+        return Response({"ok": False, "message": "Заявка не найдена"})
     try:
         equipment_receive = EquipmentReceive.objects.get(study_instance_uid_tag=study_instance_uid, equipment_model_id=equipment_model_id)
     except EquipmentReceive.DoesNotExist:
@@ -250,10 +267,41 @@ def dcm_study_link(request):
 
     image_id = equipment_receive.pk
     request_id = direction.pk
-    doc_profile = DoctorProfile.objects.filter(id=operatorCreatedId).first()
 
     body_data = json.dumps({"imageId": image_id, "requestId": request_id})
     http_obj = HttpRequest()
     http_obj._body = body_data
     http_obj.user = doc_profile.user
-    return link_image_to_request(http_obj)
+    response = link_image_to_request(http_obj)
+    try:
+        response_data = json.loads(response.content)
+    except (TypeError, ValueError):
+        response_data = {}
+
+    if response_data.get('ok'):
+        send_dcm_study_link_response_to_rmq(direction, equipment_receive, doc_profile)
+        send_dcm_study_link_status_to_rmq(direction, equipment_receive, doc_profile, ok=True)
+    else:
+        send_dcm_study_link_status_to_rmq(
+            direction,
+            equipment_receive,
+            doc_profile,
+            ok=False,
+            message=response_data.get('message', ''),
+        )
+
+    return response
+
+
+@api_view(['POST'])
+def dcm_order_create_status(request):
+    body = json.loads(request.body)
+    result = process_dcm_order_create_status(request, body)
+    return Response(result)
+
+
+@api_view(['POST'])
+def dcm_study_link_status(request):
+    body = json.loads(request.body)
+    result = process_dcm_study_link_status(request, body)
+    return Response(result)

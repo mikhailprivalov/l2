@@ -63,7 +63,6 @@
             <div class="col-xs-6">
               <div class="filter-row__right">
                 <div class="status-filters">
-                  <span class="status-filters__label">Статус:</span>
                   <label
                     v-for="status in statusOptions"
                     :key="status.id"
@@ -98,7 +97,7 @@
                   <Paginate
                     v-model="page"
                     :page-count="pages"
-                    :page-range="3"
+                    :page-range="2"
                     :margin-pages="1"
                     :click-handler="load"
                     prev-text="Назад"
@@ -202,11 +201,33 @@
               {{ row.doctorFio }}
             </td>
             <td :class="statusCellClass(row.status)">
-              <span
-                v-if="row.cito"
-                class="cito-badge"
-              >CITO</span>
-              {{ row.status }}
+              <div class="status-cell">
+                <span class="status-cell__label">
+                  <span
+                    v-if="row.cito && !row.hidden"
+                    class="cito-badge"
+                  >CITO</span>
+                  {{ row.status }}
+                </span>
+                <button
+                  v-if="row.canHide"
+                  class="btn btn-xs btn-default status-hide-btn"
+                  title="Скрыть заявку"
+                  :disabled="togglingId === row.id"
+                  @click.stop="toggleRequestCancel(row)"
+                >
+                  скр
+                </button>
+                <button
+                  v-if="row.hidden"
+                  class="btn btn-xs btn-default status-hide-btn"
+                  title="Вернуть в работу"
+                  :disabled="togglingId === row.id"
+                  @click.stop="toggleRequestCancel(row)"
+                >
+                  показать
+                </button>
+              </div>
             </td>
           </tr>
           <tr v-if="filteredRows.length === 0">
@@ -285,6 +306,8 @@ interface JournalRow {
   confirmedAt: string | null;
   status: string;
   cito: boolean;
+  hidden: boolean;
+  canHide: boolean;
 }
 
 const pageSizeOptions = [50, 100, 150];
@@ -297,6 +320,7 @@ const statusOptions = [
   { id: 'cito', label: 'CITO' },
   { id: 'accepted', label: 'В работе' },
   { id: 'confirmed', label: 'Исполнены' },
+  { id: 'hidden', label: 'Скрытые' },
 ];
 
 const getDefaultDateRange = (): [string, string] => {
@@ -324,6 +348,7 @@ const sortBy = ref<SortField | ''>('');
 const sortDir = ref<SortDir>('desc');
 const loaded = ref(false);
 const loading = ref(false);
+const togglingId = ref<number | null>(null);
 
 const pages = computed(() => Math.max(1, Math.ceil(total.value / pageSize.value)));
 
@@ -359,6 +384,9 @@ const statusCellClass = (status: string) => {
   }
   if (status === 'Исполнена') {
     return 'table-list__status--confirmed';
+  }
+  if (status === 'Скрыта') {
+    return 'table-list__status--hidden';
   }
   return '';
 };
@@ -476,6 +504,30 @@ const resetFilters = () => {
     hospitalId: -1,
     doctorId: -1,
   };
+};
+
+const toggleRequestCancel = async (row: JournalRow) => {
+  togglingId.value = row.id;
+  const wasHidden = row.hidden;
+  try {
+    const response = await api('directions/cancel', { pk: row.id });
+    if (response.ok) {
+      notify.ok(wasHidden ? 'Заявка возвращена в работу' : 'Заявка скрыта');
+      await load(page.value);
+      return;
+    }
+    if (response.forbidden) {
+      notify.error('Нет прав на изменение заявки');
+      return;
+    }
+    notify.error(response.message || (wasHidden ? 'Нельзя вернуть заявку в работу' : 'Нельзя скрыть заявку'));
+  } catch (error) {
+    notify.error(wasHidden ? 'Ошибка при возврате заявки в работу' : 'Ошибка при скрытии заявки');
+    // eslint-disable-next-line no-console
+    console.error('Ошибка при изменении статуса заявки:', error);
+  } finally {
+    togglingId.value = null;
+  }
 };
 
 watch(selectedStatuses, onFiltersChange, { deep: true });
@@ -639,10 +691,11 @@ $filter-label-width: 82px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-wrap: nowrap;
     min-height: 34px;
     width: 100%;
+    overflow-x: auto;
   }
 }
 
@@ -650,12 +703,18 @@ $filter-label-width: 82px;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
-  flex: 1 1 auto;
-  margin-left: auto;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 
   :deep(.pagination) {
     margin: 0;
+
+    > li > a,
+    > li > span {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
   }
 }
 
@@ -669,14 +728,11 @@ $filter-label-width: 82px;
 
 .status-filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 6px 12px;
-  min-height: 34px;
-
-  &__label {
-    font-weight: 600;
-  }
+  gap: 4px 8px;
+  flex: 1 1 auto;
+  min-width: 0;
 
   &__reset {
     white-space: nowrap;
@@ -688,9 +744,10 @@ $filter-label-width: 82px;
   font-weight: normal;
   cursor: pointer;
   white-space: nowrap;
+  font-size: 13px;
 
   input {
-    margin-right: 4px;
+    margin-right: 3px;
   }
 }
 
@@ -781,6 +838,30 @@ $filter-label-width: 82px;
   &__status--confirmed {
     border-right: 6px solid #049372;
   }
+
+  &__status--hidden {
+    border-right: 6px solid #aab2bd;
+  }
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+
+  &__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.status-hide-btn {
+  flex: 0 0 auto;
+  padding: 0 4px;
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 .row-cito {

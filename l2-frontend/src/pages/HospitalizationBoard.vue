@@ -122,6 +122,14 @@
                 Все врачи
               </button>
               <button
+                type="button"
+                class="badge badge-secondary doctor-badge-btn"
+                :class="{ active: doctorPk === 0 }"
+                @click="doctorPk = 0"
+              >
+                Без врача - {{ noDoctorPatientCount }}
+              </button>
+              <button
                 v-for="doctor in doctors"
                 :key="`doctor-${doctor.pk}`"
                 type="button"
@@ -633,6 +641,14 @@
                     @click.prevent="openExtractsDetailForm"
                   >Выписаны - {{ extractsCount }}</a>
                 </h5>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-blue-nb board-discharged-check-btn"
+                  :disabled="!canCheckDischargedExpertise"
+                  @click="checkDischargedExpertise"
+                >
+                  {{ expertiseCheckLoading ? '…' : 'Проверены' }}
+                </button>
               </div>
               <div class="board-aside-section-body">
                 <p
@@ -652,6 +668,7 @@
                     v-for="row in dischargedPatientsInPeriod"
                     :key="row.key"
                     class="board-patient-row board-patient-row--discharged"
+                    :class="{ 'board-patient-row--expertise': isDischargedExpertiseVerified(row.directionPk) }"
                   >
                     <a
                       class="board-patient-link"
@@ -1105,14 +1122,21 @@ const doctors = ref<any[]>([]);
 const accompanyingChildOptions = ref<AccompanyingChildOption[]>([]);
 const chambers = ref<ChamberData[]>([]);
 const records = ref<CalendarRecord[]>([]);
+type ExtractPatientAdd = {
+  directionPk?: number;
+  name?: string;
+};
+
 type ExtractDayInfo = {
   count: number;
   directionsList?: number[];
-  patientExtractsAdds?: Array<Record<string, string>>;
+  patientExtractsAdds?: Array<ExtractPatientAdd | Record<string, string>>;
 };
 const extractsByDate = ref<Record<string, ExtractDayInfo>>({});
 const extractsCount = ref(0);
 const extractsDirectionList = ref<number[]>([]);
+const verifiedExpertiseDirections = ref<Set<number>>(new Set());
+const expertiseCheckLoading = ref(false);
 const defaultHospitalizationPeriodDays = ref(3);
 const viewMode = ref<ViewMode>('day');
 const anchorDate = ref(moment());
@@ -1384,9 +1408,16 @@ const recordOverlapsVisiblePeriod = (rec: CalendarRecord) => {
   return recStart <= bounds.end && recEnd >= bounds.start;
 };
 
+const isRecordWithoutDoctor = (rec: CalendarRecord) => (
+  rec.doctor_pk == null || rec.doctor_pk <= 0
+);
+
 const filterRecordsByDoctor = (list: CalendarRecord[]) => {
-  if (doctorPk.value <= 0) {
+  if (doctorPk.value === -1) {
     return list;
+  }
+  if (doctorPk.value === 0) {
+    return list.filter(isRecordWithoutDoctor);
   }
   return list.filter((rec) => rec.doctor_pk === doctorPk.value);
 };
@@ -2085,6 +2116,25 @@ const accompanyingDisplayLetter = (record: CalendarRecord) => {
   return t.charAt(0).toLocaleUpperCase('ru-RU');
 };
 
+const ACCOMPANYING_CHILD_SEX: Record<string, string> = {
+  мама: 'Ж',
+  папа: 'М',
+  бабушка: 'Ж',
+  дедушка: 'М',
+};
+
+const accompanyngSexFromType = (typeRaw: string | null | undefined) => {
+  const type = (typeRaw || '').trim();
+  if (!type) {
+    return '-';
+  }
+  return ACCOMPANYING_CHILD_SEX[type] || '-';
+};
+
+const parseNeedSickFlag = (value: unknown) => (
+  value === true || value === 1 || value === '1' || value === 'true'
+);
+
 const isTodayDayColumn = (dayKey: string) => dayKey === todayDayKey.value;
 
 type DayColumnTotals = { male: number, female: number, accompanying: number, free: number };
@@ -2154,13 +2204,21 @@ const openExtractsDetailForm = () => {
 
 const extractDateKeyFromDayKey = (dayKey: string) => moment(dayKey, 'YYYY-MM-DD').format('DD.MM.YY');
 
-const parseExtractAddsEntry = (entry: Record<string, string>) => {
+const parseExtractAddsEntry = (entry: ExtractPatientAdd | Record<string, string>) => {
+  if ('directionPk' in entry && entry.directionPk != null) {
+    const directionPk = Number(entry.directionPk);
+    const name = (entry.name || '').trim();
+    if (!Number.isFinite(directionPk) || directionPk <= 0 || !name) {
+      return null;
+    }
+    return { directionPk, name };
+  }
   const keys = Object.keys(entry);
   if (!keys.length) {
     return null;
   }
   const directionPk = Number(keys[0]);
-  const name = (entry[keys[0]] || '').trim();
+  const name = (entry[keys[0] as keyof typeof entry] || '').trim();
   if (!Number.isFinite(directionPk) || directionPk <= 0 || !name) {
     return null;
   }
@@ -2219,6 +2277,47 @@ const dischargedPatientsInPeriod = computed(() => {
 });
 
 const hasDischargedInPeriod = computed(() => dischargedPatientsInPeriodAll.value.length > 0);
+
+const canCheckDischargedExpertise = computed(() => (
+  Boolean(departmentPk.value)
+  && hasDischargedInPeriod.value
+  && !expertiseCheckLoading.value
+));
+
+const isDischargedExpertiseVerified = (directionPk: number) => (
+  verifiedExpertiseDirections.value.has(directionPk)
+);
+
+const checkDischargedExpertise = async () => {
+  if (!canCheckDischargedExpertise.value) {
+    return;
+  }
+  const directionPks = [...new Set(
+    dischargedPatientsInPeriodAll.value.map((row) => row.directionPk),
+  )];
+  if (!directionPks.length) {
+    root.$emit('msg', 'error', 'Нет выписок за выбранный период');
+    return;
+  }
+  expertiseCheckLoading.value = true;
+  await store.dispatch(actions.INC_LOADING);
+  try {
+    const response = await api('chambers/check-discharged-expertise', {
+      direction_pks: directionPks,
+    });
+    if (!response?.ok) {
+      root.$emit('msg', 'error', response?.message || 'Не удалось проверить экспертизы');
+      return;
+    }
+    const pks = Array.isArray(response?.data?.expertise_direction_pks)
+      ? response.data.expertise_direction_pks.map((pk: unknown) => Number(pk)).filter((pk: number) => Number.isFinite(pk))
+      : [];
+    verifiedExpertiseDirections.value = new Set(pks);
+  } finally {
+    expertiseCheckLoading.value = false;
+    await store.dispatch(actions.DEC_LOADING);
+  }
+};
 
 const dayColumnTotalsMap = computed(() => {
   const map = new Map<string, DayColumnTotals>();
@@ -2427,6 +2526,23 @@ const doctorPatientCountMap = computed(() => {
 
 const doctorPatientCount = (docPk: number) => doctorPatientCountMap.value.get(docPk) || 0;
 
+const noDoctorPatientCount = computed(() => {
+  const keys = new Set<string>();
+  const tryAdd = (rec: CalendarRecord) => {
+    if (!isRecordWithoutDoctor(rec) || !recordOverlapsVisiblePeriod(rec)) {
+      return;
+    }
+    keys.add(uniqueRecordKey(rec));
+  };
+  for (const rec of recordsUnfilteredForMainGrid.value) {
+    tryAdd(rec);
+  }
+  for (const rec of stripRecords.value) {
+    tryAdd(rec);
+  }
+  return keys.size;
+});
+
 const accompanyingLetterTitle = (record: CalendarRecord) => {
   const t = (record.accompanyng_child_type || '').trim();
   const s = (record.accompanyng_child_sex || '').trim();
@@ -2538,6 +2654,9 @@ type StripServerPatient = {
   age: number;
   doctor_pk?: number | null;
   is_extract?: boolean;
+  accompanyng_child_type?: string;
+  accompanyng_child_sex?: string;
+  is_need_sick?: boolean;
   date_in?: string | null;
   date_out?: string | null;
   plan_date_in?: string | null;
@@ -2585,6 +2704,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
       pswb_pk: rec.pswb_pk ?? null,
       patient_fio_text: rec.patient_fio,
       patient_sex: rec.patient_sex,
+      accompanyng_child_type: rec.accompanyng_child_type || '',
+      is_need_sick: Boolean(rec.is_need_sick),
     },
     patient_fio_text: rec.patient_fio,
     patient_sex: rec.patient_sex,
@@ -2592,6 +2713,8 @@ const saveStripPatientToServer = async (rec: CalendarRecord) => {
     plan_date_in: rec.plan_date_in,
     plan_date_out: rec.plan_date_out,
     date_out: rec.date_out,
+    accompanyng_child_type: rec.accompanyng_child_type || '',
+    is_need_sick: Boolean(rec.is_need_sick),
     is_extract: Boolean(rec.is_extract),
     record_source: rec.record_source || 'from_history',
   });
@@ -2622,11 +2745,11 @@ const newStripRecordFromServerPatient = (
     date_out: p.date_out || null,
     plan_date_in: planIn,
     plan_date_out: planOut,
-    accompanyng_child_type: '',
-    accompanyng_child_sex: '-',
+    accompanyng_child_type: p.accompanyng_child_type || '',
+    accompanyng_child_sex: p.accompanyng_child_sex || '-',
     date_comments: {},
     is_day_hosp: true,
-    is_need_sick: false,
+    is_need_sick: parseNeedSickFlag(p.is_need_sick),
     is_extract: Boolean(p.is_extract),
     record_source: p.record_source || 'from_history',
   };
@@ -2687,7 +2810,10 @@ const loadPatientsWithoutBed = async () => {
     end_date: bounds.end,
   });
   await store.dispatch(actions.DEC_LOADING);
-  const list = Array.isArray(row?.data) ? row.data : [];
+  if (!row || !Array.isArray(row.data)) {
+    return;
+  }
+  const list = row.data;
   const dayKey = stripDefaultDayKey.value;
   stripRecords.value = list
     .filter((p: any) => {
@@ -2703,6 +2829,9 @@ const loadPatientsWithoutBed = async () => {
       age: Number(p.age ?? ''),
       doctor_pk: p.doctor_pk != null ? Number(p.doctor_pk) : null,
       is_extract: Boolean(p.is_extract),
+      accompanyng_child_type: p.accompanyng_child_type || '',
+      accompanyng_child_sex: p.accompanyng_child_sex || '-',
+      is_need_sick: parseNeedSickFlag(p.is_need_sick),
       date_in: p.date_in || null,
       date_out: p.date_out || null,
       plan_date_in: p.plan_date_in || null,
@@ -2765,6 +2894,7 @@ const loadCalendar = async () => {
   if (!departmentPk.value || visibleDays.value.length === 0) {
     return;
   }
+  verifiedExpertiseDirections.value = new Set();
   await store.dispatch(actions.INC_LOADING);
   const start = visibleDays.value[0].key;
   const end = visibleDays.value[visibleDays.value.length - 1].key;
@@ -3402,7 +3532,9 @@ const saveEditingCell = async () => {
     rec.date_out = editingForm.value.planDateOut || rec.date_out;
     rec.doctor_pk = editingForm.value.doctorPk;
     rec.doctor_fio = editingForm.value.doctorFio;
-    rec.accompanyng_child_type = editingForm.value.accompanyngChildType || '';
+    const accompanyngType = (editingForm.value.accompanyngChildType || '').trim();
+    rec.accompanyng_child_type = accompanyngType;
+    rec.accompanyng_child_sex = accompanyngSexFromType(accompanyngType);
     rec.is_need_sick = Boolean(editingForm.value.isNeedSick);
     rec.direction_pk = directionIdPayload;
     rec.date_comments = { ...(rec.date_comments || {}), [editingDayKey.value]: commentPayload };
@@ -3449,7 +3581,8 @@ const saveEditingCell = async () => {
       plan_date_out: planOut,
       date_in: planIn,
       date_out: planOut || existingRec.date_out || null,
-      accompanyng_child_type: editingForm.value.accompanyngChildType || '',
+      accompanyng_child_type: (editingForm.value.accompanyngChildType || '').trim(),
+      accompanyng_child_sex: accompanyngSexFromType(editingForm.value.accompanyngChildType),
       is_day_hosp: true,
       is_need_sick: Boolean(editingForm.value.isNeedSick),
       date_comments: { ...(existingRec.date_comments || {}), [editingDayKey.value]: commentPayload },
@@ -3832,6 +3965,21 @@ onBeforeUnmount(() => {
   cursor: default;
 }
 
+.board-patient-row--discharged.board-patient-row--expertise {
+  background: #049372;
+}
+
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link,
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link:hover,
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link:focus,
+.board-patient-row--discharged.board-patient-row--expertise .board-patient-link:visited {
+  color: #fff;
+}
+
+.board-patient-row--discharged.board-patient-row--expertise .board-discharged-date {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .board-patient-row--discharged:active {
   cursor: default;
 }
@@ -4169,6 +4317,13 @@ onBeforeUnmount(() => {
 .board-discharged-heading-link:focus {
   color: #1565c0;
   text-decoration: underline;
+}
+
+.board-discharged-check-btn {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .calendar-wrap {

@@ -11,7 +11,8 @@ from django.conf import settings as django_settings
 from django.utils import timezone
 
 from appconf.manager import SettingManager
-from directory.models import Contrasts
+from brokers_queue.rmq.rentgen_publisher import send_request_to_rentgen_rmq, send_study_link_to_rentgen_rmq
+from directory.models import Contrasts, Researches
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
@@ -20,6 +21,7 @@ from clients.models import Card
 from integration_framework.models import EquipmentReceive
 from hospitals.models import Hospitals
 from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
+from slog.models import Log
 
 ALL_LIST_PAGE_SIZE = 50
 ALLOWED_ALL_LIST_PAGE_SIZES = {50, 100, 150}
@@ -376,6 +378,10 @@ def create_request(request):
                 napravleniya_file = NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file)
                 napravleniya_file.save()
 
+    direction = Napravleniya.objects.select_related('client__individual', 'hospital', 'type_contrast').get(pk=direction_id)
+    research = Researches.objects.filter(pk=research_id).first()
+    send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
+
     return status_response(True, "Заявка успешно создана", {"requestId": direction_id})
 
 
@@ -423,6 +429,8 @@ def link_image_to_request(request):
             equipment_receive.time_reset_link = None
             equipment_receive.save(update_fields=['napravleniye', 'doc_save_link', 'time_save_link', 'doc_reset_link', 'time_reset_link'])
 
+            send_study_link_to_rentgen_rmq(napravleniye, equipment_receive, request.user.doctorprofile)
+
             return status_response(True, "Изображение успешно привязано к заявке")
         else:
             if equipment_receive.napravleniye:
@@ -436,6 +444,52 @@ def link_image_to_request(request):
             equipment_receive.save(update_fields=['napravleniye', 'doc_reset_link', 'time_reset_link'])
 
             return status_response(True, "Изображение отвязано от заявки")
+
+
+def _is_request_editable(direction):
+    return not direction.cancel and not direction.accept_who_doctor_id and not direction.total_confirmed
+
+
+def _get_request_research_id(direction):
+    for iss in direction.issledovaniya_set.all():
+        if iss.research_id:
+            return iss.research_id
+    return None
+
+
+def _get_request_research_title(direction):
+    for iss in direction.issledovaniya_set.all():
+        if iss.research:
+            return iss.research.short_title or iss.research.title
+    return ''
+
+
+def _build_request_edit_snapshot(direction):
+    files = [f.uploaded_file.name.split('/')[-1] if f.uploaded_file else 'Файл' for f in direction.napravleniyafiles_set.all()]
+    return {
+        'researchId': _get_request_research_id(direction),
+        'researchTitle': _get_request_research_title(direction),
+        'date': str(direction.fact_research_date) if direction.fact_research_date else '',
+        'time': direction.fact_research_time.strftime('%H:%M') if direction.fact_research_time else '',
+        'dose': direction.dose or '',
+        'cito': direction.is_cito,
+        'isDynamic': direction.is_dynamic,
+        'contrast': direction.text_contrast or '',
+        'contrastAmount': direction.contrast_amount or '',
+        'anamnesis': direction.anamnesis or '',
+        'comment': direction.direction_comment or '',
+        'files': files,
+    }
+
+
+def _build_edit_log_body(old_snapshot, new_snapshot):
+    old = {}
+    new = {}
+    for key in new_snapshot:
+        if old_snapshot.get(key) != new_snapshot.get(key):
+            old[key] = old_snapshot.get(key)
+            new[key] = new_snapshot.get(key)
+    return {'old': old, 'new': new} if old else None
 
 
 @login_required
@@ -500,9 +554,116 @@ def get_request_details(request):
         "researches": researches,
         "files": files,
         "contrastText": direction.text_contrast or '',
+        "editable": _is_request_editable(direction),
+        "researchId": _get_request_research_id(direction),
+        "currentContrast": direction.type_contrast_id or -1,
+        "editDate": str(direction.fact_research_date) if direction.fact_research_date else '',
+        "editTime": direction.fact_research_time.strftime('%H:%M') if direction.fact_research_time else '',
     }
 
     return JsonResponse({"success": True, "data": details})
+
+
+@login_required
+@group_required('Создание и исполнение заявок', 'Лаборант-диагностики')
+def update_request(request):
+    request_data = json.loads(request.body)
+    request_id = request_data.get('requestId')
+    research_id = request_data.get('researchId')
+    request_fields = request_data.get('requestFields', {})
+
+    if not request_id:
+        return status_response(False, "ID заявки не указан")
+
+    if not research_id:
+        return status_response(False, "Не указана услуга")
+
+    if not request_fields.get('date') or not request_fields.get('time'):
+        return status_response(False, "Не указана дата или время исследования")
+
+    files = request_fields.get('files', [])
+    for file_data in files:
+        if 'url' in file_data and file_data['url'].startswith('data:'):
+            _, data = file_data['url'].split(',', 1)
+            file_content = base64.b64decode(data)
+            if len(file_content) > 10 * 1024 * 1024:
+                return status_response(False, "Размер файла превышает 10 МБ")
+
+    try:
+        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id, is_request=True)
+    except Napravleniya.DoesNotExist:
+        return status_response(False, "Заявка не найдена")
+
+    if direction.doc != request.user.doctorprofile:
+        return status_response(False, "Нет доступа к этой заявке")
+
+    if not _is_request_editable(direction):
+        return status_response(False, "Редактирование доступно только для новых заявок")
+
+    if not Researches.objects.filter(pk=research_id).exists():
+        return status_response(False, "Услуга не найдена")
+
+    with transaction.atomic():
+        old_snapshot = _build_request_edit_snapshot(direction)
+
+        iss = direction.issledovaniya_set.first()
+        if not iss:
+            return status_response(False, "Исследование не найдено")
+
+        if iss.research_id != research_id:
+            iss.research_id = research_id
+            iss.save(update_fields=['research'])
+
+        direction.is_cito = request_fields.get('cito', False)
+        direction.is_dynamic = request_fields.get('isDynamic', False)
+        direction.contrast_amount = request_fields.get('contrastAmount', '')
+        direction.dose = request_fields.get('dose', '')
+        direction.anamnesis = request_fields.get('anamnesis', '')
+        direction.direction_comment = request_fields.get('comment', '')
+        current_contrast = request_fields.get('currentContrast', -1)
+        contrast_type = Contrasts.objects.filter(pk=int(current_contrast)).first()
+        if contrast_type:
+            direction.type_contrast = contrast_type
+            direction.text_contrast = contrast_type.title
+        else:
+            direction.type_contrast = None
+            direction.text_contrast = ''
+        direction.fact_research_date = request_fields.get('date', '') or None
+        direction.fact_research_time = request_fields.get('time', '') or None
+        direction.save(
+            update_fields=[
+                'is_cito',
+                'is_dynamic',
+                'contrast_amount',
+                'dose',
+                'anamnesis',
+                'direction_comment',
+                'fact_research_date',
+                'fact_research_time',
+                'type_contrast',
+                'text_contrast',
+            ]
+        )
+
+        for file_data in files:
+            if 'url' in file_data and file_data['url'].startswith('data:'):
+                _, data = file_data['url'].split(',', 1)
+                file_content = base64.b64decode(data)
+                file_name = file_data.get('name', f'{uuid.uuid4()}.bin')
+                django_file = ContentFile(file_content, name=file_name)
+                NapravleniyaFiles(napravleniye=direction, uploaded_file=django_file).save()
+
+        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id)
+        new_snapshot = _build_request_edit_snapshot(direction)
+        log_body = _build_edit_log_body(old_snapshot, new_snapshot)
+        if log_body:
+            Log.log(key=request_id, type=250002, user=request.user.doctorprofile, body=log_body)
+
+    direction = Napravleniya.objects.select_related('client__individual', 'hospital', 'type_contrast').get(pk=request_id)
+    research = Researches.objects.filter(pk=research_id).first()
+    send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
+
+    return status_response(True, "Заявка успешно обновлена")
 
 
 @login_required
@@ -693,6 +854,8 @@ def _get_last_confirmed_issledovaniya(direction):
 
 
 def _get_request_status_label(direction):
+    if direction.cancel:
+        return 'Скрыта'
     if direction.total_confirmed:
         return 'Исполнена'
     if direction.accept_who_doctor_id:
@@ -736,22 +899,26 @@ def direction_to_all_list_row(direction):
         'confirmedBy': confirmed_by,
         'status': _get_request_status_label(direction),
         'cito': direction.is_cito,
+        'hidden': direction.cancel,
+        'canHide': not direction.cancel,
     }
 
 
 def _apply_status_filter(directions, statuses):
     if not statuses:
-        return directions
+        return directions.filter(cancel=False)
 
     status_filter = Q()
+    if 'hidden' in statuses:
+        status_filter |= Q(cancel=True)
     if 'new' in statuses:
-        status_filter |= Q(accept_who_doctor__isnull=True, total_confirmed=False)
+        status_filter |= Q(accept_who_doctor__isnull=True, total_confirmed=False, cancel=False)
     if 'cito' in statuses:
-        status_filter |= Q(is_cito=True)
+        status_filter |= Q(is_cito=True, cancel=False)
     if 'accepted' in statuses:
-        status_filter |= Q(accept_who_doctor__isnull=False, total_confirmed=False)
+        status_filter |= Q(accept_who_doctor__isnull=False, total_confirmed=False, cancel=False)
     if 'confirmed' in statuses:
-        status_filter |= Q(total_confirmed=True)
+        status_filter |= Q(total_confirmed=True, cancel=False)
 
     return directions.filter(status_filter).distinct()
 
@@ -817,6 +984,7 @@ def _apply_sort(directions, sort_by, sort_dir, default_order='-data_sozdaniya'):
     if sort_by == 'status':
         directions = directions.annotate(
             status_sort=Case(
+                When(cancel=True, then=Value(4)),
                 When(total_confirmed=True, then=Value(3)),
                 When(accept_who_doctor__isnull=False, total_confirmed=False, then=Value(2)),
                 When(is_cito=True, then=Value(1)),
@@ -918,7 +1086,6 @@ def get_requests_all_list(request):
     directions = (
         Napravleniya.objects.filter(
             is_request=True,
-            cancel=False,
             **date_filter,
         )
         .filter(

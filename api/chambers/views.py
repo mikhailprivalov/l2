@@ -42,7 +42,7 @@ from .discharge_sync import (
     sync_patient_without_bed_discharge_date,
 )
 from .bed_action_log import log_bed_action
-from ..stationar.sql_func import get_extract_by_department_for_period
+from ..stationar.sql_func import get_extract_by_department_for_period, get_hosp_directions_with_confirmed_expertise
 import calendar
 
 
@@ -54,6 +54,74 @@ def _accompanying_child_from_request(request_data):
         return "", "-"
     sex = (ACCOMPANYING_CHILD.get(raw) or "-")[:2]
     return raw[:10], sex
+
+
+def _accompanying_child_from_payload(request_data, patient_obj=None):
+    acc_type, acc_sex = _accompanying_child_from_request(request_data)
+    if acc_type or not patient_obj:
+        return acc_type, acc_sex
+    return _accompanying_child_from_request(patient_obj)
+
+
+def _need_sick_from_payload(request_data, patient_obj=None):
+    if "is_need_sick" in request_data:
+        return _parse_bool(request_data.get("is_need_sick"))
+    if patient_obj and "is_need_sick" in patient_obj:
+        return _parse_bool(patient_obj.get("is_need_sick"))
+    return False
+
+
+def _enrich_patients_without_bed_rows(patients):
+    if not patients:
+        return patients
+    pswb_pks = [p["pswb_pk"] for p in patients if p.get("pswb_pk")]
+    direction_pks = [p["direction_pk"] for p in patients if p.get("direction_pk")]
+
+    pswb_meta = {}
+    if pswb_pks:
+        for row in PatientStationarWithoutBeds.objects.filter(pk__in=pswb_pks).values(
+            "pk",
+            "accompanyng_child_type",
+            "accompanyng_child_sex",
+            "is_need_sick",
+        ):
+            pswb_meta[row["pk"]] = row
+
+    ptb_meta = {}
+    for dir_pk in direction_pks:
+        ptb_row = PatientToBed.objects.filter(direction_id=dir_pk).order_by("-pk").values("accompanyng_child_type", "accompanyng_child_sex", "is_need_sick").first()
+        if ptb_row:
+            ptb_meta[dir_pk] = ptb_row
+
+    for patient in patients:
+        pswb_pk = patient.get("pswb_pk")
+        dir_pk = patient.get("direction_pk")
+        orm_row = pswb_meta.get(pswb_pk) if pswb_pk else None
+        ptb_row = ptb_meta.get(dir_pk) if dir_pk else None
+
+        acc_type = (patient.get("accompanyng_child_type") or "").strip()
+        acc_sex = (patient.get("accompanyng_child_sex") or "-").strip() or "-"
+        is_need_sick = bool(patient.get("is_need_sick"))
+
+        if orm_row:
+            is_need_sick = bool(orm_row.get("is_need_sick"))
+            orm_acc = (orm_row.get("accompanyng_child_type") or "").strip()
+            if orm_acc:
+                acc_type = orm_acc
+                acc_sex = (orm_row.get("accompanyng_child_sex") or "-").strip() or "-"
+
+        if not acc_type and ptb_row:
+            ptb_acc = (ptb_row.get("accompanyng_child_type") or "").strip()
+            if ptb_acc:
+                acc_type = ptb_acc
+                acc_sex = (ptb_row.get("accompanyng_child_sex") or "-").strip() or "-"
+        if not orm_row and not is_need_sick and ptb_row:
+            is_need_sick = bool(ptb_row.get("is_need_sick"))
+
+        patient["accompanyng_child_type"] = acc_type
+        patient["accompanyng_child_sex"] = acc_sex or "-"
+        patient["is_need_sick"] = is_need_sick
+    return patients
 
 
 def _patient_fields_from_direction_client(direction_pk: int):
@@ -703,7 +771,7 @@ def extract_patient_bed(request):
     discharge_date = None
     for extract_iss in (
         Issledovaniya.objects.filter(time_confirmation__isnull=False)
-        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent_id=direction_pk))
+        .filter(Q(napravleniye_id=direction_pk) | Q(napravleniye__parent__napravleniye_id=direction_pk))
         .select_related("research")
         .order_by("-time_confirmation")
     ):
@@ -837,6 +905,9 @@ def get_patients_without_bed(request):
             "direction_pk": patient.direction_id,
             "pswb_pk": patient.pswb_pk,
             "doctor_pk": patient.doctor_id,
+            "accompanyng_child_type": getattr(patient, "accompanyng_child_type", None) or "",
+            "accompanyng_child_sex": getattr(patient, "accompanyng_child_sex", None) or "-",
+            "is_need_sick": bool(getattr(patient, "is_need_sick", False)),
             "record_source": getattr(patient, "record_source", None) or RECORD_SOURCE_FROM_HISTORY,
         }
         row.update(
@@ -849,6 +920,7 @@ def get_patients_without_bed(request):
             )
         )
         patients.append(row)
+    patients = _enrich_patients_without_bed_rows(patients)
     return JsonResponse({"data": patients})
 
 
@@ -878,6 +950,28 @@ def get_directions_hosp_meta(request):
         meta["direction_pk"] = row.direction_pk
         items.append(meta)
     return JsonResponse({"ok": True, "data": items})
+
+
+@login_required
+@group_required("Оператор лечащего врача", "Лечащий врач")
+def check_discharged_expertise(request):
+    request_data = json.loads(request.body)
+    direction_pks = []
+    seen = set()
+    for raw in request_data.get("direction_pks") or []:
+        try:
+            pk = int(raw)
+        except (TypeError, ValueError):
+            continue
+        if pk <= 0 or pk in seen:
+            continue
+        seen.add(pk)
+        direction_pks.append(pk)
+    if not direction_pks:
+        return JsonResponse({"ok": True, "data": {"expertise_direction_pks": []}})
+
+    expertise_direction_pks = sorted(get_hosp_directions_with_confirmed_expertise(direction_pks))
+    return JsonResponse({"ok": True, "data": {"expertise_direction_pks": expertise_direction_pks}})
 
 
 @login_required
@@ -919,6 +1013,8 @@ def save_patient_without_bed(request):
     is_extract = _parse_bool(request_data.get("is_extract"))
     if patient_obj.get("is_extract") is not None:
         is_extract = _parse_bool(patient_obj.get("is_extract"))
+    is_need_sick = _need_sick_from_payload(request_data, patient_obj)
+    acc_type, acc_sex = _accompanying_child_from_payload(request_data, patient_obj)
     patient_without_bed = None
     if pswb_pk:
         patient_without_bed = PatientStationarWithoutBeds.objects.filter(
@@ -953,6 +1049,9 @@ def save_patient_without_bed(request):
                 plan_date_in=plan_date_in,
                 plan_date_out=plan_date_out,
                 date_out=date_out,
+                accompanyng_child_type=acc_type,
+                accompanyng_child_sex=acc_sex,
+                is_need_sick=is_need_sick,
                 is_extract=is_extract,
                 record_source=record_source,
             )
@@ -966,6 +1065,9 @@ def save_patient_without_bed(request):
                 plan_date_in=plan_date_in,
                 plan_date_out=plan_date_out,
                 date_out=date_out,
+                accompanyng_child_type=acc_type,
+                accompanyng_child_sex=acc_sex,
+                is_need_sick=is_need_sick,
                 is_extract=is_extract,
                 record_source=record_source,
             )
@@ -975,6 +1077,9 @@ def save_patient_without_bed(request):
         patient_without_bed.plan_date_out = plan_date_out
         patient_without_bed.date_out = date_out
         patient_without_bed.is_extract = is_extract or bool(patient_without_bed.is_extract)
+        patient_without_bed.accompanyng_child_type = acc_type
+        patient_without_bed.accompanyng_child_sex = acc_sex
+        patient_without_bed.is_need_sick = is_need_sick
         if not patient_without_bed.direction_id and patient_fio_text:
             patient_without_bed.patient_fio_text = patient_fio_text
             patient_without_bed.patient_sex = patient_sex or "м"
@@ -1166,15 +1271,20 @@ def get_hospitalization_calendar(request):
     total_direction_list = []
 
     for i in extract_proto_for_period:
+        patient_name = f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"
+        patient_extract_add = {
+            "directionPk": i.hosp_direction,
+            "name": patient_name,
+        }
         if not extracts_data.get(i.date_extract):
             extracts_data[i.date_extract] = {
                 "count": 1,
                 "directionsList": [i.napravleniye_id],
-                "patientExtractsAdds": [{i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"}],
+                "patientExtractsAdds": [patient_extract_add],
             }
         else:
             extracts_data[i.date_extract]["count"] += 1
-            extracts_data[i.date_extract]["patientExtractsAdds"].append({i.hosp_direction: f"{i.patient_family} {i.patient_name[0]}.{i.patient_patronymic[0]}"})
+            extracts_data[i.date_extract]["patientExtractsAdds"].append(patient_extract_add)
         total_direction_list.append(i.napravleniye_id)
 
     extracts_count = sum(item["count"] for item in extracts_data.values())

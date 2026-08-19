@@ -34,7 +34,7 @@ def menu(request):
     if request.user.is_authenticated and request.headers.get('X-Requested-With') != 'XMLHttpRequest':
         groups = [str(x) for x in request.user.groups.all()] if hasattr(request.user, 'groups') else []
 
-        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:7'
+        k = f'menu:{VERSION}:{get_md5(";".join(groups))}:{SettingManager.l2_modules_md5_of_values()}:8'
         data = cache.get(k)
         if not data:
             pages = [
@@ -89,6 +89,7 @@ def menu(request):
                         "Конструктор: Группировка исследований по направлениям",
                         "Конструктор: Настройка скрининга",
                         "Конструктор: Настройка организации",
+                        "Конструктор: ДОУ",
                     ],
                 },
                 {"url": "/ui/statistic", "title": "Статистика", "nt": False, "access": ["Просмотр статистики", "Врач-лаборант", 'Статистика скрининга', 'Статистика-моя нагрузка']},
@@ -182,7 +183,7 @@ def menu(request):
                     "url": '/ui/indicator-curator',
                     "title": "Показатели куратора",
                     "nt": False,
-                    "access": ["Куратора", "Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
+                    "access": ["Показатели куратора", "Лечащий врач", "Оператор лечащего врача", "Вызов врача", "Заполнение экстренных извещений"],
                     "module": "l2_indicator_curator",
                 },
                 {"url": '/ui/plan-pharmacotherapy', "title": "Процедурный лист", "nt": False, "access": ["Лечащий врач", "Оператор лечащего врача"]},
@@ -271,6 +272,7 @@ def menu(request):
                 {"url": "/ui/employees", "title": "Работники", "access": ["Конструктор: Настройка организации"], "module": None},
                 {"url": "/ui/utils", "title": "Инструменты", "nt": False, "access": ["Инструменты"]},
                 {"url": "/ui/document-manager", "title": "ДОУ", "nt": False, "access": ["ДОУ: просмотр документов"]},
+                {"url": "/ui/gardening", "title": "Садоводство", "nt": False, "access": ["Бухгалтер садоводства"]},
             ]
 
             hp = SettingManager.get(key="home_page", default="false")
