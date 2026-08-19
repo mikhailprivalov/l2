@@ -532,7 +532,9 @@ SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT = []
 IS_WITHOUT_LIMIT_PARALINIC_ALWAYS = False
 PARAGRAPH_FIELD_ENABLED = False
 REST_API_PULL_RESULT_DAYS_LIMIT = 4
-REST_API_PULL_RESULT_INTERVAL_SECONDS = 30 * 60
+# Время ежедневного запуска rest_api_pull_result (HH:MM, часовой пояс TIME_ZONE).
+# Переопределение в laboratory/local_settings.py
+REST_API_PULL_RESULT_RUN_TIME = "03:00"
 REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS = 30 * 60
 # Срок хранения REST-ключа больницы в кэше (минуты).
 # Переопределение в laboratory/local_settings.py

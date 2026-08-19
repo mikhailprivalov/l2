@@ -17,7 +17,7 @@ import base64
 from laboratory.utils import current_time
 from slog.models import Log
 import os
-from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT, REST_API_PULL_RESULT_INTERVAL_SECONDS, REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS
+from laboratory.settings import BASE_DIR, REST_API_PULL_RESULT_DAYS_LIMIT, REST_API_PULL_RESULT_RUN_TIME, REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS
 import datetime
 from sys import stdout
 import time
@@ -267,11 +267,22 @@ def rest_api_pull_result_manual():
     Napravleniya.objects.filter(pk__in=direction_pks).update(need_pull_result=False)
 
 
+def _seconds_until_rest_api_pull_result_run():
+    hour, minute = [int(part) for part in REST_API_PULL_RESULT_RUN_TIME.split(":")[:2]]
+    now = timezone.localtime()
+    target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if now >= target:
+        target += datetime.timedelta(days=1)
+    return (target - now).total_seconds()
+
+
 def process_rest_api_pull_result_start():
     stdout.write("Starting pull_orders process")
     while True:
+        sleep_seconds = _seconds_until_rest_api_pull_result_run()
+        interactive_log(f"Следующий запуск rest_api_pull_result в {REST_API_PULL_RESULT_RUN_TIME}, ожидание {int(sleep_seconds)} с")
+        time.sleep(sleep_seconds)
         rest_api_pull_result()
-        time.sleep(REST_API_PULL_RESULT_INTERVAL_SECONDS)
 
 
 def rest_api_get_new_results(only_new_order=True):
