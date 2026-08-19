@@ -533,6 +533,10 @@ IS_WITHOUT_LIMIT_PARALINIC_ALWAYS = False
 PARAGRAPH_FIELD_ENABLED = False
 REST_API_PULL_RESULT_DAYS_LIMIT = 4
 REST_API_PULL_RESULT_INTERVAL_SECONDS = 30 * 60
+REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS = 30 * 60
+# Срок хранения REST-ключа больницы в кэше (минуты).
+# Переопределение в laboratory/local_settings.py
+REST_API_HOSPITAL_KEY_TTL_MINUTES = 5 * 24 * 60
 
 # ----- Настройки для полей протоколов с типом "Файл" -----
 

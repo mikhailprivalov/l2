@@ -4,7 +4,7 @@ import requests
 import simplejson as json
 from hospitals.models import Hospitals
 from django.core.cache import cache
-
+from laboratory.settings import REST_API_HOSPITAL_KEY_TTL_MINUTES
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ def make_request_get_token(hosp_data, method="GET", get_new_token=False):
         auth = (hosp_data.get("auth_login"), hosp_data.get("auth_password"))
         response = requests.request(method, url, headers=headers, auth=auth)
         data = response.json()
-        cache.set(k, json.dumps(data.get("key")), 60 * 60 * 96)
+        cache.set(k, json.dumps(data.get("key")), REST_API_HOSPITAL_KEY_TTL_MINUTES * 60)
         interactive_log(f"[REST] Ключ получен: {'да' if data.get('key') else 'нет'}")
         return data.get("key")
     except Exception as e:
