@@ -364,6 +364,18 @@ class FTPConnection:
                             file_type="HL7_ORIG_ORDER",
                         )
 
+            if SettingManager.get("use_rest_api_send_order", default='False', default_type='b'):
+                for direction in Napravleniya.objects.filter(pk__in=directions.keys()):
+                    try:
+                        self.log(f"Sending direction {direction.pk} to external system via REST API")
+                        is_sent = send_order_by_rest_api(direction)
+                        if is_sent:
+                            self.log(f"Direction {direction.pk} sent successfully via REST API")
+                        else:
+                            self.error(f"Direction {direction.pk} was not sent via REST API (no order number in response)")
+                    except Exception as e:
+                        self.error(f"Error sending direction {direction.pk} via REST API: {e}")
+
             self.delete_file(file)
 
             Log.log(
