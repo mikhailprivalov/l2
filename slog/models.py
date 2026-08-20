@@ -1,6 +1,7 @@
 import simplejson
 from django.db import models
 
+from laboratory.settings import LOG_SLOW_THRESHOLD_SECONDS
 from laboratory.utils import current_time, localtime
 from users.models import DoctorProfile
 
@@ -175,7 +176,7 @@ class Log(models.Model):
         (190008, 'REST: Успех - заказ отправлен во внешнюю систему'),
         (190009, 'REST: Ошибка - результат не принят от внешней системы'),
         (190010, 'REST: Успех - результат принят от внешней системы'),
-        (190011, 'REST: медленная операция (>2 сек)'),
+        (190011, 'REST: медленная операция'),
         (200000, 'Счет на оплату: подтверждение'),
         (200001, 'Счет на оплату: сброс подтверждения'),
         (210000, 'Комплексные услуги: создание комплекса'),
@@ -255,7 +256,9 @@ class Log(models.Model):
         Log(key=key, type=type, body=simplejson.dumps(body), user=user).save()
 
     @staticmethod
-    def log_if_slow(function_name, direction, duration_seconds, threshold_seconds=2):
+    def log_if_slow(function_name, direction, duration_seconds, threshold_seconds=None):
+        if threshold_seconds is None:
+            threshold_seconds = LOG_SLOW_THRESHOLD_SECONDS
         if duration_seconds <= threshold_seconds:
             return
         now = current_time()
