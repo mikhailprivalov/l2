@@ -28,6 +28,7 @@ def build_epid_rows(epid_data, confirm_dates, dir_ids):
             {
                 'lpu': match_master_field(fields, FIELD_LPU),
                 'epid_number': item.get('epid_value') or '',
+                'master_dir': item.get('master_dir') or '',
                 'reg_date': match_master_field(fields, FIELD_REG_DATE) or confirm_dates.get(dir_id, ''),
                 'diagnosis': match_master_field(fields, FIELD_DIAGNOSIS),
             }
@@ -49,6 +50,7 @@ def epid_numbers_base(ws1, d1, d2):
     columns = [
         (FIELD_LPU, 45),
         ('Эпид номер', 22),
+        ('№ направления (извещение)', 22),
         (FIELD_REG_DATE, 20),
         (FIELD_DIAGNOSIS, 50),
     ]
@@ -73,9 +75,10 @@ def epid_numbers_fill_data(ws1, rows, row=6):
     for i in rows:
         ws1.cell(row=r, column=1).value = i.get('lpu', '')
         ws1.cell(row=r, column=2).value = i.get('epid_number', '')
-        ws1.cell(row=r, column=3).value = i.get('reg_date', '')
-        ws1.cell(row=r, column=4).value = i.get('diagnosis', '')
-        for c in range(1, 5):
+        ws1.cell(row=r, column=3).value = i.get('master_dir', '')
+        ws1.cell(row=r, column=4).value = i.get('reg_date', '')
+        ws1.cell(row=r, column=5).value = i.get('diagnosis', '')
+        for c in range(1, 6):
             ws1.cell(row=r, column=c).style = style_border1
         r += 1
     return ws1
