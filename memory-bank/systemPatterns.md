@@ -72,6 +72,9 @@
 - `reports/` - reports
 - `dashboards/` - dashboards
 - `statistics_tickets/` - ticket statistics
+- Statistics UI catalog lives in `l2-frontend/src/pages/Statistics.vue` (`STATS_CATEGORIES`); each report `type` is handled in `statistic/views.py`
+- Report `unlimitPeriod: true` skips the 2-month date range check on the frontend; backend excludes that `type` from the 60-day cap
+- Epid numbers report (`statistics-epid-numbers`) reuses `forms.views.get_epid_data` for extra-notification slave directions confirmed in the period
 
 ### Integration Domain
 - `integration_framework/` - integration framework

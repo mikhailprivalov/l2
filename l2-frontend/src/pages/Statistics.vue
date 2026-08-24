@@ -602,7 +602,7 @@ const STATS_CATEGORIES = {
   researches: {
     title: 'Оказанные услуги',
     groups: ['Просмотр статистики', 'Свидетельство о смерти-доступ', 'Статистика-статталоны', 'Статистика-посещения',
-      'Статистика-по услуге', 'Статистика-моя нагрузка'],
+      'Статистика-по услуге', 'Статистика-моя нагрузка', 'Заполнение экстренных извещений'],
     reports: {
       executors: {
         title: 'По врачу (нагрузка) – статталоны',
@@ -659,6 +659,13 @@ const STATS_CATEGORIES = {
         title: 'Моя нагрузка',
         params: [PARAMS_TYPES.DATE_RANGE],
         url: '/statistic/xls?type=statistics-workload&date-start=<date-start>&date-end=<date-end>',
+      },
+      epidNumbers: {
+        groups: ['Просмотр статистики', 'Заполнение экстренных извещений'],
+        title: 'Эпид. номера',
+        params: [PARAMS_TYPES.DATE_RANGE],
+        unlimitPeriod: true,
+        url: '/statistic/xls?type=statistics-epid-numbers&date-start=<date-start>&date-end=<date-end>',
       },
     },
   },
@@ -1300,6 +1307,9 @@ export default class Statistics extends Vue {
 
   get dateRangeInvalid() {
     if (this.unlimitPeridStatistic) {
+      return false;
+    }
+    if (this.currentReport?.unlimitPeriod) {
       return false;
     }
     if (
