@@ -1,7 +1,6 @@
 from openpyxl.styles import Border, Side, Alignment, Font, NamedStyle
 from openpyxl.utils import get_column_letter
 
-
 FIELD_LPU = 'ЛПУ сообщившее о заболевании'
 FIELD_REG_DATE = 'Дата регистрации'
 FIELD_DIAGNOSIS = 'Первичный диагноз'
