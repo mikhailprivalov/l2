@@ -31,6 +31,7 @@ from users.models import DoctorProfile
 from users.models import Podrazdeleniya
 from utils.dates import try_parse_range, normalize_date, normalize_dots_date
 from utils.parse_sql import death_form_result_parse, get_unique_directions, weapon_form_result_parse
+from forms.views import get_epid_data
 from . import sql_func
 from . import structure_sheet
 import datetime
@@ -55,6 +56,7 @@ from .report import (
     partner_coast_data,
     reestr_hospital,
     hospital_discharge_epicrisis,
+    epid_numbers,
 )
 from .sql_func import (
     attached_female_on_month,
@@ -75,6 +77,7 @@ from .sql_func import (
     result_research_by_parent_iss,
     statistics_confirm_research_by_hospital_create,
     statistics_confirm_research_by_doctor,
+    get_epid_slave_directions_by_period,
 )
 
 from laboratory.settings import (
@@ -89,6 +92,8 @@ from laboratory.settings import (
     UNLIMIT_PERIOD_STATISTIC_GROUP,
     TYPE_REPORT_FORMS,
     MAGAZINE_REPORT,
+    EXTRA_MASTER_RESEARCH_PK,
+    EXTRA_SLAVE_RESEARCH_PK,
 )
 from .statistic_func import save_file_disk, initial_work_book
 
@@ -143,7 +148,7 @@ def statistic_xls(request):
     if hasattr(request.user, 'unlimited_access'):
         unlimited_access = True
 
-    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate"] and not unlimited_access:
+    if date_start and date_end and tp not in ["lab_sum", "covid_sum", "lab_details", "statistics-consolidate", "statistics-epid-numbers"] and not unlimited_access:
         for i in UNLIMIT_PERIOD_STATISTIC_GROUP:
             if i not in [str(x) for x in request.user.groups.all()]:
                 pk_research = request_data.get("research")
@@ -2505,6 +2510,36 @@ def statistic_xls(request):
                 title_fio = fio_doctor.get_fio()
             ws = reestr_hospital.reestr_hospital_base(ws, date_start_o, date_end_o, f'Реестр оказанных услуг ВРАЧ-{title_fio}')
             ws = reestr_hospital.reestr_hospital_fill_data(ws, row_report, by_department_title_sum)
+
+    elif tp == "statistics-epid-numbers":
+        response['Content-Disposition'] = str.translate("attachment; filename=\"Эпид_номера.xlsx\"", tr)
+        d_s = request_data.get("date-start")
+        d_e = request_data.get("date-end")
+        d1 = datetime.datetime.strptime(d_s, '%d.%m.%Y')
+        d2 = datetime.datetime.strptime(d_e, '%d.%m.%Y')
+        start_date = datetime.datetime.combine(d1, datetime.time.min)
+        end_date = datetime.datetime.combine(d2, datetime.time.max)
+
+        wb = openpyxl.Workbook()
+        wb.remove(wb.get_sheet_by_name('Sheet'))
+        ws = wb.create_sheet("Отчет")
+        ws = epid_numbers.epid_numbers_base(ws, d_s, d_e)
+
+        rows = []
+        if EXTRA_SLAVE_RESEARCH_PK and EXTRA_MASTER_RESEARCH_PK:
+            slave_rows = get_epid_slave_directions_by_period(start_date, end_date, EXTRA_SLAVE_RESEARCH_PK)
+            dir_ids = [i.dir_id for i in slave_rows]
+            confirm_dates = {i.dir_id: i.date_confirm for i in slave_rows}
+            epid_data = {}
+            batch = 500
+            for idx in range(0, len(dir_ids), batch):
+                chunk = dir_ids[idx : idx + batch]
+                epid_data.update(get_epid_data(chunk, 1))
+            rows = epid_numbers.build_epid_rows(epid_data, confirm_dates, dir_ids)
+
+        ws = epid_numbers.epid_numbers_fill_data(ws, rows)
+        wb.save(response)
+        return response
 
     wb.save(response)
     return response
