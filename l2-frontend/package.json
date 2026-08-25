@@ -35,7 +35,7 @@
     "es-cookie": "^1.4.0",
     "eslint-plugin-sort-imports-es6-autofix": "^0.6.0",
     "highlight.js": "^11.11.1",
-    "inputmask": "^5.0.7",
+    "inputmask": "^5.0.10",
     "jquery": "^3.7.1",
     "js-base64": "^3.7.2",
     "lodash": "^4.17.20",
