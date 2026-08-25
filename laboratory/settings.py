@@ -539,6 +539,9 @@ REST_API_GET_NEW_RESULTS_INTERVAL_SECONDS = 30 * 60
 # Срок хранения REST-ключа больницы в кэше (минуты).
 # Переопределение в laboratory/local_settings.py
 REST_API_HOSPITAL_KEY_TTL_MINUTES = 5 * 24 * 60
+# Порог длительности для slog Log.log_if_slow (секунды).
+# Переопределение в laboratory/local_settings.py
+LOG_SLOW_THRESHOLD_SECONDS = 4
 
 # ----- Настройки для полей протоколов с типом "Файл" -----
 

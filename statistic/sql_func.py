@@ -2382,3 +2382,22 @@ def result_research_by_parent_iss(parent_iss):
 
         rows = namedtuplefetchall(cursor)
     return rows
+
+
+def get_epid_slave_directions_by_period(d_start, d_end, slave_research_id):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            SELECT
+            directions_issledovaniya.napravleniye_id as dir_id,
+            to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
+            FROM directions_issledovaniya
+            WHERE
+            directions_issledovaniya.research_id = %(slave_research_id)s
+            AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(d_start)s AND %(d_end)s
+            ORDER BY directions_issledovaniya.time_confirmation
+            """,
+            params={'d_start': d_start, 'd_end': d_end, 'tz': TIME_ZONE, 'slave_research_id': slave_research_id},
+        )
+        rows = namedtuplefetchall(cursor)
+    return rows
