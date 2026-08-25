@@ -66,6 +66,8 @@ def get_laboratory_results_by_directions(list_dirs):
                 directions_result.units as units,
                 directions_result.ref_m as ref_m,
                 directions_result.ref_f as ref_f,
+                directions_result.is_normal as is_normal,
+                directions_result.ref_sign as ref_sign,
                 users_doctorprofile.fio as fio,
                 to_char(directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s, 'DD.MM.YYYY') as date_confirm
                 from directions_issledovaniya

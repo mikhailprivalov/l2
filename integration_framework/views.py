@@ -94,7 +94,7 @@ from utils.nsi_directories import NSI
 from utils.response import status_response
 from utils.xh import check_type_research, short_fio_dots
 from . import sql_if
-from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya, DirectionResultQRCodePrintInfo
+from directions.models import DirectionDocument, DocumentSign, Issledovaniya, Napravleniya, DirectionResultQRCodePrintInfo, Result
 from .common_func import check_correct_hosp, get_data_direction_with_param, direction_pdf_result, check_correct_hospital_company, check_correct_hospital_company_for_price
 from .models import CrieOrder, ExternalService, IndividualAuth, IPLimitter
 from .tasks import send_code_cascade, stop_code_cascade
@@ -2746,6 +2746,7 @@ def results_by_direction(request):
     is_paraclinic = request_data.get("isParaclinic", mode == "paraclinic")
     is_doc_refferal = request_data.get("isDocReferral", mode == "docReferral")
     is_user_forms = request_data.get("isUserFroms", mode == "forms")
+    is_pdf = request_data.get("isPdf", False)
     direction = request_data.get("pk")
     external_add_order = request_data.get("externalOrder")
     directions_data = request_data.get("directions")
@@ -2777,6 +2778,13 @@ def results_by_direction(request):
                     "fractions": [],
                 }
 
+            is_normal = r.is_normal
+            ref_sign = r.ref_sign
+            if not is_normal:
+                result_obj = Result.objects.filter(pk=r.result_is).first()
+                if result_obj:
+                    is_normal, ref_sign = result_obj.get_is_norm(recalc=True)
+
             objs_result[r.direction]["services"][r.iss_id]["fractions"].append(
                 {
                     "title": r.fraction_title,
@@ -2785,8 +2793,17 @@ def results_by_direction(request):
                     "fsli": r.fraction_fsli,
                     "ref_m": r.ref_m,
                     "ref_f": r.ref_f,
+                    "isNorm": is_normal or None,
+                    "refSign": ref_sign or None,
                 }
             )
+
+        if is_pdf:
+            for direction_result_data in objs_result.values():
+                try:
+                    direction_result_data["pdf"] = direction_pdf_base64(direction_result_data["pk"])
+                except Exception:
+                    direction_result_data["pdf"] = None
 
     if is_paraclinic or is_doc_refferal or is_user_forms:
         results = desc_to_data(directions_data, force_all_fields=True)
@@ -2925,16 +2942,20 @@ def get_pdf_result_from_qr_code(request):
         return JsonResponse({"result": pdf_content})
 
 
+def direction_pdf_base64(pk):
+    localclient = TC(enforce_csrf_checks=False)
+    addr = "/directions/pdf"
+    params = {"napr_id": json.dumps([pk]), "token": "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
+    result = localclient.get(addr, params).content
+    return base64.b64encode(result).decode("utf-8")
+
+
 @api_view(["POST"])
 @can_use_schedule_only
 def get_pdf_direction(request):
     data = json.loads(request.body)
     pk = data.get("pk")
-    localclient = TC(enforce_csrf_checks=False)
-    addr = "/directions/pdf"
-    params = {"napr_id": json.dumps([pk]), "token": "8d63a9d6-c977-4c7b-a27c-64f9ba8086a7"}
-    result = localclient.get(addr, params).content
-    pdf_content = base64.b64encode(result).decode("utf-8")
+    pdf_content = direction_pdf_base64(pk)
     return JsonResponse({"result": pdf_content})
 
 
