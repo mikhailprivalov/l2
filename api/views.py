@@ -2899,12 +2899,30 @@ def copy_price(request):
         new_price.save()
         price_coast = PriceCoast.objects.filter(price_name=current_price)
         for pc in price_coast:
-            new_price_coast = PriceCoast(price_name=new_price, research=pc.research, coast=pc.coast, number_services_by_contract=pc.number_services_by_contract)
+            new_price_coast = PriceCoast(
+                price_name=new_price,
+                research=pc.research,
+                coast=pc.coast,
+                coast_cito=pc.coast_cito,
+                number_services_by_contract=pc.number_services_by_contract,
+            )
             new_price_coast.save()
 
         Log.log(current_price.pk, 130006, request.user.doctorprofile, {"source_price": current_price.pk, "sour_title": current_price.title, "new_price": new_price.pk})
 
     return status_response(True)
+
+
+def parse_coast_cito(value):
+    if value is None or value == "":
+        return None
+    try:
+        coast_cito = float(value)
+    except (TypeError, ValueError):
+        return None
+    if coast_cito <= 0:
+        return None
+    return coast_cito
 
 
 @login_required
@@ -2917,8 +2935,10 @@ def update_coast_research_in_price(request):
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     old_coast = current_coast_research.coast
+    old_coast_cito = current_coast_research.coast_cito
     old_number = current_coast_research.number_services_by_contract
     current_coast_research.coast = request_data["coast"]
+    current_coast_research.coast_cito = parse_coast_cito(request_data.get("coastCito"))
     current_coast_research.number_services_by_contract = request_data.get("numberService", 0)
     current_coast_research.save()
     Log.log(
@@ -2931,6 +2951,8 @@ def update_coast_research_in_price(request):
             "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "old_coast": old_coast,
             "new_coast": current_coast_research.coast,
+            "old_coast_cito": old_coast_cito,
+            "new_coast_cito": current_coast_research.coast_cito,
             "old_number": old_number,
             "new_number": current_coast_research.number_services_by_contract,
         },
@@ -3031,7 +3053,11 @@ def add_research_in_price(request):
     elif float(request_data["coast"]) <= 0:
         return JsonResponse({"ok": False, "message": "Неверная цена"})
     current_coast_research = PriceCoast(
-        price_name_id=request_data["priceId"], research_id=request_data["researchId"], coast=request_data["coast"], number_services_by_contract=request_data.get("numberService", 0)
+        price_name_id=request_data["priceId"],
+        research_id=request_data["researchId"],
+        coast=request_data["coast"],
+        coast_cito=parse_coast_cito(request_data.get("coastCito")),
+        number_services_by_contract=request_data.get("numberService", 0),
     )
     current_coast_research.save()
     Log.log(
@@ -3043,6 +3069,7 @@ def add_research_in_price(request):
             "price": {"pk": current_coast_research.price_name.pk, "title": current_coast_research.price_name.title},
             "research": {"pk": current_coast_research.research.pk, "title": current_coast_research.research.title},
             "coast": current_coast_research.coast,
+            "coast_cito": current_coast_research.coast_cito,
         },
     )
     return JsonResponse({"ok": "ok"})

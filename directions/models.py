@@ -1116,6 +1116,7 @@ class Napravleniya(models.Model):
         price_name_id=None,
         slot_fact_id=None,
         id_in_hospital=None,
+        is_cito=False,
     ) -> 'Napravleniya':
         """
         Генерация направления
@@ -1162,6 +1163,7 @@ class Napravleniya(models.Model):
             external_order=external_order,
             price_name_id=price_name_id,
             id_in_hospital=id_in_hospital,
+            is_cito=is_cito,
         )
         dir.additional_num = client.number_poliklinika
         dir.harmful_factor = dir.client.harmful_factor
@@ -1373,8 +1375,15 @@ class Napravleniya(models.Model):
         plan_start_date=None,
         slot_fact_id=None,
         id_in_hospital=None,
+        is_cito=False,
     ):
         result = {"r": False, "list_id": [], "list_stationar_id": [], "messageLimit": ""}
+        if slot_fact_id and not is_cito:
+            from doctor_schedule.models import SlotFact
+
+            slot_fact = SlotFact.objects.filter(pk=slot_fact_id).first()
+            if slot_fact and slot_fact.is_cito:
+                is_cito = True
         if case_id > -1 and case_by_direction:
             iss = Napravleniya.objects.get(pk=case_id).issledovaniya_set.all().first()
             if iss:
@@ -1665,6 +1674,7 @@ class Napravleniya(models.Model):
                                 price_name_id=price_name,
                                 slot_fact_id=slot_fact_id,
                                 id_in_hospital=id_in_hospital,
+                                is_cito=is_cito,
                             )
                             research_case = directory.Researches.objects.filter(is_case=True, hide=False).first()
                             issledovaniye_case = Issledovaniya(napravleniye=napravleniye_case, research=research_case, deferred=False)
@@ -1705,6 +1715,7 @@ class Napravleniya(models.Model):
                             price_name_id=price_name,
                             slot_fact_id=slot_fact_id,
                             id_in_hospital=id_in_hospital,
+                            is_cito=is_cito,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1738,6 +1749,7 @@ class Napravleniya(models.Model):
                             price_name_id=price_name,
                             slot_fact_id=slot_fact_id,
                             id_in_hospital=id_in_hospital,
+                            is_cito=is_cito,
                         )
                         npk = directions_for_researches[dir_group].pk
                         result["list_id"].append(npk)
@@ -1756,7 +1768,7 @@ class Napravleniya(models.Model):
                             DirectionParamsResult.save_direction_params(directions_for_researches[dir_group], all_params_result)
 
                     # получить по прайсу и услуге: текущую цену
-                    research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj)
+                    research_coast = contracts.PriceCoast.get_coast_from_price(research.pk, price_obj, is_cito=is_cito)
 
                     discount_end = discount
                     if research.prior_discount:
@@ -1962,6 +1974,7 @@ class Napravleniya(models.Model):
                     hospital=hospital_override,
                     slot_fact_id=slot_fact_id,
                     id_in_hospital=id_in_hospital,
+                    is_cito=is_cito,
                 )
                 result["list_id"].append(new_direction.pk)
                 Issledovaniya(napravleniye=new_direction, research_id=research_dir, deferred=False).save()

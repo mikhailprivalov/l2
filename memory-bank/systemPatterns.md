@@ -66,6 +66,7 @@
 ### Financial Domain
 - `contracts/` - contracts
 - `cash_registers/` - cash operations
+- **CITO pricing:** `PriceCoast.coast_cito` on the same price row; `PriceCoast.resolve_coast(coast, coast_cito, is_cito)` returns CITO price when `is_cito` and `coast_cito > 0`, else base `coast`. Direction creation passes `is_cito` into `gen_napravleniya_by_issledovaniya` so `Issledovaniya.coast` is set correctly at creation.
 
 ### Analytics Domain
 - `statistic/` - statistics

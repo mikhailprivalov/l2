@@ -131,13 +131,24 @@ class PriceCoast(models.Model):
     price_name = models.ForeignKey(PriceName, on_delete=models.DO_NOTHING, db_index=True)
     research = models.ForeignKey(directory.Researches, on_delete=models.DO_NOTHING, db_index=True)
     coast = models.DecimalField(max_digits=10, decimal_places=2)
+    coast_cito = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, default=None, help_text="Цена ЦИТО")
     number_services_by_contract = models.PositiveIntegerField(default=0, help_text="Кол-во услуг по контракту")
 
     def __str__(self):
         return "{}".format(self.price_name.title)
 
     @staticmethod
-    def get_coast_from_price(dir_research_loc, price_modifier):
+    def resolve_coast(coast, coast_cito, is_cito=False):
+        """
+        Возвращает цену ЦИТО, если признак ЦИТО передан и цена ЦИТО заполнена,
+        иначе - обычную цену прайса
+        """
+        if is_cito and coast_cito is not None and coast_cito > 0:
+            return coast_cito
+        return coast
+
+    @staticmethod
+    def get_coast_from_price(dir_research_loc, price_modifier, is_cito=False):
         """
         Принимает вид исследования, объект price_modifier: объект прайса, модификатор
         на основании прайса получает базовую цену и умножает на модификатор.
@@ -148,8 +159,8 @@ class PriceCoast(models.Model):
             price_name_loc = price_modifier[0]
             price_modifier_loc = price_modifier[1]
             try:
-                d = PriceCoast.objects.values_list("coast").get(price_name=price_name_loc, research_id=dir_research_loc)
-                res_coast = d[0]
+                d = PriceCoast.objects.values_list("coast", "coast_cito").get(price_name=price_name_loc, research_id=dir_research_loc)
+                res_coast = PriceCoast.resolve_coast(d[0], d[1], is_cito)
                 value = (res_coast * price_modifier_loc).quantize(Decimal("1.00"))
             except PriceCoast.DoesNotExist:
                 return value
@@ -157,12 +168,12 @@ class PriceCoast(models.Model):
         return value
 
     @staticmethod
-    def get_coast_by_researches(price, researches):
-        return {i.research_id: i.coast for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
+    def get_coast_by_researches(price, researches, is_cito=False):
+        return {i.research_id: PriceCoast.resolve_coast(i.coast, i.coast_cito, is_cito) for i in PriceCoast.objects.filter(price_name=price, research_id__in=researches)}
 
     @staticmethod
-    def get_coast_by_prce(price):
-        return {i.research_id: i.coast for i in PriceCoast.objects.filter(price_name=price)}
+    def get_coast_by_prce(price, is_cito=False):
+        return {i.research_id: PriceCoast.resolve_coast(i.coast, i.coast_cito, is_cito) for i in PriceCoast.objects.filter(price_name=price)}
 
     class Meta:
         unique_together = ("price_name", "research")
@@ -190,7 +201,13 @@ class PriceCoast(models.Model):
     def get_researches_and_coasts_by_price(price_id: int):
         coasts = get_researches_and_coasts_in_price(price_id)
         result = [
-            {"id": coast.id, "coast": coast.coast, "numberService": coast.number_services_by_contract, "research": {"id": coast.research_id, "title": coast.research_title}}
+            {
+                "id": coast.id,
+                "coast": coast.coast,
+                "coastCito": coast.coast_cito,
+                "numberService": coast.number_services_by_contract,
+                "research": {"id": coast.research_id, "title": coast.research_title},
+            }
             for coast in coasts
         ]
         return result

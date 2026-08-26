@@ -324,8 +324,17 @@ def create_request(request):
                 return status_response(False, "Размер файла превышает 10 МБ")
 
     with transaction.atomic():
+        is_cito = request_fields.get('cito', False)
         result = Napravleniya.gen_napravleniya_by_issledovaniya(
-            client_id=patient_id, diagnos="", finsource=fin_source.pk, history_num="", ofname_id=-1, doc_current=request.user.doctorprofile, researches={-1: [research_id]}, comments={}
+            client_id=patient_id,
+            diagnos="",
+            finsource=fin_source.pk,
+            history_num="",
+            ofname_id=-1,
+            doc_current=request.user.doctorprofile,
+            researches={-1: [research_id]},
+            comments={},
+            is_cito=is_cito,
         )
 
         if not result.get('r'):
@@ -337,7 +346,7 @@ def create_request(request):
 
         direction = Napravleniya.objects.get(pk=direction_id)
 
-        direction.is_cito = request_fields.get('cito', False)
+        direction.is_cito = is_cito
         direction.is_dynamic = request_fields.get('isDynamic', False)
         direction.is_request = True
         direction.contrast_amount = request_fields.get('contrastAmount', '')
@@ -590,7 +599,11 @@ def update_request(request):
                 return status_response(False, "Размер файла превышает 10 МБ")
 
     try:
-        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id, is_request=True)
+        direction = (
+            Napravleniya.objects.select_related('type_contrast', 'client', 'istochnik_f')
+            .prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set')
+            .get(pk=request_id, is_request=True)
+        )
     except Napravleniya.DoesNotExist:
         return status_response(False, "Заявка не найдена")
 
@@ -610,11 +623,15 @@ def update_request(request):
         if not iss:
             return status_response(False, "Исследование не найдено")
 
+        old_is_cito = direction.is_cito
+        old_research_id = iss.research_id
+        is_cito = request_fields.get('cito', False)
+
         if iss.research_id != research_id:
             iss.research_id = research_id
             iss.save(update_fields=['research'])
 
-        direction.is_cito = request_fields.get('cito', False)
+        direction.is_cito = is_cito
         direction.is_dynamic = request_fields.get('isDynamic', False)
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
@@ -644,6 +661,13 @@ def update_request(request):
                 'text_contrast',
             ]
         )
+
+        if old_is_cito != is_cito or old_research_id != research_id:
+            from contracts.models import PriceCoast
+
+            price_modifier = IstochnikiFinansirovaniya.get_price_modifier(direction.istochnik_f, direction.client.work_place_db)
+            iss.coast = PriceCoast.get_coast_from_price(iss.research_id, price_modifier, is_cito=is_cito)
+            iss.save(update_fields=['coast'])
 
         for file_data in files:
             if 'url' in file_data and file_data['url'].startswith('data:'):

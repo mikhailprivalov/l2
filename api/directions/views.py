@@ -202,6 +202,7 @@ def directions_generate(request):
             case_by_direction=p.get("caseByDirection", False),
             plan_start_date=p.get("planStartDate", None),
             slot_fact_id=p.get("slotFactId", None),
+            is_cito=p.get("isCito", False),
         )
         fin_source_obj = IstochnikiFinansirovaniya.objects.filter(pk=fin_source_pk).first()
         if type_generate == "calculate-cost":
@@ -209,10 +210,11 @@ def directions_generate(request):
             for values in researches.values():
                 calculate_researches.extend(values)
             result_coast = 0
+            is_cito = p.get("isCito", False)
             if fin_source_obj.title.lower() in ["платно", "средства граждан"]:
                 data_coast = PriceCoast.objects.filter(price_name=fin_source_obj.contracts.price, research_id__in=calculate_researches)
                 for dc in data_coast:
-                    result_coast += dc.coast
+                    result_coast += PriceCoast.resolve_coast(dc.coast, dc.coast_cito, is_cito)
             result = {"ok": True, "directions": [], "directionsStationar": [], "message": result_coast}
             return JsonResponse(result)
 

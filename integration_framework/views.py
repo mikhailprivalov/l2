@@ -3383,7 +3383,14 @@ def get_price_data(request):
     if price:
         data_price = PriceCoast.objects.filter(price_name=price)
         result = [
-            {"title": i.research.title, "shortTitle": i.research.short_title, "coast": i.coast, "internalCode": i.research.internal_code, "researchCodeNMU": i.research.code}
+            {
+                "title": i.research.title,
+                "shortTitle": i.research.short_title,
+                "coast": i.coast,
+                "coastCito": i.coast_cito,
+                "internalCode": i.research.internal_code,
+                "researchCodeNMU": i.research.code,
+            }
             for i in data_price
         ]
     return Response({"data": result})
