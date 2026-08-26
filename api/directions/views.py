@@ -3447,15 +3447,32 @@ def last_field_result(request):
             field_pks = [data[1]]
             logical_or = True
             result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_year=False, months_ago=f"{data[2]} month")
+    elif request_data["fieldPk"].find('%all#') != -1:
+        data = request_data["fieldPk"].split('#')
+        if len(data) < 2:
+            result = {"value": ""}
+        elif data[1] == "laboratory":
+            lab_research = data[2]
+            days_ago = int(data[4])
+            result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=(-1,), use_parent_iss='-1', client_pk=client_pk)
+        else:
+            field_pks = [data[1]]
+            logical_or = True
+            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or)
     elif request_data["fieldPk"].find('%current_hosp') != -1:
         data = request_data["fieldPk"].split('#')
         if len(data) < 2:
             result = {"value": ""}
         else:
-            field_pks = [data[1]]
-            logical_or = True
             parent_iss = Napravleniya.objects.get(pk=num_dir).parent_id
-            result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, parent_iss=(parent_iss,))
+            if data[1] == "laboratory":
+                lab_research = data[2]
+                days_ago = int(data[4])
+                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=(parent_iss,), client_pk=client_pk)
+            else:
+                field_pks = [data[1]]
+                logical_or = True
+                result = field_get_link_data(field_pks, client_pk, logical_or, logical_and, logical_group_or, use_current_hosp=True, parent_iss=(parent_iss,))
     elif request_data["fieldPk"].find('%root_hosp') != -1:
         data = request_data["fieldPk"].split('#')
         logical_or = True
@@ -3480,7 +3497,7 @@ def last_field_result(request):
             if data[1] == "laboratory":
                 lab_research = data[2]
                 days_ago = int(data[4])
-                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=tuple(parent_iss))
+                result = field_get_link_laboratory_data(lab_research, days_ago, parent_iss=tuple(parent_iss), client_pk=client_pk)
             else:
                 field_pks = [data[1]]
 
@@ -3704,7 +3721,7 @@ def field_get_aggregate_operation_data(operations_data):
     return result
 
 
-def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
+def field_get_link_laboratory_data(lab_research, days_ago, parent_iss, use_parent_iss='1', client_pk=None):
     lab_research = json.loads(lab_research)
     data_lab_research = {}
     for k, v in lab_research.items():
@@ -3718,7 +3735,15 @@ def field_get_link_laboratory_data(lab_research, days_ago, parent_iss):
     for i in data_lab_research.values():
         fraction_ids.extend(i)
 
-    result_sql = get_field_lab_result_by_research_and_test(date_start, date_end, tuple(researhes_ids), tuple(fraction_ids), parent_iss=parent_iss, use_parent_iss='1')
+    result_sql = get_field_lab_result_by_research_and_test(
+        date_start,
+        date_end,
+        tuple(researhes_ids),
+        tuple(fraction_ids),
+        parent_iss=parent_iss,
+        use_parent_iss=use_parent_iss,
+        client_id=int(client_pk) if client_pk else -1,
+    )
     result = [{"date": i.date_confirm, "result": f"{i.fraction_title}- {i.value}({i.unit_title if i.unit_title else i.unit_title_deprecated})"} for i in result_sql]
     final_result = {}
     for i in result:
