@@ -186,6 +186,7 @@ def dcm_order_create(request):
             {},
             hospital_override=hospital.pk,
             id_in_hospital=id_in_hospital,
+            is_cito=order_data.get('cito', False),
         )
         if not result["r"]:
             raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")

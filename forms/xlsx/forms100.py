@@ -17,9 +17,16 @@ def form_01(request_data) -> Workbook:
         prices = PriceName.objects.filter(pk=price_id)
     else:
         prices = get_prices(current_day)
-    price_template = {price.id: 0 for price in prices}
-    price_ids = tuple(price_template.keys())
-    price_titles = [f"{price.title}-{price.symbol_code}" for price in prices]
+
+    price_template = {}
+    price_titles = []
+    for price in prices:
+        price_template[price.id] = 0
+        price_template[f"{price.id}_cito"] = ""
+        price_titles.append(f"{price.title}-{price.symbol_code}")
+        price_titles.append(f"{price.title}-{price.symbol_code} ЦИТО")
+
+    price_ids = tuple(price.id for price in prices)
 
     research_dict = {}
 
@@ -35,12 +42,13 @@ def form_01(request_data) -> Workbook:
                 **price_template,
             }
 
-    coasts = get_coasts(price_ids)
+    coasts = get_coasts(price_ids) if price_ids else []
     for coast in coasts:
         if research_dict.get(coast.research_id):
             research_dict[coast.research_id][coast.price_name_id] = str(coast.coast)
+            research_dict[coast.research_id][f"{coast.price_name_id}_cito"] = str(coast.coast_cito) if coast.coast_cito is not None else ""
 
-    headers = ["Код по прайсу", "Услуга", "Код ОКМУ", "ФСИДИ", "Категория", "Короткое название"]
+    headers = ["Код по прайсу", "Услуга", "Код НМУ", "ФСИДИ", "Категория", "Короткое название"]
     headers.extend(price_titles)
     work_sheet.append(headers)
 

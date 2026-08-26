@@ -285,6 +285,7 @@
             <col width="100">
             <col width="100">
             <col width="100">
+            <col width="100">
           </colgroup>
           <thead class="sticky">
             <tr class="border-no-top">
@@ -296,6 +297,9 @@
               </th>
               <th class="text-center border-right">
                 <strong>Цена</strong>
+              </th>
+              <th class="text-center border-right">
+                <strong>Cito</strong>
               </th>
               <th
                 class="border-right delete-all-coast"
@@ -319,7 +323,7 @@
             class="text-center"
           >
             <td
-              colspan="3"
+              colspan="4"
               class="border-top"
             >
               Нет данных
@@ -346,6 +350,16 @@
             <td class="border">
               <input
                 v-model="coastResearch.coast"
+                :disabled="!priceIsActive"
+                type="number"
+                min="0.01"
+                step="0.01"
+                class="text-right form-control"
+              >
+            </td>
+            <td class="border">
+              <input
+                v-model="coastResearch.coastCito"
                 :disabled="!priceIsActive"
                 type="number"
                 min="0.01"
@@ -391,6 +405,7 @@
           <col width="100">
           <col width="100">
           <col width="100">
+          <col width="100">
         </colgroup>
         <tr>
           <td class="border">
@@ -420,6 +435,16 @@
               min="0.01"
               step="0.01"
               placeholder="Цена"
+            >
+          </td>
+          <td class="border">
+            <input
+              v-model="coastCito"
+              type="number"
+              class="text-right form-control"
+              min="0.01"
+              step="0.01"
+              placeholder="Cito"
             >
           </td>
           <td class="border">
@@ -472,6 +497,7 @@ export default {
       selectedPrice: null,
       selectedResearch: null,
       coast: '',
+      coastCito: '',
       numberService: '',
       researchList: {},
       search: '',
@@ -678,6 +704,7 @@ export default {
         const { ok, message } = await this.$api('/update-coast-research-in-price', {
           coastResearchId: coastResearch.id,
           coast: coastResearch.coast,
+          coastCito: coastResearch.coastCito,
           numberService: coastResearch.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
@@ -735,6 +762,7 @@ export default {
           priceId: this.selectedPrice,
           researchId: this.selectedResearch,
           coast: this.coast,
+          coastCito: this.coastCito,
           numberService: this.numberService,
         });
         await this.$store.dispatch(actions.DEC_LOADING);
@@ -743,6 +771,7 @@ export default {
           await this.getCoastsResearchesInPrice();
           this.selectedResearch = null;
           this.coast = '';
+          this.coastCito = '';
         } else {
           this.$root.$emit('msg', 'error', message);
         }

@@ -8,6 +8,25 @@ from directory.models import Researches, CategoryDirectory
 from laboratory.settings import RMIS_MIDDLE_SERVER_ADDRESS, RMIS_MIDDLE_SERVER_TOKEN
 
 
+def _find_column_index(cells, *titles):
+    for title in titles:
+        if title and title in cells:
+            return cells.index(title)
+    return None
+
+
+def _parse_optional_coast(value):
+    if value is None or value == "" or value == "None":
+        return None
+    try:
+        coast = float(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+    if coast <= 0:
+        return None
+    return coast
+
+
 def form_01(request_data):
     """
     Загрузка цен по прайсу
@@ -15,7 +34,9 @@ def form_01(request_data):
     На входе:
     Файл XLSX с ценами прайса
     Cтруктура:
-    Код по прайсу (internal_code Researches), Услуга (title_researches), следующее поле - любое текстовое название прайса (priceCoasts.coast)
+    Код по прайсу (internal_code Researches), Услуга (title_researches),
+    колонка с названием прайса (priceCoasts.coast),
+    опционально колонка "<название прайса> ЦИТО" (priceCoasts.coast_cito)
     """
     price_id = request_data.get("entity_id")
     file = request_data.get("file")
@@ -24,9 +45,10 @@ def form_01(request_data):
         return {"ok": False, "result": [], "message": "Такого прайса нет"}
     wb = load_workbook(filename=file)
     ws = wb[wb.sheetnames[0]]
-    internal_code_idx, coast_idx, category_idx, short_title_research_idx = (
+    internal_code_idx, coast_idx, coast_cito_idx, category_idx, short_title_research_idx = (
         '',
         '',
+        None,
         '',
         '',
     )
@@ -38,10 +60,10 @@ def form_01(request_data):
                 internal_code_idx = cells.index("Код по прайсу")
                 category_idx = cells.index("Категория")
                 short_title_research_idx = cells.index("Короткое название")
-                try:
-                    coast_idx = cells.index(price.title)
-                except ValueError:
+                coast_idx = _find_column_index(cells, price.title, f"{price.title}-{price.symbol_code}")
+                if coast_idx is None:
                     return {"ok": False, "result": [], "message": "Название прайса не совпадает"}
+                coast_cito_idx = _find_column_index(cells, f"{price.title} ЦИТО", f"{price.title}-{price.symbol_code} ЦИТО")
                 starts = True
         else:
             internal_code = cells[internal_code_idx].strip()
@@ -51,6 +73,7 @@ def form_01(request_data):
                 coast = float(cells[coast_idx].strip())
             except Exception:
                 continue
+            coast_cito = _parse_optional_coast(cells[coast_cito_idx]) if coast_cito_idx is not None else None
             if internal_code == "None" or not coast:
                 continue
             service = Researches.objects.filter(internal_code=internal_code).first()
@@ -59,11 +82,17 @@ def form_01(request_data):
                 continue
             current_coast = PriceCoast.objects.filter(price_name_id=price.pk, research_id=service.pk).first()
             if current_coast:
+                changed = False
                 if current_coast.coast != coast:
                     current_coast.coast = coast
+                    changed = True
+                if coast_cito_idx is not None and current_coast.coast_cito != coast_cito:
+                    current_coast.coast_cito = coast_cito
+                    changed = True
+                if changed:
                     current_coast.save()
             else:
-                new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast)
+                new_coast = PriceCoast(price_name_id=price.pk, research_id=service.pk, coast=coast, coast_cito=coast_cito)
                 new_coast.save()
             category = CategoryDirectory.objects.filter(title=category_title).first()
             if category:
