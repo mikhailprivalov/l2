@@ -99,6 +99,7 @@ const props = defineProps({
 const hospTypes = ref([
   { id: '%root_hosp', label: 'Весь cлучай госпитализации' },
   { id: '%current_hosp', label: 'Текущее отделение' },
+  { id: '%all', label: 'Везде' },
 ]);
 const hospType = ref('%root_hosp');
 

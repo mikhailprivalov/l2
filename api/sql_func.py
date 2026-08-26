@@ -189,7 +189,7 @@ def get_field_result_by_cda(client_id, field_ids, count=1, parent_iss=-1, use_pa
     return row
 
 
-def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_ids, fraction_ids, parent_iss=-1, use_parent_iss='-1'):
+def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_ids, fraction_ids, parent_iss=-1, use_parent_iss='-1', client_id=-1):
     with connection.cursor() as cursor:
         cursor.execute(
             """
@@ -212,6 +212,7 @@ def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_id
             AND directions_result.fraction_id in %(fraction_ids)s
             AND directions_issledovaniya.time_confirmation AT TIME ZONE %(tz)s BETWEEN %(date_start)s AND %(date_end)s
             AND directions_result.value is not NULL
+            AND (%(client_id)s = -1 OR directions_napravleniya.client_id = %(client_id)s)
             AND 
             CASE 
               WHEN %(use_parent_iss)s != '-1' THEN 
@@ -229,6 +230,7 @@ def get_field_lab_result_by_research_and_test(date_start, date_end, researhes_id
                 'use_parent_iss': use_parent_iss,
                 'researhes_ids': researhes_ids,
                 'fraction_ids': fraction_ids,
+                'client_id': client_id,
             },
         )
 
