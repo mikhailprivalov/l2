@@ -612,6 +612,7 @@ REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
 # Переопределение в laboratory/local_settings.py
 GARDENING_YEAR_MIN = 2000
 GARDENING_YEAR_MAX_OFFSET = 2
+SHOW_DOCTOR_IN_RESULT = True
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401
@@ -675,6 +676,7 @@ if ENV_SECRET_KEY:
 
 if CACHES.get('default', {}).get('BACKEND') == 'django_redis.cache.RedisCache':
     CACHES['default']['BACKEND'] = 'django.core.cache.backends.redis.RedisCache'
+
 
 
 # db = DATABASES.get('default', {})
