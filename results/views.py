@@ -58,7 +58,8 @@ from laboratory.settings import (
     RESULT_LABORATORY_FORM,
     SELF_WATERMARKS,
     DISABLE_PATIENT_CANVAS_MARKER,
-    NOT_CONTROL_VISIT_RESEARCH_ID, SHOW_DOCTOR_IN_RESULT,
+    NOT_CONTROL_VISIT_RESEARCH_ID,
+    SHOW_DOCTOR_IN_RESULT,
 )
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
