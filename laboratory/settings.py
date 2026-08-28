@@ -424,6 +424,16 @@ TUBE_BARCODE_WIDTH_MINDEX = 0.0125
 RELATED_AGREES_FORMS_TOGETHER = {}
 FTP_PATH_TO_SAVE = ""
 FTP_PATH_TO_SAVE_ERROR_FILE = ""
+# URL для FTP директории отправки заказов в JSON (ftp://user:password@host/path).
+# Пустая строка — выгрузка отключена. Переопределение в laboratory/local_settings.py
+FTP_JSON_ORDERS_URL = ""
+# Локальный каталог очереди JSON-файлов. Пусто — <BASE_DIR>/ftp_json_spool
+FTP_JSON_ORDERS_SPOOL_DIR = ""
+# Пауза между циклами отправки JSON-файлов, секунды
+FTP_JSON_ORDERS_INTERVAL_SECONDS = 30
+# URL FTP для приёма JSON-заявок (ftp://user:password@host/path). Пустая строка — приём выключен.
+# Не должен совпадать с FTP_JSON_ORDERS_URL. Переопределение в laboratory/local_settings.py
+FTP_JSON_ORDERS_PULL_URL = ""
 DISABLE_PATIENT_CANVAS_MARKER = False
 
 PROMETHEUS_ENABLED = False

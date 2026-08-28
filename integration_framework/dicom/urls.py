@@ -7,4 +7,7 @@ urlpatterns = [
     path('dcm-order-create-status', views.dcm_order_create_status),
     path('dcm-study-link', views.dcm_study_link),
     path('dcm-study-link-status', views.dcm_study_link_status),
+    path('json-order-create', views.json_order_create),
+    path('json-study-link', views.json_study_link),
+    path('json-order-get', views.json_order_get),
 ]
