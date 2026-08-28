@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -13,6 +14,7 @@ from django.utils import timezone
 from appconf.manager import SettingManager
 from brokers_queue.rmq.rentgen_publisher import send_request_to_rentgen_rmq, send_study_link_to_rentgen_rmq
 from directory.models import Contrasts, Researches
+from ftp_orders.json_export import spool_order_json, spool_study_link_json
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
@@ -22,6 +24,8 @@ from integration_framework.models import EquipmentReceive
 from hospitals.models import Hospitals
 from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 from slog.models import Log
+
+logger = logging.getLogger(__name__)
 
 ALL_LIST_PAGE_SIZE = 50
 ALLOWED_ALL_LIST_PAGE_SIZES = {50, 100, 150}
@@ -391,6 +395,11 @@ def create_request(request):
     research = Researches.objects.filter(pk=research_id).first()
     send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
 
+    try:
+        spool_order_json(direction)
+    except Exception:
+        logger.exception('Failed to spool order json for request %s', direction.pk)
+
     return status_response(True, "Заявка успешно создана", {"requestId": direction_id})
 
 
@@ -439,6 +448,11 @@ def link_image_to_request(request):
             equipment_receive.save(update_fields=['napravleniye', 'doc_save_link', 'time_save_link', 'doc_reset_link', 'time_reset_link'])
 
             send_study_link_to_rentgen_rmq(napravleniye, equipment_receive, request.user.doctorprofile)
+
+            try:
+                spool_study_link_json(napravleniye, equipment_receive)
+            except Exception:
+                logger.exception('Failed to spool study link json for request %s', napravleniye.pk)
 
             return status_response(True, "Изображение успешно привязано к заявке")
         else:
