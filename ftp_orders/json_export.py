@@ -37,10 +37,49 @@ def _serialize_value(value):
 
 def build_direction_payload(direction, file_type, extra=None):
     payload = {field.attname: _serialize_value(getattr(direction, field.attname, None)) for field in direction._meta.concrete_fields}
-    payload["_l2_file_type"] = file_type
     if extra:
         payload.update(extra)
+    payload["_l2_file_type"] = file_type
     return payload
+
+
+def _patient_documents(individual):
+    if not individual:
+        return []
+    from clients.models import Document
+
+    docs = Document.objects.filter(individual=individual, is_active=True).select_related("document_type").order_by("pk")
+    return [
+        {
+            "type": (d.document_type.title if d.document_type else "") or "",
+            "serial": d.serial or "",
+            "number": d.number or "",
+        }
+        for d in docs
+    ]
+
+
+def _direction_internal_code(direction):
+    iss = direction.issledovaniya_set.select_related("research").order_by("pk").first()
+    if not iss or not iss.research:
+        return ""
+    return iss.research.internal_code or ""
+
+
+def _order_extra_fields(direction):
+    individual = getattr(getattr(direction, "client", None), "individual", None)
+    hospital = getattr(direction, "hospital", None)
+    return {
+        "family": (individual.family if individual else "") or "",
+        "name": (individual.name if individual else "") or "",
+        "patronymic": (individual.patronymic if individual else "") or "",
+        "birthday": _serialize_value(individual.birthday if individual else None),
+        "sex": (individual.sex if individual else "") or "",
+        "doctor_id": direction.doc_id,
+        "hospital_oid": (hospital.oid if hospital else "") or "",
+        "internal_code": _direction_internal_code(direction),
+        "documents": _patient_documents(individual),
+    }
 
 
 def _safe_filename_part(value):
@@ -66,9 +105,13 @@ def spool_json(filename, payload):
     return path
 
 
+def build_order_json(direction):
+    return build_direction_payload(direction, FILE_TYPE_ORDER, extra=_order_extra_fields(direction))
+
+
 def spool_order_json(direction):
     filename = build_filename(direction.pk, FILE_TYPE_ORDER)
-    return spool_json(filename, build_direction_payload(direction, FILE_TYPE_ORDER))
+    return spool_json(filename, build_order_json(direction))
 
 
 def spool_study_link_json(direction, equipment_receive):
@@ -81,13 +124,17 @@ def spool_study_link_json(direction, equipment_receive):
     return spool_json(filename, build_direction_payload(direction, FILE_TYPE_STUDY, extra))
 
 
-def _connect():
-    parsed_url = urlparse(FTP_JSON_ORDERS_URL)
+def connect_ftp(url=None):
+    parsed_url = urlparse(url or FTP_JSON_ORDERS_URL)
     ftp = ftplib.FTP(parsed_url.hostname)
     ftp.login(parsed_url.username, parsed_url.password)
     if parsed_url.path:
         ftp.cwd(parsed_url.path)
     return ftp
+
+
+def _connect():
+    return connect_ftp(FTP_JSON_ORDERS_URL)
 
 
 def process_push_json_orders():

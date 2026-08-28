@@ -431,6 +431,9 @@ FTP_JSON_ORDERS_URL = ""
 FTP_JSON_ORDERS_SPOOL_DIR = ""
 # Пауза между циклами отправки JSON-файлов, секунды
 FTP_JSON_ORDERS_INTERVAL_SECONDS = 30
+# URL FTP для приёма JSON-заявок (ftp://user:password@host/path). Пустая строка — приём выключен.
+# Не должен совпадать с FTP_JSON_ORDERS_URL. Переопределение в laboratory/local_settings.py
+FTP_JSON_ORDERS_PULL_URL = ""
 DISABLE_PATIENT_CANVAS_MARKER = False
 
 PROMETHEUS_ENABLED = False
