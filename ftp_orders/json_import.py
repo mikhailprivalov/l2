@@ -1,3 +1,4 @@
+import base64
 import datetime
 import ftplib
 import logging
@@ -6,17 +7,19 @@ from sys import stdout
 from tempfile import NamedTemporaryFile
 
 import simplejson as json
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 
 from clients.models import Card, DocumentType, Individual
 from directory.models import Contrasts, Researches
-from directions.models import IstochnikiFinansirovaniya, Napravleniya
-from ftp_orders.json_export import FILE_TYPE_ORDER, FILE_TYPE_STUDY, connect_ftp
+from directions.models import IssledovaniyaFiles, IstochnikiFinansirovaniya, Napravleniya
+from ftp_orders.json_export import FILE_TYPE_ORDER, FILE_TYPE_RESULT, FILE_TYPE_STUDY, connect_ftp
 from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
 from integration_framework.models import EquipmentReceive
-from laboratory.settings import FTP_JSON_ORDERS_INTERVAL_SECONDS, FTP_JSON_ORDERS_PULL_URL
+from laboratory.settings import FTP_JSON_ORDERS_INTERVAL_SECONDS, FTP_JSON_ORDERS_PULL_URL, FTP_JSON_RESULTS_PULL_URL
 from slog.models import Log
 from users.models import DoctorProfile
 
@@ -29,13 +32,15 @@ def _result(ok, message="", directions=None, skipped=False):
 
 def detect_file_type(payload, filename=""):
     file_type = payload.get("_l2_file_type")
-    if file_type in (FILE_TYPE_ORDER, FILE_TYPE_STUDY):
+    if file_type in (FILE_TYPE_ORDER, FILE_TYPE_STUDY, FILE_TYPE_RESULT):
         return file_type
     name = (filename or "").lower()
     if name.endswith("_ord.json"):
         return FILE_TYPE_ORDER
     if name.endswith("_dcm.json"):
         return FILE_TYPE_STUDY
+    if name.endswith("_res.json"):
+        return FILE_TYPE_RESULT
     return None
 
 
@@ -327,12 +332,82 @@ def link_study_from_dcm_payload(payload):
     return _result(True, "", directions=[direction.pk])
 
 
+def _parse_confirmation_time(value):
+    if not value:
+        return timezone.now()
+    if hasattr(value, "isoformat") and not isinstance(value, str):
+        dt = value
+    else:
+        text = str(value).strip().replace("Z", "")
+        dt = parse_datetime(text)
+        if dt is None:
+            for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%d %H:%M:%S", "%d.%m.%Y %H:%M"):
+                try:
+                    dt = datetime.datetime.strptime(text[:26], fmt)
+                    break
+                except ValueError:
+                    continue
+    if dt is None:
+        return timezone.now()
+    if timezone.is_naive(dt):
+        return timezone.make_aware(dt, timezone.get_current_timezone())
+    return dt
+
+
+def apply_result_from_res_payload(payload, hospitals=None):
+    source_id = _source_order_id(payload)
+    if not source_id:
+        return _result(False, "Не указан id заявки")
+
+    pdf_b64 = payload.get("pdf") or ""
+    if not pdf_b64:
+        return _result(False, "Не указан pdf")
+    try:
+        pdf_bytes = base64.b64decode(pdf_b64)
+    except Exception:
+        return _result(False, "Некорректный pdf (base64)")
+    if not pdf_bytes:
+        return _result(False, "Пустой pdf")
+
+    qs = Napravleniya.objects.filter(is_request=True)
+    if hospitals is not None:
+        qs = qs.filter(hospital__in=hospitals)
+    try:
+        direction = qs.filter(pk=int(source_id)).first()
+    except (TypeError, ValueError):
+        direction = None
+    if not direction:
+        return _result(False, f"Заявка {source_id} не найдена")
+
+    doctor_fio = str(payload.get("doctor_fio") or "").strip()
+    time_confirmation = _parse_confirmation_time(payload.get("time_confirmation"))
+
+    with transaction.atomic():
+        for iss in direction.issledovaniya_set.all():
+            IssledovaniyaFiles.objects.filter(issledovaniye=iss).delete()
+            pdf_content_file = ContentFile(pdf_bytes)
+            iss_file = IssledovaniyaFiles(issledovaniye=iss, uploaded_file=pdf_content_file)
+            iss_file.uploaded_file.name = f"{direction.pk}_result.pdf"
+            iss_file.save()
+            iss.time_confirmation = time_confirmation
+            iss.time_save = timezone.now()
+            iss.doc_confirmation_string = doctor_fio
+            iss.save(update_fields=["time_confirmation", "time_save", "doc_confirmation_string"])
+
+        direction.sync_confirmed_fields(skip_post=True)
+        Log.log(source_id, 190014, direction.doc, {"direction": direction.pk, "doctor_fio": doctor_fio, "time_confirmation": str(time_confirmation)})
+
+    return _result(True, "", directions=[direction.pk])
+
+
 def import_json_payload(payload, filename=""):
     file_type = detect_file_type(payload, filename)
     if file_type == FILE_TYPE_ORDER:
         return create_request_from_ord_payload(payload)
     if file_type == FILE_TYPE_STUDY:
         return link_study_from_dcm_payload(payload)
+    if file_type == FILE_TYPE_RESULT:
+        return apply_result_from_res_payload(payload)
     return _result(False, "Неизвестный тип JSON-файла")
 
 
@@ -348,12 +423,20 @@ def _read_ftp_json(ftp, filename):
 
 
 def process_pull_json_orders():
-    if not FTP_JSON_ORDERS_PULL_URL:
+    _process_pull_json(FTP_JSON_ORDERS_PULL_URL, "ftp_json_orders_pull")
+
+
+def process_pull_json_results():
+    _process_pull_json(FTP_JSON_RESULTS_PULL_URL, "ftp_json_results_pull")
+
+
+def _process_pull_json(url, log_prefix):
+    if not url:
         return
 
     ftp = None
     try:
-        ftp = connect_ftp(FTP_JSON_ORDERS_PULL_URL)
+        ftp = connect_ftp(url)
         try:
             file_list = ftp.nlst()
         except ftplib.error_perm as resp:
@@ -368,14 +451,14 @@ def process_pull_json_orders():
                 result = import_json_payload(payload, filename)
                 if result.get("ok"):
                     ftp.delete(filename)
-                    stdout.write(f"ftp_json_orders_pull: {filename} {result.get('message') or 'ok'} {result.get('directions')}\n")
+                    stdout.write(f"{log_prefix}: {filename} {result.get('message') or 'ok'} {result.get('directions')}\n")
                 else:
-                    logger.error("ftp_json_orders_pull: %s %s", filename, result.get("message"))
-                    stdout.write(f"ftp_json_orders_pull: fail {filename} {result.get('message')}\n")
+                    logger.error("%s: %s %s", log_prefix, filename, result.get("message"))
+                    stdout.write(f"{log_prefix}: fail {filename} {result.get('message')}\n")
             except Exception:
-                logger.exception("ftp_json_orders_pull: failed %s", filename)
+                logger.exception("%s: failed %s", log_prefix, filename)
     except ftplib.all_errors:
-        logger.exception("ftp_json_orders_pull: ftp error")
+        logger.exception("%s: ftp error", log_prefix)
     finally:
         if ftp:
             try:
@@ -388,4 +471,11 @@ def process_pull_json_orders_start():
     stdout.write("Starting pull_json_orders process\n")
     while True:
         process_pull_json_orders()
+        time.sleep(FTP_JSON_ORDERS_INTERVAL_SECONDS)
+
+
+def process_pull_json_results_start():
+    stdout.write("Starting pull_json_results process\n")
+    while True:
+        process_pull_json_results()
         time.sleep(FTP_JSON_ORDERS_INTERVAL_SECONDS)

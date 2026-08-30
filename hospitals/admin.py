@@ -8,6 +8,7 @@ class RefHospitals(admin.ModelAdmin):
         'short_title',
         'code_tfoms',
         'is_default',
+        'json_result_auto_export',
     )
     list_display_links = (
         'title',
@@ -15,6 +16,7 @@ class RefHospitals(admin.ModelAdmin):
         'code_tfoms',
         'is_default',
     )
+    list_filter = ('json_result_auto_export', 'is_default', 'hide')
     search_fields = ('title',)
     autocomplete_fields = ('client',)
 

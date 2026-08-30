@@ -2027,6 +2027,13 @@ class Napravleniya(models.Model):
 
         ResultFeed.insert_feed_by_direction(self)
 
+        try:
+            from ftp_orders.json_export import spool_result_json
+
+            spool_result_json(self)
+        except Exception as exc:
+            slog.Log.log(key=self.pk, type=180015, body={"error": str(exc)})
+
     def post_reset_confirmation(self):
         if self.celery_send_task_ids:
             task_ids = self.celery_send_task_ids
