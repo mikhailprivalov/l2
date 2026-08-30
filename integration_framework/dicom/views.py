@@ -13,7 +13,7 @@ from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
 from directory.models import Researches, Contrasts
 from ftp_orders.json_export import build_order_json
-from ftp_orders.json_import import _find_hospital, create_request_from_ord_payload, link_study_from_dcm_payload
+from ftp_orders.json_import import _find_hospital, apply_result_from_res_payload, create_request_from_ord_payload, link_study_from_dcm_payload
 from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
 from integration_framework.models import EquipmentReceive
@@ -366,3 +366,13 @@ def json_order_get(request):
     if not direction:
         return Response({"ok": False, "message": "Заявка не найдена"})
     return Response({"ok": True, "result": build_order_json(direction)})
+
+
+@api_view(['POST'])
+def json_result_create(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+    result = apply_result_from_res_payload(body, hospitals=request.user.hospitals.all())
+    return Response({"ok": result["ok"], "message": result.get("message") or "", "directions": result.get("directions") or []})

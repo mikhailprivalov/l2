@@ -1,8 +1,10 @@
+import base64
 import datetime
 import decimal
 import ftplib
 import logging
 import os
+import shutil
 import time
 import uuid
 from io import BytesIO
@@ -11,16 +13,49 @@ from urllib.parse import urlparse
 
 import simplejson as json
 
-from laboratory.settings import BASE_DIR, FTP_JSON_ORDERS_URL, FTP_JSON_ORDERS_SPOOL_DIR, FTP_JSON_ORDERS_INTERVAL_SECONDS
+from laboratory.settings import (
+    BASE_DIR,
+    FTP_JSON_ORDERS_ARCHIVE_DIR,
+    FTP_JSON_ORDERS_INTERVAL_SECONDS,
+    FTP_JSON_ORDERS_SPOOL_DIR,
+    FTP_JSON_ORDERS_URL,
+    FTP_JSON_RESULTS_ARCHIVE_DIR,
+    FTP_JSON_RESULTS_SPOOL_DIR,
+    FTP_JSON_RESULTS_URL,
+)
 
 logger = logging.getLogger(__name__)
 
 FILE_TYPE_ORDER = "ord"
 FILE_TYPE_STUDY = "dcm"
+FILE_TYPE_RESULT = "res"
 
 
 def get_spool_dir():
     return FTP_JSON_ORDERS_SPOOL_DIR or os.path.join(BASE_DIR, "ftp_json_spool")
+
+
+def get_archive_dir():
+    return FTP_JSON_ORDERS_ARCHIVE_DIR or os.path.join(BASE_DIR, "ftp_json_archive")
+
+
+def get_results_spool_dir():
+    return FTP_JSON_RESULTS_SPOOL_DIR or os.path.join(BASE_DIR, "ftp_json_results_spool")
+
+
+def get_results_archive_dir():
+    return FTP_JSON_RESULTS_ARCHIVE_DIR or os.path.join(BASE_DIR, "ftp_json_results_archive")
+
+
+def _archive_sent_file(path, filename, archive_dir=None):
+    archive_dir = archive_dir or get_archive_dir()
+    os.makedirs(archive_dir, exist_ok=True)
+    dest = os.path.join(archive_dir, filename)
+    if os.path.exists(dest):
+        name, ext = os.path.splitext(filename)
+        dest = os.path.join(archive_dir, f"{name}_{int(time.time() * 1000)}{ext}")
+    shutil.move(path, dest)
+    return dest
 
 
 def _serialize_value(value):
@@ -92,11 +127,13 @@ def build_filename(direction_pk, file_type, study_instance_uid=None, event_time=
     timestamp = f"{event_time:%Y%m%d}_{event_time:%H%M%S}{event_time.microsecond // 1000:03d}"
     if file_type == FILE_TYPE_STUDY:
         return f"{direction_pk}_{timestamp}_{_safe_filename_part(study_instance_uid or 'nouid')}_{FILE_TYPE_STUDY}.json"
+    if file_type == FILE_TYPE_RESULT:
+        return f"{direction_pk}_{timestamp}_{FILE_TYPE_RESULT}.json"
     return f"{direction_pk}_{timestamp}_{FILE_TYPE_ORDER}.json"
 
 
-def spool_json(filename, payload):
-    spool_dir = get_spool_dir()
+def spool_json(filename, payload, spool_dir=None):
+    spool_dir = spool_dir or get_spool_dir()
     os.makedirs(spool_dir, exist_ok=True)
     path = os.path.join(spool_dir, filename)
     tmp_path = f"{path}.tmp"
@@ -123,6 +160,51 @@ def spool_study_link_json(direction, equipment_receive):
         "study_instance_uid": study_instance_uid,
     }
     return spool_json(filename, build_direction_payload(direction, FILE_TYPE_STUDY, extra))
+
+
+def should_spool_result(direction):
+    if not getattr(direction, "is_request", False):
+        return False
+    source_id = str(getattr(direction, "id_in_hospital", None) or "").strip()
+    if not source_id:
+        return False
+    hospital = getattr(direction, "hospital", None)
+    return bool(hospital and hospital.json_result_auto_export)
+
+
+def _result_issledovaniye(direction):
+    confirmed = [iss for iss in direction.issledovaniya_set.all() if iss.time_confirmation]
+    if confirmed:
+        return max(confirmed, key=lambda iss: iss.time_confirmation)
+    return direction.issledovaniya_set.order_by("pk").first()
+
+
+def build_result_json(direction):
+    from integration_framework.common_func import direction_pdf_content
+
+    source_id = str(direction.id_in_hospital or "").strip()
+    iss = _result_issledovaniye(direction)
+    time_confirmation = None
+    if iss and iss.time_confirmation:
+        time_confirmation = iss.time_confirmation
+    elif direction.last_confirmed_at:
+        time_confirmation = direction.last_confirmed_at
+    pdf_bytes = direction_pdf_content(direction.pk)
+    return {
+        "_l2_file_type": FILE_TYPE_RESULT,
+        "id": source_id,
+        "pdf": base64.b64encode(pdf_bytes).decode("utf-8"),
+        "time_confirmation": _serialize_value(time_confirmation),
+        "doctor_fio": (iss.doc_confirmation_fio if iss else "") or "",
+    }
+
+
+def spool_result_json(direction):
+    if not should_spool_result(direction):
+        return None
+    source_id = str(direction.id_in_hospital).strip()
+    filename = build_filename(source_id, FILE_TYPE_RESULT)
+    return spool_json(filename, build_result_json(direction), spool_dir=get_results_spool_dir())
 
 
 def connect_ftp(url=None):
@@ -158,10 +240,48 @@ def process_push_json_orders():
             with open(path, "rb") as f:
                 content = f.read()
             ftp.storbinary(f"STOR {filename}", BytesIO(content))
-            os.remove(path)
-            stdout.write(f"ftp_json_orders: sent {filename}\n")
+            try:
+                archived = _archive_sent_file(path, filename)
+                stdout.write(f"ftp_json_orders: sent {filename} -> {archived}\n")
+            except OSError:
+                logger.exception("ftp_json_orders: failed to archive %s", filename)
     except ftplib.all_errors:
         logger.exception("ftp_json_orders: ftp error")
+    finally:
+        if ftp:
+            try:
+                ftp.quit()
+            except ftplib.all_errors:
+                pass
+
+
+def process_push_json_results():
+    if not FTP_JSON_RESULTS_URL:
+        return
+
+    spool_dir = get_results_spool_dir()
+    if not os.path.isdir(spool_dir):
+        return
+
+    files = sorted(f for f in os.listdir(spool_dir) if f.endswith(".json"))
+    if not files:
+        return
+
+    ftp = None
+    try:
+        ftp = connect_ftp(FTP_JSON_RESULTS_URL)
+        for filename in files:
+            path = os.path.join(spool_dir, filename)
+            with open(path, "rb") as f:
+                content = f.read()
+            ftp.storbinary(f"STOR {filename}", BytesIO(content))
+            try:
+                archived = _archive_sent_file(path, filename, archive_dir=get_results_archive_dir())
+                stdout.write(f"ftp_json_results: sent {filename} -> {archived}\n")
+            except OSError:
+                logger.exception("ftp_json_results: failed to archive %s", filename)
+    except ftplib.all_errors:
+        logger.exception("ftp_json_results: ftp error")
     finally:
         if ftp:
             try:
@@ -174,4 +294,11 @@ def process_push_json_orders_start():
     stdout.write("Starting push_json_orders process\n")
     while True:
         process_push_json_orders()
+        time.sleep(FTP_JSON_ORDERS_INTERVAL_SECONDS)
+
+
+def process_push_json_results_start():
+    stdout.write("Starting push_json_results process\n")
+    while True:
+        process_push_json_results()
         time.sleep(FTP_JSON_ORDERS_INTERVAL_SECONDS)

@@ -46,6 +46,9 @@ class Hospitals(models.Model):
     legal_auth_doc_id = models.CharField(max_length=9, default="", blank=True, verbose_name="Код для кто заверил")
     oktmo = models.CharField(max_length=8, default="", blank=True, verbose_name="ОКТМО")
     need_send_result = models.BooleanField(default=False, blank=True, help_text='Требуется email-отправка результатов', db_index=True)
+    json_result_auto_export = models.BooleanField(
+        default=False, blank=True, db_index=True, help_text='Автоматически формировать JSON-результат для заявок этой организации'
+    )
     is_external_performing_organization = models.BooleanField(default=False, blank=True, help_text='Внешняя исполняющая организация', db_index=True)
     not_has_price = models.BooleanField(default=False, blank=True, help_text='Без прайса - не выводить в картотеке при выборе услуг', db_index=True)
     # добавить каталог для переноса заказа

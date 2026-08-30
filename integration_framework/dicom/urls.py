@@ -10,4 +10,5 @@ urlpatterns = [
     path('json-order-create', views.json_order_create),
     path('json-study-link', views.json_study_link),
     path('json-order-get', views.json_order_get),
+    path('json-result-create', views.json_result_create),
 ]
