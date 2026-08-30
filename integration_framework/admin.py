@@ -116,6 +116,7 @@ class EquipmentReceiveAdmin(admin.ModelAdmin):
                 sex=obj.sex,
                 tag_patient_id=obj.tag_patient_id,
                 order_id=obj.order_id,
+                tag_pacs_property=obj.tag_pacs_property,
             )
             new_obj.save()
             count += 1

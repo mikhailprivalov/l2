@@ -224,6 +224,7 @@ class EquipmentReceive(models.Model):
     equipment_title = models.CharField(max_length=64, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - оборудование, разделен 8 точками")
     equipment_model = models.ForeignKey(Equipment, blank=True, null=True, default=None, db_index=True, on_delete=models.CASCADE)
     ip_address = models.CharField(max_length=40, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - ip - адрес")
+    tag_pacs_property = models.CharField(max_length=255, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - свойство PACS")
 
     def __str__(self):
         patient_name = f"{self.family} {self.name} {self.patronymic}".strip()
@@ -242,6 +243,7 @@ class EquipmentReceive(models.Model):
         'manufacturer_param',
         'ip_address_param',
         'station_name_param',
+        'pacs_property_param',
     )
 
     @staticmethod
@@ -252,13 +254,16 @@ class EquipmentReceive(models.Model):
         return query
 
     @staticmethod
-    def get_equipment_receive(manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param=''):
+    def get_equipment_receive(
+        manufacturer_param='', manufacturer_model_name_param='', institution_name_param='', ip_address_param='', station_name_param='', pacs_property_param=''
+    ):
         params = {
             'manufacturer_param': manufacturer_param,
             'manufacturer_model_name_param': manufacturer_model_name_param,
             'institution_name_param': institution_name_param,
             'ip_address_param': ip_address_param,
             'station_name_param': station_name_param,
+            'pacs_property_param': pacs_property_param,
         }
         with connection.cursor() as cursor:
             for query_template in SQL_QUERY_FOR_SELECT_DICOM_EQUIPMENT:
@@ -292,6 +297,7 @@ class EquipmentReceive(models.Model):
             tag_institution_name = data.get("tag_institution_name")
             tag_station_name = data.get("tag_station_name")
             tag_sender_ip = data.get("tag_sender_ip")
+            tag_pacs_property = data.get("tag_pacs_property")
             # equipment_model = Equipment.objects.filter(
             #     Q(manufacturer=tag_manufacturer) & Q(station_name=tag_station_name) & (Q(institution_name=tag_institution_name) | Q(manufacturer_model_name=tag_manufacturer_model_name))
             # ).first()
@@ -302,6 +308,7 @@ class EquipmentReceive(models.Model):
                 institution_name_param=tag_institution_name,
                 ip_address_param=tag_sender_ip,
                 station_name_param=tag_station_name,
+                pacs_property_param=tag_pacs_property,
             )
             equipment_model = Equipment.objects.filter(pk=pk_equipment_receive).first()
             if equipment_model:
@@ -322,6 +329,7 @@ class EquipmentReceive(models.Model):
                     equipment_model=equipment_model,
                     equipment_title=equipment_model.title,
                     ip_address=tag_sender_ip,
+                    tag_pacs_property=tag_pacs_property,
                 ).save()
                 cache.set(cache_key, data.get('study_instance_uid_tag'), 60 * 60 * 24)
         return eqr
