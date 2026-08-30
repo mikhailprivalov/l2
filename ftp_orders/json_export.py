@@ -76,6 +76,7 @@ def _order_extra_fields(direction):
         "birthday": _serialize_value(individual.birthday if individual else None),
         "sex": (individual.sex if individual else "") or "",
         "doctor_id": direction.doc_id,
+        "uuid": (direction.doc.uuid if direction.doc else "") or "",
         "hospital_oid": (hospital.oid if hospital else "") or "",
         "internal_code": _direction_internal_code(direction),
         "documents": _patient_documents(individual),
