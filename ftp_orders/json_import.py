@@ -103,6 +103,12 @@ def _find_research(payload):
 
 
 def _find_doctor(payload, hospital):
+    doctor_uuid = str(payload.get("uuid") or "").strip()
+    if doctor_uuid:
+        doctor = DoctorProfile.objects.filter(uuid=doctor_uuid, hospital=hospital).first()
+        if doctor:
+            return doctor, ""
+        return None, f"Врач с uuid {doctor_uuid} не найден"
     doctor_id = payload.get("doctor_id") or payload.get("doc_id")
     if doctor_id:
         doctor = DoctorProfile.objects.filter(pk=doctor_id, hospital=hospital).first()
