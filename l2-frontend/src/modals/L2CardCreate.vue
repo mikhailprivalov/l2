@@ -1449,8 +1449,12 @@ export default {
     time_tfoms_last_sync() {
       return this.card.time_tfoms_last_sync && moment(this.card.time_tfoms_last_sync).format('HH:mm DD.MM.YY');
     },
+    allowDigitsInFamily() {
+      return Boolean(window.ALLOW_DIGITS_IN_FAMILY);
+    },
     valid() {
-      if (!this.card.family || !this.card.name || !this.card.birthday) {
+      const nameOk = this.allowDigitsInFamily || Boolean(this.card.name);
+      if (!this.card.family || !nameOk || !this.card.birthday) {
         return false;
       }
       const now = moment();
@@ -1459,7 +1463,7 @@ export default {
       if (age > 105) {
         return false;
       }
-      return !!(this.card.family.length > 0 && this.card.name.length > 0 && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
+      return !!(this.card.family.length > 0 && nameOk && this.card.birthday.match(/\d{4}-\d{2}-\d{2}/gm));
     },
     birthday() {
       return this.card.birthday;
@@ -1501,7 +1505,7 @@ export default {
       this.individuals_search();
     },
     family() {
-      this.card.family = normalizeNamePart(this.card.family);
+      this.card.family = normalizeNamePart(this.card.family, Boolean(window.ALLOW_DIGITS_IN_FAMILY));
       this.individuals_search();
       this.individual_sex('family', this.card.family);
     },
@@ -1645,6 +1649,9 @@ export default {
       }
       if (!this.valid) {
         return;
+      }
+      if (this.allowDigitsInFamily && !(this.card.name || '').trim()) {
+        this.card.name = '-';
       }
       await this.$store.dispatch(actions.INC_LOADING);
       const data = await patientsPoint.sendCard(
@@ -1810,13 +1817,17 @@ export default {
       this.individuals_search_main();
     }, 500),
     async individuals_search_main() {
-      if (!this.valid || this.card_pk !== -1 || this.card.family === '' || this.card.name === '' || this.card.new_individual) {
+      const nameForSearch = (this.card.name || '').trim() || (this.allowDigitsInFamily ? '-' : '');
+      if (!this.valid || this.card_pk !== -1 || this.card.family === '' || nameForSearch === '' || this.card.new_individual) {
         return;
       }
 
       this.loading = true;
 
-      const { result, forced_gender: forcedGender } = await patientsPoint.individualsSearch(this.card, [
+      const { result, forced_gender: forcedGender } = await patientsPoint.individualsSearch({
+        ...this.card,
+        name: nameForSearch,
+      }, [
         'family',
         'name',
         'patronymic',

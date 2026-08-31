@@ -49,6 +49,7 @@ from contracts.models import Company, CompanyDepartment, MedicalExamination
 from directions.models import Issledovaniya
 from directory.models import Researches, PatientControlParam
 from laboratory import settings
+from laboratory.settings import ALLOW_DIGITS_IN_FAMILY
 from laboratory.utils import strdate, start_end_year, localtime
 from rmis_integration.client import Client
 from slog.models import Log
@@ -109,7 +110,10 @@ def patients_search_card(request):
     limit = min(int(d.get('limit', 10)), 20)
     form = d.get('form', {})
     p = re.compile(r'^[а-яё]{3}[0-9]{8}$', re.IGNORECASE)
-    p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
+    if ALLOW_DIGITS_IN_FAMILY:
+        p2 = re.compile(r'^([А-яЁё\-0-9]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
+    else:
+        p2 = re.compile(r'^([А-яЁё\-]+)( ([А-яЁё\-]+)(( ([А-яЁё\-]*))?( ([0-9]{2}\.?[0-9]{2}\.?[0-9]{4}))?)?)?$')
     p_tfoms = re.compile(r'^([А-яЁё\-]+) ([А-яЁё\-]+)( ([А-яЁё\-]+))? (([0-9]{2})\.?([0-9]{2})\.?([0-9]{4}))$')
     p3 = re.compile(r'^[0-9]{1,15}$')
     p_enp_re = re.compile(r'^[0-9]{16}$')
@@ -345,10 +349,14 @@ def patients_search_card(request):
         cards = Card.objects.filter(pk=int(parts[1]))
         inc_archive = inc_archive or (len(parts) > 2 and parts[2] == 'true')
     else:
-        cards = Card.objects.filter(base=card_type, individual__in=objects)
+        is_numeric_query = bool(re.match(p3, query))
+        if ALLOW_DIGITS_IN_FAMILY and not has_phone_search and not p_snils and not p_enp and is_numeric_query:
+            cards = Card.objects.filter(base=card_type).filter(Q(number=query) | Q(individual__family__istartswith=query))
+        else:
+            cards = Card.objects.filter(base=card_type, individual__in=objects)
 
-        if not has_phone_search and not p_snils and re.match(p3, query):
-            cards = cards.filter(number=query)
+            if not has_phone_search and not p_snils and is_numeric_query:
+                cards = cards.filter(number=query)
 
     if p_enp and cards:
         cards = cards.filter(carddocusage__document__number=query, carddocusage__document__document_type__title='Полис ОМС')
@@ -630,6 +638,9 @@ def patients_card_save(request):
 
     for field in ['family', 'name', 'patronymic']:
         request_data[field] = request_data[field].strip()
+
+    if ALLOW_DIGITS_IN_FAMILY and not request_data["name"]:
+        request_data["name"] = "-"
 
     if "new_individual" in request_data and (request_data["new_individual"] or not Individual.objects.filter(pk=request_data["individual_pk"])) and request_data["card_pk"] < 0:
         i = Individual(

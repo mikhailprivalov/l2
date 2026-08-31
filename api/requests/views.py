@@ -35,6 +35,27 @@ def get_requests_journal_max_period_days():
     return getattr(django_settings, 'REQUESTS_JOURNAL_MAX_PERIOD_DAYS', 40)
 
 
+def _equipment_receive_matches_patient_family(equipment_receive, family):
+    fields = getattr(django_settings, 'EQUIPMENT_RECEIVE_FAMILY_MATCH_FIELDS', None) or []
+    if not fields:
+        return True
+    family_norm = (family or '').strip().casefold()
+    if not family_norm:
+        return False
+    for field_name in fields:
+        if not isinstance(field_name, str) or not hasattr(equipment_receive, field_name):
+            continue
+        value = getattr(equipment_receive, field_name)
+        if value is None:
+            continue
+        value_norm = str(value).strip().casefold()
+        if not value_norm:
+            continue
+        if family_norm == value_norm or family_norm in value_norm:
+            return True
+    return False
+
+
 def get_allowed_hospital_ids(doctor_profile):
     permissions = PermissionHospitalProtocolDoctorProfile.objects.filter(doctor_profile=doctor_profile)
     return [p.hospital_id for p in permissions if p.hospital_id]
@@ -431,9 +452,13 @@ def link_image_to_request(request):
     with transaction.atomic():
         if request_id:
             try:
-                napravleniye = Napravleniya.objects.get(pk=request_id, is_request=True, doc=request.user.doctorprofile)
+                napravleniye = Napravleniya.objects.select_related('client__individual').get(pk=request_id, is_request=True, doc=request.user.doctorprofile)
             except Napravleniya.DoesNotExist:
                 return status_response(False, "Заявка не найдена")
+
+            patient_family = napravleniye.client.individual.family if napravleniye.client_id else ''
+            if not _equipment_receive_matches_patient_family(equipment_receive, patient_family):
+                return status_response(False, "Фамилия пациента не совпадает с данными снимка")
 
             for iss in napravleniye.issledovaniya_set.all():
                 iss.study_instance_uid = equipment_receive.study_instance_uid_tag
