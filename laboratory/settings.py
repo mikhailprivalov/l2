@@ -449,6 +449,10 @@ FTP_JSON_RESULTS_ARCHIVE_DIR = ""
 DISABLE_PATIENT_CANVAS_MARKER = False
 # Разрешить цифры в фамилии пациента. Переопределение в laboratory/local_settings.py
 ALLOW_DIGITS_IN_FAMILY = False
+# Поля EquipmentReceive для сверки с фамилией пациента при связке снимка с заявкой (логика ИЛИ).
+# Пустой список — проверка отключена. Переопределение в laboratory/local_settings.py
+# Пример: ["family", "tag_patient_id", "tag_patient_name"]
+EQUIPMENT_RECEIVE_FAMILY_MATCH_FIELDS = []
 
 PROMETHEUS_ENABLED = False
 USERS_PK_SHOW_FACT_ADDRESSES_025U = []
