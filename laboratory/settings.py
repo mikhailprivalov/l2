@@ -447,6 +447,8 @@ FTP_JSON_RESULTS_SPOOL_DIR = ""
 # Локальный архив успешно отправленных JSON-результатов. Пусто — <BASE_DIR>/ftp_json_results_archive
 FTP_JSON_RESULTS_ARCHIVE_DIR = ""
 DISABLE_PATIENT_CANVAS_MARKER = False
+# Разрешить цифры в фамилии пациента. Переопределение в laboratory/local_settings.py
+ALLOW_DIGITS_IN_FAMILY = False
 
 PROMETHEUS_ENABLED = False
 USERS_PK_SHOW_FACT_ADDRESSES_025U = []
