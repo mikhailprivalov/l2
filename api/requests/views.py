@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -13,6 +14,7 @@ from django.utils import timezone
 from appconf.manager import SettingManager
 from brokers_queue.rmq.rentgen_publisher import send_request_to_rentgen_rmq, send_study_link_to_rentgen_rmq
 from directory.models import Contrasts, Researches
+from ftp_orders.json_export import spool_order_json, spool_study_link_json
 from laboratory.decorators import group_required
 from laboratory.utils import strfdatetime
 from utils.response import status_response
@@ -23,12 +25,35 @@ from hospitals.models import Hospitals
 from users.models import DoctorProfile, DoctorProfileEquipment, PermissionHospitalProtocolDoctorProfile
 from slog.models import Log
 
+logger = logging.getLogger(__name__)
+
 ALL_LIST_PAGE_SIZE = 50
 ALLOWED_ALL_LIST_PAGE_SIZES = {50, 100, 150}
 
 
 def get_requests_journal_max_period_days():
     return getattr(django_settings, 'REQUESTS_JOURNAL_MAX_PERIOD_DAYS', 40)
+
+
+def _equipment_receive_matches_patient_family(equipment_receive, family):
+    fields = getattr(django_settings, 'EQUIPMENT_RECEIVE_FAMILY_MATCH_FIELDS', None) or []
+    if not fields:
+        return True
+    family_norm = (family or '').strip().casefold()
+    if not family_norm:
+        return False
+    for field_name in fields:
+        if not isinstance(field_name, str) or not hasattr(equipment_receive, field_name):
+            continue
+        value = getattr(equipment_receive, field_name)
+        if value is None:
+            continue
+        value_norm = str(value).strip().casefold()
+        if not value_norm:
+            continue
+        if family_norm == value_norm or family_norm in value_norm:
+            return True
+    return False
 
 
 def get_allowed_hospital_ids(doctor_profile):
@@ -324,8 +349,17 @@ def create_request(request):
                 return status_response(False, "Размер файла превышает 10 МБ")
 
     with transaction.atomic():
+        is_cito = request_fields.get('cito', False)
         result = Napravleniya.gen_napravleniya_by_issledovaniya(
-            client_id=patient_id, diagnos="", finsource=fin_source.pk, history_num="", ofname_id=-1, doc_current=request.user.doctorprofile, researches={-1: [research_id]}, comments={}
+            client_id=patient_id,
+            diagnos="",
+            finsource=fin_source.pk,
+            history_num="",
+            ofname_id=-1,
+            doc_current=request.user.doctorprofile,
+            researches={-1: [research_id]},
+            comments={},
+            is_cito=is_cito,
         )
 
         if not result.get('r'):
@@ -337,7 +371,7 @@ def create_request(request):
 
         direction = Napravleniya.objects.get(pk=direction_id)
 
-        direction.is_cito = request_fields.get('cito', False)
+        direction.is_cito = is_cito
         direction.is_dynamic = request_fields.get('isDynamic', False)
         direction.is_request = True
         direction.contrast_amount = request_fields.get('contrastAmount', '')
@@ -382,6 +416,11 @@ def create_request(request):
     research = Researches.objects.filter(pk=research_id).first()
     send_request_to_rentgen_rmq(direction, request.user.doctorprofile, research)
 
+    try:
+        spool_order_json(direction)
+    except Exception:
+        logger.exception('Failed to spool order json for request %s', direction.pk)
+
     return status_response(True, "Заявка успешно создана", {"requestId": direction_id})
 
 
@@ -413,9 +452,13 @@ def link_image_to_request(request):
     with transaction.atomic():
         if request_id:
             try:
-                napravleniye = Napravleniya.objects.get(pk=request_id, is_request=True, doc=request.user.doctorprofile)
+                napravleniye = Napravleniya.objects.select_related('client__individual').get(pk=request_id, is_request=True, doc=request.user.doctorprofile)
             except Napravleniya.DoesNotExist:
                 return status_response(False, "Заявка не найдена")
+
+            patient_family = napravleniye.client.individual.family if napravleniye.client_id else ''
+            if not _equipment_receive_matches_patient_family(equipment_receive, patient_family):
+                return status_response(False, "Фамилия пациента не совпадает с данными снимка")
 
             for iss in napravleniye.issledovaniya_set.all():
                 iss.study_instance_uid = equipment_receive.study_instance_uid_tag
@@ -430,6 +473,11 @@ def link_image_to_request(request):
             equipment_receive.save(update_fields=['napravleniye', 'doc_save_link', 'time_save_link', 'doc_reset_link', 'time_reset_link'])
 
             send_study_link_to_rentgen_rmq(napravleniye, equipment_receive, request.user.doctorprofile)
+
+            try:
+                spool_study_link_json(napravleniye, equipment_receive)
+            except Exception:
+                logger.exception('Failed to spool study link json for request %s', napravleniye.pk)
 
             return status_response(True, "Изображение успешно привязано к заявке")
         else:
@@ -590,7 +638,11 @@ def update_request(request):
                 return status_response(False, "Размер файла превышает 10 МБ")
 
     try:
-        direction = Napravleniya.objects.select_related('type_contrast').prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set').get(pk=request_id, is_request=True)
+        direction = (
+            Napravleniya.objects.select_related('type_contrast', 'client', 'istochnik_f')
+            .prefetch_related('issledovaniya_set__research', 'napravleniyafiles_set')
+            .get(pk=request_id, is_request=True)
+        )
     except Napravleniya.DoesNotExist:
         return status_response(False, "Заявка не найдена")
 
@@ -610,11 +662,15 @@ def update_request(request):
         if not iss:
             return status_response(False, "Исследование не найдено")
 
+        old_is_cito = direction.is_cito
+        old_research_id = iss.research_id
+        is_cito = request_fields.get('cito', False)
+
         if iss.research_id != research_id:
             iss.research_id = research_id
             iss.save(update_fields=['research'])
 
-        direction.is_cito = request_fields.get('cito', False)
+        direction.is_cito = is_cito
         direction.is_dynamic = request_fields.get('isDynamic', False)
         direction.contrast_amount = request_fields.get('contrastAmount', '')
         direction.dose = request_fields.get('dose', '')
@@ -644,6 +700,13 @@ def update_request(request):
                 'text_contrast',
             ]
         )
+
+        if old_is_cito != is_cito or old_research_id != research_id:
+            from contracts.models import PriceCoast
+
+            price_modifier = IstochnikiFinansirovaniya.get_price_modifier(direction.istochnik_f, direction.client.work_place_db)
+            iss.coast = PriceCoast.get_coast_from_price(iss.research_id, price_modifier, is_cito=is_cito)
+            iss.save(update_fields=['coast'])
 
         for file_data in files:
             if 'url' in file_data and file_data['url'].startswith('data:'):

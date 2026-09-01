@@ -11,6 +11,8 @@ class Equipment(models.Model):
     institution_name = models.CharField(max_length=255, default="", blank=True, null=True, help_text="tag 0008,0080", db_index=True)
     device_serial_number = models.CharField(max_length=255, default="", blank=True, null=True, help_text="tag 0018,1000", db_index=True)
     ip_address = models.CharField(max_length=40, blank=True, null=True, default=None, db_index=True, help_text="ТЭГ - ip - адрес")
+    pacs_property = models.CharField(max_length=255, default="", blank=True, null=True, help_text="Свойство PACS", db_index=True)
+    uuid = models.CharField(max_length=64, blank=True, null=True, default='', db_index=True, help_text='Внешний идентификатор для интеграций оборудования')
 
     def __str__(self):
         return f"{self.hospital} {self.title}"

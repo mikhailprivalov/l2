@@ -424,7 +424,35 @@ TUBE_BARCODE_WIDTH_MINDEX = 0.0125
 RELATED_AGREES_FORMS_TOGETHER = {}
 FTP_PATH_TO_SAVE = ""
 FTP_PATH_TO_SAVE_ERROR_FILE = ""
+# URL для FTP директории отправки заказов в JSON (ftp://user:password@host/path).
+# Пустая строка — выгрузка отключена. Переопределение в laboratory/local_settings.py
+FTP_JSON_ORDERS_URL = ""
+# Локальный каталог очереди JSON-файлов. Пусто — <BASE_DIR>/ftp_json_spool
+FTP_JSON_ORDERS_SPOOL_DIR = ""
+# Локальный каталог архива успешно отправленных JSON-файлов. Пусто — <BASE_DIR>/ftp_json_archive
+FTP_JSON_ORDERS_ARCHIVE_DIR = ""
+# Пауза между циклами отправки JSON-файлов, секунды
+FTP_JSON_ORDERS_INTERVAL_SECONDS = 30
+# URL FTP для приёма JSON-заявок (ftp://user:password@host/path). Пустая строка — приём выключен.
+# Не должен совпадать с FTP_JSON_ORDERS_URL. Переопределение в laboratory/local_settings.py
+FTP_JSON_ORDERS_PULL_URL = ""
+# URL для FTP директории отправки JSON-результатов (ftp://user:password@host/path).
+# Пустая строка — выгрузка отключена. Переопределение в laboratory/local_settings.py
+FTP_JSON_RESULTS_URL = ""
+# URL FTP для приёма JSON-результатов. Пустая строка — приём выключен.
+# Не должен совпадать с FTP_JSON_RESULTS_URL. Переопределение в laboratory/local_settings.py
+FTP_JSON_RESULTS_PULL_URL = ""
+# Локальный каталог очереди JSON-результатов. Пусто — <BASE_DIR>/ftp_json_results_spool
+FTP_JSON_RESULTS_SPOOL_DIR = ""
+# Локальный архив успешно отправленных JSON-результатов. Пусто — <BASE_DIR>/ftp_json_results_archive
+FTP_JSON_RESULTS_ARCHIVE_DIR = ""
 DISABLE_PATIENT_CANVAS_MARKER = False
+# Разрешить цифры в фамилии пациента. Переопределение в laboratory/local_settings.py
+ALLOW_DIGITS_IN_FAMILY = False
+# Поля EquipmentReceive для сверки с фамилией пациента при связке снимка с заявкой (логика ИЛИ).
+# Пустой список — проверка отключена. Переопределение в laboratory/local_settings.py
+# Пример: ["family", "tag_patient_id", "tag_patient_name"]
+EQUIPMENT_RECEIVE_FAMILY_MATCH_FIELDS = []
 
 PROMETHEUS_ENABLED = False
 USERS_PK_SHOW_FACT_ADDRESSES_025U = []
@@ -612,6 +640,7 @@ REQUESTS_JOURNAL_MAX_PERIOD_DAYS = 40
 # Переопределение в laboratory/local_settings.py
 GARDENING_YEAR_MIN = 2000
 GARDENING_YEAR_MAX_OFFSET = 2
+SHOW_DOCTOR_IN_RESULT = True
 
 try:
     from laboratory.local_settings import *  # noqa: F403,F401

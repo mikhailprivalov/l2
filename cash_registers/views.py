@@ -111,6 +111,7 @@ def get_service_coasts(directions_ids: list):
             service_coast = services_coasts[service.id]
             count = service_coast["count"] + 1
             service_coast["count"] = count
+            service_coast["isCito"] = service_coast["isCito"] or bool(service.is_cito)
         else:
             services_coasts[service.id] = {
                 "id": service.id,
@@ -122,6 +123,7 @@ def get_service_coasts(directions_ids: list):
                 "discountStatic": service.prior_discount,
                 "count": 1,
                 "total": 0,
+                "isCito": bool(service.is_cito),
             }
 
     pay_fin_source: IstochnikiFinansirovaniya = IstochnikiFinansirovaniya.objects.filter(pk=PAY_FIN_SOURCE_ID).select_related('contracts').first()
@@ -130,8 +132,10 @@ def get_service_coasts(directions_ids: list):
         if price_id:
             coasts = sql_func.get_service_coasts(services_ids, price_id)
 
+    from contracts.models import PriceCoast
+
     for coast in coasts:
-        service_coast = coast.coast
+        service_coast = PriceCoast.resolve_coast(coast.coast, coast.coast_cito, services_coasts[coast.research_id]["isCito"])
         discount_absolute = service_coast * services_coasts[coast.research_id]["discountRelative"]
         discounted_coast = service_coast - discount_absolute
         services_coasts[coast.research_id]["coast"] = service_coast
@@ -139,7 +143,7 @@ def get_service_coasts(directions_ids: list):
         services_coasts[coast.research_id]["discountedCoast"] = discounted_coast
         total = services_coasts[coast.research_id]["count"] * discounted_coast
         services_coasts[coast.research_id]["total"] = total
-        summ += coast.coast
+        summ += service_coast
 
     service_coasts = [i for i in services_coasts.values()]
 

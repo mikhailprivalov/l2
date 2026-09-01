@@ -39,7 +39,8 @@ def get_service_coasts(services_ids, price_id):
         cursor.execute(
             """
             SELECT 
-            contracts_pricecoast.coast, 
+            contracts_pricecoast.coast,
+            contracts_pricecoast.coast_cito,
             contracts_pricecoast.research_id
             FROM contracts_pricecoast
             WHERE 
@@ -71,6 +72,7 @@ def get_services_by_directions(directions_ids, fin_source_id):
             """
             SELECT 
             directions_napravleniya.id as direction_id,
+            directions_napravleniya.is_cito,
             directory_researches.id,
             directory_researches.title,
             directory_researches.def_discount,

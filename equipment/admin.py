@@ -13,6 +13,7 @@ class ResEquipment(admin.ModelAdmin):
         'station_name',
         'institution_name',
         'device_serial_number',
+        'pacs_property',
     )
     list_display_links = ('title',)
 

@@ -6,7 +6,7 @@ import clients.models as Clients
 import hospitals.models as Hospitals
 from appconf.manager import SettingManager
 from laboratory import settings
-from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT, HIDE_TITLE_BUTTONS_MAIN_MENU, USE_COMBO_ROLE
+from laboratory.settings import PROTOCOL_PLAIN_TEXT, SPLIT_PRINT_RESULT, HIDE_TITLE_BUTTONS_MAIN_MENU, USE_COMBO_ROLE, ALLOW_DIGITS_IN_FAMILY
 from rmis_integration.client import get_md5
 from utils.common import get_system_name
 
@@ -24,6 +24,7 @@ def local_settings(request):
         "PROTOCOL_PLAIN_TEXT": PROTOCOL_PLAIN_TEXT,
         "SPLIT_PRINT_RESULT": SPLIT_PRINT_RESULT,
         "FRONTEND_HMR": settings.FRONTEND_HMR,
+        "ALLOW_DIGITS_IN_FAMILY": ALLOW_DIGITS_IN_FAMILY,
     }
 
 

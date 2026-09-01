@@ -12,6 +12,8 @@ from brokers_queue.rmq.rentgen_publisher import (
 from clients.models import Individual, Card
 from directions.models import Napravleniya, IstochnikiFinansirovaniya
 from directory.models import Researches, Contrasts
+from ftp_orders.json_export import build_order_json
+from ftp_orders.json_import import _find_hospital, apply_result_from_res_payload, create_request_from_ord_payload, link_study_from_dcm_payload
 from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
 from integration_framework.models import EquipmentReceive
@@ -186,6 +188,7 @@ def dcm_order_create(request):
             {},
             hospital_override=hospital.pk,
             id_in_hospital=id_in_hospital,
+            is_cito=order_data.get('cito', False),
         )
         if not result["r"]:
             raise FailedCreatingDirectionsException(result.get("message") or "Failed creating directions")
@@ -223,7 +226,7 @@ def dcm_order_create(request):
                 "service": services,
                 "directions": result["list_id"],
                 "card": card.number_with_type(),
-                "internalId": id_in_hospital
+                "internalId": id_in_hospital,
             },
         )
 
@@ -305,3 +308,71 @@ def dcm_study_link_status(request):
     body = json.loads(request.body)
     result = process_dcm_study_link_status(request, body)
     return Response(result)
+
+
+def _json_file_hospital_allowed(request, payload):
+    if not hasattr(request.user, "hospitals"):
+        return None, "Некорректный auth токен"
+    hospital, error = _find_hospital(payload)
+    if error:
+        return None, error
+    if not request.user.hospitals.filter(pk=hospital.pk).exists():
+        return None, "Нет доступа в переданную организацию"
+    return hospital, ""
+
+
+@api_view(['POST'])
+def json_order_create(request):
+    body = json.loads(request.body)
+    _, error = _json_file_hospital_allowed(request, body)
+    if error:
+        return Response({"ok": False, "message": error})
+    try:
+        result = create_request_from_ord_payload(body)
+    except FailedCreatingDirectionsException as exc:
+        return Response({"ok": False, "message": str(exc)})
+    return Response({"ok": result["ok"], "message": result.get("message") or "", "directions": result.get("directions") or []})
+
+
+@api_view(['POST'])
+def json_study_link(request):
+    body = json.loads(request.body)
+    _, error = _json_file_hospital_allowed(request, body)
+    if error:
+        return Response({"ok": False, "message": error})
+    result = link_study_from_dcm_payload(body)
+    return Response({"ok": result["ok"], "message": result.get("message") or ""})
+
+
+@api_view(['POST'])
+def json_order_get(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+    permission_hospitals = request.user.hospitals.all()
+    qs = Napravleniya.objects.select_related("client__individual", "hospital").filter(is_request=True, hospital__in=permission_hospitals)
+
+    direction = None
+    if body.get("id") not in (None, ""):
+        direction = qs.filter(pk=body.get("id")).first()
+    elif body.get("id_in_hospital"):
+        qs = qs.filter(id_in_hospital=str(body.get("id_in_hospital")))
+        oid = body.get("hospital_oid") or body.get("oid")
+        if oid:
+            qs = qs.filter(hospital__oid=oid)
+        direction = qs.first()
+
+    if not direction:
+        return Response({"ok": False, "message": "Заявка не найдена"})
+    return Response({"ok": True, "result": build_order_json(direction)})
+
+
+@api_view(['POST'])
+def json_result_create(request):
+    if not hasattr(request.user, "hospitals"):
+        return Response({"ok": False, "message": "Некорректный auth токен"})
+
+    body = json.loads(request.body)
+    result = apply_result_from_res_payload(body, hospitals=request.user.hospitals.all())
+    return Response({"ok": result["ok"], "message": result.get("message") or "", "directions": result.get("directions") or []})

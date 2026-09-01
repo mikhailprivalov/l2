@@ -59,6 +59,10 @@ coverage.xml
 .static_storage/
 .media/
 media/*
+ftp_json_spool/
+ftp_json_archive/
+ftp_json_results_spool/
+ftp_json_results_archive/
 
 local_settings.py
 

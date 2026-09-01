@@ -10,6 +10,7 @@ class ResPriceCoast(admin.ModelAdmin):
         'research',
         'internal_code',
         'coast',
+        'coast_cito',
         'status',
     )
     list_display_links = (

@@ -59,6 +59,7 @@ from laboratory.settings import (
     SELF_WATERMARKS,
     DISABLE_PATIENT_CANVAS_MARKER,
     NOT_CONTROL_VISIT_RESEARCH_ID,
+    SHOW_DOCTOR_IN_RESULT,
 )
 from laboratory.settings import FONTS_FOLDER
 from laboratory.utils import strdate
@@ -924,7 +925,8 @@ def draw_obj(c: canvas.Canvas, obj: int, i: int, doctorprofile):
     c.drawString(paddingx + s, h - 28, "№ " + str(obj))
 
     c.setFont('FreeSans', 10)
-    c.drawRightString(s + w / 2 - paddingx, h - 42, "Лечащий врач: " + napr.doc.get_fio())
+    if SHOW_DOCTOR_IN_RESULT:
+        c.drawRightString(s + w / 2 - paddingx, h - 42, "Лечащий врач: " + napr.doc.get_fio())
     c.drawRightString(s + w / 2 - paddingx, h - 54, "Дата: " + maxdate)
 
     c.drawString(s + paddingx, h - 54, "ФИО пациента: " + napr.client.fio())

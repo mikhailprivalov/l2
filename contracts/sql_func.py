@@ -55,7 +55,7 @@ def get_research_coast_by_prce(price_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-        SELECT price_name_id, research_id, coast
+        SELECT price_name_id, research_id, coast, coast_cito
         FROM contracts_pricecoast
         WHERE contracts_pricecoast.price_name_id in %(price_id)s
         
@@ -119,8 +119,8 @@ def get_researches_and_coasts_in_price(price_id):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-        SELECT contracts_pricecoast.id, contracts_pricecoast.coast, contracts_pricecoast.number_services_by_contract, directory_researches.id as research_id, 
-        directory_researches.title as research_title
+        SELECT contracts_pricecoast.id, contracts_pricecoast.coast, contracts_pricecoast.coast_cito, contracts_pricecoast.number_services_by_contract, 
+        directory_researches.id as research_id, directory_researches.title as research_title
         FROM contracts_pricecoast
         INNER JOIN directory_researches ON contracts_pricecoast.research_id = directory_researches.id
         WHERE contracts_pricecoast.price_name_id = %(price_id)s

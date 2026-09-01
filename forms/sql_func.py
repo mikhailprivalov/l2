@@ -272,7 +272,7 @@ def get_coasts(prices_ids):
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT coast, price_name_id, research_id FROM contracts_pricecoast
+            SELECT coast, coast_cito, price_name_id, research_id FROM contracts_pricecoast
             WHERE price_name_id in %(prices_ids)s
             ORDER BY price_name_id
         """,

@@ -71,7 +71,7 @@ def search_dicom_study(direction=None):
             hospital = napravleniye.hospital if napravleniye else None
             dcm_address, dcm_port = DICOM_ADDRESS, DICOM_PORT
             if hospital and hospital.dicom_ip_address and hospital.dicom_port:
-                dcm_address, dcm_port = hospital.dicom_ip_address, hospital.dicom_port
+                dcm_address, dcm_port = hospital.dicom_ip_address, int(hospital.dicom_port)
             if not check_server_port(dcm_address, dcm_port):
                 return ''
             try:

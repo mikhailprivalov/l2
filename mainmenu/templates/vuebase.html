@@ -137,6 +137,12 @@
     window.SYSTEM_AS_VI = false;
     {% endif %}
 
+    {% if ALLOW_DIGITS_IN_FAMILY %}
+    window.ALLOW_DIGITS_IN_FAMILY = true;
+    {% else %}
+    window.ALLOW_DIGITS_IN_FAMILY = false;
+    {% endif %}
+
     {% if PROTOCOL_PLAIN_TEXT %}
     window.PROTOCOL_PLAIN_TEXT = true;
     {% else %}
