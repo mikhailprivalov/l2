@@ -15,6 +15,7 @@ from django.utils.dateparse import parse_datetime
 from clients.models import Card, DocumentType, Individual
 from directory.models import Contrasts, Researches
 from directions.models import IssledovaniyaFiles, IstochnikiFinansirovaniya, Napravleniya
+from equipment.models import Equipment
 from ftp_orders.json_export import FILE_TYPE_ORDER, FILE_TYPE_RESULT, FILE_TYPE_STUDY, connect_ftp
 from ftp_orders.main import FailedCreatingDirectionsException
 from hospitals.models import Hospitals
@@ -290,6 +291,42 @@ def create_request_from_ord_payload(payload):
     return _result(True, "", directions=result["list_id"])
 
 
+def _payload_text(payload, key):
+    value = payload.get(key)
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _create_equipment_receive_from_payload(payload, equipment, study_instance_uid):
+    return EquipmentReceive(
+        family=_payload_text(payload, "family"),
+        name=_payload_text(payload, "name"),
+        patronymic=_payload_text(payload, "patronymic"),
+        birthday=_parse_birthday(payload.get("birthday")),
+        sex=_normalize_sex(payload.get("sex")) or "м",
+        order_id=_payload_text(payload, "order_id"),
+        tag_patient_name=_payload_text(payload, "tag_patient_name"),
+        tag_study_date=_payload_text(payload, "tag_study_date"),
+        tag_station_name=_payload_text(payload, "tag_station_name") or equipment.station_name or None,
+        tag_institution_name=_payload_text(payload, "tag_institution_name") or equipment.institution_name or None,
+        tag_manufacturer=_payload_text(payload, "tag_manufacturer") or equipment.manufacturer or None,
+        tag_manufacturer_model_name=_payload_text(payload, "tag_manufacturer_model_name") or equipment.manufacturer_model_name or None,
+        tag_device_serial_number=_payload_text(payload, "tag_device_serial_number") or equipment.device_serial_number or None,
+        tag_patient_sex=_payload_text(payload, "tag_patient_sex"),
+        tag_patient_birthdate=_payload_text(payload, "tag_patient_birthdate"),
+        tag_patient_id=_payload_text(payload, "tag_patient_id"),
+        tag_sex=_payload_text(payload, "tag_sex"),
+        study_instance_uid_tag=study_instance_uid,
+        tag_instance_id=_payload_text(payload, "tag_instance_id"),
+        equipment_title=equipment.title or None,
+        equipment_model=equipment,
+        ip_address=_payload_text(payload, "ip_address") or equipment.ip_address,
+        tag_pacs_property=_payload_text(payload, "tag_pacs_property") or equipment.pacs_property or None,
+    )
+
+
 def link_study_from_dcm_payload(payload):
     hospital, error = _find_hospital(payload)
     if error:
@@ -307,27 +344,29 @@ def link_study_from_dcm_payload(payload):
     if not study_instance_uid:
         return _result(False, "Не указан study_instance_uid")
 
-    equipment_receive = EquipmentReceive.objects.filter(study_instance_uid_tag=study_instance_uid).first()
-    if not equipment_receive:
-        return _result(False, "Снимок не найден")
+    equipment_uuid = str(payload.get("uuid") or "").strip()
+    if not equipment_uuid:
+        return _result(False, "Не указан uuid оборудования")
 
-    if equipment_receive.napravleniye_id == direction.pk:
-        return _result(True, "Снимок уже привязан", directions=[direction.pk], skipped=True)
+    equipment = Equipment.objects.filter(uuid=equipment_uuid).exclude(uuid="").first()
+    if not equipment:
+        return _result(False, f"Оборудование с uuid {equipment_uuid} не найдено")
 
     with transaction.atomic():
+        EquipmentReceive.objects.filter(study_instance_uid_tag=study_instance_uid, equipment_model=equipment).delete()
+
+        equipment_receive = _create_equipment_receive_from_payload(payload, equipment, study_instance_uid)
+        equipment_receive.napravleniye = direction
+        equipment_receive.doc_save_link = direction.doc
+        equipment_receive.time_save_link = timezone.now()
+        equipment_receive.save()
+
         for iss in direction.issledovaniya_set.all():
             iss.study_instance_uid = study_instance_uid
             iss.study_instance_uid_tag = study_instance_uid
             iss.save(update_fields=["study_instance_uid", "study_instance_uid_tag"])
 
-        equipment_receive.napravleniye = direction
-        equipment_receive.doc_save_link = direction.doc
-        equipment_receive.time_save_link = timezone.now()
-        equipment_receive.doc_reset_link = None
-        equipment_receive.time_reset_link = None
-        equipment_receive.save(update_fields=["napravleniye", "doc_save_link", "time_save_link", "doc_reset_link", "time_reset_link"])
-
-        Log.log(source_id, 190013, direction.doc, {"org": hospital.safe_short_title, "study_instance_uid": study_instance_uid, "direction": direction.pk})
+        Log.log(source_id, 190013, direction.doc, {"org": hospital.safe_short_title, "study_instance_uid": study_instance_uid, "direction": direction.pk, "uuid": equipment_uuid})
 
     return _result(True, "", directions=[direction.pk])
 

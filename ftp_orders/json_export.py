@@ -152,14 +152,40 @@ def spool_order_json(direction):
     return spool_json(filename, build_order_json(direction))
 
 
+def _study_extra_fields(direction, equipment_receive):
+    equipment = getattr(equipment_receive, "equipment_model", None)
+    hospital = getattr(direction, "hospital", None)
+    return {
+        "uuid": (equipment.uuid if equipment else "") or "",
+        "hospital_oid": (hospital.oid if hospital else "") or "",
+        "study_instance_uid": equipment_receive.study_instance_uid_tag,
+        "family": equipment_receive.family or "",
+        "name": equipment_receive.name or "",
+        "patronymic": equipment_receive.patronymic or "",
+        "birthday": _serialize_value(equipment_receive.birthday),
+        "sex": equipment_receive.sex or "",
+        "order_id": equipment_receive.order_id or "",
+        "tag_patient_name": equipment_receive.tag_patient_name or "",
+        "tag_study_date": equipment_receive.tag_study_date or "",
+        "tag_station_name": equipment_receive.tag_station_name or "",
+        "tag_institution_name": equipment_receive.tag_institution_name or "",
+        "tag_manufacturer": equipment_receive.tag_manufacturer or "",
+        "tag_manufacturer_model_name": equipment_receive.tag_manufacturer_model_name or "",
+        "tag_device_serial_number": equipment_receive.tag_device_serial_number or "",
+        "tag_patient_sex": equipment_receive.tag_patient_sex or "",
+        "tag_patient_birthdate": equipment_receive.tag_patient_birthdate or "",
+        "tag_patient_id": equipment_receive.tag_patient_id or "",
+        "tag_sex": equipment_receive.tag_sex or "",
+        "tag_instance_id": equipment_receive.tag_instance_id or "",
+        "ip_address": equipment_receive.ip_address or "",
+        "tag_pacs_property": equipment_receive.tag_pacs_property or "",
+    }
+
+
 def spool_study_link_json(direction, equipment_receive):
     study_instance_uid = equipment_receive.study_instance_uid_tag
     filename = build_filename(direction.pk, FILE_TYPE_STUDY, study_instance_uid)
-    extra = {
-        "equipment_receive_id": equipment_receive.pk,
-        "study_instance_uid": study_instance_uid,
-    }
-    return spool_json(filename, build_direction_payload(direction, FILE_TYPE_STUDY, extra))
+    return spool_json(filename, build_direction_payload(direction, FILE_TYPE_STUDY, extra=_study_extra_fields(direction, equipment_receive)))
 
 
 def should_spool_result(direction):
