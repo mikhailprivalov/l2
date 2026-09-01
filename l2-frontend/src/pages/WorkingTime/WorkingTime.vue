@@ -196,14 +196,16 @@ const getHolidays = async () => {
   holidays.value = result;
 };
 
+const timeOptions = ref<TimeOptionItem[]>([]);
+
 onMounted(() => {
   getDepartments();
   getRefBooks();
+  const rawVariants = store.getters.modules.working_time_variants;
+  timeOptions.value = rawVariants ? JSON.parse(rawVariants) : [];
 });
 
 const filtersFull = computed(() => !!(selectedYear.value && selectedMonth.value != null && selectedDepartment.value));
-const timeOptions = computed<TimeOptionItem[]>(() => (store.getters.modules.working_time_variants
-  ? JSON.parse(store.getters.modules.working_time_variants) : []));
 
 const documentId = ref<number | null>(null);
 const documentCreated = ref(false);

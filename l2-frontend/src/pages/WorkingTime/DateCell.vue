@@ -24,7 +24,7 @@
       />
     </div>
     <button
-      v-tippy="popover('#temp')"
+      v-tippy="popover(`#${popoverTargetId}`)"
       :disabled="props.documentBlocked || props.workTime.blocked"
       :class="cellSelect ? 'transparentButton current-time-btn cell-select' : 'transparentButton current-time-btn'"
       @hide="updateCellSelect(false)"
@@ -45,7 +45,7 @@
       {{ props.dateTitle }}
     </span>
     <div
-      id="temp"
+      :id="popoverTargetId"
       class="tp"
     >
       <div class="tp-row">
@@ -176,6 +176,12 @@ const props = defineProps({
 });
 
 const cellSelect = ref(false);
+const popoverTargetId = computed(() => {
+  const suffix = props.employeePositionId != null
+    ? `${props.employeePositionId}-${props.date}`
+    : String(props.date);
+  return `temp-${suffix}`;
+});
 const updateCellSelect = (select: boolean) => {
   cellSelect.value = select;
 };
