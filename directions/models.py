@@ -2006,10 +2006,13 @@ class Napravleniya(models.Model):
         if SettingManager.l2("send_patients_email_results") and self.is_all_confirm() and self.client.send_to_email and self.client.email:
             rt = SettingManager.get("lab_reset_confirm_time_min") * 60 + 1
             task_id = str(uuid.uuid4())
-            send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
-            self.celery_send_task_ids = (self.celery_send_task_ids or []) + [task_id]
-            self.save(update_fields=['celery_send_task_ids'])
-            slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
+            try:
+                send_result.apply_async(args=(self.pk,), countdown=rt, task_id=task_id)
+                self.celery_send_task_ids = (self.celery_send_task_ids or []) + [task_id]
+                self.save(update_fields=['celery_send_task_ids'])
+                slog.Log.log(key=self.pk, type=180000, body={"task_id": task_id})
+            except Exception as exc:
+                slog.Log.log(key=self.pk, type=180016, body={"error": str(exc), "task_id": task_id})
 
         if self.external_order:
             totally_confirmed_all_directions_in_order = True
@@ -2037,7 +2040,10 @@ class Napravleniya(models.Model):
     def post_reset_confirmation(self):
         if self.celery_send_task_ids:
             task_ids = self.celery_send_task_ids
-            celeryapp.control.revoke(task_ids, terminate=True)
+            try:
+                celeryapp.control.revoke(task_ids, terminate=True)
+            except Exception as exc:
+                slog.Log.log(key=self.pk, type=180017, body={"error": str(exc), "task_ids": task_ids})
             self.celery_send_task_ids = []
             self.save(update_fields=['celery_send_task_ids'])
             slog.Log.log(key=self.pk, type=180003, body={"task_ids": task_ids})
