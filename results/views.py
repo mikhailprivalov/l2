@@ -478,7 +478,7 @@ def result_print(request):
                 is_extract = True
             if iss.research.is_gistology:
                 is_gistology = True
-            if iss.research.has_own_form_result:
+            if iss.research.has_own_form_result and not iss.link_file and not IssledovaniyaFiles.objects.filter(issledovaniye=iss).exists():
                 has_own_form_result = True
             if iss.research.schema_pdf:
                 schema_pdf_form = True
@@ -510,6 +510,7 @@ def result_print(request):
         landscape_tmpl = PageTemplate(id='landscape_tmpl', frames=[l_frame], pagesize=landscape(A4), onPageEnd=local_mark_pages)
 
         if link_files and SettingManager.get("show_add_file_in_proto_pdf", default='true', default_type='b'):
+            has_own_form_result = False
             continue
 
         count_direction += 1
@@ -835,9 +836,11 @@ def result_print(request):
     if not hosp:
         num_card = pk[0]
 
-    if len(pk) == 1 and has_own_form_result and type_form == 12001:
+    print_saved_pdf = bool(link_result) and SettingManager.get("show_add_file_in_proto_pdf", default='true', default_type='b')
+
+    if len(pk) == 1 and has_own_form_result and type_form == 12001 and not print_saved_pdf:
         doc.build(fwb, canvasmaker=Colontitul)
-    elif len(pk) == 1 and has_own_form_result:
+    elif len(pk) == 1 and has_own_form_result and not print_saved_pdf:
         doc.build(fwb)
     elif len(pk) == 1 and not link_result and not hosp and fwb:
         doc.build(fwb, canvasmaker=PageNumCanvas)
@@ -848,7 +851,7 @@ def result_print(request):
     elif fwb:
         doc.build(naprs)
 
-    if len(link_result) > 0 and SettingManager.get("show_add_file_in_proto_pdf", default='true', default_type='b'):
+    if print_saved_pdf:
         date_now1 = datetime.datetime.strftime(datetime.datetime.now(), "%y%m%d%H%M%S")
         date_now_str = str(random.random()) + str(date_now1)
         dir_param = SettingManager.get("dir_param", default='/tmp', default_type='s')
