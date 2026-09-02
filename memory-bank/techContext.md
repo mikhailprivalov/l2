@@ -17,9 +17,9 @@
 - **astm** (custom fork) - lab equipment protocol
 
 ### Async Tasks
-- **Celery 5.2.7** - task queue
+- **Celery 5.3.6** - task queue (Python 3.12 compatible)
 - **Redis 4.4.4** - Celery broker & caching
-- **django-celery-results 2.4** - task result storage
+- **django-celery-results 2.5.1** - task result storage
 
 ### Document Generation
 - **reportlab 4.0.7** - PDF generation
