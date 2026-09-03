@@ -1,6 +1,10 @@
 <template>
   <PageInnerLayout>
-    <TwoSidedLayout :left-width-px="588">
+    <TwoSidedLayout
+      :left-width-px="leftWidthPx"
+      resizable
+      @update:left-width-px="onLeftWidthChange"
+    >
       <template #left>
         <TopBottomLayout
           :top-height-px="69"
@@ -478,6 +482,34 @@ interface Hospital {
 }
 
 const MAX_PERIOD_DAYS = 40;
+const DEFAULT_LEFT_WIDTH_PX = 588;
+const LEFT_WIDTH_STORAGE_KEY = 'requests-fill-left-width';
+
+const readStoredLeftWidth = (): number => {
+  try {
+    const value = Number(localStorage.getItem(LEFT_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(value) && value >= 360) {
+      return value;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return DEFAULT_LEFT_WIDTH_PX;
+};
+
+const leftWidthPx = ref(readStoredLeftWidth());
+
+const onLeftWidthChange = (value: number) => {
+  leftWidthPx.value = value;
+};
+
+watch(leftWidthPx, value => {
+  try {
+    localStorage.setItem(LEFT_WIDTH_STORAGE_KEY, String(value));
+  } catch {
+    // ignore storage errors
+  }
+});
 
 const getDefaultDateRange = (): [string, string] => [
   moment().subtract(10, 'days').format('DD.MM.YYYY'),
