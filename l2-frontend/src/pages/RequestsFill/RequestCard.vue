@@ -15,6 +15,15 @@
           {{ props.request.datetime }}<template v-if="props.request.orderDate"> {{ props.request.orderDate }}</template>
         </span>
       </div>
+      <span
+        :class="$style.patient"
+        :title="props.request.patient"
+      >{{ props.request.patient }}</span>
+      <span
+        v-if="showClinic"
+        :class="$style.clinic"
+        :title="props.request.clinic"
+      >{{ props.request.clinic }}</span>
       <span :class="$style.requestId">{{ props.request.id }}</span>
       <div class="topBtn">
         <button
@@ -37,8 +46,11 @@
         </button>
       </div>
     </div>
-    <div>{{ patientInfo }}</div>
-    <div :class="$style.researchRow">
+    <div
+      v-if="props.request.research"
+      :class="$style.infoRow"
+      :title="props.request.research"
+    >
       {{ props.request.research }}
     </div>
   </div>
@@ -83,12 +95,7 @@ const emit = defineEmits<{
 const notify = useNotify();
 const processing = ref(false);
 
-const patientInfo = computed(() => {
-  if (props.hospitalId === -1) {
-    return `${props.request.patient}, ${props.request.clinic}`;
-  }
-  return props.request.patient;
-});
+const showClinic = computed(() => props.hospitalId === -1 && Boolean(props.request.clinic));
 
 const showAcceptButton = () => props.request.waitFill && !props.request.accepted;
 
@@ -167,11 +174,27 @@ const handleCardClick = (event: Event) => {
   color: #ff6b6b;
 }
 
+.topLeft {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.patient,
+.clinic {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .requestId {
+  flex: 0 0 auto;
   color: #434A54;
   font-size: 13px;
   font-weight: 600;
-  float: right;
   vertical-align: middle;
 }
 
@@ -193,21 +216,25 @@ const handleCardClick = (event: Event) => {
   vertical-align: middle;
 }
 
-.researchRow {
+.infoRow {
   padding: 3px;
   background: linear-gradient(to bottom, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.07) 100%);
-  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topPart {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 </style>
 
 <style scoped lang="scss">
 .topBtn {
+  flex: 0 0 auto;
   width: 79px;
   text-align: right;
 
