@@ -1,6 +1,6 @@
 <template>
   <PageInnerLayout>
-    <TwoSidedLayout :left-width-px="340">
+    <TwoSidedLayout :left-width-px="588">
       <template #left>
         <TopBottomLayout
           :top-height-px="69"
@@ -1005,7 +1005,7 @@ onBeforeUnmount(() => {
 .results-editor {
   height: 100%;
   width: 100%;
-  max-width: calc(100vw - 340px);
+  max-width: calc(100vw - 588px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px;
