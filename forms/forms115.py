@@ -43,6 +43,29 @@ def _dash(value):
     return str(value)
 
 
+def _pdf_amount(raw):
+    if raw in (None, ""):
+        return None
+    try:
+        return Decimal(str(raw).replace(",", "."))
+    except (InvalidOperation, TypeError, ValueError):
+        return None
+
+
+def _pdf_sum(rows, key):
+    total = Decimal("0")
+    any_val = False
+    for row in rows:
+        amount = _pdf_amount(row.get(key))
+        if amount is None:
+            continue
+        total += amount
+        any_val = True
+    if not any_val:
+        return "—"
+    return f"{total:.2f}"
+
+
 def _owners_for_year(real_estate, year):
     year_start = date(int(year), 1, 1)
     year_end = date(int(year), 12, 31)
@@ -116,6 +139,15 @@ def form_01(request_data):
     style_td_red = deepcopy(style_td_right)
     style_td_red.textColor = colors.HexColor("#c62828")
     style_td_red.fontName = "PTAstraSerifBold"
+
+    style_td_bold = deepcopy(style_td)
+    style_td_bold.fontName = "PTAstraSerifBold"
+
+    style_td_right_bold = deepcopy(style_td_right)
+    style_td_right_bold.fontName = "PTAstraSerifBold"
+
+    style_td_red_bold = deepcopy(style_td_red)
+    style_td_red_bold.fontName = "PTAstraSerifBold"
 
     style_empty = deepcopy(style)
     style_empty.fontSize = 9
@@ -244,20 +276,19 @@ def form_01(request_data):
         elec_headers.append("Счётчик")
     elec_headers.extend(["Предыдущий", "Текущий", "Потребление", "Тариф", "Начислено", "Списано", "Долг", "Остаток", "Приход"])
     elec_data = [[_p(title, style_th) for title in elec_headers]]
+    total_row_indexes = []
     for month in range(1, 13):
+        month_entries = []
         for meter in meters:
             row = next((item for item in (meter.get("rows") or []) if item.get("month") == month), None)
-            if not row:
-                continue
-            show_money = row.get("remainder") is not None
+            if row:
+                month_entries.append((meter, row))
+        has_total = len(month_entries) > 1
+        for meter, row in month_entries:
+            show_money = (not has_total) and row.get("remainder") is not None
             tariff_missing = row.get("tariff") in (None, "")
             debt_raw = row.get("debt") if show_money else None
-            debt_amount = None
-            try:
-                if debt_raw not in (None, ""):
-                    debt_amount = Decimal(str(debt_raw).replace(",", "."))
-            except (InvalidOperation, TypeError, ValueError):
-                debt_amount = None
+            debt_amount = _pdf_amount(debt_raw)
             debt_style = style_td_red if debt_amount is not None and debt_amount > 0 else style_td_right
             cells = [_p(row.get("month_label") or "—", style_td)]
             if show_meter_col:
@@ -276,6 +307,29 @@ def form_01(request_data):
                 ]
             )
             elec_data.append(cells)
+        if has_total:
+            month_rows = [row for _meter, row in month_entries]
+            money_row = next((row for row in month_rows if row.get("remainder") is not None), month_rows[0])
+            debt_amount = _pdf_amount(money_row.get("debt"))
+            debt_style = style_td_red_bold if debt_amount is not None and debt_amount > 0 else style_td_right_bold
+            cells = [_p("", style_td_bold)]
+            if show_meter_col:
+                cells.append(_p("Итого", style_td_bold))
+            cells.extend(
+                [
+                    _p("—", style_td_right_bold),
+                    _p("—", style_td_right_bold),
+                    _p(_pdf_sum(month_rows, "consumption"), style_td_right_bold),
+                    _p("—", style_td_right_bold),
+                    _p(_pdf_sum(month_rows, "charge"), style_td_right_bold),
+                    _p(_dash(money_row.get("written_off")), style_td_right_bold),
+                    _p(_dash(money_row.get("debt")), debt_style),
+                    _p(_dash(money_row.get("remainder")), style_td_right_bold),
+                    _p(_dash(money_row.get("receipt")), style_td_right_bold),
+                ]
+            )
+            elec_data.append(cells)
+            total_row_indexes.append(len(elec_data) - 1)
     if show_meter_col:
         col_w = [22 * mm, 32 * mm, 22 * mm, 22 * mm, 24 * mm, 20 * mm, 24 * mm, 22 * mm, 20 * mm, 24 * mm]
     else:
@@ -283,19 +337,18 @@ def form_01(request_data):
     col_w.append(table_width - sum(col_w))
     elec_table = Table(elec_data, colWidths=col_w, repeatRows=1)
     elec_table.hAlign = "LEFT"
-    elec_table.setStyle(
-        TableStyle(
-            [
-                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#b1b1b1")),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#ececec")),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("LEFTPADDING", (0, 0), (-1, -1), 2),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 2),
-                ("TOPPADDING", (0, 0), (-1, -1), 1.5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
-            ]
-        )
-    )
+    elec_style = [
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#b1b1b1")),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#ececec")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("LEFTPADDING", (0, 0), (-1, -1), 2),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 2),
+        ("TOPPADDING", (0, 0), (-1, -1), 1.5),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 1.5),
+    ]
+    for idx in total_row_indexes:
+        elec_style.append(("BACKGROUND", (0, idx), (-1, idx), colors.HexColor("#ececec")))
+    elec_table.setStyle(TableStyle(elec_style))
     objs.append(elec_table)
 
     doc.build(objs)

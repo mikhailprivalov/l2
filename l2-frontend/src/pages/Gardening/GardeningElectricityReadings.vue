@@ -3,6 +3,24 @@
     <div class="electricity__layout">
       <div class="electricity__panel">
         <div class="electricity__header">
+          <button
+            class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+            type="button"
+            title="Развернуть"
+            :disabled="rowsExpanded"
+            @click="rowsExpanded = true"
+          >
+            <i class="fa fa-plus" />
+          </button>
+          <button
+            class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
+            type="button"
+            title="Свернуть"
+            :disabled="!rowsExpanded"
+            @click="rowsExpanded = false"
+          >
+            <i class="fa fa-minus" />
+          </button>
           <span class="electricity__header-title">Показания электроэнергии</span>
           <button
             class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
@@ -74,21 +92,27 @@
             </thead>
             <tbody>
               <tr
-                v-for="item in tableRows"
-                :key="`${item.meter.id}-${item.row.month}`"
-                :class="{ 'electricity__row--month-start': item.showMonthStart }"
+                v-for="item in visibleTableRows"
+                :key="item.key"
+                :class="{
+                  'electricity__row--month-start': item.showMonthStart,
+                  'electricity__row--total': item.isTotal,
+                }"
               >
                 <td class="electricity__col-month">
-                  {{ item.row.month_label }}
+                  {{ item.isTotal && rowsExpanded ? '' : item.row.month_label }}
                 </td>
                 <td
                   v-if="showMeterColumn"
                   class="electricity__col-meter"
                 >
-                  {{ item.meter.title }}
+                  {{ item.isTotal ? 'Итого' : (item.meter ? item.meter.title : '') }}
                 </td>
                 <td class="electricity__num electricity__col-previous">
-                  <div class="electricity__prev">
+                  <div
+                    v-if="!item.isTotal && item.meter"
+                    class="electricity__prev"
+                  >
                     <input
                       v-if="isEditingRow(item.meter, item.row)"
                       v-model="formPrevious"
@@ -115,10 +139,13 @@
                       </button>
                     </template>
                   </div>
+                  <template v-else>
+                    {{ formatValue(null) }}
+                  </template>
                 </td>
                 <td class="electricity__num">
                   <input
-                    v-if="isEditingRow(item.meter, item.row)"
+                    v-if="!item.isTotal && item.meter && isEditingRow(item.meter, item.row)"
                     v-model="formReading"
                     class="form-control electricity-field"
                     type="number"
@@ -127,20 +154,20 @@
                     :disabled="saving"
                   >
                   <template v-else>
-                    {{ formatValue(item.row.current_reading) }}
+                    {{ formatValue(item.isTotal ? null : item.row.current_reading) }}
                   </template>
                 </td>
                 <td class="electricity__num">
-                  {{ formatValue(isEditingRow(item.meter, item.row) ? editConsumption : item.row.consumption) }}
+                  {{ formatValue(rowConsumption(item)) }}
                 </td>
                 <td
                   class="electricity__num"
-                  :class="{ 'electricity__tariff--missing': isTariffMissing(item.row.tariff) }"
+                  :class="{ 'electricity__tariff--missing': !item.isTotal && isTariffMissing(item.row.tariff) }"
                 >
-                  {{ formatTariff(item.row.tariff) }}
+                  {{ item.isTotal ? formatValue(null) : formatTariff(item.row.tariff) }}
                 </td>
                 <td class="electricity__num">
-                  {{ formatValue(isEditingRow(item.meter, item.row) ? editCharge : item.row.charge) }}
+                  {{ formatValue(rowCharge(item)) }}
                 </td>
                 <td class="electricity__num">
                   {{ formatValue(item.showMoney ? item.row.written_off : null) }}
@@ -161,7 +188,10 @@
                   {{ formatValue(item.showMoney ? item.row.receipt : null) }}
                 </td>
                 <td class="electricity__col-actions">
-                  <div class="electricity__actions">
+                  <div
+                    v-if="!item.isTotal && item.meter"
+                    class="electricity__actions"
+                  >
                     <template v-if="isEditingRow(item.meter, item.row)">
                       <button
                         class="btn btn-blue-nb btn-sm nbr toolbar-icon-btn"
@@ -432,6 +462,7 @@ const meterModalDateStart = ref('');
 const meterModalDateEnd = ref('');
 const savingMeter = ref(false);
 const tariffsByMonth = ref<Record<string, string | null>>({});
+const rowsExpanded = ref(true);
 
 const isBusy = computed(() => (
   saving.value || savingMeter.value || editingMonth.value !== null || meterModalOpen.value
@@ -443,7 +474,9 @@ const isEditingRow = (meter: ElectricityMeter, row: ElectricityRow) => (
 );
 
 interface TableRow {
-  meter: ElectricityMeter;
+  key: string;
+  isTotal: boolean;
+  meter: ElectricityMeter | null;
   row: ElectricityRow;
   showMoney: boolean;
   showMonthStart: boolean;
@@ -491,45 +524,26 @@ const metersInPeriod = computed(() => {
 
 const showMeterColumn = computed(() => metersInPeriod.value.length > 1);
 
-const tableRows = computed(() => {
-  const result: TableRow[] = [];
-  const { year } = props;
-  if (!year) {
-    return result;
-  }
-  for (let month = 1; month <= 12; month += 1) {
-    const monthItems: TableRow[] = [];
-    metersInPeriod.value.forEach((meter) => {
-      if (!meterActiveInMonth(meter, year, month)) {
-        return;
-      }
-      const row = meter.rows.find((item) => item.month === month);
-      if (!row) {
-        return;
-      }
-      monthItems.push({
-        meter,
-        row,
-        showMoney: row.remainder !== null && row.remainder !== undefined,
-        showMonthStart: false,
-      });
-    });
-    if (monthItems.length > 0) {
-      monthItems[0].showMonthStart = month > 1 && (
-        monthItems.length > 1 || metersInPeriod.value.length > 1
-      );
-    }
-    result.push(...monthItems);
-  }
-  return result;
-});
-
 const parseAmount = (value: string | null | undefined) => {
   if (value == null || value === '') {
     return null;
   }
   const amount = Number(String(value).replace(',', '.'));
   return Number.isFinite(amount) ? amount : null;
+};
+
+const sumAmounts = (values: (string | null | undefined)[]) => {
+  let total = 0;
+  let hasValue = false;
+  values.forEach((value) => {
+    const amount = parseAmount(value);
+    if (amount == null) {
+      return;
+    }
+    total += amount;
+    hasValue = true;
+  });
+  return hasValue ? total.toFixed(2) : null;
 };
 
 const tariffForMonth = (month: number | null) => {
@@ -560,6 +574,108 @@ const editCharge = computed(() => {
   }
   return (consumption * tariff).toFixed(2);
 });
+
+const tableRows = computed(() => {
+  const result: TableRow[] = [];
+  const { year } = props;
+  if (!year) {
+    return result;
+  }
+  for (let month = 1; month <= 12; month += 1) {
+    const monthItems: TableRow[] = [];
+    metersInPeriod.value.forEach((meter) => {
+      if (!meterActiveInMonth(meter, year, month)) {
+        return;
+      }
+      const row = meter.rows.find((item) => item.month === month);
+      if (!row) {
+        return;
+      }
+      monthItems.push({
+        key: `${meter.id}-${row.month}`,
+        isTotal: false,
+        meter,
+        row,
+        showMoney: false,
+        showMonthStart: false,
+      });
+    });
+    if (monthItems.length === 0) {
+      continue;
+    }
+    monthItems[0].showMonthStart = month > 1 && (
+      monthItems.length > 1 || metersInPeriod.value.length > 1
+    );
+    if (monthItems.length === 1) {
+      monthItems[0].showMoney = true;
+      result.push(...monthItems);
+      continue;
+    }
+    result.push(...monthItems);
+    const moneySource = monthItems.find((item) => (
+      item.row.remainder !== null && item.row.remainder !== undefined
+    )) || monthItems[0];
+    const { row: moneyRow } = moneySource;
+    const consumptionValues = monthItems.map((item) => (
+      item.meter && isEditingRow(item.meter, item.row) ? editConsumption.value : item.row.consumption
+    ));
+    const chargeValues = monthItems.map((item) => (
+      item.meter && isEditingRow(item.meter, item.row) ? editCharge.value : item.row.charge
+    ));
+    result.push({
+      key: `total-${month}`,
+      isTotal: true,
+      meter: null,
+      row: {
+        ...moneyRow,
+        id: null,
+        previous_reading: null,
+        previous_manual: false,
+        current_reading: null,
+        consumption: sumAmounts(consumptionValues),
+        tariff: null,
+        charge: sumAmounts(chargeValues),
+      },
+      showMoney: true,
+      showMonthStart: false,
+    });
+  }
+  return result;
+});
+
+const visibleTableRows = computed(() => {
+  if (rowsExpanded.value) {
+    return tableRows.value;
+  }
+  const monthsWithTotal = new Set(
+    tableRows.value.filter((item) => item.isTotal).map((item) => item.row.month),
+  );
+  const collapsed = tableRows.value.filter((item) => (
+    item.isTotal || !monthsWithTotal.has(item.row.month)
+  ));
+  return collapsed.map((item, index) => {
+    const { month } = item.row;
+    const prev = collapsed[index - 1];
+    return {
+      ...item,
+      showMonthStart: Boolean(prev) && prev.row.month !== month,
+    };
+  });
+});
+
+const rowConsumption = (item: TableRow) => {
+  if (item.isTotal || !item.meter) {
+    return item.row.consumption;
+  }
+  return isEditingRow(item.meter, item.row) ? editConsumption.value : item.row.consumption;
+};
+
+const rowCharge = (item: TableRow) => {
+  if (item.isTotal || !item.meter) {
+    return item.row.charge;
+  }
+  return isEditingRow(item.meter, item.row) ? editCharge.value : item.row.charge;
+};
 
 const formatValue = (value: string | null | undefined) => {
   if (value === null || value === undefined || value === '') {
@@ -1082,6 +1198,11 @@ watch(
 
 .electricity__row--month-start td {
   border-top: 2px solid #8a8a8a;
+}
+
+.electricity__row--total td {
+  font-weight: bold;
+  background-color: #ececec;
 }
 
 .electricity__num {
